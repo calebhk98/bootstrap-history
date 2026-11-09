@@ -18,7 +18,7 @@ from . import bank_service, bondage, cohort_prime, credit, credit_claims, credit
 from .cohort_store import table_of
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from . import household_work_year
-from .household_work_year import basket_key, kept_basket
+from .household_work_year import kept_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .goods_order_tables import LOAN
 from .order_rows import OrderRows
@@ -165,9 +165,11 @@ def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_b
         if loan.borrower in record.cohorts:
             lent[loan.borrower] = lent.get(loan.borrower, 0.0) + loan.principal
     rows = OrderRows(order_book, LOAN)
-    for cohort_id, budget in sorted(lent.items()):
-        cohort = record.cohorts[cohort_id]
-        key = basket_key(record, cohort)
+    store = table_of(record.cohorts)
+    borrowers = sorted(lent.items())
+    figures = store.figures(store.rows_of([cohort_id for cohort_id, _budget in borrowers]))
+    keys = household_work_year.signatures_of_figures(record, figures)
+    for cohort, key, (cohort_id, budget) in zip(figures, keys, borrowers):
         basket = kept_basket(setup, key)
         rows.bids_from(households_credit.floor_bids(cohort, _priced_basket(view, key, basket, priced_by_tile), budget,
                                                     ledger.grown_units.get(cohort_id), setup.specs, view, basket))

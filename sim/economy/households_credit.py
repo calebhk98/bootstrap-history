@@ -54,7 +54,7 @@ def subsistence_request(cohort: Cohort, shortfall: float, currency: CurrencyId, 
 def floor_bids(cohort: Cohort, priced, budget: float, grown_units: Optional[Mapping[str, float]],
                specs: Mapping[GoodId, GoodSpec], view, basket: Basket) -> List[Bid]:
     """Bids for the floors of the needs, budget spread over them by cost, for goods used up in the year
-    (a durable is bought as replacement by the household's own orders)."""
+    (a durable is bought as replacement by the household's own orders). `cohort` is a `Cohort` or the `CohortFigures` of one."""
     grown_units = grown_units or {}
     wanted = []
     priced = priced_needs_of(priced)

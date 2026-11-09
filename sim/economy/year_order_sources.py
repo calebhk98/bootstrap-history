@@ -6,24 +6,28 @@ to an `OrderRows` and writes it once (the households' kernel rows are appended a
 the rule and are unpacked into rows at this edge."""
 from typing import List
 
-from . import carriage_fleet_book, carriage_wear, households, households_cohort, households_orders_pack, land_bid_year, merchants
+from . import household_work_year
+from . import carriage_fleet_book, carriage_wear, households_cohort, households_orders_pack, land_bid_year, merchants
 from . import merchants_book, merchants_plan, state_budget, state_store, tool_wear
+from .cohort_order_figures import order_figures
+from .cohort_store import table_of
 from .goods_order_tables import CARRIER, HOUSEHOLD, MERCHANT, STATE
 from .inventory import held_stock, holding_reservation
 from .opening_bid_memory import BidMemory
 from .order_rows import OrderRows
 from .protocols import AgentOrders
 from .rates import own_rate
-from .year_goods import less_what_it_grew
 
 
 def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> List:
-    """Households' bids for the year; returns their savings offers for the credit market. Every cohort whose basket the kernel covers
-    is ordered in one call (`households_orders_pack`); the rest through `households.goods_orders`."""
+    """Households' bids for the year; returns their savings offers for the credit market. Every cohort is ordered in one call
+    (`households_orders_pack`) from the figures read off the cohort table's columns; no `Cohort` is built."""
     funds = []
     memory = BidMemory()     # the priced needs and store weights cohorts of one basket share
     money = setup.currency_id
-    cohorts = sorted(record.cohorts.values(), key=lambda each: each.agent_id)
+    store = table_of(record.cohorts)
+    cohorts = order_figures(store, store.order())
+    memory.know([each.agent_id for each in cohorts], household_work_year.signatures_of_figures(record, cohorts))
     smooth_rise = not record.settling
     tool_bids_of, entries, plain = {}, [], {}
     cash_of = record.book.balance_by_agent([cohort.agent_id for cohort in cohorts], money)       # nothing posts while the orders are made
@@ -41,12 +45,8 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         grown_units = ledger.grown_units.get(cohort.agent_id)
         if not priced or cohort.people <= 0.0:
             plain[cohort.agent_id] = AgentOrders()
-        elif households_orders_pack.covered(priced):
-            entries.append((cohort, basket, priced, spendable, income, grown_units))
         else:
-            plain[cohort.agent_id] = less_what_it_grew(households.goods_orders(
-                cohort, view, spendable, income, basket, setup.specs, priced, smooth_rise=smooth_rise, shared_store=memory.stores(record, cohort)),
-                cohort, basket, grown_units)
+            entries.append((cohort, basket, priced, spendable, income, grown_units))
     made, bid_rows, planned = households_orders_pack.kernel_orders(
         view, setup.specs, entries, smooth_rise, lambda cohort: memory.key(record, cohort), lambda cohort: memory.stores(record, cohort),
         order_book)

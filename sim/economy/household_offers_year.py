@@ -43,7 +43,9 @@ def plans(setup, record, view, reads: OfferReads) -> Dict[AgentId, Tuple[float, 
     cohort_prime.prime_food_baskets(setup, record, view)
     values = hour_values(setup, record, view, reads, expected) if setup.household_work else {}
     result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
-    for cohort_id, cohort in sorted(record.cohorts.items()):
+    store = table_of(record.cohorts)
+    for cohort in store.figures(store.order()):
+        cohort_id = cohort.agent_id
         if not setup.household_work:
             hired, own, milled = 0.0, 0.0, ()
         else:

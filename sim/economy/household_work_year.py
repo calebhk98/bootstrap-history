@@ -2,7 +2,7 @@
 basket that follows. Its own hours are kept back from the labour it offers (`labour_supply.HourSupply`); the hours
 it hires become its floor of the `household_work` need, bought from domestic servants like any floor."""
 import dataclasses
-from typing import Dict, Mapping, Optional, Sequence, Tuple
+from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from . import household_grinding, households_work, labour_state, titles_worked, trade_wages
 from . import households_cohort
@@ -25,6 +25,11 @@ def has_hearth(record, cohort: Cohort) -> bool:
 def hearth_of(record, tile: str, agent_id: str) -> bool:
     """`has_hearth` for a cohort named by its tile and id (the cohort table's columns hold both, so no cohort is built)."""
     return titles_worked.worked_share(record, tile, agent_id) > HEARTH_EPSILON
+
+
+def hearths_of(record, tiles: Sequence[str], agent_ids: Sequence[str]) -> List[bool]:
+    """`hearth_of` for each (tile, id) pair, the tiles' tenancies read once."""
+    return [share > HEARTH_EPSILON for share in titles_worked.worked_shares(record, tiles, agent_ids)]
 
 
 def food_basket(setup, record, cohort: Cohort):
@@ -134,9 +139,22 @@ def priced_basket(setup, record, view, cohort: Cohort):
 
 def signatures_of(record, store, rows, buying: bool = True) -> list:
     """`basket_signature` of the cohorts in the `rows` of the cohort table `store`, read from the columns (no cohort is built)."""
-    hired = store.floats("hired_work_per_person", rows)
-    return [signature_of(record, tile, store.ids[row], hired[place], store.milled_of(row), buying)
-            for place, (row, tile) in enumerate(zip(rows.tolist(), store.tile_names(rows)))]
+    ids = [store.ids[row] for row in rows.tolist()]
+    return signatures_from_fields(record, store.tile_names(rows), ids, store.floats("hired_work_per_person", rows),
+                                  [store.milled_of(row) for row in rows.tolist()], buying)
+
+
+def signatures_from_fields(record, tiles: Sequence[str], agent_ids: Sequence[str], hired: Sequence[float], milled: Sequence[tuple],
+                           buying: bool = True) -> list:
+    """`signature_of` for each cohort named by the parallel sequences, the hearths worked out in one pass."""
+    return [(tile, hearth, hired_work, tuple(grains) if buying else ())
+            for tile, hearth, hired_work, grains in zip(tiles, hearths_of(record, tiles, agent_ids), hired, milled)]
+
+
+def signatures_of_figures(record, figures: Sequence, buying: bool = True) -> list:
+    """`basket_signature` of each of `figures` (`CohortFigures` or `OrderFigures`)."""
+    return signatures_from_fields(record, [each.tile for each in figures], [each.agent_id for each in figures],
+                                  [each.hired_work_per_person for each in figures], [each.milled_grains for each in figures], buying)
 
 
 def priced_basket_of(setup, view, tile: str, signature: tuple):

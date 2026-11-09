@@ -18,6 +18,10 @@ class BidMemory:
         self._priced: Dict[Tuple, object] = {}
         self._stores: Dict[Tuple, dict] = {}
 
+    def know(self, agent_ids, keys) -> None:
+        """The `basket_key` of each cohort named, when the caller has worked them out in one pass."""
+        self._key.update(zip(agent_ids, keys))
+
     def key(self, record, cohort) -> tuple:
         """The cohort's `basket_key`, worked out once (it needs the cohort's title to its land)."""
         found = self._key.get(cohort.agent_id)

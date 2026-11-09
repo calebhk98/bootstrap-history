@@ -64,6 +64,7 @@ class CohortStore(MutableMapping):
         self.row_of: Dict[str, int] = {}
         self.version = 0                            # rises on every write
         self._objects: List[Optional[Cohort]] = []
+        self._milled: List[Optional[tuple]] = []    # by row: the grains bought milled as names, until the row's grains are written
         self._order: Optional[np.ndarray] = None
         self._order_members = -1
         self._members = 0                           # rises when a cohort enters or its tile or class is written
@@ -158,6 +159,7 @@ class CohortStore(MutableMapping):
         self.table.row_count[0] = row + 1
         self.ids.append(cohort_id)
         self._objects.append(None)
+        self._milled.append(None)
         self.row_of[cohort_id] = row
         self._members += 1
         return row
@@ -209,6 +211,7 @@ class CohortStore(MutableMapping):
         for place, name in enumerate(grains):
             self.table.milled_good[row, place] = self._name("goods", name)
         self.table.milled_count[row] = len(grains)
+        self._milled[row] = tuple(grains)
 
     def set_fields(self, cohort_id: str, **changes) -> None:
         """The fields named of one cohort take the values (the scalar fields, the two mappings, `milled_grains`, `tile`, `income_class`)."""
@@ -267,9 +270,12 @@ class CohortStore(MutableMapping):
         self.written(rows)
 
     def milled_of(self, row: int) -> tuple:
-        """The grains the cohort in `row` buys milled."""
-        goods = self.names["goods"].name_list
-        return tuple(goods[number] for number in self.table.milled_good[row, :int(self.table.milled_count[row])].tolist())
+        """The grains the cohort in `row` buys milled (kept until the row's grains are written)."""
+        kept = self._milled[row]
+        if kept is None:
+            goods = self.names["goods"].name_list
+            kept = self._milled[row] = tuple(goods[number] for number in self.table.milled_good[row, :int(self.table.milled_count[row])].tolist())
+        return kept
 
     def pairs_of(self, group: str, row: int) -> Dict[str, float]:
         """The mapping field of `group` ("unmet" or "plan") of the cohort in `row`, as `Cohort` holds it."""

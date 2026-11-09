@@ -492,13 +492,17 @@ hours' populated tiles, `merchants_dispatch`'s poorest cohort of each tile, `tak
 `api._ranked_cohorts` and `year_arrays_holdings.share_out`. The save is written from the columns in the old format
 (`CohortStore.to_plain`). Tests: `test_cohort_store.py`, `test_cohort_people.py`, `test_cohort_reads.py`.
 
-What still builds a `Cohort` in a warm year, measured by counting `CohortStore._build` around one warm `game.step()` (a throwaway wrapper that
-records the first non-store caller; `tools/measure/warm_year_profile.py` loads and warms the game): the first object reader after each block write
-rebuilds every stale snapshot, so the count falls only when every reader between two writes reads columns. Left: `year_order_sources.cohort_orders`
-(its entries carry the `Cohort` into `households_orders_pack.kernel_orders`, which reads eight fields at lines 159-169, and into
-`households.goods_orders` for a basket the kernel does not cover); `household_offers_year.plans`; `lending.bid_household_loans` (reads one `Cohort`
-for each borrower through `cohort_basket` and `households_credit.floor_bids`). `cohort_orders` ends with `set_column("planned_spending")`, a block
-write, so the next object reader rebuilds all again.
+A warm year builds no `Cohort` (measured by counting `CohortStore._build` around one warm `game.step()`: a throwaway wrapper that records the first
+non-store caller; `tools/measure/warm_year_profile.py` loads and warms the game). The first object reader after each block write rebuilds every
+stale snapshot, so the count stays at zero only while every reader between two writes reads columns; a new reader that asks the mapping for a
+`Cohort` brings the rebuilds back, and the wrapper finds it. The last three were `year_order_sources.cohort_orders`, `household_offers_year.plans`
+and `lending.bid_household_loans`. `cohort_orders` reads `cohort_order_figures.order_figures` (the fields the orders kernel, the store offers, the land
+and tool bids and the basket key read, a cohort-like tuple with the scalar types a `Cohort` hands back) and orders every cohort through
+`households_orders_pack.kernel_orders` (the per-cohort `households.goods_orders` branch for a basket the kernel does not cover was never reached
+and is gone); `plans` and `bid_household_loans` pass `CohortFigures` to the rules written over a cohort (`work_terms_at`, `grinding_plan`,
+`households_credit.floor_bids`, which only read id, tile and people). `CohortStore.milled_of` keeps the tuple of each row until the row's grains
+are written. The basket keys of all cohorts come from one pass (`household_work_year.signatures_of_figures`, `signatures_of`), whose hearths come from
+`titles_worked.worked_shares`: the tenancies of a tile are read once for all its holders instead of once for each.
 
 Tests: `sim/tests/test_close_pack_kernels.py`, `test_year_close_dividends.py`, `test_producer_close_write.py`, `test_producer_store.py`, `test_wear_kernels.py`,
 `test_year_close_households.py` (each kernel against the Python it replaces on written-out inputs).

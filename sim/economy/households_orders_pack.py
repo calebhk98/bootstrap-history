@@ -1,7 +1,7 @@
 """The year's cohort orders over arrays: baskets packed once each, every cohort ordered in one kernel call, the answer unpacked into bids.
 
 `households_orders_kernel.year_orders` makes the orders `households_orders.goods_orders` and `year_goods.less_what_it_grew` make
-(`cohort_orders` calls this and keeps the old functions for a basket the kernel does not cover: a need with share limits).
+(`cohort_orders` calls this for every cohort; the old functions stay for the opening and the tests).
 A basket's needs, goods and store goods are the same for every cohort that shares a basket key (tile, hearth, hired work, milled
 grains), so they are packed once per key (a template); each cohort adds its holdings, its plot's units and its cash and income."""
 from typing import Dict, List
@@ -20,12 +20,6 @@ from .protocols import AgentOrders
 from .households_bid_rows import cohort_bid_rows
 from .stock_block import stock_block
 from .types import FundsOffer
-
-
-def covered(priced) -> bool:
-    """Whether the kernel makes these priced needs' orders: every basket (share limits are searched in the quality re-mix,
-    `households_orders_kernel._remix`)."""
-    return True
 
 
 class _Template:

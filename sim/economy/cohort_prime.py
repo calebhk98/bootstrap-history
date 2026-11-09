@@ -41,8 +41,8 @@ def prime_food_baskets(setup, record, view) -> None:
     store = table_of(record.cohorts)
     order = store.order()
     asks = {}
-    for tile, agent_id in zip(store.tile_names(order), (store.ids[row] for row in order.tolist())):
-        hearth = household_work_year.hearth_of(record, tile, agent_id)
+    tiles = store.tile_names(order)
+    for tile, hearth in zip(tiles, household_work_year.hearths_of(record, tiles, [store.ids[row] for row in order.tolist()])):
         if ("need_prices", tile, ("food", hearth)) not in reads and (tile, hearth) not in asks:
             asks[(tile, hearth)] = household_work_year.tile_food_basket(setup, tile, hearth)
     price_asked(view, reads, [(tile, ("food", hearth), basket) for (tile, hearth), basket in asks.items()])
