@@ -14,6 +14,7 @@ import unittest
 
 from sim.economy import merchants, merchants_book, merchants_plan, merchants_transit
 from sim.economy.merchants import Merchant
+from sim.economy.order_rows import OrderRows
 from sim.economy.protocols import AgentOrders
 from sim.economy.types import Bid, GoodSpec, MarketArea
 from sim.tests.economy_view_defaults import ViewDefaults
@@ -147,6 +148,29 @@ class MerchantPlanTests(unittest.TestCase):
         self.assertGreaterEqual(compared, SEEDS - 5)
         self.assertGreaterEqual(with_bids, SEEDS // 3)      # the cases are not all empty
         self.assertGreaterEqual(with_held_routes, 5)
+
+    def test_rows_written_equal_the_orders_made_as_objects(self):
+        with_bids = with_offers = 0
+        for seed in range(SEEDS):
+            cash = random.Random(seed).choice((0.0, 50.0, 3000.0, 1e6))
+            who, view, carriage, area_map, held, shares = random_world(seed)
+            made = merchants_plan.orders(who, view, carriage, area_map, cash, held, SPECS, 0.05, shares)
+            who_again, view, carriage, area_map, held, shares = random_world(seed)
+            rows = OrderRows(None)
+            nothing = merchants_plan.orders(who_again, view, carriage, area_map, cash, held, SPECS, 0.05, shares, rows_out=rows)
+            self.assertEqual((nothing.bids, nothing.offers), ((), ()))
+            self.assertEqual(rows.buyer, [bid.buyer for bid in made.bids])
+            self.assertEqual(list(zip(rows.bid_good, rows.bid_area, rows.bid_tile, rows.priority)),
+                             [(bid.good, bid.area, bid.tile, bid.priority) for bid in made.bids])
+            self.assertEqual(rows.figures, [(bid.floor_quantity, bid.flexible_quantity, bid.reference_price, bid.elasticity, bid.budget,
+                                             bid.maximum_price) for bid in made.bids])
+            self.assertEqual(list(zip(rows.seller, rows.offer_good, rows.offer_area, rows.offer_tile, rows.quantity, rows.reservation)),
+                             [(offer.seller, offer.good, offer.area, offer.tile, offer.quantity, offer.reservation_price) for offer in made.offers])
+            self.assertEqual(who.routes.keys(), who_again.routes.keys())
+            with_bids += bool(made.bids)
+            with_offers += bool(made.offers)
+        self.assertGreaterEqual(with_bids, SEEDS // 3)
+        self.assertGreaterEqual(with_offers, SEEDS // 3)
 
     def test_dense_shares_gather_what_rivals_commit(self):
         who, view, carriage, area_map, held, _shares = random_world(3)

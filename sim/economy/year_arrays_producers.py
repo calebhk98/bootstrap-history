@@ -118,10 +118,10 @@ def _expected_prices(store: ProducerStore, rows: np.ndarray, recipe_row: np.ndar
         return prices
     names, held_goods = store.names["goods"].name_list, table.price_good[rows]
     column_of = np.full(len(names) + 1, -1, dtype=np.int64)
-    for number in np.unique(held_goods).tolist():          # only the goods some producer holds a price for
+    places = np.arange(table.price_good.shape[1])[None, :] < held[:, None]
+    for number in np.nonzero(np.bincount(held_goods[places]))[0].tolist():          # only the goods some producer holds a price for
         if number < len(names):
             column_of[number] = matrices.goods.row.get(names[number], -1)
-    places = np.arange(table.price_good.shape[1])[None, :] < held[:, None]
     goods = np.where(places, column_of[held_goods], -1)          # the year's good column of each held price
     values = table.price_value[rows]
     slots = matrices.slot_goods[recipe_row]

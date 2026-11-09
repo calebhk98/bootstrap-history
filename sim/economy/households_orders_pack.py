@@ -39,6 +39,7 @@ class _Template:
         self.row_good_ids = static.good_ids
         self.row_market_ids = static.market_ids
         self.store_good_ids = store_static.good_ids
+        self.store_areas = dict(zip(store_static.goods, store_static.areas))      # the market area of each store good at the tile
         self.store_market_ids = store_static.market_ids
         self.unit_need_ids = [need.need_id for need in basket.needs]
 
@@ -55,6 +56,7 @@ class _Arrays:
 
     def __init__(self, specs) -> None:
         self.local = households_template.LocalGoods()
+        self.storable = households_store.storable_goods(specs)
         self.static: Dict[tuple, households_template.StaticRows] = {}
         self.life = np.array([specs[good].service_life_years if good in specs else 0.0 for good in GOODS.names], dtype=np.float64)
         self.spoilage = np.array([specs[good].spoilage_per_year if good in specs else 0.0 for good in GOODS.names], dtype=np.float64)
@@ -82,7 +84,7 @@ class _Arrays:
 
     def add_template(self, index, cohort, basket, priced, shared_store, view, specs, orders) -> _Template:
         priced = priced_needs_of(priced)
-        weights, store_prices = households_store.store_weights_of(cohort.tile, view, specs, priced, shared_store)
+        weights, store_prices = households_store.store_weights_of(cohort.tile, view, specs, priced, shared_store, self.storable)
         columns, tile = priced.columns, cohort.tile
         first_good = columns.names[columns.start[priced.positions[0]]]
         area_currency = view.currency_of(view.area_of(first_good, tile))
@@ -204,7 +206,7 @@ def _orders_of(cohort, template, stores, store_start, answer, cash, view, specs)
         if any(held[good] > 0.0 for good in held):
             offers = tuple(households_store.store_offers(cohort, view, specs, template.weights, template.store_prices, held,
                                                          answer[kernel.CA_ABOVE_BUFFER], answer[kernel.CA_REAL_RATE], cash,
-                                                         answer[kernel.CA_FLOOR_COST]))
+                                                         answer[kernel.CA_FLOOR_COST], template.store_areas))
     funds = ()
     if answer[kernel.CA_SAVINGS] > 0.0:
         ask = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, cohort.expected_inflation,

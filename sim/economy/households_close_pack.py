@@ -86,15 +86,14 @@ def unmet_by_cohort(book, packed: PackedBaskets, agent_ids: Sequence[str], tiles
     numbers, the receipts the arrays of `receipts_with_grown` (cohorts in the same order). The held stocks of the durables are read from
     the book in one block."""
     count = len(agent_ids)
+    basket_array = np.array(basket_numbers, dtype=np.int64)
+    durable_numbers = [numbers_of(book.good_ids, durables) for durables in packed.durables]      # the book's good numbers of each basket's durables
+    counts = np.array([len(each) for each in durable_numbers], dtype=np.int64)[basket_array] if count else np.zeros(0, dtype=np.int64)
     held_start = np.zeros(count + 1, dtype=np.int64)
-    held_agents, held_goods, held_tiles = [], [], []
-    for position in range(count):
-        durables = packed.durables[basket_numbers[position]]
-        held_start[position + 1] = held_start[position] + len(durables)
-        held_agents.extend([agent_ids[position]] * len(durables))
-        held_goods.extend(durables)
-        held_tiles.extend([tiles[position]] * len(durables))
-    held = stock_block(book, numbers_of(book.agent_ids, held_agents), numbers_of(book.good_ids, held_goods), numbers_of(book.tile_ids, held_tiles))
+    held_start[1:] = np.cumsum(counts)
+    held_goods = np.concatenate([durable_numbers[each] for each in basket_array.tolist()]) if count else np.zeros(0, dtype=np.int64)
+    held = stock_block(book, np.repeat(numbers_of(book.agent_ids, agent_ids), counts), held_goods,
+                       np.repeat(numbers_of(book.tile_ids, tiles), counts))
     widest = max((len(basket.needs) for basket in packed.baskets), default=0)
     unmet = np.full((count, max(widest, 1)), np.nan)
     unmet_floors(np.array(people, dtype=np.float64), np.array(basket_numbers, dtype=np.int64), receipt_start,

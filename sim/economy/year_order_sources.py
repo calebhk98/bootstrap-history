@@ -7,7 +7,7 @@ the rule and are unpacked into rows at this edge."""
 from typing import List
 
 from . import household_work_year
-from . import carriage_fleet_book, carriage_wear, households_cohort, land_bid, households_orders_pack, land_bid_year, merchants
+from . import carriage_fleet_book, carriage_wear, households_cohort, households_orders_pack, land_bid_year, merchants
 from . import merchants_book, merchants_plan, state_budget, state_store, tool_wear
 from .cohort_order_figures import order_figures
 from .cohort_store import table_of
@@ -52,7 +52,7 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         order_book)
     made.update(plain)
     rows = OrderRows(order_book, HOUSEHOLD)
-    land_goods, margins = land_bid.land_goods(setup.specs, setup.recipes), {}      # the ground goods, and the best crop margin by tile, are the same for every cohort
+    ground, margins = land_bid_year.ground_of(setup, record) if own_options else None, {}      # the ground goods and sellers, and the best crop margin by tile, are the same for every cohort
     planned_of = {}          # the money each cohort placed in bids, written to the table once all are known
     for cohort in cohorts:
         orders = made[cohort.agent_id]
@@ -64,7 +64,7 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
             savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
             orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
                 setup, record, view, cohort, own_options, ledger.spare_hours.get(cohort.agent_id, 0.0), savings,
-                land_goods, margins))
+                ground, margins))
         rows.bids_from(orders.bids)
         rows.offers_from(orders.offers)
         funds.extend(orders.funds_offers)
@@ -116,8 +116,6 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book) -> None
     first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
     for merchant in ordered[first:] + ordered[:first]:
         held = held_stock(record.book, merchant.agent_id)
-        orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
-                                  held, setup.specs, rate, shares, route)
-        rows.bids_from(orders.bids)
-        rows.offers_from(orders.offers)
+        merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
+                         held, setup.specs, rate, shares, route, rows)
     rows.write()
