@@ -108,6 +108,7 @@ class AreaMap:
         self._area_of_tile: Dict[str, Dict[TileId, AreaId]] = {}
         self._areas_of_good: Dict[GoodId, Tuple[MarketArea, ...]] = {}
         self._area_tile_sets: Dict[GoodId, Dict[AreaId, set]] = {}   # each good's areas with their tiles (tile_sets)
+        self._areas_on_tile: Dict[TileId, Dict[GoodId, AreaId]] = {}   # every good's area on a tile, made on first ask (`areas_on_tile`)
         unit = carriage_unit(tile_ids, carriage)
         for spec, price in goods:
             label, representative = bucket_of(value_per_tonne(spec, price), bucket_width_ln, unit)
@@ -154,6 +155,16 @@ class AreaMap:
     def area_of(self, good: GoodId, tile: TileId) -> AreaId:
         """The id of the area holding `tile` for `good`; KeyError if either is unknown."""
         return self._area_of_tile[self._bucket_of_good[good]][tile]
+
+    def areas_on_tile(self, tile: TileId) -> Dict[GoodId, AreaId]:
+        """Each good's area on the tile (a good with no area holding the tile is left out): the same ids as `area_of`, made for all
+        the goods at once and kept, since the areas do not change."""
+        found = self._areas_on_tile.get(tile)
+        if found is None:
+            in_bucket = {label: areas[tile] for label, areas in self._area_of_tile.items() if tile in areas}
+            found = self._areas_on_tile[tile] = {good: in_bucket[label] for good, label in self._bucket_of_good.items()
+                                                 if label in in_bucket}
+        return found
 
     def market_area_of(self, good: GoodId, tile: TileId) -> MarketArea:
         area_id = self.area_of(good, tile)

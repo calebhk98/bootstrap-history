@@ -270,7 +270,7 @@ def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],
     arable = {tile_id: titles_ground.arable_hectares(record, tile_id, tile) for tile_id, tile in setup.tiles.items()}
     money = setup.currency_id
     owners = {tile: ownership.owner_cohort(record, tile) for tile in result.rent_per_hectare_by_tile}
-    cash = {demand.agent_id: record.book.balance(demand.agent_id, money) for demand in demands}
+    cash = record.book.balance_by_agent([demand.agent_id for demand in demands], money)
     postings = rent_postings(result, demands, owners, money, cash)
     record.land.rent_paid = land_rents.booked_by_tile(postings, record.producers)
     payments = ownership.spread(record, postings)

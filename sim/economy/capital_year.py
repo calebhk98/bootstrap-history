@@ -87,8 +87,9 @@ def _redeem_units(setup, record, funds, short, rate, institutions):
 
 def snapshot(record, money: str, funds: Sequence[FundsOffer]) -> Dict[AgentId, float]:
     """What each household saver holds beyond the funds it offered the year's lending: the cash it keeps."""
-    return {offer.lender: record.book.balance(offer.lender, money) - offer.amount
-            for offer in funds if offer.lender in record.cohorts and offer.currency == money}
+    savers = [offer for offer in funds if offer.lender in record.cohorts and offer.currency == money]
+    held = record.book.balances_of([offer.lender for offer in savers], money).tolist()
+    return {offer.lender: balance - offer.amount for offer, balance in zip(savers, held)}
 
 
 def invest_idle(setup, record, view, funds: Sequence[FundsOffer], kept: Dict[AgentId, float], institutions: Sequence[str]) -> None:
@@ -158,9 +159,10 @@ def _arrange_cover(record, money: str, rate: float, year: int, company_open: boo
         return
     price = insurance.premium_rate(state, HARVEST, rate)
     expected = insurance.expected_loss_share(state, HARVEST)
+    cash_of = record.book.balance_by_agent([holder for holder in sorted(state.exposure) if holder in record.cohorts], money)
     wanting = {holder: held[HARVEST] for holder, held in sorted(state.exposure.items())
                if holder in record.cohorts and held.get(HARVEST, 0.0) > 0.0
-               and insurance.wants_cover(record.book.balance(holder, money), held[HARVEST],
+               and insurance.wants_cover(cash_of[holder], held[HARVEST],
                                          min(price, expected) if mutual_open else price, state, HARVEST)}
     state.policies = [policy for policy in state.policies if policy.holder in wanting or policy.hazard != HARVEST]
     if not wanting:

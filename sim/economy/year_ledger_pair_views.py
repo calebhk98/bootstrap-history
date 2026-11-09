@@ -9,6 +9,7 @@ from typing import Iterator, List, Optional, Tuple
 import numpy
 
 from sim.book_index import EMPTY
+from sim.economy.year_ledger_plain import plain_by_agent
 from sim.economy.year_ledger_kernels import add_pair, clear_agent_rows, kill_row, remove_from_figure, set_pair, touch
 from sim.economy.year_ledger_store import LedgerTables, PairStore
 from sim.economy.year_ledger_tables import PAIR_KIND, MEMBERS, NEXT_ENTRY
@@ -55,8 +56,8 @@ class PairView(Show):
         stamp = (self._store.row_count, self._store.kills)
         if self._cache is None or self._cache[0] is not rows or self._cache[1] != stamp:
             live = numpy.flatnonzero(rows.live[:stamp[0]])
-            names, name_of_sub = self._tables.book.agent_ids.name_list, self._sub.name
-            subs = [name_of_sub(subkey, extra) for subkey, extra in zip(rows.subkey[live].tolist(), rows.extra[live].tolist())]
+            names = self._tables.book.agent_ids.name_list
+            subs = self._sub.names(rows.subkey[live].tolist(), rows.extra[live].tolist())
             keys = [(names[agent],) + (sub if isinstance(sub, tuple) else (sub,)) for agent, sub in zip(rows.agent[live].tolist(), subs)]
             self._cache = (rows, stamp, live, keys)
         return self._cache[2], self._cache[3]
@@ -235,17 +236,10 @@ class NestedView(Show):
     def as_plain(self) -> dict:
         """Every agent's rows as plain `sub -> amount` dicts, agents in entry order and each agent's rows in the order they were made:
         what `{name: dict(inner.items()) for name, inner in self.items()}` gives, read from the table in one pass. Not live."""
-        rows, names = self._members()
-        plain = {name: {} for name in names}
+        members, names = self._members()
         table = self._store.rows.table
         live = numpy.flatnonzero(table.live[:self._store.row_count])
-        agent_names, name_of_sub = self._tables.book.agent_ids.name_list, self._sub.name
-        for agent, subkey, extra, amount in zip(table.agent[live].tolist(), table.subkey[live].tolist(), table.extra[live].tolist(),
-                                                table.amount[live].tolist()):
-            rows_of_agent = plain.get(agent_names[agent])
-            if rows_of_agent is not None:
-                rows_of_agent[name_of_sub(subkey, extra)] = amount
-        return plain
+        return plain_by_agent(members, names, table.agent[live], table.subkey[live], table.extra[live], table.amount[live], self._sub.names)
 
     @flushed
     def __contains__(self, name) -> bool:

@@ -2,6 +2,7 @@
 first round (rows in sorted id order), their baskets flattened, the market each of their goods is bought in, every market's
 offers in clearing order, and the purses and stocks of the agents and (agent, tile) keys the markets touch.
 """
+import itertools
 from dataclasses import dataclass
 from typing import Dict, List
 
@@ -13,6 +14,7 @@ from .goods_production import read_stocks
 from .goods_respend_rows import Interner, bid_rows, bought_columns, offer_rows, table_columns
 from .goods_respend import need_of_good
 from .types import is_edge, is_external_edge
+from .view_areas import areas_in
 
 
 
@@ -103,8 +105,9 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
         if slot not in area_rows:
             area_rows[slot] = len(area_table)
             table = [-1] * len(goods)
-            for good in need_of_good(baskets[slot[1]]):
-                table[good_index[good]] = market_index.get((good, view.area_of(good, tile)), -1)
+            wanted = list(need_of_good(baskets[slot[1]]))
+            for good, market in zip(wanted, map(market_index.get, zip(wanted, areas_in(view, wanted, tile)), itertools.repeat(-1))):
+                table[good_index[good]] = market
             area_table.append(table)
         buyer_area_row[row] = area_rows[slot]
     area_market = numpy.array(area_table, dtype=numpy.int64).reshape(len(area_table), len(goods))

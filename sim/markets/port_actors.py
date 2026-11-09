@@ -208,7 +208,7 @@ def close(economy, sales: Sequence[dict], purchases: Sequence[dict]):
     unsold: Dict[str, Dict[str, float]] = {}
     moves, transfers = [], []
     for account, actor, outflow, label in accounts:
-        for good, tiles in sorted(book.holdings(account)["goods"].items()):
+        for good, tiles in sorted(book.goods_held(account).items()):
             for tile, quantity in sorted(tiles.items()):
                 if quantity > 0.0:
                     spec = economy_api.good_specs(economy).get(good)

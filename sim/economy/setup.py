@@ -15,6 +15,7 @@ from sim.world import demand
 
 from .good_mass import unit_mass
 from .market_areas import AreaMap
+from .setup_countries import country_by_tile
 from .state_policy import StatePolicy
 from .tile_costs import CarriageTable, carriage_table
 from .types import AgentId, CurrencySpec, GoodId, GoodSpec, Recipe, SiteLimit, TileId, TileSpec, TradeId
@@ -139,11 +140,15 @@ class EconomySetup:
 
     def countries(self) -> Tuple[str, ...]:
         """Every civilisation with tiles in this economy, the home one first."""
-        others = sorted({self.country_of(tile) for tile in self.tiles} - {self.civ_id})
+        others = sorted(set(self.country_by_tile().values()) - {self.civ_id})
         return (self.civ_id,) + tuple(others)
 
     def tiles_of(self, country: str) -> Tuple[TileId, ...]:
-        return tuple(sorted(tile for tile in self.tiles if self.country_of(tile) == country))
+        return tuple(sorted(tile for tile, owner in self.country_by_tile().items() if owner == country))
+
+    def country_by_tile(self) -> Dict[TileId, str]:
+        """`country_of` for every tile of the setup, read in one pass."""
+        return country_by_tile(self)
 
     def recipe_allowed(self, recipe_id: str, tile: TileId) -> bool:
         """Whether the people on `tile` can run the recipe: their country's techniques allow it."""

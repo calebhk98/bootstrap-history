@@ -505,7 +505,7 @@ def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"
     if proceeds > 0.0:
         book.transfer(Transfer(agent_id, edge_id, money, proceeds, tile_note))
     returns = [GoodsMove(agent_id, edge_id, good, tile, quantity, "unsold concern output")
-               for good, tiles in book.holdings(agent_id)["goods"].items()
+               for good, tiles in book.goods_held(agent_id).items()
                for tile, quantity in tiles.items() if quantity > 0.0]
     book.move_many(returns)
     return proceeds

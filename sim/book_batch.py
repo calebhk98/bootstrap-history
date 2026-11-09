@@ -4,7 +4,7 @@ A mixin of `Book` (sim/book.py), which owns the layout (sim/book_store.py). The 
 own: an agent's number (-1 for a name the book does not know) and a stock slot (-1 for none). They are valid until the book is
 loaded again."""
 import math
-from typing import Sequence, Tuple
+from typing import Dict, Sequence, Tuple
 
 import numpy
 
@@ -34,6 +34,10 @@ class BookBatch:
     def balances_of(self, agents: Sequence[AgentId], currency: CurrencyId) -> numpy.ndarray:
         """Each agent's balance in the currency (zero for one the book has never seen)."""
         return self.balances_at(self.rows_of(agents), currency)
+
+    def balance_by_agent(self, agents: Sequence[AgentId], currency: CurrencyId) -> Dict[AgentId, float]:
+        """`balances_of` as a dict by agent name (plain floats), for a caller that looks the figures up by name afterwards."""
+        return dict(zip(agents, self.balances_of(agents, currency).tolist()))
 
     def balances_at(self, rows: numpy.ndarray, currency: CurrencyId) -> numpy.ndarray:
         """Balances by agent number (numbers of -1 read zero)."""

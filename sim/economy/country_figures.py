@@ -267,7 +267,7 @@ def money_held(economy, country: Optional[str]) -> float:
     money = economy.setup.currency_id
     holders = [cohort.agent_id for cohort in record.cohorts.values() if cohort.tile in tiles]
     holders += record.producers.ids_on_tiles(tiles.__contains__)
-    return math.fsum(record.book.balance(holder, money) for holder in holders)
+    return math.fsum(record.book.balances_of(holders, money).tolist())
 
 
 def trade_book(economy, country: Optional[str]) -> Dict[str, Dict[str, float]]:

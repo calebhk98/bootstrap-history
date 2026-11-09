@@ -21,7 +21,7 @@ MINT_PRIORITY = -1         # served before every other buyer: it pays up to the 
 
 def stock_by_tile(book, metal) -> Dict[str, float]:
     """The metal the mint holds, by tile."""
-    return {tile: quantity for tile, quantity in book.holdings(EDGE_MINT)["goods"].get(metal, {}).items()
+    return {tile: quantity for tile, quantity in book.goods_held(EDGE_MINT).get(metal, {}).items()
             if quantity > 0.0}
 
 

@@ -19,4 +19,5 @@ def on_home_tile(setup, tile: str, partners: Optional[bool] = None) -> bool:
 def home_cohorts(setup, record) -> list:
     """The cohorts living on home tiles."""
     partners = has_partners(setup)
-    return [cohort for cohort in record.cohorts.values() if on_home_tile(setup, cohort.tile, partners)]
+    home_tiles = {tile for tile in {cohort.tile for cohort in record.cohorts.values()} if on_home_tile(setup, tile, partners)}
+    return [cohort for cohort in record.cohorts.values() if cohort.tile in home_tiles]

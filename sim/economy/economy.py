@@ -219,7 +219,8 @@ class Economy:
         held_placed = bondage_hours.place_held(
             record.unfree.bonded_held, lambda area, trade: people_by_trade(record.labour.workforce, area).get(trade, 0.0), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
-        keep = bondage_hours.payable_keep(held_placed.keep, lambda employer: record.book.balance(employer, money))
+        keep = bondage_hours.payable_keep(held_placed.keep, record.book.balance_by_agent(
+            list(dict.fromkeys(held_placed.keep.employers)), money).get)
         bondage_keep.post_keep(record.book, ledger, keep, money)
         context = dataclasses.replace(context, outlay_room=outlay_room.by_plan_table(     # after the keep is paid out of the purses
             plans, setup.state_agent, record.state_budget, lambda employer: record.book.balance(employer, money),
@@ -475,6 +476,7 @@ class Economy:
         rate = max(own_rate(view, money), 1e-9)
         rebuilt: Dict[str, float] = {}
         worn = record.credit.take_rebuilds()
+        cash_of = record.book.balance_by_agent(sorted(worn), money)
         for producer_id, runs in sorted(worn.items()):
             producer = record.producers.get(producer_id)
             if producer is None or runs <= 0.0:
@@ -484,7 +486,7 @@ class Economy:
             wages = producers.live_wages(producer, recipe, view)
             earning = unit_cost.return_on_capital(recipe, producers.expected_output_prices(producer, recipe, view),
                                                   inputs, wages)
-            cash = record.book.balance(producer_id, money)
+            cash = cash_of[producer_id]
             if earning is None or not earning > rate or cash <= 0.0:
                 continue
             self._bid_for_plant(producer, runs, cash, plant_worth_ratio(earning, rate, recipe.plant_life_years),

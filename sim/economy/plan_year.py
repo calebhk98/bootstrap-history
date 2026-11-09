@@ -76,10 +76,12 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
     names = LocalNames(matrices.goods.ids, columns.tiles.ids, arrays.area_index.areas.ids, matrices.trades.ids)
     blocks = [kernel_rows(columns, matrices, arrays.area_index, view, names, rows, ~idle, hours, ceilings, quantity, bid_price, budget, worth)]
     objects: Dict[int, producers.Plan] = {}
-    for position in np.flatnonzero(~is_plain).tolist():
+    unplain = np.flatnonzero(~is_plain).tolist()
+    unplain_cash = record.book.balances_of([ids[position] for position in unplain], money).tolist()
+    for position, held in zip(unplain, unplain_cash):
         producer_id = ids[position]
         producer = record.producers[producer_id]
-        objects[position] = plan = producers.plan(producer, recipes[producer.recipe_id], view, record.book.balance(producer_id, money))
+        objects[position] = plan = producers.plan(producer, recipes[producer.recipe_id], view, held)
         runs_all[position], wanted_all[position], line_all[position] = plan.runs, plan.wanted_runs, plan.wage_line
         blocks.append(object_rows(position, plan, names))
     bids, labour = merged(blocks)

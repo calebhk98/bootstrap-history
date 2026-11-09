@@ -6,6 +6,8 @@ QUICK_TOPIC = True
 
 import unittest
 
+import numpy
+
 from sim.economy import api as economy_api
 from sim.economy import country_figures
 from sim.economy.year_close import foreign_agents
@@ -80,7 +82,8 @@ class EachCountrysOwnFigures(unittest.TestCase):
     def test_the_money_a_country_holds_is_its_own_agents_share(self):
         economy = two_country_economy()
         balances = {"household:north_farms": 7.0, "household:north_port": 1.0, "household:town": 100.0, "producer:north_farm": 2.0}
-        economy.record.book = type("Book", (), {"balance": lambda self, agent, money: balances.get(agent, 0.0)})()
+        economy.record.book = type("Book", (), {"balance": lambda self, agent, money: balances.get(agent, 0.0),
+                                                "balances_of": lambda self, agents, money: numpy.array([balances.get(agent, 0.0) for agent in agents])})()
         self.assertEqual(country_figures.money_held(economy, NORTH), 10.0)
         self.assertEqual(country_figures.money_held(economy, HOME), 100.0)
         self.assertEqual(country_figures.money_held(economy, "nowhere"), 0.0)

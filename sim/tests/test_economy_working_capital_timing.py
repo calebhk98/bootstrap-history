@@ -5,11 +5,14 @@ credit market and the lenders' asking rates are recorders. No game."""
 QUICK_TOPIC = True
 
 import types
+
 import unittest
 
 from sim.contract_record import Contract
 from sim.economy.credit_record import CreditRecord
 from unittest import mock
+
+import numpy
 
 from sim.economy import lending, producers_working_capital
 from sim.economy.types import LoanRequest
@@ -25,7 +28,8 @@ def request(purpose, amount=ASKED, borrower="firm"):
 
 def record(requests, balances):
     """Two households whose cash targets are 200 each, holding `balances`; the book answers balances and records transfers."""
-    book = types.SimpleNamespace(balance=lambda agent, money: balances[agent], transfer_many=mock.Mock())
+    book = types.SimpleNamespace(balance=lambda agent, money: balances[agent], transfer_many=mock.Mock(),
+                                 balances_of=lambda agents, money: numpy.array([balances[agent] for agent in agents]))
     cohorts = {name: types.SimpleNamespace(cash_target=200.0, expected_inflation=0.0) for name in sorted(balances)}
     return types.SimpleNamespace(book=book, cohorts=cohorts, merchants={}, memory=types.SimpleNamespace(rates={MONEY: 0.05}), credit=CreditRecord(loan_requests=list(requests)))
 
