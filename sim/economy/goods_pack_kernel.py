@@ -3,7 +3,7 @@
 
 The sorts are stable argsorts by the last key first, which orders exactly as `numpy.lexsort` over the same keys does (ties keep
 their arrival order). The rate of an area is read from a table filled as areas are first asked (`rate_known`); an area not in it is
-reported in the last value so the caller can ask for it and call again."""
+reported (`missing_areas`, with its count) so the caller can ask for them and call again."""
 import numpy
 
 from sim.jit import njit
@@ -87,11 +87,12 @@ def _key_numbers(offers, offer_rows, offer_slots, offer_ptr):
 def pack_arrays(bids, offers, offer_rows, offer_position, bid_rows, bid_position, flags, markets, seller_rank, buyer_rank,
                 tile_rank, market_price, market_volume, market_area, unmet, rate_of_area, rate_known, minimum_share):
     """(positions, market_ids, offer_rows, offer_ptr, key_of, bid_rows, bid_ptr, floors, flexibles, budgets, references, exponents,
-    capped, tier_ptr, tier_values, maximums, size, rate, minimum, has_minimum, has_bids, missing_area) of the batched markets.
+    capped, tier_ptr, tier_values, maximums, size, rate, minimum, has_minimum, has_bids, missing_count, missing_areas) of the batched markets.
 
     `offer_rows`, `offer_position`, `bid_rows`, `bid_position` and `markets` are a good's rows (`good_rows`), `flags` the markets
     to batch; `market_price`, `market_volume`, `market_area` the goods markets' remembered price, usual volume and area, `unmet` the
-    units each market left unmet last year. `missing_area` is an area id whose lending rate is not in `rate_of_area` (-1: none)."""
+    units each market left unmet last year. `missing_areas` flags the areas whose lending rate is not in `rate_of_area` (`rate_known`
+    false) that a batched market is in, `missing_count` how many."""
     count = 0
     slot_of = numpy.full(len(flags), -1, dtype=numpy.int64)
     for place in range(len(flags)):
@@ -122,7 +123,8 @@ def pack_arrays(bids, offers, offer_rows, offer_position, bid_rows, bid_position
     size = numpy.empty(count)
     rate = numpy.empty(count)
     last_price = numpy.empty(count)
-    missing_area = -1
+    missing_areas = numpy.zeros(len(rate_known), dtype=numpy.bool_)
+    missing_count = 0
     for slot in range(count):
         market = market_ids[slot]
         last_price[slot] = market_price[market]
@@ -132,10 +134,12 @@ def pack_arrays(bids, offers, offer_rows, offer_position, bid_rows, bid_position
             rate[slot] = rate_of_area[area]
         else:
             rate[slot] = numpy.nan
-            missing_area = area
+            if not missing_areas[area]:
+                missing_areas[area] = True
+                missing_count += 1
     scale = price_scales(bid_ptr, table[:, 2].copy(), last_price)
     has_minimum = ~numpy.isnan(scale)
     minimum = numpy.where(has_minimum, minimum_share * numpy.where(has_minimum, scale, 0.0), 0.0)
     has_bids = (bid_ptr[1:] - bid_ptr[:-1]) > 0
     return (positions, market_ids, sold_rows, offer_ptr, key_of, batch_rows, bid_ptr, floors, flexibles, budgets, references,
-            exponents, capped, tier_ptr, tier_values, maximums, size, rate, minimum, has_minimum, has_bids, missing_area)
+            exponents, capped, tier_ptr, tier_values, maximums, size, rate, minimum, has_minimum, has_bids, missing_count, missing_areas)

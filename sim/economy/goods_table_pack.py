@@ -32,7 +32,7 @@ class BatchPack:
 
 def pack_batch(context, rows, flags: numpy.ndarray) -> BatchPack:
     """Everything the decision kernel reads for the good's batched markets: `goods_pack_kernel.pack_arrays` over the order tables.
-    The lending rate of an area it has not been asked for is asked now and the kernel runs again."""
+    The lending rate of an area it has not been asked for is asked now (all such areas together) and the kernel runs again."""
     orders = context.orders
     bids, offers = orders.tables()
     agent_rank, tile_rank = context.agent_rank(), context.tile_rank()
@@ -43,7 +43,8 @@ def pack_batch(context, rows, flags: numpy.ndarray) -> BatchPack:
         found = pack_arrays(bids, offers, rows.offer_rows, rows.offer_position, rows.bid_rows, rows.bid_position, flags, rows.markets,
                             agent_rank, agent_rank, tile_rank, goods_table.price, goods_table.volume_weight, goods_table.area, unmet,
                             rates, known, MINIMUM_PRICE_SHARE_OF_REFERENCE)
-        if found[-1] < 0:
+        if found[-2] == 0:
             break
-        context.note_area_rate(found[-1])
+        for area in numpy.flatnonzero(found[-1]).tolist():
+            context.note_area_rate(area)
     return BatchPack(*found[:7], found[7:16], *found[16:21])

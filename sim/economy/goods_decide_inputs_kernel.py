@@ -3,7 +3,8 @@
 
 A seller that is a producer of the good's recipe has a unit cost, an input share, an expected price, workshops and expected
 sales; any other seller (a household or a trader) has none of them. A tile's band multiple is read from a table filled as tiles
-are first asked (NaN: not yet); a tile not in it is reported in the last value so the caller can ask for it and call again."""
+are first asked (NaN: not yet); the tiles not in it are reported (`missing_tiles`, with their count) so the caller can ask for them and
+call again."""
 import numpy
 
 from sim.jit import njit
@@ -13,8 +14,8 @@ from sim.jit import njit
 def decide_inputs(offer_rows, offer_ptr, offers, producer_row_of_agent, recipe_row, workshops_of_producer, expected_sales_of_producer,
                   yield_factor, slot_of, good_column, cost, input_share, expected, outputs, band_multiple_of_tile, spoilage):
     """(reservation, quantity, is_producer, unit_cost, input_share, expected_price, workshops, is_multiple_workshop, expected_sales,
-    band_multiple, spoilage_of_market, missing_tile) for the batch's offers (`offer_rows`, cut by market with `offer_ptr`).
-    `missing_tile` is a tile id whose band multiple is NaN in `band_multiple_of_tile` (-1: none)."""
+    band_multiple, spoilage_of_market, missing_count, missing_tiles) for the batch's offers (`offer_rows`, cut by market with `offer_ptr`).
+    `missing_tiles` flags the tiles of the offers whose band multiple is NaN in `band_multiple_of_tile`, `missing_count` how many."""
     count = len(offer_rows)
     reservation = numpy.empty(count)
     quantity = numpy.empty(count)
@@ -26,14 +27,16 @@ def decide_inputs(offer_rows, offer_ptr, offers, producer_row_of_agent, recipe_r
     multiple_workshops = numpy.zeros(count, dtype=numpy.bool_)
     expected_sales = numpy.zeros(count)
     band = numpy.empty(count)
-    missing_tile = -1
+    missing_tiles = numpy.zeros(len(band_multiple_of_tile), dtype=numpy.bool_)
+    missing_count = 0
     for place in range(count):
         row = offer_rows[place]
         reservation[place] = offers.reservation_price[row]
         quantity[place] = offers.quantity[row]
         band[place] = band_multiple_of_tile[offers.tile[row]]
-        if numpy.isnan(band[place]):
-            missing_tile = offers.tile[row]
+        if numpy.isnan(band[place]) and not missing_tiles[offers.tile[row]]:
+            missing_tiles[offers.tile[row]] = True
+            missing_count += 1
         unit_cost[place] = numpy.inf
         expected_price[place] = numpy.nan
         producer = producer_row_of_agent[offers.seller[row]]
@@ -50,4 +53,4 @@ def decide_inputs(offer_rows, offer_ptr, offers, producer_row_of_agent, recipe_r
             share[place] = input_share[producer, slot]
             expected_price[place] = expected[producer, slot]
     return (reservation, quantity, is_producer, unit_cost, share, expected_price, workshops, multiple_workshops, expected_sales, band,
-            numpy.full(len(offer_ptr) - 1, spoilage), missing_tile)
+            numpy.full(len(offer_ptr) - 1, spoilage), missing_count, missing_tiles)

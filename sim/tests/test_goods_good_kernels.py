@@ -85,8 +85,8 @@ class PackArraysPacksTheBatch(unittest.TestCase):
             arguments = (bids, offers, rows[3], rows[4], rows[1], rows[2], flags, markets, ranks[0], ranks[1], ranks[2], price, volume,
                          market_area, unmet, rates)
             got = goods_pack_kernel.pack_arrays(*arguments, numpy.ones(4, dtype=numpy.bool_), 0.25)
-            self.assertEqual(got[-1], -1)
-            same(self, got[:-1], plain.plain_pack(*arguments, 0.25))
+            self.assertEqual(got[-2], 0)
+            same(self, got[:-2], plain.plain_pack(*arguments, 0.25))
 
     def test_an_area_without_a_rate_is_reported(self):
         generator = numpy.random.default_rng(1)
@@ -99,7 +99,7 @@ class PackArraysPacksTheBatch(unittest.TestCase):
         got = goods_pack_kernel.pack_arrays(bids, offers, rows[3], rows[4], rows[1], rows[2], flags, rows[0], numpy.arange(5, dtype=numpy.int64),
                                             numpy.arange(5, dtype=numpy.int64), numpy.arange(4, dtype=numpy.int64), numpy.ones(6),
                                             numpy.ones(6), market_area, numpy.zeros(6), numpy.zeros(4), known, 0.25)
-        self.assertEqual(got[-1], market_area[rows[0][0]])
+        self.assertEqual((got[-2], numpy.flatnonzero(got[-1]).tolist()), (1, [market_area[rows[0][0]]]))
         self.assertTrue(math.isnan(got[17][0]))
 
 
@@ -119,8 +119,8 @@ class DecideInputsGathersTheSellersFigures(unittest.TestCase):
                          generator.random((3, 5)), generator.random(4) + 1.0)
             offer_ptr = numpy.array([0, 1, len(offer_rows)], dtype=numpy.int64)
             got = goods_decide_inputs_kernel.decide_inputs(offer_rows, offer_ptr, *arguments[:1], *arguments[2:], 0.125)
-            self.assertEqual(got[-1], -1)
-            same(self, got[:-1], plain.plain_decide_inputs(offers, offer_rows, *arguments[2:], numpy.zeros(2), 0.125))
+            self.assertEqual(got[-2], 0)
+            same(self, got[:-2], plain.plain_decide_inputs(offers, offer_rows, *arguments[2:], numpy.zeros(2), 0.125))
 
     def test_a_tile_without_a_band_multiple_is_reported(self):
         _bids, offers = plain.random_tables(numpy.random.default_rng(2), 0, 3)
@@ -130,7 +130,7 @@ class DecideInputsGathersTheSellersFigures(unittest.TestCase):
             numpy.array([0, 1, 2], dtype=numpy.int64), numpy.array([0, 3], dtype=numpy.int64), offers, numpy.full(5, -1, dtype=numpy.int64),
             numpy.zeros(1, dtype=numpy.int64), numpy.ones(1), numpy.ones(1), numpy.ones(1), numpy.zeros((1, 1), dtype=numpy.int64), 0,
             numpy.ones((1, 1)), numpy.ones((1, 1)), numpy.ones((1, 1)), numpy.ones((1, 1)), multiples, 0.0)
-        self.assertEqual(got[-1], 1)
+        self.assertEqual((got[-2], numpy.flatnonzero(got[-1]).tolist()), (1, [1]))
 
 
 class ClearingColumnsFillsTheGoodsColumns(unittest.TestCase):
