@@ -228,13 +228,22 @@ def ships_held_stock(merchant: Merchant, held_stock: Mapping[Tuple[GoodId, TileI
     return any(held_stock.get(key, 0.0) > 0.0 for key in merchant.routes)
 
 
-def holding_offer_figures(merchant, view, area_map, held_stock, specs, interest_rate):
-    """(good, area, tile, quantity, reservation price) of each stock the merchant holds that has a price to expect, in (good, tile) order."""
+NOT_AT_HAND = object()
+
+
+def holding_offer_figures(merchant, view, area_map, held_stock, specs, interest_rate, expectation_of=None):
+    """(good, area, tile, quantity, reservation price) of each stock the merchant holds that has a price to expect, in (good, tile) order.
+    `expectation_of(good, tile)` is the merchant's own expected price of the stock's market when the caller has the figures at hand (None
+    for none, `NOT_AT_HAND` for a stock the caller has not got); without it each is read from the merchant."""
     for (good, tile), quantity in sorted(held_stock.items()):
         if quantity <= 0.0 or good not in specs:
             continue
         area = area_map.area_of(good, tile)
-        expected = expected_price(merchant, view, good, area)
+        expected = expectation_of(good, tile) if expectation_of is not None else NOT_AT_HAND
+        if expected is NOT_AT_HAND:
+            expected = merchant.expected_prices.get((good, area))
+        if expected is None:
+            expected = view.price(good, area)
         if expected is None:
             continue
         yield good, area, tile, quantity, inventory.holding_reservation(expected, interest_rate, specs[good].spoilage_per_year, 0.0)

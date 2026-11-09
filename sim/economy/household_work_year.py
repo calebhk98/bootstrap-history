@@ -96,6 +96,13 @@ def signature_of(record, tile: str, agent_id: str, hired_work_per_person: float,
     return (tile, hearth_of(record, tile, agent_id), hired_work_per_person, tuple(milled_grains) if buying else ())
 
 
+def eaten_signature(signature: tuple) -> tuple:
+    """The signature of the cohort a `buying` signature is of, as it is when it eats what it has milled itself (`buying` False): the same
+    tile, hearth and hired work, no grains left out of the food need."""
+    tile, hearth, hired_work_per_person, _milled_grains = signature
+    return tile, hearth, hired_work_per_person, ()
+
+
 _kept_baskets: Dict[tuple, object] = {}
 _kept_for_setup: list = [None]
 KEPT_BASKETS_LIMIT = 4096     # a bound on the memory, not a model figure: the hired work of past years leaves keys behind

@@ -116,20 +116,19 @@ def _expected_prices(store: ProducerStore, rows: np.ndarray, recipe_row: np.ndar
     held = table.price_count[rows]
     if not len(rows) or not held.max():
         return prices
-    names, held_goods = store.names["goods"].name_list, table.price_good[rows]
+    width = int(held.max())
+    names = store.names["goods"].name_list
+    producer, place = np.nonzero(np.arange(width)[None, :] < held[:, None])          # every held price: its producer and its place in the producer's list
+    numbers = table.price_good[rows, :width][producer, place]
     column_of = np.full(len(names) + 1, -1, dtype=np.int64)
-    places = np.arange(table.price_good.shape[1])[None, :] < held[:, None]
-    for number in np.nonzero(np.bincount(held_goods[places]))[0].tolist():          # only the goods some producer holds a price for
+    for number in np.nonzero(np.bincount(numbers))[0].tolist():          # only the goods some producer holds a price for
         if number < len(names):
             column_of[number] = matrices.goods.row.get(names[number], -1)
-    goods = np.where(places, column_of[held_goods], -1)          # the year's good column of each held price
-    values = table.price_value[rows]
-    slots = matrices.slot_goods[recipe_row]
-    match = (goods[:, :, None] == slots[:, None, :]) & (slots != NO_SLOT)[:, None, :]      # producer by held price by slot, all slots at once
-    has = match.any(axis=1)
-    first = match.argmax(axis=1)                  # the first held price that is the slot's good
-    chosen = np.take_along_axis(values, first, axis=1)
-    prices[has] = chosen[has]
+    slots = matrices.slot_goods[recipe_row][producer]
+    pair, slot = np.nonzero((column_of[numbers][:, None] == slots) & (slots != NO_SLOT))          # each held price with the slots of its producer that name its good
+    _keys, first = np.unique(producer[pair] * matrices.good_slots + slot, return_index=True)      # a slot takes the producer's first held price of its good
+    pair, slot = pair[first], slot[first]
+    prices[producer[pair], slot] = table.price_value[rows, :width][producer[pair], place[pair]]
     return prices
 
 

@@ -49,6 +49,15 @@ class _Stock:
         self.volumes = merchants_book.merchant_array(book, merchant.expected_volumes)
         self.expected = merchants_book.merchant_array(book, merchant.expected_prices)
 
+    def expectation_of(self, good: GoodId, tile: TileId) -> Optional[float]:
+        """The merchant's own expected price of the market a stock on `tile` sells in (None for none), from the slot array;
+        `merchants.NOT_AT_HAND` for a stock that holds no slot."""
+        slot = self.slot_of_stock.get((good, tile))
+        if slot is None:
+            return merchants.NOT_AT_HAND
+        found = float(self.expected[slot])
+        return None if math.isnan(found) else found
+
 
 def _rows(route, merchant, stock, interest_rate, only_held=None, area_map=None) -> merchants_book.MerchantRows:
     """The candidate rows; with `only_held` ({good: [(tile, quantity)]}) those of the goods held, from the source
@@ -151,7 +160,8 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
         offers = [offer for offer in merchants._holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
                   if (offer.good, offer.tile) not in merchant.routes]
     else:
-        for good, area, tile, quantity, reservation in merchants.holding_offer_figures(merchant, view, area_map, held_stock, specs, interest_rate):
+        for good, area, tile, quantity, reservation in merchants.holding_offer_figures(merchant, view, area_map, held_stock, specs, interest_rate,
+                                                                                       stock.expectation_of):
             if (good, tile) not in merchant.routes:
                 rows_out.offer(merchant.agent_id, good, area, tile, quantity, reservation)
         offers = []
