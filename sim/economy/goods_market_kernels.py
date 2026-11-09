@@ -133,7 +133,9 @@ def choice_weights(asks, stocked):
     if found:
         for offer in range(count):
             if stocked[offer]:
-                if cheapest > 0.0:
+                if offer > 0 and stocked[offer - 1] and asks[offer] == asks[offer - 1]:      # the same ask weighs the same
+                    weights[offer] = weights[offer - 1]
+                elif cheapest > 0.0:
                     weights[offer] = numpy.exp(-LOGIT_INTENSITY * numpy.log(asks[offer] / cheapest))
                 elif asks[offer] <= cheapest:
                     weights[offer] = 1.0
@@ -157,9 +159,11 @@ def requested_round_one(asks, quantities, floors, flexibles, budgets, references
     requested = 0.0
     for bid in range(len(floors)):
         total = weight_sum(running, asks, maximums[bid])
+        want = 0.0
         for offer in range(len(asks)):
-            want = want_at(asks[offer], floors[bid], flexibles[bid], budgets[bid], references[bid], exponents[bid],
-                           maximums[bid], capped)
+            if offer == 0 or asks[offer] != asks[offer - 1]:      # the same price wants the same
+                want = want_at(asks[offer], floors[bid], flexibles[bid], budgets[bid], references[bid], exponents[bid],
+                               maximums[bid], capped)
             requested += want * weights[offer] / total
     return requested
 
@@ -205,6 +209,9 @@ def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, ex
     offers, bids = len(asks), len(floors)
     wants = numpy.zeros((offers, bids))
     for offer in range(offers):
+        if offer > 0 and asks[offer] == asks[offer - 1]:      # the same price wants the same: copy the row
+            wants[offer, :] = wants[offer - 1, :]
+            continue
         for bid in range(bids):
             wants[offer, bid] = want_at(asks[offer], floors[bid], flexibles[bid], budgets[bid], references[bid],
                                         exponents[bid], maximums[bid], capped)

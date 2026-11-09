@@ -73,29 +73,30 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
     market_offered = numpy.zeros(markets)
     market_last_delivered = numpy.zeros(markets)
     market_cleared = numpy.zeros(markets, dtype=numpy.bool_)
-    log_bid_round = numpy.zeros(capacity, dtype=numpy.int64)
-    log_bid_market = numpy.zeros(capacity, dtype=numpy.int64)
-    log_bid_buyer = numpy.zeros(capacity, dtype=numpy.int64)
-    log_bid_flexible = numpy.zeros(capacity)
-    log_bid_reference = numpy.zeros(capacity)
-    log_bid_budget = numpy.zeros(capacity)
-    log_bid_maximum = numpy.zeros(capacity)
-    log_bid_adding = numpy.zeros(capacity, dtype=numpy.bool_)
-    log_clear_market = numpy.zeros(capacity, dtype=numpy.int64)
-    log_clear_round = numpy.zeros(capacity, dtype=numpy.int64)
-    log_clear_quantity = numpy.zeros(capacity)
-    log_clear_price = numpy.zeros(capacity)
-    log_clear_has_price = numpy.zeros(capacity, dtype=numpy.bool_)
-    log_clear_demand = numpy.zeros(capacity)
-    log_clear_offered = numpy.zeros(capacity)
-    log_clear_delivered = numpy.zeros(capacity)
-    log_pair_market = numpy.zeros(capacity, dtype=numpy.int64)
-    log_pair_buyer = numpy.zeros(capacity, dtype=numpy.int64)
-    log_pair_offer = numpy.zeros(capacity, dtype=numpy.int64)
-    log_pair_goods = numpy.zeros(capacity)
-    log_pair_money = numpy.zeros(capacity)
-    log_pair_import = numpy.zeros(capacity, dtype=numpy.int64)
-    log_pair_export = numpy.zeros(capacity, dtype=numpy.int64)
+    log_bid_round = numpy.empty(capacity, dtype=numpy.int64)
+    log_bid_market = numpy.empty(capacity, dtype=numpy.int64)
+    log_bid_buyer = numpy.empty(capacity, dtype=numpy.int64)
+    log_bid_flexible = numpy.empty(capacity)
+    log_bid_reference = numpy.empty(capacity)
+    log_bid_budget = numpy.empty(capacity)
+    log_bid_maximum = numpy.empty(capacity)
+    log_bid_adding = numpy.empty(capacity, dtype=numpy.bool_)
+    log_clear_market = numpy.empty(capacity, dtype=numpy.int64)
+    log_clear_round = numpy.empty(capacity, dtype=numpy.int64)
+    log_clear_quantity = numpy.empty(capacity)
+    log_clear_price = numpy.empty(capacity)
+    log_clear_has_price = numpy.empty(capacity, dtype=numpy.bool_)
+    log_clear_demand = numpy.empty(capacity)
+    log_clear_offered = numpy.empty(capacity)
+    log_clear_delivered = numpy.empty(capacity)
+    log_pair_market = numpy.empty(capacity, dtype=numpy.int64)
+    log_pair_buyer = numpy.empty(capacity, dtype=numpy.int64)
+    log_pair_offer = numpy.empty(capacity, dtype=numpy.int64)
+    log_pair_goods = numpy.empty(capacity)
+    log_pair_money = numpy.empty(capacity)
+    log_pair_import = numpy.empty(capacity, dtype=numpy.int64)
+    log_pair_export = numpy.empty(capacity, dtype=numpy.int64)
+    # the logs are read up to the counts returned, so they are not cleared
     bids_logged = 0
     clears_logged = 0
     pairs_logged = 0
@@ -265,6 +266,9 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
             log_clear_market[clears_logged] = market
             log_clear_round[clears_logged] = round_number
             log_clear_offered[clears_logged] = supply
+            log_clear_quantity[clears_logged] = 0.0
+            log_clear_demand[clears_logged] = 0.0
+            log_clear_has_price[clears_logged] = False
             if traded > 0.0:
                 log_clear_quantity[clears_logged] = traded
                 log_clear_price[clears_logged] = mean

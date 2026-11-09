@@ -219,7 +219,7 @@ CHANGED_BY_KERNEL = ("has_bid", "offer_quantity", "key_stock", "agent_cash")
 def run_rounds(packed):
     """The kernel's answer for `packed`, run again with room for more rows while its logs are full. The arrays the kernel
     changes are copied for each run; those of the last run replace them in `packed.arguments`."""
-    capacity = max(4096, 8 * len(packed.arguments["first_market"]))
+    capacity = max(4096, 64 * len(packed.arguments["first_market"]))
     while True:
         arguments = {name: array.copy() if name in CHANGED_BY_KERNEL else array
                      for name, array in packed.arguments.items()}

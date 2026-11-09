@@ -4,7 +4,8 @@ call give the sums and the entry order that noting them one at a time gave."""
 import numpy
 
 from sim.compiled_tables.growth import NO_ROOM, claim_row
-from sim.economy.year_ledger_kernels import add_pair, add_to_figure
+from sim.book_index import EMPTY
+from sim.economy.year_ledger_kernels import add_pair, add_to_figure, add_to_found_pair
 from sim.economy.year_ledger_tables import (DELIVERED, HOURS_SOLD, MONEY_OUT, PLANT_SPEND, SALES_IN, SALES_PURPOSE, WAGES_IN,
                                             WAGES_PURPOSE)
 from sim.jit import njit
@@ -36,13 +37,20 @@ def note_settlement_money(figures, counters, agents, paid, received, plant_bough
 def note_settlement_goods(received_target, sold_target, agents, got_goods, goods_in, goods_out, good, purpose_kind):
     """Goods of the sale rows (purpose kind SALES_PURPOSE), in order: an agent that got goods adds `goods_in` to `received`
     under the row's good, and one that gave some adds `goods_out` to `sold`."""
+    received_keys, received_amount, received_second = received_target.rows.key, received_target.rows.amount, received_target.rows.second_amount
+    sold_keys, sold_amount, sold_second = sold_target.rows.key, sold_target.rows.amount, sold_target.rows.second_amount
+    received_index, sold_index = received_target.hash_index, sold_target.hash_index
     for i in range(len(agents)):
         if purpose_kind[i] != SALES_PURPOSE:
             continue
         if got_goods[i]:
-            add_pair(received_target, agents[i], good[i], 0, goods_in[i], 0.0)
+            if add_to_found_pair(received_keys, received_amount, received_second, received_index, agents[i], good[i], 0,
+                                 goods_in[i], 0.0) == EMPTY:
+                add_pair(received_target, agents[i], good[i], 0, goods_in[i], 0.0)
         if goods_out[i] > 0.0:
-            add_pair(sold_target, agents[i], good[i], 0, goods_out[i], 0.0)
+            if add_to_found_pair(sold_keys, sold_amount, sold_second, sold_index, agents[i], good[i], 0, goods_out[i],
+                                 0.0) == EMPTY:
+                add_pair(sold_target, agents[i], good[i], 0, goods_out[i], 0.0)
 
 
 @njit
@@ -74,6 +82,11 @@ def note_labour_fills(figures, counters, hired_target, by_market_target, fill_ag
     employer paid and `paid_to_slot` what each worker was paid, indexed by `fill_slot` (one slot per distinct agent of a market)
     and used up as they cover fills. A buy adds to `hours_hired` by trade and to `hours_hired_by_market` (hours and money); a
     sell adds to the worker's `hours_sold`."""
+    hired_keys, hired_amount, hired_second, hired_index = (hired_target.rows.key, hired_target.rows.amount,
+                                                           hired_target.rows.second_amount, hired_target.hash_index)
+    market_keys, market_amount, market_second, market_index = (by_market_target.rows.key, by_market_target.rows.amount,
+                                                               by_market_target.rows.second_amount, by_market_target.hash_index)
+    sold_values, sold_orders = figures.hours_sold, figures.order_hours_sold
     for i in range(len(fill_agent)):
         agent = fill_agent[i]
         quantity = fill_quantity[i]
@@ -83,10 +96,14 @@ def note_labour_fills(figures, counters, hired_target, by_market_target, fill_ag
             else:
                 quantity = paid_hours(quantity, fill_wage[i], paid_to_slot, fill_slot[i])
         if fill_is_buy[i]:
-            add_pair(hired_target, agent, fill_trade[i], 0, quantity, 0.0)
-            add_pair(by_market_target, agent, fill_market[i], 0, quantity, quantity * fill_price[i])
+            if add_to_found_pair(hired_keys, hired_amount, hired_second, hired_index, agent, fill_trade[i], 0, quantity,
+                                 0.0) == EMPTY:
+                add_pair(hired_target, agent, fill_trade[i], 0, quantity, 0.0)
+            if add_to_found_pair(market_keys, market_amount, market_second, market_index, agent, fill_market[i], 0, quantity,
+                                 quantity * fill_price[i]) == EMPTY:
+                add_pair(by_market_target, agent, fill_market[i], 0, quantity, quantity * fill_price[i])
         else:
-            add_to_figure(figures.hours_sold, figures.order_hours_sold, counters, HOURS_SOLD, agent, quantity)
+            add_to_figure(sold_values, sold_orders, counters, HOURS_SOLD, agent, quantity)
 
 
 @njit

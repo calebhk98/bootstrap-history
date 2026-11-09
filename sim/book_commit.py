@@ -140,31 +140,37 @@ def record_transfers(transfers, first, last, money):
 
 
 @njit
-def record_move(goods, giver, receiver, good, quantity, purpose_code, purpose_reference):
-    """The records of one goods move: the good's gross total, the purpose flow, the edge giver's and receiver's goods."""
-    gross = gross_so_far(goods.goods.gross_moved[good], goods.goods.gross_seen[good])
-    goods.goods.gross_moved[good] = gross + quantity
-    goods.goods.gross_seen[good] = 1
-    code = add_flow(goods.flows, goods.flow_index, good, purpose_code, purpose_reference, quantity)
-    if code != OK:
-        return code
-    if goods.agents.is_edge[giver] != 0:
-        code = record_edge_goods(goods.edge_goods, goods.edge_index, giver, good, quantity, quantity)
-        if code != OK:
-            return code
-    if goods.agents.is_edge[receiver] != 0:
-        return record_edge_goods(goods.edge_goods, goods.edge_index, receiver, good, quantity, -quantity)
-    return OK
-
-
-@njit
 def record_moves(moves, first, last, goods):
-    """record_move for goods-move postings first .. last - 1 in order. OK or TABLE_FULL."""
+    """The records of goods-move postings first .. last - 1, in order: the good's gross total, the purpose flow, the edge giver's
+    and receiver's goods. OK or TABLE_FULL. The columns are held in hand and a table is passed on whole only to make a row: a kernel
+    that passes a table to a call for each posting copies and counts every column each time."""
+    gross_moved, gross_seen = goods.goods.gross_moved, goods.goods.gross_seen
+    flow_keys, flow_quantity = goods.flows.key, goods.flows.quantity
+    flow_index, is_edge = goods.flow_index, goods.agents.is_edge
+    edge_keys, edge_volume, edge_net = goods.edge_goods.key, goods.edge_goods.volume, goods.edge_goods.net
+    edge_index = goods.edge_index
     for row in range(first, last):
-        code = record_move(goods, moves.giver[row], moves.receiver[row], moves.good[row], moves.quantity[row],
-                           moves.purpose_code[row], moves.purpose_reference[row])
-        if code != OK:
-            return code
+        giver, receiver, good, quantity = moves.giver[row], moves.receiver[row], moves.good[row], moves.quantity[row]
+        gross = gross_so_far(gross_moved[good], gross_seen[good])
+        gross_moved[good] = gross + quantity
+        gross_seen[good] = 1
+        flow = index_find(flow_keys, flow_index, pack_key(good, moves.purpose_code[row], moves.purpose_reference[row]))
+        if flow == EMPTY:
+            code = add_flow(goods.flows, flow_index, good, moves.purpose_code[row], moves.purpose_reference[row], quantity)
+            if code != OK:
+                return code
+        else:
+            flow_quantity[flow] += quantity
+        for edge_agent, edge_net_delta in ((giver, quantity), (receiver, -quantity)):
+            if is_edge[edge_agent] != 0:
+                edge = index_find(edge_keys, edge_index, pack_key(edge_agent, good))
+                if edge == EMPTY:
+                    code = record_edge_goods(goods.edge_goods, edge_index, edge_agent, good, quantity, edge_net_delta)
+                    if code != OK:
+                        return code
+                else:
+                    edge_volume[edge] += quantity
+                    edge_net[edge] += edge_net_delta
     return OK
 
 

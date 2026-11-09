@@ -17,7 +17,7 @@ KERNEL = {"error_model": "numpy"}
 FALLBACK = 1                    # flags[0] once a figure left the range these kernels reproduce
 
 
-@njit(**KERNEL)
+@njit(inline="always", **KERNEL)
 def factor_at(price, reference, exponent, flags):
     """The power of the price ratio one schedule group uses. A power the Python raises on (a zero base to a negative power) flags
     the fallback; an overflow is infinity, as the Python's fallback also makes it."""
@@ -27,7 +27,7 @@ def factor_at(price, reference, exponent, flags):
     return base ** exponent
 
 
-@njit(**KERNEL)
+@njit(inline="always", **KERNEL)
 def wanted_by(floor, flexible, budget, factor, price):
     """One funded bid's quantity: its schedule capped by what its budget buys."""
     cap = budget / price
@@ -35,7 +35,7 @@ def wanted_by(floor, flexible, budget, factor, price):
     return cap if cap < want else want
 
 
-@njit(**KERNEL)
+@njit(inline="always", **KERNEL)
 def free_total(demand, flags):
     """Total wanted at a price of zero or below: every funded bid's floor plus flexible units (a budget cap cannot bind on a free
     good), added exactly."""
@@ -47,7 +47,7 @@ def free_total(demand, flags):
     return exact_sum(wanted, count)
 
 
-@njit(**KERNEL)
+@njit(inline="always", **KERNEL)
 def capped_total(price, demand, flags):
     """Total wanted at a positive price when some bids have ceilings: the funded bids whose ceiling is not below the price, added
     exactly (so row order is free)."""
@@ -65,7 +65,7 @@ def capped_total(price, demand, flags):
     return exact_sum(wanted, used)
 
 
-@njit(**KERNEL)
+@njit(inline="always", **KERNEL)
 def plain_total(price, demand, flags):
     """Total wanted at a positive price when no bid has a ceiling: each group's quantities added with `sum`, in clearing order, and
     the groups' sums added one after another in first-appearance order."""
@@ -80,7 +80,7 @@ def plain_total(price, demand, flags):
     return total
 
 
-@njit(**KERNEL)
+@njit(inline="always", **KERNEL)
 def finite_sum(values, count, flags):
     """`sum(list(values[:count]))`, flagging the fallback for a figure that is not finite (in or out)."""
     total = python_sum(values, count)
@@ -92,7 +92,7 @@ def finite_sum(values, count, flags):
     return total
 
 
-@njit(**KERNEL)
+@njit(inline="always", **KERNEL)
 def total_at(price, demand, flags):
     """Total quantity the buyers want at a price (`DemandSchedule.total_at`)."""
     if price <= 0.0:
@@ -102,7 +102,7 @@ def total_at(price, demand, flags):
     return plain_total(price, demand, flags)
 
 
-@njit(**KERNEL)
+@njit(inline="always", **KERNEL)
 def uncapped_at(price, demand, flags):
     """Demand ignoring budgets, one step per distinct schedule (`DemandSchedule.uncapped_at`): never below `total_at`."""
     groups = len(demand.group_reference)
