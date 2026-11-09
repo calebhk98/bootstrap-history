@@ -58,9 +58,9 @@ class PlantBidCeilingTests(unittest.TestCase):
         view = pytypes.SimpleNamespace(interest_rate=lambda money: rate, area_of=lambda good, tile: "area",
                                        price=lambda good, area: 1.0)
         order_book = {}
-        with mock.patch.object(producers, "live_input_prices", return_value={}), \
-                mock.patch.object(producers, "live_wages", return_value={}), \
-                mock.patch.object(producers, "expected_output_prices", return_value={}), \
+        with mock.patch.object(producers, "live_input_prices_at", return_value={}), \
+                mock.patch.object(producers, "live_wages_at", return_value={}), \
+                mock.patch.object(producers, "expected_output_prices_at", return_value={}), \
                 mock.patch.object(unit_cost, "return_on_capital", return_value=0.5):
             rebuilding._rebuild_worn_plant(view, order_book)
         return order_book[("iron", "area")][0][0].maximum_price

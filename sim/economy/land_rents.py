@@ -2,6 +2,7 @@
 from typing import Dict, Iterable, Mapping
 
 from . import titles
+from .producer_blocks import tiles_of
 from .types import AgentId, TileId, Transfer
 
 
@@ -14,8 +15,8 @@ def rent_paid_by_tile(record) -> Dict[TileId, float]:
 def booked_by_tile(postings: Iterable[Transfer], producers: Mapping[AgentId, object]) -> Dict[TileId, float]:
     """The rent postings of producers summed by the producer's tile; a posting from an agent that is not a producer is left out."""
     paid: Dict[TileId, float] = {}
-    for posting in postings:
-        tile = producers.tile_of(posting.payer)
+    postings = list(postings)
+    for posting, tile in zip(postings, tiles_of(producers, [posting.payer for posting in postings])):
         if tile is not None and posting.amount > 0.0:
             paid[tile] = paid.get(tile, 0.0) + posting.amount
     return dict(sorted(paid.items()))

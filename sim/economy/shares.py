@@ -60,10 +60,11 @@ def whole_value(capital_markets, producer_id: AgentId, rate: float, rate_floor: 
 
 def prune(record) -> None:
     """Drop the shares of producers that have closed."""
-    for producer_id in [each for each in record.capital_markets.shares if each not in record.producers]:
+    open_ids = set(record.producers)
+    for producer_id in [each for each in record.capital_markets.shares if each not in open_ids]:
         del record.capital_markets.shares[producer_id]
         record.capital_markets.last_dividends.pop(producer_id, None)
-    for producer_id in [each for each in record.capital_markets.last_dividends if each not in record.producers]:
+    for producer_id in [each for each in record.capital_markets.last_dividends if each not in open_ids]:
         del record.capital_markets.last_dividends[producer_id]
 
 

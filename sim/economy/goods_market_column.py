@@ -37,6 +37,12 @@ class MarketColumn(MarketFigures):
         names = self.named()[0]
         return iter(sorted(names, key=lambda name: name.replace(KEY_SEPARATOR, "\x00")))
 
+    def items(self) -> list:
+        """[(market name, figure)] in (good, area) order, read from the column in one pass."""
+        names, figures = self.named()
+        ordered = sorted(zip(names, figures), key=lambda pair: pair[0].replace(KEY_SEPARATOR, "\x00"))
+        return [(name, int(figure) if self.integer else figure) for name, figure in ordered]
+
     def get(self, key, default=None):
         figure = super().get(key, default)
         return int(figure) if self.integer and figure is not default and figure is not None else figure

@@ -8,6 +8,7 @@ year's runs (`pooled(recipe_id, trade)` is the crews' pooled practice). A row wh
 import numpy as np
 
 from . import practice
+from .producer_blocks import crews_of
 from .producer_rows import FLOAT_BIT
 from .producer_store import ProducerStore
 
@@ -83,9 +84,8 @@ def _write_crews(store: ProducerStore, columns, rows: np.ndarray, answer, source
     """A crew that has practised carries the year's runs (`practice.crew_runs_after_year`), for the producers that have a crew."""
     crewed = np.nonzero(store.table.crew_count[rows] > 0)[0]
     recipe_names = store.names["recipes"].name_list
-    for place in crewed.tolist():
+    for place, crew in zip(crewed.tolist(), crews_of(store, rows[crewed])):
         row, position = int(rows[place]), int(source[place])
-        crew = store.crew_of(row)
         recipe_id = recipe_names[store.table.recipe[row]]
         runs_now = float(answer.new_last_runs[position])
         store.write_crew(row, practice.crew_runs_after_year(
