@@ -68,7 +68,22 @@ def declared_signatures():
     signatures.update(household_offer_signatures(types))
     signatures.update(stability_signatures(types))
     signatures.update(government_signatures(types))
+    signatures.update(dispatch_signatures(types))
     return signatures
+
+
+def dispatch_signatures(types):
+    """The kernel that reads the merchants' routes for the wear they call for of a fleet, which only a game whose carriers are a fleet reaches
+    (the dispatch kernel it shares helpers with compiles with the year), typed from the tables the boundary builds."""
+    from numba import typeof
+    from sim.economy.api import (DISPATCH_LEGS, DISPATCH_MERCHANTS, DISPATCH_PAIRS, DISPATCH_ROUTES, DispatchLegs, DispatchMerchants,
+                                 DispatchPairs, DispatchRoutes)
+    pairs = typeof(DISPATCH_PAIRS.new_table(DispatchPairs, 1, widths={"crew_key": 1, "crew_hours": 1, "wear_carrier": 1, "wear_units": 1, "dues_owed": 1}))
+    merchants = typeof(DISPATCH_MERCHANTS.new_table(DispatchMerchants, 1, widths={
+        name: 1 for name in ("market_wage", "hired_hours", "paid_wage", "fleet_capacity", "own_capacity", "fleet_hired", "fleet_hired_named")}))
+    return {"sim.economy.merchants_dispatch_kernel.wear_needed_all": [(
+        pairs, typeof(DISPATCH_ROUTES.new_table(DispatchRoutes, 1)), typeof(DISPATCH_LEGS.new_table(DispatchLegs, 1)), merchants,
+        types.Array(types.boolean, 1, "C"), types.float64)]}
 
 
 def government_signatures(types):

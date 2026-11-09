@@ -6,8 +6,8 @@ from . import carried_book, carriage_fleet_book, carriage_wear_batch, carriage_h
 from .market_memory import market_key
 from .inventory import held_stock
 from .national_prices import usual_volumes
-from .merchants_dispatch_answer import dispatch_all_merchants
-from .merchants_dispatch_pack import MerchantYear, YearHauls
+from .merchants_dispatch_answer import Dispatched
+from .merchants_dispatch_pack import MerchantYear, YearHauls, fit_fleet, pack, run, wear_needed
 from .year_ledger import YearLedger
 
 
@@ -36,18 +36,23 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
     record.book.move_many([move for merchant in ordered for move in merchants_transit.advance(merchant, setup.specs)])    # hauls on the road for years reach the tile or spoil
     lives = carriage_fleet_book.fleet_lives(setup) if wear is not None else {}
-    own_capacity, hired, lent = {}, {}, {}
-    if lives:     # a merchant carries no more than its fleet bears; idle fleets are hired out to those short of one
+    own_capacity, hired = {}, {}
+    if lives:
         carriage_wear_batch.settle_all(record.book, sorted(record.merchants), carrier_goods, {})     # the carriers each bought go to its carrier account
         for merchant in ordered:
             own_capacity[merchant.agent_id] = carriage_fleet_book.own_capacity(record.book, merchant.agent_id, lives)
-        needed = {merchant.agent_id: carriage_fleet_book.wear_needed(
-            merchant, held_stock(record.book, merchant.agent_id), setup.specs, wear, lives) for merchant in ordered}
-        hired, lent = carriage_fleet_book.share_idle(own_capacity, needed)
-    entries = _entries(setup, record, ledger, area_map, crew, ordered, own_capacity, hired, lives, wear)
+    entries = _entries(setup, record, ledger, area_map, crew, ordered)
     hauls = YearHauls(carriage, setup.specs, carriers.get, money, dues, None if wear is None else wear.units_per_tonne,
-                      None if wear is None else money_per_tonne, lent, prices)
-    answer = dispatch_all_merchants(entries, hauls)
+                      None if wear is None else money_per_tonne, {}, prices)
+    packed = pack(entries, hauls, sorted(lives))
+    if lives:     # a merchant carries no more than its fleet bears; idle fleets are hired out to those short of one
+        needed = {entry.merchant.agent_id: found for entry, found in zip(entries, wear_needed(packed))}
+        hired, hauls.lent = carriage_fleet_book.share_idle(own_capacity, needed)
+        for entry in entries:
+            entry.own, entry.hired = own_capacity[entry.merchant.agent_id], hired.get(entry.merchant.agent_id, {})
+            entry.fleet = carriage_fleet_book.limit_for(wear, entry.own, entry.hired)
+        fit_fleet(packed)
+    answer = Dispatched(*run(packed))
     worn: dict = {}     # the carrier units each merchant's shipments wore, settled for all of them after the loop
     shipping = []
     postings, fees, dues_paid, rents, moves = [], [], [], [], []
@@ -98,8 +103,8 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     record.carriage.set_carried(carried, carried_goods)
 
 
-def _entries(setup, record, ledger, area_map, crew, ordered, own_capacity, hired, lives, wear):
-    """Each merchant's year as `MerchantYear` (purse, stock, the crew hired for it, its fleet), in the order their purses move."""
+def _entries(setup, record, ledger, area_map, crew, ordered):
+    """Each merchant's year as `MerchantYear` (purse, stock, the crew hired for it), in the order their purses move."""
     money = setup.currency_id
     index = ledger.hours_hired_by_market if crew is not None else {}
     populated = {cohort.tile for cohort in record.cohorts.values()}
@@ -122,9 +127,7 @@ def _entries(setup, record, ledger, area_map, crew, ordered, own_capacity, hired
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
                                       _kept_by_key(lambda key, each=merchant: carriage_hours.crew_wage(setup, record, each, key, populated)),
                                       area_map.area_of)
-        own, borrowed = own_capacity.get(merchant.agent_id, {}), hired.get(merchant.agent_id, {})
-        fleet = carriage_fleet_book.limit_for(wear, own, borrowed) if lives else None
-        entries.append(MerchantYear(merchant, purse, held, True, hire, fleet, own, borrowed))
+        entries.append(MerchantYear(merchant, purse, held, True, hire))
     return entries
 
 

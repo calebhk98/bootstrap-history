@@ -613,9 +613,17 @@ row; the save still writes each merchant as before. On the table, `merchant_year
 histories, one array step for the figures) and `merchant_year.close_all` (`settle_profits`, exact sums) replace the per-merchant learning and
 close; `merchants_credit_batch.credit_requests` sizes every merchant's loan in one kernel (`commit_credit_all`) from rows searched together
 (`merchants_batch.search_arrays`) and stock by slot (`held_by_slot`); `carriage_wear_batch.settle_all` keeps and wears every merchant's carriers
-in two passes over the book. Still per merchant, with their inputs as Python objects: `merchants.dispatch` (the haul loop with crew, dues, fleet
-and purse limits, called from `merchants_dispatch.dispatch_merchants`), `merchants_plan.orders` (stock arrays, `routes` legs, `Bid` and `Offer`
-objects handed to `OrderRows`), `carriage_fleet_book.bids` and `wear_needed`. `python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year sim.economy.merchants_batch:prepare`.
+in two passes over the book. `merchants_dispatch.dispatch_merchants` dispatches every merchant of the year in one kernel call (`merchants_dispatch_settle_kernel.dispatch_all`) over
+four tables (`merchants_dispatch_tables`): pairs (a haul's fee, crew hours, carrier wear, dues and carrier money, once for each distinct source and
+destination), routes (what a merchant holds at a good and source tile), legs (a route's destinations) and merchants (purse, crew hired by key, fleet by
+carrier good). The kernel shares each route's stock over its legs, sizes the shipments, cuts them to the crew hired, the fleet's wear and the purse,
+pays the dues and the fee, wears the carriers and pays the rent of hired fleets, moving the purses in merchant order (a merchant paid rent by an
+earlier one dispatches with it). `merchants_dispatch_pack` is the edge that builds the tables once a year (and `wear_needed`, the same tables read by
+`merchants_dispatch_kernel.wear_needed_all` for `share_idle`); `merchants_dispatch_answer.Dispatched` reads the answer back as the `merchants.Dispatch`
+each merchant had, and the moves and transfers are posted to the book once. `merchants.dispatch` stays as the per-merchant reference the tests compare to.
+Still per merchant, with their inputs as Python objects: the reads that fill the tables (`inventory.held_stock`, `carriage_fleet_book.own_capacity`,
+`carriage_hours.engaged`, `merchants_transit.advance`), the writing back of the answer and the per-move ledger notes (`carried_book`, `flow_ledger`), then
+`merchants_plan.orders` (stock arrays, `routes` legs, `Bid` and `Offer` objects handed to `OrderRows`), `carriage_fleet_book.bids`. `python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year sim.economy.merchants_batch:prepare`.
 
 ## Cached views
 

@@ -13,6 +13,7 @@ from sim.unit_conversions import KILOGRAMS_PER_TONNE
 from . import merchants_dispatch_tables as tables
 from .carriage_fleet import FleetLimit
 from .merchants import PURSE_ROUNDING_MARGIN, CrewHire, Merchant
+from .merchants_dispatch_kernel import wear_needed_all
 from .merchants_dispatch_settle_kernel import dispatch_all
 
 
@@ -134,14 +135,14 @@ def _fill(table, **columns) -> None:
             getattr(table, name)[:len(values)] = values
 
 
-def pack(entries: Sequence[MerchantYear], hauls: YearHauls) -> Packed:
-    """The tables of the year's dispatch for the merchants `entries` (all the record's merchants, in the order their purses move)."""
+def pack(entries: Sequence[MerchantYear], hauls: YearHauls, fleet_goods: Sequence[str] = ()) -> Packed:
+    """The tables of the year's dispatch for the merchants `entries` (all the record's merchants, in the order their purses move);
+    `fleet_goods` are the carrier goods held as a fleet. The fleet each merchant has is fitted (`fit_fleet`) once it is known."""
     crew = next((entry.crew for entry in entries if entry.crew is not None and entry.dispatching), None)
     numbers, figures = _pair_figures(entries, hauls, crew)
     key_names = sorted({key for each in figures for key, _hours in each[2]})
     carrier_names = sorted({carrier for each in figures for carrier, _units in each[3]}
-                           | {good for entry in entries if entry.fleet is not None for good in entry.fleet.capacity}
-                           | {good for entry in entries for good in entry.hired})
+                           | set(fleet_goods))
     key_number = {name: place for place, name in enumerate(key_names)}
     carrier_number = {name: place for place, name in enumerate(carrier_names)}
     route_rows, leg_rows, leg_info, first_routes = _routes_and_legs(entries, hauls, numbers, figures)
@@ -153,16 +154,11 @@ def pack(entries: Sequence[MerchantYear], hauls: YearHauls) -> Packed:
         _fill(legs, **{name: [each[place] for each in leg_rows]})
     merchants = _merchant_table(entries, crew, first_routes, key_number, carrier_number, numbers, figures)
     count = len(carrier_names)
-    in_fleet = numpy.array([any(entry.fleet is not None and name in entry.fleet.capacity for entry in entries) for name in carrier_names],
-                           numpy.bool_)
-    row_of = {entry.merchant.agent_id: row for row, entry in enumerate(entries)}
+    in_fleet = numpy.array([name in fleet_goods for name in carrier_names], numpy.bool_)
     lent_share = numpy.zeros((count, len(entries)))
-    for good, lessors in hauls.lent.items():
-        for lessor, amount in lessors.items():
-            lent_share[carrier_number[good], row_of[lessor]] = amount
-    lent_total = numpy.array([math.fsum(hauls.lent.get(name, {}).values()) for name in carrier_names])
-    carrier_price = numpy.array([hauls.carrier_prices.get(name, math.nan) for name in carrier_names])
-    flags = numpy.array([crew is not None, hauls.wear_units is not None, any(entry.fleet is not None for entry in entries)], numpy.int64)
+    lent_total = numpy.zeros(count)
+    carrier_price = numpy.full(count, math.nan)
+    flags = numpy.array([crew is not None, hauls.wear_units is not None, len(fleet_goods) > 0], numpy.int64)
     holders = [tuple(holder for holder, _owed in each[4]) for each in figures]
     return Packed(entries, hauls, _pair_table(figures, key_number, carrier_number), routes, legs, merchants, flags, in_fleet, lent_share,
                   lent_total, carrier_price, key_names, carrier_names, holders, leg_info)
@@ -171,18 +167,11 @@ def pack(entries: Sequence[MerchantYear], hauls: YearHauls) -> Packed:
 def _merchant_table(entries, crew, first_routes, key_number, carrier_number, numbers, figures):
     keys, carriers = len(key_number), len(carrier_number)
     table = tables.new(tables.MERCHANTS, tables.DispatchMerchants, len(entries), market_wage=keys, hired_hours=keys, paid_wage=keys,
-                       fleet_capacity=carriers, own_capacity=carriers, fleet_hired=carriers, fleet_hired_named=carriers)
+                       fleet_capacity=carriers, own_capacity=carriers, fleet_hired=carriers, fleet_hired_named=carriers)  # fitted by fit_fleet
     table.paid_wage[:] = math.nan
     for row, entry in enumerate(entries):
         table.dispatching[row], table.cash[row] = entry.dispatching, entry.cash
         table.first_route[row], table.route_count[row] = first_routes[row]
-        if entry.fleet is not None:
-            for good, units in entry.fleet.capacity.items():
-                table.fleet_capacity[row, carrier_number[good]] = units
-        for good, units in entry.own.items():
-            table.own_capacity[row, carrier_number[good]] = units
-        for good, units in entry.hired.items():
-            table.fleet_hired[row, carrier_number[good]], table.fleet_hired_named[row, carrier_number[good]] = units, 1
         if entry.dispatching and entry.crew is not None:
             _crew_columns(table, row, entry, key_number, {key for pair in _pairs_of(entry) if pair in numbers
                                                           for key, _hours in figures[numbers[pair]][2]})
@@ -204,16 +193,49 @@ def _crew_columns(table, row: int, entry: MerchantYear, key_number, keys_used) -
         table.paid_wage[row, number] = math.nan if wage is None else wage
 
 
+def fit_fleet(packed: Packed) -> None:
+    """Fit each merchant's fleet (what its own and hired carriers bear), and the wear idle fleets lend and their price, into the tables."""
+    number = {name: place for place, name in enumerate(packed.carrier_names)}
+    entries, table = packed.entries, packed.merchants
+    for row, entry in enumerate(entries):
+        if entry.fleet is not None:
+            for good, units in entry.fleet.capacity.items():
+                table.fleet_capacity[row, number[good]] = units
+        for good, units in entry.own.items():
+            table.own_capacity[row, number[good]] = units
+        for good, units in entry.hired.items():
+            table.fleet_hired[row, number[good]], table.fleet_hired_named[row, number[good]] = units, 1
+    row_of = {entry.merchant.agent_id: row for row, entry in enumerate(entries)}
+    for good, lessors in packed.hauls.lent.items():
+        for lessor, amount in lessors.items():
+            packed.lent_share[number[good], row_of[lessor]] = amount
+    for good, place in number.items():
+        packed.lent_total[place] = math.fsum(packed.hauls.lent.get(good, {}).values())
+        packed.carrier_price[place] = packed.hauls.carrier_prices.get(good, math.nan)
+
+
+def wear_needed(packed: Packed) -> List[Dict[str, float]]:
+    """For each merchant, the wear a year of each fleet good that carrying the stock on its routes puts on it (`carriage_fleet_book.wear_needed`)."""
+    needed = wear_needed_all(packed.pairs, packed.routes, packed.legs, packed.merchants, packed.in_fleet, KILOGRAMS_PER_TONNE)
+    return [{name: float(needed[row, place]) for place, name in enumerate(packed.carrier_names) if packed.in_fleet[place] and needed[row, place] != 0.0}
+            for row in range(len(packed.entries))]
+
+
 def dispatch_year(entries: Sequence[MerchantYear], hauls: YearHauls):
-    """Dispatch every merchant of `entries` that carries, in one kernel call: (the packed tables, the leg results, the merchant results)."""
-    packed = pack(entries, hauls)
-    legs_table = packed.legs
-    leg_results = tables.new(tables.LEG_RESULTS, tables.DispatchLegResults, int(legs_table.row_count[0]),
+    """Pack the merchants `entries`, fit their fleets and dispatch every one that carries in one kernel call."""
+    packed = pack(entries, hauls, sorted({good for entry in entries if entry.fleet is not None for good in entry.fleet.capacity}))
+    fit_fleet(packed)
+    return run(packed)
+
+
+def run(packed: Packed):
+    """Dispatch every merchant of the packed tables that carries: (the packed tables, the leg results, the merchant results)."""
+    leg_results = tables.new(tables.LEG_RESULTS, tables.DispatchLegResults, int(packed.legs.row_count[0]),
                              dues_paid=packed.pairs.dues_owed.shape[1])
     keys, carriers = len(packed.key_names), len(packed.carrier_names)
-    results = tables.new(tables.MERCHANT_RESULTS, tables.DispatchMerchantResults, len(entries),
+    results = tables.new(tables.MERCHANT_RESULTS, tables.DispatchMerchantResults, len(packed.entries),
                          hours_wanted=keys, hours_wanted_named=keys, money_wanted=keys, money_wanted_named=keys,
-                         fleet_wanted=carriers, fleet_wanted_named=carriers, worn=carriers, worn_named=carriers, rent=len(entries))
+                         fleet_wanted=carriers, fleet_wanted_named=carriers, worn=carriers, worn_named=carriers, rent=len(packed.entries))
     dispatch_all(packed.pairs, packed.routes, packed.legs, packed.merchants, leg_results, results, packed.flags, packed.in_fleet,
                  packed.lent_share, packed.lent_total, packed.carrier_price, KILOGRAMS_PER_TONNE, PURSE_ROUNDING_MARGIN)
     return packed, leg_results, results

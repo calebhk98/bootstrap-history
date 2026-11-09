@@ -23,6 +23,8 @@ from .currency import currency_from_coin_standard
 from .economy import Economy
 from . import market_memory as market_memory_module
 from .market_memory import KEY_SEPARATOR, market_key
+from .merchants_dispatch_tables import (DispatchLegs, DispatchMerchants, DispatchPairs, DispatchRoutes, LEGS as DISPATCH_LEGS,      # the dispatch tables (kernel_signatures declares the kernels only a fleet year reaches)
+                                        MERCHANTS as DISPATCH_MERCHANTS, PAIRS as DISPATCH_PAIRS, ROUTES as DISPATCH_ROUTES)
 from .market_table_specs import GOODS_MARKETS, GoodsMarkets      # the goods market table's spec and type (kernel_signatures declares its kernels from them)
 from .priced_need_tables import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows      # the priced-need batch's specs and types (kernel_signatures declares its kernel from them)
 from . import entry_plan_steps, entry_plan_table      # entry's plan tables (kernel_signatures declares the plan kernels from them)

@@ -229,3 +229,25 @@ def carry_merchant(row, pairs, routes, legs, merchants, results_legs, shares, ou
             fee = max(0.0, min(carried * payout[leg], purse))
             purse -= fee
             results_legs.fee[leg] = fee
+
+
+@njit
+def wear_needed_all(pairs, routes, legs, merchants, in_fleet, kilograms_per_tonne):
+    """The wear a year each merchant's routes put on each fleet good if every route's stock were carried to every leg's destination
+    (`carriage_fleet_book.wear_needed`): [merchant row, carrier good]."""
+    needed = numpy.zeros((merchants.row_count[0], len(in_fleet)))
+    shares = numpy.zeros(len(legs.pair))
+    for row in range(merchants.row_count[0]):
+        first_route = merchants.first_route[row]
+        for route in range(first_route, first_route + merchants.route_count[row]):
+            split_route(routes, legs, route, shares)
+            for leg in range(routes.first_leg[route], routes.first_leg[route] + routes.leg_count[route]):
+                pair = legs.pair[leg]
+                if pair < 0 or shares[leg] <= 0.0:
+                    continue
+                tonnes = shares[leg] * routes.unit_mass_kg[route] / kilograms_per_tonne
+                for place in range(pairs.wear_count[pair]):
+                    carrier = pairs.wear_carrier[pair, place]
+                    if in_fleet[carrier]:
+                        needed[row, carrier] += tonnes * pairs.wear_units[pair, place]
+    return needed

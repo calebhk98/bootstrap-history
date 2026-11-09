@@ -3,9 +3,10 @@ gives one merchant at a time, for the same crew hired, fleet, dues, carrier mone
 
 QUICK_TOPIC = True
 
+import types
 import unittest
 
-from sim.economy import merchants
+from sim.economy import carriage_fleet_book, merchants, merchants_dispatch_pack
 from sim.economy.carriage_fleet import FleetLimit
 from sim.economy.merchants_dispatch_answer import dispatch_all_merchants
 from sim.economy.merchants_dispatch_pack import MerchantYear, YearHauls
@@ -95,6 +96,19 @@ class BatchGivesWhatOneMerchantGets(unittest.TestCase):
         hauls = YearHauls(carriage, SPECS_HERE, lambda tile: "carter", "coin", lambda _s, _d: {})
         answer = dispatch_all_merchants([MerchantYear(who, 10.0, {}, False)], hauls)
         self.assertEqual(answer.dispatch_of(0).moves, ())
+
+
+class WearNeededAsTheFleetBookGivesIt(unittest.TestCase):
+    def test_the_wear_the_routes_stock_calls_for(self):
+        carriage, old = routed()
+        _, new = routed()
+        held = {("salt", "a"): 10.0, ("brick", "a"): 3.0, ("feather", "a"): 400.0}
+        wear = types.SimpleNamespace(units_per_tonne=lambda _source, _destination: WEAR)
+        reference = carriage_fleet_book.wear_needed(old, held, SPECS_HERE, wear, [CART])
+        hauls = YearHauls(carriage, SPECS_HERE, lambda tile: "carter", "coin", lambda _s, _d: {}, wear_units=wear.units_per_tonne)
+        found = merchants_dispatch_pack.wear_needed(merchants_dispatch_pack.pack([MerchantYear(new, 5.0, held)], hauls, [CART]))
+        self.assertEqual(found, [reference])
+        self.assertTrue(reference)
 
 
 class RentsMovePursesInOrder(unittest.TestCase):
