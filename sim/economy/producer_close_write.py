@@ -9,7 +9,6 @@ import numpy as np
 
 from . import practice
 from .producer_blocks import crews_of
-from .producer_rows import FLOAT_BIT
 from .producer_store import ProducerStore
 
 
@@ -30,8 +29,6 @@ def write_close(store: ProducerStore, columns, answer, pooled) -> None:
     table.expected_sales[rows] = answer.new_expected_sales[source]
     table.last_runs[rows] = answer.new_last_runs[source]
     table.staffed_runs[rows] = answer.new_staffed[source]
-    written_bits = sum(FLOAT_BIT[name] for name in ("capacity_runs", "cash_target", "expected_sales", "last_runs", "staffed_runs"))
-    table.numpy_typed[rows] = table.numpy_typed[rows] & ~written_bits         # the answer's figures are Python floats, as `tolist` gave
     new_idle = answer.new_idle[source]
     table.idle_years[rows] = np.where(new_idle != 0, new_idle, table.idle_years[rows])
     _write_histories(store, rows, answer, source)

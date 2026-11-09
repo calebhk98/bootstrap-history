@@ -1,8 +1,8 @@
 """A producer's whole row read as a plain tuple, many rows in one block read, for the rules that read a producer's fields by name
 (`producers.plan`, `practice.recipe_for`) and are not yet kernels.
 
-`ProducerFields` has the field names of `Producer` and the values `ProducerStore.at` would hold for the same row (a numpy float where
-the field was written as one, `None` for a land cap or staffed runs that is absent), but nothing in the year loop builds a `Producer`."""
+`ProducerFields` has the field names of `Producer` and the values `ProducerStore.at` would hold for the same row (`None` for a land cap
+or staffed runs that is absent), but nothing in the year loop builds a `Producer`."""
 from typing import Iterable, List, NamedTuple, Optional
 
 import numpy as np

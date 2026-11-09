@@ -7,8 +7,7 @@ from typing import Dict, Mapping, Optional
 
 import numpy as np
 
-from .cohort_rows import FLOAT_BIT
-from .cohort_store import CohortStore, typed_flags
+from .cohort_store import CohortStore
 from .household_offer_kernels import sum_in_order_by_group
 
 
@@ -21,16 +20,14 @@ def total_by_tile(store: CohortStore, name: str, where: Optional[np.ndarray] = N
     return sum_in_order_by_group(np.ascontiguousarray(store.tile_numbers()), len(store.names["tiles"]), np.ascontiguousarray(values))
 
 
-def _per_tile(store: CohortStore, wanted: Mapping[str, float]):
-    """(the figure of each tile number named in `wanted`, NaN for a tile not named; whether it is a numpy float)."""
+def _per_tile(store: CohortStore, wanted: Mapping[str, float]) -> np.ndarray:
+    """The figure of each tile number named in `wanted`, NaN for a tile not named."""
     names = store.names["tiles"].name_list
     found = np.full(len(names), np.nan)
-    typed = np.zeros(len(names), dtype=np.bool_)
     for number, tile in enumerate(names):
         if tile in wanted:
             found[number] = wanted[tile]
-            typed[number] = isinstance(wanted[tile], np.floating)
-    return found, typed
+    return found
 
 
 def follow_population(store: CohortStore, people_by_tile: Mapping[str, float], working_by_tile: Mapping[str, float]) -> None:
@@ -42,8 +39,8 @@ def follow_population(store: CohortStore, people_by_tile: Mapping[str, float], w
     people, working = store.column("people"), store.column("working_people")
     people_now = total_by_tile(store, "people")[tile]
     working_now = total_by_tile(store, "working_people")[tile]
-    after_tile, after_typed = _per_tile(store, people_by_tile)
-    wanted_tile, wanted_typed = _per_tile(store, working_by_tile)
+    after_tile = _per_tile(store, people_by_tile)
+    wanted_tile = _per_tile(store, working_by_tile)
     after = np.where(np.isnan(after_tile[tile]), people_now, after_tile[tile])
     wanted = wanted_tile[tile]
     has_wanted = ~np.isnan(wanted)
@@ -58,16 +55,9 @@ def follow_population(store: CohortStore, people_by_tile: Mapping[str, float], w
     rows = np.nonzero(moved)[0]
     if not len(rows):
         return
-    kinds = store.table.numpy_typed[rows]
-    after_numpy = np.where(np.isnan(after_tile[tile[rows]]), (kinds & FLOAT_BIT["people"]) != 0, after_typed[tile[rows]])
-    people_numpy = ((kinds & FLOAT_BIT["people"]) != 0) | after_numpy
-    working_numpy = np.where(~has_wanted[rows], ((kinds & FLOAT_BIT["working_people"]) != 0) | after_numpy,
-                             np.where(working_now[rows] > 0.0, ((kinds & FLOAT_BIT["working_people"]) != 0) | wanted_typed[tile[rows]],
-                                      wanted_typed[tile[rows]] | ((kinds & FLOAT_BIT["people"]) != 0)))
     capped = np.minimum(new_working[rows], new_people[rows])
-    capped_numpy = np.where(new_people[rows] < new_working[rows], people_numpy, working_numpy)      # `min` hands back the one it chose
-    store.set_rows("people", rows, new_people[rows], typed=people_numpy)
-    store.set_rows("working_people", rows, capped, typed=capped_numpy)
+    store.set_rows("people", rows, new_people[rows])
+    store.set_rows("working_people", rows, capped)
 
 
 def hunger_by_tile(store: CohortStore, hunger_need: str) -> Dict[str, float]:
@@ -94,7 +84,6 @@ def apply_work_plans(store: CohortStore, plans: Mapping[str, tuple]) -> None:
     places = np.nonzero(changed)[0]
     if not len(places):
         return
-    store.set_rows("hired_work_per_person", rows[places], np.array([hired[each] for each in places.tolist()], dtype=np.float64),
-                   typed=typed_flags([hired[each] for each in places.tolist()]))
+    store.set_rows("hired_work_per_person", rows[places], np.array([hired[each] for each in places.tolist()], dtype=np.float64))
     store.write_milled(rows[places], [milled[each] for each in places.tolist()])
 

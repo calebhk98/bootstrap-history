@@ -68,11 +68,10 @@ class FollowingPopulation(unittest.TestCase):
         for each in ("household:t1:0", "household:t1:1"):
             self.assertLessEqual(store[each].working_people, store[each].people)
 
-    def test_a_numpy_count_makes_numpy_figures(self):
+    def test_a_numpy_count_makes_python_figures(self):
         store = _store()
         cohort_people.follow_population(store, {"t1": np.float64(80.0)}, {"t1": 8.0})
-        self.assertIsInstance(store["household:t1:0"].people, np.floating)
-        self.assertIs(type(store["household:t2:0"].people), float)
+        self.assertIs(type(store["household:t1:0"].people), float)
 
 
 class WorkPlans(unittest.TestCase):

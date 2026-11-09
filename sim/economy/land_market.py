@@ -263,12 +263,9 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
 
 
 def _write_land_figures(store, rows: np.ndarray, rents: List[float], caps: List[Optional[float]]) -> None:
-    """The rent a run pays and the cap the land grants (None: no cap) of the producers in `rows`, written as two column blocks; a figure
-    that is a numpy float stays one."""
-    producer_table.set_rows(store, "land_rent_per_run", rows, np.array(rents, dtype=np.float64),
-                            typed=np.array([isinstance(each, np.floating) for each in rents], dtype=np.bool_))
-    producer_table.set_rows(store, "land_run_cap", rows, np.array([np.nan if each is None else each for each in caps], dtype=np.float64),
-                            typed=np.array([isinstance(each, np.floating) for each in caps], dtype=np.bool_))
+    """The rent a run pays and the cap the land grants (None: no cap) of the producers in `rows`, written as two column blocks."""
+    producer_table.set_rows(store, "land_rent_per_run", rows, np.array(rents, dtype=np.float64))
+    producer_table.set_rows(store, "land_run_cap", rows, np.array([np.nan if each is None else each for each in caps], dtype=np.float64))
 
 
 def settle_year(setup, record, view, wanted_runs: Mapping[AgentId, float],

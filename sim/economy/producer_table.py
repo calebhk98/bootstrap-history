@@ -38,7 +38,6 @@ def set_column(producers: ProducerStore, name: str, producer_ids: Iterable[Agent
     producers.set_column(name, producer_ids, values)
 
 
-def set_rows(producers: ProducerStore, name: str, rows, values, typed=False) -> None:
-    """One scalar field of the table's rows takes the values (a block write for the rows of `ProducerStore.order`); `typed`: the
-    values are numpy floats (see `ProducerStore.set_rows`)."""
-    producers.set_rows(name, rows, values, typed=typed)
+def set_rows(producers: ProducerStore, name: str, rows, values) -> None:
+    """One scalar field of the table's rows takes the values (a block write for the rows of `ProducerStore.order`)."""
+    producers.set_rows(name, rows, values)

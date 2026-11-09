@@ -5,8 +5,6 @@ wanted, the wage line and the sums the outlay room and the land bids read, rows 
 Every producer is planned by the kernel, whatever its recipe (tool wear and fallbacks, zero entries) and whatever its crew's practice
 does to the recipe's hours. `write_bids` appends the input bids to the book of orders as rows. The stocks the kernel reads are one block
 read of the book (stock_block.py)."""
-from typing import Dict
-
 import numpy as np
 
 from . import producer_numbers, producers
@@ -37,30 +35,6 @@ def stocks_by_slot(record, columns, matrices, tools, rows) -> np.ndarray:
     return stock
 
 
-_simple: Dict[int, tuple] = {}      # id of the recipes mapping -> (mapping, recipe id -> whether the plain kernel planned it, size)
-
-
-def plain_recipes(recipes) -> Dict[str, bool]:
-    """Which recipes the kernel planned before it covered tool wear and fallbacks and zero entries: none of those, every entry positive."""
-    kept = _simple.get(id(recipes))
-    if kept is None or kept[0] is not recipes or kept[2] != len(recipes):
-        flags = {recipe_id: not recipe.tool_fallbacks and not recipe.tool_wear
-                 and all(quantity > 0.0 for quantity in recipe.inputs.values())
-                 and all(quantity > 0.0 for quantity in recipe.outputs.values())
-                 and all(quantity > 0.0 for quantity in recipe.labour_hours.values())
-                 for recipe_id, recipe in recipes.items()}
-        kept = _simple[id(recipes)] = (recipes, flags, len(recipes))
-    return kept[1]
-
-
-def python_summed(setup, columns, matrices) -> np.ndarray:
-    """The rows whose sums are added as `producers.plan` adds them (plan_sums.py): those it planned before the kernel did, a recipe the plain
-    kernel left out or a crew whose practice stretches the hours."""
-    flags = plain_recipes(setup.recipes)
-    plain_recipe = np.array([flags[recipe_id] for recipe_id in matrices.recipes.ids], dtype=bool)
-    return ~(plain_recipe[columns.recipe_row] & (columns.hours_scale == 1.0).all(axis=1))
-
-
 def plans_of(setup, record, view, arrays, money) -> PlanTable:
     """Every producer's plan, in sorted id order, as a `PlanTable` (see the module docstring)."""
     columns = arrays.producers.refresh(record.producers)
@@ -71,8 +45,7 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
     stock = stocks_by_slot(record, columns, matrices, tools, rows)
     (runs, wanted, line, hours, ceilings, bid_good, quantity, bid_price, budget, worth) = plan_rows(
         columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor, columns.land_rent_per_run, columns.land_run_cap,
-        columns.expected_sales, columns.last_runs, columns.staffed_runs, columns.idle_years, python_summed(setup, columns, matrices),
-        columns.expected_prices, cash, stock,
+        columns.expected_sales, columns.last_runs, columns.staffed_runs, columns.idle_years, columns.expected_prices, cash, stock,
         columns.hours_scale, tools, matrices.slot_goods, matrices.slot_trades, matrices.inputs, matrices.outputs, matrices.labour_hours,
         memory.price, memory.offered, memory.cleared, memory.wage, arrays.area_index.of_good_tile, producers.COST_SPREAD_WITHIN_PRODUCER,
         producers.OUTPUT_CHANGE_SHARE_PER_YEAR, producers.STOCK_CLEARING_YEARS, DEFAULT_MONTHS_OF_COVER)

@@ -555,14 +555,13 @@ The save is written from the columns in the old format (`ProducerStore.to_plain`
 that `compact` removes (`order`, `rows_of` and the saves compact), `seat_sorted` puts them in id order at the year boundary. Exits
 (`producer_exit.ExitBatch`), loan write-offs and loan requests stay Python, in producer order.
 
-**Cohorts are columns.** `record.cohorts` is a `CohortStore` (`cohort_store.py`; `cohort_rows.py` declares the columns). Each float field
-has a bit in `numpy_typed` saying it was written as a numpy float (the unmet and own-plan mappings keep a flag per figure), because
-CPython's `sum()` compensates only over exact Python floats; a block write says whether its values are numpy floats (`set_rows(..., typed=)`).
+**Cohorts are columns.** `record.cohorts` is a `CohortStore` (`cohort_store.py`; `cohort_rows.py` declares the columns). The float
+columns are plain float64: every reader hands back Python floats (`tolist`, `.item()`), whatever scalar type a writer gave.
 A `Cohort` is built only when something asks through the mapping (`store[id]`, `.values()`, `.items()`, `.get`) and is a snapshot kept until its
 row is written. The writers: `households_cohort.put_cohort`, `change_cohort`, `set_people`, `set_column`, `set_work_plans` and
 `rebase_price_level` (a plain mapping, a test's, still works through them); the close writes every figure in one block
 (`cohort_close_write.write_close`); `cohort_people.follow_population` rescales every tile's cohorts to demography's people in one block and
-`apply_work_plans` stores the household-work plans that differ. Block reads: `store.column(name)`, `floats` (typed as written), `order`,
+`apply_work_plans` stores the household-work plans that differ. Block reads: `store.column(name)`, `floats` (Python floats), `order`,
 `rows_on_tile`, `tiles_present`, `ids_on_tiles`, `exact_total`, `unmet_of(need)`, `milled_of`, `pairs_of`, and `figures(rows)`, the
 `CohortFigures` (id, tile, people, working people, last year's income, hired work, grains milled, optionally the own plan) that rules written over
 a cohort read without a `Cohort` being built. Totals by tile in table order (`cohort_people.total_by_tile`) use `sum_in_order_by_group`,
@@ -1003,12 +1002,10 @@ list lags the code.
   `goods_market.clear`, `market_quote`); `_tax_in_kind` builds `YearFacts` dictionaries (the tax rules, `taxes.assess`, take dictionaries); the
   watchers' buy fills are `Fill` objects made only for markets a watcher bought in; `GoodClearing.result` makes a `ClearingResult` for the mint and
   the watchers. `entry_year._traded_volume`, `country_figures` and `api.market_record` still read single keys of the goods record's columns.
-- **Python sums in the plan kernel.** `plan_kernel.plan_rows` plans every producer. The rows `producers.plan` planned before the kernel did
-  (`plan_year.python_summed`: tool wear and fallbacks, a zero entry, a crew whose practice stretches the hours) add each sum as it adds it
-  (a bill in the order the recipe's dict lists it, `sum` compensated, `math.fsum` exact: `plan_sums.py`, `exact_sum.py`) and equal it to the
-  bit (`test_plan_kernel_kinds`); the other rows keep the left-to-right sums they had, so the speed digests stay. Where the digests are recorded
-  again, `python_summed` becomes true for every row and the rest of the sums follow (`retire` in `plan_sums.py`). `_tax_in_kind` builds
-  `YearFacts` dictionaries for the producers on home tiles when a tax is paid in kind.
+- **Python sums in the plan kernel.** `plan_kernel.plan_rows` plans every producer, and every row adds each sum as `producers.plan` adds it
+  (a bill in the order the recipe's dict lists it, `sum` compensated, `math.fsum` exact: `plan_sums.py`, `exact_sum.py`), so the kernel equals
+  the reference rule to the bit on every row (`test_plan_kernel_kinds`). `_tax_in_kind` builds `YearFacts` dictionaries for the producers on
+  home tiles when a tax is paid in kind.
 - **The producer record readers.** A warm year builds no `Producer` (count them with `tools/measure/warm_year_cpu.py`, which wraps
   `ProducerStore._build` and `Producer.__new__`). The readers in the year loop read the store as blocks: `producer_blocks.py` (tiles,
   recipes, owners, crews, expected prices and scalar figures of many producers, `row_figures`), and `producer_rows_read.fields_of`, a whole

@@ -4,7 +4,7 @@ import unittest
 
 import numpy as np
 
-from sim.economy.cohort_store import CohortStore, typed_flags
+from sim.economy.cohort_store import CohortStore
 from sim.economy.households_cohort import Cohort
 
 QUICK_TOPIC = True
@@ -45,20 +45,15 @@ class StoreIsAMappingOfRecords(unittest.TestCase):
         store.set_fields(second.agent_id, share_wealth=4.0)
         self.assertEqual(store[second.agent_id].share_wealth, 4.0)
 
-    def test_a_numpy_float_reads_back_as_one_and_a_python_float_as_one(self):
+    def test_every_float_reads_back_as_a_python_float(self):
         first, _second = _cohorts()
         store = CohortStore({first.agent_id: first})
-        store.set_fields(first.agent_id, people=np.float64(5.0), working_people=6.0)
+        store.set_fields(first.agent_id, people=np.float64(5.0), working_people=6.0,
+                         unmet_floor_by_need={"hunger": np.float64(2.5), "warmth": 1.0})
         record = store[first.agent_id]
-        self.assertIsInstance(record.people, np.floating)
+        self.assertIs(type(record.people), float)
         self.assertIs(type(record.working_people), float)
-
-    def test_numpy_values_in_the_mappings_stay_numpy(self):
-        first, _second = _cohorts()
-        store = CohortStore({first.agent_id: first})
-        store.set_fields(first.agent_id, unmet_floor_by_need={"hunger": np.float64(2.5), "warmth": 1.0})
-        record = store[first.agent_id]
-        self.assertIsInstance(record.unmet_floor_by_need["hunger"], np.floating)
+        self.assertIs(type(record.unmet_floor_by_need["hunger"]), float)
         self.assertIs(type(record.unmet_floor_by_need["warmth"]), float)
 
     def test_the_mappings_and_the_grains_come_back_in_the_order_written(self):
@@ -138,17 +133,12 @@ class BlockReadsAndWrites(unittest.TestCase):
         self.assertEqual(store.tiles_present(), ["tile:b", "tile:a"])
         self.assertEqual(store.ids_on_tiles(lambda tile: tile == "tile:a"), ["household:a:0"])
 
-    def test_floats_hands_back_a_numpy_float_where_one_was_written(self):
+    def test_floats_hands_back_python_floats(self):
         first, second = _cohorts()
         store = CohortStore({first.agent_id: first, second.agent_id: second})
         store.set_fields(second.agent_id, people=np.float64(2.0))
         values = store.floats("people", np.array([0, 1]))
-        self.assertIs(type(values[0]), float)
-        self.assertIsInstance(values[1], np.floating)
-
-    def test_typed_flags_mark_only_numpy_floats(self):
-        self.assertEqual(typed_flags([1.0, np.float64(2.0), None]).tolist(), [False, True, False])
-        self.assertEqual(typed_flags([1.0, 2.0]).tolist(), [False, False])
+        self.assertEqual([type(each) for each in values], [float, float])
 
 
 if __name__ == "__main__":

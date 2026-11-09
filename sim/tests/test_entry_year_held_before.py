@@ -1,5 +1,5 @@
 """`entry_year._owner_and_crew_held` names, for the plans' producers the table holds, what `owner_at` and `crew_of` give; `ProducerStore.value`
-is the typed figure `floats` gives."""
+is the figure `floats` gives."""
 import unittest
 
 import numpy as np
@@ -34,8 +34,8 @@ class OwnerAndCrewHeld(unittest.TestCase):
         self.assertEqual(entry_year._owner_and_crew_held(_store(), []), {})
 
 
-class ValueIsTheTypedFigure(unittest.TestCase):
-    def test_value_equals_floats_with_the_same_type(self):
+class ValueIsTheFloatsFigure(unittest.TestCase):
+    def test_value_equals_floats(self):
         store = _store()
         for row in (0, 1):
             for name in ("capacity_runs", "yield_factor", "workshops", "last_runs"):

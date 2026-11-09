@@ -39,9 +39,9 @@ def working_cost_ratio(revenue, variable, spread):
 
 
 @njit(**KERNEL)
-def stock_runs(python_sums, sales, yield_factor, variable, made, stock, price, cover, clearing_years):
+def stock_runs(sales, yield_factor, variable, made, stock, price, cover, clearing_years):
     """producers.runs_for_stock over the recipe's slots: `made` the units a run makes of each slot's good (0 elsewhere),
-    `stock` held, `price` the expected output price (NaN where none); the sums are `math.fsum` when `python_sums`."""
+    `stock` held, `price` the expected output price (NaN where none); the sums are `math.fsum`."""
     if sales <= 0.0:
         return np.inf
     target = max(0.0, sales) * max(0.0, cover) / 12.0
@@ -57,7 +57,6 @@ def stock_runs(python_sums, sales, yield_factor, variable, made, stock, price, c
     counted = ~np.isnan(gap)
     piling = counted & (gap < 0.0)
     if piling.any():
-        total = 0.0
         paying = -1
         best = -np.inf
         terms = np.empty(slots)
@@ -65,13 +64,11 @@ def stock_runs(python_sums, sales, yield_factor, variable, made, stock, price, c
         for slot in range(slots):
             if made[slot] > 0.0 and not np.isnan(price[slot]):
                 value = made[slot] * price[slot]
-                total += value
                 terms[used] = value
                 used += 1
                 if value > best:
                     best, paying = value, slot
-        if python_sums:
-            total = exact_sum(terms, used)
+        total = exact_sum(terms, used)
         if paying < 0:
             for slot in range(slots):
                 if made[slot] > 0.0:
@@ -82,16 +79,12 @@ def stock_runs(python_sums, sales, yield_factor, variable, made, stock, price, c
                 value = made[slot] * price[slot] if not np.isnan(price[slot]) else np.nan
                 if np.isnan(value) or not value >= total - value:
                     counted[slot] = False
-        sells = 0.0
         used = 0
         for slot in range(slots):
             if made[slot] > 0.0 and not piling[slot] and not np.isnan(price[slot]):
-                sells += made[slot] * price[slot]
                 terms[used] = made[slot] * price[slot]
                 used += 1
-        if python_sums:
-            sells = exact_sum(terms, used)
-        sells *= yield_factor
+        sells = exact_sum(terms, used) * yield_factor
         if sells > 0.0 and sells >= variable:
             for slot in range(slots):
                 if piling[slot]:
@@ -104,12 +97,13 @@ def stock_runs(python_sums, sales, yield_factor, variable, made, stock, price, c
 
 
 @njit(**KERNEL)
-def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sales, last_runs, staffed, idle, python_sums, held_expected,
+def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sales, last_runs, staffed, idle, held_expected,
               cash, stock, hours_scale, tools, slot_goods, slot_trades, inputs, outputs, labour_hours, price, offered, cleared, wage,
               area_of, spread, change_share, clearing_years, cover):
     """(runs, wanted, wage line, labour hours, labour ceilings, bid good, bid quantity, bid price, bid budget, bid ceiling): the labour pair
     by row and trade slot (hours NaN where the trade is not bid for), the bids by row and need, in the order the plan makes them (the
-    good is -1 where the row has no such bid). A row with `python_sums` adds its sums as `producers.plan` does (plan_sums.py)."""
+    good is -1 where the row has no such bid).
+    The sums are added as `producers.plan` adds them (plan_sums.py)."""
     count, good_slots = held_expected.shape
     trade_slots = slot_trades.shape[1]
     bid_width = tools.bid_goods.shape[1]
@@ -128,7 +122,6 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
         if idle[row] > 0:
             continue
         recipe, tile = recipe_row[row], tile_row[row]
-        exact = python_sums[row]
         market[:], plan_price[:], expected_out[:], made[:] = np.nan, np.nan, np.nan, 0.0
         priced = True
         for slot in range(good_slots):
@@ -150,19 +143,19 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
                     priced = False
                 else:
                     plan_price[slot] = held_expected[row, slot] if not np.isnan(held_expected[row, slot]) else live
-        revenue = revenue_per_run(exact, recipe, slot_goods, outputs, expected_out, terms) * yield_factor[row]
-        input_cost = input_bill(exact, recipe, slot_goods, inputs, tools.input_order, plan_price)
+        revenue = revenue_per_run(recipe, slot_goods, outputs, expected_out, terms) * yield_factor[row]
+        input_cost = input_bill(recipe, slot_goods, inputs, tools.input_order, plan_price)
         labour_cost, total_hours, claimed_bill, hours_priced = hours_bill(
-            exact, row, recipe, tile, slot_trades, tools.hours_order, labour_hours, hours_scale, wage, hour_terms)
+            row, recipe, tile, slot_trades, tools.hours_order, labour_hours, hours_scale, wage, hour_terms)
         variable = input_cost + labour_cost + rent[row] if priced and hours_priced else np.inf
         if capacity[row] <= 0.0 or revenue <= 0.0 or not np.isfinite(variable):
             continue
-        market_cost = input_bill(exact, recipe, slot_goods, inputs, tools.input_order, market)
-        held_value = held_value_of(exact, row, recipe, slot_goods, inputs, tools.input_order, capacity[row], stock, market, terms)
+        market_cost = input_bill(recipe, slot_goods, inputs, tools.input_order, market)
+        held_value = held_value_of(row, recipe, slot_goods, inputs, tools.input_order, capacity[row], stock, market, terms)
         paid_now = market_cost + labour_cost
         affordable = (max(cash[row], 0.0) + held_value) / paid_now if paid_now > 0.0 else capacity[row]
         chosen = min(capacity[row] * share_working(revenue, variable, spread),
-                     stock_runs(exact, sales[row], yield_factor[row], variable, made, stock[row], expected_out, cover, clearing_years))
+                     stock_runs(sales[row], yield_factor[row], variable, made, stock[row], expected_out, cover, clearing_years))
         if last_runs[row] >= 0.0:
             step = change_share * capacity[row]
             anchor = last_runs[row]
@@ -191,7 +184,7 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
         for place in range(good_slots, bid_width):          # the fallback goods that are not inputs
             good = tools.bid_goods[recipe, place]
             market[place] = price_in(price, area_of, good, tile) if good >= 0 else np.nan
-        place_bids(exact, row, recipe, tile, runs, max(cash[row], 0.0) - runs * labour_cost, revenue / ratio - live_variable, live_variable,
+        place_bids(row, recipe, tile, runs, max(cash[row], 0.0) - runs * labour_cost, revenue / ratio - live_variable, live_variable,
                    stock, market, slot_goods, inputs, tools, labour_hours, hours_scale, wage, good_out, quantity_out, price_out, budget_out,
                    worth_out, wanted_at, placed, order_place, terms)
     return runs_out, wanted_out, line_out, hours_out, ceiling_out, good_out, quantity_out, price_out, budget_out, worth_out

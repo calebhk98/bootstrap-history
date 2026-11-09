@@ -64,7 +64,7 @@ def crews_of(store, rows: Iterable[int]) -> List[Dict[str, float]]:
 
 
 def figures_of(store, name: str, rows: Iterable[int]) -> list:
-    """A scalar field of the producer in each row, typed as `ProducerStore.floats` says (a numpy float where it was written as one)."""
+    """A scalar field of the producer in each row, as Python numbers."""
     return store.floats(name, np.fromiter(rows, dtype=np.int64))
 
 

@@ -19,8 +19,7 @@ import numpy as np
 from sim.compiled_tables.growth import reserve_rows
 from sim.compiled_tables.ids import IdTable
 
-from .producer_rows import (FLOAT_BIT, NAME_COLUMNS, OPTIONAL_FLOATS, PRODUCER_ROWS_SPEC, SCALAR_FLOATS, SCALAR_INTS, WIDE_COLUMNS,
-                            ProducerRows)
+from .producer_rows import (NAME_COLUMNS, OPTIONAL_FLOATS, PRODUCER_ROWS_SPEC, SCALAR_FLOATS, SCALAR_INTS, WIDE_COLUMNS, ProducerRows)
 from .producer_blocks import crews_of, owners_at
 from .producers import Producer
 
@@ -164,7 +163,6 @@ class ProducerStore(MutableMapping):
             getattr(table, name)[row] = getattr(producer, name)
         table.land_run_cap[row] = np.nan if producer.land_run_cap is None else producer.land_run_cap
         table.staffed_runs[row] = np.nan if producer.staffed_runs is None else producer.staffed_runs
-        table.numpy_typed[row] = sum(bit for name, bit in FLOAT_BIT.items() if isinstance(getattr(producer, name), np.floating))
         for column, count, values in (("earnings_history", "earnings_count", producer.net_earnings_history),
                                       ("revenue_history", "revenue_count", producer.revenue_history)):
             if len(values) > getattr(self.table, column).shape[1]:
@@ -212,9 +210,6 @@ class ProducerStore(MutableMapping):
         for name, value in (("capacity_runs", capacity_runs), ("expected_sales", expected_sales), ("yield_factor", yield_factor),
                             ("workshops", workshops), ("last_runs", -1.0), ("land_run_cap", np.nan), ("staffed_runs", np.nan)):
             getattr(table, name)[row] = value
-        table.numpy_typed[row] = sum(FLOAT_BIT[name] for name, value in (
-            ("capacity_runs", capacity_runs), ("expected_sales", expected_sales), ("yield_factor", yield_factor))
-            if isinstance(value, np.floating))
         self._write_pairs(row, "crew_trade", "crew_units", "crew_count", "trades", crew)
         self._objects[row] = None
         self.version += 1
@@ -281,9 +276,6 @@ class ProducerStore(MutableMapping):
         row = self.row_of[producer_id]
         for name, value in changes.items():
             self._scalar(name)[row] = np.nan if value is None else value
-            bit = FLOAT_BIT.get(name)
-            if bit:
-                self.table.numpy_typed[row] = (int(self.table.numpy_typed[row]) & ~bit) | (bit if isinstance(value, np.floating) else 0)
         self._objects[row] = None
         self.version += 1
 
@@ -291,33 +283,20 @@ class ProducerStore(MutableMapping):
         """One scalar field of the producers named takes the values (an id the table does not hold is skipped)."""
         pairs = [(self.row_of[each], value) for each, value in zip(producer_ids, values) if each in self.row_of]
         if pairs:
-            self.set_rows(name, np.array([row for row, _value in pairs], dtype=np.int64), np.array([value for _row, value in pairs]),
-                          typed=np.array([isinstance(value, np.floating) for _row, value in pairs], dtype=np.bool_))
+            self.set_rows(name, np.array([row for row, _value in pairs], dtype=np.int64), np.array([value for _row, value in pairs]))
 
-    def set_rows(self, name: str, rows: np.ndarray, values: np.ndarray, typed=False) -> None:
-        """One scalar field of the rows takes the values (NaN where the field is optional and the value is NaN: none). `typed` (a flag
-        or one per row) says the values are numpy floats, which a `Producer` built from the rows hands back as such; a float field written
-        without it is a Python float."""
+    def set_rows(self, name: str, rows: np.ndarray, values: np.ndarray) -> None:
+        """One scalar field of the rows takes the values (NaN where the field is optional and the value is NaN: none)."""
         self._scalar(name)[rows] = values
-        bit = FLOAT_BIT.get(name)
-        if bit:
-            self.table.numpy_typed[rows] = (self.table.numpy_typed[rows] & ~bit) | np.where(typed, bit, 0)
         self.written(rows)
 
     def floats(self, name: str, rows: np.ndarray) -> list:
-        """The float field of the rows as a list: a numpy float where the value was written as one, else a Python float."""
-        column = self._scalar(name)
-        values = column[rows].tolist()
-        bit = FLOAT_BIT.get(name, 0)
-        if bit:
-            for place in np.nonzero(self.table.numpy_typed[rows] & bit)[0].tolist():
-                values[place] = column[rows[place]]
-        return values
+        """The scalar field of the rows as a list of Python numbers."""
+        return self._scalar(name)[rows].tolist()
 
     def value(self, row: int, name: str):
-        """One scalar field of one row, typed as `floats` says."""
-        column = self._scalar(name)
-        return column[row] if self.table.numpy_typed[row] & FLOAT_BIT.get(name, 0) else column.item(row)
+        """One scalar field of one row, as a Python number."""
+        return self._scalar(name).item(row)
 
     def _scalar(self, name: str) -> np.ndarray:
         if name not in SCALAR_FLOATS + SCALAR_INTS + OPTIONAL_FLOATS:
@@ -350,13 +329,8 @@ class ProducerStore(MutableMapping):
             "revenue_history": tuple(table.revenue_history[row, :revenue].tolist()),
             "crew_runs": self.crew_of(row),
         }
-        typed = int(table.numpy_typed[row])
         for name in SCALAR_FLOATS + SCALAR_INTS:
-            fields[name] = getattr(table, name)[row] if typed & FLOAT_BIT.get(name, 0) else getattr(table, name)[row].item()
-        if typed & FLOAT_BIT["land_run_cap"] and land_cap == land_cap:
-            fields["land_run_cap"] = table.land_run_cap[row]
-        if typed & FLOAT_BIT["staffed_runs"] and staffed == staffed:
-            fields["staffed_runs"] = table.staffed_runs[row]
+            fields[name] = getattr(table, name)[row].item()
         return {name: fields[name] for name in _FIELDS}
 
     # ---- blocks ----------------------------------------------------------------------------------------------------------

@@ -2,8 +2,7 @@
 practice stretches the recipe's hours, a recipe with a zero quantity or hour entry. `plan_year.plans_of` (one kernel over the year arrays) is
 compared with `producers.plan` on producers written out for each kind and on seeded random ones; no game is run.
 
-Rows summed as Python sums (`plan_year.python_summed`) are the kinds under test and must equal exactly; the other rows are compared with
-`test_year_speed_plans.py`."""
+Every row is compared, and must equal exactly (`test_year_speed_plans.py` compares the plain recipes on a played game)."""
 
 QUICK_TOPIC = True
 
@@ -81,12 +80,8 @@ class KernelPlansAreThePlainPlans(unittest.TestCase):
     def compare(self, setup, record, view, arrays):
         """(producers compared, producers whose plan runs); every field of every plan must equal the plain plan's."""
         plans = plan_year.plans_of(setup, record, view, arrays, MONEY)
-        columns = arrays.producers.refresh(record.producers)
-        summed = plan_year.python_summed(setup, columns, arrays.matrices)
         compared = running = 0
-        for position, producer_id in enumerate(plans.ids):
-            if not summed[position]:
-                continue
+        for producer_id in plans.ids:
             producer = record.producers[producer_id]
             plain = producers.plan(producer, setup.recipes[producer.recipe_id], view, record.book.balance(producer_id, MONEY))
             found = plans.plan_of(producer_id)

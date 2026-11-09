@@ -12,7 +12,6 @@ import numpy as np
 from sim.constants import declare
 
 from . import producer_table
-from .producer_rows import FLOAT_BIT
 
 from .types import Recipe, SiteLimit, TileId
 
@@ -105,13 +104,8 @@ def apply_site_limits(record, setup) -> None:
         limit_cap[place], limit_yield[place] = seen[(recipe, tile)]
     has_limit = ~np.isnan(limit_cap)
     capacity = np.where(has_limit, np.minimum(table.capacity_runs[rows], limit_cap), 0.0)
-    held_capacity = table.capacity_runs[rows]
-    typed = table.numpy_typed[rows]
-    keeps_capacity = has_limit & (held_capacity <= limit_cap)          # `min` hands back the producer's own figure, whatever type it is
-    yield_typed = (typed & FLOAT_BIT["yield_factor"]) != 0
-    capacity_typed = (typed & FLOAT_BIT["capacity_runs"]) != 0
-    producer_table.set_rows(store, "yield_factor", rows, np.where(has_limit, limit_yield, table.yield_factor[rows]), typed=yield_typed & ~has_limit)
-    producer_table.set_rows(store, "capacity_runs", rows, capacity, typed=capacity_typed & keeps_capacity)
+    producer_table.set_rows(store, "yield_factor", rows, np.where(has_limit, limit_yield, table.yield_factor[rows]))
+    producer_table.set_rows(store, "capacity_runs", rows, capacity)
     expansion = record.credit.expansion_runs
     if expansion:
         for place in range(len(rows)):

@@ -7,9 +7,8 @@ snapshot: changing the table changes the next one built, never one already held,
 record into its row.
 
 Rows are in the order the cohorts entered (a mapping's insertion order); `seat_sorted` puts them in id order, which is the order a
-load reads them in. `version` rises on every write, so a reader that keeps a derived copy knows when to read again. A float field
-written as a numpy float is read back as one (`numpy_typed`): CPython's `sum()` adds exact Python floats with compensation and numpy
-floats without, so a changed scalar type moves a total by a last digit."""
+load reads them in. `version` rises on every write, so a reader that keeps a derived copy knows when to read again. Every float
+is read back as a Python float."""
 import math
 from collections.abc import MutableMapping
 from typing import Dict, Iterable, Iterator, List, Mapping, NamedTuple, Optional
@@ -19,7 +18,7 @@ import numpy as np
 from sim.compiled_tables.growth import reserve_rows
 from sim.compiled_tables.ids import IdTable
 
-from .cohort_rows import (COHORT_ROWS_SPEC, FLOAT_BIT, OPTIONAL_FLOATS, SCALAR_FLOATS, WIDE_COLUMNS, WIDE_GROUPS, CohortRows)
+from .cohort_rows import (COHORT_ROWS_SPEC, OPTIONAL_FLOATS, SCALAR_FLOATS, WIDE_COLUMNS, WIDE_GROUPS, CohortRows)
 from .households_cohort import Cohort
 
 _FIRST_CAPACITY = 64
@@ -40,13 +39,6 @@ class CohortFigures(NamedTuple):
     hired_work_per_person: float
     milled_grains: tuple
     own_plan_by_need: Optional[Dict[str, float]]
-
-
-def typed_flags(values) -> np.ndarray:
-    """One flag per value: True where it is a numpy float (a list of Python floats, the usual case, is checked in one pass)."""
-    if set(map(type, values)) <= {float, type(None)}:
-        return np.zeros(len(values), dtype=np.bool_)
-    return np.array([isinstance(value, np.floating) for value in values], dtype=np.bool_)
 
 
 def table_of(cohorts) -> "CohortStore":
@@ -188,7 +180,6 @@ class CohortStore(MutableMapping):
         for name in SCALAR_FLOATS:
             getattr(table, name)[row] = getattr(cohort, name)
         table.share_wealth[row] = np.nan if cohort.share_wealth is None else cohort.share_wealth
-        table.numpy_typed[row] = sum(bit for name, bit in FLOAT_BIT.items() if isinstance(getattr(cohort, name), np.floating))
         self._write_pairs(row, "unmet", cohort.unmet_floor_by_need)
         self._write_pairs(row, "plan", cohort.own_plan_by_need)
         self._write_milled(row, cohort.milled_grains)
@@ -196,12 +187,11 @@ class CohortStore(MutableMapping):
     def _write_pairs(self, row: int, group: str, held: Mapping[str, float]) -> None:
         if len(held) > getattr(self.table, WIDE_GROUPS[group][0]).shape[1]:
             self._widen(group, len(held))
-        need_column, value_column, typed_column = (getattr(self.table, name) for name in WIDE_GROUPS[group])
-        need_column[row, :], value_column[row, :], typed_column[row, :] = 0, 0.0, 0
+        need_column, value_column = (getattr(self.table, name) for name in WIDE_GROUPS[group])
+        need_column[row, :], value_column[row, :] = 0, 0.0
         for place, (name, value) in enumerate(held.items()):
             need_column[row, place] = self._name("needs", name)
             value_column[row, place] = value
-            typed_column[row, place] = isinstance(value, np.floating)
         getattr(self.table, group + "_count")[row] = len(held)
 
     def _write_milled(self, row: int, grains) -> None:
@@ -231,33 +221,27 @@ class CohortStore(MutableMapping):
                 self._members += 1
             else:
                 self._scalar(name)[row] = np.nan if value is None else value
-                bit = FLOAT_BIT[name]
-                self.table.numpy_typed[row] = (int(self.table.numpy_typed[row]) & ~bit) | (bit if isinstance(value, np.floating) else 0)
         self._objects[row] = None
         self.version += 1
 
-    def set_rows(self, name: str, rows: np.ndarray, values, typed=False) -> None:
-        """One float field of the rows takes the values. `typed` (a flag, or one per row) says the values are numpy floats, which a
-        `Cohort` built from the rows hands back as such; a field written without it reads back as a Python float."""
+    def set_rows(self, name: str, rows: np.ndarray, values) -> None:
+        """One float field of the rows takes the values."""
         self._scalar(name)[rows] = values
-        bit = FLOAT_BIT[name]
-        self.table.numpy_typed[rows] = (self.table.numpy_typed[rows] & ~bit) | np.where(typed, bit, 0)
         self.written(rows)
 
     def set_column(self, name: str, cohort_ids: Iterable[str], values: Iterable[float]) -> None:
-        """One float field of the cohorts named takes the values (an id the table does not hold is skipped); a numpy value stays one."""
+        """One float field of the cohorts named takes the values (an id the table does not hold is skipped)."""
         pairs = [(self.row_of[each], value) for each, value in zip(cohort_ids, values) if each in self.row_of]
         if pairs:
-            self.set_rows(name, np.array([row for row, _value in pairs], dtype=np.int64), np.array([value for _row, value in pairs]),
-                          typed=np.array([isinstance(value, np.floating) for _row, value in pairs], dtype=np.bool_))
+            self.set_rows(name, np.array([row for row, _value in pairs], dtype=np.int64), np.array([value for _row, value in pairs]))
 
     def write_pairs(self, group: str, rows: np.ndarray, mappings: List[Mapping[str, float]]) -> None:
         """The mapping field of `group` ("unmet" or "plan") of each row is the matching mapping of `mappings`, all written as one block."""
         counts = np.fromiter(map(len, mappings), dtype=np.int64, count=len(mappings))
         if len(counts) and int(counts.max()) > getattr(self.table, WIDE_GROUPS[group][0]).shape[1]:
             self._widen(group, int(counts.max()))
-        need_column, value_column, typed_column = (getattr(self.table, name) for name in WIDE_GROUPS[group])
-        need_column[rows, :], value_column[rows, :], typed_column[rows, :] = 0, 0.0, 0
+        need_column, value_column = (getattr(self.table, name) for name in WIDE_GROUPS[group])
+        need_column[rows, :], value_column[rows, :] = 0, 0.0
         getattr(self.table, group + "_count")[rows] = counts
         if int(counts.sum()):
             values = [value for held in mappings for value in held.values()]
@@ -265,8 +249,6 @@ class CohortStore(MutableMapping):
             place = np.arange(len(entry_rows), dtype=np.int64) - np.repeat(np.cumsum(counts) - counts, counts)
             need_column[entry_rows, place] = self.names["needs"].admit([name for held in mappings for name in held])
             value_column[entry_rows, place] = values
-            if set(map(type, values)) != {float}:
-                typed_column[entry_rows, place] = [isinstance(value, np.floating) for value in values]
         self.written(rows)
 
     def milled_of(self, row: int) -> tuple:
@@ -308,13 +290,8 @@ class CohortStore(MutableMapping):
         return self._scalar(name)[:self.count]
 
     def floats(self, name: str, rows: np.ndarray) -> list:
-        """The float field of the rows as a list: a numpy float where the value was written as one, else a Python float."""
-        column = self._scalar(name)
-        values = column[rows].tolist()
-        bit = FLOAT_BIT[name]
-        for place in np.nonzero(self.table.numpy_typed[rows] & bit)[0].tolist():
-            values[place] = column[rows[place]]
-        return values
+        """The float field of the rows as a list of Python floats."""
+        return self._scalar(name)[rows].tolist()
 
     def order(self) -> np.ndarray:
         """The rows in sorted id order."""
@@ -413,23 +390,21 @@ class CohortStore(MutableMapping):
         count = int(getattr(self.table, group + "_count")[row])
         needs = self.names["needs"].name_list
         numbers = getattr(self.table, group + "_need")[row, :count].tolist()
-        values = getattr(self.table, group + "_units")[row, :count]
-        typed = getattr(self.table, group + "_typed")[row, :count].tolist()
-        return {needs[number]: (values[place] if typed[place] else values[place].item()) for place, number in enumerate(numbers)}
+        values = getattr(self.table, group + "_units")[row, :count].tolist()
+        return {needs[number]: values[place] for place, number in enumerate(numbers)}
 
     def _fields(self, row: int) -> Dict[str, object]:
-        """The fields of the cohort in `row`, in the order of `Cohort`, each a plain Python value (a numpy float where it was written as one)."""
+        """The fields of the cohort in `row`, in the order of `Cohort`, each a plain Python value."""
         table = self.table
-        typed = int(table.numpy_typed[row])
         fields = {
             "agent_id": self.ids[row], "tile": self.names["tiles"].name_list[table.tile[row]], "income_class": int(table.income_class[row]),
             "unmet_floor_by_need": self._pairs(row, "unmet"), "own_plan_by_need": self._pairs(row, "plan"),
             "milled_grains": self.milled_of(row),
         }
         for name in SCALAR_FLOATS:
-            fields[name] = getattr(table, name)[row] if typed & FLOAT_BIT[name] else getattr(table, name)[row].item()
+            fields[name] = getattr(table, name)[row].item()
         wealth = float(table.share_wealth[row])
-        fields["share_wealth"] = None if wealth != wealth else (table.share_wealth[row] if typed & FLOAT_BIT["share_wealth"] else wealth)
+        fields["share_wealth"] = None if wealth != wealth else wealth
         return {name: fields[name] for name in _FIELDS}
 
     # ---- the save --------------------------------------------------------------------------------------------------------
