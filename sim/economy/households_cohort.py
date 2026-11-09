@@ -9,6 +9,8 @@ Functions here: `cohorts_for_tile`, `distribute_property_income`, `labour_offers
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional, Tuple
 
+import numpy as np
+
 from sim.constants import declare
 from sim.world import demand
 
@@ -113,27 +115,59 @@ def renewed(cohort: Cohort, **changes) -> Cohort:
     return replaced(cohort, **changes)
 
 
-# The cohort table (`record.cohorts`) is written only here; every other module calls one of these.
+# The cohort table (`record.cohorts`) is written only here and in `cohort_close_write.py` / `cohort_people.py`; every other module calls
+# one of these. The table is a `CohortStore` (cohort_store.py); a plain mapping (a test's) is written as a dict.
 
 def put_cohort(cohorts: Dict[AgentId, Cohort], cohort: Cohort) -> None:
     """`cohort` is the table's row for its id, new or replacing."""
-    cohorts[cohort.agent_id] = cohort
+    if hasattr(cohorts, "put"):
+        cohorts.put(cohort)
+    else:
+        cohorts[cohort.agent_id] = cohort
 
 
 def put_cohorts(cohorts: Dict[AgentId, Cohort], rows: Mapping[AgentId, Cohort]) -> None:
-    cohorts.update(rows)
+    for cohort in rows.values():
+        put_cohort(cohorts, cohort)
 
 
 def change_cohort(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, **changes) -> None:
     """The row for `cohort_id` with these fields changed."""
-    cohorts[cohort_id] = replaced(cohorts[cohort_id], **changes)
+    if hasattr(cohorts, "set_fields"):
+        cohorts.set_fields(cohort_id, **changes)
+    else:
+        cohorts[cohort_id] = replaced(cohorts[cohort_id], **changes)
 
 
 def set_people(cohorts: Dict[AgentId, Cohort], cohort_id: AgentId, people: float, working_people: float) -> None:
     """The row for `cohort_id` with these people, of whom `working_people` work (never more than the people)."""
-    cohorts[cohort_id] = replaced(cohorts[cohort_id], people=people, working_people=min(working_people, people))
+    change_cohort(cohorts, cohort_id, people=people, working_people=min(working_people, people))
 
 
 def rebase_price_level(cohorts: Dict[AgentId, Cohort]) -> None:
     """Every cohort's last basket price level is one, the new base."""
-    cohorts.update({agent: renewed(cohort, last_basket_price_level=1.0) for agent, cohort in cohorts.items()})
+    if hasattr(cohorts, "set_rows"):
+        cohorts.set_rows("last_basket_price_level", np.arange(cohorts.count, dtype=np.int64), 1.0)
+    else:
+        cohorts.update({agent: renewed(cohort, last_basket_price_level=1.0) for agent, cohort in cohorts.items()})
+
+
+def set_column(cohorts: Dict[AgentId, Cohort], name: str, values: Mapping[AgentId, float]) -> None:
+    """One float field of the cohorts named takes the values."""
+    if hasattr(cohorts, "set_column"):
+        cohorts.set_column(name, values.keys(), values.values())
+    else:
+        for cohort_id, value in values.items():
+            cohorts[cohort_id] = replaced(cohorts[cohort_id], **{name: value})
+
+
+def set_work_plans(cohorts: Dict[AgentId, Cohort], plans: Mapping[AgentId, tuple]) -> None:
+    """Each cohort's (hired hours a person, own hours, grains bought milled) is stored where it differs from what the cohort holds."""
+    if hasattr(cohorts, "set_rows"):
+        from .cohort_people import apply_work_plans      # the table's module imports this one
+        apply_work_plans(cohorts, plans)
+        return
+    for cohort_id, (per_person, _own, milled) in plans.items():
+        cohort = cohorts[cohort_id]
+        if per_person != cohort.hired_work_per_person or tuple(milled) != tuple(cohort.milled_grains):
+            change_cohort(cohorts, cohort_id, hired_work_per_person=per_person, milled_grains=milled)

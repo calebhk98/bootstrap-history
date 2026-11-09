@@ -9,7 +9,6 @@ from typing import Dict, List, Mapping, Sequence
 import numpy as np
 
 from .households_close_kernel import unmet_floors
-from .households_cohort import Cohort
 from .stock_block import numbers_of, stock_block
 from .types import GoodSpec
 
@@ -62,23 +61,25 @@ class PackedBaskets:
         return found
 
 
-def unmet_by_cohort(book, packed: PackedBaskets, cohorts: Sequence[Cohort], basket_numbers: Sequence[int], receipt_start: np.ndarray,
-                    receipt_goods: np.ndarray, receipt_amounts: np.ndarray) -> List[Dict[str, float]]:
-    """`households_close.unmet_floor_by_need` for each cohort, in the order given: `basket_numbers` are `packed`'s numbers, the receipts the
-    arrays of `receipts_with_grown` (cohorts in the same order). The held stocks of the durables are read from the book in one block."""
-    count = len(cohorts)
+def unmet_by_cohort(book, packed: PackedBaskets, agent_ids: Sequence[str], tiles: Sequence[str], people: Sequence[float],
+                    basket_numbers: Sequence[int], receipt_start: np.ndarray, receipt_goods: np.ndarray,
+                    receipt_amounts: np.ndarray) -> List[Dict[str, float]]:
+    """`households_close.unmet_floor_by_need` for each cohort, in the order given (its id, tile and people): `basket_numbers` are `packed`'s
+    numbers, the receipts the arrays of `receipts_with_grown` (cohorts in the same order). The held stocks of the durables are read from
+    the book in one block."""
+    count = len(agent_ids)
     held_start = np.zeros(count + 1, dtype=np.int64)
     held_agents, held_goods, held_tiles = [], [], []
-    for position, cohort in enumerate(cohorts):
+    for position in range(count):
         durables = packed.durables[basket_numbers[position]]
         held_start[position + 1] = held_start[position] + len(durables)
-        held_agents.extend([cohort.agent_id] * len(durables))
+        held_agents.extend([agent_ids[position]] * len(durables))
         held_goods.extend(durables)
-        held_tiles.extend([cohort.tile] * len(durables))
+        held_tiles.extend([tiles[position]] * len(durables))
     held = stock_block(book, numbers_of(book.agent_ids, held_agents), numbers_of(book.good_ids, held_goods), numbers_of(book.tile_ids, held_tiles))
     widest = max((len(basket.needs) for basket in packed.baskets), default=0)
     unmet = np.full((count, max(widest, 1)), np.nan)
-    unmet_floors(np.array([cohort.people for cohort in cohorts], dtype=np.float64), np.array(basket_numbers, dtype=np.int64), receipt_start,
+    unmet_floors(np.array(people, dtype=np.float64), np.array(basket_numbers, dtype=np.int64), receipt_start,
                  receipt_goods, receipt_amounts, np.array(packed.need_start, dtype=np.int64), np.array(packed.need_floor, dtype=np.float64),
                  np.array(packed.row_start, dtype=np.int64), np.array(packed.row_good, dtype=np.int64), np.array(packed.row_effect, dtype=np.float64),
                  np.array(packed.row_life, dtype=np.float64), np.array(packed.row_held_place, dtype=np.int64), held_start, held,

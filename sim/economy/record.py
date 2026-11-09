@@ -25,6 +25,7 @@ from .households_cohort import Cohort
 from .market_memory import KEY_SEPARATOR, MarketMemory
 from .merchants import Merchant, bind_markets
 from .merchants_transit import Shipment
+from .cohort_store import CohortStore
 from .producer_store import ProducerStore
 from .producers import Producer
 from .record_parts import OwnedRecord, sorted_store
@@ -41,7 +42,7 @@ class EconomyRecord(OwnedRecord):
     book: Book
     memory: MarketMemory
     currency: CurrencySpec
-    cohorts: Dict[AgentId, Cohort] = field(default_factory=dict)
+    cohorts: Dict[AgentId, Cohort] = field(default_factory=CohortStore)    # a `CohortStore`: columns, read as a mapping of `Cohort`
     producers: Dict[AgentId, Producer] = field(default_factory=ProducerStore)    # a `ProducerStore`: columns, read as a mapping of `Producer`
     merchants: Dict[AgentId, Merchant] = field(default_factory=dict)
     credit: CreditRecord = field(default_factory=CreditRecord)                      # credit_record.py
@@ -57,6 +58,8 @@ class EconomyRecord(OwnedRecord):
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
 
     def __setattr__(self, name: str, value: Any) -> None:
+        if name == "cohorts" and not isinstance(value, CohortStore) and all(isinstance(each, Cohort) for each in value.values()):
+            value = CohortStore(value)         # a plain mapping of records (a test's, a mod's) becomes the column store
         if name == "producers" and not isinstance(value, ProducerStore) and all(isinstance(each, Producer) for each in value.values()):
             value = ProducerStore(value)       # a plain mapping of records (a test's, a mod's) becomes the column store
         super().__setattr__(name, value)
@@ -70,10 +73,11 @@ class EconomyRecord(OwnedRecord):
     AGENT_KEYED = ("cohorts", "producers", "merchants")
     SAVED_SORTED = ("cohorts", "producers", "merchants")
     TABLE_OWNERS: ClassVar[Dict[str, Tuple[str, ...]]] = {
-        "cohorts": ("households_cohort",), "producers": ("producer_table", "producer_close_write"), "merchants": ("merchants", "merchants_dispatch")}   # modules that write each agent table
+        "cohorts": ("households_cohort", "cohort_close_write", "cohort_people"), "producers": ("producer_table", "producer_close_write"), "merchants": ("merchants", "merchants_dispatch")}   # modules that write each agent table
     TRANSIENT = ("settling",)   # true only inside the hidden spin-up, which finishes before any save
     ENCODERS = {
         "memory": MarketMemory.to_plain,
+        "cohorts": lambda cohorts: cohorts.to_plain() if isinstance(cohorts, CohortStore) else plain(sorted_store(cohorts)),
         "producers": lambda producers: producers.to_plain() if isinstance(producers, ProducerStore) else plain(sorted_store(producers)),
         "merchants": lambda merchants: {key: _merchant_record(value) for key, value in sorted(merchants.items())},
     }
@@ -81,7 +85,7 @@ class EconomyRecord(OwnedRecord):
         "book": Book.from_record,
         "memory": MarketMemory.from_plain,
         "currency": lambda value: CurrencySpec(**value),
-        "cohorts": lambda value: {key: Cohort(**each) for key, each in value.items()},
+        "cohorts": CohortStore.from_plain,
         "producers": ProducerStore.from_plain,
         "merchants": lambda value: {key: _merchant_from(each) for key, each in value.items()},
         "state_budget": lambda value: StateBudget(**value),
@@ -113,6 +117,7 @@ class EconomyRecord(OwnedRecord):
         holds or owes is added to what `new` already has."""
         self.book.rename_agent(old, new)
         self.producers = ProducerStore(rekey(dict(self.producers), old, new))
+        self.cohorts = CohortStore(rekey(dict(self.cohorts), old, new))
         super().rename_agent(old, new)
 
     def to_record(self, skip_currencies=()) -> Dict[str, Any]:

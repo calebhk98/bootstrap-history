@@ -6,10 +6,14 @@ for it (`LabourClearing.wage`), and the workers who offered them share the recei
 import dataclasses
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
+import numpy as np
+
 from sim.labour.api import LabourBidTable, TrancheBids, people_in, run_labour_year
 from sim.world.need_basket import subsistence_cost_per_person
 
-from . import household_work_year, households_basket, households_work, labour_settle_year
+from . import cohort_people, household_work_year, households_basket, households_work, labour_settle_year
+from .cohort_store import table_of
+from .household_offer_kernels import sum_in_order_by_group
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import BID_TRANCHES, BID_VALUE_SPREAD
 from .labour_fills import fills_of, rows_from_clearings, rows_from_objects
@@ -27,27 +31,33 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
     """Money a person needs a year for the floors of every need, at last year's prices on each tile: each cohort's own
     basket (its hearth's cooking fuel, its hired household work, ready-to-eat food where it has no hearth) at its tile's
     prices, averaged over the tile's people."""
-    cost_sum: Dict[str, float] = {}
-    people: Dict[str, float] = {}
-    for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        cost = subsistence_cost_per_person(household_work_year.priced_basket(setup, record, view, cohort))
-        cost_sum[cohort.tile] = cost_sum.get(cohort.tile, 0.0) + cost * cohort.people
-        people[cohort.tile] = people.get(cohort.tile, 0.0) + cohort.people
-    return {tile: (cost_sum[tile] / people[tile] if people[tile] > 0.0 else
+    store = table_of(record.cohorts)
+    order = store.order()
+    priced = {}                  # cohorts of one signature share one priced basket and its cost
+    costs = []
+    for signature in household_work_year.signatures_of(record, store, order, buying=False):
+        if signature not in priced:
+            priced[signature] = subsistence_cost_per_person(household_work_year.priced_basket_of(setup, view, signature[0], signature))
+        costs.append(priced[signature])
+    people = store.column("people")[order]
+    tiles = np.ascontiguousarray(store.tile_numbers()[order])
+    cost_sum = sum_in_order_by_group(tiles, len(store.names["tiles"]), np.array(costs, dtype=np.float64) * people).tolist()
+    people_sum = sum_in_order_by_group(tiles, len(store.names["tiles"]), np.ascontiguousarray(people)).tolist()
+    names = store.names["tiles"].name_list
+    return {tile: (cost_sum[number] / people_sum[number] if people_sum[number] > 0.0 else
                    subsistence_cost_per_person(households_basket.tile_need_prices(setup, view, tile)))
-            for tile in sorted(cost_sum)}
+            for tile, number in sorted((names[number], number) for number in np.unique(tiles).tolist())}
 
 
 def outside_option_by_tile(setup, record, view) -> Dict[str, float]:
     """What a worker must earn in a year to keep the people he supports at their floors, per tile: the
     classical floor under wages. Hours nobody hires go to the household's own plot (households_own.py)."""
     floors = subsistence_cost_by_tile(setup, record, view)
-    people: Dict[str, float] = {}
-    working: Dict[str, float] = {}
-    for cohort in record.cohorts.values():
-        people[cohort.tile] = people.get(cohort.tile, 0.0) + cohort.people
-        working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
-    return {tile: floor * (people[tile] / working[tile] if working.get(tile) else 1.0)
+    store = table_of(record.cohorts)
+    number_of = store.names["tiles"].numbers
+    people = cohort_people.total_by_tile(store, "people").tolist()
+    working = cohort_people.total_by_tile(store, "working_people").tolist()
+    return {tile: floor * (people[number_of[tile]] / working[number_of[tile]] if working[number_of[tile]] else 1.0)
             for tile, floor in floors.items()}
 
 
@@ -59,7 +69,7 @@ def labour_offer_rows(setup, record, view, subsistence_by_tile, levy_hours_per_w
     to offer."""
     rows = LabourOfferRows() if rows is None else rows
     danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
-    write_cohort_offers(rows, record.cohorts.values(), lambda area: people_by_trade(record.labour.workforce, area), view.area_of, labour_area,
+    write_cohort_offers(rows, record.cohorts, lambda area: people_by_trade(record.labour.workforce, area), view.area_of, labour_area,
                         subsistence_by_tile, setup.working_hours_per_year, danger, levy_hours_per_worker, levied_tiles)
     return rows
 

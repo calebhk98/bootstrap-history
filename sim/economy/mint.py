@@ -10,6 +10,7 @@ import math
 from typing import Dict
 
 from . import currency, mint_labour, mint_price, mint_staffing
+from .cohort_store import table_of
 from .goods_order_tables import MINT
 from .market_memory import market_key
 from .metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
@@ -84,7 +85,7 @@ def yearly_monetisation(setup, record) -> float:
     (Complaints/reports/economy-research-commodity-money.md)."""
     spec = record.currency
     supply = record.book.money_supply(spec.currency_id)
-    wanted = (math.fsum(cohort.cash_target for cohort in record.cohorts.values())
+    wanted = (table_of(record.cohorts).exact_total("cash_target")
               + record.producers.exact_total("cash_target")
               + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
     loss = loss_share(setup, spec)
