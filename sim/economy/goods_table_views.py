@@ -58,27 +58,38 @@ class HeldViews(Sequence):
 
     def __init__(self, names: list, agents: numpy.ndarray, tiles: numpy.ndarray, rows: numpy.ndarray, tile_names: list):
         self._names, self._tile_names = names, tile_names
-        self._agents, self._tiles = agents[rows].tolist(), tiles[rows].tolist()
+        self._columns = (agents, tiles, rows)
+        self._lists = None
+
+    def _held(self) -> tuple:
+        """The agent and tile numbers of the rows as lists, made when first read."""
+        if self._lists is None:
+            agents, tiles, rows = self._columns
+            self._lists = (agents[rows].tolist(), tiles[rows].tolist())
+        return self._lists
 
     def __len__(self) -> int:
-        return len(self._agents)
+        return len(self._columns[2])
 
     def __getitem__(self, index: int) -> Held:
-        return Held(self._names[self._agents[index]], self._tile_names[self._tiles[index]])
+        agents, tiles = self._held()
+        return Held(self._names[agents[index]], self._tile_names[tiles[index]])
 
 
 class BidViews(HeldViews):
     """`.buyer` and `.tile` of each bid row."""
 
     def __getitem__(self, index: int):
-        return BidView(self._names[self._agents[index]], self._tile_names[self._tiles[index]])
+        agents, tiles = self._held()
+        return BidView(self._names[agents[index]], self._tile_names[tiles[index]])
 
 
 class OfferViews(HeldViews):
     """`.seller` and `.tile` of each offer row."""
 
     def __getitem__(self, index: int):
-        return OfferView(self._names[self._agents[index]], self._tile_names[self._tiles[index]])
+        agents, tiles = self._held()
+        return OfferView(self._names[agents[index]], self._tile_names[tiles[index]])
 
 
 BidView = namedtuple("BidView", ("buyer", "tile"))

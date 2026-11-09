@@ -260,7 +260,7 @@ hands the year's `MarketBids` on when no standing bid joins a market.
 **The goods record's stores and the year's market table.** `record.goods.volumes`, `unsold`, `unmet` and `margin_years` are
 `goods_market_column.MarketColumn`s (`MarketFigures` keyed by `good|area`, indexed by the memory's goods-market numbering, `bind_markets`
 on the record): `_record_year_markets` writes each with one `replace_rows`, and `entry_plan_pack.traded_grid`,
-`entry_margin_tables._streaks_in`, `goods_table_pack.market_figures` and `entry_unmet.markets_of` read them with `take` or the ledger's
+`entry_margin_tables._streaks_in`, `goods_pack_kernel.pack_arrays` (the column itself) and `entry_unmet.markets_of` read them with `take` or the ledger's
 `member_columns`. Iteration lists the markets in (good, area) order, as the dictionaries written in sorted order did.
 
 `clear_good` returns a `goods_good_clear.GoodClearing`: per market of the good, in clearing order, the first round's quantity, price, demand,
@@ -280,15 +280,45 @@ Ground goods (not portable) are cleared in the batch like any good: the held val
 (`goods_table_clear._ground_values`, the `held_value` column of `goods_year_kernel.decide_markets`).
 
 **Per-good numpy calls, cut.** The goods loop runs once per good, so a call that costs more in overhead than in work is paid once per good.
-`rows_of_good` orders a good's markets by area name from a per-area rank array (`GoodsOrderBook.markets_by_area_name`), not a Python sort with a
-key function; `GoodClearing` and `market_figures` read the areas' names as one column (`area_names_of_markets`); `few_ids.in_ids` answers
-"is this agent one of the watchers / customs accounts" from a lookup table (`watched_buys`, `settlement_ids._in_accounts`) in place of
-`numpy.isin`, and `settle_by_ids` takes the distinct sellers by counting; the respend's `goods_respend_unpack.summed` and `paid_and_received`
-count dense agent and key numbers with `bincount` (sums added in the order given, as before) and sort only keys far above the row count.
-Tests: `test_goods_phase_columns.py`. Measure the Python left in the phase with `tools/measure/warm_year_split_profile.py` (every kernel is its
-own entry) and `warm_year_cpu.py`; what remains is spread over many small numpy calls per good (`pack_batch`, `GoodClearing.__init__`,
-`_count_left`, `decide_reservations`' argument building, `summarize_columns` for the kept areas) and the respend's pack (`flatten_baskets`,
-`write_settlement`'s per-good loop); none is one hot spot, and each next step is a kernel that takes the whole tables for one of them.
+A numpy call on a small array costs microseconds of overhead; a kernel call costs about the same once and then works at machine speed, so each
+chain of small calls on one good is one kernel that takes the whole tables and returns the arrays the next step needs. The kernels (each
+tested bit for bit against the numpy chain it replaced, kept as plain code in `sim/tests/goods_good_plain.py`, `market_curves_plain.py` and
+`respend_plain.py`, on random tables with many ties: `test_goods_good_kernels.py`):
+
+- `goods_rows_kernel.good_rows`: the good's bid and offer rows, its markets in clearing order (area name, from the per-area rank array
+  `GoodsOrderBook.area_ranks`), each row's market place, the rows grouped by market, which markets the batch clears, and the flags the markets'
+  memory is noted by (`goods_table_group.rows_of_good` is the Python around it).
+- `goods_pack_kernel.pack_arrays`: the batched markets' offers and bids in clearing order, the demand schedules, the market size, the lending
+  rate and the token minimum price (`goods_table_pack.pack_batch`). `numpy.lexsort` is not in numba; `stable_order_kernel.stable_order` runs
+  successive stable `argsort(kind="mergesort")`s, the least significant key first, which orders ties exactly as `lexsort` does. A lending rate not asked
+  for yet is reported by the kernel, asked in Python (`ClearingContext.note_area_rate`) and the kernel called again (every missing area at once).
+- `goods_decide_inputs_kernel.decide_inputs`: what `decide_markets` reads about each offer's seller from the year arrays (cost, input share,
+  expected price, workshops, expected sales, band multiple), in place of `decide_reservations`' argument building; a tile's band multiple not worked out
+  yet is reported and asked the same way (`note_band_multiple`).
+- `goods_batch_write_kernel.write_batch`: the allocation written into the offers and bids and appended to the bid order, offer order, pairs and results
+  tables (the caller reserves room in the four appended tables).
+- `goods_untraded_kernel.untraded_columns`: the quote figures (token minimum, lowest ask, best bid, what buyers wanted) of every market of the good,
+  read after the batch has written the offers' final reservations; `goods_clearing_kernel.clearing_columns`: `GoodClearing`'s columns (how each
+  market cleared, its figures from the batch or from the quote figures, the quote, and the offers left market by market).
+- `market_curves_kernel.curve_arrays_of_rows`: the summary of a kept market (`market_curves_rows.of_rows`), with the order tables' columns read in the
+  kernel; `goods_respend_settle_kernel.settlement_by_good`: the respend's settled pairs summed per good, as the arguments of
+  `post_settled_by_numbers` (`write_settlement` falls back to the old by-name route when the book has not numbered a name, which then numbers it in the
+  order it always did). `flatten_baskets` makes a need's flat columns once per distinct need (`_flat_spec`), not once per basket.
+
+`MarketRows` and the batch's `HeldViews` make their lists when first read. Other helpers that cut calls: `few_ids.in_ids` answers "is this agent
+one of the watchers / customs accounts" from a lookup table (`watched_buys`, `settlement_ids._in_accounts`) in place of `numpy.isin`, and
+`settle_by_ids` takes the distinct sellers by counting; the respend's `goods_respend_unpack.summed` and `paid_and_received` count dense agent and
+key numbers with `bincount` (sums added in the order given) and sort only keys far above the row count (`test_goods_phase_columns.py`).
+
+Measure with `tools/measure/numpy_calls_per_good.py` (numpy calls made under each function, per call of it: run it with the kernels compiled; the
+figure for `clear_good` is the calls per good), `warm_year_split_profile.py` (every kernel is its own entry) with
+`tools/measure/clear_goods_python_time.py` (the Python left under `clear_goods`: its time less the `kernel__` entries beneath it), and
+`warm_year_cpu.py`. Run `warm_year_cpu.py` once after editing a kernel file before the split profile: a kernel signature first met under the profile
+is compiled while the profile has replaced the kernels with plain functions, and fails. What is left in the loop is the producers' turn
+(`goods_turn.produce`'s `_post` and `offer` build posting and offer tables from many small arrays), `settle_good`'s ledger notes
+(`year_ledger_arrays.note_settlement_rows`), `goods_with_orders`' flush of waiting order objects, the respend's pack (`goods_respend_rows`) and
+`remember_markets`; each is a kernel over the whole tables for a next step, and the time in `clear_good` itself is now the kernels
+(`decide_markets`, `final_allocations`, `pack_arrays`).
 
 A producer's turn reads its runs from the plan table's column and its hired hours from the ledger's pair table in one kernel call
 (`goods_production_reads.py`).
