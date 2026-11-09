@@ -263,6 +263,17 @@ Tests: `test_goods_market_column.py`, `test_goods_year_markets.py`, `test_goods_
 Ground goods (not portable) are cleared in the batch like any good: the held value of an offer that is ground is its capitalised rent
 (`goods_table_clear._ground_values`, the `held_value` column of `goods_year_kernel.decide_markets`).
 
+**Per-good numpy calls, cut.** The goods loop runs once per good, so a call that costs more in overhead than in work is paid once per good.
+`rows_of_good` orders a good's markets by area name from a per-area rank array (`GoodsOrderBook.markets_by_area_name`), not a Python sort with a
+key function; `GoodClearing` and `market_figures` read the areas' names as one column (`area_names_of_markets`); `few_ids.in_ids` answers
+"is this agent one of the watchers / customs accounts" from a lookup table (`watched_buys`, `settlement_ids._in_accounts`) in place of
+`numpy.isin`, and `settle_by_ids` takes the distinct sellers by counting; the respend's `goods_respend_unpack.summed` and `paid_and_received`
+count dense agent and key numbers with `bincount` (sums added in the order given, as before) and sort only keys far above the row count.
+Tests: `test_goods_phase_columns.py`. Measure the Python left in the phase with `tools/measure/warm_year_split_profile.py` (every kernel is its
+own entry) and `warm_year_cpu.py`; what remains is spread over many small numpy calls per good (`pack_batch`, `GoodClearing.__init__`,
+`_count_left`, `decide_reservations`' argument building, `summarize_columns` for the kept areas) and the respend's pack (`flatten_baskets`,
+`write_settlement`'s per-good loop); none is one hot spot, and each next step is a kernel that takes the whole tables for one of them.
+
 A producer's turn reads its runs from the plan table's column and its hired hours from the ledger's pair table in one kernel call
 (`goods_production_reads.py`).
 
