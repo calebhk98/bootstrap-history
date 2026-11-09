@@ -10,7 +10,8 @@ which a few buyers are held back by their budgets quotes a little off the book i
 import math
 from typing import Dict, List, Optional, Sequence, Tuple
 
-from . import goods_market
+from . import curve_clearing, goods_market
+from .crossing_price import NeedsObjects
 from .types import EDGE_EXTERNAL, Bid, Offer
 
 CURVE_AREA = "curve"
@@ -95,7 +96,16 @@ def price_response(curve: Dict[str, List[List[float]]], good: str, last_price: O
                    landed: float, taken: float) -> Optional[float]:
     """The market's price after `landed` more units are offered in it and `taken` more are bought, over the
     price its summarised book clears at; None when that book traded nothing, so the market has no price to
-    move."""
+    move. Worked from the book's columns (`curve_clearing`), on objects for a figure the kernels do not take."""
+    try:
+        return curve_clearing.price_response(curve, last_price, landed, taken, goods_market.MINIMUM_PRICE_SHARE_OF_REFERENCE)
+    except NeedsObjects:
+        return price_response_objects(curve, good, last_price, landed, taken)
+
+
+def price_response_objects(curve: Dict[str, List[List[float]]], good: str, last_price: Optional[float],
+                           landed: float, taken: float) -> Optional[float]:
+    """`price_response` on `Bid` and `Offer` objects cleared by `goods_market.clear_at_one_price` (the reference the columns are tested against)."""
     base_price, base_traded, bids, offers = _base_clearing(curve, good, last_price)
     bids, offers = list(bids), list(offers)
     if not base_traded > 0.0 or not base_price > 0.0:

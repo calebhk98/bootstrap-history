@@ -204,6 +204,7 @@ def crossing_signatures(types):
         "sim.economy.crossing_price.minimum_price_of": [(floats, number)],
         "sim.economy.crossing_price.single_supply_price": [(demand, types.boolean, number, number, flags)],
         "sim.economy.crossing_price.price_at_levels": [(floats, floats, number, number, demand, flags)],
+        "sim.economy.curve_clearing.clear_summary": [(floats, floats, types.boolean, number, number, demand, flags)],
     }
 
 
