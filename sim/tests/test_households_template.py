@@ -174,7 +174,7 @@ class Priming(unittest.TestCase):
         self.patches = [mock.patch.object(cohort_prime, "table_of", lambda cohorts: cohorts),
                         mock.patch.object(work, "signatures_of", lambda record, each, rows, buying=True: [(tiles[row], buying) for row in rows.tolist()]),
                         mock.patch.object(work, "basket_of_signature", lambda setup, signature: self.basket),
-                        mock.patch.object(work, "hearth_of", lambda record, tile, agent_id: tile != "T2"),
+                        mock.patch.object(work, "hearths_of", lambda record, tiles, agent_ids: [tile != "T2" for tile in tiles]),
                         mock.patch.object(work, "tile_food_basket", lambda setup, tile, hearth: self.basket)]
         for patch in self.patches:
             patch.start()

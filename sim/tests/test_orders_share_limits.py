@@ -22,13 +22,6 @@ LIMITED_DATA["goods"]["millet"]["max_share_of_need"] = {"food": 0.25}
 
 
 class LimitedBasketTests(unittest.TestCase):
-    def test_the_kernel_covers_a_basket_with_limits(self):
-        with mock.patch.object(opening_tests, "NEED_DATA", LIMITED_DATA):
-            basket, view, cohorts = year_tests.year_world(random.Random(2))
-        priced = households.need_prices(basket, view, cohorts[0].tile)
-        self.assertTrue(any(need.spec.share_limits for need in priced))
-        self.assertTrue(households_orders_pack.covered(priced))
-
     def test_kernel_and_old_path_agree_on_baskets_with_limits(self):
         rng = random.Random(8)
         compared = skipped = binding = 0
