@@ -8,12 +8,16 @@ record, so a firm, a state or another player borrows by the same rules.
 import dataclasses
 from typing import Dict, List
 
+import numpy as np
+
 from sim.world import capital_market
 
 from sim.loans.columns import NO_TILE
 
 from . import bank_service, bondage, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_credit_batch, titles, titles_ground, titles_value, transfer_rows
+from .cohort_store import table_of
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
+from . import household_work_year
 from .household_work_year import basket_key, cohort_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .goods_order_tables import LOAN
@@ -65,11 +69,13 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
 def expected_inflation_of(record) -> float:
     """The inflation lenders expect, as the people-weighted mean of the cohorts' own expectations; none before
     any cohort has people. The real-rate bound on the credit market adds it to the bound."""
-    cohorts = record.cohorts
-    people = sum(max(0.0, cohort.people) for cohort in cohorts.values())
+    store = table_of(record.cohorts)
+    rows = np.arange(store.count, dtype=np.int64)
+    held, expected = store.floats("people", rows), store.floats("expected_inflation", rows)
+    people = sum(max(0.0, each) for each in held)
     if people <= 0.0:
         return 0.0
-    return sum(max(0.0, cohort.people) * cohort.expected_inflation for cohort in cohorts.values()) / people
+    return sum(max(0.0, each) * inflation for each, inflation in zip(held, expected)) / people
 
 
 def lend_working_capital(setup, record, view) -> None:
@@ -82,13 +88,16 @@ def lend_working_capital(setup, record, view) -> None:
         return
     record.credit.loan_requests = [request for request in record.credit.loan_requests if request.purpose != WORKING_CAPITAL_PURPOSE]
     money = setup.currency_id
-    spare = {cohort_id: record.book.balance(cohort_id, money) - cohort.cash_target
-             for cohort_id, cohort in sorted(record.cohorts.items())}
+    store = table_of(record.cohorts)
+    order = store.order()
+    targets, expected_inflation = store.floats("cash_target", order), dict(zip(
+        [store.ids[row] for row in order.tolist()], store.floats("expected_inflation", order)))
+    spare = {store.ids[row]: record.book.balance(store.ids[row], money) - target for row, target in zip(order.tolist(), targets)}
     spare = {cohort_id: amount for cohort_id, amount in spare.items() if amount > 0.0}
     if not spare:
         return
     offers = [FundsOffer(cohort_id, money, amount, lender_ask.lowest_ask(
-                  HOUSEHOLD_TIME_PREFERENCE, record.cohorts[cohort_id].expected_inflation,
+                  HOUSEHOLD_TIME_PREFERENCE, expected_inflation[cohort_id],
                   expected_loss_rate=lender_ask.loss_rate(record.credit.loss_rates.get(cohort_id, 0.0))))
               for cohort_id, amount in spare.items()]
     loans, _rate, _unmet = credit.clear(
@@ -108,9 +117,11 @@ def household_requests(setup, record, view, ledger, priced_by_tile) -> List:
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     rate = own_rate(view, money)
     requests = []
-    for cohort_id, cohort in sorted(record.cohorts.items()):
-        key = basket_key(record, cohort)
-        priced = _priced_basket(view, key, cohort_basket(setup, record, cohort), priced_by_tile)
+    store = table_of(record.cohorts)
+    order = store.order()
+    for cohort, key in zip(store.figures(order), household_work_year.signatures_of(record, store, order)):
+        cohort_id = cohort.agent_id
+        priced = _priced_basket(view, key, household_work_year.basket_of_signature(setup, key), priced_by_tile)
         if not priced or cohort.people <= 0.0:
             continue
         shortfall = (households_credit.floor_cost_unmet(cohort, priced, ledger.grown_units.get(cohort_id))

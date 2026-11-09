@@ -4,6 +4,7 @@ hours kept are added to those the own-plot plan and the household work already k
 from typing import Callable, Dict, Mapping, Optional, Sequence
 
 from . import households_hours_offered, trade_wages
+from .cohort_store import table_of
 from .households_basket import tile_need_prices
 from .households_own import Option, own_production
 from .labour_ask_floor import hectares_per_hour_by_recipe, plot_return_per_hour
@@ -63,7 +64,9 @@ def plot_parameters_by_cohort(setup, record, view, offers: Sequence[LabourOffer]
     for offer in offers:
         hours_by_worker.setdefault(offer.worker, []).append(offer.hours)
     priced_by_tile: Dict[str, list] = {}
-    for cohort_id, cohort in sorted(record.cohorts.items()):
+    store = table_of(record.cohorts)
+    for cohort in store.figures(store.order()):
+        cohort_id = cohort.agent_id
         available = sum(hours_by_worker.get(cohort_id, ()))
         if cohort.tile not in priced_by_tile:
             priced_by_tile[cohort.tile] = tile_need_prices(setup, view, cohort.tile)

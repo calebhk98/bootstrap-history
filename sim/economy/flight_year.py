@@ -11,6 +11,7 @@ from typing import Any, Callable, Dict, Mapping
 
 from sim.labour.api import migration_shares, people_in
 
+from .cohort_store import table_of
 from .setup import labour_area
 from .titles_flight import tenant_flees
 
@@ -66,10 +67,11 @@ def note_fugitives(fugitives: Dict[str, Dict[str, Any]], shares: Mapping[str, fl
 def tenants_flee(record, shares_by_area: Mapping[str, float]) -> Dict[str, float]:
     """The tenants of each fleeing area leave their land in that share; the share released per tile."""
     released: Dict[str, float] = {}
-    for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        share = shares_by_area.get(labour_area(cohort.tile), 0.0)
+    store = table_of(record.cohorts)
+    for row, tile_of in zip(store.order().tolist(), store.tile_names(store.order())):
+        share = shares_by_area.get(labour_area(tile_of), 0.0)
         if share > 0.0:
-            for tile, left in tenant_flees(record, cohort.agent_id, share).items():
+            for tile, left in tenant_flees(record, store.ids[row], share).items():
                 released[tile] = released.get(tile, 0.0) + left
     return released
 

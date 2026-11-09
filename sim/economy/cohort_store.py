@@ -12,7 +12,7 @@ written as a numpy float is read back as one (`numpy_typed`): CPython's `sum()` 
 floats without, so a changed scalar type moves a total by a last digit."""
 import math
 from collections.abc import MutableMapping
-from typing import Dict, Iterable, Iterator, List, Mapping, Optional
+from typing import Dict, Iterable, Iterator, List, Mapping, NamedTuple, Optional
 
 import numpy as np
 
@@ -27,6 +27,19 @@ _FIELDS = ("agent_id", "tile", "income_class", "people", "working_people", "owne
            "last_basket_price_level", "last_year_income", "share_wealth", "planned_spending", "expected_spending",
            "expected_floor_cost", "unmet_floor_by_need", "own_plan_by_need", "hired_work_per_person", "milled_grains")
 _DICTS = {"unmet": "unmet_floor_by_need", "plan": "own_plan_by_need"}
+
+
+class CohortFigures(NamedTuple):
+    """The few figures most rules read of a cohort, read from the columns in a block (`CohortStore.figures`): `own_plan_by_need` is None
+    unless it was asked for."""
+    agent_id: str
+    tile: str
+    people: float
+    working_people: float
+    last_year_income: float
+    hired_work_per_person: float
+    milled_grains: tuple
+    own_plan_by_need: Optional[Dict[str, float]]
 
 
 def typed_flags(values) -> np.ndarray:
@@ -53,7 +66,9 @@ class CohortStore(MutableMapping):
         self._objects: List[Optional[Cohort]] = []
         self._order: Optional[np.ndarray] = None
         self._order_members = -1
-        self._members = 0
+        self._members = 0                           # rises when a cohort enters or its tile or class is written
+        self._tile_rows: Dict[str, np.ndarray] = {}
+        self._tile_rows_members = -1
         if cohorts:
             for cohort in cohorts.values():
                 self.put(cohort)
@@ -102,10 +117,15 @@ class CohortStore(MutableMapping):
         return self.row_of.keys()
 
     def values(self):
-        return [self.at(row) for row in self.row_of.values()]
+        objects = self._objects
+        for row, kept in enumerate(objects):          # rows are in table order, every one alive
+            if kept is None:
+                self.at(row)
+        return list(objects)
 
     def items(self):
-        return [(cohort_id, self.at(row)) for cohort_id, row in self.row_of.items()]
+        self.values()
+        return list(zip(self.ids, self._objects))
 
     def clear(self) -> None:
         version, names = self.version + 1, self.names
@@ -128,6 +148,7 @@ class CohortStore(MutableMapping):
             row = self._claim(cohort.agent_id)
         self._write(row, cohort)
         self._objects[row] = None
+        self._members += 1
         self.version += 1
         return row
 
@@ -201,8 +222,10 @@ class CohortStore(MutableMapping):
                 self._write_milled(row, value)
             elif name == "tile":
                 self.table.tile[row] = self._name("tiles", value)
+                self._members += 1
             elif name == "income_class":
                 self.table.income_class[row] = value
+                self._members += 1
             else:
                 self._scalar(name)[row] = np.nan if value is None else value
                 bit = FLOAT_BIT[name]
@@ -312,6 +335,41 @@ class CohortStore(MutableMapping):
         numbers = self.table.tile[:self.count]
         _unique, first = np.unique(numbers, return_index=True)
         return [names[numbers[place]] for place in np.sort(first).tolist()]
+
+    def figures(self, rows: np.ndarray, with_plan: bool = False) -> List[CohortFigures]:
+        """The figures of the cohorts in `rows` (in that order), each as a `CohortFigures`; no `Cohort` is built."""
+        people, working, income = self.floats("people", rows), self.floats("working_people", rows), self.floats("last_year_income", rows)
+        hired = self.floats("hired_work_per_person", rows)
+        plans = [self._pairs(row, "plan") for row in rows.tolist()] if with_plan else [None] * len(rows)
+        return [CohortFigures(self.ids[row], tile, people[place], working[place], income[place], hired[place], self.milled_of(row), plans[place])
+                for place, (row, tile) in enumerate(zip(rows.tolist(), self.tile_names(rows)))]
+
+    def tile_of(self, cohort_id: str) -> Optional[str]:
+        """The tile of the cohort, None for an id the table does not hold."""
+        row = self.row_of.get(cohort_id)
+        return None if row is None else self.names["tiles"].name_list[self.table.tile[row]]
+
+    def rows_on_tile(self, tile: str) -> np.ndarray:
+        """The rows, in table order, of the cohorts on `tile` (empty where there are none); kept until a cohort enters or moves."""
+        if self._tile_rows_members != self._members:
+            numbers = self.table.tile[:self.count]
+            names = self.names["tiles"].name_list
+            self._tile_rows = {names[number]: np.nonzero(numbers == number)[0] for number in np.unique(numbers).tolist()}
+            self._tile_rows_members = self._members
+        return self._tile_rows.get(tile, np.zeros(0, dtype=np.int64))
+
+    def richest_class(self, tile: str) -> Optional[int]:
+        """Income class of the tile's richest cohort, None where the tile has none."""
+        rows = self.rows_on_tile(tile)
+        return int(self.table.income_class[rows].max()) if len(rows) else None
+
+    def poorest_on_tile(self, tile: str) -> Optional[str]:
+        """The id of the tile's poorest cohort (lowest income class, then lowest id), None where the tile has none."""
+        rows = self.rows_on_tile(tile)
+        if not len(rows):
+            return None
+        classes = self.table.income_class[rows]
+        return min(self.ids[row] for row in rows[classes == classes.min()].tolist())
 
     def ids_on_tiles(self, wanted) -> List[str]:
         """The ids, in table order, of the cohorts whose tile `wanted(tile)` accepts (asked once for each tile)."""

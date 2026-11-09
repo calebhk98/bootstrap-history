@@ -11,6 +11,7 @@ import numpy as np
 
 from sim.world import capital_market
 
+from .cohort_store import table_of
 from .rates import own_rate
 from . import cohort_people, plan_table, plan_year, producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
@@ -335,7 +336,9 @@ class Economy:
         usual fertility (it plants before it knows the harvest), and the household work it does itself
         (household_work_year.py)."""
         plan, held, options = {}, self.hectares_held(), self.own_plot_options()
-        for cohort_id, cohort in sorted(self.record.cohorts.items()):
+        store = table_of(self.record.cohorts)
+        for cohort in store.figures(store.order(), with_plan=True):
+            cohort_id = cohort.agent_id
             tile = self.setup.tiles.get(cohort.tile)
             plan[cohort_id] = hours_for_own_plan(cohort, options, tile.fertility if tile else 0.0,
                                                  self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
@@ -363,7 +366,9 @@ class Economy:
         held = self.hectares_held()
         offered = sold_hours_by_worker(offers)
         grown_steps = []       # a cohort's grown goods are one batch; the batches are posted together, in cohort order
-        for cohort_id, cohort in sorted(record.cohorts.items()):
+        store = table_of(record.cohorts)
+        for cohort in store.figures(store.order()):
+            cohort_id = cohort.agent_id
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
                     - min(kept.get(cohort_id, 0.0), self._work_hours.get(cohort_id, 0.0)))   # household work is not spare hours
             tile = setup.tiles.get(cohort.tile)

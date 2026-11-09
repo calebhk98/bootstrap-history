@@ -11,12 +11,13 @@ from sim.book import Book, InsufficientFunds
 from sim.economy import ownership
 from sim.economy.types import Transfer
 from sim.economy.year_close_sums import python_sum
+from sim.economy.households_cohort import Cohort
 from sim.economy.year_close_dividends import add_property_income, as_transfers, dividend_plan, post_dividends
 from sim.economy.year_close_owners import Participants
 
 
 def cohort(agent_id, tile, share):
-    return SimpleNamespace(agent_id=agent_id, tile=tile, ownership_share=share)
+    return Cohort(agent_id, tile, 0, 1.0, 1.0, share)
 
 
 def producer(agent_id, owner):

@@ -8,6 +8,7 @@ import types
 import unittest
 
 from sim.economy.credit_record import CreditRecord
+from sim.economy.households_cohort import Cohort
 from sim.economy.land_record import LandRecord
 from sim.economy import titles, titles_inheritance
 from sim.tests import titles_concentration
@@ -19,7 +20,7 @@ HOUSEHOLDS = 10
 
 def village(held=None):
     """A record of ten households that each opened holding a tenth of the tile; `held` replaces the titles."""
-    cohorts = {"household:%d" % index: types.SimpleNamespace(agent_id="household:%d" % index, tile=TILE, ownership_share=0.1)
+    cohorts = {"household:%d" % index: Cohort("household:%d" % index, TILE, 0, 1.0, 1.0, 0.1)
                for index in range(HOUSEHOLDS)}
     held = {holder: cohort.ownership_share for holder, cohort in cohorts.items()} if held is None else held
     return types.SimpleNamespace(cohorts=cohorts, land=LandRecord(titles={TILE: dict(held)}), credit=CreditRecord())
