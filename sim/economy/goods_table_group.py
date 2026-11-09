@@ -1,14 +1,16 @@
 """A good's markets cut out of the order tables: which rows belong to which market, and which markets the batch can clear.
 
 `rows_of_good` finds the good's bid and offer rows and the markets they are in, the markets in the order they clear (area
-name, as the dict loop sorted them). `name_ranks` turns an id table into "who sorts first by name", because the clearing sorts
-bids by (priority, buyer, tile) and offers by (seller, tile) as text while ids are numbered by arrival.
-`batch_flags` is `goods_year_batch.batchable` for every market of the good at once."""
+name, as the dict loop sorted them), and the markets the batch can clear (`goods_year_batch.batchable` for every market of the
+good at once); the work is `goods_rows_kernel.good_rows`. `name_ranks` turns an id table into "who sorts first by name", because
+the clearing sorts bids by (priority, buyer, tile) and offers by (seller, tile) as text while ids are numbered by arrival."""
 from dataclasses import dataclass
 
 import numpy
 
 from sim.book_read_kernels import find_slots
+
+from .goods_rows_kernel import good_rows
 
 
 @dataclass
@@ -40,42 +42,15 @@ def name_ranks(names) -> numpy.ndarray:
     return ranks
 
 
-def rows_of_good(orders, good_id: int) -> GoodRows:
-    """The rows of the good's bids and offers and the markets they make up, in the order the markets clear."""
+def rows_of_good(orders, good_id: int, is_edge: numpy.ndarray, good_is_batchable: bool):
+    """(the good's `GoodRows`, which markets the batch clears, the flags (has an offer row, has an offer with units, has a bid with a
+    budget) per market): one kernel call over the order tables.
+
+    A market is batched when it has units on offer and no book edge (the mint's wash of its own trades) selling units in it, and
+    the good is batchable (portable, and in the year arrays)."""
     bids, offers = orders.tables()
-    bid_rows = numpy.flatnonzero(bids.good[:int(bids.row_count[0])] == good_id)
-    offer_rows = numpy.flatnonzero(offers.good[:int(offers.row_count[0])] == good_id)
-    bid_markets, offer_markets = bids.market[bid_rows], offers.market[offer_rows]
-    distinct = numpy.unique(numpy.concatenate((bid_markets, offer_markets)))
-    by_area = orders.markets_by_area_name(distinct)
-    place_of = numpy.empty(len(distinct), dtype=numpy.int64)
-    place_of[by_area] = numpy.arange(len(distinct), dtype=numpy.int64)
-    bid_position = place_of[numpy.searchsorted(distinct, bid_markets)]
-    offer_position = place_of[numpy.searchsorted(distinct, offer_markets)]
-    bid_grouped, bid_group_ptr = grouped(bid_rows, bid_position, len(distinct))
-    offer_grouped, offer_group_ptr = grouped(offer_rows, offer_position, len(distinct))
-    return GoodRows(distinct[by_area], bid_rows, bid_position, offer_rows, offer_position, bid_grouped, bid_group_ptr,
-                    offer_grouped, offer_group_ptr)
-
-
-def grouped(rows: numpy.ndarray, position: numpy.ndarray, groups: int):
-    """The rows grouped by their group's place (arrival order kept inside a group), and where each group starts."""
-    order = numpy.argsort(position, kind="stable")
-    pointers = numpy.concatenate(([0], numpy.cumsum(numpy.bincount(position, minlength=groups)))).astype(numpy.int64)
-    return rows[order], pointers
-
-
-def batch_flags(offers, is_edge, rows: GoodRows, good_is_batchable: bool) -> numpy.ndarray:
-    """Per market: whether the batch clears it. It must have units on offer and no book edge (the mint's wash of its own
-    trades) selling units in it, and its good must be batchable (portable, and in the year arrays)."""
-    count = len(rows.markets)
-    if not good_is_batchable:
-        return numpy.zeros(count, dtype=bool)
-    has_units = offers.quantity[rows.offer_rows] > 0.0
-    edge = has_units & (is_edge[offers.seller[rows.offer_rows]] != 0)
-    units = numpy.bincount(rows.offer_position, weights=has_units, minlength=count)
-    edge_units = numpy.bincount(rows.offer_position, weights=edge, minlength=count)
-    return (units > 0) & (edge_units == 0)
+    found = good_rows(bids, offers, good_id, orders.memory_tables.goods_table.area, orders.area_ranks(), is_edge, good_is_batchable)
+    return GoodRows(*found[:9]), found[9], found[10:]
 
 
 def note_stock_slots(offers, book, good_id: int, offer_rows: numpy.ndarray) -> None:
