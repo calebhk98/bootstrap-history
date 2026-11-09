@@ -16,6 +16,7 @@ from . import settlement
 from .goods_idle_years import note_idle_years as note_idle_years_kernel
 from .goods_good_clear import ON_OBJECTS, TABLE_TRADED, TABLE_UNTRADED
 from .settlement_ids import SettledByIds, settle_by_ids
+from .settlement_note_kernel import FOREIGN_MARKET, note_columns
 from .year_ledger_tables import SALES_PURPOSE
 
 
@@ -115,25 +116,17 @@ def _noted_by_ids(book, ledger, good: str, plant_makers: Dict[str, list], slots:
         return answer
     tables = ledger.tables
     tables.fit_agents()
-    counts = numpy.diff(settled.agent_offset)
-    rows = int(settled.agent_offset[-1])
-    market_of_row = numpy.repeat(numpy.arange(len(counts), dtype=numpy.int64), counts)
-    template, reference = numpy.zeros(rows, dtype=numpy.int64), numpy.zeros(rows, dtype=numpy.int64)
-    foreign = (settled.imports != 0.0) | (settled.exports != 0.0)
-    if foreign.any():
-        code = tables.purpose_code("sale of %s" % good)
-        for market in numpy.unique(market_of_row[foreign]).tolist():
-            here = market_of_row == market
-            template[here], reference[here] = code
-    makers = numpy.array([book.agent_ids.numbers[name] for name in plant_makers.get(good, ()) if name in book.agent_ids.numbers],
-                         dtype=numpy.int64)
-    plant_bought = (settled.paid > 0.0) & settled.got_goods & numpy.isin(settled.agent, makers)
+    makers = numpy.sort(numpy.array([book.agent_ids.numbers[name] for name in plant_makers.get(good, ()) if name in book.agent_ids.numbers],
+                                    dtype=numpy.int64))
+    (purpose_kind, good_column, template, reference, plant_bought, any_foreign, *bought) = note_columns(
+        settled.agent_offset, numpy.array(slots, dtype=numpy.int64), settled.agent, settled.paid, settled.got_goods, settled.paid_as_buyer,
+        settled.buyer_net, settled.goods_in, settled.imports, settled.exports, makers, SALES_PURPOSE, book.good_number(good))
+    if any_foreign:
+        slot = template == FOREIGN_MARKET
+        template[slot], reference[slot] = tables.purpose_code("sale of %s" % good)
     ledger.note_settlement_rows(settled.agent, settled.paid, settled.received, settled.imports, settled.exports, settled.got_goods,
-                                settled.goods_in, settled.goods_out, numpy.full(rows, SALES_PURPOSE, dtype=numpy.int64),
-                                numpy.full(rows, book.good_number(good), dtype=numpy.int64), template, reference, plant_bought)
-    found = settled.got_goods | settled.paid_as_buyer
-    cleared.bought = (numpy.repeat(numpy.array(slots, dtype=numpy.int64), counts)[found], settled.agent[found], settled.goods_in[found],
-                      numpy.where(settled.paid_as_buyer[found], settled.buyer_net[found], 0.0))
+                                settled.goods_in, settled.goods_out, purpose_kind, good_column, template, reference, plant_bought)
+    cleared.bought = tuple(bought)
     answer.delivered[slots] = settled.delivered
     answer._by_ids = (book.agent_ids.name_list, settled, {position: place for place, position in enumerate(slots)})
     _note_mint_takes(book, settled, slots, answer)

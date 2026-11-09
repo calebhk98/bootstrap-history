@@ -17,7 +17,7 @@ from sim.economy.goods_order_book import GoodsOrderBook
 from sim.economy.goods_table_results import TableClearing
 from sim.economy.goods_table_views import TableBatch
 from sim.economy.market_tables import MarketTables
-from sim.economy.settlement_ids import first_use_numbers, pair_positions, settle_by_ids
+from sim.economy.settlement_ids import settle_by_ids
 from sim.economy.settlement_numbering import local_numbering
 from sim.economy.types import EDGE_MINT, Bid, GoodsMove, Offer, Transfer
 
@@ -97,14 +97,6 @@ class SettleByIdsIsSettleResults(unittest.TestCase):
 
 
 class NumberingHelpers(unittest.TestCase):
-
-    def test_first_use_numbers_count_values_in_order_of_first_appearance(self):
-        numbers, distinct = first_use_numbers(numpy.array([9, 4, 9, 7, 4]))
-        self.assertEqual((numbers.tolist(), distinct.tolist()), ([0, 1, 0, 2, 1], [9, 4, 7]))
-
-    def test_pair_positions_list_the_pairs_of_the_chosen_markets_one_after_another(self):
-        sizes, positions = pair_positions(numpy.array([0, 2, 2, 5, 6]), numpy.array([3, 0, 2]))
-        self.assertEqual((sizes.tolist(), positions.tolist()), ([1, 2, 3], [5, 0, 1, 2, 3, 4]))
 
     def test_local_numbering_of_one_market_lists_every_key_and_agent_of_the_batch(self):
         answer = local_numbering(numpy.array([2]), numpy.array([0, 1]), numpy.array([2, 2]), numpy.array([0, 1, 2]), 3)
