@@ -215,11 +215,12 @@ def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: Are
 
 def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_map: AreaMap, cash: float,
            held_stock: Mapping[Tuple[GoodId, TileId], float], specs: Mapping[GoodId, GoodSpec],
-           interest_rate: float, shares: Optional[RouteShares] = None, route=None) -> AgentOrders:
+           interest_rate: float, shares: Optional[RouteShares] = None, route=None, rows_out=None) -> AgentOrders:
     """The merchant's offers and bids for the year. Sets `merchant.routes`. `shares` is what rival
     merchants have already committed this year; this merchant adds its own to it. Many merchants sized in one
-    pass share `route` (`merchants_book.route_pass`) and `merchants_book.DenseShares` (`merchants_plan.orders`)."""
-    return merchants_plan.orders(merchant, view, carriage, area_map, cash, held_stock, specs, interest_rate, shares, route)
+    pass share `route` (`merchants_book.route_pass`) and `merchants_book.DenseShares` (`merchants_plan.orders`). With `rows_out` (an
+    `OrderRows`) the orders are written to it as rows and the answer holds none."""
+    return merchants_plan.orders(merchant, view, carriage, area_map, cash, held_stock, specs, interest_rate, shares, route, rows_out)
 
 
 def ships_held_stock(merchant: Merchant, held_stock: Mapping[Tuple[GoodId, TileId], float]) -> bool:
@@ -227,18 +228,30 @@ def ships_held_stock(merchant: Merchant, held_stock: Mapping[Tuple[GoodId, TileI
     return any(held_stock.get(key, 0.0) > 0.0 for key in merchant.routes)
 
 
-def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) -> List[Offer]:
-    offers = []
+NOT_AT_HAND = object()
+
+
+def holding_offer_figures(merchant, view, area_map, held_stock, specs, interest_rate, expectation_of=None):
+    """(good, area, tile, quantity, reservation price) of each stock the merchant holds that has a price to expect, in (good, tile) order.
+    `expectation_of(good, tile)` is the merchant's own expected price of the stock's market when the caller has the figures at hand (None
+    for none, `NOT_AT_HAND` for a stock the caller has not got); without it each is read from the merchant."""
     for (good, tile), quantity in sorted(held_stock.items()):
         if quantity <= 0.0 or good not in specs:
             continue
         area = area_map.area_of(good, tile)
-        expected = expected_price(merchant, view, good, area)
+        expected = expectation_of(good, tile) if expectation_of is not None else NOT_AT_HAND
+        if expected is NOT_AT_HAND:
+            expected = merchant.expected_prices.get((good, area))
+        if expected is None:
+            expected = view.price(good, area)
         if expected is None:
             continue
-        reservation = inventory.holding_reservation(expected, interest_rate, specs[good].spoilage_per_year, 0.0)
-        offers.append(Offer(merchant.agent_id, good, area, tile, quantity, reservation))
-    return offers
+        yield good, area, tile, quantity, inventory.holding_reservation(expected, interest_rate, specs[good].spoilage_per_year, 0.0)
+
+
+def _holding_offers(merchant, view, area_map, held_stock, specs, interest_rate) -> List[Offer]:
+    return [Offer(merchant.agent_id, good, area, tile, quantity, reservation)
+            for good, area, tile, quantity, reservation in holding_offer_figures(merchant, view, area_map, held_stock, specs, interest_rate)]
 
 
 def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, interest_rate, only_held=None):

@@ -36,10 +36,10 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         priced = memory.priced(setup, record, view, cohort, basket)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
         cash = cash_of[cohort.agent_id]
+        plot_hours = ledger.own_plot_hours.get(cohort.agent_id)
         tool_bids = tool_wear.tool_bids(
             cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.offered_price(good, view.area_of(good, cohort.tile)),
-            lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
-            setup.specs, cash)
+            lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, plot_hours, setup.specs, cash) if plot_hours else []
         tool_bids_of[cohort.agent_id] = tool_bids
         spendable = cash - sum(bid.budget for bid in tool_bids)
         grown_units = ledger.grown_units.get(cohort.agent_id)
@@ -52,6 +52,7 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         order_book)
     made.update(plain)
     rows = OrderRows(order_book, HOUSEHOLD)
+    ground, margins = land_bid_year.ground_of(setup, record) if own_options else None, {}      # the ground goods and sellers, and the best crop margin by tile, are the same for every cohort
     planned_of = {}          # the money each cohort placed in bids, written to the table once all are known
     for cohort in cohorts:
         orders = made[cohort.agent_id]
@@ -62,7 +63,8 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         if own_options:
             savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
             orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
-                setup, record, view, cohort, own_options, ledger.spare_hours.get(cohort.agent_id, 0.0), savings))
+                setup, record, view, cohort, own_options, ledger.spare_hours.get(cohort.agent_id, 0.0), savings,
+                ground, margins))
         rows.bids_from(orders.bids)
         rows.offers_from(orders.offers)
         funds.extend(orders.funds_offers)
@@ -114,8 +116,6 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book) -> None
     first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
     for merchant in ordered[first:] + ordered[:first]:
         held = held_stock(record.book, merchant.agent_id)
-        orders = merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
-                                  held, setup.specs, rate, shares, route)
-        rows.bids_from(orders.bids)
-        rows.offers_from(orders.offers)
+        merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
+                         held, setup.specs, rate, shares, route, rows)
     rows.write()

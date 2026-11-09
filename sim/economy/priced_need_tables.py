@@ -73,21 +73,23 @@ class GoodNumbers:
 
 GOODS = GoodNumbers()
 
-_SPEC_ROWS: Dict[int, tuple] = {}      # id(spec) -> (spec, goods, effects, qualities, limits); the spec is held so its id is not reused
+_SPEC_ROWS: Dict[tuple, tuple] = {}      # ids of a spec's goods, qualities and limits -> (those three, goods, effects, qualities, limits); held so the ids are not reused
 _SPEC_ROWS_LIMIT = 8192
 
 
 def spec_rows(spec: NeedSpec) -> tuple:
-    """(spec, good numbers, effects, qualities, limits) of a need's goods, as lists in the spec's order; kept by the spec object."""
-    found = _SPEC_ROWS.get(id(spec))
+    """(good numbers, effects, qualities, limits) of a need's goods, as lists in the spec's order; kept by the spec's goods, qualities and
+    limits objects, which a spec made from another by `dataclasses.replace` (another floor, the same goods) shares."""
+    key = (id(spec.goods), id(spec.qualities), id(spec.share_limits))
+    found = _SPEC_ROWS.get(key)
     if found is None:
         if len(_SPEC_ROWS) >= _SPEC_ROWS_LIMIT:
             _SPEC_ROWS.clear()
         quality, limit = dict(spec.qualities), dict(spec.share_limits)
-        found = _SPEC_ROWS[id(spec)] = (spec, [GOODS.of(good) for good, _effect in spec.goods], [effect for _good, effect in spec.goods],
-                                        [quality.get(good, 1.0) for good, _effect in spec.goods],
-                                        [limit.get(good, numpy.nan) for good, _effect in spec.goods])
-    return found
+        found = _SPEC_ROWS[key] = ((spec.goods, spec.qualities, spec.share_limits), (
+            [GOODS.of(good) for good, _effect in spec.goods], [effect for _good, effect in spec.goods],
+            [quality.get(good, 1.0) for good, _effect in spec.goods], [limit.get(good, numpy.nan) for good, _effect in spec.goods]))
+    return found[1]
 
 
 _BASKET_ROWS: Dict[int, tuple] = {}      # id(needs tuple) -> (needs, rows); the tuple is held so its id is not reused
@@ -103,7 +105,7 @@ def basket_rows(needs: Sequence[NeedSpec]) -> tuple:
         _BASKET_ROWS.clear()
     first, goods, effects, qualities, limits = [], [], [], [], []
     for spec in needs:
-        _spec, spec_goods, spec_effects, spec_qualities, spec_limits = spec_rows(spec)
+        spec_goods, spec_effects, spec_qualities, spec_limits = spec_rows(spec)
         first.append(len(goods))
         goods.extend(spec_goods)
         effects.extend(spec_effects)
@@ -113,55 +115,70 @@ def basket_rows(needs: Sequence[NeedSpec]) -> tuple:
     return found
 
 
+_BASKET_ARRAYS: Dict[int, tuple] = {}      # id(needs tuple) -> (needs, arrays); the tuple is held so its id is not reused
+
+
+def basket_arrays(needs: Sequence[NeedSpec]) -> tuple:
+    """`basket_rows` of the needs as numpy arrays, kept by the needs tuple object: (first row of each need, good numbers, effects, qualities,
+    limits)."""
+    found = _BASKET_ARRAYS.get(id(needs))
+    if found is not None:
+        return found[1]
+    if len(_BASKET_ARRAYS) >= _SPEC_ROWS_LIMIT:
+        _BASKET_ARRAYS.clear()
+    _held, _specs, first, goods, effects, qualities, limits, _limited = basket_rows(needs)
+    arrays = (numpy.array(first, dtype=numpy.int64), numpy.array(goods, dtype=numpy.int64), numpy.array(effects, dtype=numpy.float64),
+              numpy.array(qualities, dtype=numpy.float64), numpy.array(limits, dtype=numpy.float64))
+    _BASKET_ARRAYS[id(needs)] = (needs, arrays)
+    return arrays
+
+
 class NeedBatch:
-    """Requests collected as rows. `specs` is the spec of each need row, `owners` the request each need row belongs to."""
+    """Requests collected, written as rows by `tables`. `specs` is the spec of each need row, `owners` the request each need row belongs to."""
 
     def __init__(self) -> None:
         self.specs: List[NeedSpec] = []
-        self.owners: List[int] = []
-        self._tile: List[int] = []
-        self._exponent: List[float] = []
-        self._first: List[int] = []
-        self._good: List[int] = []
-        self._effect: List[float] = []
-        self._quality: List[float] = []
-        self._limit: List[float] = []
+        self._requests: List[tuple] = []        # (tile row, exponent, `basket_arrays` of the needs) of each request
         self.requests = 0
         self.has_limits = False
+
+    @property
+    def owners(self) -> List[int]:
+        """The request of each need row."""
+        counts = numpy.fromiter((len(arrays[0]) for _tile, _exponent, arrays in self._requests), numpy.int64, self.requests)
+        return numpy.repeat(numpy.arange(self.requests, dtype=numpy.int64), counts).tolist()
 
     def add(self, tile_row: int, exponent: float, needs: Sequence[NeedSpec]) -> int:
         """Add a request to price `needs` at the prices of matrix row `tile_row`; returns the request's number. `needs` should be the
         tuple object a basket holds (`Basket.needs`), so its rows are found kept."""
         request = self.requests
         self.requests += 1
-        _held, specs, first, goods, effects, qualities, limits, limited = basket_rows(needs)
-        base = len(self._good)
+        _held, specs, _first, _goods, _effects, _qualities, _limits, limited = basket_rows(needs)
+        self._requests.append((tile_row, exponent, basket_arrays(needs)))
         self.specs.extend(specs)
-        self.owners.extend([request] * len(specs))
-        self._tile.extend([tile_row] * len(specs))
-        self._exponent.extend([exponent] * len(specs))
-        self._first.extend([base + each for each in first])
-        self._good.extend(goods)
-        self._effect.extend(effects)
-        self._quality.extend(qualities)
-        self._limit.extend(limits)
         self.has_limits = self.has_limits or limited
         return request
 
     def tables(self) -> Tuple[object, object]:
         """The need and good tables of the requests added, answers empty."""
-        need_count, row_count = len(self.specs), len(self._good)
+        count = self.requests
+        arrays = [each[2] for each in self._requests]
+        need_counts = numpy.fromiter((len(each[0]) for each in arrays), numpy.int64, count)
+        row_counts = numpy.fromiter((len(each[1]) for each in arrays), numpy.int64, count)
+        need_count, row_count = int(need_counts.sum()), int(row_counts.sum())
         needs = NEED_ROWS.new_table(PricedNeedRows, need_count, need_count)
-        needs.tile[:] = self._tile
-        needs.exponent[:] = self._exponent
-        needs.first_row[:] = self._first
-        needs.end_row[:] = self._first[1:] + [row_count]
+        needs.tile[:] = numpy.repeat(numpy.fromiter((each[0] for each in self._requests), numpy.int64, count), need_counts)
+        needs.exponent[:] = numpy.repeat(numpy.fromiter((each[1] for each in self._requests), numpy.float64, count), need_counts)
+        first = numpy.concatenate([each[0] for each in arrays]) if count else numpy.zeros(0, dtype=numpy.int64)
+        needs.first_row[:] = first + numpy.repeat(numpy.cumsum(row_counts) - row_counts, need_counts)
+        needs.end_row[:need_count - 1] = needs.first_row[1:]
+        if need_count:
+            needs.end_row[need_count - 1] = row_count
         needs.price_index[:] = numpy.nan
         rows = GOOD_ROWS.new_table(PricedGoodRows, row_count, row_count)
-        rows.good[:] = self._good
-        rows.effect[:] = self._effect
-        rows.quality[:] = self._quality
-        rows.limit[:] = self._limit
+        for place, column in enumerate((rows.good, rows.effect, rows.quality, rows.limit), start=1):
+            if count:
+                column[:] = numpy.concatenate([each[place] for each in arrays])
         rows.price[:] = numpy.nan
         rows.ceiling[:] = numpy.inf
         return needs, rows

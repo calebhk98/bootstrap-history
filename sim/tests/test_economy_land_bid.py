@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from unittest import mock
 
 from sim.contract_record import Contract
 
@@ -137,6 +138,29 @@ class TitleTests(unittest.TestCase):
         self.assertAlmostEqual(land_bid.own_use(stock=50.0, hectares_needed=30.0, hectares_held=12.0), 18.0)
         self.assertAlmostEqual(land_bid.own_use(stock=10.0, hectares_needed=30.0, hectares_held=12.0), 10.0)
         self.assertEqual(land_bid.own_use(stock=50.0, hectares_needed=30.0, hectares_held=40.0), 0.0)
+
+
+class LandBidsSharedFiguresTests(unittest.TestCase):
+    def cohort(self, name):
+        return types.SimpleNamespace(agent_id=name, tile=TILE)
+
+    def test_the_margin_of_a_tile_is_worked_out_once_and_the_ground_is_handed_on(self):
+        setup = types.SimpleNamespace(tiles={TILE: "spec"})
+        margins, ground = {}, (("ground",), {})
+        with mock.patch.object(land_bid_year, "best_margin", return_value=(2.0, 5.0, "farm")) as margin, \
+                mock.patch.object(land_bid_year, "actor_bids", return_value=["bid"]) as bids:
+            for name in ("a", "b"):
+                self.assertEqual(land_bid_year.land_bids(setup, None, None, self.cohort(name), {}, 10.0, 3.0, ground, margins), ["bid"])
+        self.assertEqual(margin.call_count, 1)
+        self.assertEqual(margins, {TILE: (2.0, 5.0, "farm")})
+        self.assertEqual([call.args[-1] for call in bids.call_args_list], [ground, ground])
+        self.assertEqual([call.args[3] for call in bids.call_args_list], ["a", "b"])
+
+    def test_with_no_spare_hours_there_is_nothing_to_work_out(self):
+        setup = types.SimpleNamespace(tiles={TILE: "spec"})
+        with mock.patch.object(land_bid_year, "best_margin") as margin:
+            self.assertEqual(land_bid_year.land_bids(setup, None, None, self.cohort("a"), {}, 0.0, 3.0, (), {}), [])
+        margin.assert_not_called()
 
 
 class SellerAndGroundTests(unittest.TestCase):

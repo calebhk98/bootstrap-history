@@ -16,6 +16,7 @@ from . import credit_claims
 from .close_pack_kernels import held_goods
 from .year_arrays_costs import KERNEL, bill_goods, bill_hours, price_in
 from .year_arrays_memory import price_grid
+from .year_arrays_owners import debts_by_row, eligible_owners
 from .year_arrays_recipes import Names
 
 
@@ -143,9 +144,9 @@ def worths_from_arrays(setup, record, view, arrays) -> Dict[str, float]:
     money = setup.currency_id
     cohorts = record.cohorts
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
-    eligible = np.fromiter((owner in cohorts for owner in columns.owners()), dtype=np.bool_, count=len(ids))
+    eligible = eligible_owners(columns, cohorts)
     cash = record.book.balances_at(record.book.rows_of(ids), money)
-    debt = np.fromiter((debts.get(each, 0.0) for each in ids), dtype=np.float64, count=len(ids))
+    debt = debts_by_row(columns, debts)
     rows, goods, quantities, extra = packed_stock(record, view, ids, columns.tile_names(), matrices)
     worth, has = producer_worths(recipe_row, tile_row, capacity, cash, debt, eligible, rows, goods, quantities, extra,
                                  matrices.plant_goods, matrices.plant_labour_hours, matrices.plant_life_years, price, wage,

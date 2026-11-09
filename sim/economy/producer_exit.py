@@ -41,6 +41,7 @@ class ExitBatch:
         self._steps = []
         if self.exited:
             self.record.credit.default_term_loans_of(self.exited)
+            bondage_hours.release_many(self.record.unfree.bonded_held, self.exited)       # one pass over the held rows for every exit
             self.exited = []
 
 
@@ -49,7 +50,7 @@ def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Option
     """Repay the loans from the cash, in loan order; pay out what is left of the close's dividend (shared
     as ownership shares dividends); move the goods held to the owner; write off the unpaid debt as
     defaults and remove the producer. Returns the dividend payments made. `owed` is the producer's loans when the caller has them;
-    `deferred` leaves its term loans in the contracts for the caller to end (`ExitBatch`); `steps`, when given, takes the postings
+    `deferred` leaves its term loans in the contracts and the bonded people it holds in `bonded_held` for the caller to end (`ExitBatch`); `steps`, when given, takes the postings
     (repayments, dividend, goods) as three batches instead of posting them: only this producer's own cash and goods are read, so
     the postings of several exits can wait and be made together in order. `held` is the producer's goods (`Book.goods_held`) when the
     caller read them for several exits at once."""
@@ -80,7 +81,8 @@ def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Option
         record.credit.default_term_loans(producer_id)
     record.credit.forget_producer(producer_id)
     record.capital_markets.forget_producer(producer_id)
-    bondage_hours.release(record.unfree.bonded_held, producer_id)
+    if not deferred:
+        bondage_hours.release(record.unfree.bonded_held, producer_id)
     producer_table.remove_producer(record.producers, producer_id)
     return paid
 

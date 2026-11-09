@@ -108,11 +108,11 @@ def close_households(setup, record, view, ledger, property_income: Dict[str, flo
     hired, milled = store.floats("hired_work_per_person", order), [store.milled_of(row) for row in order.tolist()]
     numbers, floor_costs = [], []
     cohort_prime.prime_cohort_baskets(setup, record, view, False)
-    for position, cohort_id in enumerate(cohort_ids):
+    keys = household_work_year.signatures_from_fields(record, tiles_of, cohort_ids, hired, milled)       # the hearths of every cohort in one pass
+    for position, key in enumerate(keys):
         # cohorts of one tile, hearth, hired work and milled grains share a basket and its floor cost
-        key = household_work_year.signature_of(record, tiles_of[position], cohort_id, hired[position], milled[position])
         if key not in baskets:
-            eaten = household_work_year.signature_of(record, tiles_of[position], cohort_id, hired[position], milled[position], False)
+            eaten = household_work_year.eaten_signature(key)
             baskets[key] = (household_work_year.basket_of_signature(setup, eaten),
                             household_work_year.priced_basket_of(setup, view, tiles_of[position], eaten).subsistence_cost_per_person())
         numbers.append(packed.add(key, baskets[key][0]))

@@ -76,7 +76,7 @@ def own_use(stock: float, hectares_needed: float, hectares_held: float) -> float
 _seller_indexes: Dict[int, tuple] = {}      # id of a producers table -> (table, stamp, (good, tile) -> owners)
 
 
-def _seller_index(record, recipes: Mapping[str, Recipe]) -> Dict[Tuple[GoodId, TileId], set]:
+def seller_index(record, recipes: Mapping[str, Recipe]) -> Dict[Tuple[GoodId, TileId], set]:
     """The owners of the producers that make each good on each tile, built once a year per producers table (producers are
     added and handed to new owners only when the year closes)."""
     producers = record.producers
@@ -102,4 +102,4 @@ def _seller_index(record, recipes: Mapping[str, Recipe]) -> Dict[Tuple[GoodId, T
 
 def owners_of_sellers(record, recipes: Mapping[str, Recipe], good: GoodId, tile: TileId) -> Sequence[AgentId]:
     """The owners of the producers that make `good` on `tile`: whose land a sold hectare is."""
-    return sorted(_seller_index(record, recipes).get((good, tile), ()))
+    return sorted(seller_index(record, recipes).get((good, tile), ()))

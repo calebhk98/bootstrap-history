@@ -39,6 +39,37 @@ def per_good_weights(tile, view, specs, priced):
     return weights, {good: prices[good] for good in weights}
 
 
+class StorableGoods(unittest.TestCase):
+    def test_the_storable_goods_are_those_that_can_be_stored_in_the_order_of_the_specs(self):
+        self.assertEqual(households_store.storable_goods(SPECS), [good for good, spec in SPECS.items() if households_store._can_be_stored(spec)])
+        self.assertEqual(households_store.storable_goods(SPECS), [good for good in SPECS if good in STORABLE])
+
+    def test_weights_with_the_storable_goods_handed_in_equal_those_without(self):
+        _setup, record, view, _ledger, _area_map = economy_of(0)
+        for tile in TILES:
+            self.assertEqual(households_store._store_weights(tile, view, SPECS, PRICED, households_store.storable_goods(SPECS)),
+                             households_store._store_weights(tile, view, SPECS, PRICED))
+
+
+class StoreOffersAreas(unittest.TestCase):
+    def test_areas_handed_in_give_the_offers_the_view_asked_good_by_good_gives(self):
+        cohort = types.SimpleNamespace(agent_id="household:a", tile="t0", expected_inflation=0.01)
+        view = types.SimpleNamespace(area_of=lambda good, tile: "area_" + good, currency_of=lambda area: "coin", interest_rate=lambda currency: 0.05,
+                                     opening_wage_level=lambda currency: 1.0)
+        specs = {"gold": GoodSpec("gold", 0.0, 0.0, 30.0, "x"), "silver": GoodSpec("silver", 0.0, 0.0, 30.0, "x")}
+        weights, prices, held = {"gold": 0.5, "silver": 0.5}, {"gold": 100.0, "silver": 20.0}, {"gold": 3.0, "silver": 40.0}
+        asked = households_store.store_offers(cohort, view, specs, weights, prices, held, 100.0, 0.02, 5.0, 400.0)
+        given = households_store.store_offers(cohort, view, specs, weights, prices, held, 100.0, 0.02, 5.0, 400.0,
+                                              {"gold": "area_gold", "silver": "area_silver"})
+        self.assertTrue(asked)
+        self.assertEqual(given, asked)
+
+    def test_nothing_held_offers_nothing_and_asks_for_no_area(self):
+        cohort = types.SimpleNamespace(agent_id="household:a", tile="t0", expected_inflation=0.01)
+        view = types.SimpleNamespace(area_of=lambda good, tile: 1 / 0)
+        self.assertEqual(households_store.store_offers(cohort, view, {}, {"gold": 1.0}, {"gold": 100.0}, {"gold": 0.0}, 100.0, 0.02, 5.0, 400.0), [])
+
+
 class StoreWeightsOnBlocks(unittest.TestCase):
     def test_weights_and_prices_equal_the_good_by_good_read(self):
         found = 0
