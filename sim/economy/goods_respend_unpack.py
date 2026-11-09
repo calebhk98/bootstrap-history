@@ -8,7 +8,10 @@ from typing import Dict, List
 
 import numpy
 
+from sim.book_settled import post_settled_by_numbers
+
 from .goods_added_bids import AddedBids
+from .goods_respend_settle_kernel import settlement_by_good
 from .goods_respend_rows import table_columns
 from .types import Offer
 
@@ -182,9 +185,41 @@ def write_settlement(setup, record, ledger, packed, out) -> None:
     item = packed.arguments["market_good"][market]
     buyer_agent = packed.arguments["buyer_agent"][buyer_row]
     seller_agent = packed.arguments["offer_agent"][offer]
-    agents, good_names = packed.agents, packed.goods
     _note(ledger, packed, item, buyer_agent, seller_agent, goods_moved, money, pair_import[:pair_count],
-          pair_export[:pair_count], len(good_names))
+          pair_export[:pair_count], len(packed.goods))
+    book = record.book
+    numbers = _book_numbers(book, packed)
+    if numbers is None:      # a name the book has not numbered: the old route numbers it, in the order it meets it
+        _post_by_names(setup, book, packed, item, buyer_agent, seller_agent, buyer_row, offer, goods_moved, money)
+        return
+    agent_number, key_holder, key_tile, buyer_holder, buyer_tile = numbers
+    (goods, people_ptr, people, paid, received, move_ptr, holder, tile, given, taken) = settlement_by_good(
+        item, buyer_agent, seller_agent, buyer_row, packed.arguments["offer_key"][offer], goods_moved, money, agent_number, key_holder,
+        key_tile, buyer_holder, buyer_tile, len(packed.goods))
+    currency_number = book.currency_number(setup.currency_id)
+    for index, good in enumerate(goods.tolist()):
+        name = packed.goods[good]
+        people_at, moves_at = slice(people_ptr[index], people_ptr[index + 1]), slice(move_ptr[index], move_ptr[index + 1])
+        post_settled_by_numbers(book, setup.currency_id, "sale of %s" % name, name, currency_number, book.good_number(name), people[people_at],
+                                paid[people_at], received[people_at], holder[moves_at], tile[moves_at], given[moves_at], taken[moves_at])
+
+
+def _book_numbers(book, packed):
+    """(the book's number of each packed agent, of each offer key's holder and tile, of each buyer's household and tile), or None when the
+    book has not numbered one of the names."""
+    agents = book.agent_ids.numbers_of(packed.agents)
+    key_holder = book.agent_ids.numbers_of([packed.agents[each[0]] for each in packed.keys])
+    key_tile = book.tile_ids.numbers_of([each[2] for each in packed.keys])
+    buyer_holder = book.agent_ids.numbers_of(packed.buyers)
+    buyer_tile = book.tile_ids.numbers_of(packed.buyer_tile)
+    if any(len(each) and int(each.min()) < 0 for each in (agents, key_holder, key_tile, buyer_holder, buyer_tile)):
+        return None
+    return agents, key_holder, key_tile, buyer_holder, buyer_tile
+
+
+def _post_by_names(setup, book, packed, item, buyer_agent, seller_agent, buyer_row, offer, goods_moved, money) -> None:
+    """The settled pairs posted good by good with the names of agents and tiles (`Book.post_settled`)."""
+    agents, good_names = packed.agents, packed.goods
     for good in numpy.unique(item).tolist():
         mine = item == good
         buyers, sellers, units, paid_money = buyer_agent[mine], seller_agent[mine], goods_moved[mine], money[mine]
@@ -197,9 +232,9 @@ def write_settlement(setup, record, ledger, packed, out) -> None:
         for row, amount in zip(rows.tolist(), taken.tolist()):
             moves.setdefault((packed.buyers[row], packed.buyer_tile[row]), [0.0, 0.0])[1] += amount
         name = good_names[good]
-        record.book.post_settled(setup.currency_id, "sale of %s" % name, name, [agents[each] for each in people.tolist()],
-                                 paid.tolist(), received.tolist(), list(moves), [each[0] for each in moves.values()],
-                                 [each[1] for each in moves.values()])
+        book.post_settled(setup.currency_id, "sale of %s" % name, name, [agents[each] for each in people.tolist()],
+                          paid.tolist(), received.tolist(), list(moves), [each[0] for each in moves.values()],
+                          [each[1] for each in moves.values()])
 
 
 def _note(ledger, packed, item, buyer_agent, seller_agent, goods_moved, money, importer, exporter, good_count) -> None:

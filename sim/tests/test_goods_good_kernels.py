@@ -6,12 +6,13 @@ import unittest
 import numpy
 
 from sim.compiled_tables.growth import reserve_rows
-from sim.economy import market_curves_kernel, market_curves_rows
+from sim.economy import goods_respend_settle_kernel, market_curves_kernel, market_curves_rows
 from sim.economy import goods_batch_write_kernel, goods_clearing_kernel, goods_decide_inputs_kernel, goods_pack_kernel, goods_rows_kernel, stable_order_kernel
 from sim.economy.goods_order_tables import (BID_ORDER, GOODS_MARKET_RESULTS, GOODS_OFFERS, GOODS_PAIRS, OFFER_ORDER, BidOrder,
                                             GoodsMarketResults, GoodsPairs, OfferOrder)
 from sim.tests import goods_good_plain as plain
 from sim.tests.market_curves_plain import plain_summarize_columns
+from sim.tests.respend_plain import plain_settlement_by_good
 
 SEEDS = range(40)
 
@@ -196,6 +197,40 @@ class CurveArraysSummariseAMarket(unittest.TestCase):
                 bids.budget[bid_rows], bids.maximum_price[bid_rows], bids.buyer[bid_rows] == 0, offers.reservation_price[offer_rows],
                 offers.quantity[offer_rows], offers.seller[offer_rows] == 0)
             self.assertEqual(got, expected, seed)
+
+
+class SettlementByGoodSumsThePairs(unittest.TestCase):
+
+    def test_written_out(self):
+        item = numpy.array([1, 0, 1], dtype=numpy.int64)
+        got = goods_respend_settle_kernel.settlement_by_good(
+            item, numpy.array([0, 1, 0], dtype=numpy.int64), numpy.array([2, 2, 3], dtype=numpy.int64), numpy.array([0, 1, 0], dtype=numpy.int64),
+            numpy.array([0, 0, 1], dtype=numpy.int64), numpy.array([1.0, 2.0, 4.0]), numpy.array([10.0, 20.0, 40.0]),
+            numpy.array([5, 6, 7, 8], dtype=numpy.int64), numpy.array([7, 8], dtype=numpy.int64), numpy.array([0, 0], dtype=numpy.int64),
+            numpy.array([5, 6], dtype=numpy.int64), numpy.array([0, 0], dtype=numpy.int64), 2)
+        self.assertEqual(got[0].tolist(), [0, 1])
+        self.assertEqual((got[2].tolist(), got[3].tolist(), got[4].tolist()), ([6, 7, 5, 7, 8], [20.0, 0.0, 50.0, 0.0, 0.0], [0.0, 20.0, 0.0, 10.0, 40.0]))
+        self.assertEqual((got[6].tolist(), got[8].tolist(), got[9].tolist()), ([7, 6, 7, 8, 5], [2.0, 0.0, 1.0, 4.0, 0.0], [0.0, 2.0, 0.0, 0.0, 5.0]))
+
+    def test_random_pairs_with_ties(self):
+        for seed in SEEDS:
+            generator = numpy.random.default_rng(seed)
+            pairs, agents, keys, buyers, goods = int(generator.integers(1, 40)), 7, 6, 5, 4
+            item = generator.integers(0, goods, pairs).astype(numpy.int64)
+            arguments = (item, generator.integers(0, agents, pairs).astype(numpy.int64), generator.integers(0, agents, pairs).astype(numpy.int64),
+                         generator.integers(0, buyers, pairs).astype(numpy.int64), generator.integers(0, keys, pairs).astype(numpy.int64),
+                         generator.integers(1, 9, pairs) * 0.1, generator.integers(1, 9, pairs) * 0.3, generator.permutation(50)[:agents].astype(numpy.int64),
+                         generator.permutation(8)[:keys].astype(numpy.int64), generator.integers(0, 3, keys).astype(numpy.int64),
+                         generator.permutation(8)[:buyers].astype(numpy.int64), generator.integers(0, 3, buyers).astype(numpy.int64))
+            got = goods_respend_settle_kernel.settlement_by_good(*arguments, goods)
+            expected = plain_settlement_by_good(*arguments)
+            self.assertEqual(got[0].tolist(), [each[0] for each in expected])
+            for index, (_good, people, paid, received, holder, tile, given, taken) in enumerate(expected):
+                people_slice, move_slice = slice(got[1][index], got[1][index + 1]), slice(got[5][index], got[5][index + 1])
+                self.assertEqual((got[2][people_slice].tolist(), got[3][people_slice].tolist(), got[4][people_slice].tolist()),
+                                 (people.tolist(), paid.tolist(), received.tolist()), seed)
+                self.assertEqual((got[6][move_slice].tolist(), got[7][move_slice].tolist(), got[8][move_slice].tolist(), got[9][move_slice].tolist()),
+                                 (holder, tile, given, taken), seed)
 
 
 class WriteBatchWritesTheTables(unittest.TestCase):
