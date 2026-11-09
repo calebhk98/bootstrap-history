@@ -5,6 +5,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional
 
+from .cohort_store import table_of
 from .types import EDGE_CONSUMPTION, EDGE_PRODUCTION, EDGE_SPOILAGE
 
 # the purposes the economy books goods under (producers.py, households_close.py, inventory.py, economy.py)
@@ -208,23 +209,28 @@ def _cohorts(setup, record, ledger, prices) -> List[CohortAccount]:
     received_by_cohort, grown_by_cohort = plain_rows(ledger.received), plain_rows(ledger.grown)
     needs_by_tile: Dict[str, tuple] = {}     # tile -> (hunger need or None, its kept goods, its zero); the basket is the tile's
     rows = []
-    for cohort_id, cohort in sorted(record.cohorts.items()):
-        if cohort.tile not in needs_by_tile:
-            need = next((spec for spec in setup.basket_for(cohort.tile).needs if spec.need_id == setup.hunger_need), None)
-            needs_by_tile[cohort.tile] = (need, None, None)
-        need, kept, nothing = needs_by_tile[cohort.tile]
-        if need is None or cohort.people <= 0.0:
+    store = table_of(record.cohorts)
+    order = store.order()
+    people_of, income_of = store.floats("people", order), store.floats("last_year_income", order)
+    classes = store.table.income_class[order].tolist()
+    for place, (row, tile) in enumerate(zip(order.tolist(), store.tile_names(order))):
+        cohort_id, people = store.ids[row], people_of[place]
+        if tile not in needs_by_tile:
+            need = next((spec for spec in setup.basket_for(tile).needs if spec.need_id == setup.hunger_need), None)
+            needs_by_tile[tile] = (need, None, None)
+        need, kept, nothing = needs_by_tile[tile]
+        if need is None or people <= 0.0:
             continue
         if kept is None:
             kept, nothing = _hunger_need_units(need, setup.specs)
-            needs_by_tile[cohort.tile] = (need, kept, nothing)
+            needs_by_tile[tile] = (need, kept, nothing)
         bought = _need_units(kept, nothing, received_by_cohort.get(cohort_id, {}))
         own = _need_units(kept, nothing, grown_by_cohort.get(cohort_id, {}))
         rows.append(CohortAccount(
-            cohort=cohort_id, tile=cohort.tile, income_class=cohort.income_class, people=cohort.people,
-            need_per_head=need.subsistence_per_person, eaten_per_head=(bought + own) / cohort.people,
-            bought_per_head=bought / cohort.people, own_plot_per_head=own / cohort.people,
-            real_income_per_head=cohort.last_year_income / cohort.people / cost if cost is not None and cost > 0.0 else math.nan))
+            cohort=cohort_id, tile=tile, income_class=classes[place], people=people,
+            need_per_head=need.subsistence_per_person, eaten_per_head=(bought + own) / people,
+            bought_per_head=bought / people, own_plot_per_head=own / people,
+            real_income_per_head=income_of[place] / people / cost if cost is not None and cost > 0.0 else math.nan))
     return rows
 
 

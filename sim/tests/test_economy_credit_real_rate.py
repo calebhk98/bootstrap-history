@@ -8,12 +8,12 @@ import unittest
 
 from sim.agents import entry_round
 from sim.economy import credit, households_credit, lending
+from sim.economy.households_cohort import Cohort
 from sim.world import capital_market
 
 
-def cohort(people, expected_inflation, last_year_income=1000.0):
-    return types.SimpleNamespace(people=people, expected_inflation=expected_inflation, agent_id="c",
-                                 last_year_income=last_year_income)
+def cohort(people, expected_inflation, last_year_income=1000.0, agent_id="c"):
+    return Cohort(agent_id, "t", 0, people, people, 1.0, expected_inflation=expected_inflation, last_year_income=last_year_income)
 
 
 class RealRateBoundTests(unittest.TestCase):
@@ -23,7 +23,7 @@ class RealRateBoundTests(unittest.TestCase):
                                0.12 * capital_market.RATE_CEILING_SHARE + 0.5)
 
     def test_expected_inflation_is_the_people_weighted_mean_of_cohorts(self):
-        record = types.SimpleNamespace(cohorts={"a": cohort(300.0, 0.6), "b": cohort(100.0, 0.2)})
+        record = types.SimpleNamespace(cohorts={"a": cohort(300.0, 0.6, agent_id="a"), "b": cohort(100.0, 0.2, agent_id="b")})
         self.assertAlmostEqual(lending.expected_inflation_of(record), 0.5)
         self.assertEqual(lending.expected_inflation_of(types.SimpleNamespace(cohorts={})), 0.0)
 

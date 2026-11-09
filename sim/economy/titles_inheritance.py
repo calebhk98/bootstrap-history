@@ -11,6 +11,7 @@ from typing import Dict
 from sim.constants import declare
 
 from . import titles
+from .cohort_store import table_of
 from .types import TileId
 
 GENERATION_YEARS = declare(
@@ -35,24 +36,27 @@ def divide_estates(record, generation_years: float = GENERATION_YEARS,
     moved: Dict[TileId, float] = {}
     if rate <= 0.0:
         return moved
+    store = table_of(record.cohorts)
+    order = store.order()
+    owned = dict(zip([store.ids[row] for row in order.tolist()], store.floats("ownership_share", order)))
     by_tile: Dict[TileId, list] = {}
-    for cohort in sorted(record.cohorts.values(), key=lambda cohort: cohort.agent_id):
-        by_tile.setdefault(cohort.tile, []).append(cohort)
-    for tile, cohorts in sorted(by_tile.items()):
+    for row, tile in zip(order.tolist(), store.tile_names(order)):
+        by_tile.setdefault(tile, []).append(store.ids[row])
+    for tile, cohort_ids in sorted(by_tile.items()):
         held = titles.shares(record, tile)
-        lacking = {cohort.agent_id: cohort.ownership_share - held.get(cohort.agent_id, 0.0) for cohort in cohorts
-                   if cohort.ownership_share - held.get(cohort.agent_id, 0.0) > titles.EPSILON}
-        for cohort in cohorts:
+        lacking = {each: owned[each] - held.get(each, 0.0) for each in cohort_ids
+                   if owned[each] - held.get(each, 0.0) > titles.EPSILON}
+        for cohort_id in cohort_ids:
             if not lacking:
                 break
-            estate = min(titles.free_share(record, cohort.agent_id, tile),
-                         titles.holding(record, tile, cohort.agent_id) - cohort.ownership_share)
+            estate = min(titles.free_share(record, cohort_id, tile),
+                         titles.holding(record, tile, cohort_id) - owned[cohort_id])
             if estate <= titles.EPSILON:
                 continue
             passing = min(rate * estate, sum(lacking.values()))
             total_lacking = sum(lacking.values())
             for heir, lack in sorted(lacking.items()):
-                titles.pass_title(record, tile, cohort.agent_id, heir, passing * lack / total_lacking)
+                titles.pass_title(record, tile, cohort_id, heir, passing * lack / total_lacking)
             moved[tile] = moved.get(tile, 0.0) + passing
             lacking = {heir: lack - passing * lack / total_lacking for heir, lack in lacking.items()
                        if lack - passing * lack / total_lacking > titles.EPSILON}

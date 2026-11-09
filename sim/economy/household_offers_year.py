@@ -5,6 +5,7 @@ A set of offers holding a NaN or infinite figure takes the record version."""
 from typing import Dict, Mapping, Optional, Sequence, Tuple
 
 from . import cohort_prime, household_hours_year, household_work_year, households_basket, households_cohort, households_work, labour_state
+from .cohort_store import table_of
 from .household_offer_reads import OfferReads
 from .labour_ask_floor import hectares_per_hour_by_recipe
 from .labour_offer_rows import LabourOfferRows
@@ -61,12 +62,9 @@ def decide(setup, record, view, rows: LabourOfferRows) -> Dict[AgentId, float]:
     if setup.household_work and lacks_history(record, reads):
         for (trade, area), share in sorted(expected_shares(setup, record, reads).items()):
             record.labour.expect_sold_share(market_key(trade, area), share)
-    own: Dict[AgentId, float] = {}
-    for cohort_id, (per_person, own[cohort_id], milled) in plans(setup, record, view, reads).items():
-        cohort = record.cohorts[cohort_id]
-        if per_person != cohort.hired_work_per_person or milled != tuple(cohort.milled_grains):
-            households_cohort.change_cohort(record.cohorts, cohort_id, hired_work_per_person=per_person, milled_grains=milled)
-    return own
+    decided = plans(setup, record, view, reads)
+    households_cohort.set_work_plans(record.cohorts, decided)
+    return {cohort_id: own for cohort_id, (_per_person, own, _milled) in decided.items()}
 
 
 def plot_parameters_by_cohort(setup, record, view, rows: LabourOfferRows, options: Mapping[str, Sequence],
@@ -79,7 +77,9 @@ def plot_parameters_by_cohort(setup, record, view, rows: LabourOfferRows, option
     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
     parameters: Dict[AgentId, PlotParameters] = {}
     priced_by_tile: Dict[str, list] = {}
-    for cohort_id, cohort in sorted(record.cohorts.items()):
+    store = table_of(record.cohorts)
+    for cohort in store.figures(store.order()):
+        cohort_id = cohort.agent_id
         number: Optional[int] = reads.worker_number(cohort_id)
         if cohort.tile not in priced_by_tile:
             priced_by_tile[cohort.tile] = households_basket.tile_need_prices(setup, view, cohort.tile)

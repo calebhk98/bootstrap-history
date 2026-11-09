@@ -9,7 +9,7 @@ from sim.constants import declare
 
 from . import currency, households_basket, state_finance, trade_wages
 from .goods_order_tables import STATE
-from .home_scope import home_cohorts
+from .home_scope import home_working_by_tile
 from .labour_results_table import bought_value
 from .order_rows import OrderRows
 from .priced_need_list import priced_needs_of
@@ -106,9 +106,7 @@ def wage_bid_figures(setup, record, view, wage_budget: float) -> List[BidFigures
     maximum wage) each."""
     if wage_budget <= 0.0:
         return []
-    working: Dict[str, float] = {}
-    for cohort in home_cohorts(setup, record):
-        working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
+    working = home_working_by_tile(setup, record)
     total_working = math.fsum(working.values())
     if total_working <= 0.0:
         return []

@@ -11,6 +11,7 @@ from typing import Dict, List, Mapping, Optional
 from sim.loans import select as loan_select
 
 from . import titles_management
+from .cohort_store import table_of
 from .types import AgentId, CurrencyId, TileId, Transfer
 
 EPSILON = 1e-9
@@ -174,8 +175,7 @@ def settle_tenancies(record, currency: CurrencyId, arable_by_tile: Mapping[TileI
     for tile, rows in sorted(record.land.tenancies.items()):
         posted = record.land.land_rent.get(tile, 0.0)
         rent = (posted if ask_by_tile is None or tile not in ask_by_tile else min(posted, ask_by_tile[tile])) * arable_by_tile.get(tile, 0.0)
-        stewards = min((cohort for cohort in record.cohorts.values() if cohort.tile == tile),
-                       key=lambda cohort: (cohort.income_class, cohort.agent_id), default=None)
+        steward = table_of(record.cohorts).poorest_on_tile(tile)
         kept = []
         for row in rows:
             tenant, lessor = row["tenant"], row["lessor"]
@@ -193,10 +193,10 @@ def settle_tenancies(record, currency: CurrencyId, arable_by_tile: Mapping[TileI
             paid = min(owed, cash[tenant])
             if paid > 0.0:
                 cash[tenant] -= paid
-                spent = paid * cost if stewards is not None and stewards.agent_id not in (tenant, lessor) else 0.0
+                spent = paid * cost if steward is not None and steward not in (tenant, lessor) else 0.0
                 payments.append(Transfer(tenant, lessor, currency, paid - spent, "tenant_rent"))
                 if spent > 0.0:
-                    payments.append(Transfer(tenant, stewards.agent_id, currency, spent, "steward_pay"))
+                    payments.append(Transfer(tenant, steward, currency, spent, "steward_pay"))
             row["arrears"] = owed - paid
             if due > 0.0 and row["arrears"] > due:
                 release(record, tile, lessor, row["share"])

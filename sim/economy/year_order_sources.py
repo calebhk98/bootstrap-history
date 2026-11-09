@@ -51,13 +51,13 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         order_book)
     made.update(plain)
     rows = OrderRows(order_book, HOUSEHOLD)
+    planned_of = {}          # the money each cohort placed in bids, written to the table once all are known
     for cohort in cohorts:
         orders = made[cohort.agent_id]
         tool_bids = tool_bids_of[cohort.agent_id]
         rows.bids_from(tool_bids)
-        households_cohort.change_cohort(
-            record.cohorts, cohort.agent_id, planned_spending=sum(bid.budget for bid in tool_bids) + (
-                planned[cohort.agent_id] if cohort.agent_id in planned else sum(bid.budget for bid in orders.bids)))
+        planned_of[cohort.agent_id] = sum(bid.budget for bid in tool_bids) + (
+            planned[cohort.agent_id] if cohort.agent_id in planned else sum(bid.budget for bid in orders.bids))
         if own_options:
             savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
             orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
@@ -65,6 +65,7 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         rows.bids_from(orders.bids)
         rows.offers_from(orders.offers)
         funds.extend(orders.funds_offers)
+    households_cohort.set_column(record.cohorts, "planned_spending", planned_of)
     rows.write()
     if bid_rows is not None:
         order_book.append_bids(*bid_rows, HOUSEHOLD)       # after every cohort's tool bids, so a cohort's own bids keep their order

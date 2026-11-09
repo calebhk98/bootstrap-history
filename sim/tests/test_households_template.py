@@ -166,12 +166,16 @@ class Priming(unittest.TestCase):
         _setup, _record, self.view, _ledger, _area_map = economy_of(1)
         self.tiles = TILES
         self.basket = basket_of([NeedSpec("food", 10.0, 0.5, (("good0", 1.0), ("good1", 0.8)))])
-        cohorts = {"c%d" % number: types.SimpleNamespace(tile=tile) for number, tile in enumerate(self.tiles + self.tiles[:1])}
-        self.record = types.SimpleNamespace(cohorts=cohorts)
-        self.patches = [mock.patch.object(cohort_prime.household_work_year, "basket_signature", lambda record, cohort, buying: (cohort.tile, buying)),
-                        mock.patch.object(cohort_prime.household_work_year, "cohort_basket", lambda setup, record, cohort, buying=True: self.basket),
-                        mock.patch.object(cohort_prime.household_work_year, "has_hearth", lambda record, cohort: cohort.tile != "T2"),
-                        mock.patch.object(cohort_prime.household_work_year, "tile_food_basket", lambda setup, tile, hearth: self.basket)]
+        tiles = self.tiles + self.tiles[:1]
+        store = types.SimpleNamespace(ids=["c%d" % number for number in range(len(tiles))], order=lambda: np.arange(len(tiles)),
+                                      tile_names=lambda rows: [tiles[row] for row in rows.tolist()])
+        self.record = types.SimpleNamespace(cohorts=store)
+        work = cohort_prime.household_work_year
+        self.patches = [mock.patch.object(cohort_prime, "table_of", lambda cohorts: cohorts),
+                        mock.patch.object(work, "signatures_of", lambda record, each, rows, buying=True: [(tiles[row], buying) for row in rows.tolist()]),
+                        mock.patch.object(work, "basket_of_signature", lambda setup, signature: self.basket),
+                        mock.patch.object(work, "hearth_of", lambda record, tile, agent_id: tile != "T2"),
+                        mock.patch.object(work, "tile_food_basket", lambda setup, tile, hearth: self.basket)]
         for patch in self.patches:
             patch.start()
             self.addCleanup(patch.stop)

@@ -17,6 +17,7 @@ from typing import Dict, List
 import numpy as np
 
 from . import shares as producer_shares
+from .cohort_store import table_of
 
 
 class Participants:
@@ -45,17 +46,20 @@ class OwnerTable:
 
 def owner_table(record, participants: Participants) -> OwnerTable:
     """The cohorts grouped by tile; within a tile in id order, as `ownership.spread` sorts them."""
+    store = table_of(record.cohorts)
+    order = store.order()
+    owned = store.floats("ownership_share", order)
     by_tile: Dict[str, list] = {}
-    for _cohort_id, cohort in sorted(record.cohorts.items()):
-        by_tile.setdefault(cohort.tile, []).append(cohort)
+    for row, tile, share in zip(order.tolist(), store.tile_names(order), owned):
+        by_tile.setdefault(tile, []).append((store.ids[row], share))
     tile_start, members, shares, totals, tile_of_cohort = [0], [], [], [], {}
     for position, tile_cohorts in enumerate(by_tile.values()):
-        for cohort in tile_cohorts:
-            members.append(participants.of(cohort.agent_id))
-            shares.append(cohort.ownership_share)
-            tile_of_cohort[cohort.agent_id] = position
+        for agent_id, share in tile_cohorts:
+            members.append(participants.of(agent_id))
+            shares.append(share)
+            tile_of_cohort[agent_id] = position
         tile_start.append(len(members))
-        totals.append(sum(cohort.ownership_share for cohort in tile_cohorts))
+        totals.append(sum(share for _agent_id, share in tile_cohorts))
     return OwnerTable(np.array(tile_start, dtype=np.int64), np.array(members, dtype=np.int64), np.array(shares, dtype=np.float64),
                       np.array(totals, dtype=np.float64), tile_of_cohort)
 

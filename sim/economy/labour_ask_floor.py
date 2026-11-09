@@ -17,6 +17,7 @@ from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
 from .households_basket import tile_need_prices
 from .priced_need_list import priced_needs_of
 from . import cohort_prime, household_work_year, land_bid, titles_plots
+from .cohort_store import table_of
 from .households_own import Option
 
 
@@ -134,18 +135,23 @@ def ask_floor_by_tile(setup, record, view, options: Mapping[str, Sequence[Option
     hectares_per_hour = hectares_per_hour_by_recipe(setup.recipes, setup.land_per_run)
     held = titles_plots.hectares_held(setup, record)
     cohort_prime.prime_cohort_baskets(setup, record, view, False)
-    for tile in sorted({cohort.tile for cohort in record.cohorts.values()}):
-        cohorts = [cohort for cohort in record.cohorts.values() if cohort.tile == tile and cohort.working_people > 0.0]
+    store = table_of(record.cohorts)
+    for tile in sorted(store.tiles_present()):
+        rows = store.rows_on_tile(tile)
+        rows = rows[store.column("working_people")[rows] > 0.0]            # the tile's cohorts that have workers, in table order
         tile_data = setup.tiles.get(tile)
         fertility = tile_data.fertility if tile_data else 0.0
-        working = sum(cohort.working_people for cohort in cohorts)
+        working_people, people = store.floats("working_people", rows), store.floats("people", rows)
+        working = sum(working_people)
         if working <= 0.0:
             floors[tile] = wage_floor_per_worker_year(tile_need_prices(setup, view, tile), options, fertility, setup.working_hours_per_year, 1.0,
                                                       hectares_per_hour, 0.0)
             continue
-        floors[tile] = sum(cohort.working_people * wage_floor_per_worker_year(
-            household_work_year.priced_basket(setup, record, view, cohort), options, fertility, setup.working_hours_per_year, cohort.people / cohort.working_people,
-            hectares_per_hour, held.get(cohort.agent_id, 0.0) / cohort.working_people) for cohort in cohorts) / working
+        signatures = household_work_year.signatures_of(record, store, rows, buying=False)
+        floors[tile] = sum(working_people[place] * wage_floor_per_worker_year(
+            household_work_year.priced_basket_of(setup, view, tile, signatures[place]), options, fertility, setup.working_hours_per_year,
+            people[place] / working_people[place], hectares_per_hour, held.get(store.ids[row], 0.0) / working_people[place])
+            for place, row in enumerate(rows.tolist())) / working
     return floors
 
 

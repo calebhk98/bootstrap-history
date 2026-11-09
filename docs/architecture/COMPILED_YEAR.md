@@ -83,7 +83,7 @@ keys outside the map. The hash-seed command in "How to measure" checks the resul
 | plans | `sim/economy/plan_table.py` | `Plan` per producer |
 | loans | `sim/loans/` | `Contract` objects in a list |
 | producers (a row per producer, every `Producer` field a column; the names are the store's own `IdTable`s) | `sim/economy/producer_store.py` (`producer_rows.py`: the spec) | the dict of frozen `Producer` records, `replaced(producer)` and `put_producer` per change |
-| cohorts (updated in place) | close, entry | `replaced(cohort)` and `put_cohorts` per change |
+| cohorts (a row per cohort, every `Cohort` field a column; the names are the store's own `IdTable`s) | `sim/economy/cohort_store.py` (`cohort_rows.py`: the spec); writers `households_cohort.py`, `cohort_close_write.py`, `cohort_people.py` | the dict of `Cohort` records, `replaced(cohort)`, `put_cohorts` and `change_cohort` per change |
 
 Each table's owner is the only module that writes it outside a kernel the owner provides (CLAUDE.md: one owner per fact);
 other modules read through the owner's view or call the owner's kernel.
@@ -452,10 +452,28 @@ block reads of the store in sorted id order, read again when the store's `versio
 asks for one through the mapping (`store[id]`, `.values()`, `.items()`, `.get`): the screens, the protocol, mods, the tests, and the
 readers still on records (`grep -n "record.producers" sim` lists them; the commands in "What is left" count the builds a year).
 The save is written from the columns in the old format (`ProducerStore.to_plain`). Rows are in entry order, an exit leaves a dead row
-that `compact` removes (`order`, `rows_of` and the saves compact), `seat_sorted` puts them in id order at the year boundary. Cohorts are put back together once by `close_households` through `put_cohorts`; `closed_cohort`
-replaces each cohort record one at a time (`renewed`), and keeping cohorts as columns waits for the modules that read `record.cohorts`
-(entry, labour offers, demography, the screens, the save). Exits (`producer_exit.ExitBatch`), loan write-offs and loan requests stay
-Python, in producer order.
+that `compact` removes (`order`, `rows_of` and the saves compact), `seat_sorted` puts them in id order at the year boundary. Exits
+(`producer_exit.ExitBatch`), loan write-offs and loan requests stay Python, in producer order.
+
+**Cohorts are columns.** `record.cohorts` is a `CohortStore` (`cohort_store.py`; `cohort_rows.py` declares the columns). Each float field
+has a bit in `numpy_typed` saying it was written as a numpy float (the unmet and own-plan mappings keep a flag per figure), because
+CPython's `sum()` compensates only over exact Python floats; a block write says whether its values are numpy floats (`set_rows(..., typed=)`).
+A `Cohort` is built only when something asks through the mapping (`store[id]`, `.values()`, `.items()`, `.get`) and is a snapshot kept until its
+row is written. The writers: `households_cohort.put_cohort`, `change_cohort`, `set_people`, `set_column`, `set_work_plans` and
+`rebase_price_level` (a plain mapping, a test's, still works through them); the close writes every figure in one block
+(`cohort_close_write.write_close`); `cohort_people.follow_population` rescales every tile's cohorts to demography's people in one block and
+`apply_work_plans` stores the household-work plans that differ. Block reads: `store.column(name)`, `floats` (typed as written), `order`,
+`rows_on_tile`, `tiles_present`, `ids_on_tiles`, `exact_total`, `unmet_of(need)`, `milled_of`, `pairs_of`, and `figures(rows)`, the
+`CohortFigures` (id, tile, people, working people, last year's income, hired work, grains milled, optionally the own plan) that rules written over
+a cohort read without a `Cohort` being built. Totals by tile in table order (`cohort_people.total_by_tile`) use `sum_in_order_by_group`,
+which adds left to right from zero as the loops did. Converted to columns: the year's close (`year_close_households`: only the market-view
+questions of `households_close.closed_figures` stay per cohort), `_follow_population` and the hunger by tile, `CohortColumns.build`, the labour
+offers (`labour_offers_write`), `subsistence_cost_by_tile`, `outside_option_by_tile`, `ask_floor_by_tile`, `hectares_held`,
+`ownership.owner_cohort`/`spread`, `year_close_owners.owner_table`, `titles.settle_tenancies`' steward, `titles_inheritance.divide_estates`,
+`home_scope` (the home ids and working people), the state's wage bids, the mint's cash wanted, `debt_relief`, `lending`
+(`expected_inflation_of`, the spare cash, `household_requests`), `year_accounts`, `flight_year.tenants_flee`, the plot parameters, the
+own-plan hours and `_grow_own`, and `goods_respend_pack.pack`. The save is written from the columns in the old format
+(`CohortStore.to_plain`). Tests: `test_cohort_store.py`, `test_cohort_people.py`.
 
 Tests: `sim/tests/test_close_pack_kernels.py`, `test_year_close_dividends.py`, `test_producer_close_write.py`, `test_producer_store.py`, `test_wear_kernels.py`,
 `test_year_close_households.py` (each kernel against the Python it replaces on written-out inputs).
@@ -650,9 +668,17 @@ row; the save still writes each merchant as before. On the table, `merchant_year
 histories, one array step for the figures) and `merchant_year.close_all` (`settle_profits`, exact sums) replace the per-merchant learning and
 close; `merchants_credit_batch.credit_requests` sizes every merchant's loan in one kernel (`commit_credit_all`) from rows searched together
 (`merchants_batch.search_arrays`) and stock by slot (`held_by_slot`); `carriage_wear_batch.settle_all` keeps and wears every merchant's carriers
-in two passes over the book. Still per merchant, with their inputs as Python objects: `merchants.dispatch` (the haul loop with crew, dues, fleet
-and purse limits, called from `merchants_dispatch.dispatch_merchants`), `merchants_plan.orders` (stock arrays, `routes` legs, `Bid` and `Offer`
-objects handed to `OrderRows`), `carriage_fleet_book.bids` and `wear_needed`. `python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year sim.economy.merchants_batch:prepare`.
+in two passes over the book. `merchants_dispatch.dispatch_merchants` dispatches every merchant of the year in one kernel call (`merchants_dispatch_settle_kernel.dispatch_all`) over
+four tables (`merchants_dispatch_tables`): pairs (a haul's fee, crew hours, carrier wear, dues and carrier money, once for each distinct source and
+destination), routes (what a merchant holds at a good and source tile), legs (a route's destinations) and merchants (purse, crew hired by key, fleet by
+carrier good). The kernel shares each route's stock over its legs, sizes the shipments, cuts them to the crew hired, the fleet's wear and the purse,
+pays the dues and the fee, wears the carriers and pays the rent of hired fleets, moving the purses in merchant order (a merchant paid rent by an
+earlier one dispatches with it). `merchants_dispatch_pack` is the edge that builds the tables once a year (and `wear_needed`, the same tables read by
+`merchants_dispatch_kernel.wear_needed_all` for `share_idle`); `merchants_dispatch_answer.Dispatched` reads the answer back as the `merchants.Dispatch`
+each merchant had, and the moves and transfers are posted to the book once. `merchants.dispatch` stays as the per-merchant reference the tests compare to.
+Still per merchant, with their inputs as Python objects: the reads that fill the tables (`inventory.held_stock`, `carriage_fleet_book.own_capacity`,
+`carriage_hours.engaged`, `merchants_transit.advance`), the writing back of the answer and the per-move ledger notes (`carried_book`, `flow_ledger`), then
+`merchants_plan.orders` (stock arrays, `routes` legs, `Bid` and `Offer` objects handed to `OrderRows`), `carriage_fleet_book.bids`. `python3 tools/measure/function_times.py SAVE sim.economy.merchants:learn_year sim.economy.merchants:close_year sim.economy.merchants_batch:prepare`.
 
 ## Cached views
 
@@ -833,12 +859,22 @@ list lags the code.
   and `api.producers_of` / `all_producers` for the screens and mods. Each reads a handful of fields the columns hold; they move one
   at a time to `store.table` blocks or `ProducerColumns` fields. The crews' practice is still a small dictionary per producer that has a
   crew (`write_close` and `ProducerStore.crew_of` build one), since `practice.crew_runs_after_year` is Python on mappings.
-- **The cohort record readers.** `record.cohorts` is read by entry, labour offers, demography, the save and the screens;
-  `closed_cohort` builds one record per cohort until those readers are on columns.
+- **The cohort record readers.** What still builds a `Cohort` in a warm year (wrap `CohortStore._build` and count, as the producers' item
+  says): the rules written over a `Cohort` object that the opening and the tests share: `land_lease_year._margins` and
+  `land_bid_year.best_margin`, `capital_year.note_exposure`, `year_order_sources.cohort_orders` with `households.goods_orders` and
+  `households_orders_pack` (the kernel entries hold the cohort), `household_work_year.work_terms_at` / `cohort_plan`
+  (`household_offers_year.plans`), `lending.bid_household_loans`, `titles.settle_tenancies`' callers, `opening_*`, `equity`,
+  `api._ranked_cohorts`, and, outside this item's owner, `country_figures` and `carriage_hours`, `merchants_dispatch`. Each reads a handful of
+  fields; the next step for each is to take a `CohortFigures` (or the fields) as the readers above already do. Builds happen once per row
+  per write: a block write drops every kept snapshot it touches, so one reader left on records in each phase between two writes pays the
+  whole phase's rebuild. The whole-year writes (`planned_spending` after the orders, the close) are why a single reader per phase matters.
+  `closed_figures` still asks the market view per cohort (`view.currency_of`, `basket_price_level`, `observed_inflation`, `equity`, `claims`
+  are scalar questions into the markets' views) and `hearth_of` asks the land titles per cohort (`titles_worked.worked_share`).
 - **Labour readers that take records.** The cleared wages reach `HourSupply.settle` as a dict read rather than a market-indexed array.
   The household decisions still loop over cohorts in Python (`household_offers_year.plans`: the basket, grinding plan and priced needs
-  of each cohort), as do `outside_option_by_tile`, `subsistence_cost_by_tile` and `ask_floor_by_tile`; they wait for the cohorts and
-  the priced baskets as columns.
+  of each cohort); `outside_option_by_tile`, `subsistence_cost_by_tile` and `ask_floor_by_tile` read the cohort columns and share a priced
+  basket per signature (`PricedNeeds`, primed for all signatures at once by `cohort_prime`). `plans` still builds the `Cohort` snapshot of each
+  cohort for `work_terms_at`, and `hearth_of` asks the land titles per cohort.
 - **Labour readers that take records.** `household_work_year.decide` and `household_hours_year.plot_parameters_by_cohort` read
   `LabourOffer` objects; the cleared wages reach `HourSupply.settle` as a dict read rather than a market-indexed array.
 - **Country figures that read per producer or per market record.** `country_figures.output_value_and_unpriced`, `_traded_volumes` and the people counts read producer and cohort records and the saved volumes dictionary one at a time; an array version of `_traded_volumes` was measured slower while the layout of the volumes' keys is rebuilt every year, so it waits for the volumes as a column.

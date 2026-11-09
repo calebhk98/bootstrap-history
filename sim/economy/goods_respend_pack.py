@@ -9,6 +9,7 @@ import numpy
 
 from sim.constants import declare
 
+from .cohort_store import table_of
 from .goods_production import read_stocks
 from .goods_respend_rows import Interner, bid_rows, bought_columns, offer_rows, table_columns
 from .goods_respend import need_of_good
@@ -65,7 +66,7 @@ def flatten_baskets(baskets, good_index) -> tuple:
 def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packed":
     """Pack `markets` ({(good, area): LeftMarket}) and the households that bid in them; None when no household bid. The bids and the offers
     are read as columns (goods_respend_rows.py)."""
-    households = record.cohorts
+    households = table_of(record.cohorts)
     market_keys = markets.sorted_keys() if hasattr(markets, "sorted_keys") else sorted(markets)
     market_index = {key: index for index, key in enumerate(market_keys)}
     agents_interned, tiles_interned = Interner(), Interner()
@@ -82,8 +83,9 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     baskets: List[object] = []
     basket_number: Dict[int, int] = {}
     buyer_basket = numpy.zeros(len(buyer_ids), dtype=numpy.int64)
+    figures = dict(zip(buyer_ids, households.figures(households.rows_of(buyer_ids))))       # what a buyer's basket and tile are read from
     for row, buyer in enumerate(buyer_ids):
-        basket = basket_of(households[buyer])
+        basket = basket_of(figures[buyer])
         if id(basket) not in basket_number:
             basket_number[id(basket)] = len(baskets)
             baskets.append(basket)
@@ -97,7 +99,7 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     buyer_area_row = numpy.zeros(len(buyer_ids), dtype=numpy.int64)
     buyer_tile = []
     for row, buyer in enumerate(buyer_ids):
-        tile = households[buyer].tile
+        tile = figures[buyer].tile
         buyer_tile.append(tile)
         slot = (tile, int(buyer_basket[row]))
         if slot not in area_rows:

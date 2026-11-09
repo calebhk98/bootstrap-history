@@ -10,13 +10,14 @@ from typing import Dict, Iterable
 import numpy
 
 from . import titles
+from .cohort_store import table_of
 from .types import TileId
 
 
 def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
     """Cancel household debts and tenancy arrears on the tiles. Returns the principal and arrears written off."""
     relieved = set(tiles)
-    borrowers = {cohort.agent_id for cohort in record.cohorts.values() if cohort.tile in relieved}
+    borrowers = set(table_of(record.cohorts).ids_on_tiles(lambda tile: tile in relieved))
     written_off = {"principal": 0.0, "arrears": 0.0, "rent_arrears": 0.0}
     if not relieved:
         return written_off
@@ -38,7 +39,8 @@ def forgive(record, tiles: Iterable[TileId]) -> Dict[str, float]:
 
 def indebted_tiles(record) -> list:
     """Tiles where a household cohort owes a term loan, sorted: the tiles a state could relieve."""
-    tile_of = {cohort.agent_id: cohort.tile for cohort in record.cohorts.values()}
+    store = table_of(record.cohorts)
+    tile_of = dict(zip(store.ids, store.tile_names()))
     store = record.credit.contracts.loan_store
     borrowers = {store.agent_name(number) for number in numpy.unique(store.table.borrower[:len(store)]).tolist()}
     return sorted({tile_of[borrower] for borrower in borrowers if borrower in tile_of})

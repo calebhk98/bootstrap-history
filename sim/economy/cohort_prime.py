@@ -4,6 +4,7 @@ A pass that asks `households_basket.cohort_need_prices` cohort by cohort (the or
 basket by itself; `prime_cohort_baskets` asks `priced_need_prime.price_asked` for the distinct baskets of all cohorts in one kernel call, and
 the pass then reads kept answers. A cohort whose basket changes later (`household_work_year.decide`) has another key, and is priced when asked."""
 from . import household_work_year
+from .cohort_store import table_of
 from .priced_need_prime import price_asked
 
 
@@ -18,12 +19,12 @@ def prime_cohort_baskets(setup, record, view, buying: bool) -> None:
     if flag in reads:
         return
     reads[flag] = True
+    store = table_of(record.cohorts)
     asks = {}
-    for cohort in record.cohorts.values():
-        signature = household_work_year.basket_signature(record, cohort, buying)
+    for signature in household_work_year.signatures_of(record, store, store.order(), buying):
         key = ("cohort_basket", signature)
-        if ("need_prices", cohort.tile, key) not in reads and (cohort.tile, key) not in asks:
-            asks[(cohort.tile, key)] = household_work_year.cohort_basket(setup, record, cohort, buying)
+        if ("need_prices", signature[0], key) not in reads and (signature[0], key) not in asks:
+            asks[(signature[0], key)] = household_work_year.basket_of_signature(setup, signature)
     price_asked(view, reads, [(tile, key, basket) for (tile, key), basket in asks.items()])
 
 
@@ -37,10 +38,11 @@ def prime_food_baskets(setup, record, view) -> None:
     if "food_primed" in reads:
         return
     reads["food_primed"] = True
+    store = table_of(record.cohorts)
+    order = store.order()
     asks = {}
-    for cohort in record.cohorts.values():
-        hearth = household_work_year.has_hearth(record, cohort)
-        key = ("food", hearth)
-        if ("need_prices", cohort.tile, key) not in reads and (cohort.tile, hearth) not in asks:
-            asks[(cohort.tile, hearth)] = household_work_year.tile_food_basket(setup, cohort.tile, hearth)
+    for tile, agent_id in zip(store.tile_names(order), (store.ids[row] for row in order.tolist())):
+        hearth = household_work_year.hearth_of(record, tile, agent_id)
+        if ("need_prices", tile, ("food", hearth)) not in reads and (tile, hearth) not in asks:
+            asks[(tile, hearth)] = household_work_year.tile_food_basket(setup, tile, hearth)
     price_asked(view, reads, [(tile, ("food", hearth), basket) for (tile, hearth), basket in asks.items()])

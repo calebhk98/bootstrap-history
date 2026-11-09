@@ -2,6 +2,7 @@
 from typing import Dict, Mapping
 
 from . import titles_ground, titles_worked
+from .cohort_store import table_of
 from .types import AgentId
 
 
@@ -16,10 +17,11 @@ def hectares_held(setup, record) -> Dict[str, float]:
     the tile's arable land if the claims exceed it, less what producers that outbid the plots were let. Decided before
     any growing."""
     held: Dict[str, float] = {}
-    for tile_id in sorted({cohort.tile for cohort in record.cohorts.values()}):
+    store = table_of(record.cohorts)
+    for tile_id in sorted(store.tiles_present()):
         tile = setup.tiles.get(tile_id)
         arable = titles_ground.arable_hectares(record, tile_id, tile)
-        asked = {cohort.agent_id: titles_worked.worked_share(record, tile_id, cohort.agent_id) * arable
-                 for cohort in record.cohorts.values() if cohort.tile == tile_id}
+        asked = {store.ids[row]: titles_worked.worked_share(record, tile_id, store.ids[row]) * arable
+                 for row in store.rows_on_tile(tile_id).tolist()}
         held.update(allocate_on_tile(asked, arable, record.land.land_ceded.get(tile_id, 0.0)))
     return held
