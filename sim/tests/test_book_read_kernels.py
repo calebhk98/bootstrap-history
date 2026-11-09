@@ -5,8 +5,9 @@ import unittest
 
 import numpy
 
-from sim.book_read_kernels import (counted_stocks, currency_values, find_slots, good_quantities, holder_columns, holder_slots,
+from sim.book_read_kernels import (counted_stocks, currency_values, find_slots, good_quantities,
                                    read_balances, read_stocks_at)
+from sim.book_holdings_kernels import many_holder_columns
 from sim.tests.book_table_fixtures import STRIDE, StockBook, agents_table, balances_table
 
 
@@ -40,21 +41,20 @@ class StockReadTests(unittest.TestCase):
 
 
 class HolderTests(unittest.TestCase):
-    def test_an_agents_slots_come_in_the_order_they_were_made(self):
+    def test_the_columns_of_agents_slots_come_in_the_order_given_and_the_order_the_slots_were_made(self):
         book = held_book()
         table = book.stocks.table
-        self.assertEqual(holder_slots(book.agents.first_slot[0], table.next_in_agent).tolist(), [0, 2, 4])
-
-    def test_the_columns_of_those_slots_are_returned_together(self):
-        book = held_book()
-        table = book.stocks.table
-        goods, tiles, quantities = holder_columns(book.agents.first_slot[0], table.next_in_agent, table.good, table.tile,
-                                                  table.quantity)
-        self.assertEqual((goods.tolist(), tiles.tolist(), quantities.tolist()), ([0, 1, 0], [1, 2, 3], [5.0, 7.0, 0.0]))
+        starts, owner, goods, tiles, quantities = many_holder_columns(
+            book.agents.first_slot[:3][[1, 0]], table.next_in_agent, table.good, table.tile, table.quantity)
+        self.assertEqual((starts.tolist(), owner.tolist(), goods.tolist(), tiles.tolist(), quantities.tolist()),
+                         ([0, 1, 4], [0, 1, 1, 1], [0, 0, 1, 0], [1, 1, 2, 3], [2.0, 5.0, 7.0, 0.0]))
 
     def test_an_agent_with_no_slots_has_none(self):
         book = StockBook(agents_table(0))
-        self.assertEqual(holder_slots(book.agents.first_slot[0], book.stocks.table.next_in_agent).tolist(), [])
+        starts, owner, goods, _tiles, _quantities = many_holder_columns(
+            book.agents.first_slot[:1], book.stocks.table.next_in_agent, book.stocks.table.good, book.stocks.table.tile,
+            book.stocks.table.quantity)
+        self.assertEqual((starts.tolist(), owner.tolist(), goods.tolist()), ([0, 0], [], []))
 
 
 class TotalsTests(unittest.TestCase):

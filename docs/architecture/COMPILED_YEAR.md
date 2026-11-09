@@ -119,7 +119,18 @@ below zero reads as nothing held. `economy/stock_block.stock_block(book, agent_n
 number of stock cells in one call. Re-fetch tables after any call that may admit a name or reserve room (a grown table is a new
 object). The methods callers use (`balance`, `stock`, `post`, `post_settled`, ...) are wrappers over the same kernels. Whole-table
 reads that save a loop of scalar ones: `balances_by_currency` (each row in its own currency), `balances_of` / `rows_of` / `slots_of`
-(a list of names), `goods_flows` and `edge_goods_net_by_good` (the year's flows and an edge's nets for every good).
+(a list of names), `balance_by_agent` (`balances_of` as a dict by name, for a caller that looks figures up afterwards), `goods_held_many`
+(`goods_held` for a list of agents: one kernel gathers every agent's slots, one sort puts them in name order, one pass writes the dictionaries;
+`sim/book_holdings.py`), `goods_flows` and `edge_goods_net_by_good` (the year's flows and an edge's nets for every good), and
+`flow_by_purpose` / `flow_by_prefix` (the year's flow of one purpose, or of a purpose prefix summed exactly, for a list of goods:
+`sim/book_flow_columns.py`). `goods_held` and `goods_of` are the one-agent forms of the same read; a caller that wants only the goods uses
+`goods_held`, not `holdings(agent)["goods"]`.
+
+**Names to numbers in one pass.** `IdTable.numbers_if_known(names)` numbers a whole list in one C-level pass (`map` over the dictionary) or
+answers None when a name is new; `_agent_numbers`, `_admit_goods`, `_admit_tiles`, `_admit_currencies` and `posting_sequence` use it, so a
+sequence of posting steps whose names the book knows is turned into rows with one pass per column over all the steps, not one per step
+(a sequence with a new name is numbered step by step, as the book numbered it before). `IdTable.name_order()` and `name_rank()` give the
+numbers in the order of their names and each number's place in it, kept until a name is admitted.
 
 ## The year ledger
 
@@ -143,7 +154,10 @@ object signatures: they append to plain lists (`year_ledger_batch.py`) and a rea
 in one kernel call. The attribute API (`ledger.money_out["farm"]`, `ledger.hours_hired.setdefault(...)`) is unchanged:
 `year_ledger_views.py` and `year_ledger_pair_views.py` show the tables as dict-likes in entry order. Reading one cell through a view costs
 more than a dict get does, so a reader that loops over agents uses `get_many` or the tables. `NestedView.as_plain()` reads every agent's
-rows in one pass (`year_accounts._cohorts`, `_goods`).
+rows in one pass (`year_accounts._cohorts`, `_goods`): `year_ledger_plain.plain_by_agent` sorts the live rows by agent once (stable), makes
+all the sub names with the sub's `names` block call, and builds each member's dict from its slice. The year's goods accounts
+(`year_accounts._goods`) are columns, one list per figure with one entry per good (`year_accounts_columns.py`: `column`, `summed_by_key`
+adds in the order the rows came, as the running dictionary sum did, `sum_across` for the exact sums).
 
 Not on tables: the goods side's `ClearingResult`s as `note_clearing` takes them, `ledger.mint_takes`, `crew_hours_bought`,
 `own_plot_hours`, `grown_units` and `carried_in`.
@@ -768,7 +782,15 @@ each `business_books.operate` posting through the producer records the producers
 | `producers.live_input_prices_at`, `live_wages_at` | not converted: both already read the tile's block (`present_prices_at`, `wages_at` keep one answer per goods tuple and tile until the memory is written to). A producer stands for one recipe on one tile, so there is little to share between callers, and what is left per call is the dictionary built for the caller. Needs a recipe cost grid (recipes by tiles) before it pays |
 | `agents.purses.transfer` -> `book.transfer` | not converted: each transfer first draws on the payer's facility and repays the payee's debt from the purse the earlier transfers left, and the callers are the actors' own advance steps spread over many phases, so a batch would change what each draw sees |
 | `YearLedger.running_costs_of` (from `goods_production.turn_figures`) | already a block read; sharing the agent rows between the two figures made no measurable difference (the cost is the pending notes flushed into the table) |
-| `country_figures.money_held`, `year_accounts.plain_rows`, `inventory.held_stock` | below the bar |
+| `country_figures.money_held`, `credit_lines.lender_standings`, `land_bid_year.firm_land_bids`, `land_market.settle_year` (the rent cash), `lending.lend_working_capital`, `lending.household_requests`, `capital_year.snapshot` and `_arrange_cover`, `year_order_sources.cohort_orders`, `entry_year.close_idle_producers` and `_restake_over_arrays`, `Economy._rebuild_worn_plant`, `plan_year.plans_of` (the producers the kernel leaves), `payable_keep`'s balances | converted: one `balances_of` or `balance_by_agent` for the list the loop goes over, taken before the loop (none of these loops posts, or its postings are queued to the end, so the balances read together are the ones read one by one) |
+| `producer_exit.exit_producer` (through `ExitBatch.hold`), `land_bid_year.take_up_bought`, `state_budget.goods_bids` | converted: the goods the agents hold are one `goods_held_many` (or one `goods_held` before the loop); the exits post at `finish`, a buyer's move leaves the other buyers' stock alone |
+| `year_accounts._goods`, `NestedView.as_plain` | converted to columns (see "The year ledger") |
+| `EconomySetup.countries`, `tiles_of`, `home_scope.home_cohorts` | converted: `country_by_tile` (one pass over the tiles, `setup_countries.py`) in place of `country_of` once per tile; `home_cohorts` asks about each distinct tile once. `country_of` stays per tile for the callers that ask about one tile at a time (`recipe_allowed`, `carried_book.trade_book`, `route_dues_levied`, `merchants_dispatch`): the owner map (`tile_owners`) is shared with the game and changes during it, so no table of it can be kept between calls |
+| `YearView.area_of` / `areas_of` | the area map keeps each tile's table of goods to areas (`AreaMap.areas_on_tile`, made on first ask, since the areas do not change) and the view reads it, so a new view no longer works every pair out again; `areas_of(names, tile)` and `view_areas.areas_in` / `areas_of_pairs` answer a list in one call (`wages_at`, `goods_respend_pack.pack`, the plan table's labour and missing areas). A stand-in view or area map without them is asked one by one |
+| `agents.purses.transfer` -> `book.balance` (`purses.purse`) | not converted, same reason as `purses.transfer`: the balance is read after the transfers before it |
+| `bonded_purchase.settle` | not converted: each group posts (`book.transfer_many`) before the next group reads its employers' balances, and an employer can pay in several groups |
+| `entry_year.open_entrants` (the owner's cash per plan) | not converted: the stakes already decided lower an owner's cash for the next plan (`owner_cash`), a greedy loop over `Producer` records |
+| `year_accounts.plain_rows`, `inventory.held_stock` | below the bar |
 | `_remember_markets` `wanted_at_rows`; the object-rule markets (`unsold_search.clear_with_search`, `seller_offers.strategic_offers`, `goods_market.clear`) | below the bar; a kernel would leave part of each (the packing and the boundary) |
 
 Time any of these with `python3 tools/measure/function_times.py SAVE module:function ...`.
@@ -829,9 +851,15 @@ list lags the code.
 - **Country figures that read per producer or per market record.** `country_figures.output_value_and_unpriced`, `_traded_volumes` and the people counts read producer and cohort records and the saved volumes dictionary one at a time; an array version of `_traded_volumes` was measured slower while the layout of the volumes' keys is rebuilt every year, so it waits for the volumes as a column.
 - **Loan requests** become a table at the clearing; `LoanClearing.loans` and the bank rules still read `Contract`/`LoanRow` objects.
 - **Cached views** in the "Left uncached" list wait for their input's owner to bump a channel.
-- **The book's remaining Python-to-kernel calls** are one kernel per scalar read (`Book.stock`, `holdings`, `goods_of`) from the loops that
+- **Area reads in the households' files and the labour offers.** `households_orders_pack`, `households_store` and `labour_offers_write._area_numbers`
+  (which takes a callable `area_of(trade, tile)`) still ask `area_of` one pair at a time; they would take `areas_of_pairs`.
+- **The settlement of a good** (`settlement_ids.settle_by_ids`, `year_ledger_arrays.note_settlement_rows`) is one call per traded good, each reading the
+  purses and stocks the good before it left (`cash_state = book.balances_at(agents, currency)`), so the goods cannot share a call without a kernel
+  that settles several goods in order; the noted rows could be queued across goods (`year_ledger_batch.PendingNotes` queues object rows only).
+  The per-market `delivered` is a numpy `sum` per market, whose pairwise adding a kernel must reproduce to the last digit.
+- **The book's remaining Python-to-kernel calls** are one kernel per scalar read (`Book.stock`, `holdings`) from the loops that
   read one cell or one agent at a time (`producers.runs_for_stock`, `producers._input_bids`, `households_store.store_holding`,
-  `producer_exit.exit_producer`, `economy._build_plant`) and one apply per step of a loop that reads the book between steps
+  `economy._build_plant`) and one apply per step of a loop that reads the book between steps
   (`goods_production.post_lines` per turn, `purses.transfer`, `bonded_purchase.settle`). A year-level posting queue does not fit these: each
   reads what the last posting wrote, or needs the refusal at the call. They move when their loops are columns (`stock_block`, `balances_of`).
 

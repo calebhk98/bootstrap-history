@@ -1,11 +1,10 @@
-"""Whole-table reads of the book, for a converter that holds ids: many balances, many stocks, one agent's holdings, totals.
+"""Whole-table reads of the book, for a converter that holds ids: many balances, many stocks, totals.
 
 An agent, tile or good number below zero stands for a name the book never saw; every read of it answers zero (or no slot),
 because a missing holding is nothing held. None of these changes the book."""
 import numpy
 
 from sim.book_index import EMPTY, index_find, pack_key
-from sim.book_tables import FREE
 from sim.jit import njit
 
 
@@ -51,29 +50,6 @@ def read_stocks_at(stocks, slots):
         if slots[position] >= 0:
             found[position] = stocks.quantity[slots[position]]
     return found
-
-
-@njit
-def holder_slots(first_slot, next_in_agent):
-    """The stock slots of one agent (its `first_slot`) in the order they were made."""
-    count = 0
-    slot = first_slot
-    while slot != FREE:
-        count += 1
-        slot = next_in_agent[slot]
-    slots = numpy.empty(count, dtype=numpy.int64)
-    slot = first_slot
-    for position in range(count):
-        slots[position] = slot
-        slot = next_in_agent[slot]
-    return slots
-
-
-@njit
-def holder_columns(first_slot, next_in_agent, good, tile, quantity):
-    """(good numbers, tile numbers, quantities) of one agent's stock slots, in the order they were made."""
-    slots = holder_slots(first_slot, next_in_agent)
-    return good[slots], tile[slots], quantity[slots]
 
 
 @njit
