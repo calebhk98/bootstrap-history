@@ -282,6 +282,7 @@ test runner and the fingerprint live in the test package.
 python3 sim/simulator.py validate          # after EVERY edit to data/ (tree, merge, production data, civilisation starts)
 python3 -m sim.tests                       # quick tier (topics with QUICK_TOPIC = True), parallel across available cores
 python3 -m sim.tests --slow                # full suite: every topic and slow check (--jobs 1 sequential, --list, --only a,b)
+ROME_KERNEL_CACHE_KEY=kernels ...          # subagents' edit-test loops: compiled kernels survive edits to non-kernel files (sim/kernel_cache.py); games, --slow and pre-PR checks key on all of sim/
 python3 -m sim.tests.fingerprint record before.json   # then `check before.json` to prove behaviour unchanged
 python3 sim/constants.py --burndown        # declared numbers and temporary heuristics still to derive
 python3 sim/constants.py --compare origin/main   # heuristic count before/after: state it in the PR

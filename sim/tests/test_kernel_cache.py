@@ -7,8 +7,9 @@ import os
 import tempfile
 import time
 import unittest
+from unittest import mock
 
-from sim.kernel_cache import kernel_files, kernel_source_key, prune
+from sim.kernel_cache import SCOPE_ENV, kernel_files, kernel_source_key, prune, scope
 
 
 def write(path, text):
@@ -33,10 +34,29 @@ class KernelSourceKeyTests(unittest.TestCase):
         write(os.path.join(self.top, "callee.py"), "@njit\ndef helper(x):\n    return x + 2\n")
         self.assertNotEqual(kernel_source_key(self.top), before)
 
-    def test_editing_a_file_without_kernels_keeps_the_key(self):
-        before = kernel_source_key(self.top)
+    def test_editing_a_file_without_kernels_keeps_the_kernels_key(self):
+        before = kernel_source_key(self.top, "kernels")
         write(os.path.join(self.top, "plain.py"), "def not_a_kernel():\n    return 2\n")
-        self.assertEqual(kernel_source_key(self.top), before)
+        self.assertEqual(kernel_source_key(self.top, "kernels"), before)
+
+    def test_editing_a_file_without_kernels_changes_the_source_key(self):
+        before = kernel_source_key(self.top, "source")
+        write(os.path.join(self.top, "plain.py"), "LIMIT = 2\n")
+        self.assertNotEqual(kernel_source_key(self.top, "source"), before)
+
+    def test_the_source_scope_covers_every_file_but_the_tests(self):
+        self.assertEqual([os.path.basename(path) for path in kernel_files(self.top, "source")], ["callee.py", "caller.py", "plain.py"])
+
+
+class ScopeTests(unittest.TestCase):
+    def test_unset_means_the_whole_source_and_an_unknown_value_refuses(self):
+        with mock.patch.dict(os.environ, {SCOPE_ENV: ""}):
+            self.assertEqual(scope(), "source")
+        with mock.patch.dict(os.environ, {SCOPE_ENV: "kernels"}):
+            self.assertEqual(scope(), "kernels")
+        with mock.patch.dict(os.environ, {SCOPE_ENV: "everything"}):
+            with self.assertRaises(ValueError):
+                scope()
 
 
 class PruneTests(unittest.TestCase):

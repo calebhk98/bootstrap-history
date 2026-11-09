@@ -591,6 +591,10 @@ def main(argv=None):
     # "from . import"), so this runs the
     # same way whether reached via -m or via this file's own __main__ guard.
     from sim.tests import harness
+    from sim.kernel_cache import SCOPE_ENV
+    # The quick tier keys compiled kernels on the kernel files only (an edit elsewhere keeps them); --slow, run before a
+    # pull request, keys them on all of sim/ as a game does (sim/kernel_cache.py). Set before any kernel is called.
+    os.environ.setdefault(SCOPE_ENV, "source" if harness.SLOW else "kernels")
 
     # The default run is the quick tier: topics whose file sets QUICK_TOPIC = True. --slow (or
     # ROME_SLOW_TESTS) runs every topic. A topic named with --only runs whatever its tier.
