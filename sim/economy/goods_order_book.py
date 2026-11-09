@@ -281,14 +281,18 @@ class GoodsOrderBook:
         tables = self.memory_tables
         return tables.areas.name_list
 
-    def markets_by_area_name(self, markets: numpy.ndarray) -> numpy.ndarray:
-        """The places of `markets` (goods market ids, distinct areas) when they are sorted by their area's name."""
+    def area_ranks(self) -> numpy.ndarray:
+        """Per area id: its place when the area names are sorted (made again when areas have been admitted since)."""
         names = self._area_names()
         if self._area_ranks is None or len(self._area_ranks) != len(names):
             ranks = numpy.empty(len(names), dtype=numpy.int64)
             ranks[sorted(range(len(names)), key=names.__getitem__)] = numpy.arange(len(names), dtype=numpy.int64)
             self._area_ranks = ranks
-        return numpy.argsort(self._area_ranks[self.memory_tables.goods_table.area[markets]], kind="stable")
+        return self._area_ranks
+
+    def markets_by_area_name(self, markets: numpy.ndarray) -> numpy.ndarray:
+        """The places of `markets` (goods market ids, distinct areas) when they are sorted by their area's name."""
+        return numpy.argsort(self.area_ranks()[self.memory_tables.goods_table.area[markets]], kind="stable")
 
     def area_names_of_markets(self, markets: numpy.ndarray) -> List[str]:
         """The area of each goods market id of `markets`."""

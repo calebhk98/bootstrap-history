@@ -64,10 +64,27 @@ class MarketRows:
         self.orders = orders
         self.bid_array = numpy.asarray(bid_rows, dtype=numpy.int64)      # the same rows as arrays, for the readers of whole columns
         self.left_array = numpy.asarray(left_rows, dtype=numpy.int64)
-        self.bid_rows = self.bid_array.tolist()
-        self.left_rows = self.left_array.tolist()
         self.offer_array = numpy.asarray(offer_rows, dtype=numpy.int64)
-        self.offer_rows = self.offer_array.tolist()
+        self._lists = {}
+
+    def _list_of(self, name: str, array: numpy.ndarray) -> list:
+        """The rows as a list, made when first read (most markets are read as arrays only)."""
+        found = self._lists.get(name)
+        if found is None:
+            found = self._lists[name] = array.tolist()
+        return found
+
+    @property
+    def bid_rows(self) -> list:
+        return self._list_of("bid", self.bid_array)
+
+    @property
+    def left_rows(self) -> list:
+        return self._list_of("left", self.left_array)
+
+    @property
+    def offer_rows(self) -> list:
+        return self._list_of("offer", self.offer_array)
 
     def bids_lazy(self) -> LazyObjects:
         """The market's bids as objects, built when first read."""

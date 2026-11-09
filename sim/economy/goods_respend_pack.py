@@ -33,6 +33,20 @@ class Packed:
     offer_origin: list        # per packed offer: its index in its market's original offer list
 
 
+_FLAT_SPECS: Dict[object, tuple] = {}      # a need's goods as flat columns, by the need (equal needs are one entry)
+
+
+def _flat_spec(spec) -> tuple:
+    """(budget weight, has share limits, the goods' names, effectiveness, limit, whether limited) of a need, made once for each distinct need."""
+    found = _FLAT_SPECS.get(spec)
+    if found is None:
+        share_limits = dict(spec.share_limits)
+        found = _FLAT_SPECS[spec] = (spec.budget_weight, bool(spec.share_limits), tuple(good for good, _effect in spec.goods),
+                                     tuple(effect for _good, effect in spec.goods), tuple(share_limits.get(good, 0.0) for good, _effect in spec.goods),
+                                     tuple(good in share_limits for good, _effect in spec.goods))
+    return found
+
+
 def flatten_baskets(baskets, good_index) -> tuple:
     """The baskets as arrays: needs of each (`need_ptr`), a need's budget weight, its slot in the sorted need ids, whether it
     has share limits, and the rows of its goods (`need_good_ptr`: good index, effectiveness, limit, whether limited); per
@@ -40,20 +54,20 @@ def flatten_baskets(baskets, good_index) -> tuple:
     need_ids = sorted({spec.need_id for basket in baskets for spec in basket.needs})
     slot_of = {need_id: slot for slot, need_id in enumerate(need_ids)}
     need_ptr, weight, slots, has_limits, good_ptr = [0], [], [], [], [0]
-    good_rows, effects, limits, limited = [], [], [], []
+    names, effects, limits, limited = [], [], [], []
     for basket in baskets:
         for spec in basket.needs:
-            weight.append(spec.budget_weight)
+            spec_weight, spec_has_limits, spec_names, spec_effects, spec_limits, spec_limited = _flat_spec(spec)
+            weight.append(spec_weight)
             slots.append(slot_of[spec.need_id])
-            has_limits.append(bool(spec.share_limits))
-            share_limits = dict(spec.share_limits)
-            for good, effect in spec.goods:
-                good_rows.append(good_index[good])
-                effects.append(effect)
-                limited.append(good in share_limits)
-                limits.append(share_limits.get(good, 0.0))
-            good_ptr.append(len(good_rows))
+            has_limits.append(spec_has_limits)
+            names.extend(spec_names)
+            effects.extend(spec_effects)
+            limits.extend(spec_limits)
+            limited.extend(spec_limited)
+            good_ptr.append(len(names))
         need_ptr.append(len(weight))
+    good_rows = [good_index[good] for good in names]
     need_of_good_slot = numpy.full((len(baskets), len(good_index)), -1, dtype=numpy.int64)
     for index, basket in enumerate(baskets):
         for good, need_id in need_of_good(basket).items():

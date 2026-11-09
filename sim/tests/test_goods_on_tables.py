@@ -11,7 +11,7 @@ import unittest
 import numpy
 
 from sim.book import Book
-from sim.economy import goods_market_rows, goods_table_group, goods_table_pack, goods_table_quotes, market_quote
+from sim.economy import goods_market_rows, goods_pack_kernel, goods_table_group, goods_table_quotes, goods_table_scales, market_quote
 from sim.economy.goods_order_book import GoodsOrderBook
 from sim.economy.goods_order_tables import HOUSEHOLD, OTHER
 from sim.economy.market_tables import MarketTables
@@ -78,7 +78,7 @@ class GoodsRowsAreCutByMarket(unittest.TestCase):
 
     def test_rows_of_good_lists_the_markets_in_area_name_order_with_arrival_order_inside(self):
         orders = self.book_of_two_markets()
-        rows = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"))
+        rows, _flags, _flags_of = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"), orders.book.agent_table.is_edge, True)
         self.assertEqual([orders.area_name_of_market(market) for market in rows.markets.tolist()], ["north", "south"])
         self.assertEqual((rows.bids_of_market(0).tolist(), rows.bids_of_market(1).tolist()), ([1], [0, 2]))
         self.assertEqual((rows.offers_of_market(0).tolist(), rows.offers_of_market(1).tolist()), ([1, 2], [0]))
@@ -90,8 +90,7 @@ class GoodsRowsAreCutByMarket(unittest.TestCase):
         orders.add_offer(offer("edge:mint", area="east"))
         orders.add_offer(offer("s3", area="east"))
         _bids, offers = orders.tables()
-        rows = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"))
-        flags = goods_table_group.batch_flags(offers, orders.book.agent_table.is_edge, rows, True)
+        rows, flags, _flags_of = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"), orders.book.agent_table.is_edge, True)
         by_area = {orders.area_name_of_market(market): flag for market, flag in zip(rows.markets.tolist(), flags.tolist())}
         self.assertEqual(by_area, {"east": False, "north": True, "south": False})
 
@@ -99,8 +98,8 @@ class GoodsRowsAreCutByMarket(unittest.TestCase):
         orders = new_book()
         orders.add_offer(offer("s1"))
         _bids, offers = orders.tables()
-        rows = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"))
-        self.assertEqual(goods_table_group.batch_flags(offers, orders.book.agent_table.is_edge, rows, False).tolist(), [False])
+        _rows, flags, _flags_of = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"), orders.book.agent_table.is_edge, False)
+        self.assertEqual(flags.tolist(), [False])
 
     def test_the_stock_slot_of_an_offer_is_the_book_slot_of_its_seller_good_and_tile(self):
         orders = new_book()
@@ -109,7 +108,7 @@ class GoodsRowsAreCutByMarket(unittest.TestCase):
         orders.add_offer(offer("s2"))
         orders.add_offer(offer("s1", tile="t9"))
         _bids, offers = orders.tables()
-        rows = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"))
+        rows, _flags, _flags_of = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"), orders.book.agent_table.is_edge, True)
         goods_table_group.note_stock_slots(offers, orders.book, orders.book.good_number("wheat"), rows.offer_rows)
         self.assertEqual(offers.stock_slot[:3].tolist(), [orders.book.slot_for("s1", "wheat", "t1"), -1, -1])
         self.assertGreaterEqual(offers.stock_slot[0], 0)
@@ -125,10 +124,10 @@ class ClearingOrderIsTheOldSort(unittest.TestCase):
         for each in (bid("b", tile="t2"), bid("a", priority=1), bid("b", tile="t1"), bid("b", tile="t2", floor=9.0), bid("c")):
             orders.add_bid(each)
         bids, _offers = orders.tables()
-        rows = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"))
         agent_rank = goods_table_group.name_ranks(orders.book.agent_ids.name_list)
         tile_rank = goods_table_group.name_ranks(orders.book.tile_ids.name_list)
-        sorted_rows, slots = goods_table_pack.sorted_bids(bids, rows, numpy.array([True]), agent_rank, tile_rank)
+        sorted_rows, slots = goods_pack_kernel._sorted_bids(bids, numpy.arange(5), numpy.zeros(5, dtype=numpy.int64),
+                                                            numpy.zeros(1, dtype=numpy.int64), agent_rank, tile_rank)
         self.assertEqual(sorted_rows.tolist(), [2, 0, 3, 4, 1])
         self.assertEqual(slots.tolist(), [0] * 5)
 
@@ -137,19 +136,17 @@ class ClearingOrderIsTheOldSort(unittest.TestCase):
         for each in (offer("s2"), offer("s1", tile="t2"), offer("s1", quantity=0.0), offer("s1", tile="t2", quantity=3.0), offer("s1")):
             orders.add_offer(each)
         _bids, offers = orders.tables()
-        rows = goods_table_group.rows_of_good(orders, orders.book.good_number("wheat"))
         agent_rank = goods_table_group.name_ranks(orders.book.agent_ids.name_list)
         tile_rank = goods_table_group.name_ranks(orders.book.tile_ids.name_list)
-        flags = numpy.array([True])
-        sorted_rows, slots = goods_table_pack.sorted_offers(offers, rows, flags, agent_rank, tile_rank)
+        sorted_rows, slots = goods_pack_kernel._sorted_offers(offers, numpy.arange(5), numpy.zeros(5, dtype=numpy.int64),
+                                                              numpy.zeros(1, dtype=numpy.int64), agent_rank, tile_rank)
         self.assertEqual(sorted_rows.tolist(), [4, 1, 3, 0])
-        pointers = numpy.array([0, 4])
-        self.assertEqual(goods_table_pack.seller_tile_numbers(offers, sorted_rows, slots, pointers).tolist(), [0, 1, 1, 2])
+        self.assertEqual(goods_pack_kernel._key_numbers(offers, sorted_rows, slots, numpy.array([0, 4])).tolist(), [0, 1, 1, 2])
 
     def test_price_scales_is_the_mean_positive_reference_else_the_last_price(self):
         pointers = numpy.array([0, 3, 4, 4])
         references = numpy.array([2.0, 0.0, 4.0, 0.0])
-        scale = goods_table_pack.price_scales(pointers, references, numpy.array([9.0, 5.0, math.nan]))
+        scale = goods_table_scales.price_scales(pointers, references, numpy.array([9.0, 5.0, math.nan]))
         self.assertEqual(scale[:2].tolist(), [3.0, 5.0])
         self.assertTrue(math.isnan(scale[2]))
 
