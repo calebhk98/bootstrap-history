@@ -39,8 +39,12 @@ def unpack_key(key):
 
 @njit
 def start_position(key, index_length):
-    """Where probing for the key begins (the length is a power of two)."""
+    """Where probing for the key begins (the length is a power of two). Every bit of the key reaches the low bits that pick the
+    place: a product's low bits depend only on the key's low bits, so the high fields (the agent) are folded down between two
+    multiplications, or keys that differ only in them would all start at one place."""
     mixed = (int(key) * HASH_MULTIPLIER) & HASH_MASK
+    mixed ^= mixed >> 31
+    mixed = (mixed * HASH_MULTIPLIER) & HASH_MASK
     mixed ^= mixed >> 29
     return mixed & (index_length - 1)
 

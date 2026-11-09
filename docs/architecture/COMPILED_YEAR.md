@@ -113,6 +113,15 @@ passed flat do (`tools/measure/function_times.py` on `sim.book_post:apply_batche
 holds names and not ids numbers them with `IdTable.numbers_of` (one call for a list; -1 for a name the table lacks) or
 `Book.agent_numbers_in_order` (admits the new ones one at a time, as `agent_number` does, which a batch admit would number differently).
 
+**What a hot kernel costs inside.** Passing a nested bundle of arrays from one compiled function to another, once per posting or per
+row, copies and reference-counts every array in it each time; a loop that holds the columns it uses in hand and passes a table on whole
+only to make a row (`book_plan.plan_transfers`, `plan_moves`, `book_commit.record_moves`, `year_ledger_kernels.new_pair` and the
+`note_*` kernels' `add_to_found_pair`) did the same arithmetic in far less time. Every hash index starts a probe at `book_index.start_position`,
+which folds a key's high fields (the agent) into the low bits that pick the place; before, keys that differed only in the agent
+started at one place and a lookup walked a long run. `tests/test_kernel_speed_*.py` hold the earlier versions as plain Python
+(`kernel_speed_plain.py`) and compare bit for bit. A compiled caller's cache is not invalidated when a kernel in another file that it
+calls changes: delete the `.nbi` and `.nbc` files in `__pycache__` before timing an edit to a callee.
+
 **How it reads.** The kernels in `sim/book_read_kernels.py` (`read_balances`, `find_slots`, `read_stocks_at`, `holder_columns`,
 `counted_stocks`, `currency_values`) take the book's tables from `book.tables()`, `book.balance_table`, `book.stock_rows`; an id
 below zero reads as nothing held. `economy/stock_block.stock_block(book, agent_numbers, good_numbers, tile_numbers)` reads any
@@ -223,7 +232,14 @@ sellers' cash shortfall, the offers) runs between one good's settlement and the 
 after it: only a run of goods with no producer turn between them could share a call (`tools/measure` has no command that counts them; a one-off
 count of a Rome year found few). The state carried inside one call is the purses and stocks from market to market of the good
 (`settlement_batch_kernel.settle_markets`). The remaining per-good cost is kernel compute, not glue: `goods_year_kernel.decide_markets`
-(the price search), `final_allocations`, `settle_markets` and the ledger's `note_settlement_*` kernels.
+(the price search), `final_allocations`, `settle_markets` and the ledger's `note_settlement_*` kernels. In the market kernels a run of equal asks is priced once
+(`goods_market_kernels.choice_weights`, `requested_round_one`, `allocate_arrays` copy the last ask's wants and weight), and the
+respend kernel's logs (`goods_respend_kernel.respend_rounds`) are not cleared, since the unpack reads them up to the counts it returns
+(a log row written by only some branches is set to its default where the row starts); `goods_respend_year.run_rounds` starts with room for
+the logs of a whole year, so the first run is the only run. What is left in `decide_markets` is the sellers' price search
+(`price_setting_kernel.best_prices`, an exponential and a logarithm per rival per candidate price) and the raise search's repeated
+demand sums (`goods_market_kernels.raise_search`), which a candidate price changes for the lifted asks only; both keep the Python's
+summation order, so a cheaper form must give the same bits.
 
 A good takes the object path (`settlement.settle_goods_many`, `YearLedger.note_settlement`) when one of its traded markets is not a
 `TableClearing` of the good's batch (a mod replaced the rules). Tests: `test_goods_settle_ids.py` (the id path against `settle_results`

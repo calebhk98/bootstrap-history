@@ -23,59 +23,60 @@ def clear_plan(plan, local_index):
 
 
 @njit
-def touch(plan, local_index, key, holder):
+def touch(plan_keys, plan_holders, plan_slots, plan_failing, plan_positions, row_count, local_index, key, holder):
     """The plan row for the cell, made (at row_count) when the batch has not touched it yet. Returns (row, is_new); a new
-    row has only key and holder set. The plan has room for every touch the caller will make."""
+    row has only key and holder set. The plan has room for every touch the caller will make. The plan's columns are passed
+    one by one: a kernel that takes the whole table on each posting copies and counts every column each time."""
     position = start_position(key, len(local_index))
     mask = len(local_index) - 1
     while True:
         row = local_index[position]
         if row == EMPTY:
-            row = plan.row_count[0]
-            plan.row_count[0] = row + 1
-            plan.key[row] = key
-            plan.holder[row] = holder
-            plan.slot[row] = FREE
-            plan.failing[row] = 0
-            plan.position[row] = position
+            row = row_count[0]
+            row_count[0] = row + 1
+            plan_keys[row] = key
+            plan_holders[row] = holder
+            plan_slots[row] = FREE
+            plan_failing[row] = 0
+            plan_positions[row] = position
             local_index[position] = row
             return row, True
-        if plan.key[row] == key:
+        if plan_keys[row] == key:
             return row, False
         position = (position + 1) & mask
 
 
 @njit
-def add_to_cell(plan, local_index, key, holder, held, amount, receives):
-    """Move amount into the cell (receives) or out of it; `held` is what the cell holds now. The first touch starts from
-    `held`, later ones continue from the plan's running value, so repeated postings add in posting order."""
-    row, is_new = touch(plan, local_index, key, holder)
-    if is_new:
-        plan.before[row] = held
-        plan.after[row] = held
-        plan.moved[row] = amount
-    else:
-        plan.moved[row] += amount
-    if receives:
-        plan.after[row] += amount
-    else:
-        plan.after[row] -= amount
-    return row
-
-
-@njit
 def plan_transfers(transfers, first, last, balances, stride, plan, local_index):
     """Plan transfer postings first .. last - 1 as one batch over balance cells. Returns (OK, 0), or (NEGATIVE_AMOUNT, the
-    posting row) at the first negative amount, which is checked before any overdraft."""
+    posting row) at the first negative amount, which is checked before any overdraft. A cell's first touch starts from what
+    the balance holds, later ones continue from the plan's running value, so repeated postings add in posting order."""
+    keys, holders, slots, failing, positions = plan.key, plan.holder, plan.slot, plan.failing, plan.position
+    row_count, before, after, moved = plan.row_count, plan.before, plan.after, plan.moved
+    amounts = balances.amount
     for row in range(first, last):
         amount = transfers.amount[row]
         if not amount >= 0.0:
             return NEGATIVE_AMOUNT, row
         payer, payee, currency = transfers.payer[row], transfers.payee[row], transfers.currency[row]
         cell = payer * stride + currency
-        add_to_cell(plan, local_index, cell, payer, balances.amount[cell], amount, False)
+        place, is_new = touch(keys, holders, slots, failing, positions, row_count, local_index, cell, payer)
+        if is_new:
+            before[place] = amounts[cell]
+            after[place] = amounts[cell]
+            moved[place] = amount
+        else:
+            moved[place] += amount
+        after[place] -= amount
         cell = payee * stride + currency
-        add_to_cell(plan, local_index, cell, payee, balances.amount[cell], amount, True)
+        place, is_new = touch(keys, holders, slots, failing, positions, row_count, local_index, cell, payee)
+        if is_new:
+            before[place] = amounts[cell]
+            after[place] = amounts[cell]
+            moved[place] = amount
+        else:
+            moved[place] += amount
+        after[place] += amount
     return OK, 0
 
 
@@ -86,36 +87,33 @@ def held_in_slot(stocks, slot):
 
 
 @njit
-def add_to_stock(plan, local_index, stocks, stock_index, agent, good, tile, amount, receives):
-    """add_to_cell for the stock cell (agent, good, tile), looking up its slot when the batch first touches it."""
-    key = pack_key(agent, good, tile)
-    row, is_new = touch(plan, local_index, key, agent)
-    if is_new:
-        slot = index_find(stocks.key, stock_index, key)
-        plan.slot[row] = slot
-        plan.before[row] = held_in_slot(stocks, slot)
-        plan.after[row] = plan.before[row]
-        plan.moved[row] = amount
-    else:
-        plan.moved[row] += amount
-    if receives:
-        plan.after[row] += amount
-    else:
-        plan.after[row] -= amount
-    return row
-
-
-@njit
 def plan_moves(moves, first, last, stocks, stock_index, plan, local_index):
     """Plan goods-move postings first .. last - 1 as one batch over stock cells. Returns (OK, 0), or (NEGATIVE_QUANTITY, the
-    posting row)."""
+    posting row). A cell's slot is looked up when the batch first touches it."""
+    keys, holders, slots, failing, positions = plan.key, plan.holder, plan.slot, plan.failing, plan.position
+    row_count, before, after, moved = plan.row_count, plan.before, plan.after, plan.moved
+    stock_keys, stock_quantity = stocks.key, stocks.quantity
     for row in range(first, last):
         quantity = moves.quantity[row]
         if not quantity >= 0.0:
             return NEGATIVE_QUANTITY, row
         good = moves.good[row]
-        add_to_stock(plan, local_index, stocks, stock_index, moves.giver[row], good, moves.tile[row], quantity, False)
-        add_to_stock(plan, local_index, stocks, stock_index, moves.receiver[row], good, moves.receiver_tile[row], quantity, True)
+        for agent, tile, receives in ((moves.giver[row], moves.tile[row], False),
+                                      (moves.receiver[row], moves.receiver_tile[row], True)):
+            key = pack_key(agent, good, tile)
+            place, is_new = touch(keys, holders, slots, failing, positions, row_count, local_index, key, agent)
+            if is_new:
+                slot = index_find(stock_keys, stock_index, key)
+                slots[place] = slot
+                before[place] = 0.0 if slot == FREE else stock_quantity[slot]
+                after[place] = before[place]
+                moved[place] = quantity
+            else:
+                moved[place] += quantity
+            if receives:
+                after[place] += quantity
+            else:
+                after[place] -= quantity
     return OK, 0
 
 

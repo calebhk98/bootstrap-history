@@ -6,7 +6,7 @@ keys first appeared are what the dicts held. A kernel never grows a table: the c
 for as many new rows or agents as the call can add. `add_pair` answers -1 when the table is full, which a caller that reserved
 correctly never sees."""
 from sim.book_index import EMPTY, index_add, index_find, pack_key
-from sim.compiled_tables.growth import NO_ROOM, claim_row
+from sim.compiled_tables.growth import NO_ROOM
 from sim.economy.year_ledger_tables import MEMBERS, NEXT_ENTRY
 from sim.jit import njit
 
@@ -65,42 +65,50 @@ def find_pair(target, agent, subkey, extra):
 
 
 @njit
-def _link_row(target, agent, row):
-    """Append the row to the agent's chain and make the agent a member of the figure its rows belong to."""
-    touch(target.orders, target.counters, target.figure, agent)
-    last = target.lasts[agent]
-    if last == 0:
-        target.firsts[agent] = row + 1
-    else:
-        target.rows.next_in_agent[last - 1] = row + 1
-    target.lasts[agent] = row + 1
+def new_pair(target, agent, subkey, extra):
+    """A new, zeroed, live row for the key (which must be absent), indexed and chained; NO_ROOM when the table is full. The
+    columns are used in hand, not passed on whole, so a call copies and counts no table."""
+    rows = target.rows
+    row = rows.row_count[0]
+    if row >= rows.capacity[0]:
+        return NO_ROOM
+    rows.row_count[0] = row + 1
+    keys = rows.key
+    keys[row] = pack_key(agent, subkey, extra)
+    rows.agent[row] = agent
+    rows.subkey[row] = subkey
+    rows.extra[row] = extra
+    rows.amount[row] = 0.0
+    rows.second_amount[row] = 0.0
+    rows.next_in_agent[row] = 0
+    rows.live[row] = 1
+    index_add(keys, target.hash_index, row)
+    if target.chained:
+        touch(target.orders, target.counters, target.figure, agent)
+        last = target.lasts[agent]
+        if last == 0:
+            target.firsts[agent] = row + 1
+        else:
+            rows.next_in_agent[last - 1] = row + 1
+        target.lasts[agent] = row + 1
+    return row
 
 
 @njit
-def new_pair(target, agent, subkey, extra):
-    """A new, zeroed, live row for the key (which must be absent), indexed and chained; NO_ROOM when the table is full."""
-    row = claim_row(target.rows)
-    if row == NO_ROOM:
-        return NO_ROOM
-    key = pack_key(agent, subkey, extra)
-    target.rows.key[row] = key
-    target.rows.agent[row] = agent
-    target.rows.subkey[row] = subkey
-    target.rows.extra[row] = extra
-    target.rows.amount[row] = 0.0
-    target.rows.second_amount[row] = 0.0
-    target.rows.next_in_agent[row] = 0
-    target.rows.live[row] = 1
-    index_add(target.rows.key, target.hash_index, row)
-    if target.chained:
-        _link_row(target, agent, row)
+def add_to_found_pair(keys, amounts, second_amounts, hash_index, agent, subkey, extra, amount, second_amount):
+    """`add_pair` for a row that exists, through the table's columns alone (a loop that holds the columns in hand skips
+    copying the whole table on every row); EMPTY, with nothing written, when the key is absent."""
+    row = index_find(keys, hash_index, pack_key(agent, subkey, extra))
+    if row != EMPTY:
+        amounts[row] += amount
+        second_amounts[row] += second_amount
     return row
 
 
 @njit
 def add_pair(target, agent, subkey, extra, amount, second_amount):
     """`dict[key] = dict.get(key, 0.0) + amount` (and the same for the second figure). Returns the row, or -1 when full."""
-    row = find_pair(target, agent, subkey, extra)
+    row = index_find(target.rows.key, target.hash_index, pack_key(agent, subkey, extra))
     if row == EMPTY:
         row = new_pair(target, agent, subkey, extra)
         if row == NO_ROOM:
