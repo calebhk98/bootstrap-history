@@ -10,6 +10,7 @@ from sim.constants import declare
 from sim.loans import select as loan_select
 
 from . import bank_runs, funds as fund_pools, insurance, lending, portfolio_year, secondary_trade
+from .cohort_reads import tile_of
 from .funds import POOLED_FUNDS
 from .insurance import HARVEST, INSURANCE_UNDERWRITING, RISK_POOLING
 from .secondary_trade import CashShortfall
@@ -123,12 +124,12 @@ def note_exposure(setup, record, view, area_map, ledger, harvest_factor: float, 
         return
     exposed = {}
     for cohort_id, grown in sorted(ledger.grown.items()):
-        cohort = record.cohorts.get(cohort_id)
-        if cohort is None:
+        tile = tile_of(record.cohorts, cohort_id)
+        if tile is None:
             continue
         value = 0.0
         for good, quantity in sorted(grown.items()):
-            price = view.price(good, area_map.area_of(good, cohort.tile))
+            price = view.price(good, area_map.area_of(good, tile))
             if price is not None:
                 value += quantity * price
         if value > 0.0:

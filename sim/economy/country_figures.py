@@ -13,6 +13,7 @@ import numpy as np
 from sim.labour.api import people_by_trade_over
 
 from . import carried_book, households_basket, quiet_year
+from .cohort_store import table_of
 from .home_scope import has_partners
 from .market_memory import KEY_SEPARATOR, YearView
 from .national_prices import national_prices, national_wages
@@ -203,8 +204,9 @@ def _worked_need_floor_costs(economy, country: Optional[str]) -> Dict[str, float
     record = economy.record
     view = _floor_view(economy)
     people_on: Dict[TileId, List[float]] = {}
-    for cohort in record.cohorts.values():
-        people_on.setdefault(cohort.tile, []).append(cohort.people)
+    store = table_of(record.cohorts)
+    for tile_id, people in zip(store.tile_names(), store.column("people").tolist()):
+        people_on.setdefault(tile_id, []).append(people)
     tiles = [tile for tile in sorted(country_tiles(economy, country)) if math.fsum(people_on.get(tile, ())) > 0.0]
     households_basket.tiles_need_prices(economy.setup, view, tiles)     # every tile's basket priced together; the reads below are then kept ones
     sums: Dict[str, float] = {}
@@ -265,7 +267,7 @@ def money_held(economy, country: Optional[str]) -> float:
     tiles = country_tiles(economy, country)
     record = economy.record
     money = economy.setup.currency_id
-    holders = [cohort.agent_id for cohort in record.cohorts.values() if cohort.tile in tiles]
+    holders = table_of(record.cohorts).ids_on_tiles(tiles.__contains__)
     holders += record.producers.ids_on_tiles(tiles.__contains__)
     return math.fsum(record.book.balance(holder, money) for holder in holders)
 

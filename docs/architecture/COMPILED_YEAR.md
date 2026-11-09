@@ -472,8 +472,19 @@ offers (`labour_offers_write`), `subsistence_cost_by_tile`, `outside_option_by_t
 `ownership.owner_cohort`/`spread`, `year_close_owners.owner_table`, `titles.settle_tenancies`' steward, `titles_inheritance.divide_estates`,
 `home_scope` (the home ids and working people), the state's wage bids, the mint's cash wanted, `debt_relief`, `lending`
 (`expected_inflation_of`, the spare cash, `household_requests`), `year_accounts`, `flight_year.tenants_flee`, the plot parameters, the
-own-plan hours and `_grow_own`, and `goods_respend_pack.pack`. The save is written from the columns in the old format
-(`CohortStore.to_plain`). Tests: `test_cohort_store.py`, `test_cohort_people.py`.
+own-plan hours and `_grow_own`, and `goods_respend_pack.pack`; and, through `cohort_reads.py` (the same answers from the columns or from a plain mapping of cohort-like objects), the land
+margins and leases (`land_bid_year.best_margin` takes a tile id; `land_lease_year` reads `CohortFigures`), `capital_year.note_exposure`, the carriage
+hours' populated tiles, `merchants_dispatch`'s poorest cohort of each tile, `take_up_own`'s owner, `country_figures` (`money_held` and the floor costs),
+`api._ranked_cohorts` and `year_arrays_holdings.share_out`. The save is written from the columns in the old format
+(`CohortStore.to_plain`). Tests: `test_cohort_store.py`, `test_cohort_people.py`, `test_cohort_reads.py`.
+
+What still builds a `Cohort` in a warm year, measured by counting `CohortStore._build` around one warm `game.step()` (a throwaway wrapper that
+records the first non-store caller; `tools/measure/warm_year_profile.py` loads and warms the game): the first object reader after each block write
+rebuilds every stale snapshot, so the count falls only when every reader between two writes reads columns. Left: `year_order_sources.cohort_orders`
+(its entries carry the `Cohort` into `households_orders_pack.kernel_orders`, which reads eight fields at lines 159-169, and into
+`households.goods_orders` for a basket the kernel does not cover); `household_offers_year.plans`; `lending.bid_household_loans` (reads one `Cohort`
+for each borrower through `cohort_basket` and `households_credit.floor_bids`). `cohort_orders` ends with `set_column("planned_spending")`, a block
+write, so the next object reader rebuilds all again.
 
 Tests: `sim/tests/test_close_pack_kernels.py`, `test_year_close_dividends.py`, `test_producer_close_write.py`, `test_producer_store.py`, `test_wear_kernels.py`,
 `test_year_close_households.py` (each kernel against the Python it replaces on written-out inputs).

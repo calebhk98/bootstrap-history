@@ -17,6 +17,8 @@ import numpy as np
 
 from sim.jit import njit
 
+from .cohort_store import table_of
+
 
 @njit
 def share_out_kernel(owner_cohort, worth, outside_start, outside_holder, outside_part, outside_sum, cohort_tile, cohort_share,
@@ -62,13 +64,15 @@ def tile_share_totals(cohort_tile, cohort_share, tile_count):
 def share_out(record, worths: Dict[str, float]) -> Dict[str, float]:
     """Each agent's share of the producers' `worths`: the cohorts' by ownership share on the owner's tile, and what holders of a producer's
     shares own at the share price factor."""
-    cohorts = sorted(record.cohorts.values(), key=lambda each: each.agent_id)
-    names: List[str] = [each.agent_id for each in cohorts]
+    store = table_of(record.cohorts)
+    order = store.order()
+    names: List[str] = [store.ids[row] for row in order.tolist()]
     row_of_agent = {name: row for row, name in enumerate(names)}
-    tile_names = sorted({each.tile for each in cohorts})
+    cohort_tile_names = store.tile_names(order)
+    tile_names = sorted(set(cohort_tile_names))
     row_of_tile = {tile: row for row, tile in enumerate(tile_names)}
-    cohort_tile = np.fromiter((row_of_tile[each.tile] for each in cohorts), dtype=np.int64, count=len(cohorts))
-    cohort_share = np.fromiter((each.ownership_share for each in cohorts), dtype=np.float64, count=len(cohorts))
+    cohort_tile = np.fromiter((row_of_tile[tile] for tile in cohort_tile_names), dtype=np.int64, count=len(names))
+    cohort_share = store.column("ownership_share")[order]
     by_tile = np.argsort(cohort_tile, kind="stable")
     tile_start = np.concatenate(([0], np.cumsum(np.bincount(cohort_tile, minlength=len(tile_names)))))
     ids = list(worths)

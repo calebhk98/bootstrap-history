@@ -14,6 +14,7 @@ from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
 from . import banks
 from .banks import DEPOSIT_BANKING
+from .cohort_reads import figures_in_id_order
 from .funds import POOLED_FUNDS
 from .insurance import INSURANCE_UNDERWRITING, RISK_POOLING
 from .secondary_trade import BOND_MARKET, SHARE_TRADING
@@ -271,7 +272,7 @@ def _ranked_cohorts(economy, country=None):
     """The home country's household cohorts, poorest per head first (ties by people, then id)."""
     scope = country_figures.home_when_shared(economy, country)
     tiles = country_figures.country_tiles(economy, scope)
-    cohorts = [cohort for cohort in economy.record.cohorts.values() if cohort.people > 0.0 and cohort.tile in tiles]
+    cohorts = [cohort for cohort in figures_in_id_order(economy.record.cohorts) if cohort.people > 0.0 and cohort.tile in tiles]
     return sorted(cohorts, key=lambda cohort: (cohort.last_year_income / cohort.people, cohort.people, cohort.agent_id))
 
 
