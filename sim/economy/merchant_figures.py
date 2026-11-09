@@ -223,6 +223,11 @@ class MarketFigures(MutableMapping):
         for row in rows:
             yield self.key_of_name(names[row])
 
+    def items(self) -> list:
+        """[(key, figure)] in iteration order, read from the column in one pass (the keys with a figure, as `[(key, self[key]) for key in self]`)."""
+        names, figures = self.named()
+        return [(self.key_of_name(name), figure) for name, figure in zip(names, figures)]
+
     def __len__(self) -> int:
         return int(self._present_rows().size)
 

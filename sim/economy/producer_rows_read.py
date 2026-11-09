@@ -7,7 +7,7 @@ from typing import Iterable, List, NamedTuple, Optional
 
 import numpy as np
 
-from .producer_blocks import expected_prices_of, figures_of
+from .producer_blocks import crews_of, expected_prices_of, figures_of
 
 _SCALARS = ("capacity_runs", "yield_factor", "years_of_loss", "cash_target", "expected_sales", "last_runs", "land_rent_per_run",
             "workshops", "idle_years")
@@ -56,12 +56,12 @@ def fields_of(store, rows: Iterable[int]) -> List[ProducerFields]:
     land_caps, staffed = _optional(figures_of(store, "land_run_cap", rows)), _optional(figures_of(store, "staffed_runs", rows))
     earnings = _histories(table.earnings_history[rows], table.earnings_count[rows])
     revenue = _histories(table.revenue_history[rows], table.revenue_count[rows])
-    crewed = (table.crew_count[rows] > 0).tolist()
+    crews = crews_of(store, rows)
     owner_of, recipe_of, tile_of = table.owner[rows].tolist(), table.recipe[rows].tolist(), table.tile[rows].tolist()
     return [ProducerFields(
         store.ids[row], owners[owner_of[place]], recipes[recipe_of[place]], tiles[tile_of[place]], scalars["capacity_runs"][place],
         scalars["yield_factor"][place], expected[place], scalars["years_of_loss"][place], scalars["cash_target"][place],
         scalars["expected_sales"][place], scalars["last_runs"][place], scalars["land_rent_per_run"][place], land_caps[place],
         scalars["workshops"][place], earnings[place], revenue[place], scalars["idle_years"][place], staffed[place],
-        store.crew_of(row) if crewed[place] else {})
+        crews[place])
         for place, row in enumerate(rows.tolist())]

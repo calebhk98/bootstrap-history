@@ -145,5 +145,8 @@ def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
     keys = [market_key(trade, area) for area, trade in zip(areas, trades)]
     if hasattr(wages, "admit_keys"):
         wages.admit_keys(keys)      # numbered in sorted order, whatever order the core named its wages in
+    if hasattr(wages, "set_many"):
+        wages.set_many(keys, found.tolist())
+        return
     for key, wage in zip(keys, found.tolist()):
         wages[key] = wage

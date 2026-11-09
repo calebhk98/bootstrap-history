@@ -50,6 +50,15 @@ def expected_prices_of(store, rows: Iterable[int]) -> List[Mapping[str, float]]:
             for place, count in enumerate(counts)]
 
 
+def crews_of(store, rows: Iterable[int]) -> List[Dict[str, float]]:
+    """The crew's practice ({trade: runs made}, in the order written) of the producer in each row (`ProducerStore.crew_of` for each)."""
+    rows = np.fromiter(rows, dtype=np.int64)
+    table, trade_names = store.table, store.names["trades"].name_list
+    trades, units = table.crew_trade[rows], table.crew_units[rows]
+    return [{trade_names[number]: runs for number, runs in zip(trades[place, :count].tolist(), units[place, :count].tolist())}
+            for place, count in enumerate(table.crew_count[rows].tolist())]
+
+
 def figures_of(store, name: str, rows: Iterable[int]) -> list:
     """A scalar field of the producer in each row, typed as `ProducerStore.floats` says (a numpy float where it was written as one)."""
     return store.floats(name, np.fromiter(rows, dtype=np.int64))

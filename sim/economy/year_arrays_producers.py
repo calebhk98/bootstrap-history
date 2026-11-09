@@ -11,6 +11,7 @@ from typing import Dict, List, Mapping, Tuple
 import numpy as np
 
 from .practice import practised_multiplier
+from .producer_blocks import crews_of
 from .producer_store import ProducerStore
 from .year_arrays_recipes import NO_SLOT, Names, RecipeMatrices
 
@@ -115,9 +116,13 @@ def _expected_prices(store: ProducerStore, rows: np.ndarray, recipe_row: np.ndar
     held = table.price_count[rows]
     if not len(rows) or not held.max():
         return prices
-    column_of = np.array([matrices.goods.row.get(name, -1) for name in store.names["goods"].name_list] + [-1], dtype=np.int64)
+    names, held_goods = store.names["goods"].name_list, table.price_good[rows]
+    column_of = np.full(len(names) + 1, -1, dtype=np.int64)
+    for number in np.unique(held_goods).tolist():          # only the goods some producer holds a price for
+        if number < len(names):
+            column_of[number] = matrices.goods.row.get(names[number], -1)
     places = np.arange(table.price_good.shape[1])[None, :] < held[:, None]
-    goods = np.where(places, column_of[table.price_good[rows]], -1)          # the year's good column of each held price
+    goods = np.where(places, column_of[held_goods], -1)          # the year's good column of each held price
     values = table.price_value[rows]
     slots = matrices.slot_goods[recipe_row]
     for slot in range(matrices.good_slots):
@@ -130,7 +135,8 @@ def _expected_prices(store: ProducerStore, rows: np.ndarray, recipe_row: np.ndar
 
 def _crews(store: ProducerStore, rows: np.ndarray) -> Dict[int, Dict[str, float]]:
     """{row here: the crew's practice} for the producers that have a crew."""
-    return {position: store.crew_of(int(rows[position])) for position in np.nonzero(store.table.crew_count[rows] > 0)[0].tolist()}
+    crewed = np.nonzero(store.table.crew_count[rows] > 0)[0]
+    return dict(zip(crewed.tolist(), crews_of(store, rows[crewed])))
 
 
 def _hours_scale(store: ProducerStore, rows: np.ndarray, matrices: RecipeMatrices) -> np.ndarray:

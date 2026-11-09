@@ -136,8 +136,10 @@ def learned_prices(totals, memory):
     the price the market now remembers, which for a market that sold nothing is what buyers would have paid."""
     volumes, cleared = totals
     prices = {}
-    for key, price in cleared.items():
-        remembered = memory.prices.get(market_key(*key), price)
+    keys = list(cleared)
+    for key, quoted, remembered in zip(keys, cleared.values(), memory.prices.get_many([market_key(*key) for key in keys], None)):
+        if remembered is None:
+            remembered = quoted
         if remembered is not None:      # a market with no price remembered and none quoted has none to learn from
             prices[key] = remembered
     return prices, volumes

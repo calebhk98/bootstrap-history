@@ -42,6 +42,15 @@ class NameReads(unittest.TestCase):
 
 
 class FigureReads(unittest.TestCase):
+    def test_crews_of_matches_crew_of_and_is_empty_for_no_crew(self):
+        store = _store()
+        store.write_crew(store.row_of["producer:b"], {"smith": 4.0, "baker": 1.5})
+        store.write_crew(store.row_of["producer:c"], {"miller": 0.5})
+        rows = [2, 1, 0]
+        self.assertEqual(producer_blocks.crews_of(store, rows), [store.crew_of(row) for row in rows])
+        self.assertEqual(producer_blocks.crews_of(store, rows)[1], {})
+        self.assertEqual(list(producer_blocks.crews_of(store, [0])[0]), ["smith", "baker"])
+
     def test_expected_prices_of_matches_the_records_in_written_order(self):
         store = _store()
         ids = ("producer:c", "producer:a", "producer:b")

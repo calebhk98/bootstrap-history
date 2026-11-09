@@ -256,6 +256,31 @@ class FloatStore(MarketStore):
         figure = self._values.item(row)
         return figure == figure
 
+    def set_many(self, keys: Sequence[str], figures: Sequence[float]) -> None:
+        """`for key, figure in zip(keys, figures): self[key] = figure`, written as one block: markets not yet numbered are numbered
+        first as one sorted batch, and the markets that enter the store do so in the order of their first appearance in `keys`."""
+        figure_of = dict(zip(keys, figures))
+        if not figure_of:
+            return
+        if any(figure != figure for figure in figure_of.values()):
+            raise ValueError("a NaN is no figure for a market: use pop to remove one")
+        tables = self._tables
+        numbers = tables.labour_numbers if self._labour else tables.goods_numbers
+        if any(key not in numbers for key in figure_of):
+            self.admit_keys(figure_of)
+            numbers = tables.labour_numbers if self._labour else tables.goods_numbers
+        tables.writes += len(keys)
+        rows = numpy.fromiter(map(numbers.__getitem__, figure_of), dtype=numpy.int64, count=len(figure_of))
+        table = self._table()
+        entering = ~self._present_at(rows)
+        getattr(table, self._column)[rows] = numpy.fromiter(figure_of.values(), dtype=numpy.float64, count=len(figure_of))
+        added = int(entering.sum())
+        if added:
+            first = int(tables.next_order[self._store])
+            getattr(table, self._order_column)[rows[entering]] = first + numpy.arange(added)
+            tables.next_order[self._store] += added
+            tables.member_count[self._store] += added
+
     def _put(self, table, row: int, figure) -> None:
         if figure != figure:
             raise ValueError("a NaN is no figure for a market: use pop to remove one")

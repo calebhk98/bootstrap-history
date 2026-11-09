@@ -21,6 +21,7 @@ from sim.compiled_tables.ids import IdTable
 
 from .producer_rows import (FLOAT_BIT, NAME_COLUMNS, OPTIONAL_FLOATS, PRODUCER_ROWS_SPEC, SCALAR_FLOATS, SCALAR_INTS, WIDE_COLUMNS,
                             ProducerRows)
+from .producer_blocks import crews_of, owners_at
 from .producers import Producer
 
 _FIRST_CAPACITY = 64
@@ -238,7 +239,6 @@ class ProducerStore(MutableMapping):
 
     def owners_of(self, producer_ids: Iterable[str]) -> List[str]:
         """The owner of each producer named."""
-        from .producer_blocks import owners_at
         return owners_at(self, np.array([self.row_of[each] for each in producer_ids], dtype=np.int64))
 
     def live_rows(self) -> np.ndarray:
@@ -270,10 +270,9 @@ class ProducerStore(MutableMapping):
         order, or in the order the producers entered."""
         order = self.order() if in_id_order else np.nonzero([each is not None for each in self.ids])[0]
         recipe_names = self.names["recipes"].name_list
-        crewed = self.table.crew_count > 0
         grouped: Dict[str, List[Mapping[str, float]]] = {}
-        for row, recipe in zip(order.tolist(), self.table.recipe[order].tolist()):
-            grouped.setdefault(recipe_names[recipe], []).append(self.crew_of(row) if crewed[row] else {})
+        for recipe, crew in zip(self.table.recipe[order].tolist(), crews_of(self, order)):
+            grouped.setdefault(recipe_names[recipe], []).append(crew)
         return grouped
 
     def set_fields(self, producer_id: str, **changes) -> None:
