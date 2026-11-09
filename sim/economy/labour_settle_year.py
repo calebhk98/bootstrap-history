@@ -13,6 +13,7 @@ import numpy
 from sim.book_post import settled_scratch
 
 from .labour_fills import LabourFills
+from .labour_idle_hours import market_keys
 from .labour_walk_kernel import fill_slots, market_agents, walk_pairs
 from .labour_wage_kernel import settle_wage_markets
 from .year_ledger_tables import WAGES_PURPOSE
@@ -112,6 +113,22 @@ def _note_settlements(ledger, markets, agent_book, agent_market, paid, received,
                                 numpy.full(count, -1, dtype=numpy.int64), template, reference, numpy.zeros(count, dtype=numpy.bool_))
 
 
+def _ledger_numbers(tables, trades, areas, rows: numpy.ndarray):
+    """(trade number, labour market number) in the market memory of each listed market. A name not yet numbered is numbered in the
+    order the markets come, trades and markets each as the one-at-a-time calls number them."""
+    trade_names = numpy.asarray(trades, dtype=str)[rows]
+    distinct, first, inverse = numpy.unique(trade_names, return_index=True, return_inverse=True)
+    by_number = numpy.zeros(len(distinct), dtype=numpy.int64)
+    for place in numpy.argsort(first, kind="stable").tolist():                 # a new trade is numbered where its first market comes
+        by_number[place] = tables.trade_number(str(distinct[place]))
+    keys = market_keys(trade_names, numpy.asarray(areas, dtype=str)[rows])
+    found = list(map(tables.markets.labour_numbers.get, keys))
+    for place, number in enumerate(found):
+        if number is None:
+            found[place] = tables.markets.labour_row_for_write(keys[place])
+    return by_number[inverse.reshape(-1)], numpy.array(found, dtype=numpy.int64)
+
+
 def _note_hours(ledger, fills, book_of_ref, agent_market, agent_ref, paid, received) -> None:
     """The ledger's rows for every fill (`YearLedger.note_labour_settled` of each market): hours count as far as the wages
     paid cover them."""
@@ -132,9 +149,7 @@ def _note_hours(ledger, fills, book_of_ref, agent_market, agent_ref, paid, recei
     tables = ledger.tables
     trade_number = numpy.zeros(market_count, dtype=numpy.int64)
     market_number = numpy.zeros(market_count, dtype=numpy.int64)
-    for row in with_fills.tolist():
-        trade_number[row] = tables.trade_number(markets.trade[row])
-        market_number[row] = tables.labour_market_number(markets.trade[row], markets.area[row])
+    trade_number[with_fills], market_number[with_fills] = _ledger_numbers(tables, markets.trade, markets.area, with_fills)
     per_fill = buys + sells
     market_of_fill = numpy.repeat(numpy.arange(market_count, dtype=numpy.int64), per_fill)
     wage = markets.wage[market_of_fill]

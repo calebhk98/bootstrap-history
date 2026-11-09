@@ -54,6 +54,22 @@ def trade_people_over_areas(areas, trade_count, present, people, length):
 
 
 @njit
+def trade_people_by_area(areas, trade_count, present, people, length):
+    """Working people of every trade in each listed area (numbers, below zero: none): returns (people, seen), each of shape
+    (areas, trades). A figure is the `math.fsum` of the pair's bands; `seen` marks a pair with an entry, even an empty one."""
+    totals = numpy.zeros((len(areas), trade_count))
+    seen = numpy.zeros((len(areas), trade_count), numpy.bool_)
+    for place in range(len(areas)):
+        if areas[place] >= 0:
+            for trade in range(trade_count):
+                row = areas[place] * trade_count + trade
+                if present[row]:
+                    seen[place, trade] = True
+                    totals[place, trade] = exact_sum(people[row], length[row])
+    return totals, seen
+
+
+@njit
 def working_people_in_areas(areas, trade_count, present, people, length):
     """For each listed area (below zero: none), `math.fsum` of its trades' people, each trade's people being the `math.fsum` of its bands."""
     totals = numpy.zeros(len(areas))
@@ -103,6 +119,18 @@ def scale_cohorts(first_row, stop_row, factor, people, length):
     for row in range(first_row, stop_row):
         for band in range(length[row]):
             people[row, band] = people[row, band] * factor
+
+
+@njit
+def scale_areas(areas, factors, trade_count, present, people, length, cohort_first, cohort_count, trainee_people, trainee_length):
+    """`scale_pairs` and `scale_cohorts` for each listed area (numbers; below zero: none) by its own factor, area after area."""
+    for place in range(len(areas)):
+        if areas[place] >= 0:
+            first = areas[place] * trade_count
+            stop = first + trade_count
+            scale_pairs(first, stop, factors[place], present, people, length)
+            first_cohort = cohort_first[first]
+            scale_cohorts(first_cohort, first_cohort + cohort_count[first:stop].sum(), factors[place], trainee_people, trainee_length)
 
 
 @njit

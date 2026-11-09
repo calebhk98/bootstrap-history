@@ -115,10 +115,16 @@ class LabourResults(SequenceBase):
         """(trade, area): hours hired plus idle hours, for every market."""
         markets = self.fills.markets
         found = {(result.trade, result.area): result.hours_hired + result.idle_hours for result in self.before}
-        found.update({(trade, area): hired + idle for trade, area, hired, idle in zip(
-            markets.trade, markets.area, self.scalars["hours_hired"], self.scalars["idle_hours"])})
+        found.update(zip(zip(markets.trade, markets.area), (markets.hours_hired + markets.idle_hours).tolist()))
         found.update({(result.trade, result.area): result.hours_hired + result.idle_hours for result in self.after})
         return found
+
+
+def offered_by_market(results) -> Dict[Tuple[str, str], float]:
+    """{(trade, area): hours hired plus idle hours} of the year's results: `LabourResults.hours_by_market`, or the same over a plain list."""
+    if isinstance(results, LabourResults):
+        return results.hours_by_market()
+    return {(result.trade, result.area): result.hours_hired + result.idle_hours for result in results}
 
 
 def hours_totals(results) -> Tuple[float, float]:

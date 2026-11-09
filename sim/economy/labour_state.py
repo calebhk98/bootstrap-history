@@ -5,9 +5,11 @@ comes from the setup's trade registry; the unskilled trade is the work anyone ca
 """
 import math
 from collections.abc import Mapping as MappingBase
-from typing import Dict, Iterable, Mapping
+from typing import Dict, Iterable, Mapping, Sequence
 
-from sim.labour.api import (MarketState, TradeSpec, opening_labour_market, people_by_trade_over, scale_people_in_area, seed_hours, trade_specs,
+import numpy
+
+from sim.labour.api import (MarketState, TradeSpec, grid_rows_of, opening_labour_market, people_at, people_by_trade_in_each_area, people_by_trade_over, people_in_areas, scale_people_in_area, scale_people_in_areas, seed_hours, trade_specs,
                             wages_in_view_order, working_people_in_areas)
 
 from . import households_own, mint, mint_labour, opening_hours_needed, opening_placement, practice
@@ -94,19 +96,37 @@ def people_by_trade(state: MarketState, area: str) -> Dict[str, float]:
     return people_by_trade_over(state, [area])
 
 
+def people_in_pairs(state: MarketState, areas: Iterable[str], trades: Iterable[str]) -> numpy.ndarray:
+    """Working people of each (area, trade) pair given as two lists of equal length; zero for a pair the state holds no entry for."""
+    return people_at(state, grid_rows_of(state, areas, trades))
+
+
+def people_by_trade_matrix(state: MarketState, areas: Iterable[str]):
+    """Working people of the areas as (people per area and trade, the trade names in name order): zero where an area has no entry."""
+    totals, _seen = people_by_trade_in_each_area(state, areas)
+    return totals, state.ids.trades.names
+
+
 class PeopleByTile(MappingBase):
-    """Working people by tile and trade over every labour area of the state, each tile's trades worked out (and kept) when the
-    tile is first read: a caller that wants one tile's people does not pay for the other tiles'."""
+    """Working people by tile and trade over every labour area of the state. The first read takes every tile's figures in one block
+    (`people_by_trade_in_each_area`); a tile's trades are made into a dict, and kept, when it is read."""
 
     def __init__(self, state: MarketState):
         self._state = state
         names = state.ids.areas.names
         self._area_of_tile = {area_tile(area): area for area in sorted(names[number] for number in state.named_areas("workers"))}
         self._read: Dict[str, Dict[str, float]] = {}
+        self._place = {tile: place for place, tile in enumerate(self._area_of_tile)}
+        self._block = None
 
     def __getitem__(self, tile):
         if tile not in self._read:
-            self._read[tile] = people_by_trade(self._state, self._area_of_tile[tile])
+            place = self._place[tile]
+            if self._block is None:
+                self._block = people_by_trade_in_each_area(self._state, self._area_of_tile.values())
+            totals, seen = self._block
+            names = self._state.ids.trades.names
+            self._read[tile] = {names[trade]: float(totals[place, trade]) for trade in numpy.flatnonzero(seen[place]).tolist()}
         return self._read[tile]
 
     def working_people(self, tiles) -> float:
@@ -123,11 +143,22 @@ class PeopleByTile(MappingBase):
 
 def people_by_trade_everywhere(state: MarketState) -> Dict[str, float]:
     """Working people by trade across every labour area (trainees are not counted)."""
-    totals: Dict[str, float] = {}
-    for area in sorted(state.workers):
-        for trade, people in people_by_trade(state, area).items():
-            totals[trade] = totals.get(trade, 0.0) + people
-    return dict(sorted(totals.items()))
+    return people_by_trade_over(state, sorted(state.workers))
+
+
+def working_people_of_areas(state: MarketState, areas: Iterable[str]) -> numpy.ndarray:
+    """Everyone working in each area (`math.fsum` of its trades' people), zero for an area the state holds nobody in."""
+    return working_people_in_areas(state, areas)
+
+
+def follow_working_people(state: MarketState, areas: Sequence[str], people: numpy.ndarray, unskilled_trade: str, add_workers) -> None:
+    """The core's people (workers and trainees) in each area brought to the working `people` the cohorts hold there: an area the core
+    holds nobody in gets them in the unskilled trade (`add_workers(area, trade, people)`), any other is scaled by one factor."""
+    held = people_in_areas(state, areas)
+    for place in numpy.flatnonzero(held <= 0.0).tolist():
+        add_workers(areas[place], unskilled_trade, float(people[place]))
+    scaled = numpy.flatnonzero((held > 0.0) & (held != people))
+    scale_people_in_areas(state, [areas[place] for place in scaled.tolist()], people[scaled] / held[scaled])
 
 
 def scale_people(state: MarketState, area: str, factor: float) -> None:

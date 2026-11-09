@@ -2,7 +2,7 @@
 hours a year they offer."""
 from sim.constants import declare
 
-from . import trade_data, trade_supply_rules
+from . import labour_supply_block, trade_data, trade_supply_rules
 from .labour_wage_schedule import person_year_hours
 
 
@@ -135,6 +135,10 @@ class Supply:
         if trade_data.literate_trades(trade_data.registry_of(self._world), (trade,)):
             return self.literate_capacity(trade)
         return self.market_supply(trade) / person_year_hours(self._world)
+
+    def reach_block(self, trades):
+        """(`reachable_trade_population`, `people_who_exist`) of every trade given, as two arrays: the same figures, worked out together."""
+        return labour_supply_block.reach_block(self, trades)
 
     def taught_trade_people(self, trade):
         """People in a trade only the founder teaches (see `_taught_trade_people`); what firms draw on too."""

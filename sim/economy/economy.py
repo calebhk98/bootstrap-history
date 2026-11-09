@@ -29,12 +29,12 @@ from . import capital_year, household_offers_year, land_bid_year, land_lease_yea
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step, households_cohort, trade_wages
 from .labour_inputs import labour_context
-from sim.labour.api import LabourBidTable, people_in
-from .labour_state import scale_people
+from sim.labour.api import LabourBidTable
+from .labour_state import follow_working_people
 from .opening import open_economy
 from .protocols import EconomyYearInputs
 from .record import EconomyRecord
-from .setup import EconomySetup, area_tile, labour_area
+from .setup import LABOUR_AREA_PREFIX, EconomySetup, area_tile, labour_area
 from .posting_sequence import post_in_order
 from .types import EDGE_CONSUMPTION, GoodsMove
 from .national_prices import national_prices, national_wages
@@ -50,7 +50,7 @@ from .labour_offer_rows import LabourOfferRows
 from .labour_sold_offers import sold_hours_by_worker
 from .labour_supply import HourSupply
 from .labour_results_table import hours_totals
-from .labour_state import people_by_trade
+from .labour_state import people_in_pairs
 from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import standing_block
@@ -220,7 +220,7 @@ class Economy:
             everyone.add_objects(orders.labour_offers)    # a seat's own hours, sold at the market's wage
         context = labour_context(setup, record, view, self.carriage, inputs, self.own_plot_options(), outside_option)
         held_placed = bondage_hours.place_held(
-            record.unfree.bonded_held, lambda area, trade: people_by_trade(record.labour.workforce, area).get(trade, 0.0), everyone, labour_bids,
+            record.unfree.bonded_held, lambda areas, trades: people_in_pairs(record.labour.workforce, areas, trades), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
         keep = bondage_hours.payable_keep(held_placed.keep, record.book.balance_by_agent(
             list(dict.fromkeys(held_placed.keep.employers)), money).get)
@@ -312,15 +312,14 @@ class Economy:
         record = self.record
         cohort_people.follow_population(record.cohorts, inputs.population_by_tile, inputs.working_people_by_tile)
         store = record.cohorts
-        working = cohort_people.total_by_tile(store, "working_people").tolist()
-        names = store.names["tiles"].name_list
-        for tile, people in sorted((names[number], working[number]) for number in np.unique(store.tile_numbers()).tolist()):
-            area = labour_area(tile)
-            held = people_in(record.labour.workforce, area)
-            if held <= 0.0:      # the core holds nobody there: the tile's working people start as the unskilled trade
-                record.labour.add_workers(area, self.setup.unskilled_trade, people)
-            elif held != people:
-                scale_people(record.labour.workforce, area, people / held)
+        working = cohort_people.total_by_tile(store, "working_people")
+        numbers = np.unique(store.tile_numbers())
+        if not len(numbers):
+            return
+        tiles = np.asarray(store.names["tiles"].name_list)[numbers]
+        by_name = np.argsort(tiles, kind="stable")
+        follow_working_people(record.labour.workforce, np.char.add(LABOUR_AREA_PREFIX, tiles[by_name]).tolist(), working[numbers][by_name],
+                              self.setup.unskilled_trade, record.labour.add_workers)
 
     def _follow_yields(self, inputs: EconomyYearInputs) -> None:
         producer_table.set_column(self.record.producers, "yield_factor", inputs.yield_factor_by_producer, inputs.yield_factor_by_producer.values())

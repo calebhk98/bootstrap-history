@@ -14,6 +14,12 @@ from sim.labour.market.records import Route
 
 RATE, CAREER, HOURS = 0.05, 30.0, 2000.0
 
+
+def block(workers):
+    """A scalar `workers(area, trade)` as the block form `place_held` takes."""
+    return lambda areas, trades: [workers(area, trade) for area, trade in zip(areas, trades)]
+
+
 # the worth of hours: present value over a working life at the lenders' ask
 check("a person's worth is the wage times the year's hours times the annuity factor",
       abs(bonded_worth.worth_of_hours(0.01, HOURS, CAREER, RATE) - 0.01 * HOURS * annuity_factor(RATE, CAREER)) < 1e-9)
@@ -71,7 +77,7 @@ def offers_in(area, trade, *hours_by_cohort):
 held = {"t1": {"smith": {"forge": 3.0}}}
 offers = offers_in("work@t1", "smith", 4000.0, 6000.0)
 bids = [LabourBid("forge", "smith", "work@t1", 5000.0, 1.0), LabourBid("mill", "smith", "work@t1", 5000.0, 1.0)]
-placement = bondage_hours.place_held(held, lambda area, trade: 10.0, offers, bids, HOURS, {"work@t1": 50.0}, lambda tile: "work@" + tile)
+placement = bondage_hours.place_held(held, block(lambda area, trade: 10.0), offers, bids, HOURS, {"work@t1": 50.0}, lambda tile: "work@" + tile)
 check("the held people's hours come off the households' offers", abs(sum(offer.hours for offer in placement.offers) - (10000.0 - 5000.0)) < 1e-6,
       placement.offers)
 check("the offers are cut in proportion", abs(placement.offers[0].hours - 4000.0 * 0.5) < 1e-6, placement.offers[0])
@@ -83,11 +89,11 @@ check("the holder pays the keep of the people working for it, to the households 
       placement.keep)
 
 held = {"t1": {"smith": {"forge": 3.0}}}
-placement = bondage_hours.place_held(held, lambda area, trade: 1.0, offers_in("work@t1", "smith", 4000.0), bids, HOURS,
+placement = bondage_hours.place_held(held, block(lambda area, trade: 1.0), offers_in("work@t1", "smith", 4000.0), bids, HOURS,
                                      {"work@t1": 50.0}, lambda tile: "work@" + tile)
 check("deaths and retirements thin the people held: no more than the trade's workers there",
       abs(held["t1"]["smith"]["forge"] - 1.0) < 1e-9 and placement.hired == {"forge": {"smith": HOURS}}, (held, placement.hired))
-placement = bondage_hours.place_held({"t1": {"smith": {"forge": 3.0}}}, lambda area, trade: 10.0,
+placement = bondage_hours.place_held({"t1": {"smith": {"forge": 3.0}}}, block(lambda area, trade: 10.0),
                                      offers_in("work@t1", "smith", 1000.0), [LabourBid("forge", "smith", "work@t1", 0.0, 1.0)], HOURS,
                                      {}, lambda tile: "work@" + tile)
 check("a holder with no work for them leaves their hours on the market", placement.hired == {} and placement.offers[0].hours == 1000.0)

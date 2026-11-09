@@ -36,6 +36,19 @@ class ReachablePool(unittest.TestCase):
         labour.book.core_people_by_trade = lambda: {"smith": 1000.0}
         self.assertGreater(labour.supply.national_trade_population("smith"), labour.supply.reachable_trade_population("smith"))
 
+    def test_the_block_form_gives_each_trades_figures_as_the_one_at_a_time_methods_do(self):
+        world, labour = labour_of("norse_900ad")
+        base = labour.settlement.base_tile()
+        world.trades.trades_absent = {"mason"}
+        world.economy.agent_people_by_tile_and_trade = lambda: {base: {"smith": 40.0, "weaver": 0.0, "scribe": 3.0}}
+        world.economy.agent_hours_offered_at = lambda trade, tile: {"smith": 40.0 * HOURS, "weaver": 0.0}.get(trade)
+        world.actors.actor_staff_fte = lambda trade: 5.0 if trade == "smith" else 0.0
+        trades = sorted(world.trades.wages)
+        self.assertTrue({"smith", "weaver", "scribe", "mason", "soldier"} <= set(trades))
+        reachable, existing = labour.supply.reach_block(trades)
+        self.assertEqual(reachable.tolist(), [labour.supply.reachable_trade_population(trade) for trade in trades])
+        self.assertEqual(existing.tolist(), [labour.supply.people_who_exist(trade) for trade in trades])
+
     def test_a_literate_trades_reachable_figure_matches_the_real_hiring_wall(self):
         _world, labour = labour_of("norse_900ad")
         self.assertEqual(labour.supply.reachable_trade_population("scribe"), labour.supply.literate_capacity("scribe"))

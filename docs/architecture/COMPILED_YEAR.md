@@ -346,7 +346,9 @@ looked up). `year_labour.clear_labour` takes the table (a list of records is put
 
 **Offers.** `labour_offer_rows.LabourOfferRows` is the year's offers as columns (`worker`, `trade`, `area`, `hours`,
 `reservation_wage`), sharing the bid table's trade and area numbers. `labour_offers_write.write_cohort_offers` makes every cohort's
-offers at once (cohorts by id, trades by name; a cohort x trade is a row of an expansion over its labour area's trades).
+offers at once (cohorts by id, trades by name; a cohort x trade is a row of an expansion over its labour area's trades). It takes the
+working people of all the areas as one matrix (`labour_state.people_by_trade_matrix`) and numbers the areas of the rows with array
+operations (`_area_numbers`); a trade's hours are offered in its tile's labour area.
 `labour_offers_table.build_labour_offers`, `HourSupply`, bondage placement and the settlement read the columns: `HourSupply.settle`
 returns `labour_sold_offers.SoldOffers` (the `LabourOffers` table with the hours sold), and `labour_fills.sell_rows` reads its columns
 (market of each offer, hours sold, distinct workers).
@@ -386,7 +388,16 @@ admitting a name the book has not met in the order the per-market path would.
 Who still builds the objects: `year_labour._result` (one `LabourResult` of a clearing and its offers; the reference the tests compare
 with), `settlement.settle_labour` and `YearLedger.note_labour`/`note_hours` (tests and the reference ledger), `LabourResults` items
 (`economy._outcome` reads totals from the columns; `year_close.close_agents` iterates the items, without their fills, only when carriage
-hours hire), and the offers (`LabourOffer`, built upstream and by `HourSupply.settle`). Tests: `sim/tests/test_year_speed_labour_settle.py`.
+hours hire; its crew loans read `labour_results_table.offered_by_market`, which builds no item), and the offers (`LabourOffer`, built upstream and
+by `HourSupply.settle`). The ledger's numbers for the labour markets of a year are found in one pass (`labour_settle_year._ledger_numbers`).
+Tests: `sim/tests/test_year_speed_labour_settle.py`, `test_labour_ledger_numbers.py`.
+
+What the labour year still does in Python, with the reason: the switching and the clearing are kernels, and their time in a profile is the
+kernels' (`switch_year.switch_all`, `hiring_kernel.hire_markets`, `clearing_kernel.market_heads`; a numba call is not listed by cProfile,
+so the caller's own time holds it); `Supply.reach_block` still asks `actor_staff_fte` and `agent_hours_offered_at` once per ordinary trade,
+because staff by trade is the actors module's (`registry_staff.home_staff_fte` scans actors per call) and hours offered a markets-module
+keyed view; `carriage_hours.engaged`/`bid_figures`/`wage_loans` walk each merchant's plan dict (`Merchant.carriage_hours_wanted`), a record
+the merchant tables own; `port_staff` bids are built per seat. A measurement of what is left: `tools/measure/warm_year_profile.py`.
 
 ### Readers in the economy
 
@@ -399,8 +410,12 @@ The economy's readers of the labour core read its tables in blocks (`sim/labour/
 | `LabourRecord.hours_cleared_in`/`hours_cleared_by`/`hours_cleared_in_markets`, `people_in_markets` | `hours_cleared_at`, `people_at` over grid rows from `grid_rows_of` (a name the state does not number is row -1, read as nothing) |
 | `national_prices.national_wages` | one `wage_means_by_group` call over every remembered wage, hours and people read as arrays |
 | `country_figures.people_by_trade`, `labour_state.people_by_trade` | `people_by_trade_over` (areas added in the order given) |
-| `labour_state.PeopleByTile.working_people` (the levy) | `working_people_in_areas` |
-| `labour_state.scale_people` | `scale_people_in_area` |
+| `labour_state.PeopleByTile` (a tile's trades) | the first read takes every area at once, `people_by_trade_in_each_area` (people and `seen`, areas by trades) |
+| `labour_state.PeopleByTile.working_people` (the levy), the siting's hands per tile | `working_people_in_areas` (`labour_state.working_people_of_areas`) |
+| `labour_state.scale_people`; `Economy._follow_population` | `scale_people_in_area`; `follow_working_people`: `people_in_areas` for every tile, the empty ones get unskilled workers, the others are scaled together by `scale_people_in_areas` |
+| held people placed against a trade's workers (`bondage_hours.place_held`) | `people_in_pairs` over all the (area, trade) pairs: `people_at` on `grid_rows_of` |
+| `year_labour.clear_labour` areas' people and idle hours | `people_in_areas`; `labour_idle_hours.note_idle_hours` (market keys, idle hours and the smoothed sold shares as arrays) |
+| `reachable_trade_population`, `people_who_exist` of every trade (`engine/invariants.check_labour_market_invariants`) | `Supply.reach_block` (`labour_supply_block.py`, view `labour_reach_block`): the ordinary trades as columns, the absent, literate and pool trades through the per-trade methods |
 | `labour_state.mirror_wages` | `wages_in_view_order` (areas in the order named, trades in the order they got a wage) |
 | `flight_step.mean_year_income`, `people_before`; `records.people_in`, `MarketState.area_people` | `people_weighted_wage_by_area`, `people_in_areas` (trades in the workers view's order, then cohorts) |
 

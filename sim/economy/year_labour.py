@@ -8,19 +8,19 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
-from sim.labour.api import LabourBidTable, TrancheBids, people_in, run_labour_year
+from sim.labour.api import LabourBidTable, TrancheBids, people_in_areas, run_labour_year
 
-from . import cohort_people, cohort_prime, household_work_year, households_basket, households_work, labour_settle_year
+from . import cohort_people, cohort_prime, household_work_year, households_basket, labour_settle_year
 from .cohort_store import table_of
 from .household_offer_kernels import sum_in_order_by_group
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import BID_TRANCHES, BID_VALUE_SPREAD
+from .labour_idle_hours import note_idle_hours
 from .labour_fills import fills_of, rows_from_clearings, rows_from_objects
 from .labour_offer_rows import LabourOfferRows
 from .labour_offers_write import write_cohort_offers
 from .labour_results_table import LabourResults
-from .labour_state import core_trades, mirror_wages, people_by_trade
-from .market_memory import market_key
+from .labour_state import core_trades, mirror_wages, people_by_trade_matrix
 from .setup import labour_area
 from .types import Fill, LabourBid, LabourOffer, LabourResult
 from .year_ledger import YearLedger
@@ -69,7 +69,7 @@ def labour_offer_rows(setup, record, view, subsistence_by_tile, levy_hours_per_w
     to offer."""
     rows = LabourOfferRows() if rows is None else rows
     danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
-    write_cohort_offers(rows, record.cohorts, lambda area: people_by_trade(record.labour.workforce, area), view.area_of, labour_area,
+    write_cohort_offers(rows, record.cohorts, lambda areas: people_by_trade_matrix(record.labour.workforce, areas), labour_area,
                         subsistence_by_tile, setup.working_hours_per_year, danger, levy_hours_per_worker, levied_tiles)
     return rows
 
@@ -113,9 +113,9 @@ def clear_labour(setup, record, bids: Union[LabourBidTable, Sequence[LabourBid]]
         found.add_objects(bids)
         bids = found
     core_bids = TrancheBids(bids, BID_TRANCHES, BID_VALUE_SPREAD)      # the core cuts each bid into its tranches (labour_bids.sloped_bids is the same rule as objects)
+    floor_areas = list(context.ask_floor_per_worker_year)
     ledger.wage_floor_per_hour = mean_floor_per_hour(
-        context.ask_floor_per_worker_year,
-        {area: people_in(record.labour.workforce, area) for area in context.ask_floor_per_worker_year},
+        context.ask_floor_per_worker_year, dict(zip(floor_areas, people_in_areas(record.labour.workforce, floor_areas).tolist())),
         context.hours_per_worker_year)
     inputs = dataclasses.replace(context, trades=core_trades(setup, core_bids.trade_names()),
                                  bids=core_bids, hours_sold_at=supply.schedules() if supply is not None else None)
@@ -126,13 +126,7 @@ def clear_labour(setup, record, bids: Union[LabourBidTable, Sequence[LabourBid]]
     fills = fills_of(*rows, offers)
     labour_settle_year.settle_year(record.book, ledger, fills, setup.currency_id)
     ledger.labour_results = LabourResults(fills, setup.currency_id, ledger.labour_results)
-    record.labour.hours_idle = {}
     markets = fills.markets
-    for trade, area, hired, idle in zip(markets.trade, markets.area, markets.hours_hired.tolist(), markets.idle_hours.tolist()):
-        key = market_key(trade, area)
-        record.labour.hours_idle[key] = idle
-        if hired + idle > 0.0:
-            record.labour.sold_share_expected[key] = households_work.smoothed_sold_share(
-                record.labour.sold_share_expected.get(key, 1.0), households_work.sold_share(hired, idle))
+    record.labour.hours_idle = note_idle_hours(record.labour.sold_share_expected, markets.trade, markets.area, markets.hours_hired, markets.idle_hours)
     mirror_wages(record.memory.wages, record.labour.workforce)
     return report

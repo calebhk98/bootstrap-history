@@ -139,27 +139,29 @@ class HeldPlacement:
     keep: KeepRows                                  # the keep the holder owes for those hours (employer, cohort, money)
 
 
-def place_held(held: Dict[str, Dict[str, Dict[AgentId, float]]], workers: Callable[[str, str], float],
+def place_held(held: Dict[str, Dict[str, Dict[AgentId, float]]], workers: Callable[[Sequence[str], Sequence[str]], numpy.ndarray],
                offers: Union[LabourOfferRows, Sequence[LabourOffer]], bids: Union[LabourBidTable, Sequence[LabourBid]],
                hours_per_worker: float, keep_per_worker_year: Mapping[str, float], area_of: Callable[[str], str]) -> HeldPlacement:
     """The hours of bought bonded people are their holders': for each (tile, trade) the people held (no more than the
     trade's workers there, so deaths and retirements thin them) work for the employer that holds them, off the
     market, as far as that employer bids hours for the trade there. They come off the offers of the households the
     workers live in, in proportion, and the holder pays the keep of the people working for it, which the hours no
-    longer earn their households."""
+    longer earn their households. `workers(areas, trades)` gives the working people of each (area, trade) pair at once."""
     offers, bids = as_rows(offers, bids)
     new_offers, new_bids = offers.copy(), bids.copy()
     if not held:
         return HeldPlacement(new_offers, new_bids, {}, KeepRows([], [], []))
-    triples, group_available, group_of, area_names = [], [], [], []
+    triples, group_areas, group_trades, group_of, area_names = [], [], [], [], []
     for tile in sorted(held):
         area = area_of(tile)
         for trade in sorted(held[tile]):
-            group_available.append(workers(area, trade))
+            group_areas.append(area)
+            group_trades.append(trade)
             for employer in sorted(held[tile][trade]):
                 triples.append((tile, trade, employer))
-                group_of.append(len(group_available) - 1)
+                group_of.append(len(group_areas) - 1)
                 area_names.append(area)
+    group_available = workers(group_areas, group_trades)
     triple_trade = numpy.array(numbers_of([trade for _tile, trade, _employer in triples], bids.trades), dtype=numpy.int64)
     triple_area = numpy.array(numbers_of(area_names, bids.areas), dtype=numpy.int64)
     triple_employer = numpy.array(numbers_of([employer for _tile, _trade, employer in triples], bids.employers), dtype=numpy.int64)
@@ -176,7 +178,7 @@ def place_held(held: Dict[str, Dict[str, Dict[AgentId, float]]], workers: Callab
     keep_triple, keep_offer, keep_amount = numpy.zeros(keep_capacity, numpy.int64), numpy.zeros(keep_capacity, numpy.int64), numpy.zeros(keep_capacity)
     take_triple, take_hours = numpy.zeros(take_capacity, numpy.int64), numpy.zeros(take_capacity)
     keeps, takes = bondage_kernels.place_held_kernel(
-        numpy.array(group_of, dtype=numpy.int64), numpy.array(group_available, dtype=numpy.float64),
+        numpy.array(group_of, dtype=numpy.int64), numpy.asarray(group_available, dtype=numpy.float64),
         numpy.array([held[tile][trade][employer] for tile, trade, employer in triples], dtype=numpy.float64), bid_first, bid_last,
         bid_order, offer_first, offer_last, offer_order, columns[3], table.hours, hours_per_worker,
         numpy.array([keep_per_worker_year.get(area, 0.0) for area in area_names], dtype=numpy.float64), people_after, keep_triple, keep_offer,
