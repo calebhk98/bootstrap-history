@@ -18,7 +18,7 @@ from sim.economy.labour_bid_sink import put_bids
 from sim.economy.labour_fills import MarketRows, BuyRows, fills_of
 from sim.economy.labour_offer_rows import LabourOfferRows
 from sim.economy.labour_offers_table import build_labour_offers
-from sim.economy.labour_offers_write import write_cohort_offers
+from sim.economy.labour_offers_write import _area_numbers, write_cohort_offers
 from sim.economy.labour_supply import HourSupply
 from sim.economy.labour_sold_offers import SoldOffers, sold_hours_by_worker
 from sim.economy.plan_table import BidColumns as PlanBidColumns, LabourColumns, PlanTable
@@ -115,6 +115,15 @@ class PlanTableLabour(unittest.TestCase):
                          [("p0", "miller", "work@a"), ("p0", "smith", "work@b"), ("p2", "miller", "work@b")])
 
 
+def as_matrix(people_in_area):
+    """A per-area `people_in_area(area)` dict as the block form `write_cohort_offers` takes: (people per area and trade, trade names)."""
+    def people_in_areas(areas):
+        found = [people_in_area(area) for area in areas]
+        names = sorted({trade for each in found for trade in each})
+        return numpy.array([[each.get(trade, 0.0) for trade in names] for each in found], dtype=float).reshape(len(areas), len(names)), names
+    return people_in_areas
+
+
 def plain_cohort_offers(cohorts, people_in_area, area_of, subsistence, hours_per_year, danger, levy, levied):
     """What `year_labour.labour_offers` did: each cohort's offers by `households_cohort.labour_offers`, cohorts by id."""
     working = {}
@@ -144,19 +153,31 @@ class CohortOffers(unittest.TestCase):
                        for tile in tiles for number in range(rng.randrange(0, 4))]
             people = {"work@" + tile: {trade: rng.choice([0.0, rng.uniform(0.1, 300)]) for trade in rng.sample(TRADES, rng.randrange(0, 4))}
                       for tile in tiles}
-            area_of = lambda trade, tile: "work@" + tile if trade != "miller" else "work@a"
+            area_of = lambda trade, tile: "work@" + tile
             subsistence = {tile: rng.uniform(100, 900) for tile in tiles[:rng.randrange(0, 4)]}
             danger = {"smith": 0.01, "miller": 0.0}
             hours, levy, levied = 2000.0, rng.choice([0.0, 300.0, 5000.0]), rng.sample(tiles, rng.randrange(0, 3))
             rows = LabourOfferRows()
-            write_cohort_offers(rows, cohorts, lambda area: people[area], area_of, lambda tile: "work@" + tile, subsistence, hours, danger, levy, levied)
+            write_cohort_offers(rows, cohorts, as_matrix(lambda area: people[area]), lambda tile: "work@" + tile, subsistence, hours, danger, levy, levied)
             self.assertEqual(list(rows.objects()), plain_cohort_offers(cohorts, lambda area: people[area], area_of, subsistence, hours, danger, levy,
                                                                        levied))
+
+    def test_area_numbers_follow_the_sorted_trade_tile_pairs_for_new_areas(self):
+        rows = LabourOfferRows()
+        rows.areas.number("work@x")
+        area_of_tile = {4: "work@d", 2: "work@b", 7: "work@x"}
+        chosen_tile = numpy.array([4, 2, 7, 2])
+        row_cohort = numpy.array([0, 1, 2, 3, 0, 1])
+        trade = numpy.array([1, 1, 1, 1, 0, 0])
+        found = _area_numbers(rows, area_of_tile, chosen_tile, row_cohort, trade)
+        # tiles rank 4:0, 2:1, 7:2; the pairs sorted by (trade, rank) reach work@d first, then work@b
+        self.assertEqual(rows.areas.names, ["work@x", "work@d", "work@b"])
+        self.assertEqual(found.tolist(), [1, 2, 0, 2, 1, 2])
 
     def test_cohorts_taken_in_any_order_give_the_offers_by_id(self):
         cohorts = [Cohort("household:b:0", "b", 0, 100.0, 50.0, 0.5), Cohort("household:a:0", "a", 0, 100.0, 50.0, 0.5)]
         rows = LabourOfferRows()
-        write_cohort_offers(rows, cohorts, lambda area: {"smith": 10.0, "labourer": 4.0}, lambda trade, tile: "work@" + tile,
+        write_cohort_offers(rows, cohorts, as_matrix(lambda area: {"smith": 10.0, "labourer": 4.0}),
                             lambda tile: "work@" + tile, {}, 2000.0, {})
         self.assertEqual([(offer.worker, offer.trade, offer.hours) for offer in rows], [
             ("household:a:0", "labourer", 4.0 * 2000.0), ("household:a:0", "smith", 10.0 * 2000.0),

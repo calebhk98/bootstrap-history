@@ -54,6 +54,22 @@ def trade_people_over_areas(areas, trade_count, present, people, length):
 
 
 @njit
+def trade_people_by_area(areas, trade_count, present, people, length):
+    """Working people of every trade in each listed area (numbers, below zero: none): returns (people, seen), each of shape
+    (areas, trades). A figure is the `math.fsum` of the pair's bands; `seen` marks a pair with an entry, even an empty one."""
+    totals = numpy.zeros((len(areas), trade_count))
+    seen = numpy.zeros((len(areas), trade_count), numpy.bool_)
+    for place in range(len(areas)):
+        if areas[place] >= 0:
+            for trade in range(trade_count):
+                row = areas[place] * trade_count + trade
+                if present[row]:
+                    seen[place, trade] = True
+                    totals[place, trade] = exact_sum(people[row], length[row])
+    return totals, seen
+
+
+@njit
 def working_people_in_areas(areas, trade_count, present, people, length):
     """For each listed area (below zero: none), `math.fsum` of its trades' people, each trade's people being the `math.fsum` of its bands."""
     totals = numpy.zeros(len(areas))

@@ -19,7 +19,7 @@ from .labour_fills import fills_of, rows_from_clearings, rows_from_objects
 from .labour_offer_rows import LabourOfferRows
 from .labour_offers_write import write_cohort_offers
 from .labour_results_table import LabourResults
-from .labour_state import core_trades, mirror_wages, people_by_trade
+from .labour_state import core_trades, mirror_wages, people_by_trade_matrix
 from .market_memory import market_key
 from .setup import labour_area
 from .types import Fill, LabourBid, LabourOffer, LabourResult
@@ -69,7 +69,7 @@ def labour_offer_rows(setup, record, view, subsistence_by_tile, levy_hours_per_w
     to offer."""
     rows = LabourOfferRows() if rows is None else rows
     danger = {trade: spec.fatality_risk_per_year for trade, spec in setup.trades.items()}
-    write_cohort_offers(rows, record.cohorts, lambda area: people_by_trade(record.labour.workforce, area), view.area_of, labour_area,
+    write_cohort_offers(rows, record.cohorts, lambda areas: people_by_trade_matrix(record.labour.workforce, areas), labour_area,
                         subsistence_by_tile, setup.working_hours_per_year, danger, levy_hours_per_worker, levied_tiles)
     return rows
 

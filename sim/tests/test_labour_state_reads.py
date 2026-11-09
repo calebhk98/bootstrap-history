@@ -8,6 +8,7 @@ import unittest
 
 import numpy
 
+from sim.economy import labour_state
 from sim.labour.market import state_read_kernels, state_reads
 from sim.labour.market.market_state import MarketState
 
@@ -65,6 +66,37 @@ class BlockReadsEqualViewReads(unittest.TestCase):
         found = state_reads.people_by_trade_over(state, areas)
         self.assertEqual(found, dict(sorted(expected.items())))
         self.assertIn("weaver", found)
+
+    def test_people_by_trade_in_each_area_is_one_area_at_a_time(self):
+        state = awkward_state()
+        areas = ["work@b", "work@a", "work@c", "work@z"]
+        totals, seen = state_reads.people_by_trade_in_each_area(state, areas)
+        names = state.ids.trades.names
+        for place, area in enumerate(areas):
+            single = state_reads.people_by_trade_over(state, [area])
+            self.assertEqual({names[trade]: float(totals[place, trade]) for trade in numpy.flatnonzero(seen[place]).tolist()}, single)
+        self.assertEqual(totals[3].tolist(), [0.0] * len(names))        # an area the state does not number holds nobody
+        self.assertTrue(seen[2].sum() == 0 and seen[0].sum() == 3)
+
+    def test_people_by_tile_reads_each_tile_as_people_by_trade_does(self):
+        state = awkward_state()
+        by_tile = labour_state.PeopleByTile(state)
+        for tile, area in (("c", "work@c"), ("a", "work@a"), ("b", "work@b")):
+            self.assertEqual(by_tile[tile], labour_state.people_by_trade(state, area))
+        self.assertEqual(by_tile["b"]["weaver"], 0.0)
+
+    def test_people_in_pairs_is_the_dict_read_of_each_pair(self):
+        state = awkward_state()
+        pairs = [("work@a", "smith"), ("work@b", "weaver"), ("work@c", "weaver"), ("work@z", "smith"), ("work@a", "baker")]
+        found = labour_state.people_in_pairs(state, [area for area, _ in pairs], [trade for _, trade in pairs])
+        self.assertEqual(found.tolist(), [labour_state.people_by_trade(state, area).get(trade, 0.0) for area, trade in pairs])
+
+    def test_people_by_trade_matrix_has_a_row_per_area_in_trade_name_order(self):
+        state = awkward_state()
+        totals, names = labour_state.people_by_trade_matrix(state, ["work@b", "work@z"])
+        self.assertEqual(names, ["farmer", "smith", "weaver"])
+        self.assertEqual(totals[0].tolist(), [math.fsum([1e16, 1.0, -1e16]), math.fsum([0.1, 0.2, 0.3]), 0.0])
+        self.assertEqual(totals[1].tolist(), [0.0, 0.0, 0.0])
 
     def test_working_people_in_areas_is_fsum_of_fsums(self):
         state = awkward_state()

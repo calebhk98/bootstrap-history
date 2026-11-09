@@ -50,7 +50,7 @@ from .labour_offer_rows import LabourOfferRows
 from .labour_sold_offers import sold_hours_by_worker
 from .labour_supply import HourSupply
 from .labour_results_table import hours_totals
-from .labour_state import people_by_trade
+from .labour_state import people_in_pairs
 from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import standing_block
@@ -220,7 +220,7 @@ class Economy:
             everyone.add_objects(orders.labour_offers)    # a seat's own hours, sold at the market's wage
         context = labour_context(setup, record, view, self.carriage, inputs, self.own_plot_options(), outside_option)
         held_placed = bondage_hours.place_held(
-            record.unfree.bonded_held, lambda area, trade: people_by_trade(record.labour.workforce, area).get(trade, 0.0), everyone, labour_bids,
+            record.unfree.bonded_held, lambda areas, trades: people_in_pairs(record.labour.workforce, areas, trades), everyone, labour_bids,
             setup.working_hours_per_year, context.ask_floor_per_worker_year, labour_area)
         keep = bondage_hours.payable_keep(held_placed.keep, record.book.balance_by_agent(
             list(dict.fromkeys(held_placed.keep.employers)), money).get)

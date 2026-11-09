@@ -52,6 +52,14 @@ def people_by_trade_over(state, areas: Iterable[str]) -> Dict[str, float]:
     return {names[trade]: float(totals[trade]) for trade in numpy.flatnonzero(seen).tolist()}
 
 
+def people_by_trade_in_each_area(state, areas: Iterable[str]) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    """Working people of every trade in each area given, one kernel call: (people, seen), each of shape (areas, trades) with the
+    trades in name order. A row is what `people_by_trade_over(state, [area])` holds, as a column per trade; a trade with an entry
+    in the area is `seen`, even at zero. Trainees are not counted."""
+    table = state.workers_table
+    return kernels.trade_people_by_area(area_numbers(state, areas), len(state.ids.trades), table.present, table.people, table.length)
+
+
 def working_people_in_areas(state, areas: Iterable[str]) -> numpy.ndarray:
     """For each area, `fsum` of its trades' people (each `fsum` of the bands); zero for an area the state does not number."""
     table = state.workers_table

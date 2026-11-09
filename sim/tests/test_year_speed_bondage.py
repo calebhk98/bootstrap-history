@@ -31,11 +31,16 @@ def random_rows(rng, cohorts=25, firms=6, bids=30):
     return offers, found, employers
 
 
+def as_block(workers):
+    """A scalar `workers(area, trade)` as the block form `place_held` takes."""
+    return lambda areas, trades: numpy.array([workers(area, trade) for area, trade in zip(areas, trades)], dtype=float)
+
+
 class PlaceHeld(unittest.TestCase):
     def check(self, held, workers, offers, bids, keep_rate, area_of):
         held_plain = copy.deepcopy(held)
         plain = plain_place_held(held_plain, workers, offers, bids, HOURS, keep_rate, area_of)
-        placed = bondage_hours.place_held(held, workers, offers, bids, HOURS, keep_rate, area_of)
+        placed = bondage_hours.place_held(held, as_block(workers), offers, bids, HOURS, keep_rate, area_of)
         self.assertEqual(list(placed.offers), plain.offers)
         self.assertEqual([(bid.employer, bid.trade, bid.area, bid.hours) for bid in placed.bids],
                          [(bid.employer, bid.trade, bid.area, bid.hours) for bid in plain.bids])
@@ -49,7 +54,7 @@ class PlaceHeld(unittest.TestCase):
                   LabourOffer("c2", "miller", "work@a", 500.0, 1.0)]
         bids = [LabourBid("firm", "smith", "work@a", 800.0, 1.0), LabourBid("other", "smith", "work@a", 800.0, 1.0)]
         held = {"a": {"smith": {"firm": 0.25}}}
-        placed = bondage_hours.place_held(held, lambda area, trade: 10.0, offers, bids, HOURS, {"work@a": 40.0}, lambda tile: "work@" + tile)
+        placed = bondage_hours.place_held(held, as_block(lambda area, trade: 10.0), offers, bids, HOURS, {"work@a": 40.0}, lambda tile: "work@" + tile)
         self.assertEqual(placed.hired, {"firm": {"smith": 500.0}})
         self.assertEqual([offer.hours for offer in placed.offers], [875.0, 2625.0, 500.0])      # a share of 500 of the 4000 offered
         self.assertEqual([bid.hours for bid in placed.bids], [300.0, 800.0])
@@ -75,7 +80,7 @@ class PlaceHeld(unittest.TestCase):
         bid_table = LabourBidTable()
         bid_table.add_objects(bids)
         held = {"a": {"smith": {"firm0": 2.0, "firm1": 1.0}}}
-        args = (lambda area, trade: 5.0, HOURS, {"work@a": 30.0}, lambda tile: "work@a")
+        args = (as_block(lambda area, trade: 5.0), HOURS, {"work@a": 30.0}, lambda tile: "work@a")
         from_records = bondage_hours.place_held(copy.deepcopy(held), args[0], offers, bids, *args[1:])
         from_rows = bondage_hours.place_held(copy.deepcopy(held), args[0], LabourOfferRows.of_objects(offers, bid_table.trades, bid_table.areas),
                                              bid_table, *args[1:])
@@ -86,7 +91,7 @@ class PlaceHeld(unittest.TestCase):
     def test_no_holdings_leave_offers_and_bids(self):
         offers = [LabourOffer("cohort0", "smith", "work@a", 100.0, 1.0)]
         bids = [LabourBid("firm0", "smith", "work@a", 50.0, 1.0)]
-        placement = bondage_hours.place_held({}, lambda area, trade: 1.0, offers, bids, HOURS, {}, lambda tile: tile)
+        placement = bondage_hours.place_held({}, as_block(lambda area, trade: 1.0), offers, bids, HOURS, {}, lambda tile: tile)
         self.assertEqual((list(placement.offers), [(bid.employer, bid.trade, bid.area, bid.hours, bid.maximum_wage) for bid in placement.bids],
                           placement.hired, list(placement.keep)), (offers, [(bid.employer, bid.trade, bid.area, bid.hours, bid.maximum_wage) for bid in bids], {}, []))
 
