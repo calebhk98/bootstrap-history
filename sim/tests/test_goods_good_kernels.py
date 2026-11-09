@@ -6,10 +6,12 @@ import unittest
 import numpy
 
 from sim.compiled_tables.growth import reserve_rows
-from sim.economy import goods_batch_write_kernel, goods_clearing_kernel, goods_decide_inputs_kernel, goods_pack_kernel, goods_rows_kernel
+from sim.economy import market_curves_kernel, market_curves_rows
+from sim.economy import goods_batch_write_kernel, goods_clearing_kernel, goods_decide_inputs_kernel, goods_pack_kernel, goods_rows_kernel, stable_order_kernel
 from sim.economy.goods_order_tables import (BID_ORDER, GOODS_MARKET_RESULTS, GOODS_OFFERS, GOODS_PAIRS, OFFER_ORDER, BidOrder,
                                             GoodsMarketResults, GoodsPairs, OfferOrder)
 from sim.tests import goods_good_plain as plain
+from sim.tests.market_curves_plain import plain_summarize_columns
 
 SEEDS = range(40)
 
@@ -34,7 +36,7 @@ class StableOrderIsLexsort(unittest.TestCase):
         for seed in SEEDS:
             generator = numpy.random.default_rng(seed)
             keys = tuple(generator.integers(0, 3, 40).astype(numpy.int64) for _ in range(4))
-            got = goods_pack_kernel._stable_order(keys)
+            got = stable_order_kernel.stable_order(keys)
             self.assertEqual(got.tolist(), numpy.lexsort(keys).tolist())
 
 
@@ -178,6 +180,22 @@ class ClearingColumnsFillsTheGoodsColumns(unittest.TestCase):
             numpy.zeros(3, dtype=numpy.int64), empty_floats)
         self.assertEqual(got[1].tolist(), [goods_clearing_kernel.ON_OBJECTS] * 2)
         self.assertEqual((len(got[9]), got[10].tolist(), got[11].tolist()), (0, [0, 0, 0], [0, 0]))
+
+
+class CurveArraysSummariseAMarket(unittest.TestCase):
+
+    def test_random_tables_with_ties(self):
+        for seed in SEEDS:
+            generator = numpy.random.default_rng(seed)
+            bids, offers = plain.random_tables(generator, int(generator.integers(0, 30)), int(generator.integers(0, 30)))
+            bid_rows = generator.permutation(int(bids.row_count[0]))[:int(generator.integers(0, 30))].astype(numpy.int64)
+            offer_rows = generator.permutation(int(offers.row_count[0]))[:int(generator.integers(0, 30))].astype(numpy.int64)
+            got = market_curves_rows._summary(market_curves_kernel.curve_arrays_of_rows(bids, offers, bid_rows, offer_rows, 0))
+            expected = plain_summarize_columns(
+                bids.floor_quantity[bid_rows], bids.flexible_quantity[bid_rows], bids.reference_price[bid_rows], bids.elasticity[bid_rows],
+                bids.budget[bid_rows], bids.maximum_price[bid_rows], bids.buyer[bid_rows] == 0, offers.reservation_price[offer_rows],
+                offers.quantity[offer_rows], offers.seller[offer_rows] == 0)
+            self.assertEqual(got, expected, seed)
 
 
 class WriteBatchWritesTheTables(unittest.TestCase):

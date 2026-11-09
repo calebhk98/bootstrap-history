@@ -10,15 +10,7 @@ from sim.jit import njit
 
 from .goods_market_kernels import pack_demand_many
 from .goods_table_scales import price_scales
-
-
-@njit
-def _stable_order(keys_last_first):
-    """The order of the rows by the keys (the least significant first), as `numpy.lexsort` gives it."""
-    order = numpy.arange(len(keys_last_first[0]))
-    for keys in keys_last_first:
-        order = order[numpy.argsort(keys[order], kind="mergesort")]
-    return order
+from .stable_order_kernel import stable_order
 
 
 @njit
@@ -46,7 +38,7 @@ def _sorted_offers(offers, offer_rows, offer_position, slot_of, seller_rank, til
             candidates[found] = offer_rows[place]
             slots[found] = slot_of[offer_position[place]]
             found += 1
-    order = _stable_order((tile_rank[offers.tile[candidates]], seller_rank[offers.seller[candidates]], slots))
+    order = stable_order((tile_rank[offers.tile[candidates]], seller_rank[offers.seller[candidates]], slots))
     return candidates[order], slots[order]
 
 
@@ -65,7 +57,7 @@ def _sorted_bids(bids, bid_rows, bid_position, slot_of, buyer_rank, tile_rank):
             candidates[found] = bid_rows[place]
             slots[found] = slot_of[bid_position[place]]
             found += 1
-    order = _stable_order((tile_rank[bids.tile[candidates]], buyer_rank[bids.buyer[candidates]], bids.priority[candidates], slots))
+    order = stable_order((tile_rank[bids.tile[candidates]], buyer_rank[bids.buyer[candidates]], bids.priority[candidates], slots))
     return candidates[order], slots[order]
 
 
