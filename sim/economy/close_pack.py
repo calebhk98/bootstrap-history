@@ -10,6 +10,7 @@ import numpy as np
 from sim.loans.close_kernel import producer_loans
 
 from . import ask_adjust, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
+from .close_pack_markets import clearing_and_unmet, columns_of_markets
 from .close_pack_kernels import held_goods, pair_values_by_slot, slot_stocks
 from .year_arrays import YearArrays
 from .year_arrays_memory import NO_AREA
@@ -138,17 +139,15 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
     interest, commitments, arrears, debt = (np.zeros(count) for _name in range(4))
     _loans(record, arrays, (interest, commitments, arrears, debt))
     shape = memory.price.shape
-    clearing, unmet = np.full(shape, np.nan), np.zeros(shape)
-    traded, round_prices = ledger.market_totals()
-    area_row = arrays.area_index.areas.row
-    for (good, area), price in round_prices.items():
-        column, good_column = area_row.get(area), goods_row.get(good)
-        if column is not None and good_column is not None and traded[(good, area)] > 0.0 and price is not None:
-            clearing[good_column, column] = price
-    for (good, area), quantity in ledger.unmet_demand.items():
-        column, good_column = area_row.get(area), goods_row.get(good)
-        if column is not None and good_column is not None:
-            unmet[good_column, column] = quantity
+    delivered, priced = ledger.market_total_columns()
+    market_tables = ledger.tables.markets
+    market_figures = ledger.tables.market_figures
+    market_count = min(len(market_tables.goods_markets), int(market_figures.row_count[0]))
+    table = market_tables.goods_table
+    good_column, area_column = columns_of_markets(table.first[:market_count], table.area[:market_count], market_tables.goods.name_list,
+                                                  market_tables.areas.name_list, goods_row, arrays.area_index.areas.row)
+    clearing, unmet = clearing_and_unmet(shape, delivered, priced, market_figures.unmet, market_figures.order_unmet,
+                                         good_column, area_column)
     spoilage = np.zeros(len(matrices.goods.ids))
     ground = np.zeros(len(matrices.goods.ids), dtype=bool)
     for good, spec in setup.specs.items():

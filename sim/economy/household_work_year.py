@@ -104,37 +104,55 @@ def eaten_signature(signature: tuple) -> tuple:
 
 
 _kept_baskets: Dict[tuple, object] = {}
+_kept_bases: Dict[tuple, object] = {}
 _kept_for_setup: list = [None]
 KEPT_BASKETS_LIMIT = 4096     # a bound on the memory, not a model figure: the hired work of past years leaves keys behind
 
 
 def kept_basket(setup, key: tuple):
-    """`built_basket` for the key, built once per setup (the memory is dropped when another setup asks)."""
+    """`built_basket` for the key, built once per setup (the memory is dropped when another setup asks). The part that does not depend on the
+    hired work is kept apart (`base_basket`), so a floor that changed with the year costs one replacement of the work need."""
     if _kept_for_setup[0] is not setup:
         _kept_for_setup[0] = setup
         _kept_baskets.clear()
+        _kept_bases.clear()
     found = _kept_baskets.get(key)
     if found is None:
         if len(_kept_baskets) >= KEPT_BASKETS_LIMIT:
             _kept_baskets.clear()
-        found = _kept_baskets[key] = built_basket(setup, *key)
+        tile, hearth, hired_work_per_person, milled_grains = key
+        base_key = (tile, hearth, milled_grains)
+        base = _kept_bases.get(base_key)
+        if base is None:
+            base = _kept_bases[base_key] = base_basket(setup, tile, hearth, milled_grains)
+        found = _kept_baskets[key] = with_hired_work(setup, base, hired_work_per_person)
     return found
 
 
-def built_basket(setup, tile, hearth: bool, hired_work_per_person: float, milled_grains: Tuple[str, ...]):
-    """The basket of a cohort on `tile` with or without a hearth, with `hired_work_per_person` as the household-work floor
-    and `milled_grains` left out of the food need (what `cohort_basket` shares by key)."""
+def base_basket(setup, tile, hearth: bool, milled_grains: Tuple[str, ...]):
+    """The basket of a cohort on `tile` with or without a hearth, with `milled_grains` left out of the food need and no hired household work."""
     basket = tile_food_basket(setup, tile, hearth)
     if milled_grains:
         basket = household_grinding.without_goods(basket, milled_grains, setup.hunger_need)
     if hearth:
         basket = households_work.with_cooking_fuel(
             basket, households_work.cooking_fuel_per_person_per_year(setup.household_work), setup.fuel_need)
+    return basket
+
+
+def with_hired_work(setup, basket, hired_work_per_person: float):
+    """The basket with `hired_work_per_person` as the floor of the household-work need (whole when nothing is hired)."""
     if hired_work_per_person > 0.0:
         basket = dataclasses.replace(basket, needs=tuple(
             dataclasses.replace(need, subsistence_per_person=hired_work_per_person)
             if need.need_id == setup.work_need else need for need in basket.needs))
     return basket
+
+
+def built_basket(setup, tile, hearth: bool, hired_work_per_person: float, milled_grains: Tuple[str, ...]):
+    """The basket of a cohort on `tile` with or without a hearth, with `hired_work_per_person` as the household-work floor
+    and `milled_grains` left out of the food need (what `cohort_basket` shares by key)."""
+    return with_hired_work(setup, base_basket(setup, tile, hearth, milled_grains), hired_work_per_person)
 
 
 def priced_basket(setup, record, view, cohort: Cohort):

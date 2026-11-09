@@ -107,5 +107,23 @@ class BuiltBaskets(unittest.TestCase):
         self.assertIsNot(household_work_year.kept_basket(other, key), first)
 
 
+class BaseBasket(unittest.TestCase):
+
+    def test_a_basket_for_any_hired_work_equals_the_base_with_the_floor_put_on(self):
+        for hearth in (True, False):
+            for milled in ((), ("wheat_kg",)):
+                base = household_work_year.base_basket(SETUP, "t", hearth, milled)
+                for hired in (0.0, 0.5, 3.0):
+                    self.assertEqual(household_work_year.with_hired_work(SETUP, base, hired),
+                                     household_work_year.built_basket(SETUP, "t", hearth, hired, milled))
+
+    def test_no_hired_work_leaves_the_base_whole_and_hired_work_changes_only_the_work_need(self):
+        base = household_work_year.base_basket(SETUP, "t", True, ())
+        self.assertIs(household_work_year.with_hired_work(SETUP, base, 0.0), base)
+        hired = household_work_year.with_hired_work(SETUP, base, 2.0)
+        changed = [after.need_id for before, after in zip(base.needs, hired.needs) if before != after]
+        self.assertEqual(changed, ["household_work"])
+
+
 if __name__ == "__main__":
     unittest.main()
