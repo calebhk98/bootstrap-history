@@ -29,6 +29,13 @@ _FIELDS = ("agent_id", "tile", "income_class", "people", "working_people", "owne
 _DICTS = {"unmet": "unmet_floor_by_need", "plan": "own_plan_by_need"}
 
 
+def typed_flags(values) -> np.ndarray:
+    """One flag per value: True where it is a numpy float (a list of Python floats, the usual case, is checked in one pass)."""
+    if set(map(type, values)) <= {float, type(None)}:
+        return np.zeros(len(values), dtype=np.bool_)
+    return np.array([isinstance(value, np.floating) for value in values], dtype=np.bool_)
+
+
 class CohortStore(MutableMapping):
     """The cohorts by id, as columns; a mapping from agent id to `Cohort`."""
 
@@ -214,10 +221,31 @@ class CohortStore(MutableMapping):
                           typed=np.array([isinstance(value, np.floating) for _row, value in pairs], dtype=np.bool_))
 
     def write_pairs(self, group: str, rows: np.ndarray, mappings: List[Mapping[str, float]]) -> None:
-        """The mapping field of `group` ("unmet" or "plan") of each row is the matching mapping of `mappings`."""
-        for row, held in zip(rows.tolist(), mappings):
-            self._write_pairs(row, group, held)
+        """The mapping field of `group` ("unmet" or "plan") of each row is the matching mapping of `mappings`, all written as one block."""
+        counts = np.fromiter(map(len, mappings), dtype=np.int64, count=len(mappings))
+        if len(counts) and int(counts.max()) > getattr(self.table, WIDE_GROUPS[group][0]).shape[1]:
+            self._widen(group, int(counts.max()))
+        need_column, value_column, typed_column = (getattr(self.table, name) for name in WIDE_GROUPS[group])
+        need_column[rows, :], value_column[rows, :], typed_column[rows, :] = 0, 0.0, 0
+        getattr(self.table, group + "_count")[rows] = counts
+        if int(counts.sum()):
+            values = [value for held in mappings for value in held.values()]
+            entry_rows = np.repeat(rows, counts)
+            place = np.arange(len(entry_rows), dtype=np.int64) - np.repeat(np.cumsum(counts) - counts, counts)
+            need_column[entry_rows, place] = self.names["needs"].admit([name for held in mappings for name in held])
+            value_column[entry_rows, place] = values
+            if set(map(type, values)) != {float}:
+                typed_column[entry_rows, place] = [isinstance(value, np.floating) for value in values]
         self.written(rows)
+
+    def milled_of(self, row: int) -> tuple:
+        """The grains the cohort in `row` buys milled."""
+        goods = self.names["goods"].name_list
+        return tuple(goods[number] for number in self.table.milled_good[row, :int(self.table.milled_count[row])].tolist())
+
+    def pairs_of(self, group: str, row: int) -> Dict[str, float]:
+        """The mapping field of `group` ("unmet" or "plan") of the cohort in `row`, as `Cohort` holds it."""
+        return self._pairs(row, group)
 
     def write_milled(self, rows: np.ndarray, grains: List[tuple]) -> None:
         """The grains bought milled of each row are the matching tuple of `grains`."""
@@ -323,12 +351,11 @@ class CohortStore(MutableMapping):
     def _fields(self, row: int) -> Dict[str, object]:
         """The fields of the cohort in `row`, in the order of `Cohort`, each a plain Python value (a numpy float where it was written as one)."""
         table = self.table
-        goods = self.names["goods"].name_list
         typed = int(table.numpy_typed[row])
         fields = {
             "agent_id": self.ids[row], "tile": self.names["tiles"].name_list[table.tile[row]], "income_class": int(table.income_class[row]),
             "unmet_floor_by_need": self._pairs(row, "unmet"), "own_plan_by_need": self._pairs(row, "plan"),
-            "milled_grains": tuple(goods[number] for number in table.milled_good[row, :int(table.milled_count[row])].tolist()),
+            "milled_grains": self.milled_of(row),
         }
         for name in SCALAR_FLOATS:
             fields[name] = getattr(table, name)[row] if typed & FLOAT_BIT[name] else getattr(table, name)[row].item()

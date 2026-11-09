@@ -150,3 +150,24 @@ def rebase_price_level(cohorts: Dict[AgentId, Cohort]) -> None:
         cohorts.set_rows("last_basket_price_level", np.arange(cohorts.count, dtype=np.int64), 1.0)
     else:
         cohorts.update({agent: renewed(cohort, last_basket_price_level=1.0) for agent, cohort in cohorts.items()})
+
+
+def set_column(cohorts: Dict[AgentId, Cohort], name: str, values: Mapping[AgentId, float]) -> None:
+    """One float field of the cohorts named takes the values."""
+    if hasattr(cohorts, "set_column"):
+        cohorts.set_column(name, values.keys(), values.values())
+    else:
+        for cohort_id, value in values.items():
+            cohorts[cohort_id] = replaced(cohorts[cohort_id], **{name: value})
+
+
+def set_work_plans(cohorts: Dict[AgentId, Cohort], plans: Mapping[AgentId, tuple]) -> None:
+    """Each cohort's (hired hours a person, own hours, grains bought milled) is stored where it differs from what the cohort holds."""
+    if hasattr(cohorts, "set_rows"):
+        from .cohort_people import apply_work_plans      # the table's module imports this one
+        apply_work_plans(cohorts, plans)
+        return
+    for cohort_id, (per_person, _own, milled) in plans.items():
+        cohort = cohorts[cohort_id]
+        if per_person != cohort.hired_work_per_person or tuple(milled) != tuple(cohort.milled_grains):
+            change_cohort(cohorts, cohort_id, hired_work_per_person=per_person, milled_grains=milled)

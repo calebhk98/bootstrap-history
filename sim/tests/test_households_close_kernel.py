@@ -66,8 +66,9 @@ class UnmetFloorsAgree(unittest.TestCase):
                         goods.append(number)
                         amounts.append(quantity)
                 start.append(len(goods))
-            answers = households_close_pack.unmet_by_cohort(book, packed, cohorts, numbers, np.array(start, dtype=np.int64),
-                                                             np.array(goods, dtype=np.int64), np.array(amounts, dtype=np.float64))
+            answers = households_close_pack.unmet_by_cohort(
+                book, packed, [each.agent_id for each in cohorts], [each.tile for each in cohorts], [each.people for each in cohorts], numbers,
+                np.array(start, dtype=np.int64), np.array(goods, dtype=np.int64), np.array(amounts, dtype=np.float64))
             for cohort, got, (_key, each), answer in zip(cohorts, received, baskets, answers):
                 numbered = {good: quantity for good, quantity in got.items() if good in book.good_ids.numbers}
                 expected = households_close.unmet_floor_by_need(cohort, numbered, BookView(book), SPECS, each)
@@ -84,7 +85,7 @@ class UnmetFloorsAgree(unittest.TestCase):
         packed = households_close_pack.PackedBaskets(book, SPECS)
         basket = need_basket.make_basket(NEED_DATA, {})
         answers = households_close_pack.unmet_by_cohort(
-            book, packed, [cohort_of("household:t0:0", "t0", 0.0)], [packed.add("a", basket)], np.array([0, 0], dtype=np.int64),
+            book, packed, ["household:t0:0"], ["t0"], [0.0], [packed.add("a", basket)], np.array([0, 0], dtype=np.int64),
             np.array([], dtype=np.int64), np.array([], dtype=np.float64))
         self.assertEqual(answers, [{}])
 

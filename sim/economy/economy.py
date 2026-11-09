@@ -7,10 +7,12 @@ import dataclasses
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
+import numpy as np
+
 from sim.world import capital_market
 
 from .rates import own_rate
-from . import plan_table, plan_year, producer_table
+from . import cohort_people, plan_table, plan_year, producer_table
 from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from . import transfer_rows
@@ -306,31 +308,11 @@ class Economy:
         if not inputs.population_by_tile:
             return
         record = self.record
-        people_now: Dict[str, float] = {}
-        working_now: Dict[str, float] = {}
-        for cohort in record.cohorts.values():
-            people_now[cohort.tile] = people_now.get(cohort.tile, 0.0) + cohort.people
-            working_now[cohort.tile] = working_now.get(cohort.tile, 0.0) + cohort.working_people
-        for cohort_id, cohort in sorted(record.cohorts.items()):
-            tile = cohort.tile
-            before = people_now.get(tile, 0.0)
-            if before <= 0.0:
-                continue
-            after = inputs.population_by_tile.get(tile, before)
-            people = cohort.people * after / before
-            wanted = inputs.working_people_by_tile.get(tile)
-            if wanted is None:
-                working = cohort.working_people * after / before
-            elif working_now[tile] > 0.0:
-                working = cohort.working_people * wanted / working_now[tile]
-            else:
-                working = wanted * cohort.people / before
-            if people != cohort.people or working != cohort.working_people:
-                households_cohort.set_people(record.cohorts, cohort_id, people, working)
-        working: Dict[str, float] = {}
-        for cohort in record.cohorts.values():
-            working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
-        for tile, people in sorted(working.items()):
+        cohort_people.follow_population(record.cohorts, inputs.population_by_tile, inputs.working_people_by_tile)
+        store = record.cohorts
+        working = cohort_people.total_by_tile(store, "working_people").tolist()
+        names = store.names["tiles"].name_list
+        for tile, people in sorted((names[number], working[number]) for number in np.unique(store.tile_numbers()).tolist()):
             area = labour_area(tile)
             held = people_in(record.labour.workforce, area)
             if held <= 0.0:      # the core holds nobody there: the tile's working people start as the unskilled trade
@@ -533,11 +515,7 @@ class Economy:
         money = setup.currency_id
         hired, idle = hours_totals(ledger.labour_results)
         mean_wages = national_wages(record)
-        hunger: Dict[str, float] = {}
-        for cohort in record.cohorts.values():
-            short = cohort.unmet_floor_by_need.get(self.setup.hunger_need, 0.0)
-            if short > 0.0:
-                hunger[cohort.tile] = hunger.get(cohort.tile, 0.0) + short
+        hunger = cohort_people.hunger_by_tile(record.cohorts, self.setup.hunger_need)
         output: Dict[str, float] = {}
         for (_agent, good), quantity in ledger.output.items():
             output[good] = output.get(good, 0.0) + quantity

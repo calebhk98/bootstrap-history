@@ -60,12 +60,9 @@ def decide(setup, record, view, rows: LabourOfferRows) -> Dict[AgentId, float]:
     if setup.household_work and lacks_history(record, reads):
         for (trade, area), share in sorted(expected_shares(setup, record, reads).items()):
             record.labour.expect_sold_share(market_key(trade, area), share)
-    own: Dict[AgentId, float] = {}
-    for cohort_id, (per_person, own[cohort_id], milled) in plans(setup, record, view, reads).items():
-        cohort = record.cohorts[cohort_id]
-        if per_person != cohort.hired_work_per_person or milled != tuple(cohort.milled_grains):
-            households_cohort.change_cohort(record.cohorts, cohort_id, hired_work_per_person=per_person, milled_grains=milled)
-    return own
+    decided = plans(setup, record, view, reads)
+    households_cohort.set_work_plans(record.cohorts, decided)
+    return {cohort_id: own for cohort_id, (_per_person, own, _milled) in decided.items()}
 
 
 def plot_parameters_by_cohort(setup, record, view, rows: LabourOfferRows, options: Mapping[str, Sequence],

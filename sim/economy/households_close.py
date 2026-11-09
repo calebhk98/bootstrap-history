@@ -82,28 +82,37 @@ def closed_cohort(cohort: Cohort, received_by_good: Mapping[GoodId, float], view
     `floor_cost_per_person` for the cohort's basket and tile when the caller has it already (cohorts of one basket share it)."""
     if unmet is None:
         unmet = unmet_floor_by_need(cohort, received_by_good, view, specs, basket)
-    first_good = next((need.goods[0][0] for need in basket.needs if need.goods), None)
     if floor_cost_of_person is None:
         floor_cost_of_person = floor_cost_per_person(basket, view, cohort.tile, offered_prices)
-    floor_cost = floor_cost_of_person * cohort.people
-    expected, level, target = cohort.expected_inflation, cohort.last_basket_price_level, cohort.cash_target
-    share_wealth = cohort.share_wealth
+    return renewed(cohort, **closed_figures(
+        cohort.agent_id, cohort.tile, cohort.people, cohort.expected_inflation, cohort.last_basket_price_level, cohort.cash_target,
+        cohort.share_wealth, cohort.last_year_income, cohort.expected_spending, cohort.planned_spending, cohort.expected_floor_cost,
+        cohort.own_plan_by_need, view, basket, income_received, spent, floor_cost_of_person, unmet))
+
+
+def closed_figures(agent_id: str, tile: str, people: float, expected_inflation: float, last_basket_price_level: float, cash_target: float,
+                   share_wealth: Optional[float], last_year_income: float, expected_spending: float, planned_spending: float,
+                   expected_floor_cost: float, own_plan_by_need: Mapping[str, float], view: MarketView, basket: Basket,
+                   income_received: float, spent: float, floor_cost_of_person: float, unmet: Dict[str, float]) -> Dict[str, object]:
+    """The fields a cohort's close changes, from the fields it reads (`closed_cohort` is this over a `Cohort`; the year's close reads the
+    same figures from the cohort table's columns, so no cohort is built). The market view is asked for the cohort's currency, the
+    basket's price level and observed inflation, its equity and its claims."""
+    first_good = next((need.goods[0][0] for need in basket.needs if need.goods), None)
+    floor_cost = floor_cost_of_person * people
+    expected, level, target = expected_inflation, last_basket_price_level, cash_target
     if first_good is not None:
-        money = view.currency_of(view.area_of(first_good, cohort.tile))
+        money = view.currency_of(view.area_of(first_good, tile))
         level = view.basket_price_level(money)
         observed = view.observed_inflation(money)
         if observed is None:
-            observed = level / cohort.last_basket_price_level - 1.0
-        expected = currency.update_expected_inflation(cohort.expected_inflation, observed)
+            observed = level / last_basket_price_level - 1.0
+        expected = currency.update_expected_inflation(expected_inflation, observed)
         # the cash the spending rule rests at: the one figure for cash wanted (mint, lending and the opening read it)
-        share_wealth = view.equity(cohort.agent_id)
+        share_wealth = view.equity(agent_id)
         target = opening_resting.resting_household_purse(
-            households_buffer_stock.mean_net_income(income_received, cohort.last_year_income),
-            share_wealth, view.claims(cohort.agent_id, money))
-    return renewed(cohort, expected_inflation=expected, last_basket_price_level=level, cash_target=target,
-                   share_wealth=share_wealth, last_year_income=income_received,
-                   expected_spending=durable_stock.update_expected_spending(cohort.expected_spending, spent, cohort.planned_spending),
-                   planned_spending=0.0,
-                   expected_floor_cost=durable_stock.update_expected_spending(cohort.expected_floor_cost, floor_cost),
-                   unmet_floor_by_need=unmet,
-                   own_plan_by_need=next_own_plan(cohort.own_plan_by_need, unmet, spent < income_received))
+            households_buffer_stock.mean_net_income(income_received, last_year_income),
+            share_wealth, view.claims(agent_id, money))
+    return {"expected_inflation": expected, "last_basket_price_level": level, "cash_target": target, "share_wealth": share_wealth,
+            "last_year_income": income_received, "expected_spending": durable_stock.update_expected_spending(expected_spending, spent, planned_spending),
+            "planned_spending": 0.0, "expected_floor_cost": durable_stock.update_expected_spending(expected_floor_cost, floor_cost),
+            "unmet_floor_by_need": unmet, "own_plan_by_need": next_own_plan(own_plan_by_need, unmet, spent < income_received)}

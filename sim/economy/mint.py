@@ -84,7 +84,7 @@ def yearly_monetisation(setup, record) -> float:
     (Complaints/reports/economy-research-commodity-money.md)."""
     spec = record.currency
     supply = record.book.money_supply(spec.currency_id)
-    wanted = (math.fsum(cohort.cash_target for cohort in record.cohorts.values())
+    wanted = (record.cohorts.exact_total("cash_target")
               + record.producers.exact_total("cash_target")
               + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
     loss = loss_share(setup, spec)

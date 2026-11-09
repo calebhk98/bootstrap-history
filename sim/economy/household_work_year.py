@@ -19,7 +19,12 @@ HEARTH_EPSILON = 1e-9
 def has_hearth(record, cohort: Cohort) -> bool:
     """A cohort cooks at a hearth of its own when it works land: it holds a title or a tenancy on its tile.
     (No urban marker exists yet; a landless townsman is a cohort with no title or tenancy.)"""
-    return titles_worked.worked_share(record, cohort.tile, cohort.agent_id) > HEARTH_EPSILON
+    return hearth_of(record, cohort.tile, cohort.agent_id)
+
+
+def hearth_of(record, tile: str, agent_id: str) -> bool:
+    """`has_hearth` for a cohort named by its tile and id (the cohort table's columns hold both, so no cohort is built)."""
+    return titles_worked.worked_share(record, tile, agent_id) > HEARTH_EPSILON
 
 
 def food_basket(setup, record, cohort: Cohort):
@@ -51,6 +56,11 @@ def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tup
     return bought, household_grinding.ground_share(food.goods, setup.milled_as, bought)
 
 
+def basket_of_signature(setup, signature: tuple):
+    """The basket a `signature_of` names (shared by every cohort with it)."""
+    return _kept_basket(setup, signature)
+
+
 def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
     """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth (else cooking fuel on its warmth floor), and
     this year's hired household work as the floor of that need. `buying` leaves out the grains it buys milled, which
@@ -62,7 +72,12 @@ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
 def basket_signature(record, cohort: Cohort, buying: bool = True) -> tuple:
     """(tile, hearth, hired household work, grains left out of the food need): what `cohort_basket` is built from, so two
     cohorts, or the two uses of one, with an equal signature have the very same basket."""
-    return (cohort.tile, has_hearth(record, cohort), cohort.hired_work_per_person, tuple(cohort.milled_grains) if buying else ())
+    return signature_of(record, cohort.tile, cohort.agent_id, cohort.hired_work_per_person, cohort.milled_grains, buying)
+
+
+def signature_of(record, tile: str, agent_id: str, hired_work_per_person: float, milled_grains, buying: bool = True) -> tuple:
+    """`basket_signature` from the cohort's fields, for a caller reading them from the cohort table's columns."""
+    return (tile, hearth_of(record, tile, agent_id), hired_work_per_person, tuple(milled_grains) if buying else ())
 
 
 _kept_baskets: Dict[tuple, object] = {}
@@ -103,7 +118,20 @@ def priced_basket(setup, record, view, cohort: Cohort):
     """The cohort's basket at its tile's prices: what the cohort counts as eaten (`cohort_basket` with `buying` False), the
     one basket the wage floor and the outside option are worked from. Cohorts with the same tile, hearth, hired work and
     milled grains share one priced basket until the memory is next written to (the list is shared, never changed)."""
-    return cohort_need_prices(cohort_basket(setup, record, cohort, buying=False), view, cohort.tile, basket_signature(record, cohort, False))
+    return priced_basket_of(setup, view, cohort.tile, basket_signature(record, cohort, False))
+
+
+def signatures_of(record, rows, buying: bool = True) -> list:
+    """`basket_signature` of the cohorts in the table's `rows`, read from the columns (no cohort is built)."""
+    store = record.cohorts
+    hired = store.floats("hired_work_per_person", rows)
+    return [signature_of(record, tile, store.ids[row], hired[place], store.milled_of(row), buying)
+            for place, (row, tile) in enumerate(zip(rows.tolist(), store.tile_names(rows)))]
+
+
+def priced_basket_of(setup, view, tile: str, signature: tuple):
+    """`priced_basket` for the cohorts with a (`buying` False) `signature` on `tile`."""
+    return cohort_need_prices(basket_of_signature(setup, signature), view, tile, signature)
 
 
 def service_price_per_hour(setup, view, tile, wage_price: float) -> float:
@@ -222,12 +250,9 @@ def decide(setup, record, view, offers: Sequence[LabourOffer]) -> Dict[AgentId, 
     if setup.household_work and lacks_history(record, offers):
         for (trade, area), share in sorted(expected_shares(setup, record, offers).items()):
             record.labour.expect_sold_share(market_key(trade, area), share)
-    own: Dict[AgentId, float] = {}
-    for cohort_id, (per_person, own[cohort_id], milled) in plans(setup, record, view, offers).items():
-        cohort = record.cohorts[cohort_id]
-        if per_person != cohort.hired_work_per_person or milled != tuple(cohort.milled_grains):
-            households_cohort.change_cohort(record.cohorts, cohort_id, hired_work_per_person=per_person, milled_grains=milled)
-    return own
+    decided = plans(setup, record, view, offers)
+    households_cohort.set_work_plans(record.cohorts, decided)
+    return {cohort_id: own for cohort_id, (_per_person, own, _milled) in decided.items()}
 
 
 def basket_key(record, cohort: Cohort):

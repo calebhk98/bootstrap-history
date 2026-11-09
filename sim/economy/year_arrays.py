@@ -21,7 +21,7 @@ from .year_arrays_recipes import Names, RecipeMatrices, build_recipe_matrices
 
 def tiles_of(record, setup=None) -> Names:
     """Every tile a producer or cohort is on, and every tile of the setup (a newcomer may be sited on a tile nobody is on yet)."""
-    return Names.of(record.producers.tiles_in_use() + [each.tile for each in record.cohorts.values()]
+    return Names.of(record.producers.tiles_in_use() + record.cohorts.tiles_present()
                     + list(getattr(setup, "tiles", ())))
 
 
