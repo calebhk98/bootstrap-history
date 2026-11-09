@@ -517,6 +517,20 @@ class YearView:
         grid = self._grid()
         return grid.on_tile(tile, usual=True) if grid else None
 
+    def cleared_prices_on(self, tile: TileId):
+        """`offered_prices_on` for the cleared prices (`cleared_price`): every good that cleared last year on `tile`, as one block."""
+        grid = self._grid()
+        return grid.on_tile(tile, cleared=True) if grid else None
+
+    def cleared_prices_for(self, tile: TileId, goods) -> Dict[GoodId, Optional[float]]:
+        """`cleared_price(good, area_of(good, tile))` for each of `goods`, read from the tile's block of cleared prices; a good outside the
+        block (the area map has no market for it) is read by itself."""
+        block = self.cleared_prices_on(tile)
+        if block is None:
+            return {good: self.cleared_price(good, self.area_of(good, tile)) for good in goods}
+        prices, covered = block.prices, block.covered
+        return {good: prices.get(good) if good in covered else self.cleared_price(good, self.area_of(good, tile)) for good in goods}
+
     def present_prices_at(self, names: tuple, tile: TileId) -> Dict[str, float]:
         """`price` of each of `names` (goods, one tuple kept by the caller) in its area on `tile`, those with a
         price only, in order: read from the tile's block of remembered prices, once per names tuple and tile until the memory is written to."""
