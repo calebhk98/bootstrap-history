@@ -9,7 +9,7 @@ from typing import Callable, Dict, Iterable, Mapping, Optional, Sequence, Union
 import numpy as np
 
 from .cohort_people import total_by_tile
-from .cohort_store import CohortStore
+from .cohort_store import CohortStore, table_of
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME, Cohort
 from .labour_offer_rows import LabourOfferRows
 
@@ -42,7 +42,7 @@ def write_cohort_offers(rows: LabourOfferRows, cohorts: Union[CohortStore, Itera
     `people_in_area(area)` is the working people by trade of a labour area; `area_of(trade, tile)` the area a trade's hours are
     offered in from a tile."""
     value_of_life = VALUE_OF_LIFE_YEARS_OF_INCOME if value_of_life is None else value_of_life
-    store = cohorts if isinstance(cohorts, CohortStore) else CohortStore({each.agent_id: each for each in cohorts})
+    store = table_of(cohorts) if isinstance(cohorts, Mapping) else CohortStore({each.agent_id: each for each in cohorts})
     order = store.order()
     if not len(order):
         return

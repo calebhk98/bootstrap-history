@@ -121,9 +121,8 @@ def priced_basket(setup, record, view, cohort: Cohort):
     return priced_basket_of(setup, view, cohort.tile, basket_signature(record, cohort, False))
 
 
-def signatures_of(record, rows, buying: bool = True) -> list:
-    """`basket_signature` of the cohorts in the table's `rows`, read from the columns (no cohort is built)."""
-    store = record.cohorts
+def signatures_of(record, store, rows, buying: bool = True) -> list:
+    """`basket_signature` of the cohorts in the `rows` of the cohort table `store`, read from the columns (no cohort is built)."""
     hired = store.floats("hired_work_per_person", rows)
     return [signature_of(record, tile, store.ids[row], hired[place], store.milled_of(row), buying)
             for place, (row, tile) in enumerate(zip(rows.tolist(), store.tile_names(rows)))]

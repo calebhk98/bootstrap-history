@@ -36,6 +36,11 @@ def typed_flags(values) -> np.ndarray:
     return np.array([isinstance(value, np.floating) for value in values], dtype=np.bool_)
 
 
+def table_of(cohorts) -> "CohortStore":
+    """`cohorts` as the cohort table: the table itself, or a plain mapping of cohorts (a test's) made into one."""
+    return cohorts if isinstance(cohorts, CohortStore) else CohortStore(cohorts)
+
+
 class CohortStore(MutableMapping):
     """The cohorts by id, as columns; a mapping from agent id to `Cohort`."""
 

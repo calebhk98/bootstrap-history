@@ -9,6 +9,7 @@ from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
 from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, currency, expansion_price, merchants, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
+from .cohort_store import table_of
 from .home_scope import has_partners, home_cohort_ids, on_home_tile
 from . import households_cohort
 from .market_memory import market_key
@@ -33,7 +34,7 @@ def foreign_agents(setup, record) -> set:
     if not has_partners(setup):
         return set()
     away = lambda tile: not on_home_tile(setup, tile, True)   # noqa: E731
-    return (set(record.cohorts.ids_on_tiles(away))
+    return (set(table_of(record.cohorts).ids_on_tiles(away))
             | set(record.producers.ids_on_tiles(away))
             | {merchant.agent_id for merchant in record.merchants.values() if away(merchant.home_tile)})
 
@@ -43,11 +44,12 @@ def tax_facts(setup, record, view, ledger: YearLedger) -> YearFacts:
     hours = setup.working_hours_per_year
     away = foreign_agents(setup, record)
     home = home_cohort_ids(setup, record)
-    rows = record.cohorts.rows_of(home)
-    working = dict(zip(home, record.cohorts.floats("working_people", rows)))
+    store = table_of(record.cohorts)
+    rows = store.rows_of(home)
+    working = dict(zip(home, store.floats("working_people", rows)))
     wage_of_tile: Dict[str, float] = {}
     wage_year = {}
-    for agent, tile in zip(home, record.cohorts.tile_names(rows)):
+    for agent, tile in zip(home, store.tile_names(rows)):
         if tile not in wage_of_tile:
             wage_of_tile[tile] = trade_wages.wage_in_view(setup, view, setup.unskilled_trade, labour_area(tile)) * hours
         wage_year[agent] = wage_of_tile[tile]

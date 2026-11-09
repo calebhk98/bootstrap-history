@@ -12,6 +12,7 @@ from sim.labour.api import LabourBidTable, TrancheBids, people_in, run_labour_ye
 from sim.world.need_basket import subsistence_cost_per_person
 
 from . import cohort_people, household_work_year, households_basket, households_work, labour_settle_year
+from .cohort_store import table_of
 from .household_offer_kernels import sum_in_order_by_group
 from .labour_ask_floor import mean_floor_per_hour
 from .labour_bids import BID_TRANCHES, BID_VALUE_SPREAD
@@ -30,11 +31,11 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
     """Money a person needs a year for the floors of every need, at last year's prices on each tile: each cohort's own
     basket (its hearth's cooking fuel, its hired household work, ready-to-eat food where it has no hearth) at its tile's
     prices, averaged over the tile's people."""
-    store = record.cohorts
+    store = table_of(record.cohorts)
     order = store.order()
     priced = {}                  # cohorts of one signature share one priced basket and its cost
     costs = []
-    for signature in household_work_year.signatures_of(record, order, buying=False):
+    for signature in household_work_year.signatures_of(record, store, order, buying=False):
         if signature not in priced:
             priced[signature] = subsistence_cost_per_person(household_work_year.priced_basket_of(setup, view, signature[0], signature))
         costs.append(priced[signature])
@@ -52,7 +53,7 @@ def outside_option_by_tile(setup, record, view) -> Dict[str, float]:
     """What a worker must earn in a year to keep the people he supports at their floors, per tile: the
     classical floor under wages. Hours nobody hires go to the household's own plot (households_own.py)."""
     floors = subsistence_cost_by_tile(setup, record, view)
-    store = record.cohorts
+    store = table_of(record.cohorts)
     number_of = store.names["tiles"].numbers
     people = cohort_people.total_by_tile(store, "people").tolist()
     working = cohort_people.total_by_tile(store, "working_people").tolist()

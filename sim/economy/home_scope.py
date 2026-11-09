@@ -4,6 +4,7 @@ from typing import Dict, Optional
 import numpy as np
 
 from .cohort_people import total_by_tile
+from .cohort_store import table_of
 
 
 def has_partners(setup) -> bool:
@@ -23,12 +24,12 @@ def on_home_tile(setup, tile: str, partners: Optional[bool] = None) -> bool:
 def home_cohort_ids(setup, record) -> list:
     """The ids, in table order, of the cohorts living on home tiles (the tile of each cohort is asked once per tile)."""
     partners = has_partners(setup)
-    return record.cohorts.ids_on_tiles(lambda tile: on_home_tile(setup, tile, partners))
+    return table_of(record.cohorts).ids_on_tiles(lambda tile: on_home_tile(setup, tile, partners))
 
 
 def home_working_by_tile(setup, record) -> Dict[str, float]:
     """{tile: working people of the home cohorts on it, added in table order}, in tile name order."""
-    store = record.cohorts
+    store = table_of(record.cohorts)
     partners = has_partners(setup)
     names = store.names["tiles"].name_list
     home = np.array([on_home_tile(setup, name, partners) for name in names], dtype=np.bool_)

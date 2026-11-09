@@ -16,12 +16,13 @@ from .setup import labour_area
 from .year_arrays_cohorts import CohortColumns
 from .year_arrays_memory import AreaIndex, MemoryArrays
 from .year_arrays_producers import ProducerColumns
+from .cohort_store import table_of
 from .year_arrays_recipes import Names, RecipeMatrices, build_recipe_matrices
 
 
 def tiles_of(record, setup=None) -> Names:
     """Every tile a producer or cohort is on, and every tile of the setup (a newcomer may be sited on a tile nobody is on yet)."""
-    return Names.of(record.producers.tiles_in_use() + record.cohorts.tiles_present()
+    return Names.of(record.producers.tiles_in_use() + table_of(record.cohorts).tiles_present()
                     + list(getattr(setup, "tiles", ())))
 
 
