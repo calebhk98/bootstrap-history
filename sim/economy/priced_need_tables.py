@@ -46,6 +46,8 @@ class GoodNumbers:
     def __init__(self) -> None:
         self.number: Dict[str, int] = {}
         self.names: List[str] = []
+        self._array: Optional[numpy.ndarray] = None
+        self._rank: Optional[numpy.ndarray] = None
 
     def of(self, good: str) -> int:
         found = self.number.get(good)
@@ -53,6 +55,20 @@ class GoodNumbers:
             found = self.number[good] = len(self.names)
             self.names.append(good)
         return found
+
+    def name_array(self) -> numpy.ndarray:
+        """The names as an object array indexed by good number, so a column of good numbers becomes names in one take."""
+        if self._array is None or len(self._array) != len(self.names):
+            self._array = numpy.array(self.names, dtype=object)
+        return self._array
+
+    def rank_array(self) -> numpy.ndarray:
+        """Each good's place among the names in sorted order, indexed by good number."""
+        if self._rank is None or len(self._rank) != len(self.names):
+            order = numpy.argsort(self.name_array(), kind="stable")
+            self._rank = numpy.empty(len(order), dtype=numpy.int64)
+            self._rank[order] = numpy.arange(len(order))
+        return self._rank
 
 
 GOODS = GoodNumbers()

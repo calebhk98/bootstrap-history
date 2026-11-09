@@ -10,8 +10,8 @@ from sim.economy import opening_bid_memory
 from sim.economy.opening_bid_memory import BidMemory
 
 
-def cohort(hired_work_per_person):
-    return types.SimpleNamespace(tile="t", hired_work_per_person=hired_work_per_person, milled_grains=())
+def cohort(hired_work_per_person, agent_id):
+    return types.SimpleNamespace(agent_id=agent_id, tile="t", hired_work_per_person=hired_work_per_person, milled_grains=())
 
 
 class StoresPerBasket(unittest.TestCase):
@@ -21,11 +21,11 @@ class StoresPerBasket(unittest.TestCase):
             return memory.stores(None, first), memory.stores(None, second)
 
     def test_cohorts_of_one_basket_on_a_tile_share_one_store(self):
-        first, second = self.stores(cohort(0.0), cohort(0.0))
+        first, second = self.stores(cohort(0.0, "a"), cohort(0.0, "b"))
         self.assertIs(first, second)
 
     def test_cohorts_of_different_baskets_on_a_tile_do_not(self):
-        first, second = self.stores(cohort(0.0), cohort(1.0))
+        first, second = self.stores(cohort(0.0, "a"), cohort(1.0, "b"))
         self.assertIsNot(first, second)
 
 

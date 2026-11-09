@@ -12,11 +12,9 @@ import numpy as np
 from sim.book_post import table_from
 from sim.book_tables import GOODS_MOVE_POSTINGS, TRANSFER_POSTINGS, GoodsMovePostings, TransferPostings
 from sim.compiled_tables.causes import OK
-from sim.world.need_basket import subsistence_cost_per_person
 
-from . import cohort_close_write, household_work_year, households_close, households_close_pack
+from . import cohort_close_write, cohort_prime, household_work_year, households_close, households_close_pack
 from .close_pack import figure_values
-from .household_work_year import basket_key, cohort_basket
 from .types import EDGE_CONSUMPTION, GoodsMove
 from .year_close_household_kernels import consumption_postings, receipts_with_grown
 
@@ -109,13 +107,14 @@ def close_households(setup, record, view, ledger, property_income: Dict[str, flo
     packed = households_close_pack.PackedBaskets(book, setup.specs)
     hired, milled = store.floats("hired_work_per_person", order), [store.milled_of(row) for row in order.tolist()]
     numbers, floor_costs = [], []
+    cohort_prime.prime_cohort_baskets(setup, record, view, False)
     for position, cohort_id in enumerate(cohort_ids):
         # cohorts of one tile, hearth, hired work and milled grains share a basket and its floor cost
         key = household_work_year.signature_of(record, tiles_of[position], cohort_id, hired[position], milled[position])
         if key not in baskets:
             eaten = household_work_year.signature_of(record, tiles_of[position], cohort_id, hired[position], milled[position], False)
             baskets[key] = (household_work_year.basket_of_signature(setup, eaten),
-                            subsistence_cost_per_person(household_work_year.priced_basket_of(setup, view, tiles_of[position], eaten)))
+                            household_work_year.priced_basket_of(setup, view, tiles_of[position], eaten).subsistence_cost_per_person())
         numbers.append(packed.add(key, baskets[key][0]))
         floor_costs.append(baskets[key][1])
     people = store.floats("people", order)

@@ -9,9 +9,8 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 import numpy as np
 
 from sim.labour.api import LabourBidTable, TrancheBids, people_in, run_labour_year
-from sim.world.need_basket import subsistence_cost_per_person
 
-from . import cohort_people, household_work_year, households_basket, households_work, labour_settle_year
+from . import cohort_people, cohort_prime, household_work_year, households_basket, households_work, labour_settle_year
 from .cohort_store import table_of
 from .household_offer_kernels import sum_in_order_by_group
 from .labour_ask_floor import mean_floor_per_hour
@@ -31,13 +30,14 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
     """Money a person needs a year for the floors of every need, at last year's prices on each tile: each cohort's own
     basket (its hearth's cooking fuel, its hired household work, ready-to-eat food where it has no hearth) at its tile's
     prices, averaged over the tile's people."""
+    cohort_prime.prime_cohort_baskets(setup, record, view, False)
     store = table_of(record.cohorts)
     order = store.order()
     priced = {}                  # cohorts of one signature share one priced basket and its cost
     costs = []
     for signature in household_work_year.signatures_of(record, store, order, buying=False):
         if signature not in priced:
-            priced[signature] = subsistence_cost_per_person(household_work_year.priced_basket_of(setup, view, signature[0], signature))
+            priced[signature] = household_work_year.priced_basket_of(setup, view, signature[0], signature).subsistence_cost_per_person()
         costs.append(priced[signature])
     people = store.column("people")[order]
     tiles = np.ascontiguousarray(store.tile_numbers()[order])
@@ -45,7 +45,7 @@ def subsistence_cost_by_tile(setup, record, view) -> Dict[str, float]:
     people_sum = sum_in_order_by_group(tiles, len(store.names["tiles"]), np.ascontiguousarray(people)).tolist()
     names = store.names["tiles"].name_list
     return {tile: (cost_sum[number] / people_sum[number] if people_sum[number] > 0.0 else
-                   subsistence_cost_per_person(households_basket.tile_need_prices(setup, view, tile)))
+                   households_basket.tile_need_prices(setup, view, tile).subsistence_cost_per_person())
             for tile, number in sorted((names[number], number) for number in np.unique(tiles).tolist())}
 
 

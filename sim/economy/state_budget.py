@@ -12,6 +12,7 @@ from .goods_order_tables import STATE
 from .home_scope import home_working_by_tile
 from .labour_results_table import bought_value
 from .order_rows import OrderRows
+from .priced_need_list import priced_needs_of
 from .setup import labour_area
 from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .labour_bid_sink import BidFigures, bid_objects, put_bids
@@ -135,17 +136,19 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
         return
     tile = setup.capital_tile
     basket = setup.basket_for(tile)
-    priced = households_basket.tile_need_prices(setup, view, tile)
-    weight_total = math.fsum(need.spec.budget_weight for need in priced)
+    priced = priced_needs_of(households_basket.tile_need_prices(setup, view, tile))
+    weight_total = math.fsum(spec.budget_weight for spec, _index, _first, _end in priced.blocks())
     if weight_total <= 0.0:
         return
     state = setup.state_agent
     moves = []
     rows = OrderRows(order_book, STATE)
     state_held = record.book.goods_held(state)      # the moves are posted after the loop, so the stores stay as read
-    for need in priced:
-        need_budget = budget.goods_budget * need.spec.budget_weight / weight_total
-        for good, price, _effect, share in need.goods:
+    names, prices, shares = priced.columns.names, priced.columns.price, priced.columns.share
+    for spec, _index, first, end in priced.blocks():
+        need_budget = budget.goods_budget * spec.budget_weight / weight_total
+        for row in range(first, end):
+            good, price, share = names[row], prices[row], shares[row]
             wanted = need_budget * share / price
             held = [(held_tile, quantity) for held_tile, quantity in
                     sorted(state_held.get(good, {}).items()) if quantity > 0.0]

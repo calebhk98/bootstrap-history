@@ -9,7 +9,6 @@ from typing import List
 from . import carriage_fleet_book, carriage_wear, households, households_cohort, households_orders_pack, land_bid_year, merchants
 from . import merchants_book, merchants_plan, state_budget, state_store, tool_wear
 from .goods_order_tables import CARRIER, HOUSEHOLD, MERCHANT, STATE
-from .household_work_year import basket_key
 from .inventory import held_stock, holding_reservation
 from .opening_bid_memory import BidMemory
 from .order_rows import OrderRows
@@ -49,7 +48,7 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
                 cohort, view, spendable, income, basket, setup.specs, priced, smooth_rise=smooth_rise, shared_store=memory.stores(record, cohort)),
                 cohort, basket, grown_units)
     made, bid_rows, planned = households_orders_pack.kernel_orders(
-        view, setup.specs, entries, smooth_rise, lambda cohort: basket_key(record, cohort), lambda cohort: memory.stores(record, cohort),
+        view, setup.specs, entries, smooth_rise, lambda cohort: memory.key(record, cohort), lambda cohort: memory.stores(record, cohort),
         order_book)
     made.update(plain)
     rows = OrderRows(order_book, HOUSEHOLD)

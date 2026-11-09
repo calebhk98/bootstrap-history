@@ -2,30 +2,18 @@
 
 `priced_reads.kept_need_prices` answers a (tile, basket) the first time it is asked after a write to the memory. The tiles' own baskets
 (`TILE_BASKET_KEY`) are asked on the same tiles after every write, so the memory remembers which it was asked (`asked_by`) and, at the first
-miss of one after a write, prices all of them together; a cohort's basket key carries figures that change between phases, so those are asked one
-at a time (`price_asked` takes any list of asks, for a caller that knows its pass's baskets up front): one request per distinct (tile, need, exponent) in a `NeedBatch`, the tiles' prices as one matrix from the
-price grid, one `priced_need_kernel.price_needs` call, and the `PricedNeed` objects made from the answer for the readers that take objects.
+miss of one after a write, prices all of them together; a cohort's basket key carries figures that change between phases, so a caller that knows
+its pass's baskets up front asks `price_asked` for all of them (`cohort_prime.prime_cohort_baskets`): one request per (tile, basket) in a
+`NeedBatch`, the tiles' prices as one matrix from the price grid, one `priced_need_kernel.price_needs` call, and for each ask the
+`priced_need_list.PricedNeeds` of its rows in the answer (no `PricedNeed` object is made).
 The answers equal the one-need-at-a-time path (`need_basket.priced_need`) bit for bit (`test_priced_need_kernel.py`)."""
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional
 
-from sim.world.need_basket import NeedSpec, PricedNeed
-
+from .priced_need_list import PricedNeeds
 from .priced_need_tables import GOODS, NeedBatch
 from .priced_needs import PricedBatch
 
 TILE_BASKET_KEY = ("food", True)     # the key of the tile's own basket (a cohort with a hearth and nothing hired) in the kept reads
-
-_ALONE: Dict[int, Tuple[NeedSpec, Tuple[NeedSpec, ...]]] = {}     # id(spec) -> (spec, (spec,)): a need as a basket of one; the spec is held so its id is not reused
-_ALONE_LIMIT = 8192
-
-
-def _alone(spec: NeedSpec) -> Tuple[NeedSpec, ...]:
-    found = _ALONE.get(id(spec))
-    if found is None:
-        if len(_ALONE) >= _ALONE_LIMIT:
-            _ALONE.clear()
-        found = _ALONE[id(spec)] = (spec, (spec,))
-    return found[1]
 
 
 def asked_by(view) -> Optional[Dict[tuple, object]]:
@@ -40,48 +28,23 @@ def asked_by(view) -> Optional[Dict[tuple, object]]:
     return kept[2]
 
 
-_SPEC_NUMBERS: Dict[NeedSpec, int] = {}      # equal specs share a number; a spec is held here, so its number is never reused
-
-
-def need_key(tile, spec: NeedSpec, exponent: float) -> tuple:
-    """The key a priced need is kept under in the view's reads: shared by every basket that holds the same need on a tile. The spec stands
-    in the key by its number (set once on the object), so a lookup hashes integers instead of the spec's fields."""
-    number = spec.__dict__.get("_number")
-    if number is None:
-        number = _SPEC_NUMBERS.setdefault(spec, len(_SPEC_NUMBERS))
-        object.__setattr__(spec, "_number", number)
-    return ("priced_need", tile, number, exponent)
-
-
 def price_asked(view, reads: dict, pending: List[tuple]) -> bool:
-    """Price every (tile, key, basket) of `pending` and keep the answers in `reads` (each priced need under `need_key`, each basket's
-    list under ("need_prices", tile, key)). False, with nothing kept, when the view's grid cannot answer for these tiles."""
+    """Price every (tile, key, basket) of `pending` and keep each basket's `PricedNeeds` in `reads` under ("need_prices", tile, key).
+    False, with nothing kept, when the view's grid cannot answer for these tiles."""
+    if not pending:
+        return True
     tiles = sorted({tile for tile, _key, _basket in pending})
     row_of_tile = {tile: row for row, tile in enumerate(tiles)}
     batch = NeedBatch()
-    position_of: Dict[tuple, int] = {}
     for tile, _key, basket in pending:
-        exponent = 1.0 - basket.substitution
-        for spec in basket.needs:
-            each = need_key(tile, spec, exponent)
-            if each not in reads and each not in position_of:
-                position_of[each] = batch.add(row_of_tile[tile], exponent, _alone(spec))
-    if position_of:
-        matrix = view.offered_price_matrix(tiles, GOODS.names)
-        if matrix is None:
-            return False
-        answer = PricedBatch(batch, matrix)
-        names = GOODS.names
-        for each, position in position_of.items():
-            reads[each] = answer.need(position, names) if answer.priced(position) else None
-    for tile, key, basket in pending:
-        exponent = 1.0 - basket.substitution
-        found: List[PricedNeed] = []
-        for spec in basket.needs:
-            need = reads[need_key(tile, spec, exponent)]
-            if need is not None:
-                found.append(need)
-        reads[("need_prices", tile, key)] = found
+        batch.add(row_of_tile[tile], 1.0 - basket.substitution, basket.needs)
+    matrix_of = getattr(view, "offered_price_matrix", None)
+    matrix = None if matrix_of is None else matrix_of(tiles, GOODS.names)
+    if matrix is None:
+        return False
+    answer = PricedBatch(batch, matrix)
+    for (tile, key, _basket), positions in zip(pending, answer.positions_by_request()):
+        reads[("need_prices", tile, key)] = PricedNeeds(answer, positions)
     return True
 
 

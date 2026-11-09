@@ -57,11 +57,10 @@ def tile_price_reader(view, tile):
 
 
 def kept_need_prices(view, basket_of, tile, key):
-    """`households_basket.need_prices(basket_of(), view, tile)` for the basket the caller names by `key` (with the tile; `basket_of` is only called on a miss): the priced list
-    is kept like any read (so is each priced need, by need and tile), and the prices on a tile (the offered price in the area each good is bought in) are read once, as a block, for every
-    basket priced there. A view without kept reads prices the basket every time."""
-    from sim.world import need_basket
-    from .priced_need_prime import TILE_BASKET_KEY, asked_by, need_key, price_asked, pending_asks
+    """`households_basket.need_prices(basket_of(), view, tile)` for the basket the caller names by `key` (with the tile; `basket_of` is only called on a miss): the
+    `PricedNeeds` are kept like any read, priced in one kernel batch (`priced_need_prime.price_asked`) with every tile basket asked since the last write when
+    the key is the tiles' own. A view without kept reads prices the basket every time."""
+    from .priced_need_prime import TILE_BASKET_KEY, asked_by, price_asked, pending_asks
     current = getattr(view, "_current", None)
     if current is None:
         from .households_basket import need_prices
@@ -74,34 +73,22 @@ def kept_need_prices(view, basket_of, tile, key):
         pass
     basket = basket_of()
     asked = asked_by(view) if key == TILE_BASKET_KEY else None
+    pending = [(tile, key, basket)]
     if asked is not None:       # the tiles' own baskets: asked on every tile after every write, so all are priced in one batch at the first miss
         asked[(tile, key)] = basket
         if "primed" not in reads:
             reads["primed"] = True
             pending = pending_asks(asked, reads)
-            if len(pending) > 1 and price_asked(view, reads, pending):
-                return reads[full_key]
-    reader_for = reads.get(("prices_on", tile))
-    if reader_for is None:
-        reader_for = reads[("prices_on", tile)] = tile_price_reader(view, tile)
-    exponent = 1.0 - basket.substitution
-    found = []
-    for spec in basket.needs:     # a need priced on this tile is shared by every basket that holds the same need
-        each = need_key(tile, spec, exponent)
-        try:
-            need = reads[each]
-        except KeyError:
-            need = reads[each] = need_basket.priced_need(spec, exponent, reader_for(spec.goods))
-        if need is not None:
-            found.append(need)
-    reads[full_key] = found
-    return found
+    if not price_asked(view, reads, pending):
+        from .households_basket import need_prices
+        reads[full_key] = need_prices(basket, view, tile)
+    return reads[full_key]
 
 
 def kept_need_prices_many(view, asks):
     """`kept_need_prices(view, basket_of, tile, key)` for each ask (a (tile, key, basket_of) triple), as a list in the asks' order: the asks the
     view's reads do not hold yet are priced together in one kernel call (`priced_need_prime.price_asked`), and any the grid cannot answer for
-    are priced one at a time as a single ask is."""
+    are priced from the offered prices as a single ask is."""
     from .priced_need_prime import price_asked
     current = getattr(view, "_current", None)
     if current is not None:

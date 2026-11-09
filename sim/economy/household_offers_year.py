@@ -4,7 +4,7 @@ the hours it keeps for its plot (`household_hours_year.plot_parameters_by_cohort
 A set of offers holding a NaN or infinite figure takes the record version."""
 from typing import Dict, Mapping, Optional, Sequence, Tuple
 
-from . import household_hours_year, household_work_year, households_basket, households_cohort, households_work, labour_state
+from . import cohort_prime, household_hours_year, household_work_year, households_basket, households_cohort, households_work, labour_state
 from .cohort_store import table_of
 from .household_offer_reads import OfferReads
 from .labour_ask_floor import hectares_per_hour_by_recipe
@@ -40,6 +40,7 @@ def plans(setup, record, view, reads: OfferReads) -> Dict[AgentId, Tuple[float, 
     """`household_work_year.plans` with no service-price floors: each cohort's (hours hired a person, hours done itself, grains
     bought milled) for the year; changes nothing."""
     expected = expected_shares(setup, record, reads) if setup.household_work and lacks_history(record, reads) else {}
+    cohort_prime.prime_food_baskets(setup, record, view)
     values = hour_values(setup, record, view, reads, expected) if setup.household_work else {}
     result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
     for cohort_id, cohort in sorted(record.cohorts.items()):
