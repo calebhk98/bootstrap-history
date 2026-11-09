@@ -41,6 +41,14 @@ class NeedSpec:
     share_limits: Tuple[Tuple[str, float], ...] = ()   # (good, largest share of the need's units it can meet)
     qualities: Tuple[Tuple[str, float], ...] = ()      # (good, quality factor the buyer values; absent means one)
 
+    def __hash__(self) -> int:
+        """The hash of the fields, worked out once: a spec is the key of every priced need of every tile, so it is hashed many times a year."""
+        found = self.__dict__.get("_hashed")
+        if found is None:
+            found = hash((self.need_id, self.subsistence_per_person, self.budget_weight, self.goods, self.share_limits, self.qualities))
+            object.__setattr__(self, "_hashed", found)
+        return found
+
 
 @dataclass(frozen=True)
 class Basket:
