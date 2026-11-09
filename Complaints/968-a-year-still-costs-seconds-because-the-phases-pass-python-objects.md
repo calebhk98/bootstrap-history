@@ -1,6 +1,6 @@
 # A Rome year still costs seconds: the Python between the kernels is spread over the whole year
 
-**Status:** partly - branch `year-speed-caching-and-order-book` took a warm Rome year from about 4 s to about 2.3 s of process time (results unchanged but for last digits); this file is the handoff for the rest of the way to one second
+**Status:** partly - branch `year-speed-caching-and-order-book` took a warm Rome year from about 3.5 s to about 1.9 s of wall time on a quiet machine (rules unchanged; last digits move); this file is the handoff for the rest of the way to one second
 
 This file is written so that someone who was not part of the work can pick it up with nothing else. Read it whole, then
 `docs/architecture/COMPILED_YEAR.md` (what each phase now is, phase by phase, and what is left in it) and
@@ -24,20 +24,26 @@ The measure saves are made as in the old text: `printf '{"cmd":"state"}\n{"cmd":
 --civ rome_100ad --seed 1 --session rome_start.json` (and `england_1300` for England), then `python3 sim/simulator.py
 compile-kernels` once.
 
-Measured at the handoff (a four-core machine, otherwise quiet, three alternating runs each, every run warm):
+Measured at the handoff, commit `cc25316d` against main `08a8a54d` (a four-core machine, otherwise quiet, runs of main
+and the branch alternated, every run on a warm compile cache):
 
 | Figure | main | this branch | Command |
 |---|---|---|---|
-| warm Rome year, process time | about 3.9 to 4.1 s | about 2.2 to 2.4 s | `python3 tools/measure/warm_year_cpu.py rome_start.json` (main has no such tool: the same steps by hand, load, step a year, time a second `game.step()` with `time.process_time()`) |
-| warm Rome year, wall | not measured at the handoff | about 2.1 to 2.5 s | `python3 sim/simulator.py year-time --session rome_start.json --years 2 --reload-check` (second figure) |
-| warm England year, wall | not measured | about 0.6 to 1.4 s | the same with `england_start.json --years 5` |
+| warm Rome year, wall | 3.3 to 3.7 s | 1.7 to 2.0 s | `python3 sim/simulator.py year-time --session rome_start.json --years 2` (second figure), three runs each |
+| first Rome year of a process, wall | 7.1 to 9.1 s | 6.2 to 6.9 s | the same (first figure) |
+| warm England years, wall | 0.75 to 1.2 s | 0.58 to 0.94 s | the same with `england_start.json --years 3` (second and third figures), two runs each |
+| first England year of a process, wall | 2.3 s | 2.6 s | the same (first figure): loading more kernels costs the first year |
+| warm Rome year, user-space instructions | 25.8 billion | 12.2 billion | `python3 sim/simulator.py year-time --session rome_start.json --years 2 --count-instructions` (`instructions_warm_years`; main measured with the same tool added to it) |
+| loading a Rome game, instructions | 9.2 billion | 11.8 billion | the same (`instructions_load`) |
 | time inside compiled kernels, warm Rome year | not measured | about 0.7 s | `python3 tools/measure/warm_year_split_profile.py rome_start.json out.prof`, sum of the `kernel__` entries |
 | profiled function calls, warm Rome year | not measured | about 3.9 million | the same profile |
 
-The instruction counts of the final branch against main are in the pull request (`year-time --count-instructions`).
+Process time (`python3 tools/measure/warm_year_cpu.py rome_start.json`) reads a little higher than the quiet wall time
+when other work shares the machine; compare like with like.
 
 So the three-second limit is met and the one-second goal is not. The kernels alone are about 0.7 s; the Python left in
-the year is about 1.5 s, spread so thinly that no single function has more than a few hundredths of a second of own time.
+the year is about one second, spread so thinly that no single function has more than a few hundredths of a second of own
+time.
 
 ## What this branch did (pointers, not a list of everything)
 
@@ -60,7 +66,19 @@ the year is about 1.5 s, spread so thinly that no single function has more than 
   log line could not carry a fact named `cause` (`sim/refusal.py`); loan clearing recompiled in every process (a table
   class whose name differed from its module attribute).
 
-## Why it stopped at about 2.3 s: what was measured
+- **Last digits moved once, at the end.** Until the last commits every merge kept the game bit for bit. Two workarounds
+  that existed only for that (the column stores kept which float fields were numpy floats; the plan kernel summed some
+  rows one way and some another) were then removed, so the digests and `protocol_golden` were recorded again. Evidence
+  that only last digits moved: one stepped year from the same save, old against new (`year-time --keep`, then
+  `tools/measure/save_compare.py`), differs only in last digits apart from cancelled leftovers near zero (a stock of
+  `1e-16` against `0.0`, one trainee entry of about `1e-16` people dropped). The goldens' short spin-up moved more (the
+  Rome founder's capital at the first command), and so does the old code under a nudge of two units in the last place in
+  one land rent: a probe with that nudge moved it by several percent one way and by over a third the other, so the
+  opening amplifies any last-digit change. The digests at the handoff (Rome two years `d4b47ff2...`, England five years
+  `1446d498...`, `year-time --reload-check`) belong to the saves this branch measured on, which are not committed; a save
+  made now from the commands above opens differently, so record your own base digests on your own saves first.
+
+## Why it stopped at about two seconds: what was measured
 
 The plan assumed the Python was per-object glue that would disappear once the data were columns. Measured package by
 package (process time, alternating base and branch), that was mostly wrong:
@@ -82,7 +100,7 @@ hour supply (`Economy._hour_supply`), merchant orders. Run the profile and read 
     python3 tools/measure/warm_year_split_profile.py rome_start.json out.prof
     python3 -c "import pstats; s=pstats.Stats('out.prof'); s.sort_stats('cumulative').print_stats('economy/(year_|economy)', 30)"
 
-To reach one second the Python must fall from about 1.5 s to about 0.3 s: most of it, everywhere. No single conversion
+To reach one second the Python must fall from about one second to about 0.3 s: most of it, everywhere. No single conversion
 left on the list below is worth more than a few percent.
 
 ## What is left, by phase (each with where it stops and why)
