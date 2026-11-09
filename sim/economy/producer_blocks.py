@@ -54,9 +54,13 @@ def crews_of(store, rows: Iterable[int]) -> List[Dict[str, float]]:
     """The crew's practice ({trade: runs made}, in the order written) of the producer in each row (`ProducerStore.crew_of` for each)."""
     rows = np.fromiter(rows, dtype=np.int64)
     table, trade_names = store.table, store.names["trades"].name_list
-    trades, units = table.crew_trade[rows], table.crew_units[rows]
-    return [{trade_names[number]: runs for number, runs in zip(trades[place, :count].tolist(), units[place, :count].tolist())}
-            for place, count in enumerate(table.crew_count[rows].tolist())]
+    counts = table.crew_count[rows]
+    crews: List[Dict[str, float]] = [{} for _row in range(len(rows))]
+    crewed = np.flatnonzero(counts)
+    trades, units = table.crew_trade[rows[crewed]], table.crew_units[rows[crewed]]
+    for place, count, trade_numbers, runs in zip(crewed.tolist(), counts[crewed].tolist(), trades.tolist(), units.tolist()):
+        crews[place] = {trade_names[number]: made for number, made in zip(trade_numbers[:count], runs[:count])}
+    return crews
 
 
 def figures_of(store, name: str, rows: Iterable[int]) -> list:

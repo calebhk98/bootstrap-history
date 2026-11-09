@@ -68,7 +68,7 @@ class ProducerColumns:
         """Every column read from the store's table in sorted id order (the store is compacted first)."""
         order = store.order()
         table = store.table
-        ids = tuple(store.ids[row] for row in order.tolist())
+        ids = tuple(map(store.ids.__getitem__, order.tolist()))
         recipe_numbers, tile_numbers = table.recipe[order], table.tile[order]
         recipe_row = _lookup(store.names["recipes"].name_list, matrices.recipes.row, np.unique(recipe_numbers), "recipe")[recipe_numbers]
         tile_row = _lookup(store.names["tiles"].name_list, tiles.row, np.unique(tile_numbers), "tile")[tile_numbers]
