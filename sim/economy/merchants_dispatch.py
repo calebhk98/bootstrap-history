@@ -3,6 +3,7 @@ from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import carried_book, carriage_fleet_book, carriage_wear_batch, carriage_hours, carriage_wear, merchants, merchants_transit, route_dues
+from .cohort_reads import poorest_by_tile, populated_tiles
 from .market_memory import market_key
 from .inventory import held_stock
 from .national_prices import usual_volumes
@@ -21,11 +22,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     households of the tile the goods leave (Complaints/552)."""
     money = setup.currency_id
     crew = carriage_hours.crew_for(setup, record.carriage, carriage)
-    carriers = {}
-    for cohort in record.cohorts.values():
-        held = carriers.get(cohort.tile)
-        if held is None or cohort.income_class < record.cohorts[held].income_class:
-            carriers[cohort.tile] = cohort.agent_id
+    carriers = poorest_by_tile(record.cohorts)
     carried: dict = {}
     carried_goods: dict = {}
     carrier_goods = carriage_wear.carrier_goods(setup)
@@ -107,7 +104,7 @@ def _entries(setup, record, ledger, area_map, crew, ordered):
     """Each merchant's year as `MerchantYear` (purse, stock, the crew hired for it), in the order their purses move."""
     money = setup.currency_id
     index = ledger.hours_hired_by_market if crew is not None else {}
-    populated = {cohort.tile for cohort in record.cohorts.values()}
+    populated = populated_tiles(record.cohorts)
     bought_by = {}
     for (employer, trade, area), (bought, _paid) in index.items():
         bought_by.setdefault(employer, {})[(trade, area)] = bought
