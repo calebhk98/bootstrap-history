@@ -82,7 +82,8 @@ keys outside the map. The hash-seed command in "How to measure" checks the resul
 | labour bids (tranches cut in the kernel), labour offers, labour market results, hired hours (market x employer) | labour | `LabourBid`, `EmployerHoursBid`, `LabourOffer`, `LabourClearing`, `LabourResult`, labour `Fill` |
 | plans | `sim/economy/plan_table.py` | `Plan` per producer |
 | loans | `sim/loans/` | `Contract` objects in a list |
-| producers, cohorts (updated in place) | close, entry | `replaced(producer)` and `put_producer` per change |
+| producers (a row per producer, every `Producer` field a column; the names are the store's own `IdTable`s) | `sim/economy/producer_store.py` (`producer_rows.py`: the spec) | the dict of frozen `Producer` records, `replaced(producer)` and `put_producer` per change |
+| cohorts (updated in place) | close, entry | `replaced(cohort)` and `put_cohorts` per change |
 
 Each table's owner is the only module that writes it outside a kernel the owner provides (CLAUDE.md: one owner per fact);
 other modules read through the owner's view or call the owner's kernel.
@@ -430,7 +431,7 @@ exactly as the Python did.
 |---|---|---|
 | the pack: stocks, held goods, the ledger's sales, costs, sold, made, hours hired | `close_pack.py` | `close_pack_kernels.py`: `slot_stocks`, `held_goods` (exact sum of the tiles, as `math.fsum`), `pair_values_by_slot` |
 | producers' dividends: `shares.split_dividend` and `ownership.spread` | `year_close_dividends.py`, `year_close_owners.py` | `year_close_dividend_kernels.py`: `dividend_rows` (rows in the order of the payments), `add_in_order` (the property income) |
-| producers' new records and the plant worn | `year_close_records.py`, `year_close_ledger.py` | `set_in_order` over the ledger's `set_figure` |
+| producers' new figures (written into the store's columns) and the plant worn | `producer_close_write.py`, `year_close_ledger.py` | `set_in_order` over the ledger's `set_figure` |
 | the rows that need the credit record: exits, write-offs, loan requests, rebuild plans | `year_close_producers.py` (`_effects_by_row`) | Python, in producer order |
 | wear and spoilage, coin wear | `wear_year.py` | `wear_kernels.py`: `loss_moves` |
 | households: receipts (received and grown), wages, spending, consumption | `year_close_households.py` | `year_close_household_kernels.py`: `receipts_with_grown`, `consumption_postings` |
@@ -444,16 +445,19 @@ first appear. The property income dictionary gets each payee's payments added in
 (`add_property_income`), so each sum and the order of new keys are the loop's. A cohort's consumption changes only its own stock, so
 reading the stocks once for all cohorts gives what reading them after the earlier cohorts' moves would.
 
-**Producer and Cohort objects.** The close's answer is columns; `closed_records` makes one new `Producer` per producer from them (a copy
-of the old record's fields with the changed ones replaced) and `producer_table.put_producers` puts them back at once. The records are
-read by entry (`entry_year`, `opening`), the next year's plans (`plan_year`, `year_goods`, `seller_offers`, `land_bid_year`), the labour
-state, equity and tax-farming code, the save and the screens (`grep -rl "record.producers" sim` lists them). Retiring the record needs
-those readers on the columns first. Cohorts are put back together once by `close_households` through `put_cohorts`; `closed_cohort`
+**Producers are columns.** `record.producers` is a `ProducerStore`: the close's answer is written into its columns in place
+(`producer_close_write.write_close`: block writes for the figures, a slot-by-slot pass for the expected prices, and the crews'
+practice for the producers that have one), and no `Producer` is made. The year arrays' producer columns (`ProducerColumns.of`) are
+block reads of the store in sorted id order, read again when the store's `version` rose. A `Producer` is built only when something
+asks for one through the mapping (`store[id]`, `.values()`, `.items()`, `.get`): the screens, the protocol, mods, the tests, and the
+readers still on records (`grep -n "record.producers" sim` lists them; the commands in "What is left" count the builds a year).
+The save is written from the columns in the old format (`ProducerStore.to_plain`). Rows are in entry order, an exit leaves a dead row
+that `compact` removes (`order`, `rows_of` and the saves compact), `seat_sorted` puts them in id order at the year boundary. Cohorts are put back together once by `close_households` through `put_cohorts`; `closed_cohort`
 replaces each cohort record one at a time (`renewed`), and keeping cohorts as columns waits for the modules that read `record.cohorts`
 (entry, labour offers, demography, the screens, the save). Exits (`producer_exit.ExitBatch`), loan write-offs and loan requests stay
 Python, in producer order.
 
-Tests: `sim/tests/test_close_pack_kernels.py`, `test_year_close_dividends.py`, `test_year_close_records.py`, `test_wear_kernels.py`,
+Tests: `sim/tests/test_close_pack_kernels.py`, `test_year_close_dividends.py`, `test_producer_close_write.py`, `test_producer_store.py`, `test_wear_kernels.py`,
 `test_year_close_households.py` (each kernel against the Python it replaces on written-out inputs).
 
 ## Entry, exit, credit and worths
@@ -482,7 +486,9 @@ markets' keys (`entry_margin.keep_streaks`). The three loops share the siting ar
 What each recipe's siting reads (`entry_plan_steps.SiteTables`) is worked out in Python once per recipe asked for, the first time it is
 asked (`entry_plan_pack.site_tables`). The plain Python of the three rules (`entry.entry_plans`, `entry_margin.margin_entry_plans`,
 `entry_trial.trial_entry_plans`) stays for a year with no arrays, and `test_year_speed_entry_arrays` compares the year's plans with and without them.
-`open_entrants` reads the plan columns; the producers it starts and the stakes and loan requests per plan are still made one plan at a time.
+`open_entrants` reads the plan columns and applies them to the producer store: an existing producer's capacity and workshops are column writes, a
+newcomer is a row appended by `ProducerStore.enter`, and the recipe's peers' crews come from `crews_by_recipe` (table order, as the mapping
+iterated); the stakes and loan requests per plan are still made one plan at a time.
 
 ## Loans
 
@@ -781,9 +787,16 @@ list lags the code.
 - **Tool wear and fallbacks in the plan kernel.** `plan_year` sends a producer whose recipe has tool wear or fallbacks, or a zero entry, to
   `producers.plan`; `plan_kernel.plan_rows` would need the fallbacks' bids and `tool_fallback.value_in_use` ceilings. `_tax_in_kind` builds
   `YearFacts` dictionaries for the producers on home tiles when a tax is paid in kind.
-- **The record readers.** `record.producers` and `record.cohorts` are read by entry, the plans, the labour state, equity, tax farming,
-  the save and the screens; `closed_records` and `closed_cohort` build one record per producer and cohort until those readers are on
-  columns.
+- **The producer record readers.** What still builds a `Producer` in a warm year (count them with `ProducerStore._build` wrapped, as
+  `tools/measure/function_times.py` wraps a function): `producers.plan` for the producers the plan kernel leaves (tool wear, fallbacks),
+  `land_market.demands_of` and `post_rents` (`expected_output_prices` and the live prices read the record), `year_goods.clear_goods`
+  (`plant_makers`, and `_produce_and_offer` when there are no arrays), `seller_offers`, `unsold_search`, `goods_production`,
+  `equity`, `labour_state`, `workforce_settle`, `shares`, `funds`, `tax_farming`, `location*`, the entry rules without the year arrays,
+  and `api.producers_of` / `all_producers` for the screens and mods. Each reads a handful of fields the columns hold; they move one
+  at a time to `store.table` blocks or `ProducerColumns` fields. The crews' practice is still a small dictionary per producer that has a
+  crew (`write_close` and `ProducerStore.crew_of` build one), since `practice.crew_runs_after_year` is Python on mappings.
+- **The cohort record readers.** `record.cohorts` is read by entry, labour offers, demography, the save and the screens;
+  `closed_cohort` builds one record per cohort until those readers are on columns.
 - **Labour readers that take records.** The cleared wages reach `HourSupply.settle` as a dict read rather than a market-indexed array.
   The household decisions still loop over cohorts in Python (`household_offers_year.plans`: the basket, grinding plan and priced needs
   of each cohort), as do `outside_option_by_tile`, `subsistence_cost_by_tile` and `ask_floor_by_tile`; they wait for the cohorts and

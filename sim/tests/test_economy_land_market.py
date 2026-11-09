@@ -7,6 +7,7 @@ import math
 import unittest
 from types import SimpleNamespace
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy.land_record import LandRecord
 from sim.economy import land_market, titles
 from sim.book import Book
@@ -125,7 +126,7 @@ def economy_of(arable_by_tile, runs_by_tile):
         producers[producer_id] = Producer(producer_id, cohort_id(tile, 2), "wheat", tile, runs_by_tile[tile],
                                           expected_prices={"grain": 1.0})
         book.transfer(Transfer(EDGE_MINT, producer_id, "coin", 1e6, "opening"))
-    record = SimpleNamespace(producers=producers, book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
+    record = SimpleNamespace(producers=ProducerStore(producers), book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
     titles.seed(record)
     setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run=LAND_PER_RUN, currency_id="coin")
     return setup, record

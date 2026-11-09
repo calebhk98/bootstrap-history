@@ -13,7 +13,7 @@ from sim.economy.year_arrays_worths import packed_stock
 from sim.tests.year_close_fixture import economy_of
 
 
-def plain_packed_stock(record, view, ids, records, matrices):
+def plain_packed_stock(record, view, ids, tiles, matrices):
     """The reference: the book read one producer at a time through `goods_of`."""
     goods_row = matrices.goods.row
     rows, goods, quantities = [], [], []
@@ -26,7 +26,7 @@ def plain_packed_stock(record, view, ids, records, matrices):
             total = positive[0] if len(positive) == 1 else math.fsum(positive)
             column = goods_row.get(good)
             if column is None:
-                price = view.price(good, view.area_of(good, records[row].tile))
+                price = view.price(good, view.area_of(good, tiles[row]))
                 if price is not None and price > 0.0:
                     extra[row] += price * total
                 continue
@@ -45,9 +45,9 @@ class PackedStock(unittest.TestCase):
             setup, record, view, _ledger, area_map = economy_of(seed, producer_count=60)
             arrays = YearArrays.build(setup, record, area_map, view)
             ids = sorted(record.producers)
-            records = [record.producers[each] for each in ids]
-            new = packed_stock(record, view, ids, records, arrays.matrices)
-            old = plain_packed_stock(record, view, ids, records, arrays.matrices)
+            tiles = [record.producers[each].tile for each in ids]
+            new = packed_stock(record, view, ids, tiles, arrays.matrices)
+            old = plain_packed_stock(record, view, ids, tiles, arrays.matrices)
             for got, want in zip(new, old):
                 self.assertEqual(got.tolist(), want.tolist())
             compared += len(old[0])

@@ -52,7 +52,7 @@ def producer_worths(recipe_row, tile_row, capacity, cash, debt, eligible, stock_
     return worth, has
 
 
-def packed_stock(record, view, ids, records, matrices):
+def packed_stock(record, view, ids, tiles, matrices):
     """The stock the book holds, as lists sorted by producer row and good column: (producer rows, good columns, quantities), and
     by producer row the value of goods with no column, priced through the view. The book is read in one kernel call
     (`close_pack_kernels.held_goods`); a good with no column is given a column past the matrices' own, so it comes back in the
@@ -67,7 +67,7 @@ def packed_stock(record, view, ids, records, matrices):
     extra = np.zeros(len(ids))
     outside = np.nonzero(positive & ~own_column)[0]
     if len(outside):
-        _price_unlisted(record, view, ids, records, rows[outside], columns[outside] - len(matrices.goods.ids), quantities[outside],
+        _price_unlisted(record, view, ids, tiles, rows[outside], columns[outside] - len(matrices.goods.ids), quantities[outside],
                         others, extra)
     keep = positive & own_column
     return rows[keep], columns[keep], quantities[keep], extra
@@ -88,7 +88,7 @@ def _columns_of_book_goods(book, matrices):
     return column_of, others
 
 
-def _price_unlisted(record, view, ids, records, rows, other_index, quantities, others, extra) -> None:
+def _price_unlisted(record, view, ids, tiles, rows, other_index, quantities, others, extra) -> None:
     """Add to `extra[row]` the value of each good without a column that the producer holds. A producer holding two such goods is
     summed in the order the book lists its goods (the per-producer read), so it is read that way."""
     crowded = set(np.nonzero(np.bincount(rows, minlength=len(ids)) > 1)[0].tolist())
@@ -96,7 +96,7 @@ def _price_unlisted(record, view, ids, records, rows, other_index, quantities, o
         if row in crowded:
             continue
         good = others[index]
-        price = view.price(good, view.area_of(good, records[row].tile))
+        price = view.price(good, view.area_of(good, tiles[row]))
         if price is not None and price > 0.0:
             extra[row] += price * quantity
     for row in sorted(crowded):
@@ -105,7 +105,7 @@ def _price_unlisted(record, view, ids, records, rows, other_index, quantities, o
             positives = [quantity for quantity in by_tile.values() if quantity > 0.0]
             if good not in listed or not positives:
                 continue
-            price = view.price(good, view.area_of(good, records[row].tile))
+            price = view.price(good, view.area_of(good, tiles[row]))
             if price is not None and price > 0.0:
                 extra[row] += price * (positives[0] if len(positives) == 1 else math.fsum(positives))
 
@@ -129,27 +129,24 @@ def worths_from_arrays(setup, record, view, arrays) -> Dict[str, float]:
     """The net worth of each producer a household owns and that has plant (`equity._built_worths`), over the year `arrays`: the
     recipe and tile of each producer from the rows' names, its cash, capacity and stock from the records now, and the prices and
     wages as the memory holds them now."""
-    ids = sorted(record.producers)
-    if not ids:
+    if not record.producers:
         return {}
-    records = [record.producers[each] for each in ids]
-    matrices = arrays.matrices
     try:
-        tile_row = np.fromiter((arrays.tiles.row[each.tile] for each in records), dtype=np.int64, count=len(ids))
+        columns = arrays.producers.refresh(record.producers)
     except KeyError:          # a producer on a tile the arrays do not know
         arrays = arrays.sync(setup, record, view)
-        matrices = arrays.matrices
-        tile_row = np.fromiter((arrays.tiles.row[each.tile] for each in records), dtype=np.int64, count=len(ids))
-    recipe_row = np.fromiter((matrices.recipes.row[each.recipe_id] for each in records), dtype=np.int64, count=len(ids))
-    capacity = np.fromiter((each.capacity_runs for each in records), dtype=np.float64, count=len(ids))
+        columns = arrays.producers
+    matrices = arrays.matrices
+    ids = list(columns.ids)
+    tile_row, recipe_row, capacity = columns.tile_row, columns.recipe_row, columns.capacity_runs
     price, wage = prices_and_wages(setup, record, view, arrays)
     money = setup.currency_id
     cohorts = record.cohorts
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
-    eligible = np.fromiter((each.owner in cohorts for each in records), dtype=np.bool_, count=len(ids))
+    eligible = np.fromiter((owner in cohorts for owner in columns.owners()), dtype=np.bool_, count=len(ids))
     cash = record.book.balances_at(record.book.rows_of(ids), money)
     debt = np.fromiter((debts.get(each, 0.0) for each in ids), dtype=np.float64, count=len(ids))
-    rows, goods, quantities, extra = packed_stock(record, view, ids, records, matrices)
+    rows, goods, quantities, extra = packed_stock(record, view, ids, columns.tile_names(), matrices)
     worth, has = producer_worths(recipe_row, tile_row, capacity, cash, debt, eligible, rows, goods, quantities, extra,
                                  matrices.plant_goods, matrices.plant_labour_hours, matrices.plant_life_years, price, wage,
                                  arrays.area_index.of_good_tile)

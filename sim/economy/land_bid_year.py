@@ -107,7 +107,9 @@ def take_up_bought(setup, record) -> Dict[str, float]:
     it is sold or its owner keeps it. Returns hectares titled by actor."""
     titled: Dict[str, float] = {}
     for good in land_bid.land_goods(setup.specs, setup.recipes):
-        clearers = {producer_id for producer_id, producer in record.producers.items() if good in setup.recipes[producer.recipe_id].outputs}
+        store = record.producers
+        makes = [good in setup.recipes[name].outputs for name in store.names["recipes"].name_list]
+        clearers = {store.ids[row] for row in store.rows_with_recipes(makes, in_id_order=False).tolist()}
         for buyer in record.book.holders_of(good):
             if buyer in clearers:
                 continue
@@ -127,18 +129,21 @@ def take_up_own(setup, record, options: Mapping[str, List[Option]]) -> Dict[str,
     hectares its own plots need to grow its floors beyond the land it holds (land_bid.own_use) become its title.
     Returns hectares kept by cohort."""
     kept: Dict[str, float] = {}
+    store = record.producers
     for good in land_bid.land_goods(setup.specs, setup.recipes):
-        for producer_id, producer in sorted(record.producers.items()):
-            owner, tile = record.cohorts.get(producer.owner), setup.tiles.get(producer.tile)
-            if owner is None or tile is None or good not in setup.recipes[producer.recipe_id].outputs:
+        makes = [good in setup.recipes[name].outputs for name in store.names["recipes"].name_list]
+        for row in store.rows_with_recipes(makes).tolist():
+            producer_id, producer_tile = store.ids[row], store.names["tiles"].name_list[store.table.tile[row]]
+            owner, tile = record.cohorts.get(store.owner_at(row)), setup.tiles.get(producer_tile)
+            if owner is None or tile is None:
                 continue
-            arable = titles_ground.arable_hectares(record, producer.tile, tile)
+            arable = titles_ground.arable_hectares(record, producer_tile, tile)
             floors = {need.need_id: need.subsistence_per_person * owner.people for need in setup.basket_for(owner.tile).needs}
             needed = plot_hectares(floors, options, setup.recipes, setup.land_per_run, tile.fertility)
             held = titles_worked.worked_share(record, owner.tile, owner.agent_id) * arable
-            taken = land_bid.own_use(record.book.stock(producer_id, good, producer.tile), needed, held)
-            if titles_ground.add_ground(record, producer.tile, owner.agent_id, taken, arable) > 0.0:
-                record.book.move_many([GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer.tile, taken,
+            taken = land_bid.own_use(record.book.stock(producer_id, good, producer_tile), needed, held)
+            if titles_ground.add_ground(record, producer_tile, owner.agent_id, taken, arable) > 0.0:
+                record.book.move_many([GoodsMove(producer_id, EDGE_CONSUMPTION, good, producer_tile, taken,
                                                  "ground kept for its owner's own plots")])
                 kept[owner.agent_id] = kept.get(owner.agent_id, 0.0) + taken
     return kept

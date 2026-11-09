@@ -81,7 +81,7 @@ changes a field. The saved record format does not change.
     - [ ] the households' close and the equity built for it (`households_close`, `equity.producer_worths`, `credit_view.equity`):
           the households' own part is small (312 cohorts); the cost is the producers' net worths (`equity._built_worths`, one
           `plant_value_per_run` per recipe and tile and one `inventory_value` per producer), built once per view
-    - [x] the close hands its producer columns to entry (`year_arrays_closed.columns_after_close`, from the kernel's answer;
+    - [x] the close hands its producer columns to entry (now `ProducerColumns.of`, read from the store the close wrote;
           `test_year_speed_close_arrays`): the `sync` in `open_entrants` finds no row to read again (about 0.09 cProfile s of a warm year)
     - [x] the close's pack reads rows as lists and one currency per area (`close_pack.pack`)
     - [ ] the per-producer tail: dividends (`spread`, `transfer_many`), `write_off`, loan asks

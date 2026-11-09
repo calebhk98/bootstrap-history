@@ -37,7 +37,8 @@ def dividend_plan(record, columns, dividend: np.ndarray, pay_rows: np.ndarray, p
     holders = share_holders(record, columns.row, count, participants)
     owner_participant = np.zeros(count, dtype=np.int64)
     owner_tile = np.full(count, -1, dtype=np.int64)
-    names = [columns.records[row].owner for row in pay_rows.tolist()]
+    owner_names = columns.owners()
+    names = [owner_names[row] for row in pay_rows.tolist()]
     owner_participant[pay_rows] = [participants.of(name) for name in names]
     owner_tile[pay_rows] = [owners.tile_of_cohort.get(name, -1) for name in names]
     rows, payees, amounts, kinds = dividend_rows(

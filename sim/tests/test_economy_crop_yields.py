@@ -7,14 +7,16 @@ QUICK_TOPIC = True
 import unittest
 from types import SimpleNamespace
 
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 from sim.economy.setup import recipe_of_tile_key, recipe_tile_key
 from sim.markets import port_sites
 
 WEATHER = 0.8
 
 
-def producer(recipe_id, tile):
-    return SimpleNamespace(recipe_id=recipe_id, tile=tile)
+def producer(name, recipe_id, tile):
+    return Producer(name, "owner", recipe_id, tile, 1.0)
 
 
 def economy():
@@ -22,9 +24,9 @@ def economy():
     setup = SimpleNamespace(
         yield_factor_by_recipe_tile={recipe_tile_key("wheat", "good"): 1.4, recipe_tile_key("wheat", "poor"): 0.6},
         land_per_run={"wheat": 2.0, "pasture": 5.0, "mine": 0.0}, countries=lambda: ["home"])
-    producers = {"farm_good": producer("wheat", "good"), "farm_poor": producer("wheat", "poor"),
-                 "farm_unsited": producer("wheat", "elsewhere"), "herd": producer("pasture", "good"),
-                 "pit": producer("mine", "good")}
+    producers = ProducerStore({name: producer(name, recipe, tile) for name, recipe, tile in (
+        ("farm_good", "wheat", "good"), ("farm_poor", "wheat", "poor"), ("farm_unsited", "wheat", "elsewhere"),
+        ("herd", "pasture", "good"), ("pit", "mine", "good"))})
     return SimpleNamespace(setup=setup, record=SimpleNamespace(producers=producers))
 
 
@@ -79,7 +81,7 @@ class HarmedYieldsTests(unittest.TestCase):
         self.yields = port_sites.crop_yields(self.economy, WEATHER)
 
     def harmed(self, harm_by_tile):
-        return port_sites.harmed_yields(self.yields, harm_by_tile, self.economy.record.producers)
+        return port_sites.harmed_yields(self.yields, harm_by_tile, {name: each.tile for name, each in self.economy.record.producers.items()})
 
     def test_a_harm_factor_scales_the_land_producers_of_that_tile_only(self):
         after = self.harmed({"good": 0.5})

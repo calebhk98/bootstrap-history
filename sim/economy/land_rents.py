@@ -15,9 +15,9 @@ def booked_by_tile(postings: Iterable[Transfer], producers: Mapping[AgentId, obj
     """The rent postings of producers summed by the producer's tile; a posting from an agent that is not a producer is left out."""
     paid: Dict[TileId, float] = {}
     for posting in postings:
-        producer = producers.get(posting.payer)
-        if producer is not None and posting.amount > 0.0:
-            paid[producer.tile] = paid.get(producer.tile, 0.0) + posting.amount
+        tile = producers.tile_of(posting.payer)
+        if tile is not None and posting.amount > 0.0:
+            paid[tile] = paid.get(tile, 0.0) + posting.amount
     return dict(sorted(paid.items()))
 
 

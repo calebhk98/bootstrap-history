@@ -9,6 +9,7 @@ import unittest
 from unittest import mock
 
 from sim.tests.goods_fixtures import goods_on
+from sim.economy.producer_store import ProducerStore
 from sim.economy import producers, producers_close, producers_working_capital, seller_offers, year_goods
 from sim.book import Book
 from sim.economy.market_memory import MarketMemory
@@ -72,7 +73,7 @@ class DeliveredVolumeTests(unittest.TestCase):
         setup = types.SimpleNamespace(recipes={}, tax_forms=[], currency_id="coin", port_tile="t", capital_tile="t",
                                       opening_prices={}, state_agent="state")
         memory = MarketMemory()
-        record = types.SimpleNamespace(producers={}, cohorts={}, book=book, currency=CurrencySpec("coin", "fiat", None, 0.0, None), memory=memory,
+        record = types.SimpleNamespace(producers=ProducerStore(), cohorts={}, book=book, currency=CurrencySpec("coin", "fiat", None, 0.0, None), memory=memory,
                                        goods=goods_on(memory))
         area_map = types.SimpleNamespace(area_of=lambda good, tile: "area", goods=lambda: {"timber"})
         ledger = YearLedger()

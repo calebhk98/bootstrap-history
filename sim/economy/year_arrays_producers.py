@@ -1,31 +1,34 @@
-"""The producers' numeric fields as columns, one row per producer in sorted id order.
+"""The producers' numeric fields as the year's columns, one row per producer in sorted id order.
 
-`ProducerColumns.build(producers, matrices, tiles)` reads every record once. `stale_rows` says which rows no longer
-hold the record the table holds (producers are frozen records replaced through producer_table, so a replaced record is a
-different object), and `refresh` re-reads those rows, or the whole table when the ids changed (entry or exit)."""
-import operator
+`ProducerColumns.of(store, matrices, tiles)` reads the producer table's columns (producer_store.py) in blocks: a name is turned
+into the year's numbering (recipe row, tile row) through a lookup array, the expected prices are laid out by the recipe's good
+slot, and the crew's practice becomes the hours multiplier of each trade. No `Producer` is built. The table is the store: a phase
+that changes producers writes the store, and `refresh` reads the store again when its `version` rose (the same object when
+nothing was written). `rows` says which store row each column row is, valid until the store is compacted."""
 from dataclasses import dataclass, field
-from operator import attrgetter
 from typing import Dict, List, Mapping, Tuple
 
 import numpy as np
 
 from .practice import practised_multiplier
+from .producer_store import ProducerStore
 from .year_arrays_recipes import NO_SLOT, Names, RecipeMatrices
 
 
-_MANY_ROWS = 64     # from this many rows a column is read in one pass
-_COPIED = ("capacity_runs", "yield_factor", "years_of_loss", "cash_target", "expected_sales", "last_runs", "land_rent_per_run",
-           "workshops", "idle_years")      # the columns that are a producer field of the same name
-_PER_ROW = ("recipe_row", "tile_row", "capacity_runs", "yield_factor", "years_of_loss", "cash_target", "expected_sales", "last_runs",
-            "land_rent_per_run", "land_run_cap", "workshops", "idle_years", "staffed_runs", "history_count", "expected_prices", "hours_scale")
+def _lookup(names: List[str], row_of: Mapping[str, int], used: np.ndarray, what: str) -> np.ndarray:
+    """For each store number, its row in the year's numbering (-1 for a name the year has no row for); a name in `used` with no row
+    is a KeyError, as a producer on a tile or recipe the arrays do not know has always been."""
+    found = np.array([row_of.get(name, -1) for name in names], dtype=np.int64)
+    if len(used) and (found[used] < 0).any():
+        raise KeyError("no %s row for %s" % (what, names[int(used[found[used] < 0][0])]))
+    return found
 
 
 @dataclass
 class ProducerColumns:
     ids: Tuple[str, ...]
     row: Dict[str, int]
-    records: List[object]
+    rows: np.ndarray                  # the store row of each row here
     recipe_row: np.ndarray
     tile_row: np.ndarray
     capacity_runs: np.ndarray
@@ -44,157 +47,107 @@ class ProducerColumns:
     history_count: np.ndarray
     expected_prices: np.ndarray       # producer by the recipe's good slot; NaN: no expectation held
     hours_scale: np.ndarray           # producer by trade column: what its crew's practice multiplies the booked hours by (one: at the floor)
+    owner_number: np.ndarray = None   # the owner's number in the store's `owners` names
+    tile_number: np.ndarray = None    # the tile's number in the store's `tiles` names
+    crews: Dict[int, Dict[str, float]] = field(repr=False, default_factory=dict)   # row here -> the crew's practice, for a producer that has one
+    store: ProducerStore = field(repr=False, default=None)
+    version: int = -1                 # the store's `version` when these were read
+    layout: int = -1                  # the store's `layout` when these were read: `rows` mean the same rows while it is the same
     matrices: RecipeMatrices = field(repr=False, default=None)
     tiles: Names = field(repr=False, default=None)
 
     @classmethod
-    def _empty(cls, ids: Tuple[str, ...], records: List[object], history_width: int, matrices: RecipeMatrices,
-               tiles: Names) -> "ProducerColumns":
-        count = len(ids)
-        return cls(
-            ids, {each: position for position, each in enumerate(ids)}, records,
-            np.zeros(count, dtype=np.int64), np.zeros(count, dtype=np.int64), np.zeros(count), np.zeros(count),
-            np.zeros(count, dtype=np.int64), np.zeros(count), np.zeros(count), np.zeros(count), np.zeros(count),
-            np.full(count, np.nan), np.zeros(count, dtype=np.int64), np.zeros(count, dtype=np.int64), np.full(count, np.nan),
-            np.zeros((count, history_width)), np.zeros((count, history_width)), np.zeros(count, dtype=np.int64),
-            np.full((count, matrices.good_slots), np.nan), np.ones((count, len(matrices.trades.ids))), matrices, tiles)
+    def build(cls, producers: Mapping[str, object], matrices: RecipeMatrices, tiles: Names) -> "ProducerColumns":
+        """The columns of a producer table (a plain mapping of records is made a store first)."""
+        store = producers if isinstance(producers, ProducerStore) else ProducerStore(producers)
+        return cls.of(store, matrices, tiles)
 
     @classmethod
-    def build(cls, producers: Mapping[str, object], matrices: RecipeMatrices, tiles: Names) -> "ProducerColumns":
-        ids = tuple(sorted(producers))
-        history_width = max(1, max((len(producers[each].net_earnings_history) for each in ids), default=0),
-                            max((len(producers[each].revenue_history) for each in ids), default=0))
-        columns = cls._empty(ids, [producers[each] for each in ids], history_width, matrices, tiles)
-        columns._read_many(list(range(len(ids))))
+    def of(cls, store: ProducerStore, matrices: RecipeMatrices, tiles: Names) -> "ProducerColumns":
+        """Every column read from the store's table in sorted id order (the store is compacted first)."""
+        order = store.order()
+        table = store.table
+        ids = tuple(store.ids[row] for row in order.tolist())
+        recipe_numbers, tile_numbers = table.recipe[order], table.tile[order]
+        recipe_row = _lookup(store.names["recipes"].name_list, matrices.recipes.row, np.unique(recipe_numbers), "recipe")[recipe_numbers]
+        tile_row = _lookup(store.names["tiles"].name_list, tiles.row, np.unique(tile_numbers), "tile")[tile_numbers]
+        counts = table.earnings_count[order]
+        width = max(1, int(counts.max()) if len(counts) else 0, int(table.revenue_count[order].max()) if len(order) else 0)
+        earnings = _padded(table.earnings_history, order, width)
+        revenue = _padded(table.revenue_history, order, width)
+        columns = cls(ids, {each: position for position, each in enumerate(ids)}, order, recipe_row, tile_row,
+                      table.capacity_runs[order], table.yield_factor[order], table.years_of_loss[order], table.cash_target[order],
+                      table.expected_sales[order], table.last_runs[order], table.land_rent_per_run[order], table.land_run_cap[order],
+                      table.workshops[order], table.idle_years[order], table.staffed_runs[order], earnings, revenue, counts.copy(),
+                      _expected_prices(store, order, recipe_row, matrices), _hours_scale(store, order, matrices),
+                      table.owner[order], tile_numbers, _crews(store, order), store, store.version, store.layout, matrices, tiles)
         return columns
 
-    def _rebuilt(self, producers: Mapping[str, object]) -> "ProducerColumns":
-        """The columns for a changed set of ids: a row whose record is the very one this table holds is copied, the others
-        (entered or replaced) are read."""
-        ids = tuple(sorted(producers))
-        records = [producers[each] for each in ids]
-        kept_new, kept_old, fresh = [], [], []
-        for position, record in enumerate(records):
-            old = self.row.get(ids[position])
-            if old is not None and self.records[old] is record:
-                kept_new.append(position)
-                kept_old.append(old)
-            else:
-                fresh.append(position)
-        width = max(self.earnings_history.shape[1], 1, max((len(records[each].net_earnings_history) for each in fresh), default=0),
-                    max((len(records[each].revenue_history) for each in fresh), default=0))
-        columns = ProducerColumns._empty(ids, records, width, self.matrices, self.tiles)
-        kept_new, kept_old = np.array(kept_new, dtype=np.int64), np.array(kept_old, dtype=np.int64)
-        for name in _PER_ROW:
-            getattr(columns, name)[kept_new] = getattr(self, name)[kept_old]
-        for name in ("earnings_history", "revenue_history"):
-            getattr(columns, name)[kept_new, :self.earnings_history.shape[1]] = getattr(self, name)[kept_old]
-        columns._read_many(fresh)
-        return columns
+    def owners(self) -> List[str]:
+        """Each producer's owner, by row."""
+        return self.store.name_of("owners", self.owner_number)
 
-    def read_scale(self, position: int) -> None:
-        """The row's hours multipliers from its record's crew practice (`practice.recipe_for`'s multipliers, one where the crew is at the floor)."""
-        self.hours_scale[position, :] = 1.0
-        for trade, units in self.records[position].crew_runs.items():
-            column = self.matrices.trades.row.get(trade)
-            if column is not None:
-                self.hours_scale[position, column] = practised_multiplier(units)
-
-    def _read(self, position: int) -> None:
-        producer = self.records[position]
-        matrices = self.matrices
-        recipe = matrices.recipes.row[producer.recipe_id]
-        self.recipe_row[position] = recipe
-        self.tile_row[position] = self.tiles.row[producer.tile]
-        self.capacity_runs[position] = producer.capacity_runs
-        self.yield_factor[position] = producer.yield_factor
-        self.years_of_loss[position] = producer.years_of_loss
-        self.cash_target[position] = producer.cash_target
-        self.expected_sales[position] = producer.expected_sales
-        self.last_runs[position] = producer.last_runs
-        self.land_rent_per_run[position] = producer.land_rent_per_run
-        self.land_run_cap[position] = np.nan if producer.land_run_cap is None else producer.land_run_cap
-        self.workshops[position] = producer.workshops
-        self.idle_years[position] = producer.idle_years
-        self.staffed_runs[position] = np.nan if producer.staffed_runs is None else producer.staffed_runs
-        for history, column in ((producer.net_earnings_history, self.earnings_history),
-                                (producer.revenue_history, self.revenue_history)):
-            column[position, :len(history)] = history
-        self.history_count[position] = len(producer.net_earnings_history)
-        slots = matrices.slot_goods[recipe]
-        self.expected_prices[position, :] = np.nan
-        self.read_scale(position)
-        goods = matrices.goods.row
-        held = producer.expected_prices
-        for slot, good_row in enumerate(slots):
-            if good_row == NO_SLOT:
-                break
-            price = held.get(matrices.goods.ids[good_row])
-            if price is not None:
-                self.expected_prices[position, slot] = price
-
-    def _read_many(self, positions: List[int]) -> None:
-        """`_read` for each position, a column at a time when there are many (one pass over the records per column)."""
-        if len(positions) < _MANY_ROWS:
-            for position in positions:
-                self._read(position)
-            return
-        rows = np.array(positions, dtype=np.int64)
-        records = [self.records[position] for position in positions]
-        matrices = self.matrices
-        recipe_rows, tile_rows = matrices.recipes.row, self.tiles.row
-        self.recipe_row[rows] = recipe_rows_of = [recipe_rows[each.recipe_id] for each in records]
-        self.tile_row[rows] = [tile_rows[each.tile] for each in records]
-        for name, values in zip(_COPIED, zip(*map(attrgetter(*_COPIED), records))):     # every copied field of every record in one pass
-            getattr(self, name)[rows] = values
-        self.land_run_cap[rows] = [np.nan if each.land_run_cap is None else each.land_run_cap for each in records]
-        self.staffed_runs[rows] = [np.nan if each.staffed_runs is None else each.staffed_runs for each in records]
-        self.history_count[rows] = [len(each.net_earnings_history) for each in records]
-        width = self.earnings_history.shape[1]
-        for column, attribute in ((self.earnings_history, "net_earnings_history"), (self.revenue_history, "revenue_history")):
-            column[rows] = 0.0
-            for position, each in zip(positions, records):
-                history = getattr(each, attribute)
-                if history:
-                    column[position, :len(history)] = history
-        self.expected_prices[rows] = np.nan
-        self.hours_scale[rows] = 1.0
-        for position, each in zip(positions, records):
-            if each.crew_runs:
-                self.read_scale(position)
-        slot_goods = matrices.slot_goods
-        goods_ids = matrices.goods.ids
-        row_of, slot_of, price_of = [], [], []
-        for position, each, recipe in zip(positions, records, recipe_rows_of):
-            held = each.expected_prices
-            if held:
-                for slot, good_row in enumerate(slot_goods[recipe]):
-                    if good_row == NO_SLOT:
-                        break
-                    price = held.get(goods_ids[good_row])
-                    if price is not None:
-                        row_of.append(position)
-                        slot_of.append(slot)
-                        price_of.append(price)
-        self.expected_prices[row_of, slot_of] = price_of
-
-    def stale_rows(self, producers: Mapping[str, object]) -> List[int]:
-        """The rows whose record the table has replaced; None-like `[-1]` when the ids themselves changed."""
-        if len(producers) != len(self.ids):
-            return [-1]
-        try:
-            current = [producers[each] for each in self.ids]
-        except KeyError:
-            return [-1]
-        return np.flatnonzero(np.fromiter(map(operator.is_not, current, self.records), dtype=np.bool_, count=len(current))).tolist()
+    def tile_names(self) -> List[str]:
+        """Each producer's tile, by row."""
+        return self.store.name_of("tiles", self.tile_number)
 
     def refresh(self, producers: Mapping[str, object]) -> "ProducerColumns":
-        """Columns in step with the table: the same object with the replaced rows re-read, or a rebuilt one when producers
-        entered or left."""
-        stale = self.stale_rows(producers)
-        if stale == [-1]:
-            return self._rebuilt(producers)
-        for position in stale:
-            self.records[position] = producers[self.ids[position]]
-        self._read_many(stale)
-        return self
+        """Columns in step with the table: this object when nothing was written since it was read, else read again."""
+        store = producers if isinstance(producers, ProducerStore) else ProducerStore(producers)
+        if store is self.store and store.version == self.version and not store._dead:
+            return self
+        return ProducerColumns.of(store, self.matrices, self.tiles)
+
+
+def _padded(column: np.ndarray, rows: np.ndarray, width: int) -> np.ndarray:
+    """The rows of a history column, `width` places wide (zero past what the row holds)."""
+    taken = column[rows]
+    if taken.shape[1] >= width:
+        return taken[:, :width].copy()
+    return np.concatenate([taken, np.zeros((len(rows), width - taken.shape[1]))], axis=1)
+
+
+def _expected_prices(store: ProducerStore, rows: np.ndarray, recipe_row: np.ndarray, matrices: RecipeMatrices) -> np.ndarray:
+    """producer by the recipe's good slot: the price the producer expects for the slot's good, NaN where it holds none. A price for
+    a good outside the recipe's slots is not a column."""
+    table = store.table
+    prices = np.full((len(rows), matrices.good_slots), np.nan)
+    held = table.price_count[rows]
+    if not len(rows) or not held.max():
+        return prices
+    column_of = np.array([matrices.goods.row.get(name, -1) for name in store.names["goods"].name_list] + [-1], dtype=np.int64)
+    places = np.arange(table.price_good.shape[1])[None, :] < held[:, None]
+    goods = np.where(places, column_of[table.price_good[rows]], -1)          # the year's good column of each held price
+    values = table.price_value[rows]
+    slots = matrices.slot_goods[recipe_row]
+    for slot in range(matrices.good_slots):
+        match = (goods == slots[:, slot][:, None]) & (slots[:, slot][:, None] != NO_SLOT)
+        has = match.any(axis=1)
+        if has.any():
+            prices[has, slot] = values[has, match.argmax(axis=1)[has]]
+    return prices
+
+
+def _crews(store: ProducerStore, rows: np.ndarray) -> Dict[int, Dict[str, float]]:
+    """{row here: the crew's practice} for the producers that have a crew."""
+    return {position: store.crew_of(int(rows[position])) for position in np.nonzero(store.table.crew_count[rows] > 0)[0].tolist()}
+
+
+def _hours_scale(store: ProducerStore, rows: np.ndarray, matrices: RecipeMatrices) -> np.ndarray:
+    """producer by trade column: `practice.practised_multiplier` of the crew's runs at the trade, one for a trade with no practice figure."""
+    table = store.table
+    scale = np.ones((len(rows), len(matrices.trades.ids)))
+    crewed = np.nonzero(table.crew_count[rows] > 0)[0]
+    if not len(crewed):
+        return scale
+    trade_names = store.names["trades"].name_list
+    multiplier: Dict[float, float] = {}
+    for position in crewed.tolist():
+        row = int(rows[position])
+        for number, units in zip(table.crew_trade[row, :table.crew_count[row]].tolist(), table.crew_units[row, :table.crew_count[row]].tolist()):
+            column = matrices.trades.row.get(trade_names[number])
+            if column is not None:
+                if units not in multiplier:
+                    multiplier[units] = practised_multiplier(units)
+                scale[position, column] = multiplier[units]
+    return scale

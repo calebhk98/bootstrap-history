@@ -1,4 +1,4 @@
-"""The producer records after the close (year_close_records.py) against the per-producer `replaced(...)` the close used to run."""
+"""The producer table after the close (producer_close_write.py) against the per-producer `replaced(...)` the close used to run."""
 QUICK_TOPIC = True
 
 import math
@@ -10,7 +10,8 @@ import numpy as np
 from sim.economy import practice
 from sim.economy.producers import Producer
 from sim.economy.replaced import replaced
-from sim.economy.year_close_records import closed_records
+from sim.economy.producer_close_write import write_close
+from sim.economy.producer_store import ProducerStore
 
 GOODS = ("bread", "flour", "wheat")
 
@@ -38,13 +39,16 @@ def old_changes(before, row, answer, written_goods, pooled):
     return changes
 
 
-class ClosedRecordsTests(unittest.TestCase):
+class WriteCloseTests(unittest.TestCase):
     def test_each_kind_of_row_becomes_the_record_the_old_replacement_made(self):
         records = [producer("a", expected_prices={"bread": 2.0}), producer("b", idle_years=2), producer("c"),
                    producer("d", crew_runs={"baker": 3.0, "miller": 0.5}, last_runs=4.0, workshops=2), producer("e", idle_years=1)]
         count = len(records)
         slot_goods = np.array([[0, 1, -1]] * count)
-        columns = SimpleNamespace(records=records, idle_years=np.array([0, 2, 0, 0, 1]), recipe_row=np.zeros(count, dtype=np.int64),
+        store = ProducerStore({each.agent_id: each for each in records})
+        del store["c"]
+        columns = SimpleNamespace(layout=store.layout, rows=np.arange(count), idle_years=np.array([0, 2, 0, 0, 1]), recipe_row=np.zeros(count, dtype=np.int64),
+                                  last_runs=np.array([each.last_runs for each in records]),
                                   matrices=SimpleNamespace(goods=SimpleNamespace(ids=GOODS), slot_goods=slot_goods))
         answer = SimpleNamespace(
             exited=np.array([False, False, True, False, False]), new_capacity=np.array([9.0, 0.0, 0.0, 12.0, 0.0]),
@@ -57,7 +61,8 @@ class ClosedRecordsTests(unittest.TestCase):
 
         def pooled(recipe_id, trade):
             return {"baker": 2.0, "miller": 9.0}[trade]
-        new = closed_records(columns, answer, pooled)
+        write_close(store, columns, answer, pooled)
+        new = [store.get(each.agent_id) for each in records]
         arrays = dict(capacity=answer.new_capacity.tolist(), losses=answer.new_losses.tolist(), target=answer.new_target.tolist(),
                       earnings=answer.new_earnings.tolist(), revenues=answer.new_revenues.tolist(), count=answer.new_count.tolist(),
                       sales=answer.new_expected_sales.tolist(), last=answer.new_last_runs.tolist(), staffed=answer.new_staffed.tolist(),

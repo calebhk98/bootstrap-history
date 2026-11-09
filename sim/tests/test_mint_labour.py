@@ -8,6 +8,7 @@ import os
 import types as pytypes
 import unittest
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy import currency, mint, mint_labour
 from sim.book import Book
 from sim.tests.test_economy_mint import BullionAtParity
@@ -74,7 +75,7 @@ def world(spec, recipe="default"):
     setup.trades = {trade: None for trade in setup.mint_recipe.labour_hours} if recipe == "default" else {}   # the trades the recipe hires
     setup.unskilled_trade = min(setup.trades, default=None)
     record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()),
-                                     cohorts={}, producers={}, merchants={})
+                                     cohorts={}, producers=ProducerStore(), merchants={})
     mint.seed_opening_metal(setup, record)
     return setup, record
 

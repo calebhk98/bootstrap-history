@@ -6,6 +6,8 @@ from itertools import permutations
 
 from .harness import *  # noqa: F401,F403
 from sim.economy import country_figures
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 
 PRICES = {"grain": 0.1, "cloth": 0.7, "iron": 1.0 / 3.0}
 RECIPES = {"farm": SimpleNamespace(outputs={"grain": 1.3}), "loom": SimpleNamespace(outputs={"cloth": 0.37, "iron": 0.11}),
@@ -13,11 +15,11 @@ RECIPES = {"farm": SimpleNamespace(outputs={"grain": 1.3}), "loom": SimpleNamesp
 
 
 def producer(recipe_id, runs, yield_factor):
-    return SimpleNamespace(tile="t", recipe_id=recipe_id, capacity_runs=runs, last_runs=runs, yield_factor=yield_factor)
+    return Producer("p%r" % ((recipe_id, runs, yield_factor),), "owner", recipe_id, "t", runs, last_runs=runs, yield_factor=yield_factor)
 
 
 def value_in_order(producers):
-    economy = SimpleNamespace(record=SimpleNamespace(producers=dict(enumerate(producers))), setup=SimpleNamespace(recipes=RECIPES))
+    economy = SimpleNamespace(record=SimpleNamespace(producers=ProducerStore({each.agent_id: each for each in producers})), setup=SimpleNamespace(recipes=RECIPES))
     saved = country_figures.country_tiles, country_figures.prices
     country_figures.country_tiles, country_figures.prices = (lambda economy, country: {"t"}), (lambda economy, country: PRICES)
     try:

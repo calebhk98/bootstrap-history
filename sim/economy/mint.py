@@ -85,7 +85,7 @@ def yearly_monetisation(setup, record) -> float:
     spec = record.currency
     supply = record.book.money_supply(spec.currency_id)
     wanted = (math.fsum(cohort.cash_target for cohort in record.cohorts.values())
-              + math.fsum(producer.cash_target for producer in record.producers.values())
+              + record.producers.exact_total("cash_target")
               + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
     loss = loss_share(setup, spec)
     return (max(0.0, wanted - supply) + loss * supply) / (1.0 - loss)       # the money struck wears too, before the year ends

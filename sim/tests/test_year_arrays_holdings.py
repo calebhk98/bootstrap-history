@@ -3,6 +3,7 @@
 
 QUICK_TOPIC = True
 
+import dataclasses
 import random
 import types
 import unittest
@@ -30,8 +31,8 @@ def record_of(seed):
             outside[producer_id] = {holder: rng.uniform(0.0, 0.3) for holder in rng.sample(ids + ["outsider:1", "outsider:2"], rng.randrange(1, 4))}
     record.capital_markets = types.SimpleNamespace(capital=types.SimpleNamespace(share_price_factor=rng.uniform(0.5, 1.5)), shares=outside)
     owners = ids
-    for producer_id, producer in record.producers.items():
-        object.__setattr__(producer, "owner", rng.choice(owners))
+    for producer_id, producer in list(record.producers.items()):
+        record.producers.put(dataclasses.replace(producer, owner=rng.choice(owners)))
     return record
 
 

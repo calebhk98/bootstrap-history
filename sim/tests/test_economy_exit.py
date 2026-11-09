@@ -6,6 +6,8 @@ import types
 import unittest
 from unittest import mock
 
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 from sim.economy.capital_markets_record import CapitalMarketsRecord
 from sim.economy.credit_record import CreditRecord
 from sim.economy.unfree_record import UnfreeRecord
@@ -133,7 +135,7 @@ def exiting(cash, loans, goods=None):
     """A record holding one producer (owned by "owner") with `cash` and `goods`, owing `loans`; ownership.spread is the identity."""
     credit = CreditRecord()
     credit.add_loans(list(loans))
-    record = types.SimpleNamespace(book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, credit=credit, capital_markets=CapitalMarketsRecord(),
+    record = types.SimpleNamespace(book=StubBook(cash, goods or {}), producers=ProducerStore({"producer": Producer("producer", "owner", "r", "t", 1.0)}), credit=credit, capital_markets=CapitalMarketsRecord(),
                              unfree=UnfreeRecord())
     return record
 
@@ -181,7 +183,7 @@ class CloseIdleProducersTests(unittest.TestCase):
         from sim.economy import entry_year
         record = types.SimpleNamespace(
             book=StubBook(30.0, {ORE: {HILLS: 2.0}}), credit=CreditRecord(), capital_markets=CapitalMarketsRecord(), unfree=UnfreeRecord(),
-            producers={"sliver": farmer(agent_id="sliver", owner="owner", capacity_runs=0.0)})
+            producers=ProducerStore({"sliver": farmer(agent_id="sliver", owner="owner", capacity_runs=0.0)}))
         record.capital_markets.shares["sliver"] = {"holder": 0.5}
         record.credit.expansion_runs.clear()
         setup = types.SimpleNamespace(currency_id="coin")
@@ -198,7 +200,7 @@ class ExitBatchTests(unittest.TestCase):
 
     def record_of(self, loans):
         record = exiting(40.0, loans, {ORE: {HILLS: 7.0}})
-        record.producers = {name: types.SimpleNamespace(owner="owner") for name in ("a", "b", "c")}
+        record.producers = ProducerStore({name: Producer(name, "owner", "r", "t", 1.0) for name in ("a", "b", "c")})
         return record
 
     def test_two_exits_end_their_loans_together_and_book_the_same_losses(self):

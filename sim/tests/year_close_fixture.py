@@ -6,6 +6,7 @@ import types
 from sim.tests.credit_stub import credit_of
 
 from sim.book import Book
+from sim.economy.producer_store import ProducerStore
 from sim.economy.households_cohort import Cohort
 from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, YearView
 from sim.economy.producers import Producer
@@ -121,7 +122,7 @@ def economy_of(seed, producer_count=40):
                 ledger.unmet_demand[(good, area)] = rng.uniform(0, 50)
     ledger.totals_cache = ({(good, area): rng.choice((0.0, 5.0)) for good in GOODS for area in AREAS},
                            {(good, area): rng.choice((None, rng.uniform(0.5, 9.0))) for good in GOODS for area in AREAS})
-    record = types.SimpleNamespace(producers=producers, cohorts=cohorts, memory=memory, book=book,
+    record = types.SimpleNamespace(producers=ProducerStore(producers), cohorts=cohorts, memory=memory, book=book,
                                    credit=credit_of(loans))
     area_map = AreaMapStub()
     view = YearView(memory, book, area_map, MONEY, setup, labour_area)

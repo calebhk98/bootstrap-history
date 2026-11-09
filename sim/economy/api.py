@@ -33,6 +33,7 @@ from .crossing_columns import demand_columns
 from .year_ledger_store import LedgerTables      # the year ledger's tables (kernel_signatures declares its kernels from a fresh one)
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import costing_wages, shown_prices, shown_prices_with_kinds
+from .producer_views import capacity_units_by_material, producer_list
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
@@ -73,7 +74,7 @@ __all__ = [
     "person_equivalent_unemployment", "labour_market_rows",
     "actor_fundable_amount", "risk_premium", "lender_listing", "note_pool_posting",
     "found_bank_from_outside", "people_by_trade", "people_by_tile_and_trade", "hours_paid_by_employer", "add_workers", "hours_offered_in_area_of",
-    "all_producers", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
+    "all_producers", "producer_list", "capacity_units_by_material", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
     "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
     "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",

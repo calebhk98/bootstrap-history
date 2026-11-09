@@ -73,7 +73,7 @@ def share_out(record, worths: Dict[str, float]) -> Dict[str, float]:
     tile_start = np.concatenate(([0], np.cumsum(np.bincount(cohort_tile, minlength=len(tile_names)))))
     ids = list(worths)
     producers = record.producers
-    owner_cohort = np.fromiter((row_of_agent[producers[each].owner] for each in ids), dtype=np.int64, count=len(ids))
+    owner_cohort = np.fromiter((row_of_agent[owner] for owner in producers.owners_of(ids)), dtype=np.int64, count=len(ids))
     outside_start = np.zeros(len(ids) + 1, dtype=np.int64)
     holders: List[int] = []
     parts: List[float] = []

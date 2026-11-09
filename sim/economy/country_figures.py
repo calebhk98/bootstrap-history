@@ -8,6 +8,8 @@ import math
 import weakref
 from typing import Dict, List, Optional, Set, Tuple
 
+import numpy as np
+
 from sim.labour.api import people_by_trade_over
 
 from . import carried_book, households_basket, quiet_year
@@ -229,19 +231,26 @@ def output_value_and_unpriced(economy, country: Optional[str]) -> Tuple[Optional
     values = []
     unpriced = set()
     run_value: Dict[str, Optional[float]] = {}       # per recipe: what one run's outputs are worth at the country's prices (None: the recipe is unknown)
-    for producer in economy.record.producers.values():
-        if producer.tile not in tiles:
-            continue
-        if producer.recipe_id not in run_value:
-            recipe = economy.setup.recipes.get(producer.recipe_id)
-            run_value[producer.recipe_id] = None if recipe is None else math.fsum(
+    store = economy.record.producers
+    table = store.table
+    rows = store.live_rows()
+    tile_names, recipe_names = store.names["tiles"].name_list, store.names["recipes"].name_list
+    inside = np.array([name in tiles for name in tile_names], dtype=np.bool_)
+    rows = rows[inside[table.tile[rows]]]
+    for row, recipe_number, capacity, last_runs, yield_factor in zip(
+            rows.tolist(), table.recipe[rows].tolist(), store.floats("capacity_runs", rows), store.floats("last_runs", rows),
+            store.floats("yield_factor", rows)):
+        recipe_id = recipe_names[recipe_number]
+        if recipe_id not in run_value:
+            recipe = economy.setup.recipes.get(recipe_id)
+            run_value[recipe_id] = None if recipe is None else math.fsum(
                 quantity * own_prices[good] for good, quantity in recipe.outputs.items() if good in own_prices)
             if recipe is not None:
                 unpriced.update(good for good in recipe.outputs if good not in own_prices)
-        if run_value[producer.recipe_id] is None:
+        if run_value[recipe_id] is None:
             continue
-        runs = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
-        values.append(runs * producer.yield_factor * run_value[producer.recipe_id])
+        runs = capacity if last_runs < 0.0 else last_runs
+        values.append(runs * yield_factor * run_value[recipe_id])
     # fsum is exact, so the producers' order (creation order live, saved order after a load) cannot change the total
     return (math.fsum(values) if values else None), sorted(unpriced)
 
@@ -257,7 +266,7 @@ def money_held(economy, country: Optional[str]) -> float:
     record = economy.record
     money = economy.setup.currency_id
     holders = [cohort.agent_id for cohort in record.cohorts.values() if cohort.tile in tiles]
-    holders += [producer.agent_id for producer in record.producers.values() if producer.tile in tiles]
+    holders += record.producers.ids_on_tiles(tiles.__contains__)
     return math.fsum(record.book.balance(holder, money) for holder in holders)
 
 
