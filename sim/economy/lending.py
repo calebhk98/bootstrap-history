@@ -90,9 +90,10 @@ def lend_working_capital(setup, record, view) -> None:
     money = setup.currency_id
     store = table_of(record.cohorts)
     order = store.order()
-    targets, expected_inflation = store.floats("cash_target", order), dict(zip(
-        [store.ids[row] for row in order.tolist()], store.floats("expected_inflation", order)))
-    spare = {store.ids[row]: record.book.balance(store.ids[row], money) - target for row, target in zip(order.tolist(), targets)}
+    ids = [store.ids[row] for row in order.tolist()]
+    targets, expected_inflation = store.floats("cash_target", order), dict(zip(ids, store.floats("expected_inflation", order)))
+    held = record.book.balances_of(ids, money).tolist()
+    spare = {cohort_id: balance - target for cohort_id, balance, target in zip(ids, held, targets)}
     spare = {cohort_id: amount for cohort_id, amount in spare.items() if amount > 0.0}
     if not spare:
         return
@@ -119,13 +120,14 @@ def household_requests(setup, record, view, ledger, priced_by_tile) -> List:
     requests = []
     store = table_of(record.cohorts)
     order = store.order()
+    held = record.book.balance_by_agent([store.ids[row] for row in order.tolist()], money)
     for cohort, key in zip(store.figures(order), household_work_year.signatures_of(record, store, order)):
         cohort_id = cohort.agent_id
         priced = _priced_basket(view, key, household_work_year.basket_of_signature(setup, key), priced_by_tile)
         if not priced or cohort.people <= 0.0:
             continue
         shortfall = (households_credit.floor_cost_unmet(cohort, priced, ledger.grown_units.get(cohort_id))
-                     - record.book.balance(cohort_id, money))
+                     - held[cohort_id])
         asked = households_credit.subsistence_request(cohort, shortfall, money, rate, debts.get(cohort_id, 0.0))
         if asked is not None:
             requests.append(_pledging_title(setup, record, cohort, asked, rate))

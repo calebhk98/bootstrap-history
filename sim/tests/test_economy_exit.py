@@ -120,6 +120,15 @@ class StubBook:
     def holdings(self, agent):
         return {"goods": self.goods}
 
+    def balance_by_agent(self, agents, currency):
+        return {agent: self.cash for agent in agents}
+
+    def goods_held(self, agent):
+        return self.goods
+
+    def goods_held_many(self, agents):
+        return [self.goods for _agent in agents]
+
     def transfer_many(self, transfers):
         self.transfers.extend(transfers)
 

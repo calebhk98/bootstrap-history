@@ -9,6 +9,7 @@ from typing import List
 import numpy as np
 
 from .plan_table import BidColumns, LabourColumns
+from .view_areas import areas_of_pairs
 from .year_arrays_memory import NO_AREA
 
 _BID_FIGURES = 6
@@ -36,8 +37,10 @@ def _areas_of_missing(area: np.ndarray, good: np.ndarray, tile: np.ndarray, view
     missing = np.flatnonzero(area == NO_AREA)
     if not len(missing):
         return
-    for good_place, tile_place in sorted({(good[row], tile[row]) for row in missing.tolist()}):
-        place = names.place(2, view.area_of(names.goods[good_place], names.tiles[tile_place]))
+    asked = sorted({(good[row], tile[row]) for row in missing.tolist()})
+    areas = areas_of_pairs(view, [names.goods[good_place] for good_place, _tile in asked], [names.tiles[tile_place] for _good, tile_place in asked])
+    for (good_place, tile_place), area_name in zip(asked, areas):
+        place = names.place(2, area_name)
         area[missing[(good[missing] == good_place) & (tile[missing] == tile_place)]] = place
 
 
@@ -46,8 +49,9 @@ def _labour_areas(trade: np.ndarray, tile: np.ndarray, view, trade_names, names:
     if not len(trade):
         return np.empty(0, dtype=np.int64)
     pairs, inverse = np.unique(np.stack([trade, tile], axis=1), axis=0, return_inverse=True)
-    areas = np.array([names.place(2, view.area_of(trade_names[pair_trade], names.tiles[pair_tile])) for pair_trade, pair_tile in pairs.tolist()],
-                     dtype=np.int64)
+    asked = areas_of_pairs(view, [trade_names[pair_trade] for pair_trade, _tile in pairs.tolist()],
+                           [names.tiles[pair_tile] for _trade, pair_tile in pairs.tolist()])
+    areas = np.array([names.place(2, area) for area in asked], dtype=np.int64)       # numbered in the order of the pairs
     return areas[inverse.reshape(-1)]
 
 

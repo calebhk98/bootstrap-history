@@ -24,6 +24,8 @@ class IdTable:
         self.kind = kind
         self._names: List[str] = []
         self._number_of = {}
+        self._order = None
+        self._rank = None
         self.admit(names)
 
     def __len__(self) -> int:
@@ -59,6 +61,25 @@ class IdTable:
         """Every given name's number in one call, -1 for a name the table lacks (the batch form of `find`)."""
         names = names if isinstance(names, (list, tuple)) else list(names)
         return numpy.fromiter(map(self._number_of.get, names, itertools.repeat(-1)), dtype=numpy.int64, count=len(names))
+
+    def numbers_if_known(self, names: Sequence[str]) -> Optional[List[int]]:
+        """Every given name's number as a list, or None when any name is new (the caller then admits). One C-level pass."""
+        found = list(map(self._number_of.get, names))
+        return None if None in found else found
+
+    def name_order(self) -> numpy.ndarray:
+        """The numbers in the order of their names (`name_order()[0]` is the number of the first name when sorted). Kept until a name
+        is admitted, so a hot read does not sort again."""
+        if self._order is None or len(self._order) != len(self._names):
+            self._order = numpy.array(sorted(range(len(self._names)), key=self._names.__getitem__), dtype=numpy.int64)
+            self._rank = numpy.empty(len(self._order), dtype=numpy.int64)
+            self._rank[self._order] = numpy.arange(len(self._order), dtype=numpy.int64)
+        return self._order
+
+    def name_rank(self) -> numpy.ndarray:
+        """Each number's place among the names when sorted (the inverse of `name_order`); sorting numbers by rank sorts their names."""
+        self.name_order()
+        return self._rank
 
     def number(self, name: str) -> int:
         found = self._number_of.get(name)

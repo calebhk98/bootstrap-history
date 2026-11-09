@@ -107,10 +107,10 @@ class BookStore:
 
     def _admit_goods(self, goods: Iterable[GoodId]) -> List[int]:
         given = list(goods)
-        numbers = self.good_ids.numbers
-        found = [numbers.get(good) for good in given]
-        if None not in found:
+        found = self.good_ids.numbers_if_known(given)
+        if found is not None:
             return found
+        numbers = self.good_ids.numbers
         self.good_ids.admit(given)
         self._fit_goods()
         return [numbers[good] for good in given]
@@ -132,10 +132,10 @@ class BookStore:
 
     def _admit_tiles(self, tiles: Iterable[TileId]) -> List[int]:
         given = list(tiles)
-        numbers = self.tile_ids.numbers
-        found = [numbers.get(tile) for tile in given]
-        if None not in found:
+        found = self.tile_ids.numbers_if_known(given)
+        if found is not None:
             return found
+        numbers = self.tile_ids.numbers
         self.tile_ids.admit(given)
         if len(self.tile_ids) >= 1 << THIRD_FIELD_BITS:
             raise BookError("the book cannot number more than %d tiles" % (1 << THIRD_FIELD_BITS))
@@ -149,10 +149,10 @@ class BookStore:
 
     def _admit_currencies(self, currencies: Iterable[CurrencyId]) -> List[int]:
         given = list(currencies)
-        numbers = self.currency_ids.numbers
-        found = [numbers.get(currency) for currency in given]
-        if None not in found:
+        found = self.currency_ids.numbers_if_known(given)
+        if found is not None:
             return found
+        numbers = self.currency_ids.numbers
         self.currency_ids.admit(given)
         self._fit_currencies()
         return [numbers[currency] for currency in given]

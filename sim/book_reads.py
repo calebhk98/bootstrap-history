@@ -4,12 +4,13 @@ A mixin of `Book` (sim/book.py), which owns the layout (sim/book_store.py). Each
 and turns the answer back into names; a name the book never saw reads as nothing held. A converter holding ids uses the
 kernels in sim/book_read_kernels.py instead."""
 import math
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 import numpy
 
 from sim.book_index import EMPTY, FIRST_SHIFT, SECOND_SHIFT, index_find
-from sim.book_read_kernels import counted_stocks, currency_values, good_quantities, holder_columns
+from sim.book_holdings import goods_of_many
+from sim.book_read_kernels import counted_stocks, currency_values, good_quantities
 from sim.book_types import AgentId, ConservationReport, CurrencyId, GoodId, TileId, _share
 
 
@@ -43,41 +44,30 @@ class BookReads:
         number = self.agent_ids.numbers.get(agent)
         money = {}
         if number is not None and self.agent_table.known.item(number):
-            for currency in sorted(self.currency_ids.names):
-                cell = number * self.stride + self.currency_ids.find(currency)
-                value = self.balance_table.amount.item(cell)
-                if self.balance_table.seen.item(cell) and value != 0.0:
-                    money[currency] = value
+            money = self._money_held(number)
         return {"money": money, "goods": self.goods_held(agent)}
 
+    def _money_held(self, number: int) -> Dict[CurrencyId, float]:
+        """The agent's nonzero balances that were ever written, by currency in name order."""
+        first, wanted = number * self.stride, len(self.currency_ids)
+        amounts = self.balance_table.amount[first:first + wanted].tolist()
+        seen = self.balance_table.seen[first:first + wanted].tolist()
+        names = self.currency_ids.name_list
+        order = self.currency_ids.name_order().tolist()
+        return {names[currency]: amounts[currency] for currency in order if seen[currency] and amounts[currency] != 0.0}
+
     def goods_of(self, agent: AgentId) -> Dict[GoodId, Dict[TileId, float]]:
-        """What the agent holds, good to tile to quantity: a copy, in no stated order, and it may hold zeros.
+        """What the agent holds, good to tile to quantity: a copy, goods and tiles in the order they were first held, and it may hold zeros.
         A caller that adds quantities sums them exactly."""
-        number = self.agent_ids.numbers.get(agent)
-        if number is None:
-            return {}
-        first = self.agent_table.first_slot.item(number)
-        if first == -1:
-            return {}
-        table = self.stock_rows.table
-        goods, tiles, quantities = holder_columns(first, table.next_in_agent, table.good, table.tile, table.quantity)
-        good_names, tile_names = self.good_ids.name_list, self.tile_ids.name_list
-        held: Dict[GoodId, Dict[TileId, float]] = {}
-        for good, tile, quantity in zip(goods.tolist(), tiles.tolist(), quantities.tolist()):
-            by_tile = held.get(good_names[good])
-            if by_tile is None:
-                by_tile = held[good_names[good]] = {}
-            by_tile[tile_names[tile]] = quantity
-        return held
+        return goods_of_many(self, [agent], True, False)[0]
 
     def goods_held(self, agent: AgentId) -> Dict[GoodId, Dict[str, float]]:
         """What the agent holds of each good, by tile: goods and tiles in name order, nothing at zero."""
-        goods = {}
-        for good, by_tile in sorted(self.goods_of(agent).items()):
-            tiles = {tile: value for tile, value in sorted(by_tile.items()) if value != 0.0}
-            if tiles:
-                goods[good] = tiles
-        return goods
+        return goods_of_many(self, [agent], False, True)[0]
+
+    def goods_held_many(self, agents: Sequence[AgentId]) -> List[Dict[GoodId, Dict[str, float]]]:
+        """`goods_held` for each agent, in one read."""
+        return goods_of_many(self, agents, False, True)
 
     # ---- everyone ------------------------------------------------------------------------------------
 

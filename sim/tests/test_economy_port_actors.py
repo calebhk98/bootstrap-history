@@ -43,6 +43,9 @@ class Book:
     def holdings(self, account):
         return {"goods": self.goods.get(account, {})}
 
+    def goods_held(self, account):
+        return self.goods.get(account, {})
+
     def balance(self, account, currency):
         return self.money.get(account, 0.0)
 

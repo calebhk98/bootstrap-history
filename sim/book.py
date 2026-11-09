@@ -13,9 +13,10 @@ batch; the methods here, by name, are thin wrappers that build the rows, call th
 A converter that holds ids calls `apply_postings` and the kernels of sim/book_read_kernels.py instead.
 
 The mixins, by topic:  BookStore (ids, tables, admitting names)  BookPostings (post, transfer, move, apply_postings)  BookSingle (one posting on its own)
-BookReads (balance, stock, holdings, totals, flows)  BookBatch (many reads, post_settled)  BookRecord (save, merge, rename).
+BookReads (balance, stock, holdings, totals, flows)  BookBatch (many reads, post_settled)  BookFlowColumns (flows per good)  BookRecord (save, merge, rename).
 """
 from sim.book_batch import BookBatch
+from sim.book_flow_columns import BookFlowColumns
 from sim.book_post import BookPostings
 from sim.book_reads import BookReads
 from sim.book_record import BookRecord
@@ -27,5 +28,5 @@ from sim.book_types import (  # noqa: F401  (the names callers import from here)
     is_edge, _share)
 
 
-class Book(BookStore, BookPostings, BookSingle, BookReads, BookBatch, BookRecord):
+class Book(BookStore, BookPostings, BookSingle, BookReads, BookBatch, BookFlowColumns, BookRecord):
     pass

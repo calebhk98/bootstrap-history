@@ -2,7 +2,7 @@
 
 A pair row is (agent, subkey, extra). What the subkey stands for differs by table; one small class each says how a name the
 readers use becomes (subkey, extra) and back. `find` never numbers anything (a name nobody has met is absent); `make` numbers it."""
-from typing import Optional, Tuple
+from typing import Optional, Sequence, Tuple
 
 from sim.book_purposes import REFERENCE_PREFIXES
 
@@ -25,6 +25,9 @@ class GoodSub:
     def name(self, subkey: int, extra: int) -> str:
         return self._tables.book.good_ids.name_list[subkey]
 
+    def names(self, subkeys: Sequence[int], extras: Sequence[int]) -> list:
+        return list(map(self._tables.book.good_ids.name_list.__getitem__, subkeys))
+
 
 class TradeSub:
     """A trade, numbered by the market memory."""
@@ -41,6 +44,9 @@ class TradeSub:
 
     def name(self, subkey: int, extra: int) -> str:
         return self._tables.markets.trades.name_list[subkey]
+
+    def names(self, subkeys: Sequence[int], extras: Sequence[int]) -> list:
+        return list(map(self._tables.markets.trades.name_list.__getitem__, subkeys))
 
 
 class ForeignSub:
@@ -69,6 +75,9 @@ class ForeignSub:
         text = self._tables.book.purposes.decode(subkey, extra)
         return text[len(SALE_PREFIX):] if text.startswith(SALE_PREFIX) else text
 
+    def names(self, subkeys: Sequence[int], extras: Sequence[int]) -> list:
+        return list(map(self.name, subkeys, extras))
+
 
 class LabourMarketSub:
     """A labour market (a trade and a labour area) of the market memory; the key shows both parts."""
@@ -86,3 +95,6 @@ class LabourMarketSub:
     def name(self, subkey: int, extra: int):
         trade, _separator, area = self._tables.markets.labour_markets.name_list[subkey].partition("|")
         return (trade, area)
+
+    def names(self, subkeys: Sequence[int], extras: Sequence[int]) -> list:
+        return list(map(self.name, subkeys, extras))

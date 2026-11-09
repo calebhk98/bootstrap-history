@@ -28,6 +28,9 @@ class StandInBook:
     def holdings(self, agent):
         return {"goods": {}}
 
+    def goods_held(self, agent):
+        return {}
+
     def edge_net(self, edge, currency_id):
         return 0.0
 

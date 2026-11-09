@@ -142,12 +142,13 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
     state = setup.state_agent
     moves = []
     rows = OrderRows(order_book, STATE)
+    state_held = record.book.goods_held(state)      # the moves are posted after the loop, so the stores stay as read
     for need in priced:
         need_budget = budget.goods_budget * need.spec.budget_weight / weight_total
         for good, price, _effect, share in need.goods:
             wanted = need_budget * share / price
             held = [(held_tile, quantity) for held_tile, quantity in
-                    sorted(record.book.holdings(state)["goods"].get(good, {}).items()) if quantity > 0.0]
+                    sorted(state_held.get(good, {}).items()) if quantity > 0.0]
             for held_tile, quantity in held:
                 reserved = min(quantity, kept.get(good, 0.0)) if held_tile == tile else 0.0
                 used = min(wanted, quantity - reserved)

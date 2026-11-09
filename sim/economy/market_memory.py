@@ -6,7 +6,7 @@ sees nothing of this year's clearing, which is where the economy's lags come fro
 import dataclasses
 import weakref
 from dataclasses import dataclass, field
-from typing import ClassVar, Dict, Optional, Set, Tuple
+from typing import ClassVar, Dict, List, Optional, Sequence, Set, Tuple
 
 import numpy
 
@@ -411,7 +411,8 @@ class YearView:
         self._labour_area_of = labour_area_of
         self._goods = set(area_map.goods())
         self._keys_of_good: Dict[str, tuple] = {}
-        self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area; the area map does not change
+        self._area_by_tile: Dict[str, Dict[TileId, AreaId]] = {}    # name -> tile -> its area, for an area map without `areas_on_tile`
+        self._labour_area_by_tile: Dict[TileId, AreaId] = {}    # tile -> the labour area of its trades
         self._stamp = _writes[0]
         self._reads: Dict[tuple, object] = {}     # reads of the memory kept until the next write to it
         self._offered: Dict[str, Optional[float]] = {}
@@ -584,8 +585,7 @@ class YearView:
         kept = reads.get(key)
         if kept is None or kept[0] is not trades:
             found = {}
-            for trade in trades:
-                area = self.area_of(trade, tile)
+            for trade, area in zip(trades, self.areas_of(trades, tile)):
                 wage = reads.get(("wage", trade, area))
                 if wage is None:
                     wage = reads[("wage", trade, area)] = wage_in_view(self.setup, self, trade, area)
@@ -600,13 +600,27 @@ class YearView:
 
     def area_of(self, good_or_trade: str, tile: TileId) -> AreaId:
         """A good's market area on this tile; a trade's labour area when the key is not a good."""
-        by_tile = self._area_by_tile.get(good_or_trade)
-        if by_tile is None:
-            by_tile = self._area_by_tile[good_or_trade] = {}
+        if good_or_trade not in self._goods:
+            return self._labour_area(tile)
+        if hasattr(self._area_map, "areas_on_tile"):
+            return self._area_map.areas_on_tile(tile)[good_or_trade]
+        by_tile = self._area_by_tile.setdefault(good_or_trade, {})
         area = by_tile.get(tile)
         if area is None:
-            area = by_tile[tile] = (self._area_map.area_of(good_or_trade, tile) if good_or_trade in self._goods
-                                    else self._labour_area_of(tile))
+            area = by_tile[tile] = self._area_map.area_of(good_or_trade, tile)
+        return area
+
+    def areas_of(self, names: Sequence[str], tile: TileId) -> List[AreaId]:
+        """`area_of` for each good or trade in order, on one tile: the area map's table of the tile is read once."""
+        if not hasattr(self._area_map, "areas_on_tile"):
+            return [self.area_of(name, tile) for name in names]
+        on_tile, goods = self._area_map.areas_on_tile(tile), self._goods
+        return [on_tile[name] if name in goods else self._labour_area(tile) for name in names]
+
+    def _labour_area(self, tile: TileId) -> AreaId:
+        area = self._labour_area_by_tile.get(tile)
+        if area is None:
+            area = self._labour_area_by_tile[tile] = self._labour_area_of(tile)
         return area
 
     def currency_of(self, area: AreaId) -> CurrencyId:

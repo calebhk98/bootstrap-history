@@ -73,8 +73,10 @@ def firm_land_bids(setup, record, view, wanted_runs: Mapping[str, float], budget
     its runs fetch less their other costs; hired hands are in the cost, so none limits it) out of the cash it holds
     beyond `budgets` (what its plan already set aside)."""
     bids: List[Bid] = []
-    for demand in land_market.demands_of(setup, record, view, wanted_runs):
-        free = record.book.balance(demand.agent_id, setup.currency_id) - budgets.get(demand.agent_id, 0.0)
+    demands = land_market.demands_of(setup, record, view, wanted_runs)
+    cash = record.book.balance_by_agent([demand.agent_id for demand in demands], setup.currency_id)
+    for demand in demands:
+        free = cash[demand.agent_id] - budgets.get(demand.agent_id, 0.0)
         bids.extend(actor_bids(setup, record, view, demand.agent_id, demand.tile,
                                demand.output_value_per_hectare - demand.other_cost_per_hectare, 0.0, 0.0, free))
     return bids
@@ -110,10 +112,9 @@ def take_up_bought(setup, record) -> Dict[str, float]:
         store = record.producers
         makes = [good in setup.recipes[name].outputs for name in store.names["recipes"].name_list]
         clearers = {store.ids[row] for row in store.rows_with_recipes(makes, in_id_order=False).tolist()}
-        for buyer in record.book.holders_of(good):
-            if buyer in clearers:
-                continue
-            for tile_id, bought in sorted(record.book.holdings(buyer)["goods"].get(good, {}).items()):
+        buyers = [buyer for buyer in record.book.holders_of(good) if buyer not in clearers]
+        for buyer, held in zip(buyers, record.book.goods_held_many(buyers)):     # a move out of one buyer's stock leaves the others' alone
+            for tile_id, bought in sorted(held.get(good, {}).items()):
                 tile = setup.tiles.get(tile_id)
                 if bought <= 0.0 or tile is None:
                     continue

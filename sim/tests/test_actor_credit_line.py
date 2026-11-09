@@ -62,7 +62,8 @@ class OpenLending(unittest.TestCase):
 
 
 def economy_over(credit, balances=None, cohorts=(), banks=(), coin_per_unit=2.0):
-    book = types.SimpleNamespace(balance=lambda agent, currency: (balances or {}).get(agent, 0.0))
+    book = types.SimpleNamespace(balance=lambda agent, currency: (balances or {}).get(agent, 0.0),
+                                 balance_by_agent=lambda agents, currency: {agent: (balances or {}).get(agent, 0.0) for agent in agents})
     record = types.SimpleNamespace(
         credit=credit, book=book, cohorts={name: None for name in cohorts},
         capital_markets=types.SimpleNamespace(banks={name: types.SimpleNamespace(agent_id=name, reserve_share=0.1) for name in banks}),

@@ -90,6 +90,7 @@ def _effects_by_row(setup, record, columns, answer, bundle, participants: Partic
     loan_write_offs = LoanWriteOffs(record)
     write_offs: Dict[str, float] = {}      # applied in one pass over the loans when an exit comes and at the end
     exits = producer_exit.ExitBatch(record)
+    exits.hold([ids[row] for row in rows if answer.exited[row]])
     owners = columns.owners()
     exit_rows, exit_payees, exit_amounts = [], [], []
     for row in rows:

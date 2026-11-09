@@ -21,7 +21,12 @@ class ExitBatch:
         self.record = record
         self.exited: List[str] = []
         self._owed = None
+        self._held: Dict[str, dict] = {}   # the goods the exits about to come hold, read together by `hold`
         self._steps: List[tuple] = []      # the postings of the exits so far, one batch each, made together at `finish()`
+
+    def hold(self, producer_ids: List[str]) -> None:
+        """Read the goods of the producers that will exit in one block (nothing is posted before `finish`, so the read stays true)."""
+        self._held = dict(zip(producer_ids, self.record.book.goods_held_many(producer_ids)))
 
     def exit(self, producer_id: str, payout: List[Transfer]) -> List[Transfer]:
         store = self.record.credit.contracts.loan_store
@@ -29,7 +34,7 @@ class ExitBatch:
             self._owed = store.group_rows()
         self.exited.append(producer_id)
         return exit_producer(self.record, producer_id, payout, store.snapshots(self._owed.get(producer_id, ())), deferred=True,
-                             steps=self._steps)
+                             steps=self._steps, held=self._held[producer_id] if producer_id in self._held else None)
 
     def finish(self) -> None:
         post_in_order(self.record.book, self._steps)
@@ -40,13 +45,14 @@ class ExitBatch:
 
 
 def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Optional[List] = None, deferred: bool = False,
-                  steps: Optional[List[tuple]] = None) -> List[Transfer]:
+                  steps: Optional[List[tuple]] = None, held: Optional[dict] = None) -> List[Transfer]:
     """Repay the loans from the cash, in loan order; pay out what is left of the close's dividend (shared
     as ownership shares dividends); move the goods held to the owner; write off the unpaid debt as
     defaults and remove the producer. Returns the dividend payments made. `owed` is the producer's loans when the caller has them;
     `deferred` leaves its term loans in the contracts for the caller to end (`ExitBatch`); `steps`, when given, takes the postings
     (repayments, dividend, goods) as three batches instead of posting them: only this producer's own cash and goods are read, so
-    the postings of several exits can wait and be made together in order."""
+    the postings of several exits can wait and be made together in order. `held` is the producer's goods (`Book.goods_held`) when the
+    caller read them for several exits at once."""
     owner = record.producers.owner_at(record.producers.row_of[producer_id])
     if owed is None:
         store = record.credit.contracts.loan_store
@@ -55,9 +61,9 @@ def exit_producer(record, producer_id: str, payout: List[Transfer], owed: Option
     repaid = math.fsum(transfer.amount for transfer in repayments)
     payout = _less(payout, repaid)
     paid = ownership.spread(record, payout)
+    held = record.book.goods_held(producer_id) if held is None else held
     moves = [GoodsMove(producer_id, owner, good, tile, quantity, "an exited producer's stock")
-             for good, tiles in sorted(record.book.holdings(producer_id)["goods"].items())
-             for tile, quantity in sorted(tiles.items()) if quantity > 0.0]
+             for good, tiles in held.items() for tile, quantity in tiles.items() if quantity > 0.0]
     if steps is not None:
         steps.extend([(repayments, ()), (paid, ()), ((), moves)])
     else:

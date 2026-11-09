@@ -27,11 +27,12 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
     cohorts = sorted(record.cohorts.values(), key=lambda each: each.agent_id)
     smooth_rise = not record.settling
     tool_bids_of, entries, plain = {}, [], {}
+    cash_of = record.book.balance_by_agent([cohort.agent_id for cohort in cohorts], money)       # nothing posts while the orders are made
     for cohort in cohorts:
         basket = memory.basket(setup, record, cohort)
         priced = memory.priced(setup, record, view, cohort, basket)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
-        cash = record.book.balance(cohort.agent_id, money)
+        cash = cash_of[cohort.agent_id]
         tool_bids = tool_wear.tool_bids(
             cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.offered_price(good, view.area_of(good, cohort.tile)),
             lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),

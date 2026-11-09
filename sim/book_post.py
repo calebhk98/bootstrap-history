@@ -95,11 +95,8 @@ class BookPostings:
                           [move.quantity for move in moves], codes, references, [batch] * len(moves))
 
     def _agent_numbers(self, names: Sequence[str]) -> list:
-        get = self.agent_ids.numbers.get
-        numbers = [get(name) for name in names]
-        if None in numbers:
-            return self._admit_agents(names)
-        return numbers
+        numbers = self.agent_ids.numbers_if_known(names)
+        return self._admit_agents(names) if numbers is None else numbers
 
     # ---- the kernel calls ------------------------------------------------------------------------
 

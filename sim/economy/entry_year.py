@@ -223,7 +223,6 @@ def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -
     itself a producer, whose cash a stake would change before its own turn."""
     arrays = refreshed(arrays, setup, record, view)
     columns, matrices, memory = arrays.producers, arrays.matrices, arrays.memory
-    balance = record.book.balance
     ids = columns.ids
     cash = record.book.balances_at(record.book.rows_of(ids), money)
     shortfall = np.where(columns.capacity_runs > 0.0, columns.cash_target - cash, 0.0)
@@ -236,7 +235,7 @@ def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -
     owner_of = np.zeros(len(ids), dtype=np.int64)
     for row in wanting:
         owner_of[row] = owner_row[owner_names[row]]
-    owner_cash = np.array([balance(owner, money) for owner in owners], dtype=np.float64)
+    owner_cash = record.book.balances_of(owners, money)
     amounts = entry_kernels.restake_amounts(
         columns.recipe_row, columns.tile_row, shortfall, columns.land_rent_per_run, columns.expected_prices, owner_of, owner_cash,
         matrices.slot_goods, matrices.inputs, matrices.outputs, matrices.plant_goods, matrices.labour_hours,
@@ -256,8 +255,10 @@ def close_idle_producers(setup, record) -> int:
     debtors = {store.agent_name(number) for number in np.unique(store.table.borrower[:len(store)]).tolist()}
     closing = producers_to_close(record.producers, set(record.credit.expansion_runs), debtors)
     exits = producer_exit.ExitBatch(record)
+    exits.hold(closing)
+    held = record.book.balance_by_agent(closing, money)       # the exits post together at `finish`, so none changes another's cash
     for producer_id in closing:
-        cash = record.book.balance(producer_id, money)
+        cash = held[producer_id]
         payout = [Transfer(producer_id, record.producers.owner_at(record.producers.row_of[producer_id]), money, cash, "dividend")] if cash > 0.0 else []
         exits.exit(producer_id, payout)
     exits.finish()
