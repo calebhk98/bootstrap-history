@@ -89,6 +89,7 @@ class PreparedCurve:
         self.reservation, self.quantity = offers[ascending, 0].copy(), offers[ascending, 1].copy()
         self.demand = demand_columns(self.columns, self.order)
         self.minimum: Dict[Optional[float], Tuple[bool, float]] = {}
+        self.base: Dict[Optional[float], Tuple[int, float]] = {}      # the book alone, cleared with a last price held
 
     def minimum_price(self, last_price: Optional[float], share: float) -> Tuple[bool, float]:
         """(there is one, the token price): `share` of the mean positive reference price, else of the last price held."""
@@ -143,7 +144,10 @@ def price_response(curve, last_price: Optional[float], landed: float, taken: flo
     """`market_curves.price_response_objects` of the same arguments (`share` is `goods_market.MINIMUM_PRICE_SHARE_OF_REFERENCE`).
     Raises `NeedsObjects` for a figure the kernels do not take."""
     book = prepared(curve)
-    base_status, base_price = _clear(book, book.reservation, book.quantity, book.demand, last_price, share)
+    base = book.base.get(last_price)
+    if base is None:
+        base = book.base[last_price] = _clear(book, book.reservation, book.quantity, book.demand, last_price, share)
+    base_status, base_price = base
     if base_status != TRADES or not base_price > 0.0:
         return None
     reservation, quantity = book.with_extra_seller(landed) if landed > 0.0 else (book.reservation, book.quantity)

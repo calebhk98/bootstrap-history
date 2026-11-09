@@ -40,9 +40,17 @@ def asked_by(view) -> Optional[Dict[tuple, object]]:
     return kept[2]
 
 
+_SPEC_NUMBERS: Dict[NeedSpec, int] = {}      # equal specs share a number; a spec is held here, so its number is never reused
+
+
 def need_key(tile, spec: NeedSpec, exponent: float) -> tuple:
-    """The key a priced need is kept under in the view's reads: shared by every basket that holds the same need on a tile."""
-    return ("priced_need", tile, spec, exponent)
+    """The key a priced need is kept under in the view's reads: shared by every basket that holds the same need on a tile. The spec stands
+    in the key by its number (set once on the object), so a lookup hashes integers instead of the spec's fields."""
+    number = spec.__dict__.get("_number")
+    if number is None:
+        number = _SPEC_NUMBERS.setdefault(spec, len(_SPEC_NUMBERS))
+        object.__setattr__(spec, "_number", number)
+    return ("priced_need", tile, number, exponent)
 
 
 def price_asked(view, reads: dict, pending: List[tuple]) -> bool:

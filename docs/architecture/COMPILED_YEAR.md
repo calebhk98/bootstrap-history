@@ -697,25 +697,37 @@ answer builds one part and each world keeps its own turn's memo. The stability p
 `stability_kernels.read_tiles` once per pass (a rising ends a pass; `sim/campaigns/stability_tiles.py`, tests `test_stability_kernels.py`,
 `test_stability_tile_passes.py`, the plain chain in `sim/tests/stability_tiles_plain.py`). Still per actor in Python: the government's and
 the strata's year (`agents/government*.py`, `budget*.py`, `stratum_year.py`), the household theft exposure, `material_prices`
-(`sim/prices/module_spec.py` says why it cannot be cached), `urban_fraction`, `reachable_trade_population` and the quotes.
+(`sim/prices/module_spec.py` says why it cannot be cached), `urban_fraction`, `reachable_trade_population` and the quotes (see the table below).
 
 Tests: `sim/tests/test_response_memo.py`, `test_year_accounts.py` (`PlainLedgerReadTests`), `test_year_ledger_views.py` (`as_plain`).
 
-**Below the bar, so unchanged.** Time the phase with a handler wrapper over `year_steps.money_world` and `time.process_time`, or
-`function_times.py SAVE sim.economy.country_figures:money_held ...`, against the whole step from `year-time`. The government's and
-registry's year (`money_world`, nearly all of it the actors' `advance_actors`) is a small share of the step. The cost under
-`government.advance` is the first work of economy figures after the economy stepped: `price_response` clearing (nearly all of it
-`goods_market.clear_at_one_price`, which the goods package owns, not `response_memo` or `prices_at`), the floor costs of the tiles
-(`_worked_need_floor_costs` over `_worked_tile_floor_costs`, almost all of it `kept_need_prices` misses, whose batch form is not wired, see
-Households), `country_figures._prices` with the `MarketLayout.kept` mask, `output_value_and_unpriced`, `money_held` and
-`price_index.kept`. Each is below the bar, so no block read was added: a floor-cost grid would repeat the `NeedBatch` result, and
-`output_value` and `money_held` read the producer and cohort records and one `balance` per holder, which `book.balance` already serves
-from its table. The views the actors read are cheap lookups (`tree_nodes`, `civilisation`, `home_tiles_held` are asked most). `ActorWorld`
-is built several times per phase; its once-memo keeps a turn's shared answers consistent, so it stays as it is. The largest single
-items in the packages the phase owns (`group_jobs.displacing_technique`, `strata_observed.slice_income`, `carriage_surcharge`,
-`world_groups.goods_categories`) and `demography.urban_people_by_tile` are each below the bar, and so are the packages' own Python in
-all. Re-measure with `warm_year_profile.py` (then `pstats` sorted by `tottime`, summed per directory) and look at `clear_at_one_price`,
-`_worked_need_floor_costs`, `MarketLayout.kept`, `output_value_and_unpriced`, `money_held`, `urban_people_by_tile`.
+**The first work of figures after the economy stepped.** Measure with `python3 tools/measure/warm_year_profile.py SAVE OUT.prof` (kernels
+compiled first, `compile-kernels`, or the profile times the compiler) and read the calls and own time of each function with `pstats`.
+
+| Figure | Before | Now |
+|---|---|---|
+| price response of a book (`market_curves.price_response`) | a clearing through `goods_market.clear_at_one_price` per book (`Bid` and `Offer` objects, fills, a `DemandSchedule`) | `curve_clearing`: the summarised book is columns kept against the book object (`PreparedCurve`), the crossing is one kernel (`clear_summary`, over `crossing_price.price_at_levels`), and the book alone is cleared once per last price; no `clear_at_one_price` call, no object. Test: `test_curve_clearing.py` (columns against `price_response_objects`, bit for bit, on written and random books); a figure the kernels do not take (`NeedsObjects`) is answered by the objects |
+| floor costs of the tiles (`_worked_need_floor_costs`) | one `price_asked` batch call over every tile of the country; the spec hashed in Python at every key lookup | the same one batch call; `NeedSpec` keeps its hash and a priced need is keyed by the spec's number (`priced_need_prime.need_key`), so a lookup hashes integers |
+| `country_figures._prices`, `price_index.kept` | already columns: `MarketLayout.masked` builds the country's mask from the tile table (`price_index_masks.country_price_mask`), `national_prices` reads the goods table's columns; `MarketLayout.kept` (the per-market Python rule) runs only for an area map without a tile table (a test's stand-in) or for no rule | unchanged |
+
+Still per item, and why:
+
+- **`PricedNeed` objects in `priced_need_prime.price_asked`** (`NeedBatch.add` and `PricedBatch.need` per priced need; count them with the profile). The floor cost of a tile
+  is `price_index * subsistence_per_person` of each priced need, which is a column of the batch (`PricedBatch.index`), but the same priced needs are
+  kept in `reads` under `need_key` for `households_orders_pack`, `households_store.staple_price_per_kg`, `household_work_year.grinding_plan` and
+  the cohorts' own asks (listed under Households), which share them by (tile, spec, exponent); a floor-cost matrix built beside them would price
+  the tiles twice. They go when those readers take the columns.
+- **`material_prices`** (read from many views a year, `prices/tables.py` `Tables.price_tables` lines 43-69): the cost is the validity check of the table (the
+  techniques granted and in use, the banded farmed hectares, the market rate, the home tiles), not a loop over goods; `rules.money_prices` runs only when the table or the hour's money moves. It stays uncached for the reason `sim/prices/module_spec.py` gives (its inputs are written outside the owners' commands); the check
+  can be cached once `techniques_in_use` and `market_rate` bump a channel.
+- **`urban_fraction`** (`demography/urban.py` `urban_people_by_tile`): the ceilings are worked out once a year
+  (`_computed_urban_ceilings`, mostly `kept_carriage_costs`, a geography route read); each read then takes `min` over three per-tile dicts
+  (`people_for_urban_share`, the ceilings, `world.urban_share_of_people`), which are dicts of the demography world, so an array form would first copy
+  them and cost the same.
+- **`reachable_trade_population`** (read once per available trade by `engine/invariants.check_labour_market_invariants`: each is
+  `LabourSupply.market_supply` (`people_who_exist` through `hands_available`, `labour_supply.py` line 153), the work of that trade, and the two
+  literate trades repeat `literate_capacity` (`staff_ceiling`, finance reads). A block form needs the labour core's people by trade as a column.
+- **`output_value_and_unpriced`, `money_held`**: the producers' conversion.
 
 ## The government's year as tables
 
@@ -788,7 +800,7 @@ list lags the code.
   The household decisions still loop over cohorts in Python (`household_offers_year.plans`: the basket, grinding plan and priced needs
   of each cohort), as do `outside_option_by_tile`, `subsistence_cost_by_tile` and `ask_floor_by_tile`; they wait for the cohorts and
   the priced baskets as columns.
-- **Priced needs.** The readers of `PricedNeed` listed under Households take objects, so `NeedBatch` stays unwired.
+- **Priced needs.** The readers of `PricedNeed` listed under Households take objects, so the batch (`price_asked`) still makes them from its columns.
 
 - **Labour readers that take records.** `household_work_year.decide` and `household_hours_year.plot_parameters_by_cohort` read
   `LabourOffer` objects; the cleared wages reach `HourSupply.settle` as a dict read rather than a market-indexed array.
