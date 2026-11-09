@@ -98,6 +98,26 @@ class BlockReadsEqualViewReads(unittest.TestCase):
         self.assertEqual(totals[0].tolist(), [math.fsum([1e16, 1.0, -1e16]), math.fsum([0.1, 0.2, 0.3]), 0.0])
         self.assertEqual(totals[1].tolist(), [0.0, 0.0, 0.0])
 
+    def test_scale_people_in_areas_is_scale_people_in_area_for_each(self):
+        areas, factors = ["work@a", "work@z", "work@b", "work@c"], numpy.array([1.7, 3.0, 0.3, 2.0])
+        block, single = awkward_state(), awkward_state()
+        state_reads.scale_people_in_areas(block, areas, factors)
+        for area, factor in zip(areas, factors.tolist()):
+            state_reads.scale_people_in_area(single, area, factor)
+        self.assertEqual(block.to_plain(), single.to_plain())
+        self.assertNotEqual(block.to_plain(), awkward_state().to_plain())
+
+    def test_follow_working_people_adds_to_an_empty_area_and_scales_the_rest(self):
+        state, added = awkward_state(), []
+        areas, people = ["work@c", "work@a", "work@b"], numpy.array([5.0, 0.7 + 0.1 + 0.2 + 3.3 + 0.1 + 0.01 + 2.0 + 1.0 + 0.5, 2.0])
+        held = state_reads.people_in_areas(state, areas).tolist()
+        labour_state.follow_working_people(state, areas, people, "farmer", lambda area, trade, count: added.append((area, trade, count)))
+        self.assertEqual(added, [("work@c", "farmer", 5.0)])
+        expected = awkward_state()
+        state_reads.scale_people_in_area(expected, "work@a", people[1] / held[1])
+        state_reads.scale_people_in_area(expected, "work@b", 2.0 / held[2])
+        self.assertEqual(state.to_plain(), expected.to_plain())
+
     def test_working_people_in_areas_is_fsum_of_fsums(self):
         state = awkward_state()
         areas = ["work@a", "work@b", "work@c", "work@z"]

@@ -235,8 +235,8 @@ class EntryTables:
         self.short_of_land[columns.tile_row[entry_siting_tables.land_short_rows(columns, self.tables[6][:, 1])]] = True
         self.supply_weight, self.supply_present = entry_kernels.supply_by_tile(
             columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor, matrices.outputs, tile_count)
-        self.hands_hours = np.array([math.fsum(labour_state.people_by_trade(record.labour.workforce, labour_area(tile)).values())
-                                     for tile in self.tiles.ids]) * setup.working_hours_per_year
+        self.hands_hours = labour_state.working_people_of_areas(record.labour.workforce, [labour_area(tile) for tile in self.tiles.ids]) \
+            * setup.working_hours_per_year
         self.carriage_matrix = entry_siting_tables.carriage_matrix(self.carriage, self.tiles.ids, self.tiles.row)
         recipe_count = len(matrices.recipes.ids)
         self.yield_rt = np.ones((recipe_count, tile_count))

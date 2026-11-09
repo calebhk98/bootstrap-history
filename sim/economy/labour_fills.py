@@ -50,7 +50,7 @@ def rows_from_clearings(clearings) -> Tuple[MarketRows, BuyRows, Sequence[str]]:
     """The market and buy rows of the core's `Clearings` columns, and the employer names their numbers index."""
     area_names, trade_names = clearings.names
     hired = clearings.hours_hired
-    markets = MarketRows([trade_names[each] for each in clearings.trade.tolist()], [area_names[each] for each in clearings.area.tolist()],
+    markets = MarketRows(numpy.asarray(trade_names, dtype=str)[clearings.trade].tolist(), numpy.asarray(area_names, dtype=str)[clearings.area].tolist(),
                          clearings.wage, hired, _positive_part(clearings.hours_wanted - hired),
                          _positive_part(clearings.hours_offered - hired))
     packed = clearings.markets

@@ -127,6 +127,16 @@ def scale_people_in_area(state, area: str, factor: float) -> None:
                           state.trainee_table.length)
 
 
+def scale_people_in_areas(state, areas: Sequence[str], factors: numpy.ndarray) -> None:
+    """`scale_people_in_area` for each area by its own factor (an area the state does not number is left as it is)."""
+    if not len(state.ids.trades):
+        return
+    workers, markets = state.workers_table, state.market_table
+    kernels.scale_areas(area_numbers(state, areas), numpy.asarray(factors, dtype=numpy.float64), len(state.ids.trades), workers.present,
+                        workers.people, workers.length, markets.cohort_first, markets.cohort_count, state.trainee_table.people,
+                        state.trainee_table.length)
+
+
 def wages_in_view_order(state, above: float) -> Tuple[List[str], List[str], numpy.ndarray]:
     """The wages greater than `above`, as (area names, trade names, wages) in the order `state.wages` lists them: areas in the order
     they were named, and inside an area the trades in the order they got their wages."""

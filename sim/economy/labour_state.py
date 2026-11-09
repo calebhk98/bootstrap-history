@@ -5,11 +5,11 @@ comes from the setup's trade registry; the unskilled trade is the work anyone ca
 """
 import math
 from collections.abc import Mapping as MappingBase
-from typing import Dict, Iterable, Mapping
+from typing import Dict, Iterable, Mapping, Sequence
 
 import numpy
 
-from sim.labour.api import (MarketState, TradeSpec, grid_rows_of, opening_labour_market, people_at, people_by_trade_in_each_area, people_by_trade_over, scale_people_in_area, seed_hours, trade_specs,
+from sim.labour.api import (MarketState, TradeSpec, grid_rows_of, opening_labour_market, people_at, people_by_trade_in_each_area, people_by_trade_over, people_in_areas, scale_people_in_area, scale_people_in_areas, seed_hours, trade_specs,
                             wages_in_view_order, working_people_in_areas)
 
 from . import households_own, mint, mint_labour, opening_hours_needed, opening_placement, practice
@@ -144,6 +144,21 @@ class PeopleByTile(MappingBase):
 def people_by_trade_everywhere(state: MarketState) -> Dict[str, float]:
     """Working people by trade across every labour area (trainees are not counted)."""
     return people_by_trade_over(state, sorted(state.workers))
+
+
+def working_people_of_areas(state: MarketState, areas: Iterable[str]) -> numpy.ndarray:
+    """Everyone working in each area (`math.fsum` of its trades' people), zero for an area the state holds nobody in."""
+    return working_people_in_areas(state, areas)
+
+
+def follow_working_people(state: MarketState, areas: Sequence[str], people: numpy.ndarray, unskilled_trade: str, add_workers) -> None:
+    """The core's people (workers and trainees) in each area brought to the working `people` the cohorts hold there: an area the core
+    holds nobody in gets them in the unskilled trade (`add_workers(area, trade, people)`), any other is scaled by one factor."""
+    held = people_in_areas(state, areas)
+    for place in numpy.flatnonzero(held <= 0.0).tolist():
+        add_workers(areas[place], unskilled_trade, float(people[place]))
+    scaled = numpy.flatnonzero((held > 0.0) & (held != people))
+    scale_people_in_areas(state, [areas[place] for place in scaled.tolist()], people[scaled] / held[scaled])
 
 
 def scale_people(state: MarketState, area: str, factor: float) -> None:

@@ -122,6 +122,18 @@ def scale_cohorts(first_row, stop_row, factor, people, length):
 
 
 @njit
+def scale_areas(areas, factors, trade_count, present, people, length, cohort_first, cohort_count, trainee_people, trainee_length):
+    """`scale_pairs` and `scale_cohorts` for each listed area (numbers; below zero: none) by its own factor, area after area."""
+    for place in range(len(areas)):
+        if areas[place] >= 0:
+            first = areas[place] * trade_count
+            stop = first + trade_count
+            scale_pairs(first, stop, factors[place], present, people, length)
+            first_cohort = cohort_first[first]
+            scale_cohorts(first_cohort, first_cohort + cohort_count[first:stop].sum(), factors[place], trainee_people, trainee_length)
+
+
+@njit
 def _weighted_mean(wage, weight, product, count):
     """(whether the weights add to something, `math.fsum(wage * weight) / math.fsum(weight)`) over the first `count` entries."""
     total = exact_sum(weight, count)
