@@ -171,7 +171,7 @@ LABOUR_METHOD_OF_VIEW = {
     "hours_you_can_call_on": "hours_you_can_call_on", "literacy_capacity": "literate_capacity", "market_supply": "market_supply",
     "trade_available": "trade_available", "base_annual_wage": "base_annual_wage", "wage": "wage_per_hour",
     "hours_reserved": "hours_reserved", "available_trades": "available_trades",
-    "reachable_trade_population": "reachable_trade_population", "people_who_exist": "people_who_exist",
+    "reachable_trade_population": "reachable_trade_population", "people_who_exist": "people_who_exist", "labour_reach_block": "reach_block",
     "money_per_labour_hour": "money_per_labour_hour",
     "trade_headcount_pending": "trade_headcount_pending", "literacy_factor": "literacy_factor",
     "relocation_quote": "relocation_quote", "slave_quote": "slave_quote",

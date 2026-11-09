@@ -77,6 +77,10 @@ class Views(Part):
 	def reachable_trade_population(self, trade):
 		return self.parts.core.labour.supply.reachable_trade_population(trade)
 
+	def labour_reach_block(self, trades):
+		"""(reachable_trade_population, people_who_exist) of each trade given, as two arrays."""
+		return self.parts.core.labour.supply.reach_block(trades)
+
 	def base_tile(self):
 		"""Where the acting seat works from."""
 		return self.parts.core.labour.settlement.base_tile()
