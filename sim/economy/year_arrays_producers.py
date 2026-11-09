@@ -125,11 +125,11 @@ def _expected_prices(store: ProducerStore, rows: np.ndarray, recipe_row: np.ndar
     goods = np.where(places, column_of[held_goods], -1)          # the year's good column of each held price
     values = table.price_value[rows]
     slots = matrices.slot_goods[recipe_row]
-    for slot in range(matrices.good_slots):
-        match = (goods == slots[:, slot][:, None]) & (slots[:, slot][:, None] != NO_SLOT)
-        has = match.any(axis=1)
-        if has.any():
-            prices[has, slot] = values[has, match.argmax(axis=1)[has]]
+    match = (goods[:, :, None] == slots[:, None, :]) & (slots != NO_SLOT)[:, None, :]      # producer by held price by slot, all slots at once
+    has = match.any(axis=1)
+    first = match.argmax(axis=1)                  # the first held price that is the slot's good
+    chosen = np.take_along_axis(values, first, axis=1)
+    prices[has] = chosen[has]
     return prices
 
 

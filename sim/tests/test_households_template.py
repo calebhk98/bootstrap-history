@@ -97,7 +97,7 @@ class StaticRowsKept(unittest.TestCase):
         orders = mock.Mock()
         orders.good_id.side_effect = lambda good: len(good)
         orders.market_ids.side_effect = lambda goods, areas: [len(good) * 10 for good in goods]
-        view = mock.Mock()
+        view = mock.Mock(spec=["area_of"])
         view.area_of.side_effect = lambda good, tile: "area_" + tile
         cache = {}
         first = households_template.static_rows(cache, ["ab", "cde"], ("T0", b"x"), "T0", view, orders)
@@ -107,6 +107,19 @@ class StaticRowsKept(unittest.TestCase):
         self.assertEqual(orders.market_ids.call_count, 1)
         households_template.static_rows(cache, ["ab", "cde"], ("T1", b"x"), "T1", view, orders)
         self.assertEqual(orders.market_ids.call_count, 2)
+
+
+class StaticRowsAreas(unittest.TestCase):
+    def test_a_view_that_answers_in_a_block_is_asked_once_for_the_tile(self):
+        orders = mock.Mock()
+        orders.good_id.side_effect = lambda good: len(good)
+        orders.market_ids.side_effect = lambda goods, areas: [len(good) * 10 for good in goods]
+        view = mock.Mock(spec=["area_of", "areas_of"])
+        view.areas_of.side_effect = lambda names, tile: ["block_" + tile for _name in names]
+        found = households_template.static_rows({}, ["ab", "cde"], ("T0", b"x"), "T0", view, orders)
+        self.assertEqual(found.areas, ["block_T0", "block_T0"])
+        self.assertEqual(view.areas_of.call_count, 1)
+        self.assertEqual(view.area_of.call_count, 0)
 
 
 class PackedBasketsAdd(unittest.TestCase):

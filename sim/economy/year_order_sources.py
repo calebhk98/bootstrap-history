@@ -7,7 +7,7 @@ the rule and are unpacked into rows at this edge."""
 from typing import List
 
 from . import household_work_year
-from . import carriage_fleet_book, carriage_wear, households_cohort, households_orders_pack, land_bid_year, merchants
+from . import carriage_fleet_book, carriage_wear, households_cohort, land_bid, households_orders_pack, land_bid_year, merchants
 from . import merchants_book, merchants_plan, state_budget, state_store, tool_wear
 from .cohort_order_figures import order_figures
 from .cohort_store import table_of
@@ -36,10 +36,10 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         priced = memory.priced(setup, record, view, cohort, basket)
         income = ledger.wages_in.get(cohort.agent_id, 0.0) + record.capital_markets.property_income.get(cohort.agent_id, 0.0)
         cash = cash_of[cohort.agent_id]
+        plot_hours = ledger.own_plot_hours.get(cohort.agent_id)
         tool_bids = tool_wear.tool_bids(
             cohort.agent_id, cohort.tile, lambda good: view.area_of(good, cohort.tile), lambda good: view.offered_price(good, view.area_of(good, cohort.tile)),
-            lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, ledger.own_plot_hours.get(cohort.agent_id, {}),
-            setup.specs, cash)
+            lambda good: view.stock(cohort.agent_id, good, cohort.tile), setup.recipes, plot_hours, setup.specs, cash) if plot_hours else []
         tool_bids_of[cohort.agent_id] = tool_bids
         spendable = cash - sum(bid.budget for bid in tool_bids)
         grown_units = ledger.grown_units.get(cohort.agent_id)
@@ -52,6 +52,7 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         order_book)
     made.update(plain)
     rows = OrderRows(order_book, HOUSEHOLD)
+    land_goods, margins = land_bid.land_goods(setup.specs, setup.recipes), {}      # the ground goods, and the best crop margin by tile, are the same for every cohort
     planned_of = {}          # the money each cohort placed in bids, written to the table once all are known
     for cohort in cohorts:
         orders = made[cohort.agent_id]
@@ -62,7 +63,8 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
         if own_options:
             savings = sum(offer.amount for offer in orders.funds_offers)     # only what it would otherwise lend
             orders = land_bid_year.with_land_bids(orders, land_bid_year.land_bids(
-                setup, record, view, cohort, own_options, ledger.spare_hours.get(cohort.agent_id, 0.0), savings))
+                setup, record, view, cohort, own_options, ledger.spare_hours.get(cohort.agent_id, 0.0), savings,
+                land_goods, margins))
         rows.bids_from(orders.bids)
         rows.offers_from(orders.offers)
         funds.extend(orders.funds_offers)

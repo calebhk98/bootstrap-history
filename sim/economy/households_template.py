@@ -13,6 +13,7 @@ import numpy as np
 from . import opening_demand_kernel as opening_kernel
 from .priced_need_list import PricedNeeds
 from .priced_need_tables import GOODS
+from .view_areas import areas_in
 
 
 def selected_rows(first: np.ndarray, stop: np.ndarray) -> np.ndarray:
@@ -64,7 +65,7 @@ def static_rows(cache: Dict[tuple, StaticRows], goods: List[str], key: tuple, ti
     """The `StaticRows` of the goods on the tile, made on the first template that has them (`key` names the goods)."""
     found = cache.get(key)
     if found is None:
-        areas = [view.area_of(good, tile) for good in goods]
+        areas = areas_in(view, goods, tile)
         found = cache[key] = StaticRows(goods, areas, [orders.good_id(good) for good in goods], orders.market_ids(goods, areas))
     return found
 

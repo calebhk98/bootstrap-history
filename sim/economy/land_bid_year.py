@@ -34,7 +34,7 @@ def best_margin(setup, view, tile_id: str, options: Mapping[str, List[Option]], 
 
 
 def actor_bids(setup, record, view, buyer: str, tile_id: str, margin_per_hectare: float, hours_per_hectare: float,
-               spare_hours: float, cash: float) -> List[Bid]:
+               spare_hours: float, cash: float, goods=None) -> List[Bid]:
     """Bids for ground on a tile from any actor (a household, a firm, a state, an institution): for the hectares its
     spare hours can work, at no more than the better of its crop margin and the tile's rent capitalised. An actor with
     no hands to work a hectare (`hours_per_hectare` zero) is limited by its cash alone, and buys only to let the ground
@@ -42,7 +42,7 @@ def actor_bids(setup, record, view, buyer: str, tile_id: str, margin_per_hectare
     if setup.tiles.get(tile_id) is None or cash <= 0.0:
         return []
     bids = []
-    for good in land_bid.land_goods(setup.specs, setup.recipes):
+    for good in (land_bid.land_goods(setup.specs, setup.recipes) if goods is None else goods):      # `goods`: the caller's `land_goods`, found once for many actors
         sellers = land_bid.owners_of_sellers(record, setup.recipes, good, tile_id)
         if not sellers or buyer in sellers:
             continue
@@ -59,14 +59,20 @@ def actor_bids(setup, record, view, buyer: str, tile_id: str, margin_per_hectare
     return bids
 
 
-def land_bids(setup, record, view, cohort, options, spare_hours: float, cash: float) -> List[Bid]:
+def land_bids(setup, record, view, cohort, options, spare_hours: float, cash: float, goods=None, margins=None) -> List[Bid]:
     """The cohort's bids for ground on its tile: for the hectares its spare hours can work, at no more than the
-    earning capitalised (`actor_bids`)."""
+    earning capitalised (`actor_bids`). `goods` is `land_bid.land_goods` and `margins` a dict that keeps `best_margin` by tile, when
+    the caller asks for many cohorts of one set of options at one set of prices."""
     tile = setup.tiles.get(cohort.tile)
     if tile is None or spare_hours <= 0.0:
         return []
-    margin, hours, _recipe_id = best_margin(setup, view, cohort.tile, options, tile)
-    return actor_bids(setup, record, view, cohort.agent_id, cohort.tile, margin, hours, spare_hours, cash)
+    best = margins.get(cohort.tile) if margins is not None else None
+    if best is None:
+        best = best_margin(setup, view, cohort.tile, options, tile)
+        if margins is not None:
+            margins[cohort.tile] = best
+    margin, hours, _recipe_id = best
+    return actor_bids(setup, record, view, cohort.agent_id, cohort.tile, margin, hours, spare_hours, cash, goods)
 
 
 def firm_land_bids(setup, record, view, wanted_runs: Mapping[str, float], budgets: Mapping[str, float]) -> List[Bid]:
@@ -76,10 +82,11 @@ def firm_land_bids(setup, record, view, wanted_runs: Mapping[str, float], budget
     bids: List[Bid] = []
     demands = land_market.demands_of(setup, record, view, wanted_runs)
     cash = record.book.balance_by_agent([demand.agent_id for demand in demands], setup.currency_id)
+    goods = land_bid.land_goods(setup.specs, setup.recipes)
     for demand in demands:
         free = cash[demand.agent_id] - budgets.get(demand.agent_id, 0.0)
         bids.extend(actor_bids(setup, record, view, demand.agent_id, demand.tile,
-                               demand.output_value_per_hectare - demand.other_cost_per_hectare, 0.0, 0.0, free))
+                               demand.output_value_per_hectare - demand.other_cost_per_hectare, 0.0, 0.0, free, goods))
     return bids
 
 

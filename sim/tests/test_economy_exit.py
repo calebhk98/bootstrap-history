@@ -230,6 +230,17 @@ class ExitBatchTests(unittest.TestCase):
         self.assertEqual(batched.credit.credit_losses, one_by_one.credit.credit_losses)
         self.assertEqual(sorted(batched.producers), ["c"])
 
+    def test_exits_release_the_bonded_people_they_hold_at_finish(self):
+        record = self.record_of([])
+        record.unfree.bonded_held = {"tile": {"smith": {"a": 3.0, "c": 1.0, "b": 2.0}}, "gone": {"smith": {"a": 2.0}}}
+        with mock.patch.object(producer_exit.ownership, "spread", lambda _record, payments: payments):
+            batch = producer_exit.ExitBatch(record)
+            for name in ("a", "b"):
+                batch.exit(name, [])
+            self.assertIn("a", record.unfree.bonded_held["tile"]["smith"])      # held until finish
+            batch.finish()
+        self.assertEqual(record.unfree.bonded_held, {"tile": {"smith": {"c": 1.0}}})
+
     def test_no_exit_changes_nothing(self):
         record = self.record_of([Loan("loan-c", "lender", "c", "coin", 30.0, 0.05, 5.0, 0.0)])
         producer_exit.ExitBatch(record).finish()
