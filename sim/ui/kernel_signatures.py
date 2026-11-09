@@ -51,6 +51,8 @@ def declared_signatures():
             integer, array(flag, 1), floats, array(flag, 1), array(number, 2), whole)],
         "sim.labour.market.state_read_kernels.working_people_in_areas": [(whole, integer, array(flag, 1), array(number, 2), whole)],
         "sim.labour.market.state_read_kernels.scale_pairs": [(integer, integer, number, array(flag, 1), array(number, 2), whole)],
+        "sim.labour.market.state_read_kernels.scale_areas": [(
+            whole, floats, integer, array(flag, 1), array(number, 2), whole, whole, whole, array(number, 2), whole)],
         "sim.labour.market.state_read_kernels.scale_cohorts": [(integer, integer, number, array(number, 2), whole)],
         "sim.labour.market.training_kernel.age_cohorts": [(
             array(integer, 1), array(number, 1), array(number, 1), array(number, 2), integer, integer, array(number, 1), array(flag, 1),
