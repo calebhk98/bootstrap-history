@@ -69,6 +69,12 @@ class BookStore:
                     found[position] = self.agent_number(given[position])
         return found
 
+    def agent_numbers_batch(self, agents: Iterable[AgentId]) -> List[int]:
+        """Each agent's number; the names new to the book are admitted together, numbered sorted among themselves (as `agent_number`
+        gives them one at a time in sorted order)."""
+        given = list(agents)
+        return self._admit_agents(given)
+
     def _admit_agents(self, agents: Iterable[AgentId]) -> List[int]:
         given = list(agents)
         self.agent_ids.admit(given)
@@ -105,6 +111,10 @@ class BookStore:
             number = self._admit_goods([good])[0]
         return number
 
+    def good_numbers_batch(self, goods: Iterable[GoodId]) -> List[int]:
+        """`agent_numbers_batch` for goods."""
+        return self._admit_goods(goods)
+
     def _admit_goods(self, goods: Iterable[GoodId]) -> List[int]:
         given = list(goods)
         found = self.good_ids.numbers_if_known(given)
@@ -129,6 +139,10 @@ class BookStore:
         if number is None:
             number = self._admit_tiles([tile])[0]
         return number
+
+    def tile_numbers_batch(self, tiles: Iterable[TileId]) -> List[int]:
+        """`agent_numbers_batch` for tiles."""
+        return self._admit_tiles(tiles)
 
     def _admit_tiles(self, tiles: Iterable[TileId]) -> List[int]:
         given = list(tiles)

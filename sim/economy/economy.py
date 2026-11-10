@@ -453,6 +453,7 @@ class Economy:
 
         asked, worth = lend_requests.asked_and_worth(requests, plant_worth_of)
         plant_runs: Dict[str, float] = {}
+        plant_bids = OrderRows(order_book, LOAN)        # every borrower's plant bids, written once
         for borrower, principal in funded:
             runs = record.credit.expansion_runs.get(borrower, 0.0)
             if tile_of[borrower] is None or runs <= 0.0 or not asked.get(borrower):
@@ -461,7 +462,8 @@ class Economy:
             plant_runs[borrower] = plant_runs.get(borrower, 0.0) + funded_runs
             # no dearer than the price at which the new plant would earn just the loan's rate
             self._bid_for_plant(borrower, tile_of[borrower], recipe_of[borrower], funded_runs, principal, worth.get(borrower, 1.0), view,
-                                order_book)
+                                plant_bids)
+        plant_bids.write()
         record.credit.clear_expansion()
         return plant_runs
 
@@ -475,6 +477,7 @@ class Economy:
         worn = record.credit.take_rebuilds()
         cash_of = record.book.balance_by_agent(sorted(worn), money)
         figures = producer_blocks.figures_by_id(record.producers, sorted(worn))
+        plant_bids = OrderRows(order_book, LOAN)        # every producer's plant bids, written once
         for producer_id, runs in sorted(worn.items()):
             producer = figures.get(producer_id)
             if producer is None or runs <= 0.0:
@@ -488,13 +491,14 @@ class Economy:
             if earning is None or not earning > rate or cash <= 0.0:
                 continue
             self._bid_for_plant(producer_id, producer.tile, producer.recipe_id, runs, cash,
-                                plant_worth_ratio(earning, rate, recipe.plant_life_years), view, order_book)
+                                plant_worth_ratio(earning, rate, recipe.plant_life_years), view, plant_bids)
             rebuilt[producer_id] = runs
+        plant_bids.write()
         return rebuilt
 
-    def _bid_for_plant(self, producer_id, tile, recipe_id, runs, budget, worth_ratio, view, order_book) -> None:
+    def _bid_for_plant(self, producer_id, tile, recipe_id, runs, budget, worth_ratio, view, rows) -> None:
+        """The producer's bids for the plant goods its funded runs need, added to `rows` (the caller writes them)."""
         recipe = self.setup.recipes[recipe_id]
-        rows = OrderRows(order_book, LOAN)
         for good, per_run in sorted(recipe.plant_goods.items()):
             if good not in self.area_map.goods():
                 continue
@@ -504,7 +508,6 @@ class Economy:
                 continue
             rows.bid(producer_id, good, area, tile, per_run * runs, 0.0, price, 0.0, budget,
                      maximum_price=price * max(1.0, worth_ratio))
-        rows.write()
 
     def _build_plant(self, plant_runs: Dict[str, float]) -> None:
         """Plant goods a producer received are built in; capacity grows by the share that arrived."""

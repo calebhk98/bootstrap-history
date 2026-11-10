@@ -151,4 +151,5 @@ def worths_from_arrays(setup, record, view, arrays) -> Dict[str, float]:
     worth, has = producer_worths(recipe_row, tile_row, capacity, cash, debt, eligible, rows, goods, quantities, extra,
                                  matrices.plant_goods, matrices.plant_labour_hours, matrices.plant_life_years, price, wage,
                                  arrays.area_index.of_good_tile)
-    return {ids[row]: float(worth[row]) for row in np.nonzero(has)[0]}
+    held = np.nonzero(has)[0]
+    return dict(zip(map(ids.__getitem__, held.tolist()), worth[held].tolist()))

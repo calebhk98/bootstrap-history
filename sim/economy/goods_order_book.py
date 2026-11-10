@@ -112,20 +112,21 @@ class GoodsOrderBook:
         return list(map(known.__getitem__, pairs))
 
     def _numbers_of(self, kind: int, names: Sequence[str], admit) -> List[int]:
-        """The ids of the names: those new to the year are looked up (admitted by `admit`, in name order) once, not once per order."""
+        """The ids of the names: those new to the year are looked up (admitted together by `admit`, in name order) once, not once per order."""
         cache = self._numbers[kind]
-        for name in sorted(name for name in dict.fromkeys(names) if name not in cache):
-            cache[name] = admit(name)
+        new = sorted(name for name in dict.fromkeys(names) if name not in cache)
+        if new:
+            cache.update(zip(new, admit(new)))
         return list(map(cache.__getitem__, names))
 
     def agent_ids_of(self, names: Sequence[str]) -> List[int]:
-        return self._numbers_of(0, names, self.book.agent_number)
+        return self._numbers_of(0, names, self.book.agent_numbers_batch)
 
     def good_ids_of(self, names: Sequence[str]) -> List[int]:
-        return self._numbers_of(1, names, self.book.good_number)
+        return self._numbers_of(1, names, self.book.good_numbers_batch)
 
     def tile_ids_of(self, names: Sequence[str]) -> List[int]:
-        return self._numbers_of(2, names, self.book.tile_number)
+        return self._numbers_of(2, names, self.book.tile_numbers_batch)
 
     # ---- legacy doors (objects) ------------------------------------------------------------------
 
