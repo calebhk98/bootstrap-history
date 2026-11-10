@@ -36,11 +36,12 @@ def _first_below(ranked, count, offers, ask):
 
 
 @njit
-def _shares_of_prefix(count, ranked, offered, offers, applications, shares, ways):
+def _shares_of_prefix(count, ranked, offered, offers, applications, shares, ways, better):
     """For the first `count` ranked posters, the share of one hour of a group applying to `applications` of them at random
     that each takes on, given the chance each makes an offer; fills `shares[:count]`."""
     applied = applications if applications < count else count
-    better = np.zeros(applications)
+    for chosen in range(applications):
+        better[chosen] = 0.0
     better[0] = 1.0
     denominator = ways[count - 1, applied - 1]
     for position in range(count):
@@ -73,6 +74,7 @@ def _shares_of_prefix(count, ranked, offered, offers, applications, shares, ways
 def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ceilings, taken_amount, taken_flag,
                  rounds, applications, separation, cut, raise_share, threshold, ways):
     count_employers = hired.shape[0]
+    better = np.empty(applications)
     capacity = 2 + rounds * count_employers
     group_hours = np.empty(capacity)
     group_ask = np.empty(capacity)
@@ -156,7 +158,7 @@ def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ce
             reached = slot_count[slot]
             slot_total[slot] = 0.0
             if reached > 0:
-                _shares_of_prefix(reached, ranked, offered, offers, applications, slot_shares[slot], ways)
+                _shares_of_prefix(reached, ranked, offered, offers, applications, slot_shares[slot], ways, better)
                 for position in range(reached):
                     slot_total[slot] += slot_shares[slot, position]
         furthest = 0
