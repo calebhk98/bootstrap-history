@@ -73,11 +73,31 @@ def compile_all():
     return time.perf_counter() - began, uncompiled()
 
 
-def cmd_compile_kernels(_args):
+def jobs_of(asked):
+    """The processes to compile in: as asked, else the cores this process may use."""
+    if asked:
+        return max(1, asked)
+    return len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else (os.cpu_count() or 1)
+
+
+def cmd_compile_kernels(args):
+    from . import compile_parallel
+    internal = getattr(args, "internal", None)
+    if internal:     # a step run in a child process by `compile_parallel`
+        if internal[0] == compile_parallel.RECORD:
+            compile_parallel.record_signatures(internal[1])
+        else:
+            compile_parallel.compile_share(internal[1], int(internal[2]))
+        return
     if not jit.ENABLED:
         print("numba is not in use (not installed, or %s is set): nothing to compile" % jit.NO_JIT_ENV)
         return
+    began = time.perf_counter()
+    jobs = jobs_of(getattr(args, "jobs", 0))
+    if jobs > 1:
+        compile_parallel.compile_in_parallel(jobs)     # a worker that fails leaves its kernels to the serial pass below
     seconds, missing = compile_all()
+    seconds = time.perf_counter() - began
     print("compiled %d kernels in %.1f s" % (len(jit.REGISTRY), seconds))
     if missing:
         print("kernels reached by neither the fixture nor kernel_signatures.py:\n  " + "\n  ".join(missing))
