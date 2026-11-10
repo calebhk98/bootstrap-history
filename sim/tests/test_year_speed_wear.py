@@ -49,6 +49,11 @@ class WearAndSpoilageIsTheOldPass(unittest.TestCase):
             old_wear_and_spoilage(setup, old_record, ("producer:003",))
             year_close.wear_and_spoilage(setup, record, ("producer:003",))
             self.assertEqual(stocks_of(record.book), stocks_of(old_record.book))
+            self.assertEqual(record.book.numbering_state(), old_record.book.numbering_state())
+            for edge in ("edge:spoilage", "edge:consumption", "edge:wear"):
+                self.assertEqual(record.book.edge_volume(edge, MONEY), old_record.book.edge_volume(edge, MONEY))
+                for good in record.book.gross_goods():
+                    self.assertEqual(record.book.edge_goods_net(edge, good), old_record.book.edge_goods_net(edge, good))
             for agent in record.book.agents():
                 self.assertEqual(record.book.balance(agent, MONEY), old_record.book.balance(agent, MONEY))
             self.assertNotEqual(stocks_of(record.book), stocks_of(copy.deepcopy(economy_of(seed, producer_count=50)[1].book)))

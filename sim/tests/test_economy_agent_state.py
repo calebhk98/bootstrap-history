@@ -7,6 +7,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.credit_record import CreditRecord
+
 from sim.economy import state_budget, state_finance
 from sim.economy.state_policy import StatePolicy
 from sim.economy.types import CurrencySpec, Loan
@@ -33,14 +35,9 @@ class StubBook:
         self.transfers.extend(transfers)
 
 
-class StubCredit:
-    """The credit record's two lists and the owner method that asks for a loan."""
-
-    def __init__(self):
-        self.loans, self.loan_requests, self.remembered_defaults = [], [], {}
-
-    def ask_for_loan(self, request):
-        self.loan_requests.append(request)
+def StubCredit():
+    """A credit record with no loans."""
+    return CreditRecord()
 
 
 def currency(regime):

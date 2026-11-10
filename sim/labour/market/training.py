@@ -9,9 +9,11 @@ join the fallback trade. A trade needing no training takes people straight into 
 import math
 from typing import List, Sequence, Tuple
 
+import numpy as np
+
 from sim.constants import declare
 
-from . import aptitude
+from . import aptitude, training_kernel
 from .records import MarketState, YearInputs, YearReport
 from .trades import fallback_trade
 
@@ -79,30 +81,27 @@ def enrol(state: MarketState, inputs: YearInputs, area: str, trade: str,
 
 
 def advance(state: MarketState, inputs: YearInputs, report: YearReport) -> None:
-    """Every cohort ages a year; finished cohorts graduate or fall back."""
+    """Every cohort ages a year; finished cohorts graduate or fall back (`training_kernel.age_cohorts` over the trainees table)."""
     fallback = fallback_trade(inputs.trades)
-    for area in sorted(state.trainees):
-        by_trade = state.trainees[area]
-        for trade in sorted(by_trade):
-            still: List[list] = []
-            spec = inputs.trades.get(trade)
-            for years_left, bands, bonus in by_trade[trade]:
-                years_left -= 1.0
-                if years_left > GRADUATION_TOLERANCE_YEARS:
-                    still.append([years_left, bands, bonus])
-                    continue
-                chances = (aptitude.completion_by_band(spec.difficulty, bonus) if spec is not None
-                           else aptitude.empty_bands())
-                finished = [value * chance for value, chance in zip(bands, chances)]
-                failed = [value - done for value, done in zip(bands, finished)]
-                workers = state.workers.setdefault(area, {})
-                aptitude.add_bands(aptitude.bands_of(workers, trade), finished)
-                aptitude.add_bands(aptitude.bands_of(workers, fallback), failed)
-                report.graduated.setdefault(area, {})[trade] = (
-                    report.graduated.get(area, {}).get(trade, 0.0) + aptitude.band_total(finished))
-            if still:
-                by_trade[trade] = still
-            else:
-                del by_trade[trade]
-        if not by_trade:
-            del state.trainees[area]
+    state.admit((), list(inputs.trades))
+    rows = int(state.trainee_table.row_count[0])
+    if not rows:
+        return
+    ids = state.ids
+    specs = [inputs.trades.get(name) for name in ids.trades.names]
+    difficulty = np.array([spec.difficulty if spec else 0.0 for spec in specs])
+    has_spec = np.array([spec is not None for spec in specs], np.bool_)
+    trainees, workers, areas = state.trainee_table, state.workers_table, state.areas_table
+    keep = np.zeros(rows, np.bool_)
+    graduated, graduated_any = np.zeros(len(workers.present)), np.zeros(len(workers.present), np.bool_)
+    counter = np.array([state._order], np.int64)
+    training_kernel.age_cohorts(trainees.market, trainees.years_left, trainees.bonus, trainees.people, rows, len(ids.trades), difficulty, has_spec,
+                                ids.trades.number(fallback), np.array(aptitude.band_abilities()), aptitude.COMPLETION_SPREAD,
+                                GRADUATION_TOLERANCE_YEARS, workers.people, workers.present, workers.order, workers.length, areas.workers_named,
+                                areas.workers_order, counter, graduated, graduated_any, keep)
+    state._order = int(counter[0])
+    state.keep_cohorts(keep)
+    trade_count = len(ids.trades)
+    for row in np.flatnonzero(graduated_any).tolist():
+        area, trade = ids.areas.names[row // trade_count], ids.trades.names[row % trade_count]
+        report.graduated.setdefault(area, {})[trade] = report.graduated.get(area, {}).get(trade, 0.0) + float(graduated[row])

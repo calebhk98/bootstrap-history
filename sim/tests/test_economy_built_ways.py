@@ -81,12 +81,13 @@ class SetupAndEconomyTests(unittest.TestCase):
     def test_the_rebuilt_carriage_table_is_the_setups_over_the_current_ways(self):
         asked = []
         stand_in = types.SimpleNamespace(
-            record=types.SimpleNamespace(carriage=CarriageRecord(ways=self.edge, area_imbalance=1.5)), area_map="old",
+            record=types.SimpleNamespace(memory="memory", carriage=CarriageRecord(ways=self.edge, area_imbalance=1.5)), area_map="old",
             setup=types.SimpleNamespace(carriage_table=lambda ways, imbalance: asked.append((ways, imbalance)) or "table",
                                         area_map=lambda carriage: ("areas", carriage)))
-        with mock.patch.object(economy_module, "follow"):
+        with mock.patch.object(economy_module, "follow"), mock.patch.object(economy_module, "number_area_markets") as numbered:
             self.assertTrue(Economy._rebuild_carriage(stand_in))
         self.assertEqual((stand_in.carriage, stand_in.area_map, asked), ("table", ("areas", "table"), [(self.edge, 1.5)]))
+        self.assertEqual(numbered.call_args.args[1], ("areas", "table"))     # the new map's markets are numbered after the memory follows
 
     def test_the_spin_up_key_sees_the_ways(self):
         self.assertIn("improvements", {field.name for field in dataclasses.fields(EconomySetup)})

@@ -10,7 +10,7 @@ one state can take a share of the crop in some and a share of assessed property 
 from dataclasses import dataclass, replace
 from typing import Any, FrozenSet, List, Optional, Tuple
 
-from . import authority, evasion, revenue_labour
+from . import assessment_kernels, assessment_table, authority, evasion, revenue_labour
 from .revenue_bases import BASES, GOOD_BASES, TILE_BASES
 
 
@@ -65,12 +65,19 @@ def form_tiles(declared: Any, world: Any) -> Optional[FrozenSet[str]]:
 	return frozenset(chosen - set(excepted or ()))
 
 
-def assess(world: Any) -> List[Assessment]:
-	"""Every declared form assessed on this year's base, in the order the civilisation lists them."""
-	assessments = []
+def assess(world: Any) -> assessment_table.AssessmentTable:
+	"""Every declared form assessed on this year's base, in the order the civilisation lists them. Python reads each form's base,
+	reach and payers through the world's views (once per form); the kernels do the arithmetic over the table of forms and payers
+	(`assessment_kernels.py`)."""
+	rows, form_figures, payer_figures = [], [], []
 	for declared in world.revenue.revenue_forms():
 		if declared["basis"] == revenue_labour.BASIS:
-			assessments.append(labour_due(declared, world))
+			levy = revenue_labour.levy_of(declared, world)
+			share_of_year = (float(declared["rate"]) * revenue_labour.HOURS_PER_WORKING_DAY) / world.labour.hours_per_person_year
+			rows.append(assessment_table.FormRow(declared["form"], declared["basis"], labour_to=levy.destination))
+			form_figures.append({"kind": assessment_kernels.LABOUR, "rate": share_of_year, "person_days": levy.person_days,
+								 "commute": levy.commute,
+								 "base": levy.people * world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled"))})
 			continue
 		tiles = form_tiles(declared, world)
 		material = declared.get("paid_in", "")
@@ -87,13 +94,19 @@ def assess(world: Any) -> List[Assessment]:
 							 % (declared["form"], material, declared["basis"], base.material))
 		collectible = world.collection.collectible_share(tiles)
 		kept = authority.kept_on(world, tiles)
+		figures = {"rate": rate, "collectible": collectible, "kept": kept}
 		if base.payers:
-			assessments.append(leaked(taxed_actors(declared, base, collectible), kept))
-			continue
-		assessments.append(leaked(Assessment(declared["form"], declared["basis"], base.value, rate, collectible * rate * base.value,
-											 collectible * rate * base.tonnes if material else 0.0, material,
-											 collectible=collectible), kept))
-	return assessments
+			names = declared.get("from_strata")
+			chosen = [(payer, income) for payer, income in base.payers if names is None or payer.record.stratum in names]
+			figures.update(kind=assessment_kernels.HELD_BY_PAYERS, visible_share=1.0 - evasion.hidden_share(rate, collectible),
+						   first_payer=len(payer_figures), payer_count=len(chosen))
+			payer_figures.extend({"form": len(rows), "income": income, "purse": payer.money} for payer, income in chosen)
+			rows.append(assessment_table.FormRow(declared["form"], declared["basis"], payers=tuple(payer for payer, _income in chosen)))
+		else:
+			figures.update(kind=assessment_kernels.PLAIN, base=base.value, base_tonnes=base.tonnes, in_kind=1 if material else 0)
+			rows.append(assessment_table.FormRow(declared["form"], declared["basis"], material))
+		form_figures.append(figures)
+	return assessment_table.build(rows, form_figures, payer_figures)
 
 
 def leaked(assessment: Assessment, kept: float) -> Assessment:
@@ -109,7 +122,8 @@ def leaked(assessment: Assessment, kept: float) -> Assessment:
 def taxed_actors(declared: Any, base: Any, collectible: float = 1.0) -> Assessment:
 	"""A form on what actors hold: each payer keeps part of its income off the rolls (evasion.py, by the rate and the
 	state's reach) and owes the rate of the rest, no more than its purse holds, and the state reaches the
-	`collectible` share of it. A form may name the bodies it falls on (`from_strata`)."""
+	`collectible` share of it. A form may name the bodies it falls on (`from_strata`). The year's assessment does this in
+	`assessment_kernels.assess_payers`; this is the same rule over one base, for a caller that has an assessment's parts."""
 	rate = float(declared["rate"])
 	names = declared.get("from_strata")
 	chosen = [(payer, income) for payer, income in base.payers if names is None or payer.record.stratum in names]
@@ -119,13 +133,3 @@ def taxed_actors(declared: Any, base: Any, collectible: float = 1.0) -> Assessme
 	seen_total = sum(seen for _payer, seen in declared_by_payer)
 	return Assessment(declared["form"], declared["basis"], seen_total, rate, sum(amount for _payer, amount in owed),
 					  payers=owed, collectible=collectible, concealed=gross - seen_total)
-
-
-def labour_due(declared: Any, world: Any) -> Assessment:
-	"""Labour owed: the base is a year of the liable people's work at the going wage, the rate the share of a working
-	year the days come to, so the money's worth is what the state would pay for the labour."""
-	levy = revenue_labour.levy_of(declared, world)
-	share_of_year = (float(declared["rate"]) * revenue_labour.HOURS_PER_WORKING_DAY) / world.labour.hours_per_person_year
-	base = levy.people * world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled"))
-	return Assessment(declared["form"], declared["basis"], base, share_of_year, share_of_year * base,
-					  person_days=levy.person_days, labour_to=levy.destination, commute=levy.commute)

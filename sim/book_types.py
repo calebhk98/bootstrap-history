@@ -12,6 +12,8 @@ TileId = str
 # other agent's holdings change only by a transfer with a counterparty.
 EDGE_PREFIX = "edge:"
 EDGE_EXCHANGE = "edge:exchange"   # the actors' coin turned into the economy's unit and back
+MINT_ID = "edge:mint"             # where coin is struck from metal and melted back into it (the agent flag `is_mint`)
+EXTERNAL_PREFIX = "edge:external"  # foreign economies the model does not simulate (the agent flag `is_external`)
 
 
 def is_edge(agent_id: AgentId) -> bool:

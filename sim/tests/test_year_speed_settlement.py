@@ -9,6 +9,7 @@ agent, where the old path posted pair by pair."""
 QUICK_TOPIC = True
 
 import random
+from collections.abc import Mapping
 import unittest
 
 from sim.book import Book
@@ -55,9 +56,9 @@ def snapshot(book):
 
 def close(left, right, path=""):
     """Every number in two nested structures agrees within TOLERANCE of the larger (or of one, near zero)."""
-    if isinstance(left, dict) or isinstance(right, dict):
+    if isinstance(left, Mapping) or isinstance(right, Mapping):
         keys = {key for key, value in list(left.items()) + list(right.items()) if abs(value if isinstance(value, float) else 1.0) > TOLERANCE
-                or isinstance(value, (dict, tuple))}
+                or isinstance(value, (Mapping, tuple))}
         for key in keys:
             close(left.get(key, 0.0), right.get(key, 0.0), "%s/%s" % (path, key))
         return

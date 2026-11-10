@@ -16,12 +16,12 @@ import numpy as np
 
 from sim.labour.api import SOURCE_TASK_FLOOR_FRACTION, learning_curve
 
-from . import entry_kernels, labour_state, location, location_inputs, practice, sites
+from . import entry_kernels, entry_plan_pack, entry_siting_tables, labour_state, location, location_inputs, practice, sites
 from .entry_spare import idle_runs
-from .location_land import land_short_tiles
+from .year_close_dividend_kernels import add_in_order
 from .producers_close import LOSS_YEARS_BEFORE_EXIT
 from .rates import own_rate
-from .setup import labour_area, recipe_tile_key
+from .setup import labour_area
 from .types import TileId
 from .year_arrays_memory import NO_AREA
 
@@ -45,6 +45,7 @@ class EntryTables:
     def __init__(self, setup, record, view, area_map, arrays, carriage, crews_of):
         self.setup, self.record, self.area_map, self.arrays = setup, record, area_map, arrays
         self.carriage, self.crews_of = carriage, crews_of
+        self.known_goods = set(area_map.goods())
         matrices, memory = arrays.matrices, arrays.memory
         self.matrices, self.tiles, self.goods, self.trades = matrices, arrays.tiles, matrices.goods, matrices.trades
         self.recipe_row = matrices.recipes.row
@@ -76,7 +77,10 @@ class EntryTables:
         self._first_hours = np.zeros(len(recipe_ids))
         self._sites: Dict[int, RecipeSite] = {}
         self._siting_ready = False
+        self._reach = None            # the reachable output by good and area (`capacity_in`), made on first use
         self._area_masks: Dict[str, np.ndarray] = {}
+        self._unsited_candidates: Dict[Tuple[int, str], np.ndarray] = {}
+        self._traded = None
 
     @classmethod
     def build(cls, setup, record, view, area_map, arrays, carriage, crews_of) -> "EntryTables":
@@ -172,14 +176,27 @@ class EntryTables:
         `capacity_terms_by_good`), plant to come counted."""
         columns = self.arrays.producers
         index = self.arrays.area_index
-        reach = entry_kernels.reach_by_area(columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor,
-                                            self._pending(), self.matrices.outputs, index.of_good_tile, len(index.areas.ids))
+        if self._reach is None:     # the producers and plant to come do not change while plans are made: the grid is made once
+            self._reach = entry_kernels.reach_by_area(columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor,
+                                                      self._pending(), self.matrices.outputs, index.of_good_tile, len(index.areas.ids))
+        reach = self._reach
         goods_row, areas_row = self.goods.row, index.areas.row
 
         def capacity(good, area_id):
             good_column, area_column = goods_row.get(good), areas_row.get(area_id)
             return 0.0 if good_column is None or area_column is None else float(reach[good_column, area_column])
         return capacity
+
+    def reach_grid(self) -> np.ndarray:
+        """The output the makers of each (good column, area column) could reach, plant to come counted (the grid `capacity_in` reads)."""
+        self.capacity_in()
+        return self._reach
+
+    def traded_grid(self) -> np.ndarray:
+        """What each good's market carried last year, seen from each tile (`entry_plan_pack.traded_grid`), read once."""
+        if self._traded is None:
+            self._traded = entry_plan_pack.traded_grid(self)
+        return self._traded
 
     # ---- spare output -----------------------------------------------------------------------------------------
     def spare_output(self) -> np.ndarray:
@@ -191,7 +208,10 @@ class EntryTables:
 
     # ---- siting -----------------------------------------------------------------------------------------------
     def _ready_siting(self) -> None:
-        """What every siting reads of the producers and the map; read once, on the first siting."""
+        """What every siting reads of the producers and the map; read once, on the first siting (a later call would drop the sites
+        already claimed)."""
+        if self._siting_ready:
+            return
         setup, record, columns = self.setup, self.record, self.arrays.producers
         matrices = self.matrices
         tile_count, goods_count = len(self.tiles.ids), len(self.goods.ids)
@@ -207,35 +227,17 @@ class EntryTables:
         self.fixed_goods = np.array([good in fixed for good in self.goods.ids], dtype=np.bool_)
         pending = self._pending()
         self.capacity = np.zeros((len(matrices.recipes.ids), tile_count))
-        np.add.at(self.capacity, (columns.recipe_row, columns.tile_row), columns.capacity_runs + pending)
+        add_in_order(columns.recipe_row * tile_count + columns.tile_row, columns.capacity_runs + pending, self.capacity.reshape(-1))
         self.committed = np.zeros(tile_count)
-        booked_hours = {}
-        for position, producer in enumerate(columns.records):
-            recipe = setup.recipes[producer.recipe_id]
-            hours = booked_hours.get(producer.recipe_id) if not producer.crew_runs else None
-            if hours is None:
-                hours = math.fsum(practice.recipe_for(recipe, producer.crew_runs).labour_hours.values())
-                if not producer.crew_runs:
-                    booked_hours[producer.recipe_id] = hours
-            working = producer.capacity_runs if producer.last_runs < 0.0 else producer.last_runs
-            self.committed[columns.tile_row[position]] += working * hours
+        working = np.where(columns.last_runs < 0.0, columns.capacity_runs, columns.last_runs)
+        add_in_order(columns.tile_row, working * entry_siting_tables.hours_of_producers(setup.recipes, columns), self.committed)
         self.short_of_land = np.zeros(tile_count, dtype=np.bool_)
-        for tile in land_short_tiles((each.tile, each.land_run_cap, setup.land_per_run.get(each.recipe_id, 0.0) > 0.0)
-                                     for each in columns.records):
-            self.short_of_land[self.tiles.row[tile]] = True
+        self.short_of_land[columns.tile_row[entry_siting_tables.land_short_rows(columns, self.tables[6][:, 1])]] = True
         self.supply_weight, self.supply_present = entry_kernels.supply_by_tile(
             columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor, matrices.outputs, tile_count)
-        self.hands_hours = np.array([math.fsum(labour_state.people_by_trade(record.labour.workforce, labour_area(tile)).values())
-                                     for tile in self.tiles.ids]) * setup.working_hours_per_year
-        carriage = np.full((tile_count, tile_count), np.inf)
-        for source in self.tiles.ids:
-            reached = self.carriage.costs_from(source) if hasattr(self.carriage, "costs_from") else {
-                tile: self.carriage.cost_per_tonne(source, tile) for tile in self.tiles.ids}
-            for tile, cost in reached.items():
-                column = self.tiles.row.get(tile)
-                if column is not None:
-                    carriage[self.tiles.row[source], column] = cost
-        self.carriage_matrix = carriage
+        self.hands_hours = labour_state.working_people_of_areas(record.labour.workforce, [labour_area(tile) for tile in self.tiles.ids]) \
+            * setup.working_hours_per_year
+        self.carriage_matrix = entry_siting_tables.carriage_matrix(self.carriage, self.tiles.ids, self.tiles.row)
         recipe_count = len(matrices.recipes.ids)
         self.yield_rt = np.ones((recipe_count, tile_count))
         self.limit_rt = np.full((recipe_count, tile_count), np.inf)
@@ -256,11 +258,9 @@ class EntryTables:
         fits = self._allowed_by_climate(recipe) & self._allowed_by_people(recipe_id)
         limits = self.by_recipe.get(recipe_id, {})
         suited = fits & np.array([tile in limits for tile in tile_ids], dtype=np.bool_) if sited else fits
-        for column, tile in enumerate(tile_ids):
-            self.yield_rt[row, column] = sites.yield_at(recipe, tile, self.by_recipe, setup.yield_factor_by_recipe_tile.get(
-                recipe_tile_key(recipe_id, tile), 1.0))
-            if sited:
-                self.limit_rt[row, column] = limits[tile].capacity_runs_per_year if tile in limits else 0.0
+        self.yield_rt[row] = entry_siting_tables.yield_row(recipe, tile_ids, setup.yield_factor_by_recipe_tile, limits, self.tiles.row)
+        if sited:
+            self.limit_rt[row] = entry_siting_tables.limit_row(limits, tile_ids, self.tiles.row)
         for good, tonnes in location_inputs.tonnes_of(recipe.inputs, setup.specs).items():
             if self.fixed_goods[self.goods.row[good]]:
                 self.input_tonnes[row, self.goods.row[good]] = tonnes
@@ -324,7 +324,10 @@ class EntryTables:
                 candidates = site.order
             else:
                 area = self.area_map.market_area_of(demand.good, demand.anchor_tile)
-                candidates = np.flatnonzero(site.suited & (self._area_mask(area) | site.supply_tiles))
+                candidates = self._unsited_candidates.get((row, area.area_id))
+                if candidates is None:       # the recipe's suited tiles in the area, or where a maker of its fixed-site input stands
+                    candidates = self._unsited_candidates[(row, area.area_id)] = np.flatnonzero(
+                        site.suited & (self._area_mask(area) | site.supply_tiles))
             tile, taken = entry_kernels.site_choice(
                 row, anchor, candidates, runs, site.tonnes_out, self.tables, self.input_tonnes, self.supply_weight,
                 self.supply_present, self.carriage_matrix, self.hauls, self.yield_rt, self.limit_rt, bool(takes_land),

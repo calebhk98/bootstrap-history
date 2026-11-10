@@ -2,180 +2,180 @@
 
 Agents close their year from this: a producer from what it took in and paid out, a cohort from what
 it received and earned, a merchant from what it bought where. It is rebuilt every year and not saved.
-"""
-from dataclasses import dataclass, field
+
+The figures live in tables (`year_ledger_tables.py`) keyed by the book's agent, good and purpose numbers and the market memory's
+market numbers; `year_ledger_views.py` shows them as the dicts they used to be (`ledger.money_out["farm"]`), so a reader not yet
+on the tables is unchanged. A converted caller hands the `note_*_arrays` entry points whole arrays of numbers instead. What the
+tables do not hold yet is kept as before: the clearings, fills and bids (objects the goods side owns), the labour results, the
+mint takes, and the small per-agent dicts nobody adds to in a loop (`crew_hours_bought`, `own_plot_hours`, `grown_units`,
+`carried_in`)."""
 from typing import Dict, Iterable, List, Optional, Tuple
 
-from .clearing_totals import MarketKey, market_totals
+import numpy
+
+from .clearing_totals import MarketKey
 from .goods_year_results import ArrayClearing
-from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer, EDGE_MINT, is_external_edge
+from .types import AgentId, ClearingResult, Fill, GoodId, GoodsMove, LabourResult, Transfer
+from . import year_ledger_arrays as arrays
+from .year_ledger_note_kernels import round_totals
+from .year_ledger_store import LedgerTables
+from .year_ledger_pair_views import NestedView, PairView
+from .year_ledger_postings import PostingNotes
+from .year_ledger_subs import ForeignSub, GoodSub, LabourMarketSub, TradeSub
+from .year_ledger_tables import (HOURS, HOURS_SOLD, MONEY_OUT, OTHER_PURPOSE, OUTPUT, PAIR_KIND, PLANT_SPEND, PLANT_WORN, ROUNDS, SALES_IN,
+                                 SALES_PURPOSE, SETTLEMENTS, SPARE_HOURS, WAGES_IN, WAGES_PURPOSE)
+from .year_ledger_views import AgentFigureView, MarketFigureView
 
-SALE_PREFIX = "sale of "    # settlement's purpose for a goods sale
+
+def _floats(values) -> numpy.ndarray:
+    return numpy.asarray(values, dtype=numpy.float64)
 
 
-@dataclass
-class YearLedger:
-    money_out: Dict[AgentId, float] = field(default_factory=dict)
-    wages_in: Dict[AgentId, float] = field(default_factory=dict)
-    sales_in: Dict[AgentId, float] = field(default_factory=dict)
-    received: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)
-    hours_hired: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)
-    hours_hired_by_market: Dict[Tuple[AgentId, str, str], Tuple[float, float]] = field(default_factory=dict)   # (employer, trade, area): (hours paid for, money paid)
-    crew_hours_bought: Dict[AgentId, Dict[Tuple[str, str], float]] = field(default_factory=dict)   # merchants that bid for crew: hours sold them by (trade, area)
-    hours_sold: Dict[AgentId, float] = field(default_factory=dict)
-    spare_hours: Dict[AgentId, float] = field(default_factory=dict)   # hours a household had left once its own plot took what the land it holds could
-    grown: Dict[AgentId, Dict[GoodId, float]] = field(default_factory=dict)       # made for itself
-    own_plot_hours: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)   # hours worked on its own plot, by recipe
-    grown_units: Dict[AgentId, Dict[str, float]] = field(default_factory=dict)    # need units of that
-    buy_fills: Dict[AgentId, List[Fill]] = field(default_factory=dict)
-    fill_watchers: Optional[frozenset] = None   # the buyers whose buy fills are kept (merchants and the state read them); None: all
-    sold: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
-    output: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)
-    clearings: List[ClearingResult] = field(default_factory=list)
-    delivered_by_market: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): goods settlement moved
-    totals_cache: Optional[Tuple[Dict[MarketKey, float], Dict[MarketKey, Optional[float]]]] = field(default=None, repr=False, compare=False)
-    mint_takes: List[Tuple[ClearingResult, Dict[Tuple[AgentId, str], float]]] = field(default_factory=list)   # clearing, units delivered to the mint by (seller, tile)
-    pending_mint_takes: Dict[Tuple[AgentId, str], float] = field(default_factory=dict, repr=False)
-    labour_results: List[LabourResult] = field(default_factory=list)
-    imports_paid: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)       # money paid to foreign partners
-    carried_in: Dict[Tuple[AgentId, str], float] = field(default_factory=dict)   # (carrier, source country): value at the source of what it carried into the home country (the tariff rides on it)
-    exports_received: Dict[Tuple[AgentId, GoodId], float] = field(default_factory=dict)   # money received from them
-    plant_spend: Dict[AgentId, float] = field(default_factory=dict)    # paid for plant goods, a build not a running cost
-    plant_worn: Dict[AgentId, float] = field(default_factory=dict)     # runs of capacity that wore out this year
-    unmet_demand: Dict[Tuple[GoodId, str], float] = field(default_factory=dict)   # (good, area): quantity
-    bids_by_market: Dict[Tuple[GoodId, str], list] = field(default_factory=dict)  # (good, area): the year's bids
-    import_accounts: frozenset = frozenset()   # accounts whose sales are goods that crossed the border (customs)
-    export_accounts: frozenset = frozenset()   # accounts whose purchases leave over the border
-    migrated_by_tile: Dict[str, float] = field(default_factory=dict)   # net working people the labour market moved, by tile
-    bonded_lots: list = field(default_factory=list)   # the lots as paid (bonded_purchase.settle)
-    wage_floor_per_hour: float = 0.0       # what a worker's household costs less its plot, per hour, over the areas
-    state_capacity: float = 1.0            # the year's share of its assessments the state's officials collect (`EconomyYearInputs.state_capacity`)
+def _flags(values) -> numpy.ndarray:
+    return numpy.asarray(values, dtype=numpy.bool_)
 
-    def note_postings(self, postings: Iterable[object], purpose_kind: str = "") -> None:
-        for posting in postings:
-            if isinstance(posting, Transfer):
-                self.money_out[posting.payer] = self.money_out.get(posting.payer, 0.0) + posting.amount
-                self._note_foreign(posting)
-                if purpose_kind == "wages":
-                    self.wages_in[posting.payee] = self.wages_in.get(posting.payee, 0.0) + posting.amount
-                elif purpose_kind == "sales":
-                    self.sales_in[posting.payee] = self.sales_in.get(posting.payee, 0.0) + posting.amount
-            elif isinstance(posting, GoodsMove) and purpose_kind == "sales":
-                goods = self.received.setdefault(posting.receiver, {})
-                goods[posting.good] = goods.get(posting.good, 0.0) + posting.quantity
-                key = (posting.giver, posting.good)
-                self.sold[key] = self.sold.get(key, 0.0) + posting.quantity
-                if posting.receiver == EDGE_MINT:
-                    taken = (posting.giver, posting.tile)
-                    self.pending_mint_takes[taken] = self.pending_mint_takes.get(taken, 0.0) + posting.quantity
+
+class YearLedger(PostingNotes):
+    def __init__(self, import_accounts: frozenset = frozenset(), export_accounts: frozenset = frozenset(), state_capacity: float = 1.0,
+                 book=None, markets=None) -> None:
+        """`book` and `markets` are the game's book and market memory tables (`record.book`, `record.memory.tables`), whose
+        numberings the ledger's tables use; a ledger made without them numbers on its own, which is for a test."""
+        self.tables = tables = LedgerTables(book, markets)
+        figure = lambda name, number: AgentFigureView(tables, number, name)       # noqa: E731
+        self.money_out = figure("money_out", MONEY_OUT)
+        self.wages_in = figure("wages_in", WAGES_IN)
+        self.sales_in = figure("sales_in", SALES_IN)
+        self.plant_spend = figure("plant_spend", PLANT_SPEND)     # paid for plant goods, a build not a running cost
+        self.plant_worn = figure("plant_worn", PLANT_WORN)        # runs of capacity that wore out this year
+        self.hours_sold = figure("hours_sold", HOURS_SOLD)
+        self.spare_hours = figure("spare_hours", SPARE_HOURS)     # hours a household had left once its own plot took what the land it holds could
+        pairs = tables.pairs
+        self.received = NestedView(tables, pairs["received"], GoodSub(tables))
+        self.grown = NestedView(tables, pairs["grown"], GoodSub(tables))                 # made for itself
+        self.hours_hired = NestedView(tables, pairs["hours_hired"], TradeSub(tables))
+        self.sold = PairView(tables, pairs["sold"], GoodSub(tables))
+        self.output = PairView(tables, pairs["output"], GoodSub(tables))
+        self.imports_paid = PairView(tables, pairs["imports_paid"], ForeignSub(tables))      # money paid to foreign partners
+        self.exports_received = PairView(tables, pairs["exports_received"], ForeignSub(tables))   # money received from them
+        self.hours_hired_by_market = PairView(tables, pairs["hours_hired_by_market"], LabourMarketSub(tables))   # (employer, trade, area): (hours paid for, money paid)
+        self.delivered_by_market = MarketFigureView(tables, 0, "delivered")     # (good, area): goods settlement moved
+        self.unmet_demand = MarketFigureView(tables, 1, "unmet")              # (good, area): quantity
+        self.crew_hours_bought: Dict[AgentId, Dict[Tuple[str, str], float]] = {}   # merchants that bid for crew: hours sold them by (trade, area)
+        self.own_plot_hours: Dict[AgentId, Dict[str, float]] = {}   # hours worked on its own plot, by recipe
+        self.grown_units: Dict[AgentId, Dict[str, float]] = {}    # need units of that
+        self.buy_fills: Dict[AgentId, List[Fill]] = {}
+        self.fill_watchers: Optional[frozenset] = None   # the buyers whose buy fills are kept (merchants and the state read them); None: all
+        self.totals_cache: Optional[Tuple[Dict[MarketKey, float], Dict[MarketKey, Optional[float]]]] = None
+        self.mint_takes: List[Tuple[ClearingResult, Dict[Tuple[AgentId, str], float]]] = []   # the clearings of the coin metal's markets (all of them on the object path), units delivered to the mint by (seller, tile)
+        self.pending_mint_takes: Dict[Tuple[AgentId, str], float] = {}
+        self.labour_results: List[LabourResult] = []
+        self.carried_in: Dict[Tuple[AgentId, str], float] = {}   # (carrier, source country): value at the source of what it carried into the home country (the tariff rides on it)
+        self.bids_by_market: Dict[Tuple[GoodId, str], list] = {}  # (good, area): the year's bids
+        self.year_bids = None        # the same bids as one grouped table (`year_bids.YearBids`), made once the goods side has cleared
+        self.import_accounts = import_accounts   # accounts whose sales are goods that crossed the border (customs)
+        self.export_accounts = export_accounts   # accounts whose purchases leave over the border
+        self.migrated_by_tile: Dict[str, float] = {}   # net working people the labour market moved, by tile
+        self.bonded_lots: list = []   # the lots as paid (bonded_purchase.settle)
+        self.wage_floor_per_hour = 0.0       # what a worker's household costs less its plot, per hour, over the areas
+        self.state_capacity = state_capacity   # the year's share of its assessments the state's officials collect (`EconomyYearInputs.state_capacity`)
+
+    # ---- whole arrays in: the entry points a converted caller uses (`year_ledger_arrays.py` says what each takes) ---------------
+
+    def add_money_out(self, agents, amounts, positive_only: bool = False) -> None:
+        self.tables.flush(SETTLEMENTS)
+        arrays.add_money_out(self.tables, agents, amounts, positive_only)
+
+    def add_pair_amounts(self, name: str, agents, subkeys, amounts, extras=arrays.NO_WHOLES, positive_only: bool = False) -> None:
+        self.tables.flush(PAIR_KIND[name])
+        arrays.add_pair_amounts(self.tables, name, agents, subkeys, amounts, extras, positive_only)
+
+    def note_settlement_rows(self, *columns) -> None:
+        """`arrays.note_settlement_rows` after the pending notes."""
+        self.tables.flush(SETTLEMENTS)
+        arrays.note_settlement_rows(self.tables, *columns)
+
+    def note_hours_rows(self, *columns) -> None:
+        """`arrays.note_hours_rows` after the pending notes."""
+        self.tables.flush(HOURS)
+        arrays.note_hours_rows(self.tables, *columns)
+
+    def note_round_rows(self, markets, quantities, prices, moved) -> None:
+        """`arrays.note_round_rows` after the pending notes; the market totals are worked out again."""
+        self.tables.flush(ROUNDS)
+        arrays.note_round_rows(self.tables, markets, quantities, prices, moved)
+        self.totals_cache = None
 
     def note_settlement(self, settled, purpose_kind: str,
                         plant_goods: Optional[Dict[AgentId, Iterable[GoodId]]] = None) -> None:
         """`note_postings(settled.postings, purpose_kind)` from the settlement's per-agent sums: money paid out, wages or
         sales received, the foreign-money figures, and for a sale the goods received and sold and what the mint took. With
-        `plant_goods`, also `note_plant_purchases` for the good sold."""
-        item = settled.item
-        foreign = settled.purpose[len(SALE_PREFIX):] if settled.purpose.startswith(SALE_PREFIX) else settled.purpose
-        wages, sales = purpose_kind == "wages", purpose_kind == "sales"
-        for agent, out, income, imported, exported, got, units_in, units_out in zip(
-                settled.agents, settled.paid, settled.received, settled.imports, settled.exports, settled.got_goods,
-                settled.goods_in, settled.goods_out):
-            if out > 0.0:
-                self.money_out[agent] = self.money_out.get(agent, 0.0) + out
-                if plant_goods is not None and got and item in plant_goods.get(agent, ()):
-                    self.plant_spend[agent] = self.plant_spend.get(agent, 0.0) + out
-            if imported > 0.0:
-                self.imports_paid[(agent, foreign)] = self.imports_paid.get((agent, foreign), 0.0) + imported
-            if exported > 0.0:
-                self.exports_received[(agent, foreign)] = self.exports_received.get((agent, foreign), 0.0) + exported
-            if income > 0.0:
-                if wages:
-                    self.wages_in[agent] = self.wages_in.get(agent, 0.0) + income
-                elif sales:
-                    self.sales_in[agent] = self.sales_in.get(agent, 0.0) + income
-            if sales:
-                if got:
-                    held = self.received.setdefault(agent, {})
-                    held[item] = held.get(item, 0.0) + units_in
-                if units_out > 0.0:
-                    key = (agent, item)
-                    self.sold[key] = self.sold.get(key, 0.0) + units_out
-        if sales:
+        `plant_goods`, also `note_plant_purchases` for the good sold. The rows wait in `tables.pending` until a read."""
+        item, agents, pending = settled.item, settled.agents, self.tables.pending
+        count = len(agents)
+        sales = purpose_kind == "sales"
+        pending.agents.extend(agents)
+        pending.paid.extend(settled.paid)
+        pending.received.extend(settled.received)
+        pending.imports.extend(settled.imports)
+        pending.exports.extend(settled.exports)
+        pending.got_goods.extend(settled.got_goods)
+        pending.goods_in.extend(settled.goods_in)
+        pending.goods_out.extend(settled.goods_out)
+        pending.purpose_kind.extend([WAGES_PURPOSE if purpose_kind == "wages" else SALES_PURPOSE if sales else OTHER_PURPOSE] * count)
+        pending.good.extend([self.tables.book.good_number(item) if sales else -1] * count)
+        template = reference = 0
+        if any(settled.imports) or any(settled.exports):
+            template, reference = self.tables.purpose_code(settled.purpose)
+        pending.template.extend([template] * count)
+        pending.reference.extend([reference] * count)
+        if plant_goods is None:
+            pending.plant_bought.extend([False] * count)
+        else:
+            pending.plant_bought.extend([bool(out > 0.0 and got and item in plant_goods.get(agent, ()))
+                                         for agent, out, got in zip(agents, settled.paid, settled.got_goods)])
+        pending.counts[SETTLEMENTS] += count
+        if sales and settled.key_to_mint and max(settled.key_to_mint) > 0.0:
             for key, taken in zip(settled.keys, settled.key_to_mint):
                 if taken > 0.0:
                     self.pending_mint_takes[key] = self.pending_mint_takes.get(key, 0.0) + taken
 
-    def note_summed_sales(self, paid: Dict[AgentId, float], income: Dict[AgentId, float],
-                          received: Iterable[Tuple[Tuple[AgentId, GoodId], float]],
-                          sold: Iterable[Tuple[Tuple[AgentId, GoodId], float]],
-                          foreign: Iterable[Tuple[str, Tuple[AgentId, GoodId], float]]) -> None:
-        """`note_settlement(..., "sales")` of many goods settlements at once, from their sums: money paid and received by agent,
-        goods received and sold by (agent, good), and money across the border ("imports" or "exports") by (agent, good). No
-        plant purchase is noted: the buyers are households, which own no plant."""
-        for agent, amount in paid.items():
-            self.money_out[agent] = self.money_out.get(agent, 0.0) + amount
-        for agent, amount in income.items():
-            self.sales_in[agent] = self.sales_in.get(agent, 0.0) + amount
-        for (agent, good), amount in received:
-            held = self.received.setdefault(agent, {})
-            held[good] = held.get(good, 0.0) + amount
-        for key, amount in sold:
-            self.sold[key] = self.sold.get(key, 0.0) + amount
-        for side, key, amount in foreign:
-            figures = self.imports_paid if side == "imports" else self.exports_received
-            figures[key] = figures.get(key, 0.0) + amount
-
-    def note_paid_outside_markets(self, postings: Iterable[Transfer]) -> None:
-        """Money paid out in no market (rent, a bonded household's payments, the keep of bonded people): a cost of the payer's
-        year, though it takes nothing from the payee's receipts."""
-        for posting in postings:
-            self.money_out[posting.payer] = self.money_out.get(posting.payer, 0.0) + posting.amount
-
-    def note_wages_outside_markets(self, postings: Iterable[Transfer]) -> None:
-        """Pay for work that was not bought in the labour market (a steward's pay): the payer's cost, the payee's wages."""
-        postings = list(postings)
-        self.note_paid_outside_markets(postings)
-        for posting in postings:
-            self.wages_in[posting.payee] = self.wages_in.get(posting.payee, 0.0) + posting.amount
-
-    def note_plant_purchases(self, postings: Iterable[object], good: GoodId, plant_goods: Dict[AgentId, Iterable[GoodId]]) -> None:
-        """Money producers paid, in the clearing of `good`, for goods their own plant is built from: what they paid the sellers. A seller paid
-        nothing but paying to be rid of a negative-priced good is not a buyer, so only receivers of the goods count."""
-        postings = list(postings)
-        buyers = {posting.receiver for posting in postings if isinstance(posting, GoodsMove)}
-        for posting in postings:
-            if isinstance(posting, Transfer) and posting.payer in buyers and good in plant_goods.get(posting.payer, ()):
-                self.plant_spend[posting.payer] = self.plant_spend.get(posting.payer, 0.0) + posting.amount
-
     def running_costs(self, agent: AgentId) -> float:
         """Money the agent paid out this year other than for building plant."""
-        return max(0.0, self.money_out.get(agent, 0.0) - self.plant_spend.get(agent, 0.0))
+        tables = self.tables
+        tables.flush(SETTLEMENTS)
+        number = tables.book.agent_ids.numbers.get(agent)
+        if number is None:
+            return 0.0
+        figures = tables.figures
+        try:
+            paid = figures.money_out.item(number) if figures.order_money_out.item(number) else 0.0
+            plant = figures.plant_spend.item(number) if figures.order_plant_spend.item(number) else 0.0
+        except IndexError:
+            return 0.0
+        return max(0.0, paid - plant)
 
-    def _note_foreign(self, transfer: Transfer) -> None:
-        """Money across the border, by the domestic party and the good named in the purpose: paid to a foreign edge,
-        received from one, taken for a landed cargo's sale, or paid for a cargo bound abroad."""
-        good = transfer.purpose[len(SALE_PREFIX):] if transfer.purpose.startswith(SALE_PREFIX) else transfer.purpose
-        if is_external_edge(transfer.payee) and not is_external_edge(transfer.payer):
-            key = (transfer.payer, good)
-            self.imports_paid[key] = self.imports_paid.get(key, 0.0) + transfer.amount
-        elif is_external_edge(transfer.payer) and not is_external_edge(transfer.payee):
-            key = (transfer.payee, good)
-            self.exports_received[key] = self.exports_received.get(key, 0.0) + transfer.amount
-        elif transfer.payee in self.import_accounts and transfer.purpose.startswith(SALE_PREFIX):
-            key = (transfer.payee, good)
-            self.imports_paid[key] = self.imports_paid.get(key, 0.0) + transfer.amount
-        elif transfer.payer in self.export_accounts and transfer.purpose.startswith(SALE_PREFIX):
-            key = (transfer.payer, good)
-            self.exports_received[key] = self.exports_received.get(key, 0.0) + transfer.amount
+    def running_costs_of(self, agents) -> numpy.ndarray:
+        """`running_costs` of each agent, as one array."""
+        paid, plant = self.money_out.values_of(agents), self.plant_spend.values_of(agents)
+        return numpy.maximum(0.0, paid - plant)
+
+    def running_costs_at(self, agent_numbers) -> numpy.ndarray:
+        """`running_costs_of` for agents given by the book's numbers (-1 for one never numbered)."""
+        return numpy.maximum(0.0, self.money_out.values_at(agent_numbers) - self.plant_spend.values_at(agent_numbers))
 
     def note_clearing(self, result: ClearingResult, delivered: float) -> None:
         """Keep a clearing and the goods its settlement delivered (less than it matched when a buyer could not pay)."""
-        self.clearings.append(result)
         self.mint_takes.append((result, self.pending_mint_takes))
         self.pending_mint_takes = {}
+        price, pending = result.price, self.tables.pending
+        key = result.good + "|" + result.area
+        market = self.tables.markets.goods_numbers.get(key)
+        pending.round_market.append(self.tables.market_number(result.good, result.area) if market is None else market)
+        pending.round_quantity.append(result.quantity)
+        pending.round_price.append(numpy.nan if price is None else price)
+        pending.round_moved.append(delivered)
+        pending.counts[ROUNDS] += 1
         self.totals_cache = None
-        market = (result.good, result.area)
-        self.delivered_by_market[market] = self.delivered_by_market.get(market, 0.0) + delivered
         watchers = self.fill_watchers
         if watchers is not None and isinstance(result, ArrayClearing):
             for agent, fills in result.bought_by(watchers).items():
@@ -195,8 +195,27 @@ class YearLedger:
     def market_totals(self):
         """`clearing_totals.market_totals` of the year's clearings, worked out once until another clearing is noted."""
         if self.totals_cache is None:
-            self.totals_cache = market_totals(self.clearings, self.delivered_by_market)
+            tables = self.tables
+            tables.flush(ROUNDS)
+            markets, quantity, price = round_totals(tables.rounds.market, tables.rounds.quantity, tables.rounds.price,
+                                                    int(tables.rounds.row_count[0]), tables.market_figures.delivered,
+                                                    tables.market_figures.order_delivered, int(tables.market_figures.row_count[0]))
+            names = tables.markets.goods_markets.name_list
+            keys = [(names[market].partition("|")[0], names[market].partition("|")[2]) for market in markets.tolist()]
+            self.totals_cache = (dict(zip(keys, quantity.tolist())),
+                                 {key: None if value != value else value for key, value in zip(keys, price.tolist())})
+            self.totals_columns = (markets, quantity, price)
         return self.totals_cache
+
+    def market_total_columns(self):
+        """`market_totals` as arrays by market number: (delivered quantity, price weighted by quantity; NaN: none), zero and NaN for a market
+        with no round."""
+        self.market_totals()
+        markets, quantity, price = self.totals_columns
+        count = len(self.tables.markets.goods_markets)
+        delivered, priced = numpy.zeros(count), numpy.full(count, numpy.nan)
+        delivered[markets], priced[markets] = quantity, price
+        return delivered, priced
 
     def note_labour(self, result: LabourResult, postings: Iterable[object] = (), settled: bool = True) -> None:
         """Hours count as hired and sold in proportion to the wages actually paid: hours an employer
@@ -218,24 +237,32 @@ class YearLedger:
                    settled: bool) -> None:
         """The hours of a labour result as hired and sold, given the wages paid by each employer and to each worker."""
         self.labour_results.append(result)
+        fills = result.fills
+        if not fills:
+            return
+        pending, tables = self.tables.pending, self.tables
         settled = settled and result.wage > 0.0
-        for fill in result.fills:
-            quantity = fill.quantity
-            if settled:
-                paid = paid_by if fill.side == "buy" else paid_to
-                quantity = min(quantity, paid.get(fill.agent, 0.0) / result.wage)
-                paid[fill.agent] = paid.get(fill.agent, 0.0) - quantity * result.wage
-            if fill.side == "buy":
-                trades = self.hours_hired.setdefault(fill.agent, {})
-                trades[result.trade] = trades.get(result.trade, 0.0) + quantity
-                market = (fill.agent, result.trade, result.area)
-                bought, paid_money = self.hours_hired_by_market.get(market, (0.0, 0.0))
-                self.hours_hired_by_market[market] = (bought + quantity, paid_money + quantity * fill.price)
-            else:
-                self.hours_sold[fill.agent] = self.hours_sold.get(fill.agent, 0.0) + quantity
+        count = len(fills)
+        slot_of: Dict[AgentId, int] = {}
+        offset = len(pending.paid_by_slot)
+        pending.fill_agents.extend([fill.agent for fill in fills])
+        pending.fill_slot.extend([offset + slot_of.setdefault(fill.agent, len(slot_of)) for fill in fills])
+        pending.fill_quantity.extend([fill.quantity for fill in fills])
+        pending.fill_price.extend([fill.price for fill in fills])
+        pending.fill_is_buy.extend([fill.side == "buy" for fill in fills])
+        pending.fill_trade.extend([tables.trade_number(result.trade)] * count)
+        pending.fill_market.extend([tables.labour_market_number(result.trade, result.area)] * count)
+        pending.fill_wage.extend([result.wage] * count)
+        pending.fill_settled.extend([settled] * count)
+        pending.paid_by_slot.extend([paid_by.get(name, 0.0) for name in slot_of])
+        pending.paid_to_slot.extend([paid_to.get(name, 0.0) for name in slot_of])
+        pending.counts[HOURS] += count
 
     def note_output(self, agent: AgentId, moves: Iterable[GoodsMove]) -> None:
+        pending = self.tables.pending
         for move in moves:
             if move.receiver == agent:
-                key = (agent, move.good)
-                self.output[key] = self.output.get(key, 0.0) + move.quantity
+                pending.output_agents.append(agent)
+                pending.output_goods.append(move.good)
+                pending.output_quantity.append(move.quantity)
+                pending.counts[OUTPUT] += 1

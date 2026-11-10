@@ -1,4 +1,4 @@
-"""Numba port, labour clearing: the hours a market's offers sell at a wage (`labour_supply_kernel.sold_hours`) agree with
+"""Numba port, labour clearing: the hours a market's offers sell at a wage (`sold_hours_kernel.sold_hours`) agree with
 the plain per-offer schedules (`HourSupply.sold_hours_schedule`) summed, on random offers and plots; no game.
 
 The kernel sums left to right where the plain code used Python's compensated `sum`, so they agree to a relative tolerance."""

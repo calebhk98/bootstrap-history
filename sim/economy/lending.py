@@ -8,15 +8,24 @@ record, so a firm, a state or another player borrows by the same rules.
 import dataclasses
 from typing import Dict, List
 
+import numpy as np
+
 from sim.world import capital_market
 
-from . import bank_service, banks, bondage, credit, credit_claims, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, titles, titles_ground, titles_value
+from sim.loans.columns import NO_TILE
+
+from . import bank_service, bondage, cohort_prime, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_credit_batch, titles, titles_ground, titles_value, transfer_rows
+from .cohort_store import table_of
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
-from .household_work_year import basket_key, cohort_basket
+from . import household_work_year
+from .household_work_year import kept_basket
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
+from .goods_order_tables import LOAN
+from .order_rows import OrderRows
 from .types import FundsOffer
-from .households_basket import need_prices
+from .households_basket import cohort_need_prices
 from .inventory import held_stock
+from .merchant_table import MerchantTable
 from .rates import own_rate
 
 
@@ -32,25 +41,26 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
     first payment falls due a year after it borrowed). Books the defaults: a lender's loss, a defaulter's
     record, a merchant's staked capital after what it repaid or was freed of. Returns the interest each
     lender received, which is its income; returned principal is not income."""
-    due = [loan for loan in record.credit.loans if loan.issued_year < year and not banks.is_deposit(record.capital_markets, loan)]
-    if not due:
+    store = record.credit.contracts.loan_store
+    serving = credit_service.due_rows(store, year, list(record.capital_markets.banks))
+    if not len(serving):
         return bank_service.service_deposits(record, money, year)
-    cash = {loan.borrower: record.book.balance(loan.borrower, money) for loan in due}
-    transfers, serviced, defaults, receipts = credit.service_split(due, cash, year)
-    record.book.transfer_many(transfers)
-    received = {lender: receipt.interest for lender, receipt in receipts.items() if receipt.interest > 0.0}
-    owed_before = credit_claims.principal_by_borrower(due)
-    owed_after = credit_claims.principal_by_borrower(serviced)
-    merchants_credit.stake(record.merchants, {agent: owed_after.get(agent, 0.0) - owed
-                                              for agent, owed in owed_before.items()})
-    pledged_loans = {loan.loan_id: loan for loan in due if loan.collateral_tile}
-    taken = [dataclasses.replace(default, loss=max(0.0, default.loss - titles.foreclose(record, pledged_loans[default.loan_id])))
-             if default.loan_id in pledged_loans else default for default in defaults]
+    borrowers = list(dict.fromkeys(store.agent_name(number) for number in store.table.borrower[serving].tolist()))
+    cash = dict(zip(borrowers, record.book.balances_at(record.book.rows_of(borrowers), money).tolist()))
+    served = credit_service.serve(store, serving, cash)
+    transfer_rows.post_payments(record.book, *served.payments(year))
+    received = {lender: receipt.interest for lender, receipt in served.receipts().items() if receipt.interest > 0.0}
+    merchants_credit.stake(record.merchants, credit_service.principal_changes(store, served, serving))
+    defaults = served.defaults()
+    pledged_rows = {store.texts[number]: row for number, row in zip(store.table.number[serving].tolist(), serving.tolist())
+                    if store.table.collateral_tile[row] != NO_TILE}
+    taken = [dataclasses.replace(default, loss=max(0.0, default.loss - titles.foreclose(record, store.snapshot(pledged_rows[default.loan_id]))))
+             if default.loan_id in pledged_rows else default for default in defaults]
     for agent, lost in credit_claims.losses_by_lender(taken).items():
         record.credit.add_loss(agent, lost)
     bondage.enter(record, taken, bondage_years)
     record.credit.remembered_defaults = credit_claims.remember_defaults(record.credit.remembered_defaults, defaults)
-    record.credit.loans = [loan for loan in record.credit.loans if loan.issued_year >= year or banks.is_deposit(record.capital_markets, loan)] + serviced
+    credit_service.apply_served(store, served, serving)
     for depositor, interest in bank_service.service_deposits(record, money, year).items():
         received[depositor] = received.get(depositor, 0.0) + interest
     return received
@@ -59,11 +69,13 @@ def _collect(record, money: str, year: int, bondage_years: float) -> Dict[str, f
 def expected_inflation_of(record) -> float:
     """The inflation lenders expect, as the people-weighted mean of the cohorts' own expectations; none before
     any cohort has people. The real-rate bound on the credit market adds it to the bound."""
-    cohorts = record.cohorts
-    people = sum(max(0.0, cohort.people) for cohort in cohorts.values())
+    store = table_of(record.cohorts)
+    rows = np.arange(store.count, dtype=np.int64)
+    held, expected = store.floats("people", rows), store.floats("expected_inflation", rows)
+    people = sum(max(0.0, each) for each in held)
     if people <= 0.0:
         return 0.0
-    return sum(max(0.0, cohort.people) * cohort.expected_inflation for cohort in cohorts.values()) / people
+    return sum(max(0.0, each) * inflation for each, inflation in zip(held, expected)) / people
 
 
 def lend_working_capital(setup, record, view) -> None:
@@ -76,13 +88,17 @@ def lend_working_capital(setup, record, view) -> None:
         return
     record.credit.loan_requests = [request for request in record.credit.loan_requests if request.purpose != WORKING_CAPITAL_PURPOSE]
     money = setup.currency_id
-    spare = {cohort_id: record.book.balance(cohort_id, money) - cohort.cash_target
-             for cohort_id, cohort in sorted(record.cohorts.items())}
+    store = table_of(record.cohorts)
+    order = store.order()
+    ids = [store.ids[row] for row in order.tolist()]
+    targets, expected_inflation = store.floats("cash_target", order), dict(zip(ids, store.floats("expected_inflation", order)))
+    held = record.book.balances_of(ids, money).tolist()
+    spare = {cohort_id: balance - target for cohort_id, balance, target in zip(ids, held, targets)}
     spare = {cohort_id: amount for cohort_id, amount in spare.items() if amount > 0.0}
     if not spare:
         return
     offers = [FundsOffer(cohort_id, money, amount, lender_ask.lowest_ask(
-                  HOUSEHOLD_TIME_PREFERENCE, record.cohorts[cohort_id].expected_inflation,
+                  HOUSEHOLD_TIME_PREFERENCE, expected_inflation[cohort_id],
                   expected_loss_rate=lender_ask.loss_rate(record.credit.loss_rates.get(cohort_id, 0.0))))
               for cohort_id, amount in spare.items()]
     loans, _rate, _unmet = credit.clear(
@@ -91,8 +107,8 @@ def lend_working_capital(setup, record, view) -> None:
         clearing="working_capital",
         rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
         expected_inflation=expected_inflation_of(record))
-    record.book.transfer_many(credit.disbursements(loans))
-    record.credit.loans.extend(loans)
+    transfer_rows.post_payments(record.book, *credit.disbursement_rows(loans))
+    record.credit.add_loans(loans)
     merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})
 
 
@@ -102,13 +118,17 @@ def household_requests(setup, record, view, ledger, priced_by_tile) -> List:
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     rate = own_rate(view, money)
     requests = []
-    for cohort_id, cohort in sorted(record.cohorts.items()):
-        key = basket_key(record, cohort)
-        priced = _priced_basket(view, key, cohort_basket(setup, record, cohort), priced_by_tile)
+    cohort_prime.prime_cohort_baskets(setup, record, view, True)
+    store = table_of(record.cohorts)
+    order = store.order()
+    held = record.book.balance_by_agent([store.ids[row] for row in order.tolist()], money)
+    for cohort, key in zip(store.figures(order), household_work_year.signatures_of(record, store, order)):
+        cohort_id = cohort.agent_id
+        priced = _priced_basket(view, key, household_work_year.basket_of_signature(setup, key), priced_by_tile)
         if not priced or cohort.people <= 0.0:
             continue
         shortfall = (households_credit.floor_cost_unmet(cohort, priced, ledger.grown_units.get(cohort_id))
-                     - record.book.balance(cohort_id, money))
+                     - held[cohort_id])
         asked = households_credit.subsistence_request(cohort, shortfall, money, rate, debts.get(cohort_id, 0.0))
         if asked is not None:
             requests.append(_pledging_title(setup, record, cohort, asked, rate))
@@ -132,15 +152,10 @@ def merchant_requests(setup, record, view, area_map, carriage) -> List:
     money = setup.currency_id
     rate = own_rate(view, money)
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
-    requests = []
-    route = merchants_book.route_pass(view, carriage, area_map, setup.specs) if record.merchants else None
-    for merchant_id, merchant in sorted(record.merchants.items()):
-        asked = merchants_credit.credit_request(
-            merchant, view, carriage, area_map, record.book.balance(merchant_id, money),
-            held_stock(record.book, merchant_id), setup.specs, rate, debts.get(merchant_id, 0.0), money, route)
-        if asked is not None:
-            requests.append(asked)
-    return requests
+    if not record.merchants:
+        return []
+    route = merchants_book.route_pass(view, carriage, area_map, setup.specs)
+    return merchants_credit_batch.credit_requests(MerchantTable.of(record.memory.tables), route, record.book, debts, money, rate)
 
 
 def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile) -> None:
@@ -149,16 +164,20 @@ def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_b
     for loan in loans:
         if loan.borrower in record.cohorts:
             lent[loan.borrower] = lent.get(loan.borrower, 0.0) + loan.principal
-    for cohort_id, budget in sorted(lent.items()):
-        cohort = record.cohorts[cohort_id]
-        basket = cohort_basket(setup, record, cohort)
-        for bid in households_credit.floor_bids(cohort, _priced_basket(view, basket_key(record, cohort), basket, priced_by_tile), budget,
-                                                ledger.grown_units.get(cohort_id), setup.specs, view, basket):
-            order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
+    rows = OrderRows(order_book, LOAN)
+    store = table_of(record.cohorts)
+    borrowers = sorted(lent.items())
+    figures = store.figures(store.rows_of([cohort_id for cohort_id, _budget in borrowers]))
+    keys = household_work_year.signatures_of_figures(record, figures)
+    for cohort, key, (cohort_id, budget) in zip(figures, keys, borrowers):
+        basket = kept_basket(setup, key)
+        rows.bids_from(households_credit.floor_bids(cohort, _priced_basket(view, key, basket, priced_by_tile), budget,
+                                                    ledger.grown_units.get(cohort_id), setup.specs, view, basket))
+    rows.write()
 
 
 def _priced_basket(view, key, basket, priced_by_tile):
     if key not in priced_by_tile:
-        priced_by_tile[key] = need_prices(basket, view, key[0])
+        priced_by_tile[key] = cohort_need_prices(basket, view, key[0], key)
     return priced_by_tile[key]
 

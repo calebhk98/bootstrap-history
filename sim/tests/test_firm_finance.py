@@ -106,6 +106,7 @@ class BankruptcyTests(unittest.TestCase):
 from types import SimpleNamespace
 
 from sim.economy import firm_year
+from sim.economy.loan_write_offs import LoanWriteOffs
 from sim.economy.credit_record import CreditRecord
 from sim.tests.test_economy_producers import farmer
 
@@ -167,6 +168,34 @@ class WriteOffTests(unittest.TestCase):
         record = SimpleNamespace(credit=credit_with([Loan("l1", "bank", "f1", "coin", 90.0)]))
         self.assertEqual(firm_year.write_off(record, "f1", 0.0), 0.0)
         self.assertEqual(record.credit.credit_losses, {})
+
+
+class LoanWriteOffsTests(unittest.TestCase):
+    def loans(self):
+        return [Loan("l%d" % index, "bank%d" % (index % 2), "f%d" % (index % 4), "coin", 40.0 + index) for index in range(12)]
+
+    def test_flushes_in_two_parts_are_write_off_many_one_after_another(self):
+        first, second = {"f2": 0.5, "f0": 1.0}, {"f3": 0.25, "f2": 0.5, "f9": 0.5}
+        flushed = SimpleNamespace(credit=credit_with(self.loans()))
+        writer = LoanWriteOffs(flushed)
+        lost_first, lost_second = writer.apply(first), writer.apply(second)
+        plain = SimpleNamespace(credit=credit_with(self.loans()))
+        expected_first, expected_second = firm_year.write_off_many(plain, first), firm_year.write_off_many(plain, second)
+        self.assertEqual((lost_first, lost_second), (expected_first, expected_second))
+        self.assertEqual([(loan.loan_id, loan.principal) for loan in flushed.credit.loans],
+                         [(loan.loan_id, loan.principal) for loan in plain.credit.loans])
+        self.assertEqual(list(flushed.credit.remembered_defaults.items()), list(plain.credit.remembered_defaults.items()))
+        self.assertEqual(list(flushed.credit.credit_losses.items()), list(plain.credit.credit_losses.items()))
+
+    def test_a_loan_added_between_flushes_is_written_down_too(self):
+        record = SimpleNamespace(credit=credit_with(self.loans()))
+        writer = LoanWriteOffs(record)
+        writer.apply({"f1": 0.5})
+        record.credit.add_loan(Loan("late", "bank0", "f1", "coin", 100.0))
+        lost = writer.apply({"f1": 0.5})
+        late = [loan for loan in record.credit.loans if loan.loan_id == "late"][0]
+        self.assertAlmostEqual(late.principal, 50.0)
+        self.assertAlmostEqual(lost["f1"], 50.0 + sum(0.5 * (40.0 + index) * 0.5 for index in (1, 5, 9)))
 
 
 class WriteOffManyTests(unittest.TestCase):

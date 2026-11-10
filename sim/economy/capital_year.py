@@ -7,8 +7,10 @@ asked for more than it holds sells loans or fails (bank_runs.py).
 from typing import Dict, List, Sequence
 
 from sim.constants import declare
+from sim.loans import select as loan_select
 
 from . import bank_runs, funds as fund_pools, insurance, lending, portfolio_year, secondary_trade
+from .cohort_reads import tile_of
 from .funds import POOLED_FUNDS
 from .insurance import HARVEST, INSURANCE_UNDERWRITING, RISK_POOLING
 from .secondary_trade import CashShortfall
@@ -27,7 +29,9 @@ def holds_a_claim(record) -> bool:
     """Whether any household holds shares or a loan it could sell."""
     if any(holders for holders in record.capital_markets.shares.values()):
         return True
-    return any(loan.lender in record.cohorts and secondary_trade.tradable(record, loan) for loan in record.credit.loans)
+    store = record.credit.contracts.loan_store
+    return bool((loan_select.tradable(store, record.capital_markets.banks, record.cohorts, secondary_trade.EPSILON)
+                 & loan_select.lent_by(store, record.cohorts)).any())
 
 
 def holds_units(capital_markets) -> bool:
@@ -84,8 +88,9 @@ def _redeem_units(setup, record, funds, short, rate, institutions):
 
 def snapshot(record, money: str, funds: Sequence[FundsOffer]) -> Dict[AgentId, float]:
     """What each household saver holds beyond the funds it offered the year's lending: the cash it keeps."""
-    return {offer.lender: record.book.balance(offer.lender, money) - offer.amount
-            for offer in funds if offer.lender in record.cohorts and offer.currency == money}
+    savers = [offer for offer in funds if offer.lender in record.cohorts and offer.currency == money]
+    held = record.book.balances_of([offer.lender for offer in savers], money).tolist()
+    return {offer.lender: balance - offer.amount for offer, balance in zip(savers, held)}
 
 
 def invest_idle(setup, record, view, funds: Sequence[FundsOffer], kept: Dict[AgentId, float], institutions: Sequence[str]) -> None:
@@ -120,12 +125,12 @@ def note_exposure(setup, record, view, area_map, ledger, harvest_factor: float, 
         return
     exposed = {}
     for cohort_id, grown in sorted(ledger.grown.items()):
-        cohort = record.cohorts.get(cohort_id)
-        if cohort is None:
+        tile = tile_of(record.cohorts, cohort_id)
+        if tile is None:
             continue
         value = 0.0
         for good, quantity in sorted(grown.items()):
-            price = view.price(good, area_map.area_of(good, cohort.tile))
+            price = view.price(good, area_map.area_of(good, tile))
             if price is not None:
                 value += quantity * price
         if value > 0.0:
@@ -155,9 +160,10 @@ def _arrange_cover(record, money: str, rate: float, year: int, company_open: boo
         return
     price = insurance.premium_rate(state, HARVEST, rate)
     expected = insurance.expected_loss_share(state, HARVEST)
+    cash_of = record.book.balance_by_agent([holder for holder in sorted(state.exposure) if holder in record.cohorts], money)
     wanting = {holder: held[HARVEST] for holder, held in sorted(state.exposure.items())
                if holder in record.cohorts and held.get(HARVEST, 0.0) > 0.0
-               and insurance.wants_cover(record.book.balance(holder, money), held[HARVEST],
+               and insurance.wants_cover(cash_of[holder], held[HARVEST],
                                          min(price, expected) if mutual_open else price, state, HARVEST)}
     state.policies = [policy for policy in state.policies if policy.holder in wanting or policy.hazard != HARVEST]
     if not wanting:

@@ -36,6 +36,9 @@ from .goods_market_fills import buyer_fills, make_fill, seller_fills, without_ed
 from .goods_market_logit import allocate
 from .goods_market_ration import ration
 from .goods_market_solve import solve_price
+from . import crossing_columns, crossing_price
+from .bid_columns import columns_of_bids
+from .crossing_price import CHEAP_PASSES_PER_BID
 from . import market_quote
 from .types import AreaId, Bid, ClearingResult, CurrencyId, Fill, GoodId, Offer, Pairing, is_edge
 
@@ -51,7 +54,6 @@ _OFFER_ORDER = attrgetter("reservation_price", "seller", "tile")
 _SELLER_KEY = attrgetter("seller", "tile")
 _BUYER_KEY = attrgetter("buyer", "tile")
 _FIRST = itemgetter(0)
-CHEAP_PASSES_PER_BID = 10
 
 
 def quantity_at(bid: Bid, price: float) -> float:
@@ -106,6 +108,11 @@ class Buyers:
     def arrays(self) -> DemandArrays:
         """The bids packed for the clearing kernels, built when a market with offers first reads it."""
         return DemandArrays(self.bids)
+
+    @cached_property
+    def demand_columns(self):
+        """The bids (already in clearing order) prepared for the price search kernels; None when the kernels cannot take them."""
+        return crossing_columns.demand_columns(columns_of_bids(self.bids), numpy.arange(len(self.bids), dtype=numpy.int64))
 
     @cached_property
     def schedule(self) -> DemandSchedule:
@@ -276,16 +283,29 @@ def crossing(buyers: Buyers, offers: List[Offer], with_wants: bool = True):
     for reservation, group in groupby(zip(effective, offers), key=_FIRST):
         running += math.fsum(offer.quantity for _, offer in group)
         levels.append((max(reservation, floor), running))
-    price = solve_price(levels, schedule.total_at, demand_at_first,
-                        schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(buyers.bids)
-                        else None, schedule.solutions)
-    if schedule.price_capped:
-        price = at_a_ceiling(price, schedule, levels, effective[0])
+    price = _kernel_price(buyers, levels, demand_at_first, effective[0])
+    if price is None:
+        price = solve_price(levels, schedule.total_at, demand_at_first,
+                            schedule.uncapped_at if schedule.distinct_schedules() * CHEAP_PASSES_PER_BID <= len(buyers.bids)
+                            else None, schedule.solutions)
+        if schedule.price_capped:
+            price = at_a_ceiling(price, schedule, levels, effective[0])
 
     eligible = [(reservation, offer) for reservation, offer in zip(effective, offers)
                 if reservation <= price]
     supply = math.fsum(offer.quantity for _, offer in eligible)
     return price, eligible, supply, schedule.each_at(price) if with_wants else None
+
+
+def _kernel_price(buyers: Buyers, levels, demand_at_first: float, lowest: float) -> Optional[float]:
+    """The crossing price from the search kernels; None when they cannot take these bids or a figure (the Python then searches)."""
+    demand = buyers.demand_columns
+    if demand is None:
+        return None
+    flags = numpy.zeros(1, dtype=numpy.int64)
+    price = float(crossing_price.price_at_levels(numpy.array([level[0] for level in levels]), numpy.array([level[1] for level in levels]),
+                                                 demand_at_first, lowest, demand, flags))
+    return None if flags[0] else price
 
 
 def _smallest_price(reservations: Sequence[float], last_price: Optional[float]) -> Optional[float]:

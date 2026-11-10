@@ -65,6 +65,5 @@ def of_producers(rows: List[Tuple[object, str, float]]) -> Dict[str, Dict[str, f
     for area, area_position in area_index.items():             # areas in the order the first producer met them
         met = sorted((int(first[area_position, trade]), trade) for trade in range(len(trade_names))
                      if first[area_position, trade] != NEVER)
-        # numpy scalars, as the plain loop's sums were (expected sales are numpy floats); a Python float here moves later last digits
-        result[area] = {trade_names[trade]: total[area_position, trade] for _key, trade in met}
+        result[area] = {trade_names[trade]: float(total[area_position, trade]) for _key, trade in met}
     return result

@@ -91,15 +91,14 @@ def crop_yields(economy, weather=1.0, weather_by_tile=None):
     (the economy's site yield factors), the weather alone for pasture and forest."""
     site_yield, land_per_run = economy_api.crop_site_inputs(economy)
     weather_by_tile = weather_by_tile or {}
-    return {producer_id: weather_by_tile.get(producer.tile, weather)
-            * site_yield.get(recipe_tile_key(producer.recipe_id, producer.tile), 1.0)
-            for producer_id, producer in economy_api.producers_of(economy).items()
-            if land_per_run.get(producer.recipe_id, 0.0) > 0.0}
+    listed = economy_api.producer_list(economy)
+    return {producer_id: weather_by_tile.get(tile, weather) * site_yield.get(recipe_tile_key(recipe_id, tile), 1.0)
+            for producer_id, recipe_id, tile in zip(listed.ids, listed.recipe_ids, listed.tiles) if land_per_run.get(recipe_id, 0.0) > 0.0}
 
 
-def harmed_yields(yields, harm_by_tile, producers):
-    """`yields` with each producer's factor scaled by the harm factor of the tile it stands on (a tile no provider
-    names is unharmed); the same mapping when nothing is harmed."""
+def harmed_yields(yields, harm_by_tile, tile_of):
+    """`yields` with each producer's factor scaled by the harm factor of the tile it stands on (`tile_of`: producer id to tile; a tile no
+    provider names is unharmed); the same mapping when nothing is harmed."""
     if not harm_by_tile:
         return yields
-    return {producer_id: factor * harm_by_tile.get(producers[producer_id].tile, 1.0) for producer_id, factor in yields.items()}
+    return {producer_id: factor * harm_by_tile.get(tile_of[producer_id], 1.0) for producer_id, factor in yields.items()}

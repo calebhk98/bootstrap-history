@@ -6,7 +6,11 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from unittest import mock
 
+from sim.contract_record import Contract
+
+from sim.economy.producer_store import ProducerStore
 from sim.economy import land_bid, land_bid_year, titles, titles_ground, titles_value
 from sim.book import Book
 from sim.economy.households_cohort import cohort_id, cohorts_for_tile
@@ -106,7 +110,7 @@ class TitleTests(unittest.TestCase):
     def test_tenancies_and_pledges_keep_their_hectares(self):
         record = self.world()
         record.land.tenancies = {TILE: [{"tenant": BUYER, "lessor": SELLER, "share": 0.2, "arrears": 0.0}]}
-        record.credit.loans = [types.SimpleNamespace(borrower=SELLER, collateral_tile=TILE, collateral_share=0.1)]
+        record.credit.loans = [Contract("loan", "lender", SELLER, "coin", 1.0, collateral_tile=TILE, collateral_share=0.1)]
         land_bid.take_up(record, BUYER, TILE, 100.0, HECTARES_ON_TILE)
         self.assertAlmostEqual(record.land.tenancies[TILE][0]["share"] * 2.0 * HECTARES_ON_TILE, 0.2 * HECTARES_ON_TILE)
         self.assertAlmostEqual(record.credit.loans[0].collateral_share * 2.0 * HECTARES_ON_TILE, 0.1 * HECTARES_ON_TILE)
@@ -136,6 +140,29 @@ class TitleTests(unittest.TestCase):
         self.assertEqual(land_bid.own_use(stock=50.0, hectares_needed=30.0, hectares_held=40.0), 0.0)
 
 
+class LandBidsSharedFiguresTests(unittest.TestCase):
+    def cohort(self, name):
+        return types.SimpleNamespace(agent_id=name, tile=TILE)
+
+    def test_the_margin_of_a_tile_is_worked_out_once_and_the_ground_is_handed_on(self):
+        setup = types.SimpleNamespace(tiles={TILE: "spec"})
+        margins, ground = {}, (("ground",), {})
+        with mock.patch.object(land_bid_year, "best_margin", return_value=(2.0, 5.0, "farm")) as margin, \
+                mock.patch.object(land_bid_year, "actor_bids", return_value=["bid"]) as bids:
+            for name in ("a", "b"):
+                self.assertEqual(land_bid_year.land_bids(setup, None, None, self.cohort(name), {}, 10.0, 3.0, ground, margins), ["bid"])
+        self.assertEqual(margin.call_count, 1)
+        self.assertEqual(margins, {TILE: (2.0, 5.0, "farm")})
+        self.assertEqual([call.args[-1] for call in bids.call_args_list], [ground, ground])
+        self.assertEqual([call.args[3] for call in bids.call_args_list], ["a", "b"])
+
+    def test_with_no_spare_hours_there_is_nothing_to_work_out(self):
+        setup = types.SimpleNamespace(tiles={TILE: "spec"})
+        with mock.patch.object(land_bid_year, "best_margin") as margin:
+            self.assertEqual(land_bid_year.land_bids(setup, None, None, self.cohort("a"), {}, 0.0, 3.0, (), {}), [])
+        margin.assert_not_called()
+
+
 class SellerAndGroundTests(unittest.TestCase):
     def test_ground_is_an_immobile_good_a_recipe_makes_from_nothing(self):
         specs = {GROUND: GoodSpec(GROUND, float("inf"), 0.0, 0.0, ""), CROP: GoodSpec(CROP, 1.0, 0.0, 0.0, ""),
@@ -146,7 +173,7 @@ class SellerAndGroundTests(unittest.TestCase):
 
     def test_a_sold_hectare_is_the_land_of_the_producers_owner(self):
         recipes = {"clear": Recipe("clear", {GROUND: 1.0}, {}, {})}
-        record = types.SimpleNamespace(producers={"p": Producer("p", SELLER, "clear", TILE, 10.0)})
+        record = types.SimpleNamespace(producers=ProducerStore({"p": Producer("p", SELLER, "clear", TILE, 10.0)}))
         self.assertEqual(land_bid.owners_of_sellers(record, recipes, GROUND, TILE), [SELLER])
         self.assertEqual(land_bid.owners_of_sellers(record, recipes, GROUND, "elsewhere"), [])
 
@@ -154,7 +181,7 @@ class SellerAndGroundTests(unittest.TestCase):
 class YearWiringTests(unittest.TestCase):
     def world(self):
         record = TitleTests().world()
-        record.producers = {"p": Producer("p", SELLER, "clear", TILE, 10.0)}
+        record.producers = ProducerStore({"p": Producer("p", SELLER, "clear", TILE, 10.0)})
         tile = TileSpec(TILE, 40.0, 10.0, 1.0, False, (), 1.0, 1.0)      # a hundred hectares
         specs = {GROUND: GoodSpec(GROUND, float("inf"), 0.0, 0.0, "")}
         setup = types.SimpleNamespace(tiles={TILE: tile}, specs=specs, recipes={"clear": Recipe("clear", {GROUND: 1.0}, {}, {})})

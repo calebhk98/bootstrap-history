@@ -8,8 +8,8 @@ bankruptcy to the producer's loans. A producer that closed to exit is left to pr
 """
 from typing import Dict, List, Mapping, NamedTuple, Optional, Tuple
 
-from . import credit_claims, equity, firm_finance as finance, unit_cost
-from .credit import Default
+from . import equity, firm_finance as finance, unit_cost
+from .loan_write_offs import LoanWriteOffs
 from .producers import live_input_prices, live_wages
 from .replaced import replaced
 from .types import Transfer
@@ -94,23 +94,4 @@ def write_off(record, borrower: str, ratio: float) -> float:
 def write_off_many(record, ratios: Mapping[str, float]) -> Dict[str, float]:
     """`write_off` for every borrower in `ratios` (borrower to ratio) in one pass over the loans; the losses are booked and
     the defaults remembered borrower by borrower, in the mapping's order. Returns the total lost by borrower."""
-    ratios = {borrower: ratio for borrower, ratio in ratios.items() if ratio > 0.0}
-    if not ratios:
-        return {}
-    kept: List = []
-    defaults: Dict[str, List[Default]] = {borrower: [] for borrower in ratios}
-    for loan in record.credit.loans:
-        ratio = ratios.get(loan.borrower)
-        if ratio is None:
-            kept.append(loan)       # the list keeps its order
-            continue
-        written, lost = finance.written_down(loan, ratio)
-        defaults[loan.borrower].append(Default(loan.loan_id, loan.lender, loan.borrower, loan.currency, lost))
-        if written.principal > finance.ARREARS_EPSILON or written.arrears > finance.ARREARS_EPSILON:
-            kept.append(written)
-    record.credit.replace_loans(kept)
-    for group in defaults.values():
-        for lender, lost in credit_claims.losses_by_lender(group).items():
-            record.credit.add_loss(lender, lost)
-        record.credit.remember(group)
-    return {borrower: sum(default.loss for default in group) for borrower, group in defaults.items()}
+    return LoanWriteOffs(record).apply(ratios)

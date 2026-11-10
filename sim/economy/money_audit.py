@@ -58,7 +58,7 @@ def _metal_gap(record, supply: Dict[str, float]) -> Tuple[Dict[str, float], Dict
     spec = record.currency
     if spec.backing_good is None or spec.backing_per_unit <= 0.0:
         return {}, {}
-    held = math.fsum(quantity for quantity in record.book.holdings(EDGE_MINT)["goods"].get(spec.backing_good, {}).values()
+    held = math.fsum(quantity for quantity in record.book.goods_held(EDGE_MINT).get(spec.backing_good, {}).values()
                      if quantity > 0.0)
     awaiting = max(0.0, -record.book.edge_net(EDGE_WEAR, spec.currency_id)) * spec.backing_per_unit
     embodied = supply.get(spec.currency_id, 0.0) * spec.backing_per_unit + awaiting

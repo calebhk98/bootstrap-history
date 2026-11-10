@@ -10,38 +10,15 @@ are read from here, so a query never depends on which path made the contract. Ca
 
 The registry is shared the way the book is: the economy owns it, and the actors' purses adopt it.
 """
-from dataclasses import dataclass
 from typing import Any, Dict, Iterable, List, Optional
 
+import numpy
+
+from sim.contract_record import DEPOSIT, FACILITY, TERM_LOAN, Contract   # noqa: F401  (the registry's public names)
+from sim.loans import reads
+from sim.loans.store import LoanStore
+from sim.loans.view import LoanList
 from sim.rekey import rename_text
-
-FACILITY = "facility"
-TERM_LOAN = "term_loan"
-DEPOSIT = "deposit"
-
-
-@dataclass
-class Contract:
-    contract_id: str
-    lender: str
-    borrower: str
-    currency: str
-    principal: float
-    rate: float = 0.0
-    years_left: float = 0.0
-    collateral_value: float = 0.0
-    arrears: float = 0.0
-    issued_year: int = 0
-    arrears_interest: float = 0.0     # the part of arrears that is unpaid interest
-    kind: str = TERM_LOAN
-    collateral_tile: str = ""         # the tile whose land title the loan pledges (empty: none)
-    collateral_share: float = 0.0     # the share of that tile's land pledged
-    unit_value: float = 1.0           # a deposit placed across the exchange: what one coin of its principal is worth in the lender's own unit
-
-    @property
-    def loan_id(self) -> str:
-        return self.contract_id
-
 
 class Contracts:
     """All contracts. Facilities are indexed by borrower (the purses ask on every posting); the others keep
@@ -50,17 +27,31 @@ class Contracts:
     def __init__(self) -> None:
         self.facilities: Dict[str, Dict[str, Contract]] = {}      # borrower -> lender -> facility contract
         self.deposits: Dict[str, Contract] = {}                   # depositor -> deposit contract (the pool owes it)
-        self.term_loans: List[Contract] = []
-        self._term_seen: Any = None                      # (the list, its length, its last contract) the debts below were summed over
+        self.loan_store = LoanStore()                             # the term loans, a table (sim/loans)
+        self._loan_list = LoanList(self.loan_store)
+        self._term_seen: Any = None                      # the loan store's version the debts below were summed at
         self._term_debts: Dict[Optional[str], Dict[str, float]] = {}   # currency -> borrower -> debt on the term loans
 
+    @property
+    def term_loans(self) -> LoanList:
+        """The term loans in the order they were struck, as rows of the loan table (`loan_store`); assigning a list of loans
+        replaces them all."""
+        return self._loan_list
+
+    @term_loans.setter
+    def term_loans(self, loans) -> None:
+        self.loan_store.replace_all(list(loans))
+
     # ---- reads ------------------------------------------------------------------------------
-    def all(self) -> Iterable[Contract]:
+    def all_but_term_loans(self) -> Iterable[Contract]:
         for _borrower, held in sorted(self.facilities.items()):
             for _lender, contract in sorted(held.items()):
                 yield contract
         for _depositor, contract in sorted(self.deposits.items()):
             yield contract
+
+    def all(self) -> Iterable[Contract]:
+        yield from self.all_but_term_loans()
         yield from self.term_loans
 
     def debt(self, borrower: str, currency: Optional[str] = None) -> float:
@@ -73,24 +64,23 @@ class Contracts:
         return total + self._term_debt(currency).get(borrower, 0.0)
 
     def _term_debt(self, currency: Optional[str]) -> Dict[str, float]:
-        loans = self.term_loans
-        last = loans[-1] if loans else None
-        seen = self._term_seen
-        if seen is None or seen[0] is not loans or seen[1] != len(loans) or seen[2] is not last:
-            self._term_seen, self._term_debts = (loans, len(loans), last), {}
+        if self._term_seen != self.loan_store.version:
+            self._term_seen, self._term_debts = self.loan_store.version, {}
         if currency not in self._term_debts:
-            owed: Dict[str, float] = {}
-            for contract in loans:
-                if currency is None or contract.currency == currency:
-                    owed[contract.borrower] = owed.get(contract.borrower, 0.0) + contract.principal + contract.arrears
-            self._term_debts[currency] = owed
+            self._term_debts[currency] = reads.debts_by_borrower(self.loan_store, currency)
         return self._term_debts[currency]
 
     def exposure(self, lender: Optional[str] = None, currency: Optional[str] = None) -> float:
         """The principal the lender (every lender when none is named) has out."""
-        return sum(contract.principal for contract in self.all()
-                   if (lender is None or contract.lender == lender)
-                   and (currency is None or contract.currency == currency))
+        principals = [contract.principal for contract in self.all_but_term_loans()
+                      if (lender is None or contract.lender == lender) and (currency is None or contract.currency == currency)]
+        return sum(principals + self.loan_store.principals_of(lender, currency))
+
+    def lent_total(self, currency: str) -> float:
+        """The principal of every facility and term loan in `currency` (deposits are what the pool owes, not lent out)."""
+        facilities = [contract.principal for contract in self.all_but_term_loans()
+                      if contract.kind != DEPOSIT and contract.currency == currency]
+        return sum(facilities + self.loan_store.principals_of(currency=currency))
 
     def facility_of(self, borrower: str) -> Dict[str, float]:
         """lender -> principal it has drawn out on the borrower's facility."""
@@ -179,22 +169,25 @@ class Contracts:
 
     def default_many(self, borrowers, kind: Optional[str] = None) -> List[Contract]:
         """The term loans (of `kind`, all when none) of every borrower in `borrowers` end, in one pass over the list; returned in list order."""
-        ended: List[Contract] = []
-        kept: List[Contract] = []
-        for contract in self.term_loans:
-            if contract.borrower in borrowers and (kind is None or contract.kind == kind):
-                ended.append(contract)
-            else:
-                kept.append(contract)
+        store = self.loan_store
+        count = len(store)
+        numbers = [store.agents.find(each) for each in borrowers]
+        ending = numpy.isin(store.table.borrower[:count], [each for each in numbers if each is not None])
+        if kind is not None:
+            kind_number = store.kinds.find(kind)
+            ending &= (store.table.kind[:count] == kind_number) if kind_number is not None else False
+        rows = numpy.nonzero(ending)[0].tolist()
+        ended = store.snapshots(rows)
         if ended:
-            self.term_loans = kept
+            store.retain(~ending)
         return ended
 
     # ---- renaming ---------------------------------------------------------------------------
     def rename(self, old: str, new: str) -> None:
         """`old` becomes `new` as borrower, lender and depositor: its contracts join `new`'s (a draw on the same
         lender adds to the one facility). A contract that would then be between `new` and itself ends."""
-        for contract in self.all():
+        self.loan_store.rename(old, new)
+        for contract in self.all_but_term_loans():
             contract.lender = rename_text(contract.lender, old, new)
             contract.borrower = rename_text(contract.borrower, old, new)
             contract.contract_id = rename_text(contract.contract_id, old, new)
@@ -220,8 +213,6 @@ class Contracts:
             else:
                 deposits[contract.lender] = contract
         self.deposits = deposits
-        self.term_loans = [contract for contract in self.term_loans if contract.lender != contract.borrower]
-        self._term_seen = None
 
     # ---- sharing and the save file ----------------------------------------------------------
     def adopt(self, other: "Contracts") -> None:
@@ -243,7 +234,7 @@ class Contracts:
             return ([dict(vars(contract)) for _borrower, held in sorted(self.facilities.items())
                      for _lender, contract in sorted(held.items())]
                     + [dict(vars(contract)) for _depositor, contract in sorted(self.deposits.items())])
-        return [dict(vars(contract)) for contract in self.term_loans]
+        return self.loan_store.records()
 
     def load_records(self, records: Iterable[Dict[str, Any]]) -> None:
         for record in records:
@@ -253,4 +244,4 @@ class Contracts:
             elif contract.kind == DEPOSIT:
                 self.deposits[contract.lender] = contract
             else:
-                self.term_loans.append(contract)
+                self.loan_store.append_contract(contract)

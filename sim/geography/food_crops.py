@@ -59,6 +59,18 @@ def _tillable_scale(world_map: WorldMap, tile_id: str, tillage_capacity: float) 
 
 def crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_share: float, nutrient_factor: float = 1.0,
               tillage_capacity: float = 1.0) -> CropSite:
+    """`computed_crop_site`, kept on the map per (tile, rotation share, nutrient factor, tillage): the map is read-only, so the
+    answer is a function of the arguments alone (the tile layers are kept on the map the same way)."""
+    cache = world_map.__dict__.setdefault("_crop_site_cache", {})
+    key = (tile_id, open_field_cropped_share, nutrient_factor, tillage_capacity)
+    site = cache.get(key)
+    if site is None:
+        site = cache[key] = computed_crop_site(world_map, tile_id, open_field_cropped_share, nutrient_factor, tillage_capacity)
+    return site
+
+
+def computed_crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_share: float, nutrient_factor: float = 1.0,
+                       tillage_capacity: float = 1.0) -> CropSite:
     """The tile's cropland under a rotation that crops `open_field_cropped_share` of open fields each year.
     `nutrient_factor` is what the tile's soil nitrogen stock does to a cropped hectare's yield (sim/geography/soil_nutrients.py).
     `tillage_capacity` is the share of the tile's heavy ground the society's toolkit can open; the rest is not arable to it."""

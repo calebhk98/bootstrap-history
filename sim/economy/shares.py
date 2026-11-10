@@ -31,6 +31,12 @@ def note_dividend(capital_markets, producer_id: AgentId, payout: Sequence[Transf
     capital_markets.last_dividends[producer_id] = sum(transfer.amount for transfer in payout if transfer.purpose == "dividend")
 
 
+def note_dividends(capital_markets, noted) -> None:
+    """`note_dividend` for many producers: `noted` pairs each producer with the dividend it paid (zero for one that paid none; the
+    close passes the amount for a payer and the integer zero `sum` of no payments gave for the rest)."""
+    capital_markets.last_dividends.update(noted)
+
+
 def split_dividend(record, payment: Transfer) -> List[Transfer]:
     """A producer's dividend as payments: each holder of its shares its part, the rest to its owner (paid on
     to the owner's tile by the caller). Other payments pass through."""
@@ -54,10 +60,11 @@ def whole_value(capital_markets, producer_id: AgentId, rate: float, rate_floor: 
 
 def prune(record) -> None:
     """Drop the shares of producers that have closed."""
-    for producer_id in [each for each in record.capital_markets.shares if each not in record.producers]:
+    open_ids = set(record.producers)
+    for producer_id in [each for each in record.capital_markets.shares if each not in open_ids]:
         del record.capital_markets.shares[producer_id]
         record.capital_markets.last_dividends.pop(producer_id, None)
-    for producer_id in [each for each in record.capital_markets.last_dividends if each not in record.producers]:
+    for producer_id in [each for each in record.capital_markets.last_dividends if each not in open_ids]:
         del record.capital_markets.last_dividends[producer_id]
 
 

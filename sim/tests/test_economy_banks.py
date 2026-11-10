@@ -53,12 +53,11 @@ def bank_that_has_lent(amount=820.0):
     record = record_with(household_cash())
     bank = standing_bank(record)
     for depositor in DEPOSITORS:
-        record.credit.loans.append(deposit(depositor, PLEDGED))
+        record.credit.add_loan(deposit(depositor, PLEDGED))
         record.book.transfer(Transfer(depositor, BANK, MONEY, PLEDGED, "deposit"))
     loan = Loan("loan:0:0", BANK, BORROWER, MONEY, amount, rate=0.05, years_left=5.0, issued_year=0)
     record.book.transfer(Transfer(BANK, BORROWER, MONEY, amount, "loan"))
-    record.credit.loans.append(loan)
-    return record, bank, loan
+    return record, bank, record.credit.add_loan(loan)
 
 
 def pledges(amount=PLEDGED):

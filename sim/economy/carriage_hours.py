@@ -12,10 +12,12 @@ import math
 from typing import Dict, List, Optional, Tuple
 
 from . import credit, trade_wages
+from .cohort_reads import populated_tiles
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
 from .producers_working_capital import WORKING_CAPITAL_PURPOSE
 from .setup import labour_area
+from .labour_bid_sink import BidFigures, bid_objects, put_bids
 from .types import LabourBid, LoanRequest
 
 CrewRows = Tuple[Tuple[str, float], ...]      # ((crew key, crew hours),): a crew key is market_key(trade, tile hired at)
@@ -96,7 +98,7 @@ def wage_scale(setup, record, carriage) -> float:
     if not carried or setup.carriage_wage <= 0.0 or not hires(setup):
         return record.memory.opening_wage_level(setup.currency_id)
     crew = Crew(setup, carriage, record.carriage.area_imbalance)
-    populated = {cohort.tile for cohort in record.cohorts.values()}
+    populated = populated_tiles(record.cohorts)
     hired_in: Dict[str, str] = {}
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         for key in sorted(merchant.carriage_hours_wanted or {}):
@@ -126,7 +128,7 @@ def hiring_area(record, merchant: Merchant, tile: str, populated=None) -> str:
     """The labour area carriers for goods leaving `tile` are hired in: the tile's own, or the merchant's home
     where nobody lives (carriers come from home)."""
     if populated is None:
-        populated = {cohort.tile for cohort in record.cohorts.values()}
+        populated = populated_tiles(record.cohorts)
     return labour_area(tile if tile in populated else merchant.home_tile)
 
 
@@ -136,20 +138,30 @@ def _split(key: str) -> Tuple[str, str]:
 
 
 def bids(setup, record) -> List[LabourBid]:
-    """Each merchant's bid for carriers on the tiles its goods left last year, in the trades the hauls need. The
-    merchants' plan is last year's shipments (what they wanted to carry, before any cut), because this year's
-    purchases are not known until the goods markets clear, after the labour market. The most an hour of crew
-    can be worth to a merchant is all of the carriage money its hours stand for."""
+    """`bid_figures` as records (an edge: the workforce's figures, tests)."""
+    return bid_objects(bid_figures(setup, record))
+
+
+def write_bids(sink, setup, record) -> None:
+    """Add every merchant's bid for carriers to the year's labour bids (a `LabourBidTable`, or a list of records)."""
+    put_bids(sink, bid_figures(setup, record))
+
+
+def bid_figures(setup, record) -> List[BidFigures]:
+    """Each merchant's bid for carriers on the tiles its goods left last year, in the trades the hauls need: (employer, trade, area,
+    hours, maximum wage) each. The merchants' plan is last year's shipments (what they wanted to carry, before any cut), because
+    this year's purchases are not known until the goods markets clear, after the labour market. The most an hour of crew can be
+    worth to a merchant is all of the carriage money its hours stand for."""
     if not hires(setup):
         return []
-    populated = {cohort.tile for cohort in record.cohorts.values()}
+    populated = populated_tiles(record.cohorts)
     found = []
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         for key, hours in sorted((merchant.carriage_hours_wanted or {}).items()):
             if hours > 0.0:
                 trade, tile = _split(key)
-                found.append(LabourBid(merchant.agent_id, trade, hiring_area(record, merchant, tile, populated), hours,
-                                       merchant.carriage_money_wanted.get(key, 0.0) / hours))
+                found.append((merchant.agent_id, trade, hiring_area(record, merchant, tile, populated), hours,
+                              merchant.carriage_money_wanted.get(key, 0.0) / hours))
     return found
 
 
@@ -163,7 +175,7 @@ def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[s
     """({crew key: hours hired}, {crew key: average wage, None where nothing was hired}) for the merchant's plan, from `YearLedger.hours_hired_by_market` (hours the employer paid for, not hours matched). Keys
     that share a labour market (goods leaving unpopulated tiles are bid for at home) share what was hired in
     proportion to their hours."""
-    populated = {cohort.tile for cohort in record.cohorts.values()}
+    populated = populated_tiles(record.cohorts)
     plan = merchant.carriage_hours_wanted or {}
     markets: Dict[Tuple[str, str], float] = {}
     market_of = {}
@@ -191,7 +203,7 @@ def wage_loans(setup, record, hired_last_year=None, supply_last_year=None) -> Li
     hours it wants, to no more than the market's whole supply last year, `supply_last_year` {(trade, area): hours
     hired plus hours left idle}."""
     money = setup.currency_id
-    populated = {cohort.tile for cohort in record.cohorts.values()}
+    populated = populated_tiles(record.cohorts)
     hired_last_year = hired_last_year or {}
     supply_last_year = supply_last_year or {}
     requests = []

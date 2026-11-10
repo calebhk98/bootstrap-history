@@ -4,6 +4,10 @@ Home tiles town, farms and hills; the north's tiles north_farms and north_port. 
 Every figure is a round number a test can add up by hand."""
 from types import SimpleNamespace
 
+from sim.economy.cohort_store import CohortStore
+from sim.economy.households_cohort import Cohort
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 from sim.economy.market_memory import MarketMemory, market_key
 from sim.economy.setup import labour_area
 from sim.tests.labour_record_stand_in import labour_record
@@ -18,13 +22,11 @@ GRAIN_AREAS = {"grain:home": set(HOME_TILES), "grain:north": set(NORTH_TILES)}
 
 
 def cohort(agent_id, tile, people, income, ownership_share=1.0):
-    return SimpleNamespace(agent_id=agent_id, tile=tile, people=people, last_year_income=income, ownership_share=ownership_share,
-                           working_people=people / 2.0)
+    return Cohort(agent_id, tile, 0, people, people / 2.0, ownership_share, last_year_income=income)
 
 
 def producer(agent_id, tile, recipe_id, last_runs, land_rent_per_run=0.0):
-    return SimpleNamespace(agent_id=agent_id, tile=tile, recipe_id=recipe_id, last_runs=last_runs, capacity_runs=last_runs,
-                           yield_factor=1.0, land_rent_per_run=land_rent_per_run)
+    return Producer(agent_id, "owner", recipe_id, tile, last_runs, last_runs=last_runs, land_rent_per_run=land_rent_per_run)
 
 
 def wage_key(trade, tile):
@@ -52,7 +54,7 @@ def two_country_economy():
                cohort("household:north_farms", "north_farms", 40.0, 30.0), cohort("household:north_port", "north_port", 10.0, 20.0)]
     producers = [producer("producer:mine", "hills", "mine", 4.0), producer("producer:farm", "farms", "farm", 6.0, land_rent_per_run=1.0),
                  producer("producer:north_farm", "north_farms", "farm", 5.0, land_rent_per_run=2.0)]
-    record = SimpleNamespace(cohorts={each.agent_id: each for each in cohorts}, producers={each.agent_id: each for each in producers}, memory=memory, goods=SimpleNamespace(volumes={}),
+    record = SimpleNamespace(cohorts=CohortStore({each.agent_id: each for each in cohorts}), producers=ProducerStore({each.agent_id: each for each in producers}), memory=memory, goods=SimpleNamespace(volumes={}),
                            labour=labour_record({wage_key("labourer", "town"): 1000.0, wage_key("labourer", "farms"): 3000.0, wage_key("labourer", "north_farms"): 100.0},
                                                 {wage_key("labourer", "town"): 10.0, wage_key("miner", "hills"): 0.0}, workforce=workforce), carriage=SimpleNamespace(carried_goods={}), land=SimpleNamespace(land_rent={}, rent_paid={"farms": 6.0, "north_farms": 10.0},
                                                                                       titles={each.tile: {each.agent_id: 1.0} for each in cohorts}))

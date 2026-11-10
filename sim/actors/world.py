@@ -59,35 +59,52 @@ from .world_trade import Trade
 
 class ActorWorld:
 	"""The parts of the view of one simulation's actors. `needs` is what the actors module reads; `cast`, `seat_book` and
-	`staff` are the actors module's parts that keep the registry, the seats' parties and the staff of the actors."""
+	`staff` are the actors module's parts that keep the registry, the seats' parties and the staff of the actors.
+
+	A part is built the first time it is asked for and kept, so a world made to answer one question builds one part. Each part
+	holds only the world and its own table of the turn's shared answers, so building it late changes no answer."""
+
+	PARTS = {"setting": Setting, "knowledge": Knowledge, "disclosure": Disclosure, "seats": Seats, "people": People, "army": Army,
+	         "taxpayers": Taxpayers, "revenue": Revenue, "collection": HomeCollection, "labour": ActorLabourReads, "quotes": Quotes,
+	         "groups": Groups, "stakes": Stakes, "patronage": Patronage, "credit": Credit, "capacity": Capacity, "site": Site,
+	         "concerns": Concerns, "enterprises": Enterprises, "market": Market, "trade": Trade, "research": Research}
+
+	setting: Setting
+	knowledge: Knowledge
+	disclosure: Disclosure
+	seats: Seats
+	people: People
+	army: Army
+	taxpayers: Taxpayers
+	revenue: Revenue
+	collection: HomeCollection
+	labour: ActorLabourReads
+	quotes: Quotes
+	groups: Groups
+	stakes: Stakes
+	patronage: Patronage
+	credit: Credit
+	capacity: Capacity
+	site: Site
+	concerns: Concerns
+	enterprises: Enterprises
+	market: Market
+	trade: Trade
+	research: Research
 
 	def __init__(self, needs: Any, cast: Any = None, seat_book: Any = None, staff: Any = None) -> None:
 		self.needs = needs
 		self.cast = cast
 		self.seat_book = seat_book
 		self.staff = staff
-		self.setting = Setting(self)
-		self.knowledge = Knowledge(self)
-		self.disclosure = Disclosure(self)
-		self.seats = Seats(self)
-		self.people = People(self)
-		self.army = Army(self)
-		self.taxpayers = Taxpayers(self)
-		self.revenue = Revenue(self)
-		self.collection = HomeCollection(self)
-		self.labour = ActorLabourReads(self)
-		self.quotes = Quotes(self)
-		self.groups = Groups(self)
-		self.stakes = Stakes(self)
-		self.patronage = Patronage(self)
-		self.credit = Credit(self)
-		self.capacity = Capacity(self)
-		self.site = Site(self)
-		self.concerns = Concerns(self)
-		self.enterprises = Enterprises(self)
-		self.market = Market(self)
-		self.trade = Trade(self)
-		self.research = Research(self)
+
+	def __getattr__(self, name: str) -> Any:
+		part_class = self.PARTS.get(name)
+		if part_class is None:
+			raise AttributeError(name)
+		part = part_class(self)
+		setattr(self, name, part)
+		return part
 
 	@property
 	def registry(self) -> Any:

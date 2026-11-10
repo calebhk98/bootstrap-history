@@ -17,6 +17,13 @@ GOODS = ["grain", "iron"]
 CURRENCIES = ["coin", "bullion"]
 
 
+def plain_record(book, **filters):
+    """The book's record without its numbering, which the reference book (names only) does not have."""
+    record = book.to_record(**filters)
+    record.pop("numbering", None)
+    return record
+
+
 def pair_of_books(rng, rounds=12):
     """Two books, the array one and the reference, after the same random postings."""
     books = (Book(), ReferenceBook())
@@ -59,7 +66,7 @@ class ArrayBookAgreesWithTheDictionaryBook(unittest.TestCase):
         rng = random.Random(3)
         for _ in range(60):
             new, old = pair_of_books(rng)
-            self.assertEqual(new.to_record(), old.to_record())
+            self.assertEqual(plain_record(new), old.to_record())
             for agent in AGENTS + ["nobody"]:
                 self.assertEqual(new.knows(agent), old.knows(agent))
                 self.assertEqual(new.holdings(agent), old.holdings(agent))
@@ -105,7 +112,7 @@ class ArrayBookAgreesWithTheDictionaryBook(unittest.TestCase):
                     outcomes.append((type(error), str(error)))
             self.assertEqual(outcomes[0], outcomes[1])
             refused += outcomes[0] is not None
-            self.assertEqual(new.to_record(), old.to_record())
+            self.assertEqual(plain_record(new), old.to_record())
         self.assertTrue(0 < refused < 300)
 
     def test_post_settled_with_many_entries_uses_the_array_path_and_agrees(self):
@@ -134,14 +141,14 @@ class ArrayBookAgreesWithTheDictionaryBook(unittest.TestCase):
                     outcomes.append((type(error), str(error)))
             self.assertEqual(outcomes[0], outcomes[1])
             refused += outcomes[0] is not None
-            self.assertEqual(new.to_record(), old.to_record())
+            self.assertEqual(plain_record(new), old.to_record())
         self.assertTrue(0 < refused < 60, refused)
 
     def test_start_year_keeps_holdings_and_clears_the_flows(self):
         new, old = pair_of_books(random.Random(8))
         new.start_year()
         old.start_year()
-        self.assertEqual(new.to_record(), old.to_record())
+        self.assertEqual(plain_record(new), old.to_record())
 
     def test_rename_agent_adds_to_what_the_new_name_holds(self):
         rng = random.Random(9)
@@ -149,10 +156,26 @@ class ArrayBookAgreesWithTheDictionaryBook(unittest.TestCase):
             new, old = pair_of_books(rng)
             new.rename_agent("a2", "a3")
             old.rename_agent("a2", "a3")
-            self.assertEqual(new.to_record(), old.to_record())
+            self.assertEqual(plain_record(new), old.to_record())
             self.assertFalse(new.knows("a2"))
             self.assertEqual(new.goods_totals(), old.goods_totals())
             self.assertEqual(new.agents(), old.agents())
+
+    def test_goods_of_lists_goods_and_tiles_in_the_order_the_dictionary_book_does(self):
+        rng = random.Random(11)
+        for _ in range(60):
+            new, old = pair_of_books(rng)
+            for agent in AGENTS:
+                self.assertEqual([(good, list(by_tile)) for good, by_tile in new.goods_of(agent).items()],
+                                 [(good, list(by_tile)) for good, by_tile in old.goods_of(agent).items()])
+
+    def test_a_rename_appends_the_old_names_goods_and_tiles_after_what_the_new_name_held(self):
+        book = Book()
+        for agent, good, tile in (("new", "grain", "t1"), ("old", "grain", "t3"), ("old", "iron", "t2"), ("old", "grain", "t2")):
+            book.move(GoodsMove("edge:world", agent, good, tile, 1.0, "start"))
+        book.rename_agent("old", "new")
+        self.assertEqual([(good, list(by_tile)) for good, by_tile in book.goods_of("new").items()],
+                         [("grain", ["t1", "t3", "t2"]), ("iron", ["t2"])])
 
     def test_absorb_adds_the_other_book(self):
         rng = random.Random(10)
@@ -161,12 +184,12 @@ class ArrayBookAgreesWithTheDictionaryBook(unittest.TestCase):
             other_new, other_old = pair_of_books(rng)
             new.absorb(other_new)
             old.absorb(other_old)
-            self.assertEqual(new.to_record(), old.to_record())
+            self.assertEqual(plain_record(new), old.to_record())
 
     def test_the_record_filters_by_currency_like_the_reference(self):
         new, old = pair_of_books(random.Random(12))
-        self.assertEqual(new.to_record(only=("coin",)), old.to_record(only=("coin",)))
-        self.assertEqual(new.to_record(skip=("coin",)), old.to_record(skip=("coin",)))
+        self.assertEqual(plain_record(new, only=("coin",)), old.to_record(only=("coin",)))
+        self.assertEqual(plain_record(new, skip=("coin",)), old.to_record(skip=("coin",)))
 
     def test_from_record_round_trips(self):
         new, _old = pair_of_books(random.Random(14))

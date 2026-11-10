@@ -11,6 +11,7 @@ import math
 from typing import Callable, Dict, List, Mapping, Sequence
 
 from . import practice
+from .producer_store import ProducerStore
 from .producers_close import LOSS_YEARS_BEFORE_EXIT
 from .types import Recipe
 
@@ -36,6 +37,8 @@ def crews_of_recipe(producers: Mapping[str, object]) -> CrewsOf:
         return held[1]
 
     def crews(recipe_id: str) -> List[Mapping[str, float]]:
+        if isinstance(producers, ProducerStore):
+            return producers.crews_by_recipe().get(recipe_id, [])
         return [each.crew_runs for _name, each in sorted(producers.items()) if each.recipe_id == recipe_id]
     return crews
 
@@ -49,8 +52,11 @@ def shared_crews(producers: Mapping[str, object]):
 
     def crews(recipe_id: str) -> List[Mapping[str, float]]:
         if not state["built"]:
-            for _name, each in sorted(producers.items()):
-                grouped.setdefault(each.recipe_id, []).append(each.crew_runs)
+            if isinstance(producers, ProducerStore):
+                grouped.update(producers.crews_by_recipe())
+            else:
+                for _name, each in sorted(producers.items()):
+                    grouped.setdefault(each.recipe_id, []).append(each.crew_runs)
             state["built"] = True
         handed = _GroupedCrews(grouped.get(recipe_id, ()))
         handed.group = (id(grouped), recipe_id)

@@ -74,7 +74,7 @@ def standing(record) -> List[Bank]:
 
 
 def deposits_of(record, bank_id: AgentId) -> List[Loan]:
-    return [loan for loan in record.credit.loans if loan.borrower == bank_id]
+    return record.credit.loans.select(borrower=bank_id)
 
 
 def owed_to_depositors(record, bank_id: AgentId) -> float:
@@ -83,7 +83,7 @@ def owed_to_depositors(record, bank_id: AgentId) -> float:
 
 def assets_of(record, bank_id: AgentId, money: str) -> float:
     """What the bank holds in cash, is owed on its loans (as the loans' lenders value them) and has deposited in the actors' pool."""
-    claims = credit_claims.claims_by_lender((loan for loan in record.credit.loans if loan.lender == bank_id), money)
+    claims = credit_claims.claims_by_lender(record.credit.loans.select(lender=bank_id), money)
     return record.book.balance(bank_id, money) + claims.get(bank_id, 0.0) + record.credit.contracts.deposit_value(bank_id)
 
 
@@ -93,13 +93,13 @@ def capital_of(record, bank_id: AgentId, money: str) -> float:
 
 
 def loans_out(record, bank_id: AgentId) -> float:
-    return sum(loan.principal for loan in record.credit.loans if loan.lender == bank_id and not is_deposit(record.capital_markets, loan))
+    return sum(loan.principal for loan in record.credit.loans.select(lender=bank_id) if not is_deposit(record.capital_markets, loan))
 
 
 def risk_headroom(record, bank_id: AgentId, money: str) -> float:
     """The value at risk the bank may still take on (bank_credit_risk.var_headroom): its equity, what it holds and is
     owed less what it owes depositors, times ALFA, less the value at risk of the loans it has out."""
-    own_loans = [loan for loan in record.credit.loans if loan.lender == bank_id and not is_deposit(record.capital_markets, loan)]
+    own_loans = [loan for loan in record.credit.loans.select(lender=bank_id) if not is_deposit(record.capital_markets, loan)]
     at_risk = bank_credit_risk.value_at_risk(
         bank_credit_risk.exposures(own_loans, credit_claims.principal_by_borrower(record.credit.loans)))
     return bank_credit_risk.var_headroom(capital_of(record, bank_id, money), at_risk)
@@ -229,6 +229,6 @@ def draw_deposits(record, loans: Sequence[Loan], pledged: Dict[AgentId, List[Fun
         for offer in offers:
             amount = offer.amount * share
             placed.append(Transfer(offer.lender, bank_id, money, amount, DEPOSIT_PURPOSE))
-            record.credit.loans.append(Loan("deposit:%d:%s:%s" % (year, bank_id, offer.lender), offer.lender, bank_id, money,
+            record.credit.add_loan(Loan("deposit:%d:%s:%s" % (year, bank_id, offer.lender), offer.lender, bank_id, money,
                                      amount, rate=offer.minimum_rate, years_left=DEPOSIT_TERM_YEARS, issued_year=year))
     record.book.transfer_many(placed)

@@ -6,7 +6,9 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from unittest import mock
 
+from sim.economy import economy as economy_module
 from sim.economy.goods_record import GoodsRecord
 from sim.economy.economy import Economy
 from sim.economy.market_areas_follow import follow
@@ -33,9 +35,11 @@ class Setup:
 class ResumeTests(unittest.TestCase):
     def test_the_resume_partitions_for_the_emptiness_the_record_saved_not_the_one_its_ledger_implies(self):
         setup = Setup()
-        record = types.SimpleNamespace(carriage=types.SimpleNamespace(ways={"road": {"road": True}}, area_imbalance=0.75, carried={"town": {"farms": 10.0}, "farms": {"town": 10.0}}))
+        record = types.SimpleNamespace(memory="memory", carriage=types.SimpleNamespace(ways={"road": {"road": True}}, area_imbalance=0.75, carried={"town": {"farms": 10.0}, "farms": {"town": 10.0}}))
         economy = types.SimpleNamespace()
-        Economy.__init__(economy, setup, record)
+        with mock.patch.object(economy_module, "number_area_markets") as numbered:
+            Economy.__init__(economy, setup, record)
+        numbered.assert_called_once_with("memory", setup.map)     # a resumed game numbers the map's markets as one batch
         self.assertEqual(setup.carriage_asked, [({"road": {"road": True}}, 0.75)])
         self.assertIs(economy.carriage, setup.table)
         self.assertIs(setup.carriage_of_map, setup.table)

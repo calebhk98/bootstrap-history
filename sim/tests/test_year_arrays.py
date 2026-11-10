@@ -75,7 +75,7 @@ class SyncFollowsTheTable(unittest.TestCase):
         first = sorted(record.producers)[5]
         record.producers[first] = replace(record.producers[first], capacity_runs=123.5, expected_sales=7.0)
         synced = arrays.sync(setup, record, view)
-        self.assertIs(synced.producers, arrays.producers)
+        self.assertIsNot(synced.producers, arrays.producers)
         row = synced.producers.row[first]
         self.assertEqual((synced.producers.capacity_runs[row], synced.producers.expected_sales[row]), (123.5, 7.0))
 

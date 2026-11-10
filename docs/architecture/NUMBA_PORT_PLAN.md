@@ -81,7 +81,7 @@ changes a field. The saved record format does not change.
     - [ ] the households' close and the equity built for it (`households_close`, `equity.producer_worths`, `credit_view.equity`):
           the households' own part is small (312 cohorts); the cost is the producers' net worths (`equity._built_worths`, one
           `plant_value_per_run` per recipe and tile and one `inventory_value` per producer), built once per view
-    - [x] the close hands its producer columns to entry (`year_arrays_closed.columns_after_close`, from the kernel's answer;
+    - [x] the close hands its producer columns to entry (now `ProducerColumns.of`, read from the store the close wrote;
           `test_year_speed_close_arrays`): the `sync` in `open_entrants` finds no row to read again (about 0.09 cProfile s of a warm year)
     - [x] the close's pack reads rows as lists and one currency per area (`close_pack.pack`)
     - [ ] the per-producer tail: dividends (`spread`, `transfer_many`), `write_off`, loan asks
@@ -91,7 +91,7 @@ changes a field. The saved record format does not change.
 - [ ] Market clearing (`clearing.clear_all`, `clear_one`, `hire_through_rounds`, `import_cost`)
     - [x] every market prepared, then all their hiring rounds in one kernel (`hiring_kernel.py`, `applications.hire_markets`),
           then finished (`test_year_speed_labour_hiring`, the old rounds in `labour_hiring_reference.py`)
-    - [x] the hours-sold schedule over a matrix of wages (`sim/economy/labour_supply_kernel.py`; `test_year_speed_labour_sold_hours`)
+    - [x] the hours-sold schedule over a matrix of wages (`sim/labour/market/sold_hours_kernel.py`, fed from the `LabourOffers` table by `sim/economy/labour_offers_kernels.py`; `test_year_speed_labour_sold_hours`, `test_labour_offers_table`)
     - [x] the fetched-hands search and the wage searches for every market at once (`clearing_kernel.market_heads`,
           `clearing_arrays.py`; `test_year_speed_labour_heads` against `clearing._plain_head`; the plain path kept for a
           mod's fetch search or an unpacked schedule)

@@ -126,7 +126,8 @@ class OpeningDemand:
                         found = view.price(good, view.area_of(good, cohort.tile))
                         row_floats.append([price, effect, share, ceiling, qualities.get(good, 1.0), view.stock(cohort.agent_id, good, cohort.tile),
                                    spec.service_life_years if spec is not None else 0.0,
-                                   spec.spoilage_per_year if spec is not None else 0.0, found or 0.0])
+                                   spec.spoilage_per_year if spec is not None else 0.0, found or 0.0,
+                                   dict(need.spec.share_limits).get(good, math.nan)])
                         row_ints.append([good_index(good), first_unit.get(good, -1)])
                 for good, weight in weights.items():
                     spec = specs[good]

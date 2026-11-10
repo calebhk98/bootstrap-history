@@ -8,6 +8,8 @@ from sim.constants import declare
 
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .inventory import holding_reservation
+from .priced_need_list import priced_needs_of
+from .priced_reads import offered_prices_for, usual_prices_for
 from .store_return import (STORE_SERVICE_UNLIMITED, carrying_return, storage_cost_per_kg_year,
                            service_values_per_year, split_by_return)
 from .types import Bid, GoodId, GoodSpec, Offer
@@ -85,27 +87,40 @@ def store_value_target(savings: float, expected_inflation: float, real_rate: flo
 def staple_price_per_kg(priced, specs: Mapping[GoodId, GoodSpec]) -> float:
     """Cheapest price per kg among the goods that meet a need with a subsistence floor (inf if none)."""
     cheapest = math.inf
-    for need in priced:
-        if need.spec.subsistence_per_person <= 0.0:
+    priced = priced_needs_of(priced)
+    names, prices = priced.columns.names, priced.columns.price
+    for need_spec, _index, first, end in priced.blocks():
+        if need_spec.subsistence_per_person <= 0.0:
             continue
-        for good, price, _effect, _share in need.goods:
-            spec = specs.get(good)
-            if spec is not None and math.isfinite(spec.unit_mass_kg) and spec.unit_mass_kg > 0.0 and price > 0.0:
-                cheapest = min(cheapest, price / spec.unit_mass_kg)
+        for row in range(first, end):
+            spec = specs.get(names[row])
+            if spec is not None and math.isfinite(spec.unit_mass_kg) and spec.unit_mass_kg > 0.0 and prices[row] > 0.0:
+                cheapest = min(cheapest, prices[row] / spec.unit_mass_kg)
     return cheapest
+
+
+def storable_goods(specs: Mapping[GoodId, GoodSpec]) -> List[GoodId]:
+    """The goods whose physical properties let them be held as wealth, in the order of `specs`; only these can be candidates, so the
+    others' prices are not read."""
+    return [good for good, spec in specs.items() if _can_be_stored(spec)]
+
+
+def store_weights_of(tile, view, specs: Mapping[GoodId, GoodSpec], priced, shared: Optional[dict] = None,
+                     storable: Optional[List[GoodId]] = None) -> Tuple[Dict[GoodId, float], Dict[GoodId, float]]:
+    """(weights, last prices) of the store goods at the tile; empty if none. `shared` (empty to begin with) keeps the weights and prices of each
+    tile for cohorts that see the same market and the same priced needs there; `storable` is `storable_goods(specs)` when the caller has it."""
+    found = shared.get(tile) if shared is not None else None
+    if found is None:
+        found = _store_weights(tile, view, specs, priced, storable)
+        if shared is not None:
+            shared[tile] = found
+    return found
 
 
 def store_holding(cohort, view, specs: Mapping[GoodId, GoodSpec], priced,
                   shared: Optional[dict] = None) -> Tuple[Dict[GoodId, float], Dict[GoodId, float], Dict[GoodId, float]]:
-    """(weights, last prices, quantities held) of the store goods at this cohort's tile; empty if none.
-    `shared` (empty to begin with) keeps the weights and prices of each tile for cohorts that see the same
-    market and the same priced needs there."""
-    found = shared.get(cohort.tile) if shared is not None else None
-    if found is None:
-        found = _store_weights(cohort.tile, view, specs, priced)
-        if shared is not None:
-            shared[cohort.tile] = found
-    weights, prices = found
+    """(weights, last prices, quantities held) of the store goods at this cohort's tile; empty if none."""
+    weights, prices = store_weights_of(cohort.tile, view, specs, priced, shared)
     return weights, prices, {good: view.stock(cohort.agent_id, good, cohort.tile) for good in weights}
 
 
@@ -115,24 +130,21 @@ def _money_level(view, tile, goods) -> float:
     return 1.0 if first is None else view.opening_wage_level(view.currency_of(view.area_of(first, tile)))
 
 
-def _store_weights(tile, view, specs: Mapping[GoodId, GoodSpec], priced) -> Tuple[Dict[GoodId, float], Dict[GoodId, float]]:
+def _store_weights(tile, view, specs: Mapping[GoodId, GoodSpec], priced, storable: Optional[List[GoodId]] = None
+                   ) -> Tuple[Dict[GoodId, float], Dict[GoodId, float]]:
     """(weights, last prices) of the store goods at a tile."""
     staple = staple_price_per_kg(priced, specs)
     if not math.isfinite(staple):
         return {}, {}
-    prices, usual_prices = {}, {}
     money_level = _money_level(view, tile, specs)
-    for good, spec in specs.items():
-        if not _can_be_stored(spec):
-            continue      # only these goods can be candidates, so the others' prices are not read
-        area = view.area_of(good, tile)
-        price = view.offered_price(good, area)
-        if price:
-            prices[good] = price
-            usual = view.usual_price(good, area)
-            if usual:
-                usual_prices[good] = usual
-    weights = store_candidates(specs, prices, staple, usual_prices, service_values_per_year(priced, specs), money_level=money_level)
+    if storable is None:
+        storable = storable_goods(specs)
+    offered = offered_prices_for(view, tile, storable)
+    prices = {good: offered[good] for good in storable if offered[good]}
+    usual = usual_prices_for(view, tile, list(prices))
+    usual_prices = {good: usual[good] for good in prices if usual[good]}
+    candidates = {good: specs[good] for good in prices}      # `prices` holds the storable goods that have a price, in the order of `specs`
+    weights = store_candidates(candidates, prices, staple, usual_prices, service_values_per_year(priced, specs), money_level=money_level)
     return weights, {good: prices[good] for good in weights}
 
 
@@ -157,13 +169,16 @@ def store_bids(cohort, view, specs, basket, weights, prices, held, wealth_above_
 
 
 def store_offers(cohort, view, specs, weights, prices, held, wealth_above_buffer: float, real_rate: float,
-                 cash: float, floor_cost: float) -> List[Offer]:
+                 cash: float, floor_cost: float, areas: Optional[Mapping[GoodId, str]] = None) -> List[Offer]:
     """Offers of the store: the excess over the target plus the band at the holding reservation, and
-    enough at a low reservation to cover a shortfall of cash against the floor cost."""
+    enough at a low reservation to cover a shortfall of cash against the floor cost. `areas` is the market area of each store good on the
+    cohort's tile when the caller has them (cohorts of one template share them)."""
     held_value = math.fsum(held[good] * prices[good] for good in weights)
     if held_value <= 0.0:
         return []
-    rate = view.interest_rate(view.currency_of(view.area_of(next(iter(weights)), cohort.tile)))
+    if areas is None:
+        areas = {good: view.area_of(good, cohort.tile) for good in weights}
+    rate = view.interest_rate(view.currency_of(areas[next(iter(weights))]))
     if rate is None:
         return []
     target = store_value_target(wealth_above_buffer, cohort.expected_inflation, real_rate)
@@ -176,7 +191,7 @@ def store_offers(cohort, view, specs, weights, prices, held, wealth_above_buffer
         low = prices[good] * STORE_LIQUIDATION_RESERVATION_SHARE
         urgent = min(held[good], shortfall * share / low) if shortfall > 0.0 else 0.0
         patient = min(held[good] - urgent, excess * share / prices[good])
-        area = view.area_of(good, cohort.tile)
+        area = areas[good]
         if urgent > 0.0:
             offers.append(Offer(cohort.agent_id, good, area, cohort.tile, urgent, low))
         if patient > 0.0:

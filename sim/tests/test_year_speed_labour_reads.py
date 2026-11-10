@@ -9,7 +9,8 @@ import unittest
 from sim.economy import household_hours_year, households_hours_offered
 from sim.economy.labour_supply import HourSupply
 from sim.economy.types import LabourOffer
-from sim.labour.market import bonded_room, formation_bonded, trades
+from sim.labour.market import bonded_room, trades
+from sim.tests import labour_formation_bonded_plain as formation_bonded
 from sim.labour.market.carriage import carriage_from
 from sim.labour.market.import_cost import ImportCosts
 from sim.labour.market.records import EmployerHoursBid, LabourClearing, MarketState, Route, YearInputs, YearReport

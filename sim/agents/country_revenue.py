@@ -5,11 +5,11 @@ own part of the economy, so the one `Government` actor runs a foreign country by
 A reading the country's own part of the economy keeps no record of is a refusal (`NoCountryEconomy`, naming the country) or
 None, never the home figure.
 """
-from typing import Any, Dict, FrozenSet, List, Optional, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Sequence, Tuple
 
 from sim.geography.api import arable_hectares, territory
 
-from . import government_levers, revenue, strata_observed
+from . import assessment_table, government_levers, revenue, strata_observed
 from .country_part import SharedPart
 from .no_country_economy import NoCountryEconomy
 
@@ -27,14 +27,14 @@ class CountryRevenue(SharedPart):
 		"""The forms of revenue the country's state raises, as its civilisation file declares them."""
 		return government_levers.revenue_forms(self.world.setting.government().record)
 
-	def revenue_assessments(self) -> List[revenue.Assessment]:
+	def revenue_assessments(self) -> Sequence[revenue.Assessment]:
 		"""Every declared form assessed on this year's base; kept for the year this scope lives."""
 		if self._assessed is None:
 			self._assessed = revenue.assess(self.world)
 		return self._assessed
 
 	def state_revenue(self) -> float:
-		return sum(assessment.money for assessment in self.revenue_assessments())
+		return assessment_table.as_table(self.revenue_assessments()).total_money()
 
 	def fugitive_share(self) -> None:
 		"""A country does not follow its people's flight: no figure."""

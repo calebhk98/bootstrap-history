@@ -6,9 +6,11 @@ needs, the supply of a force in the field against a threat, and the donative a n
 import math
 from typing import Any, List
 
+import numpy
+
 from sim.disease import api as disease
 
-from . import budget_lines, state_works
+from . import assessment_kernels, assessment_table, budget_lines, state_works
 from .budget_line import Line, goods
 from .tuning_spending import (CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT, CUSTOMS_BASE_PER_COLLECTOR_WAGE_YEAR,
 							  DONATIVE_SHARE_OF_ANNUAL_PAY, FARM_TAX_BASE_PER_COLLECTOR_WAGE_YEAR, MARCH_KM_PER_DAY,
@@ -39,12 +41,12 @@ def works_upkeep_lines(world: Any) -> List[Line]:
 
 def collection_line(world: Any) -> List[Line]:
 	"""Collectors for the forms the state raises: each form's base, counted in years of an unskilled wage, over
-	what a collector handles of that kind of base in a year."""
+	what a collector handles of that kind of base in a year (`assessment_kernels.collectors_needed`)."""
 	wage = world.labour.pay_per_person_year(world.labour.trade_of_role("unskilled"))
-	collectors = 0.0
-	for assessed in world.revenue.revenue_assessments():
-		handled = BASE_PER_COLLECTOR_WAGE_YEAR.get(assessed.basis, PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR)
-		collectors += assessed.base / wage / handled
+	table = assessment_table.as_table(world.revenue.revenue_assessments())
+	handled = numpy.array([BASE_PER_COLLECTOR_WAGE_YEAR.get(row.basis, PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR) for row in table.rows],
+						  dtype=numpy.float64)
+	collectors = float(assessment_kernels.collectors_needed(table.forms, wage, handled))
 	line = budget_lines.paid(world, "tax_collection", "office", {world.labour.trade_of_role("clerk"): collectors})
 	return [line] if line.money > 0.0 else []
 

@@ -71,7 +71,8 @@ RF_HELD = 5
 RF_LIFE = 6
 RF_SPOIL = 7
 RF_GPRICE = 8
-RF_COUNT = 9
+RF_LIMIT = 9          # largest share of the need's units the good can meet (NaN: none); the opening kernel does not read it
+RF_COUNT = 10
 # row ints
 RI_GOOD = 0
 RI_UNIT = 1

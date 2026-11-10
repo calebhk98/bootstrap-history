@@ -4,22 +4,23 @@ QUICK_TOPIC = True
 
 import unittest
 from types import SimpleNamespace
-from unittest import mock
 
-from sim.markets import reads_producers
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 from sim.markets.reads_producers import ProducerReads
 
 
 def producer(agent_id, recipe_id, runs):
-	return SimpleNamespace(agent_id=agent_id, recipe_id=recipe_id, capacity_runs=runs, last_runs=runs, tile="t_" + agent_id)
+	return Producer(agent_id, "owner", recipe_id, "t_" + agent_id, runs, last_runs=runs)
 
 
 class ProducerOrder(unittest.TestCase):
 	def reads(self, producers):
 		recipes = {"r": SimpleNamespace(inputs={"a": 1.0}, outputs={"b": 2.0})}
-		agent = SimpleNamespace(opened=lambda: True, economy=lambda: "economy")
-		patches = (mock.patch.object(reads_producers.economy_api, "all_producers", lambda economy: producers),
-		           mock.patch.object(reads_producers.economy_api, "recipes_of", lambda economy: recipes))
+		economy = SimpleNamespace(record=SimpleNamespace(producers=ProducerStore({each.agent_id: each for each in producers})),
+		                          setup=SimpleNamespace(countries=lambda: ["home"], recipes=recipes))
+		agent = SimpleNamespace(opened=lambda: True, economy=lambda: economy)
+		patches = ()
 		for patch in patches:
 			patch.start()
 			self.addCleanup(patch.stop)

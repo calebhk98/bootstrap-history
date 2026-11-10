@@ -12,7 +12,7 @@ class TransferLoan(unittest.TestCase):
     def test_two_parcels_bought_by_one_buyer_have_different_ids(self):
         record = CreditRecord()
         loan = Loan("loan:1", "lender", "borrower", "coin", 100.0, rate=0.05, years_left=5.0)
-        record.add_loan(loan)
+        loan = record.add_loan(loan)
         record.transfer_loan(loan, "buyer", 0.2)
         record.transfer_loan(loan, "buyer", 0.25)
         identifiers = [each.loan_id for each in record.loans]
@@ -22,7 +22,7 @@ class TransferLoan(unittest.TestCase):
     def test_a_parcel_sold_on_to_the_same_buyer_keeps_ids_unique(self):
         record = CreditRecord()
         loan = Loan("loan:1", "lender", "borrower", "coin", 100.0, rate=0.05, years_left=5.0)
-        record.add_loan(loan)
+        loan = record.add_loan(loan)
         record.transfer_loan(loan, "buyer", 0.5)
         record.transfer_loan(loan, "buyer", 0.5)
         parcel = [each for each in record.loans if each.lender == "buyer"][0]

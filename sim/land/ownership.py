@@ -11,6 +11,9 @@ from sim.hazards.api import RecordWorldEvent
 from sim.stores.api import WriteStore
 
 
+OWNERS = "owners"   # version channel: who owns each tile (a transfer; a load moves the era)
+
+
 class ControlStore:
     """The `control` tile store as the owner rules read and write it: writes are commands, reads are the store as it stands."""
 
@@ -106,6 +109,7 @@ class Ownership(Part):
         controls = ControlStore(self.needs)
         self.caches["transfers"] = self.caches.get("transfers", 0) + 1
         previous = tile_owners.transfer(self.tile_owner_map(), tile_id, to_actor, control, self.parts.map_views.world_map, controls)
+        self.bump(OWNERS)
         self.needs.send(FollowTileTransfer(tile_id, previous, to_actor))
         self.needs.send(RecordWorldEvent(
             "tile_transfer", actors=tuple(actor for actor in (previous, to_actor) if actor), tiles=(tile_id,), cause=cause,

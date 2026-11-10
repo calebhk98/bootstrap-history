@@ -101,7 +101,16 @@ def stakes(setup, record, view, arrays):
         made.append((transfer.payer, transfer.payee, transfer.amount))
         original(transfer)
     record.book.transfer = recording
-    entry_year.restake_owners(setup, record, view, arrays)
+    original_posting = entry_year.post_in_order
+
+    def recording_steps(book, steps, rule):
+        made.extend((transfer.payer, transfer.payee, transfer.amount) for transfers, _moves in steps for transfer in transfers)
+        original_posting(book, steps, rule)
+    entry_year.post_in_order = recording_steps
+    try:
+        entry_year.restake_owners(setup, record, view, arrays)
+    finally:
+        entry_year.post_in_order = original_posting
     return made
 
 

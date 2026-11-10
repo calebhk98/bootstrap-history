@@ -119,6 +119,72 @@ class YearAccountsTests(unittest.TestCase):
         self.assertAlmostEqual(wage.real_wage_index, expected, places=9)
 
 
+def reference_cohorts(setup, record, ledger, prices):
+    """The cohort rows as they were read from the ledger one cohort and one good at a time."""
+    cost = year_accounts.basket_cost_per_head(record.goods, prices, math.fsum(setup.opening_population_by_tile.values()))
+    rows = []
+    for cohort_id, cohort in sorted(record.cohorts.items()):
+        need = next((spec for spec in setup.basket_for(cohort.tile).needs if spec.need_id == setup.hunger_need), None)
+        if need is None or cohort.people <= 0.0:
+            continue
+
+        def units(goods):
+            return math.fsum(goods.get(good, 0.0) * effect for good, effect in need.goods if not setup.specs[good].service_life_years > 0.0)
+        bought, own = units(ledger.received.get(cohort_id, {})), units(ledger.grown.get(cohort_id, {}))
+        rows.append(year_accounts.CohortAccount(
+            cohort=cohort_id, tile=cohort.tile, income_class=cohort.income_class, people=cohort.people,
+            need_per_head=need.subsistence_per_person, eaten_per_head=(bought + own) / cohort.people,
+            bought_per_head=bought / cohort.people, own_plot_per_head=own / cohort.people,
+            real_income_per_head=cohort.last_year_income / cohort.people / cost if cost is not None and cost > 0.0 else math.nan))
+    return rows
+
+
+def awkward_year(ledger):
+    """A setup with two tiles (one has no hunger need), a durable good the need counts but the cohort rows leave out, and cohorts with
+    no people, none eaten, and sums that only an exact addition keeps."""
+    from sim.economy.households_cohort import Cohort
+    goods = ("grain", "fish", "plough", "wine")
+    specs = {good: GoodSpec(good, 1.0, 0.0, 20.0 if good == "plough" else 0.0, good) for good in goods}
+    hunger = SimpleNamespace(need_id="food", subsistence_per_person=2.5, goods=[("grain", 0.1), ("fish", 0.3), ("plough", 9.0), ("wine", -0.2)])
+    other = SimpleNamespace(need_id="cloth", subsistence_per_person=1.0, goods=[("grain", 1.0)])
+    baskets = {"farms": SimpleNamespace(needs=[other, hunger]), "hills": SimpleNamespace(needs=[hunger]), "bare": SimpleNamespace(needs=[other])}
+    setup = SimpleNamespace(specs=specs, hunger_need="food", basket_for=lambda tile: baskets[tile], opening_population_by_tile={"farms": 1e16, "hills": 1.0},
+                            opening_wages={}, opening_prices={}, working_hours_per_year=1.0, recipes={}, currency_id="coin")
+    cohorts = {}
+    for number, (tile, people) in enumerate([("farms", 100.0), ("hills", 0.0), ("hills", 33.0), ("bare", 5.0), ("farms", 7.0), ("farms", 3.0)]):
+        cohorts["household:%s:%d" % (tile, number)] = Cohort("household:%s:%d" % (tile, number), tile, number % 3, people, people / 2, 0.3, last_year_income=4000.0 + number)
+    record = SimpleNamespace(cohorts=cohorts, goods=SimpleNamespace(opening_basket={"grain": 1.0, "fish": 2.0}, index_base_prices={}))
+    for number, name in enumerate(sorted(cohorts)):
+        ledger.received[name] = {"grain": 1e16 * (number % 2) + 0.1 * number, "fish": 1.0 / 3.0, "plough": 4.0, "wine": 1e-9}
+        if number % 2:
+            ledger.grown[name] = {"grain": 1.0 / 7.0, "plough": 2.0}
+    return setup, record, {"grain": 1.0, "fish": 2.0}
+
+
+class PlainLedgerReadTests(unittest.TestCase):
+    def test_cohort_rows_from_the_ledger_block_are_those_read_one_good_at_a_time(self):
+        from sim.economy.year_ledger import YearLedger
+        for ledger in (YearLedger(), SimpleNamespace(received={}, grown={})):
+            setup, record, prices = awkward_year(ledger)
+            rows = year_accounts._cohorts(setup, record, ledger, prices)
+            expected = reference_cohorts(setup, record, ledger, prices)
+            self.assertEqual(len(rows), len(expected))
+            self.assertEqual(len(rows), 4)       # the empty cohort and the tile without a hunger need leave no row
+            for row, wanted in zip(rows, expected):
+                for name in ("cohort", "tile", "people", "need_per_head", "eaten_per_head", "bought_per_head", "own_plot_per_head"):
+                    self.assertEqual(getattr(row, name), getattr(wanted, name), name)
+                self.assertEqual(row.real_income_per_head, wanted.real_income_per_head)
+
+    def test_a_cohort_without_rows_eats_nothing(self):
+        from sim.economy.year_ledger import YearLedger
+        ledger = YearLedger()
+        setup, record, prices = awkward_year(ledger)
+        ledger.received.clear()
+        ledger.grown.clear()
+        rows = year_accounts._cohorts(setup, record, ledger, prices)
+        self.assertEqual([row.eaten_per_head for row in rows], [0.0] * 4)
+
+
 class AccountsTextTests(unittest.TestCase):
     def test_the_printout_names_each_good_and_cohort(self):  # presentation: the command's layout lists what the accounts hold
         from sim.ui.cli_economy_accounts import format_accounts

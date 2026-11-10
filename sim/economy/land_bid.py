@@ -11,6 +11,8 @@ becomes that actor's title (titles_ground.add_ground); no other holder gives up 
 import math
 from typing import Dict, Mapping, Optional, Sequence, Tuple
 
+import numpy as np
+
 from . import titles_ground, titles_value, unit_cost
 from .types import AgentId, AreaId, Bid, GoodId, Recipe, TileId, TradeId
 
@@ -74,7 +76,7 @@ def own_use(stock: float, hectares_needed: float, hectares_held: float) -> float
 _seller_indexes: Dict[int, tuple] = {}      # id of a producers table -> (table, stamp, (good, tile) -> owners)
 
 
-def _seller_index(record, recipes: Mapping[str, Recipe]) -> Dict[Tuple[GoodId, TileId], set]:
+def seller_index(record, recipes: Mapping[str, Recipe]) -> Dict[Tuple[GoodId, TileId], set]:
     """The owners of the producers that make each good on each tile, built once a year per producers table (producers are
     added and handed to new owners only when the year closes)."""
     producers = record.producers
@@ -82,9 +84,17 @@ def _seller_index(record, recipes: Mapping[str, Recipe]) -> Dict[Tuple[GoodId, T
     kept = _seller_indexes.get(id(producers))
     if kept is None or kept[0] is not producers or kept[1] != stamp:
         index: Dict[Tuple[GoodId, TileId], set] = {}
-        for producer in producers.values():
-            for good in recipes[producer.recipe_id].outputs:
-                index.setdefault((good, producer.tile), set()).add(producer.owner)
+        recipe_names, tile_names, owner_names = (producers.names[kind].name_list for kind in ("recipes", "tiles", "owners"))
+        outputs = [recipes[name].outputs if name in recipes else None for name in recipe_names]
+        live = np.array([each is not None for each in producers.ids], dtype=np.bool_)
+        table = producers.table
+        used = np.unique(table.recipe[:producers.count][live])
+        if any(outputs[number] is None for number in used.tolist()):
+            raise KeyError("a producer works a recipe the setup does not hold")
+        for recipe, tile, owner in set(zip(table.recipe[:producers.count][live].tolist(), table.tile[:producers.count][live].tolist(),
+                                           table.owner[:producers.count][live].tolist())):
+            for good in outputs[recipe]:
+                index.setdefault((good, tile_names[tile]), set()).add(owner_names[owner])
         _seller_indexes.clear()
         kept = _seller_indexes[id(producers)] = (producers, stamp, index)
     return kept[2]
@@ -92,4 +102,4 @@ def _seller_index(record, recipes: Mapping[str, Recipe]) -> Dict[Tuple[GoodId, T
 
 def owners_of_sellers(record, recipes: Mapping[str, Recipe], good: GoodId, tile: TileId) -> Sequence[AgentId]:
     """The owners of the producers that make `good` on `tile`: whose land a sold hectare is."""
-    return sorted(_seller_index(record, recipes).get((good, tile), ()))
+    return sorted(seller_index(record, recipes).get((good, tile), ()))

@@ -1,6 +1,8 @@
 """Pure, opt-in validation of state produced by one simulation turn."""
 import math
 
+import numpy
+
 VALID_PROJECT_STATUSES = frozenset(("ACTIVE", "PAUSED", "BLOCKED", "BLOCKED_INPUTS"))
 
 
@@ -62,13 +64,13 @@ def check_labour_market_invariants(sim):
     assert town <= nation + 1e-6, \
         "home town of %.1f people exceeds the nation of %.1f" % (town, nation)
     employees = sim.view("staff")()["employees"]
-    for trade in sim.view("available_trades")():
-        reachable = sim.view("reachable_trade_population")[trade]
-        people = sim.view("people_who_exist")[trade]
-        assert reachable <= people + 1e-6, \
-            "reachable %s %.2f exceed the %.2f people in that trade" % (trade, reachable, people)
-        assert reachable <= nation + 1e-6, \
-            "reachable %s %.2f exceed the nation of %.1f" % (trade, reachable, nation)
+    trades = list(sim.view("available_trades")())
+    reachable, people = sim.view("labour_reach_block")(trades)
+    for place in numpy.flatnonzero((reachable > people + 1e-6) | (reachable > nation + 1e-6)).tolist()[:1]:
+        assert reachable[place] <= people[place] + 1e-6, \
+            "reachable %s %.2f exceed the %.2f people in that trade" % (trades[place], reachable[place], people[place])
+        assert reachable[place] <= nation + 1e-6, \
+            "reachable %s %.2f exceed the nation of %.1f" % (trades[place], reachable[place], nation)
     staffed = sum(employees.values())
     available = sim.view("population")().working_age
     assert staffed <= available + 1e-6, \

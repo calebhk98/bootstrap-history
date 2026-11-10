@@ -10,10 +10,12 @@ import random
 import types
 import unittest
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy import entry_practice, land_bid, labour_state, location_inputs, practice, trade_wages
 from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, YearView
 from sim.economy.producers import Producer
 from sim.economy.types import GoodSpec, Recipe
+from sim.labour.api import MarketState
 
 TRADES = ("labourer", "smith", "miller")
 AREAS = ("north", "south", "east")
@@ -55,7 +57,7 @@ class KeptReadsAreThePlainOnes(unittest.TestCase):
         view = view_of(memory)
         trades = ("smith",)
         self.assertEqual(view.wages_at(trades, "north"), {"smith": 2.0})
-        state = types.SimpleNamespace(wages={"north": {"smith": 7.0}})
+        state = MarketState(wages={"north": {"smith": 7.0}})
         labour_state.mirror_wages(memory.wages, state)
         self.assertEqual(view.wages_at(trades, "north"), {"smith": 7.0})
 
@@ -66,7 +68,7 @@ class KeptReadsAreThePlainOnes(unittest.TestCase):
             memory = MarketMemory(wages=wages)
             for trade in TRADES + ("other",):
                 self.assertEqual(memory.holds_wage_for(trade), any(key.startswith(trade + KEY_SEPARATOR) for key in wages))
-            labour_state.mirror_wages(memory.wages, types.SimpleNamespace(wages={"north": {"smith": 1.0}}))
+            labour_state.mirror_wages(memory.wages, MarketState(wages={"north": {"smith": 1.0}}))
             self.assertTrue(memory.holds_wage_for("smith"))
             self.assertFalse(memory.holds_wage_for("miller"))
 
@@ -111,7 +113,7 @@ class SellerIndex(unittest.TestCase):
         for _round in range(30):
             producers = {"p%d" % index: Producer("p%d" % index, rng.choice(("o1", "o2", "o3")), rng.choice(list(recipes)),
                                                  rng.choice(AREAS), 1.0) for index in range(rng.randrange(0, 25))}
-            record = types.SimpleNamespace(producers=producers, memory=types.SimpleNamespace(year=_round))
+            record = types.SimpleNamespace(producers=ProducerStore(producers), memory=types.SimpleNamespace(year=_round))
             for good in GOODS:
                 for tile in AREAS:
                     self.assertEqual(land_bid.owners_of_sellers(record, recipes, good, tile),
@@ -119,7 +121,7 @@ class SellerIndex(unittest.TestCase):
 
     def test_a_producer_added_after_a_read_is_a_seller(self):
         recipes = {"a": Recipe("a", {"grain": 1.0}, {}, {})}
-        producers = {"p1": Producer("p1", "o1", "a", "north", 1.0)}
+        producers = ProducerStore({"p1": Producer("p1", "o1", "a", "north", 1.0)})
         record = types.SimpleNamespace(producers=producers, memory=types.SimpleNamespace(year=1))
         self.assertEqual(land_bid.owners_of_sellers(record, recipes, "grain", "north"), ["o1"])
         producers["p2"] = Producer("p2", "o2", "a", "north", 1.0)

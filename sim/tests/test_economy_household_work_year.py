@@ -5,6 +5,7 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+from unittest import mock
 
 from sim.tests.economy_view_defaults import ViewDefaults
 from sim.economy import household_work_year, households_work
@@ -63,6 +64,15 @@ def setup():
 def record(titles=None, tenancies=None, cohorts=()):
     expected = {market_key(trade, labour_area("t1")): 1.0 for trade in ("smith", "labourer", "servant")}
     return types.SimpleNamespace(labour=types.SimpleNamespace(sold_share_expected=expected), cohorts={each.agent_id: each for each in cohorts}, land=types.SimpleNamespace(titles=titles or {}, tenancies=tenancies or {}))
+
+
+class EatenSignatureTests(unittest.TestCase):
+    def test_it_is_the_signature_with_no_grains_left_out_and_the_same_hearth(self):
+        buying = ("tile:a", True, 2.5, ("wheat_kg", "barley_kg"))
+        self.assertEqual(household_work_year.eaten_signature(buying), ("tile:a", True, 2.5, ()))
+        with mock.patch.object(household_work_year, "hearth_of", return_value=True):
+            self.assertEqual(household_work_year.eaten_signature(buying),
+                             household_work_year.signature_of(None, "tile:a", "household:a", 2.5, ("wheat_kg", "barley_kg"), False))
 
 
 class SplitTests(unittest.TestCase):

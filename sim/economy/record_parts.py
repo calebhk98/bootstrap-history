@@ -19,6 +19,9 @@ def sorted_store(store: Dict[Any, Any]) -> Dict[Any, Any]:
 
 
 def seat_sorted(store: Dict[Any, Any]) -> None:
+    if hasattr(store, "seat_sorted"):      # a column store reseats its rows itself
+        store.seat_sorted()
+        return
     if list(store) != sorted(store):
         held = [(key, store[key]) for key in sorted(store)]
         store.clear()
@@ -54,6 +57,8 @@ class OwnedRecord:
         for name in self.SAVED_SORTED:
             store = getattr(self, name)
             seat_sorted(store)
+            if hasattr(store, "seat_sorted"):
+                continue
             for inner in store.values():
                 if isinstance(inner, dict):
                     seat_sorted(inner)

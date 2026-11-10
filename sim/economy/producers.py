@@ -25,6 +25,7 @@ from sim.constants import declare
 from . import ask_adjust, inventory, practice, tool_fallback, trade_wages, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
+from .priced_reads import cleared_prices_for, offered_prices_for
 from .protocols import MarketView
 from .types import (AgentId, Bid, EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodId, GoodSpec, GoodsMove, LabourBid,
                     Offer, Recipe, TileId)
@@ -121,9 +122,16 @@ def expected_price(producer: Producer, good: GoodId, view: MarketView) -> Option
 
 
 def expected_output_prices(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
+    return expected_output_prices_at(producer.expected_prices, producer.tile, recipe, view)
+
+
+def expected_output_prices_at(expected_prices: Mapping[GoodId, float], tile: TileId, recipe: Recipe,
+                              view: MarketView) -> Dict[GoodId, float]:
+    """`expected_output_prices` for a producer on `tile` holding `expected_prices`, read from the store's row with no `Producer`."""
+    offered = offered_prices_for(view, tile, [good for good in recipe.outputs if good not in expected_prices])
     prices = {}
     for good in recipe.outputs:
-        price = expected_price(producer, good, view)
+        price = expected_prices[good] if good in expected_prices else offered[good]
         if price is not None:
             prices[good] = price
     return prices
@@ -163,8 +171,7 @@ def paid_input_prices(producer: Producer, recipe: Recipe, view: MarketView,
     market, where that is higher than the remembered price: a thin trade moves the remembered price only
     slightly, and a buyer bidding from it is outbid every year."""
     paid = dict(live)
-    for good in recipe.inputs:
-        cleared = view.cleared_price(good, view.area_of(good, producer.tile))
+    for good, cleared in cleared_prices_for(view, producer.tile, recipe.inputs).items():
         if cleared is not None and cleared > paid.get(good, math.inf):
             paid[good] = cleared
     return paid
@@ -502,9 +509,17 @@ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_
 def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, float],
             hours_hired: Mapping[str, float], runs_planned: Optional[float] = None
             ) -> Tuple[float, List[GoodsMove]]:
-    """Runs achieved, with the goods moves that book them. The scarcest of inputs, hours, the plan and
-    the capacity sets how many runs go ahead (Leontief); the yield factor scales what comes out, not
-    what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
+    """Runs achieved, with the goods moves that book them (`production_lines` made into `GoodsMove`s)."""
+    achieved, lines = production_lines(producer, recipe, inputs_held, hours_hired, runs_planned)
+    return achieved, [GoodsMove(*line) for line in lines]
+
+
+def production_lines(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, float],
+                     hours_hired: Mapping[str, float], runs_planned: Optional[float] = None
+                     ) -> Tuple[float, List[tuple]]:
+    """Runs achieved, with the goods moves that book them as (giver, receiver, good, tile, quantity, purpose) tuples. The scarcest
+    of inputs, hours, the plan and the capacity sets how many runs go ahead (Leontief); the yield factor scales what comes out,
+    not what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
     tool (`tool_fallbacks`), then works by hand, and the extra hours that takes can lower the runs the hours
     hired allow."""
     recipe = practice.recipe_for(recipe, producer.crew_runs)
@@ -514,30 +529,29 @@ def produce(producer: Producer, recipe: Recipe, inputs_held: Mapping[GoodId, flo
     for trade, per_run in recipe.labour_hours.items():
         limit = min(limit, hours_hired.get(trade, 0.0) / per_run)
     limit = max(0.0, limit)
-    moves = []
+    lines = []
     if limit <= 0.0:
-        return 0.0, moves
+        return 0.0, lines
     draws, extra_hours = tool_fallback.draws(recipe, inputs_held, limit)
     for trade, extra in extra_hours.items():
         stretched = recipe.labour_hours[trade] * limit + extra
         if stretched > hours_hired.get(trade, 0.0):
             limit *= max(0.0, hours_hired.get(trade, 0.0) / stretched)
     if limit <= 0.0:
-        return 0.0, moves
+        return 0.0, lines
     if extra_hours:
         draws, extra_hours = tool_fallback.draws(recipe, inputs_held, limit)
-    for good, per_run in sorted(recipe.hard_inputs.items()):
+    for good, per_run in recipe.hard_inputs_sorted:
         used = min(limit * per_run, inputs_held.get(good, 0.0))   # never more than held, to the last bit
-        moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
+        lines.append((producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
     for good, used in sorted(draws.items()):
         if used > 0.0:
-            moves.append(GoodsMove(producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
+            lines.append((producer.agent_id, EDGE_CONSUMPTION, good, producer.tile, used, "input"))
     achieved = limit * producer.yield_factor
-    for good, per_run in sorted(recipe.outputs.items()):
+    for good, per_run in recipe.outputs_sorted:
         if achieved * per_run > 0.0:
-            moves.append(GoodsMove(EDGE_PRODUCTION, producer.agent_id, good, producer.tile,
-                                   achieved * per_run, "output"))
-    return achieved, moves
+            lines.append((EDGE_PRODUCTION, producer.agent_id, good, producer.tile, achieved * per_run, "output"))
+    return achieved, lines
 
 
 def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good: Mapping[GoodId, float],

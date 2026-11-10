@@ -7,6 +7,8 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+
+from sim.economy.credit_record import CreditRecord
 from unittest import mock
 
 from sim.contracts import Contracts
@@ -44,7 +46,7 @@ class FundFixture(unittest.TestCase):
     def setUp(self):
         self.setup = types.SimpleNamespace(currency_id=MONEY, opening_rate=0.05)
         self.record = types.SimpleNamespace(book=Purse({SAVER: 1000.0, OTHER: 1000.0}), cohorts={}, producers={PRODUCER: Producer(PRODUCER, MANAGER, "grow", "town", 4.0)}, capital_markets=types.SimpleNamespace(capital=CapitalState(), shares={}, last_dividends={PRODUCER: 20.0}, last_pool_income={}),
-                                       credit=types.SimpleNamespace(loans=[], remembered_defaults={}, contracts=Contracts()))
+                                       credit=CreditRecord())
         self.fund = Fund(FUND, MANAGER, 0)
         self.record.capital_markets.capital.funds[FUND] = self.fund
         self.money = MONEY

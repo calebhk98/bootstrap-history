@@ -20,7 +20,8 @@ from dataclasses import replace
 
 import numpy as np
 
-from sim.economy import goods_year_batch, year_goods, seller_offers, unsold_search
+from sim.tests.goods_fixtures import goods_on
+from sim.economy import goods_order_book, goods_year_batch, year_goods, seller_offers, unsold_search
 from sim.economy.inventory import holding_reservation
 from sim.economy.market_memory import market_key
 from sim.economy.producers import expected_output_prices
@@ -41,7 +42,9 @@ def near(left, right):
 def with_markets(seed):
     setup, record, view, _ledger, area_map = economy_of(seed)
     setup.basket_for = lambda tile: types.SimpleNamespace(substitution=1.0 + (hash(tile) % 3) * 0.7)
-    record.goods = types.SimpleNamespace(unmet={})
+    record.goods = goods_on(record.memory)
+    record.land = types.SimpleNamespace(land_rent={tile: random.Random(seed).uniform(0.0, 3.0) * (index % 3) for index, tile in enumerate(TILES)})
+    setup.opening_rate = getattr(setup, "opening_rate", 0.04)
     rng = random.Random(seed)
     for producer_id in sorted(record.producers):
         if rng.random() < 0.25:      # a crowd of workshops
@@ -111,8 +114,6 @@ class BatchedMarketsAreTheMarketsOneByOne(unittest.TestCase):
             costs = OfferCosts.build(arrays, view.interest_rate(MONEY))
             markets = []
             for good in GOODS:
-                if not setup.specs[good].portable:
-                    continue
                 for area in AREAS:
                     bids = [random_bid(rng, index, good, area) for index in range(rng.choice([0, 1, 3, 7]))]
                     offers = random_offers(rng, setup, record, good, area)
@@ -142,6 +143,14 @@ class BatchedMarketsAreTheMarketsOneByOne(unittest.TestCase):
         self.assertLess(skipped, 0.05 * (compared + skipped), (compared, skipped))
 
 
+def offers_by_market(orders):
+    """The offers a book of orders holds, by (good, area), in arrival order."""
+    found = {}
+    for offer in orders.offers_of(range(orders.offer_count())):
+        found.setdefault((offer.good, offer.area), []).append(offer)
+    return found
+
+
 class ProducersOfferWhatTheyHold(unittest.TestCase):
 
     def test_quick_offers_are_the_producers_offers(self):
@@ -159,12 +168,13 @@ class ProducersOfferWhatTheyHold(unittest.TestCase):
             arrays = refreshed(YearArrays.build(setup, record, area_map, view), setup, record, view)
             costs = OfferCosts.build(arrays, view.interest_rate(MONEY))
             ids = sorted(record.producers)
-            plain, fast = {}, {}
-            year_goods._produce_and_offer(setup, record, view, ids, {}, [], plain, ledger)
-            year_goods._produce_and_offer(setup, record, view, ids, {}, [], fast, ledger, (arrays, costs))
+            plain_book, fast_book = goods_order_book.new_order_book(setup, record), goods_order_book.new_order_book(setup, record)
+            year_goods._produce_and_offer(setup, record, view, ids, {}, [], plain_book, ledger)
+            year_goods._produce_and_offer(setup, record, view, ids, {}, [], fast_book, ledger, (arrays, costs))
+            plain, fast = offers_by_market(plain_book), offers_by_market(fast_book)
             self.assertEqual(sorted(plain), sorted(fast))
-            for market, (_bids, offers) in plain.items():
-                made = fast[market][1]
+            for market, offers in plain.items():
+                made = fast[market]
                 self.assertEqual(len(offers), len(made))
                 for old, new in zip(offers, made):
                     self.assertEqual((old.seller, old.good, old.area, old.tile), (new.seller, new.good, new.area, new.tile))

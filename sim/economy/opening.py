@@ -22,6 +22,7 @@ from . import carriage_fleet_book, durable_stock, equity, land_lease_year, goods
 from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
+from .market_memory_areas import number_area_markets
 from . import merchants
 from .merchants import Merchant
 from .producers import Producer, paying_output
@@ -240,6 +241,7 @@ def _store_goods(setup, view, area_map, priced_goods) -> set:
 def _opening_memory(setup, area_map, priced_goods) -> MarketMemory:
     memory = MarketMemory(year=0, rates={setup.currency_id: setup.opening_rate},
                           basket_price_levels={setup.currency_id: 1.0}, last_year_prices=dict(priced_goods))
+    number_area_markets(memory, area_map)
     for good, price in priced_goods.items():
         for area in area_map.areas(good):
             memory.set_price(market_key(good, area.area_id), price)
@@ -597,7 +599,7 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
         merchant_id = "merchant:%d" % index
         merchants.put_merchant(record.merchants, Merchant(agent_id=merchant_id, home_tile=tile,
                                                           owner=households.cohort_id(tile, _richest_class(record, tile)),
-                                                          capital_base=capital))
+                                                          capital_base=capital), record.memory.tables)
 
 
 def _strike_opening_cash(setup, record, view, extra_spending) -> None:

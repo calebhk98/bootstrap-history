@@ -15,8 +15,9 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import entry_practice, unit_cost
+from . import bid_columns, entry_practice, unit_cost, year_bids
 from .entry import EntryPlan, UnmetDemand
+from .entry_bid_markets import makers_of, weigh
 from .entrant_rent import site_rent_per_run
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .producers import Producer, live_input_prices_at, live_wages_at
@@ -37,15 +38,7 @@ def demand_at(bids: Sequence[Bid], price: float, price_now: float) -> float:
     budget, so it buys in inverse proportion to the price, up to what the bid's own schedule would take there
     (`flexible_quantity`; a buyer with none takes its floor and no more, however cheap the good). A buyer's
     ceiling still holds."""
-    total = 0.0
-    for bid in bids:
-        if bid.budget <= 0.0 or price > bid.maximum_price:
-            continue
-        surplus = max(0.0, bid.budget - bid.floor_quantity * price_now)
-        reach = bid.flexible_quantity * math.exp(min(700.0, -bid.elasticity * math.log(price / bid.reference_price))) \
-            if bid.flexible_quantity > 0.0 and bid.reference_price > 0.0 and price > 0.0 else 0.0
-        total += bid.floor_quantity + min(surplus / price, reach)
-    return total
+    return bid_columns.demand_at(bid_columns.columns_of(bids), price, price_now)
 
 
 def capacity_terms_by_good(producers: Mapping[str, Producer], recipes: Mapping[str, Recipe],
@@ -81,60 +74,58 @@ def reachable_capacity(record, setup, costs=None):
     return lambda good, area: capacity_in_area(terms, good, area.tiles)
 
 
-def trial_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
-                      planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None, costs=None) -> List[EntryPlan]:
+def trial_entry_plans(setup, record, view, area_map, bids_by_market, planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None, costs=None,
+                      weighed=None) -> List[EntryPlan]:
     """Trial newcomers for each market with bids and no maker in its area: every recipe whose entry price
     the bids would still take output at, cheapest first, each for a share of what the cheaper ones leave. With `costs`
-    (entry_tables.EntryTables) the recipes are costed for all the markets at once."""
-    makers: Dict[GoodId, List[str]] = {}
-    for recipe_id in sorted(setup.recipes):
-        for good in setup.recipes[recipe_id].outputs:
-            makers.setdefault(good, []).append(recipe_id)
+    (entry_tables.EntryTables) the recipes are costed for all the markets at once. `bids_by_market` is the year's bids block
+    (`year_bids.YearBids`) or a mapping of market to bids; `weighed` the block's markets as `entry_bid_markets.weigh` made them (made here when
+    not given). The bids' demand at every price asked is worked out in one call per step, since it does not depend on the plans made."""
+    block = year_bids.of(bids_by_market)
+    makers = makers_of(setup.recipes)
     skip = set(planned)
-    capacity_in = reachable_capacity(record, setup, costs)
-    areas_of: Dict[GoodId, Dict[AreaId, object]] = {}
-    known_goods = set(area_map.goods())
-    markets = []
-    for (good, area_id), bids in sorted(bids_by_market.items()):
-        if (good, area_id) in skip or good not in makers or good not in known_goods:
-            continue
-        if good not in areas_of:
-            areas_of[good] = {each.area_id: each for each in area_map.areas(good)}
-        area = areas_of[good].get(area_id)
-        if area is None or capacity_in(good, area) > 0.0:
-            continue
-        markets.append((good, area_id, bids, area, view.price(good, area_id)))
-    booked_all = recipes_by_cost_many(setup, record, view, [(good, area.anchor_tile, makers[good], None)
-                                                           for good, _area_id, _bids, area, _price in markets], costs)
+    if weighed is None:
+        weighed = weigh(block, makers, area_map, view, reachable_capacity(record, setup, costs))
+    markets = [each for each in weighed if (each.good, each.area_id) not in skip and each.area is not None and each.capacity <= 0.0]
+    booked_all = recipes_by_cost_many(setup, record, view, [(each.good, each.area.anchor_tile, makers[each.good], None) for each in markets], costs)
     # the newcomers' learning is judged on the trial share of what the bids take at the price now, or at the
     # cheapest booked cost's entry price where nothing has sold
-    trial_markets, trial_requests = [], []
-    for market, booked in zip(markets, booked_all):
-        if not booked:
-            continue
-        good, _area_id, bids, area, price = market
-        reference = price if price and price > 0.0 else booked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
-        trial_markets.append(market)
-        trial_requests.append((good, area.anchor_tile, makers[good], ENTRY_SHARE_OF_UNTRADED_DEMAND * demand_at(bids, reference, reference)))
-    plans = []
-    for (good, area_id, bids, area, price), ranked in zip(trial_markets, recipes_by_cost_many(setup, record, view, trial_requests, costs)):
-        built = 0.0
-        for recipe_id, cost in ranked:
+    trial_markets = [each for each, booked in zip(markets, booked_all) if booked]
+    references = [each.price if each.price and each.price > 0.0 else booked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
+                  for each, booked in zip(markets, booked_all) if booked]
+    reference_demands = block.demand_at_many([each.place for each in trial_markets], references, references).tolist()
+    trial_requests = [(each.good, each.area.anchor_tile, makers[each.good], ENTRY_SHARE_OF_UNTRADED_DEMAND * demand)
+                      for each, demand in zip(trial_markets, reference_demands)]
+    ranked_all = recipes_by_cost_many(setup, record, view, trial_requests, costs)
+    places, prices, prices_now = [], [], []
+    for each, ranked in zip(trial_markets, ranked_all):
+        for _recipe_id, cost in ranked:
             entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
-            wanted = demand_at(bids, entry_price, price if price and price > 0.0 else entry_price) - built
+            places.append(each.place)
+            prices.append(entry_price)
+            prices_now.append(each.price if each.price and each.price > 0.0 else entry_price)
+    demands = block.demand_at_many(places, prices, prices_now).tolist()
+    plans = []
+    asked = 0
+    for each, ranked in zip(trial_markets, ranked_all):
+        built = 0.0
+        first = asked
+        asked += len(ranked)
+        for place, (recipe_id, _cost) in enumerate(ranked):
+            wanted = demands[first + place] - built
             if wanted <= 0.0:
                 break
             added = wanted * ENTRY_SHARE_OF_UNTRADED_DEMAND
-            runs = added / setup.recipes[recipe_id].outputs[good]
-            tile = area.anchor_tile
+            runs = added / setup.recipes[recipe_id].outputs[each.good]
+            tile = each.area.anchor_tile
             if siting is not None:
-                picked = siting(recipe_id, UnmetDemand(good, area_id, area.anchor_tile, added), runs)
+                picked = siting(recipe_id, UnmetDemand(each.good, each.area_id, each.area.anchor_tile, added), runs)
                 if picked is None:
                     continue
                 tile, runs = picked
             if runs > 0.0 and math.isfinite(runs):
-                plans.append(EntryPlan(recipe_id, tile, good, runs, ENTRY_PRICE_MARGIN_SHARE))
-                built += runs * setup.recipes[recipe_id].outputs[good]
+                plans.append(EntryPlan(recipe_id, tile, each.good, runs, ENTRY_PRICE_MARGIN_SHARE))
+                built += runs * setup.recipes[recipe_id].outputs[each.good]
     return plans
 
 

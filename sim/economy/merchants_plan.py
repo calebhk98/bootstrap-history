@@ -9,7 +9,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
 
-from . import merchants, merchants_book, merchants_book_kernel, merchants_legs
+from . import merchants, merchants_batch, merchants_book, merchants_book_kernel, merchants_legs
 from .merchants_shares import MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE, RouteShares
 from .protocols import AgentOrders
 from .types import Bid, GoodId, TileId
@@ -49,6 +49,15 @@ class _Stock:
         self.volumes = merchants_book.merchant_array(book, merchant.expected_volumes)
         self.expected = merchants_book.merchant_array(book, merchant.expected_prices)
 
+    def expectation_of(self, good: GoodId, tile: TileId) -> Optional[float]:
+        """The merchant's own expected price of the market a stock on `tile` sells in (None for none), from the slot array;
+        `merchants.NOT_AT_HAND` for a stock that holds no slot."""
+        slot = self.slot_of_stock.get((good, tile))
+        if slot is None:
+            return merchants.NOT_AT_HAND
+        found = float(self.expected[slot])
+        return None if math.isnan(found) else found
+
 
 def _rows(route, merchant, stock, interest_rate, only_held=None, area_map=None) -> merchants_book.MerchantRows:
     """The candidate rows; with `only_held` ({good: [(tile, quantity)]}) those of the goods held, from the source
@@ -67,8 +76,22 @@ def _rows(route, merchant, stock, interest_rate, only_held=None, area_map=None) 
                 slot = stock.slot_of_stock.get((good, tile))
                 if slot is not None:
                     source_allowed[slot] = True
+    if only_held is None:
+        prepared = merchants_batch.rows_for(route, merchant.agent_id, float(interest_rate), merchant.home_tile, stock.expected)
+        if prepared is not None:
+            return prepared
     return merchants_book.search(route, stock.expected, merchant.home_tile, interest_rate, merchants.MERCHANT_MARGIN_SHARE,
                                  good_allowed, source_allowed)
+
+
+def prepare_rows(route, merchants, interest_rate: float) -> None:
+    """Search the candidate rows of these merchants in one call, for their `orders` or `credit_wanted` that follow on this `route`."""
+    if merchants:
+        merchants_batch.prepare(route, merchants, interest_rate, merchants_margin())
+
+
+def merchants_margin() -> float:
+    return merchants.MERCHANT_MARGIN_SHARE
 
 
 def candidate_rows(merchant, view, carriage, area_map, held_stock, specs, interest_rate, only_held=None, route=None):
@@ -98,10 +121,11 @@ def _group_arrays(book, shares) -> Tuple[np.ndarray, np.ndarray, bool]:
 
 
 def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[Tuple[GoodId, TileId], float], specs,
-           interest_rate: float, shares=None, route=None) -> AgentOrders:
+           interest_rate: float, shares=None, route=None, rows_out=None) -> AgentOrders:
     """The merchant's offers and bids for the year (`merchants.orders`). `shares` is what rival merchants have already
     committed this year (`RouteShares`, or `merchants_book.DenseShares` when the caller sizes many merchants over one
-    `route` pass); this merchant adds its own to it."""
+    `route` pass); this merchant adds its own to it. With `rows_out` (an `OrderRows`) the bids and offers are written to it as rows,
+    offers first as `OrderRows` takes them in any order, and no `Bid` or `Offer` is made; the answer then holds no orders."""
     route = route or merchants_book.route_pass(view, carriage, area_map, specs)
     book = route.book
     shares = shares if shares is not None else RouteShares()
@@ -132,8 +156,15 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
     for key, rooms in held_rooms.items():
         weights = merchants_legs.held_weights(rooms) or {held_best[key]: 1.0}     # stock with nowhere to go still follows the best route
         merchant.routes[key] = merchants_legs.from_weights(weights)
-    offers = [offer for offer in merchants._holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
-              if (offer.good, offer.tile) not in merchant.routes]
+    if rows_out is None:
+        offers = [offer for offer in merchants._holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
+                  if (offer.good, offer.tile) not in merchant.routes]
+    else:
+        for good, area, tile, quantity, reservation in merchants.holding_offer_figures(merchant, view, area_map, held_stock, specs, interest_rate,
+                                                                                       stock.expectation_of):
+            if (good, tile) not in merchant.routes:
+                rows_out.offer(merchant.agent_id, good, area, tile, quantity, reservation)
+        offers = []
     bids: List[Bid] = []
     bought: Dict[Tuple[GoodId, TileId], Dict[Tuple[TileId, str], float]] = {}
     if remaining > 0.0:
@@ -152,9 +183,13 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
             leg = (destination.anchor_tile, destination.area_id)
             by_leg = bought.setdefault((good, source.anchor_tile), {})
             by_leg[leg] = by_leg.get(leg, 0.0) + quantity
-            bids.append(Bid(merchant.agent_id, good, source.area_id, source.anchor_tile, 0.0, quantity,
-                            price_here, merchants.MERCHANT_BID_ELASTICITY, quantity * price_here,
-                            maximum_price=float(rows.ceiling[row])))
+            if rows_out is None:
+                bids.append(Bid(merchant.agent_id, good, source.area_id, source.anchor_tile, 0.0, quantity,
+                                price_here, merchants.MERCHANT_BID_ELASTICITY, quantity * price_here,
+                                maximum_price=float(rows.ceiling[row])))
+            else:
+                rows_out.bid(merchant.agent_id, good, source.area_id, source.anchor_tile, 0.0, quantity, price_here,
+                             merchants.MERCHANT_BID_ELASTICITY, quantity * price_here, maximum_price=float(rows.ceiling[row]))
     for key, by_leg in bought.items():      # what was bought is carried to the destinations it was bought for
         merchant.routes[key] = merchants_legs.from_weights(by_leg)
     return AgentOrders(bids=tuple(bids), offers=tuple(offers))

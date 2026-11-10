@@ -1,164 +1,238 @@
-# A Rome year still costs seconds because the phases hand each other Python objects
+# A Rome year still costs seconds: the Python between the kernels is spread over the whole year
 
-**Status:** open - the numba port (branch `speed-year-step-and-openings`, plan `docs/architecture/NUMBA_PORT_PLAN.md`) took a warm Rome year from about 20 s to about 3.5 s and stopped there; this complaint is the handoff for the redesign the one-second goal needs
+**Status:** partly - branch `year-speed-caching-and-order-book` took a warm Rome year from about 3.5 s to about 1.9 s of wall time on a quiet machine (rules unchanged; last digits move); this file is the handoff for the rest of the way to one second
 
-This file is written so that someone who was not part of the port can pick it up with nothing else. Read it whole, then
-the plan, then Complaint 497 (the speed history before the port).
+This file is written so that someone who was not part of the work can pick it up with nothing else. Read it whole, then
+`docs/architecture/COMPILED_YEAR.md` (what each phase now is, phase by phase, and what is left in it) and
+`docs/architecture/COMPILED_TABLES.md` (the table conventions). Complaint 497 has the history before the numba port.
 
 ## The goal and the owner's requirements
 
 - A game is about five hundred years. A Rome year must take **under one second** of wall time; **three seconds is the
-  absolute most**. Rome is the largest civilisation (about 104 tiles, about 6,800 producers, 312 household cohorts, a few
-  thousand goods and labour markets); England, Norse and Mexica are several times smaller.
-- **Reproducible, not bit-exact.** A ported phase may move floats in their last digits against the old Python; the rules
-  must not change. The same save stepped on the same machine must give the same game, straight or saved and loaded in
-  between.
-- **No loss of accuracy** to buy speed: no fewer agents, no looser solves, no shortened opening.
-- The game is played mostly by AI agents, often in **fresh environments on any platform** (Linux, Windows, Mac), who also
-  edit the code. That is why the compiler is **numba** (`pip install numba`, carries its own LLVM, no build step, no binary
-  to ship or merge). A pilot measured JAX, numba, Rust and Cython on one kernel (all compiled ones tens of times faster
-  than CPython; JAX a few times; a GPU does not pay at this size: tens of thousands of small dependent steps). Do not
-  switch technology without a measurement that overturns that.
+  absolute most**. Rome is the largest civilisation; England, Norse and Mexica are several times smaller.
+- **Reproducible, not bit-exact.** A change may move floats in their last digits; the rules must not change. The same save
+  stepped on the same machine must give the same game, straight or saved and loaded in between.
+- **No loss of accuracy** to buy speed: no fewer agents, no looser solves, no coarser searches, no shortened opening.
+- **Readable.** Objects and classes are the programming interface; arrays sit underneath. Comments, spelled-out names, small
+  functions. The owner's words: if the code is too slow, readability is not useful, but both are wanted.
+- The compiler stays **numba** (`sim/jit.py`; reasons in the numba port plan, `docs/architecture/NUMBA_PORT_PLAN.md`). Do
+  not switch technology without a measurement that overturns it.
 
 ## Where it stands (measure it again first)
 
-Make a Rome save to measure on (a new game opens in a minute or two once the shipped openings match the source):
+The measure saves are made as in the old text: `printf '{"cmd":"state"}\n{"cmd":"quit"}\n' | python3 sim/simulator.py agent
+--civ rome_100ad --seed 1 --session rome_start.json` (and `england_1300` for England), then `python3 sim/simulator.py
+compile-kernels` once.
 
-    printf '{"cmd":"state"}\n{"cmd":"quit"}\n' | python3 sim/simulator.py agent --civ rome_100ad --seed 1 --session rome_start.json
-    python3 sim/simulator.py compile-kernels                      # once per environment: compiles every kernel ahead of play
-    python3 sim/simulator.py year-time --session rome_start.json --years 4 --reload-check
+Measured at the handoff, commit `cc25316d` against main `08a8a54d` (a four-core machine, otherwise quiet, runs of main
+and the branch alternated, every run on a warm compile cache):
 
-`year-time` copies the save, steps it, prints each year's wall seconds and a digest of the game after them, and with
-`--reload-check` saves and loads after the first year and checks the digest is the same. Measured at the end of the port
-(three runs, a four-core machine lightly loaded): first year of a process about 6.2 to 6.7 s, later years about 3.5 to
-4.5 s, typically about 3.7. Other figures at the end of the port, each with its command:
+| Figure | main | this branch | Command |
+|---|---|---|---|
+| warm Rome year, wall | 3.3 to 3.7 s | 1.7 to 2.0 s | `python3 sim/simulator.py year-time --session rome_start.json --years 2` (second figure), three runs each |
+| first Rome year of a process, wall | 7.1 to 9.1 s | 6.2 to 6.9 s | the same (first figure) |
+| warm England years, wall | 0.75 to 1.2 s | 0.58 to 0.94 s | the same with `england_start.json --years 3` (second and third figures), two runs each |
+| first England year of a process, wall | 2.3 s | 2.6 s | the same (first figure): loading more kernels costs the first year |
+| warm Rome year, user-space instructions | 25.8 billion | 12.2 billion | `python3 sim/simulator.py year-time --session rome_start.json --years 2 --count-instructions` (`instructions_warm_years`; main measured with the same tool added to it) |
+| loading a Rome game, instructions | 9.2 billion | 11.8 billion | the same (`instructions_load`) |
+| time inside compiled kernels, warm Rome year | not measured | about 0.7 s | `python3 tools/measure/warm_year_split_profile.py rome_start.json out.prof`, sum of the `kernel__` entries |
+| profiled function calls, warm Rome year | not measured | about 3.9 million | the same profile |
 
-- a process's first year costs about 2 s more than its second on a warm compile cache (loading about 150 cached kernels,
-  building route graphs); `year-time` first against second year
-- one `agent --session` command (`echo '{"cmd":"state"}' | python3 sim/simulator.py agent --session COPY`) about 2.3 s:
-  imports about 0.7, parsing the save about 0.3, the reply about 0.5, writing the save again about 0.5
-- `compile-kernels` on an empty cache about one and a half to two minutes; without it a fresh environment pays that in
-  its first year
-- a cold opening (a new game with an empty `ROME_CACHE_DIR`): England about 4 s, Rome about 50 s for the opening solve
-  (it was about ten minutes a solve before); `simulator.py openings` builds the shipped openings, one civilisation per core
+Process time (`python3 tools/measure/warm_year_cpu.py rome_start.json`) reads a little higher than the quiet wall time
+when other work shares the machine; compare like with like.
 
-## Why it stopped at a few seconds
+So the three-second limit is met and the one-second goal is not. The kernels alone are about 0.7 s; the Python left in
+the year is about one second, spread so thinly that no single function has more than a few hundredths of a second of own
+time.
 
-Profile a warm year with `python3 tools/measure/warm_year_profile.py rome_start.json out.prof`. At the end of the port it
-showed about 15 million calls a year (138 million before the port), about 8 s of profiled own time, and:
+## What this branch did (pointers, not a list of everything)
 
-- about 4.9 million `dict.get` calls, 1.4 million `list.append`, about 430,000 `str.startswith` and 170,000 `str.split`
-- the largest Python files by own time: `sim/book.py`, the labour package, `market_memory.py`, `settlement_batch.py`,
-  `year_goods.py`, `goods_year_batch.py`
-- every phase's arithmetic is a kernel and takes little of the year
+- **The book, the market memory and the year ledger are tables** (`sim/compiled_tables/`: `TableSpec` namedtuples of numpy
+  columns, `IdTable` numberings, exact sum kernels). Producers (`ProducerStore`), cohorts (`CohortStore`) and merchants
+  (`MerchantTable`) are column stores; `Producer`, `Cohort` and `Merchant` are snapshots or handles made on demand. A warm
+  year builds no `Producer`, no `Cohort` and no `PricedNeed` object.
+- **Kernels over whole phases where the rule allows:** producers' plans (every producer, `plan_kernel.plan_rows`), the
+  goods clearing per good (the per-good numpy chains are kernels: `goods_rows_kernel`, `goods_pack_kernel`,
+  `goods_decide_inputs_kernel`, `goods_clearing_kernel`, ...), settlement numbering and ledger columns, merchant dispatch
+  (one call a year), merchant learning, close and credit, the government's keep, assessments and revenue, revolts, entry
+  plan loops, labour offers and reach, the price response.
+- **Faster kernels, same answers:** the book index hash, columns held in hot loops instead of whole tables passed per row,
+  the respend logs sized so it runs once.
+- **Cached views** on channels (the shadow check `SHADOW_CHECK_EVERY` in `sim/engine/game_assembly.py` verifies them).
+- **Tools:** `tools/measure/warm_year_split_profile.py`, `warm_year_cpu.py`, `numpy_calls_per_good.py`,
+  `clear_goods_python_time.py`, `year-time --count-instructions`, `tools/check_table_names.py`.
+- **Correctness fixes found on the way:** numba's cache served stale compiled callers after a callee changed in another
+  file (now keyed on source, `sim/kernel_cache.py`); market numbering followed string-hash order (canonical numbering); a
+  log line could not carry a fact named `cause` (`sim/refusal.py`); loan clearing recompiled in every process (a table
+  class whose name differed from its module attribute).
 
-The cost is at the phases' edges. Each phase receives Python objects from the one before (`Plan`, `Bid`, `Offer`,
-`LabourBid`, `Fill`, `Pairing`, `ClearingResult`, `Settlement`, `GoodsMove`, `Transfer`, the ledger's dicts), packs them
-into arrays, runs its kernel, and builds Python objects again for the next phase. It reads the book and the market memory
-one value at a time with string keys (`good|area`, `trade|area`). Moving one store to arrays at a time does not help: the
-book was moved (merged, game unchanged) and the market memory was moved (branch `port-memory-arrays`, not merged), and
-neither made the year faster, because the readers still read one value at a time; for the memory, a single read through
-numpy is slower than a dict read.
+- **Last digits moved once, at the end.** Until the last commits every merge kept the game bit for bit. Two workarounds
+  that existed only for that (the column stores kept which float fields were numpy floats; the plan kernel summed some
+  rows one way and some another) were then removed, so the digests and `protocol_golden` were recorded again. Evidence
+  that only last digits moved: one stepped year from the same save, old against new (`year-time --keep`, then
+  `tools/measure/save_compare.py`), differs only in last digits apart from cancelled leftovers near zero (a stock of
+  `1e-16` against `0.0`, one trainee entry of about `1e-16` people dropped). The goldens' short spin-up moved more (the
+  Rome founder's capital at the first command), and so does the old code under a nudge of two units in the last place in
+  one land rent: a probe with that nudge moved it by several percent one way and by over a third the other, so the
+  opening amplifies any last-digit change. The digests at the handoff (Rome two years `d4b47ff2...`, England five years
+  `1446d498...`, `year-time --reload-check`) belong to the saves this branch measured on, which are not committed; a save
+  made now from the commands above opens differently, so record your own base digests on your own saves first.
 
-## What would reach one second (proposal, not settled)
+## Why it stopped at about two seconds: what was measured
 
-Make integer-indexed arrays the interface between phases, so that from producers' plans to the close no per-bid,
-per-market or per-agent Python object is built:
+The plan assumed the Python was per-object glue that would disappear once the data were columns. Measured package by
+package (process time, alternating base and branch), that was mostly wrong:
 
-1. **Ids.** Number agents, goods, trades, tiles, areas and markets once for the game (growable: producers enter and leave,
-   goods and trades are admitted during a game), and keep the numbering in the economy. Every hot path takes ids, never
-   string keys. The year arrays (`sim/economy/year_arrays*.py`) already number producers, recipes, goods and areas per year
-   and carry them across years; extend that numbering rather than start again.
-2. **An order book of arrays.** Producers' plans, cohorts' orders, merchants' orders and the engine's orders write bids
-   and offers into columns (buyer id, market id, floor, flexible, reference price, elasticity, budget, priority, ceiling;
-   seller id, market id, quantity, reservation) instead of `Bid` and `Offer` objects. `plan_year.plans_of`,
-   `households_orders_pack`, `merchants_book` and `year_goods_offers` already compute those numbers in kernels and then
-   build objects: stop building the objects.
-3. **Clearing results as arrays end to end.** `goods_year_results.final_allocations` already returns flows, per-bid and
-   per-offer results as arrays; settlement (`settlement_arrays`, `settlement_batch`), the ledger (`year_ledger`), the market
-   memory's notes and the mint should read those arrays. Labour likewise: `clearing_tail` writes one `LabourClearing` per
-   market; settlement of labour and the ledger should read the arrays.
-4. **The book and the memory read in blocks.** The book has `rows_of`, `balances_of`, `stocks_of`, `stocks_at`; the memory
-   branch has `gather`, `positions`, `get_pair`. Every pack that reads them value by value (`close_pack`,
-   `goods_respend_pack`, `year_arrays_worths`, `seller_offers`, `trade_wages`, `prices_at` and others found in the profile)
-   moves to block reads; merge `port-memory-arrays` only when its readers move with it, and measure.
-5. **The saved record** may keep its present format (the encode builds the plain dicts once at a save) or change: there is
-   no save migration (CLAUDE.md 4.6). Within a build, save and load must round-trip (`--reload-check`).
+- Removing every `PricedNeed` (thousands a year), every `Cohort` snapshot, the merchants' per-merchant loops, the book's
+  single-value reads, the labour glue and the close's dict walks each gave a change within run-to-run noise.
+- Cutting the numpy calls per good in the goods loop by more than ten times gave no measurable change.
+- The one clear gain of the last part of the work was the producer and memory reads as blocks (about a third of a second).
+- The kernel-speed work took the kernels from about 0.8 to about 0.7 s.
 
-Order of work suggested by the profile: the order book and the goods results first (they touch the most objects), then
-labour's results, then the book and memory readers, then the close. Measure after each; stop a line of work that does not
-show in `year-time`.
+What the split profile shows now: about 0.7 s in kernels, and the rest of the year as ordinary Python (loops, dict and
+list work, attribute reads, small numpy calls) spread over every phase. By phase, profiled and so inflated (cProfile about
+doubles Python), kernels included, largest first: the goods clearing loop (`year_goods.clear_goods`), labour clearing
+(`year_labour.clear_labour`), the close (`year_close.close_agents`), household orders (`year_order_sources.cohort_orders`),
+the money phases outside the economy (`year_steps.money_world`, mostly the governments' `advance`), entry
+(`entry_year.open_entrants`), merchant dispatch, producers' plans, lending (`Economy._lend`), land (`land_market.settle_year`),
+hour supply (`Economy._hour_supply`), merchant orders. Run the profile and read it with:
 
-## What is already compiled, by phase (all through `sim/jit.py`)
+    python3 tools/measure/warm_year_split_profile.py rome_start.json out.prof
+    python3 -c "import pstats; s=pstats.Stats('out.prof'); s.sort_stats('cumulative').print_stats('economy/(year_|economy)', 30)"
 
-- `sim/jit.py`: the one `njit` (nopython, no fastmath, no parallel, `cache=True`), lazy numba import, `REGISTRY` of every
-  kernel; `ROME_NO_JIT=1` runs the same code as plain Python. `simulator.py compile-kernels` (`sim/ui/cli_compile_kernels.py`,
-  `sim/ui/kernel_signatures.py`) compiles them all.
-- Goods: `goods_market_kernels.py`, `price_setting_kernel.py`, `goods_year_kernel.py`, `goods_year_batch.py`,
-  `goods_year_results.py`, `year_arrays_costs.py`, `year_goods_offers.py`; respend: `goods_respend_kernel.py` and its
-  basket, market, pack and unpack modules; settlement: `settlement_kernel.py`, `settlement_batch*.py`, `settlement_arrays.py`.
-- Labour (`sim/labour/market/`): `hiring_kernel.py`, `clearing_kernel.py`, `clearing_arrays.py`, `clearing_tail_kernel.py`,
-  `clearing_tail.py`, `switching_kernel.py`, `sold_hours_kernel.py`, `carriage.py`.
-- Producers: `plan_kernel.py`, `plan_year.py`; close: `close_kernel*.py`, `close_pack.py`, `close_run.py`,
-  `year_close_producers.py`, `year_arrays_closed.py`; worths: `year_arrays_worths.py`; entry: `entry_kernels.py`,
-  `entry_tables.py`; practice kernels in `practice.py`.
-- Merchants: `merchants_kernel.py`, `merchants_search.py`, `merchants_book*.py`, `merchants_plan.py`, `merchants_news.py`.
-- Households: `households_orders_kernel.py`, `households_orders_pack.py`.
-- Opening: `opening_demand.py`, `opening_demand_kernel.py`, `opening_runs_pack.py`, `opening_runs_kernel.py`,
-  `opening_hours_needed.py`.
-- Geography: `routes_tree_kernel.py` (route trees).
-- Year arrays: `year_arrays.py`, `year_arrays_recipes.py`, `year_arrays_producers.py`, `year_arrays_cohorts.py`,
-  `year_arrays_memory.py`; built at the start of `Economy._run_year`, carried across years, synced after entry and exit.
-- Kept-between-steps figures: `quiet_year.py` (country figures and shown prices, dropped by a step, a new setup or a
-  memory write), `kept_wages.py`, `priced_reads.py`, `price_index.py`.
+To reach one second the Python must fall from about one second to about 0.3 s: most of it, everywhere. No single conversion
+left on the list below is worth more than a few percent.
 
-The plan's unticked items list the Python left in each phase, with the profiled cost each agent measured.
+## What is left, by phase (each with where it stops and why)
 
-## Traps found during the port (each cost hours; check for them)
+Each item names what an agent found and why it stopped there. The per-phase sections of `COMPILED_YEAR.md` hold the same
+with more detail.
 
-- **Python's `sum()` of floats is compensated summation since 3.12**, not left to right; and **set iteration order of
-  floats** decided a summation order and a dict's key order in one rule. A kernel need not copy either (the owner allows
-  last-digit moves), but a test that compares with the old path must allow for it.
-- **numba does not check array bounds.** An empty market wrote one past an array's end, silently, until the plain-Python
-  path raised. Run the quick tier with `NUMBA_BOUNDSCHECK=1` and a fresh `NUMBA_CACHE_DIR`, and every kernel must handle
-  empty inputs.
-- **numpy scalars in records.** A numpy boolean in the spin-up result stopped every new game from opening; `numpy.float64`
-  passes JSON by luck, `numpy.int64` and `numpy.bool_` do not. Convert at the record boundary (`spin_up_run.plain`).
-- **Every check that loads a save misses a new game's spin-up.** Also run a new game on an empty cache:
-  `ROME_CACHE_DIR=<empty> agent --civ england_1300` with `state` and one `step`, exit status 0.
-- **A packed snapshot can go stale inside a phase.** The opening's kernel reused the households' stock from before the
-  durable stock was seeded; Rome's opening moved (8170 producers against 8189). It was found only by comparing a cold Rome
-  opening with the old code's (`python3 tools/measure/opening_figures.py dump` from a checkout of each build, then
-  `compare`). Compare Rome, not only England: Rome's discrete household plans react to rules England never reaches.
-- **Caches keyed on a write stamp** (`market_memory.note_written` / `written_stamp`) must be bumped by every writer, including
-  ones outside a step (`api.add_workers` was missing). A new cache needs a list of everything that can change its input.
-- **Save and load must round-trip.** `year-time --reload-check` found two pre-existing order dependences (a sum over
-  producers in live order; an int written as a float after a load). Iterate in sorted order or use `math.fsum`.
-- **Shipped openings go stale on every economy edit** (their key hashes the source). A stale opening makes a new game run
-  its own opening; the test harness shortens the spin-up, so it never reads shipped openings (Complaint 967).
-- **Wall time on a shared machine swings by more than a small cut.** Compare profiles, and `perf_counter` wrappers around a
-  phase, not only `year-time`; take before and after on the same load.
+- **Goods clearing loop** (`year_goods.clear_goods`, `for good in order`). It must stay a loop over goods in order: between
+  one good's settlement and the next good's clearing, the producers' turn (`goods_turn.produce`) reads the stocks and cash
+  the earlier goods posted, and offers read the cash shortfall. Posting once at the end would change a rule. Left inside:
+  - the producers' turn: `goods_turn._post` (builds posting tables from about fifteen small arrays, then the
+    `apply_postings` kernel), `goods_turn.offer` (a chain of numpy calls around `offer_pairs`, `reservations_for`, `_write`);
+    a kernel over the posting tables and `reservations_for` is not written
+  - `settle_good`: `post_settled_by_numbers` and `note_settlement_rows` write the book and ledger per good
+  - `goods_order_book.goods_with_orders`: the flush of waiting `Bid` objects into rows; the order makers should write rows
+  - respend: `goods_respend_pack.pack` is Python over objects (`bid_rows`, `offer_rows`, `read_stocks`, `need_of_good`)
+  - kernels: `goods_year_kernel.decide_markets` is the largest kernel of the year (the price search; nearly every
+    candidate price is distinct, so there is nothing to share; `raise_search` recomputes demand per offer at each bisection
+    step, an estimated small saving); `respend_rounds`; `final_allocations`
+- **The structural option for this loop:** one kernel per good that runs turn, clear and settle with the book's columns
+  inside the kernel (the book is already tables). This is the only change in sight that removes most of the loop's Python;
+  it is a rewrite of the loop, and nobody has measured what it would give. Measure first (below).
+- **Labour** (`year_labour.clear_labour`): the kernels (`switch_all`, `hire_markets`, `market_heads`, `settle_wage_markets`)
+  are most of it; `Supply.reach_block` still calls `actor_staff_fte` (`sim/actors/staff.py`) and `agent_hours_offered_at`
+  per trade (block views in the actors and markets modules are needed); `setup.labour_area` is asked tens of thousands of
+  times from `land_lease_year._outside_options`; scalar `Supply` readers (`hands_available`) build a whole `PeopleByTile`
+  for one tile.
+- **Close** (`year_close.close_agents`): `ProducerColumns.of` (`year_arrays_producers.py`) is rebuilt several times a year
+  after producer writes (needs the exit compaction row map to update in place); `producer_blocks._names_of` (its callers'
+  id lists are not rows); `year_close_producers._share_pricer` calls `crossing_price.ColumnDemand.price_with_supply` one
+  quantity at a time (a batch over many demand columns is not written); per-cohort and per-loan loops
+  (`households_close.closed_figures`, `households_own.next_own_plan`, `households_close_pack.add`, `carriage_hours.wage_loans`,
+  `merchants_news.lags_at`, `producer_close_write._write_crews`, `practice.crew_runs_after_year`, `_write_expected_prices`);
+  the priced rows of a basket are rebuilt for each new hired-work floor key.
+- **Household orders** (`year_order_sources.cohort_orders`): `households_orders_pack.add_template` (about two dozen small
+  numpy calls per template; a template-level kernel is not written), `_store_weights` and `store_offers` (Python rules over
+  dicts, `math.log`/`exp`/`fsum` that a kernel would have to reproduce to the last digit), the per-cohort loop's reads,
+  `land_bids` and `tool_bids` return `Bid` objects.
+- **Merchant orders**: `merchants_plan.orders` commit loop, `merchants_legs.from_weights`, `_Stock` per merchant;
+  `carriage_fleet_book.bids` returns `Bid` objects.
+- **Entry** (`entry_year.open_entrants`): a greedy loop where an earlier plan changes the capacity a later plan of the same
+  producer reads (`producer_table.set_fields` inside it); `live_input_prices_at` and `live_wages_at` per producer (the
+  market memory is written between the readers, so a per-write grid misses; a block read needs arrays threaded through
+  `settle_year` -> `post_rents` -> `demands_of`).
+- **Money phases outside the economy** (`year_steps.money_world`): the governments' and the registry's `advance`
+  (`ActorRegistry.advance`, one Python method per actor that a mod's actor kind may override), `Government.pay_standing_need`,
+  `budget.standing_lines`, `state_enterprises.run`. Not converted.
+- **`dict.get`** is still the largest builtin of the profile (several hundred thousand calls); its callers are spread
+  (`pstats` `print_callers('get')`).
 
-## How a change is checked (the port's protocol)
+## What to do next (recommendation)
 
-- quick tier `python3 -m sim.tests` green, also with `ROME_NO_JIT=1` and with `NUMBA_BOUNDSCHECK=1` plus a fresh
-  `NUMBA_CACHE_DIR`
-- each rule moved to a kernel keeps a copy of its old path in its test, run beside the kernel on random built inputs within
-  a stated tolerance (the `test_year_speed_*` topics are the pattern); a case where the old path itself jumps under a
-  one-ulp nudge (a discrete rule) may be skipped, saying so, and most cases must be compared
-- `year-time --reload-check` reproducible, digest the same on two runs
-- `python3 tools/measure/save_compare.py BEFORE.json AFTER.json` of two-year saves (`year-time --keep`): last-digit moves
-  are expected; a rule change shows as more; explain what moved
-- a new game on an empty cache opens and steps (above); for the opening, a cold Rome opening compared with the old code's
-- `python3 sim/simulator.py compile-kernels` covers every new kernel (`sim/ui/kernel_signatures.py` for kernels the fixture
-  does not reach); the slow `compile_kernels_smoke` checks it
-- before a PR: `openings --prune` rebuilt, `--slow` run
+1. **Measure the ceiling before rewriting.** For each phase above, its Python own time (split profile, the phase's
+   cumulative minus its `kernel__` entries) is the most a rewrite of that phase can save. Add these up and check that the
+   phases you plan to rewrite can reach one second together; then do the largest.
+2. **Prototype the per-good kernel** (turn, clear, settle in one call per good with the book's columns) on one good's
+   path behind a switch, compare it bit for bit with the current path on recorded inputs, and time the whole loop. Continue
+   only if the loop's Python falls by most of its share.
+3. Then the household orders template kernel, the close's per-cohort pass, and entry, each measured the same way.
+4. Kernels last: `decide_markets` and `respend_rounds` only by algorithmic means that keep every answer bit for bit.
 
-If the work is shared among agents: keep their files and scratch inside the repository directory (an access outside the
-working directory stops an agent on a permission prompt), give each disjoint files, and hand long runs (cold Rome
-openings, the slow suite, the openings build) to whoever orchestrates.
+Stop a line of work that does not show in `warm_year_cpu.py`. Several packages of this branch removed thousands of calls
+and saved nothing measurable.
+
+## How to measure
+
+- `python3 tools/measure/warm_year_cpu.py SAVE`: process time of one warm year (also counts `Producer` builds).
+- `python3 tools/measure/warm_year_split_profile.py SAVE OUT.prof`: cProfile with each kernel as its own `kernel__` entry.
+  **Plain cProfile (`warm_year_profile.py`) does not see calls into numba kernels: a kernel's time shows as its Python
+  caller's own time.** Several targets of this branch were chosen from that misreading.
+- `python3 sim/simulator.py year-time --session SAVE --years N --reload-check [--keep OUT] [--count-instructions]`: wall per
+  year, the digest, save-and-load reproducibility; instruction counts under valgrind (load-independent, slow).
+- `python3 tools/measure/function_times.py SAVE module:function ...`: plain timers around chosen functions.
+- `python3 tools/measure/save_compare.py A.json B.json`: what differs between two stepped games.
+- Wall time on a shared machine swings by more than most cuts: alternate base and branch three times each on the same load,
+  both warm, and compare medians.
+
+## How a change is checked (protocol used on this branch)
+
+1. A test that calls the new function with written-out and seeded random inputs and compares bit for bit with the old
+   path, kept as plain reference code in a test helper (`sim/tests/settlement_ids_plain.py`, `goods_good_plain.py`,
+   `kernel_speed_plain.py` are the pattern).
+2. `python3 sim/simulator.py compile-kernels; echo $?` is 0 (a kernel the fixture does not reach needs its signature in
+   `sim/ui/kernel_signatures.py`, imported through the package's `api.py`; an unreached kernel makes it exit 1).
+3. `python3 -m sim.tests` green, and `ROME_NO_JIT=1` on the topics covering new kernels.
+4. `tools/check_table_names.py`, `check_package_walls.py`, `check_module_reads.py`, `check_record_owners.py` unchanged.
+5. Digests unchanged where nothing is meant to move: `year-time` Rome two years and England five years with
+   `--reload-check`, compared with the base's digests (record them on the base first).
+6. A fresh spin-up: an empty `ROME_CACHE_DIR`, `python3 -m sim.tests --slow --jobs 1 --topic-seconds 700 --only
+   protocol_golden`; its first-command values must equal the base's (saved games do not cover the opening).
+7. `python3 -m sim.tests --slow --jobs 1 --only hash_seed_order` (string-hash order must not reach the game).
+8. Process time, alternating base and branch.
+9. Before a pull request: `--slow` on a checkout pinned to one commit.
+
+## Traps (each cost hours on this branch or the port)
+
+- **cProfile and numba** (above): use the split profile.
+- **numba's cache and callees in other files.** numba checks only a kernel's own file. The cache directory is now named by
+  a digest of the source (`sim/kernel_cache.py`): `ROME_KERNEL_CACHE_KEY=source` (default: games, `--slow`, checks before a
+  pull request) covers every file under `sim/`; `=kernels` (the quick tier's default, and agents' edit-test loops) covers
+  only files that define kernels and can miss a changed constant in another file. The first run after an edit compiles
+  every reached kernel (minutes on four cores): never time that run.
+- **The price-solve cache is keyed on source**, so the first run after any edit solves cold and distorts its profile.
+- **Python's `sum()` compensates rounding for exact Python floats only**; numpy scalars take the plain path. A store that
+  changes a field from `np.float64` to `float` moves last digits; a fresh spin-up amplifies a one-ulp move in a land rent
+  into percent-level differences in capital and a different producer count. That is dust, not a rule change, but it hides
+  real changes: compare fresh spin-ups between base and branch, not against stale goldens.
+- **numpy `ndarray.sum` is pairwise** (blocks of eight running sums up to 128 terms, then halved); a kernel that must match
+  it bit for bit reproduces that (`numpy_sum` in the settlement kernels). numpy's scalar `exp` and numba's differ in the
+  last bit.
+- **numba has no `lexsort`**: successive stable `argsort(kind="mergesort")` calls, least significant key first, give the
+  same order including ties (`stable_order_kernel`).
+- **Dict key order** reaches the game where a dict is iterated later: build dicts in the order the old loop first met each
+  key.
+- **A table class's name must equal its module attribute** (`TableSpec("Requests", ...)` held as `Requests`), or numba's
+  cache never finds it and recompiles in every process (`tools/check_table_names.py`).
+- **`check_record_owners.py` matches names**: a kernel's scratch table named `merchants` reads as the merchants record;
+  name scratch tables otherwise (`merchant_rows`).
+- **`protocol_golden` takes longer than its topic limit on a loaded machine**; a timeout shows as an extra failure.
+- **Order must not depend on history** (CLAUDE.md): iterate in a load's order or sorted.
+- The traps of the numba port (bounds not checked: run with `NUMBA_BOUNDSCHECK=1`; numpy scalars in records; caches keyed on
+  a write stamp need every writer to bump; shipped openings go stale on economy edits) still hold.
+
+## Working with agents on this
+
+What worked: briefs that list the functions to convert with their call counts, the exact checks (as above) with the base's
+digests and fresh spin-up values, the files other agents own, and "too large" or "budget" not accepted as a reason, only a
+concrete technical one with its code line; agents report call counts and process time before and after. What did not:
+large packages (agents run out of budget and stop at the first hard kernel), and choosing targets from plain cProfile.
+Agents that run whole games compete for cores: no more at once than the machine has cores to spare.
 
 ## Related
 
-Complaint 497 (the speed history and rounds before the port), 966 (the sample Egypt civilisation does not open), 967 (the
-test runner opens every civilisation before a slow topic).
+Complaint 497 (speed history), 966 (the sample Egypt civilisation does not open), 967 (the test runner opens every
+civilisation before a slow topic), 969 (a quick fingerprint scenario stops on an empty nation).

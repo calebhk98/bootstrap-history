@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy.credit_record import CreditRecord
 from sim.economy.land_record import LandRecord
 from sim.economy import land_market, land_bid_year, land_lease_year, titles, titles_worked
@@ -45,7 +46,7 @@ def world(rent=20.0):
         specs={GROUND: GoodSpec(GROUND, float("inf"), 0.0, 0.0, "")}, opening_rate=0.05, currency_id="coin",
         basket_for=lambda tile_id: BASKET)
     from sim.book import Book
-    record = types.SimpleNamespace(cohorts={POOR: Cohort(POOR, TILE, 0, 10.0, 10.0, 0.0), LANDLORD: Cohort(LANDLORD, TILE, 2, 0.0, 0.0, 1.0)}, producers={CLEARER: Producer(CLEARER, LANDLORD, "clear", TILE, 10.0)}, book=Book(), land=LandRecord(titles={TILE: {LANDLORD: 1.0}}, land_rent={TILE: rent}), credit=CreditRecord())
+    record = types.SimpleNamespace(cohorts={POOR: Cohort(POOR, TILE, 0, 10.0, 10.0, 0.0), LANDLORD: Cohort(LANDLORD, TILE, 2, 0.0, 0.0, 1.0)}, producers=ProducerStore({CLEARER: Producer(CLEARER, LANDLORD, "clear", TILE, 10.0)}), book=Book(), land=LandRecord(titles={TILE: {LANDLORD: 1.0}}, land_rent={TILE: rent}), credit=CreditRecord())
     return setup, record, own_production_options(recipes, LAND, BASKET)
 
 

@@ -16,18 +16,29 @@ from .setup import labour_area
 from .year_arrays_cohorts import CohortColumns
 from .year_arrays_memory import AreaIndex, MemoryArrays
 from .year_arrays_producers import ProducerColumns
+from .cohort_store import table_of
 from .year_arrays_recipes import Names, RecipeMatrices, build_recipe_matrices
+from .year_arrays_tools import ToolTables, tool_tables
 
 
 def tiles_of(record, setup=None) -> Names:
     """Every tile a producer or cohort is on, and every tile of the setup (a newcomer may be sited on a tile nobody is on yet)."""
-    return Names.of([each.tile for each in record.producers.values()] + [each.tile for each in record.cohorts.values()]
+    return Names.of(record.producers.tiles_in_use() + table_of(record.cohorts).tiles_present()
                     + list(getattr(setup, "tiles", ())))
 
 
 def wage_grid(setup, view, trades: Names, tiles: Names) -> np.ndarray:
-    """`trade_wages.wage_in_view` for every trade and tile, as a (trade by tile) grid: the wage rule's three cases worked out per
-    trade (what it holds, the opening wage, the premium) and per tile (the unskilled wage), then read cell by cell."""
+    """`trade_wages.wage_in_view` for every trade and tile, as a (trade by tile) grid. A view that reads the wage rule in blocks
+    (`YearView.wage_rule_block`) gives it in one kernel call; any other view is read cell by cell (`wage_grid_by_cells`)."""
+    block = getattr(view, "wage_rule_block", None)
+    if block is None or getattr(view, "setup", None) is not setup:
+        return wage_grid_by_cells(setup, view, trades, tiles)
+    return block(trades.ids, [labour_area(tile) for tile in tiles.ids]).reshape(len(trades.ids), len(tiles.ids))
+
+
+def wage_grid_by_cells(setup, view, trades: Names, tiles: Names) -> np.ndarray:
+    """`wage_grid` read one cell at a time: the wage rule's three cases worked out per trade (what it holds, the opening wage, the
+    premium) and per tile (the unskilled wage), then applied cell by cell."""
     from .trade_wages import priced_trade_wage
     areas = [labour_area(tile) for tile in tiles.ids]
     unskilled = [view.wage(setup.unskilled_trade, area) for area in areas]
@@ -74,6 +85,7 @@ class YearArrays:
     memory: MemoryArrays
     area_map: object
     source: tuple = ()               # `source_of(setup)` when the matrices were built (`carried` checks it)
+    tools: ToolTables = None         # the recipes' tool fallbacks over the matrices' numbering (year_arrays_tools.py)
 
     @classmethod
     def build(cls, setup, record, area_map, view) -> "YearArrays":
@@ -83,7 +95,7 @@ class YearArrays:
         area_index = AreaIndex.build(area_map, matrices.goods, tiles)
         return cls(matrices, tiles, area_index, ProducerColumns.build(record.producers, matrices, tiles),
                    CohortColumns.build(record.cohorts, tiles), _memory_arrays(setup, matrices, tiles, area_index, record, view),
-                   area_map, source_of(setup))
+                   area_map, source_of(setup), tool_tables(setup.recipes, matrices))
 
     @classmethod
     def carried(cls, previous, setup, record, area_map, view) -> "YearArrays":
@@ -104,4 +116,4 @@ class YearArrays:
         except KeyError:
             return YearArrays.build(setup, record, self.area_map, view)
         memory = _memory_arrays(setup, self.matrices, self.tiles, self.area_index, record, view, self.memory)
-        return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map, self.source)
+        return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map, self.source, self.tools)

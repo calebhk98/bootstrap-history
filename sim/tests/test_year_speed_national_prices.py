@@ -11,6 +11,7 @@ import unittest
 
 from sim.economy.market_memory import KEY_SEPARATOR, RECENT_TRADE_YEARS, MarketMemory
 from sim.economy.national_prices import national_prices, national_wages
+from sim.labour.api import MarketState
 
 
 def plain_national_prices(record, keep):
@@ -63,7 +64,7 @@ def random_record(rng):
     hired = {key.split(KEY_SEPARATOR)[1]: {key.split(KEY_SEPARATOR)[0]: {"x": rng.choice([0.0, rng.uniform(1.0, 40.0)])}}
              for key in keys if rng.random() < 0.5}
     labour = types.SimpleNamespace(
-        workforce=types.SimpleNamespace(workers=workers),
+        workforce=MarketState(workers=workers, hired_hours=hired),
         hours_cleared_in=lambda key: math.fsum(hired.get(key.split(KEY_SEPARATOR)[1], {}).get(key.split(KEY_SEPARATOR)[0], {}).values()))
     return types.SimpleNamespace(memory=memory, goods=types.SimpleNamespace(volumes={}), labour=labour)
 

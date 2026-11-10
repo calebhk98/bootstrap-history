@@ -11,6 +11,13 @@ from sim.book import Book, GoodsMove, InsufficientGoods
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION
 
 
+def holdings_record(book: Book) -> dict:
+    """The book's record without its numbering (a refused batch may leave a name numbered, but holds nothing of it)."""
+    record = book.to_record()
+    del record["numbering"]
+    return record
+
+
 def stocked_book(rng: random.Random) -> Book:
     book = Book()
     for agent in ("a", "b", "c"):
@@ -37,14 +44,14 @@ class MoveManyIsPost(unittest.TestCase):
             moves = random_moves(rng)
             first.move_many(moves)
             second.post((), moves)
-            self.assertEqual(first.__dict__, second.__dict__)
+            self.assertEqual(first.to_record(), second.to_record())
 
     def test_an_overdraft_applies_nothing(self):
         book = stocked_book(random.Random(1))
-        before = copy.deepcopy(book.__dict__)
+        before = holdings_record(book)
         with self.assertRaises(InsufficientGoods):
             book.move_many([GoodsMove("a", "b", "grain", "t1", 1e6, "input")])
-        self.assertEqual(book.__dict__, before)
+        self.assertEqual(holdings_record(book), before)
 
 
 if __name__ == "__main__":

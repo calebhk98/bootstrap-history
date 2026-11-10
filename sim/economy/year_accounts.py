@@ -5,6 +5,9 @@ import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Optional
 
+from .cohort_store import table_of
+from .producer_blocks import recipes_of
+from .year_accounts_columns import column, row_columns, sum_across, summed_by_key
 from .types import EDGE_CONSUMPTION, EDGE_PRODUCTION, EDGE_SPOILAGE
 
 # the purposes the economy books goods under (producers.py, households_close.py, inventory.py, economy.py)
@@ -119,52 +122,50 @@ def build(setup, record, ledger, stocks_at_start: Mapping[str, float], prices: M
                         real_wages=_real_wages(setup, record, prices, wages))
 
 
+def plain_rows(view) -> Dict[str, Dict[str, float]]:
+    """A ledger's agent -> (sub -> amount) view as plain dicts, read from its table in one pass (a plain mapping in a test is copied)."""
+    block = getattr(view, "as_plain", None)
+    return block() if block is not None else {name: dict(rows.items()) for name, rows in view.items()}
+
+
 def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
     book = record.book
     stocks_now = stocks(book)
     other_edges = [edge for edge in book.edge_goods_agents()
                    if edge not in (EDGE_PRODUCTION, EDGE_CONSUMPTION, EDGE_SPOILAGE)]
-    bought: Dict[str, float] = {}
-    grown: Dict[str, float] = {}
-    for cohort_id in record.cohorts:
-        for good, quantity in ledger.received.get(cohort_id, {}).items():
-            bought[good] = bought.get(good, 0.0) + quantity
-        for good, quantity in ledger.grown.get(cohort_id, {}).items():
-            grown[good] = grown.get(good, 0.0) + quantity
-    turnover: Dict[str, float] = {}
-    for (good, _area), quantity in ledger.delivered_by_market.items():     # what traded is what was delivered
-        turnover[good] = turnover.get(good, 0.0) + quantity
-    goods = set(stocks_now) | set(stocks_at_start) | set(turnover) | set(setup.specs)
+    cohort_ids = list(record.cohorts)
+    bought = summed_by_key(*row_columns(plain_rows(ledger.received), cohort_ids))
+    grown = summed_by_key(*row_columns(plain_rows(ledger.grown), cohort_ids))
+    delivered = ledger.delivered_by_market.items()     # what traded is what was delivered
+    turnover = summed_by_key([good for (good, _area), _quantity in delivered], [quantity for _market, quantity in delivered])
+    names = sorted(set(stocks_now) | set(stocks_at_start) | set(turnover) | set(setup.specs))
+    nets = {edge: column(book.edge_goods_net_by_good(edge), names)
+            for edge in (EDGE_PRODUCTION, EDGE_CONSUMPTION, EDGE_SPOILAGE, *other_edges)}
+    inputs, household_flows = book.flow_by_purpose(INPUT_PURPOSE, names), book.flow_by_purpose(CONSUMPTION_PURPOSE, names)
+    wear, plant = book.flow_by_purpose(WEAR_PURPOSE, names), book.flow_by_purpose(PLANT_PURPOSE, names)
+    grown_flows, state_flows = book.flow_by_purpose(GROWN_PURPOSE, names), book.flow_by_prefix(STATE_PURPOSE_PREFIX, names)
+    others = sum_across([nets[edge] for edge in other_edges], len(names))
+    columns = zip(names, nets[EDGE_PRODUCTION], nets[EDGE_CONSUMPTION], nets[EDGE_SPOILAGE], others, inputs, household_flows, wear, plant,
+                  grown_flows, state_flows, column(grown, names), column(bought, names), column(stocks_at_start, names),
+                  column(stocks_now, names), column(turnover, names))
     accounts = {}
-    for good in sorted(goods):
-        purposes = book.goods_flow(good)
-        state = math.fsum(quantity for purpose, quantity in purposes.items() if purpose.startswith(STATE_PURPOSE_PREFIX))
-        known = (purposes.get(INPUT_PURPOSE, 0.0) + purposes.get(CONSUMPTION_PURPOSE, 0.0)
-                 + purposes.get(WEAR_PURPOSE, 0.0) + purposes.get(PLANT_PURPOSE, 0.0) + state)
-        household = purposes.get(CONSUMPTION_PURPOSE, 0.0)
-        own = grown.get(good, 0.0)
-        share_grown = own / (own + bought.get(good, 0.0)) if own > 0.0 else 0.0
+    for (good, produced, consumed, spoiled, other_net, intermediate, household, worn, built, grown_flow, state, own, bought_here,
+         start, now, traded) in columns:
+        known = intermediate + household + worn + built + state
+        share_grown = own / (own + bought_here) if own > 0.0 else 0.0
         accounts[good] = GoodAccount(
-            production=book.edge_goods_net(EDGE_PRODUCTION, good),
-            production_grown=purposes.get(GROWN_PURPOSE, 0.0),
-            intermediate_use=purposes.get(INPUT_PURPOSE, 0.0),
+            production=produced, production_grown=grown_flow, intermediate_use=intermediate,
             final_consumption_bought=household * (1.0 - share_grown), final_consumption_grown=household * share_grown,
-            durable_wear=purposes.get(WEAR_PURPOSE, 0.0), state_use=state,
-            investment=purposes.get(PLANT_PURPOSE, 0.0),
-            other_use=-book.edge_goods_net(EDGE_CONSUMPTION, good) - known,
-            spoilage=-book.edge_goods_net(EDGE_SPOILAGE, good),
-            other_net_inflow=math.fsum(book.edge_goods_net(edge, good) for edge in other_edges),
-            stock_at_start=stocks_at_start.get(good, 0.0),
-            stock_change=stocks_now.get(good, 0.0) - stocks_at_start.get(good, 0.0),
-            market_turnover=turnover.get(good, 0.0))
+            durable_wear=worn, state_use=state, investment=built, other_use=-consumed - known, spoilage=-spoiled,
+            other_net_inflow=other_net, stock_at_start=start, stock_change=now - start, market_turnover=traded)
     return accounts
 
 
 def _plant_wear(setup, record, ledger) -> Dict[str, float]:
     wear: Dict[str, float] = {}
-    for producer_id, runs in sorted(ledger.plant_worn.items()):
-        producer = record.producers.get(producer_id)
-        recipe = setup.recipes[producer.recipe_id] if producer is not None else None
+    worn = sorted(ledger.plant_worn.items())
+    for (_producer_id, runs), recipe_id in zip(worn, recipes_of(record.producers, [each[0] for each in worn])):
+        recipe = setup.recipes[recipe_id] if recipe_id is not None else None
         if recipe is None or recipe.plant_life_years <= 0.0:
             continue
         for good, per_run in recipe.plant_goods.items():
@@ -180,25 +181,47 @@ def basket_cost_per_head(goods, prices: Mapping[str, float], people: float) -> O
     return math.fsum(quantity * prices[good] for good, quantity in goods.opening_basket.items()) / people
 
 
-def _need_units(need, goods: Mapping[str, float], specs) -> float:
-    return math.fsum(goods.get(good, 0.0) * effect for good, effect in need.goods
-                     if not specs[good].service_life_years > 0.0)
+def _hunger_need_units(need, specs):
+    """The hunger need's (good, need units per unit of the good) for the goods that are used up, and what no good at all is worth
+    (the sum of the zero terms)."""
+    kept = [(good, effect) for good, effect in need.goods if not specs[good].service_life_years > 0.0]
+    return kept, math.fsum(0.0 * effect for _good, effect in kept)
+
+
+def _need_units(kept, nothing, quantities: Mapping[str, float]) -> float:
+    """The need units of the goods a cohort got (`quantities` by good) over the `kept` goods of its need; `nothing` for no goods."""
+    if not quantities:
+        return nothing
+    return math.fsum(quantities.get(good, 0.0) * effect for good, effect in kept)
 
 
 def _cohorts(setup, record, ledger, prices) -> List[CohortAccount]:
     cost = basket_cost_per_head(record.goods, prices, math.fsum(setup.opening_population_by_tile.values()))
+    received_by_cohort, grown_by_cohort = plain_rows(ledger.received), plain_rows(ledger.grown)
+    needs_by_tile: Dict[str, tuple] = {}     # tile -> (hunger need or None, its kept goods, its zero); the basket is the tile's
     rows = []
-    for cohort_id, cohort in sorted(record.cohorts.items()):
-        need = next((spec for spec in setup.basket_for(cohort.tile).needs if spec.need_id == setup.hunger_need), None)
-        if need is None or cohort.people <= 0.0:
+    store = table_of(record.cohorts)
+    order = store.order()
+    people_of, income_of = store.floats("people", order), store.floats("last_year_income", order)
+    classes = store.table.income_class[order].tolist()
+    for place, (row, tile) in enumerate(zip(order.tolist(), store.tile_names(order))):
+        cohort_id, people = store.ids[row], people_of[place]
+        if tile not in needs_by_tile:
+            need = next((spec for spec in setup.basket_for(tile).needs if spec.need_id == setup.hunger_need), None)
+            needs_by_tile[tile] = (need, None, None)
+        need, kept, nothing = needs_by_tile[tile]
+        if need is None or people <= 0.0:
             continue
-        bought = _need_units(need, ledger.received.get(cohort_id, {}), setup.specs)
-        own = _need_units(need, ledger.grown.get(cohort_id, {}), setup.specs)
+        if kept is None:
+            kept, nothing = _hunger_need_units(need, setup.specs)
+            needs_by_tile[tile] = (need, kept, nothing)
+        bought = _need_units(kept, nothing, received_by_cohort.get(cohort_id, {}))
+        own = _need_units(kept, nothing, grown_by_cohort.get(cohort_id, {}))
         rows.append(CohortAccount(
-            cohort=cohort_id, tile=cohort.tile, income_class=cohort.income_class, people=cohort.people,
-            need_per_head=need.subsistence_per_person, eaten_per_head=(bought + own) / cohort.people,
-            bought_per_head=bought / cohort.people, own_plot_per_head=own / cohort.people,
-            real_income_per_head=cohort.last_year_income / cohort.people / cost if cost is not None and cost > 0.0 else math.nan))
+            cohort=cohort_id, tile=tile, income_class=classes[place], people=people,
+            need_per_head=need.subsistence_per_person, eaten_per_head=(bought + own) / people,
+            bought_per_head=bought / people, own_plot_per_head=own / people,
+            real_income_per_head=income_of[place] / people / cost if cost is not None and cost > 0.0 else math.nan))
     return rows
 
 

@@ -225,6 +225,7 @@ class TradeReads:
         self._needs = needs
         self._parts = parts
         self._trade_registry = None
+        self._records_of_registry = None     # the trade records the registry was built from
 
     @property
     def wages(self):
@@ -247,9 +248,11 @@ class TradeReads:
     @property
     def trade_registry(self):
         """Each trade's fields as plain mappings: the named ones and everything else its file states."""
-        if self._trade_registry is None:
+        records = self._needs.trade_records()
+        if self._records_of_registry is not records:
             self._trade_registry = {trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
-                                    for trade_id, trade in self._needs.trade_records().items()}
+                                    for trade_id, trade in records.items()}
+            self._records_of_registry = records
         return self._trade_registry
 
     def trade_family(self, trade):

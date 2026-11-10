@@ -61,6 +61,22 @@ def hours_on_land(hectares: float, recipe: Recipe, land_per_run: float) -> float
     return max(0.0, hectares) / land_per_run * math.fsum(recipe.labour_hours.values())
 
 
+_GROWING: Dict[tuple, tuple] = {}      # (id(needs), the need ids that have options) -> (needs, the needs that have options); the tuple is held so its id is not reused
+_GROWING_LIMIT = 256
+
+
+def growing_needs(basket: Basket, options: Mapping[str, List[Option]]) -> tuple:
+    """The needs of `basket` that have an option to grow them, in the basket's order: the cohorts of a tile share a basket, and few of its needs
+    can be grown, so the cohorts loop over these only."""
+    key = (id(basket.needs), tuple(need_id for need_id, rows in options.items() if rows))
+    found = _GROWING.get(key)
+    if found is None:
+        if len(_GROWING) >= _GROWING_LIMIT:
+            _GROWING.clear()
+        found = _GROWING[key] = (basket.needs, tuple(need for need in basket.needs if options.get(need.need_id)))
+    return found[1]
+
+
 def own_production(cohort: Cohort, idle_hours: float, options: Mapping[str, List[Option]],
                    recipes: Mapping[str, Recipe], fertility: float, basket: Basket,
                    land_per_run: Optional[Mapping[str, float]] = None, hectares_held: float = 0.0,
@@ -75,9 +91,9 @@ def own_production(cohort: Cohort, idle_hours: float, options: Mapping[str, List
     grown: Dict[GoodId, float] = {}
     units: Dict[str, float] = {}
     hours_left = max(0.0, idle_hours)
-    for need in basket.needs:
-        rows = options.get(need.need_id)
-        if not rows or hours_left <= 0.0 or fertility <= 0.0:
+    for need in growing_needs(basket, options):
+        rows = options[need.need_id]
+        if hours_left <= 0.0 or fertility <= 0.0:
             continue
         hours_per_unit, recipe_id, good, effect = rows[0]
         floor_units = need.subsistence_per_person * cohort.people

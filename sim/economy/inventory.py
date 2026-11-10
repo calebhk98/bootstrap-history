@@ -44,7 +44,7 @@ def _moves(holdings: Holdings, rate_of_good, receiver: str, purpose: str,
 def held_stock(book, agent) -> Dict[Tuple[GoodId, TileId], float]:
     """What `agent` holds in the book: (good, tile) -> quantity, the positive holdings only."""
     held = {}
-    for good, tiles in book.holdings(agent)["goods"].items():
+    for good, tiles in book.goods_held(agent).items():
         for tile, quantity in tiles.items():
             if quantity > 0.0:
                 held[(good, tile)] = quantity

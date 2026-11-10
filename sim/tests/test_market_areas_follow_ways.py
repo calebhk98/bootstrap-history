@@ -12,6 +12,7 @@ from sim.economy.carriage_record import CarriageRecord
 from sim.economy.economy import Economy
 from sim.economy.market_areas_follow import _moved_expectations, follow, old_areas_by_new
 from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, market_key
+from sim.economy.merchants import Merchant, bind_markets
 from sim.economy.record import EconomyRecord
 from sim.economy.types import CurrencySpec
 
@@ -91,6 +92,18 @@ class FollowTests(unittest.TestCase):
         merchant = record.merchants["merchant:1"]
         self.assertEqual(merchant.expected_prices, {(GOOD, "a:one"): 2.0})
         self.assertEqual(merchant.expected_volumes, {})
+
+    def test_a_merchants_columns_of_the_memory_numbering_move_with_the_markets(self):
+        record = record_remembering({"a:farms": 2.0})
+        merchant = Merchant("merchant:1", "t", "owner", 1.0, {(GOOD, "a:farms"): 2.0, ("salt", "x:1"): 5.0}, {(GOOD, "a:town"): 4.0})
+        bind_markets(merchant, record.memory.tables)
+        record.merchants["merchant:1"] = merchant
+        follow(record, SPLIT, JOINED)
+        self.assertIs(merchant.expected_prices.tables, record.memory.tables)
+        self.assertEqual(dict(merchant.expected_prices), {(GOOD, "a:one"): 2.0, ("salt", "x:1"): 5.0})
+        self.assertEqual(dict(merchant.expected_volumes), {})
+        follow(record, JOINED, SPLIT)
+        self.assertEqual(dict(merchant.expected_prices), {(GOOD, area_id): 2.0 for area_id in SPLIT.anchors} | {("salt", "x:1"): 5.0})
 
 
 class MovedExpectationsTests(unittest.TestCase):

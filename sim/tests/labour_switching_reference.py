@@ -9,8 +9,9 @@ import numpy as np
 from sim.labour.market import aptitude, expectations, switching_kernel, training
 from sim.labour.market.premium import annuity_factor
 from sim.labour.market.switching import (NEGLIGIBLE_MOVE_SHARE, PLAN_REUSE_TOLERANCE, REMAINING_CAREER_SHARE,
-                                         SWITCHING_CONSIDERATION_SHARE_PER_YEAR, SWITCHING_TASTE_SCALE, Move,
-                                         RETRAINING_SHARE_WITHIN_FAMILY, _move_order)
+                                         SWITCHING_CONSIDERATION_SHARE_PER_YEAR, SWITCHING_TASTE_SCALE,
+                                         RETRAINING_SHARE_WITHIN_FAMILY)
+from sim.tests.labour_switching_plain import Move, _move_order
 from sim.labour.market.records import MarketState, YearInputs, YearReport
 from sim.labour.market.trades import fallback_trade
 

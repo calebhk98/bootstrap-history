@@ -6,6 +6,8 @@ import types
 import unittest
 from unittest import mock
 
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 from sim.economy.capital_markets_record import CapitalMarketsRecord
 from sim.economy.credit_record import CreditRecord
 from sim.economy.unfree_record import UnfreeRecord
@@ -118,10 +120,23 @@ class StubBook:
     def holdings(self, agent):
         return {"goods": self.goods}
 
+    def balance_by_agent(self, agents, currency):
+        return {agent: self.cash for agent in agents}
+
+    def goods_held(self, agent):
+        return self.goods
+
+    def goods_held_many(self, agents):
+        return [self.goods for _agent in agents]
+
     def transfer_many(self, transfers):
         self.transfers.extend(transfers)
 
     def move_many(self, moves):
+        self.moves.extend(moves)
+
+    def post(self, transfers, moves):
+        self.transfers.extend(transfers)
         self.moves.extend(moves)
 
 
@@ -129,7 +144,7 @@ def exiting(cash, loans, goods=None):
     """A record holding one producer (owned by "owner") with `cash` and `goods`, owing `loans`; ownership.spread is the identity."""
     credit = CreditRecord()
     credit.add_loans(list(loans))
-    record = types.SimpleNamespace(book=StubBook(cash, goods or {}), producers={"producer": types.SimpleNamespace(owner="owner")}, credit=credit, capital_markets=CapitalMarketsRecord(),
+    record = types.SimpleNamespace(book=StubBook(cash, goods or {}), producers=ProducerStore({"producer": Producer("producer", "owner", "r", "t", 1.0)}), credit=credit, capital_markets=CapitalMarketsRecord(),
                              unfree=UnfreeRecord())
     return record
 
@@ -177,7 +192,7 @@ class CloseIdleProducersTests(unittest.TestCase):
         from sim.economy import entry_year
         record = types.SimpleNamespace(
             book=StubBook(30.0, {ORE: {HILLS: 2.0}}), credit=CreditRecord(), capital_markets=CapitalMarketsRecord(), unfree=UnfreeRecord(),
-            producers={"sliver": farmer(agent_id="sliver", owner="owner", capacity_runs=0.0)})
+            producers=ProducerStore({"sliver": farmer(agent_id="sliver", owner="owner", capacity_runs=0.0)}))
         record.capital_markets.shares["sliver"] = {"holder": 0.5}
         record.credit.expansion_runs.clear()
         setup = types.SimpleNamespace(currency_id="coin")
@@ -194,7 +209,7 @@ class ExitBatchTests(unittest.TestCase):
 
     def record_of(self, loans):
         record = exiting(40.0, loans, {ORE: {HILLS: 7.0}})
-        record.producers = {name: types.SimpleNamespace(owner="owner") for name in ("a", "b", "c")}
+        record.producers = ProducerStore({name: Producer(name, "owner", "r", "t", 1.0) for name in ("a", "b", "c")})
         return record
 
     def test_two_exits_end_their_loans_together_and_book_the_same_losses(self):
@@ -214,6 +229,17 @@ class ExitBatchTests(unittest.TestCase):
         self.assertEqual([each.loan_id for each in one_by_one.credit.loans], ["loan-c"])
         self.assertEqual(batched.credit.credit_losses, one_by_one.credit.credit_losses)
         self.assertEqual(sorted(batched.producers), ["c"])
+
+    def test_exits_release_the_bonded_people_they_hold_at_finish(self):
+        record = self.record_of([])
+        record.unfree.bonded_held = {"tile": {"smith": {"a": 3.0, "c": 1.0, "b": 2.0}}, "gone": {"smith": {"a": 2.0}}}
+        with mock.patch.object(producer_exit.ownership, "spread", lambda _record, payments: payments):
+            batch = producer_exit.ExitBatch(record)
+            for name in ("a", "b"):
+                batch.exit(name, [])
+            self.assertIn("a", record.unfree.bonded_held["tile"]["smith"])      # held until finish
+            batch.finish()
+        self.assertEqual(record.unfree.bonded_held, {"tile": {"smith": {"c": 1.0}}})
 
     def test_no_exit_changes_nothing(self):
         record = self.record_of([Loan("loan-c", "lender", "c", "coin", 30.0, 0.05, 5.0, 0.0)])

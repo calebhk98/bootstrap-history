@@ -9,6 +9,7 @@ from sim.agents import government_levers_tax
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
 from sim.economy import flight_routes, flight_year
+from sim.economy.households_cohort import Cohort
 from sim.economy.protocols import EconomyYearInputs
 from sim.labour.api import MarketState, Route
 
@@ -76,7 +77,7 @@ class Leavers(unittest.TestCase):
 		self.assertEqual(shares, {"x": 0.05})
 
 	def test_tenants_of_a_fleeing_area_leave_the_land_and_the_title_goes_back_to_no_holder(self):
-		record = SimpleNamespace(cohorts={"serf": SimpleNamespace(agent_id="serf", tile="a"), "other": SimpleNamespace(agent_id="other", tile="b")}, land=SimpleNamespace(titles={"t1": {"lord": 0.5}}, tenancies={"t1": [{"tenant": "serf", "lessor": "lord", "share": 0.5, "arrears": 0.0}]}))
+		record = SimpleNamespace(cohorts={"serf": Cohort("serf", "a", 0, 1.0, 1.0, 1.0), "other": Cohort("other", "b", 0, 1.0, 1.0, 1.0)}, land=SimpleNamespace(titles={"t1": {"lord": 0.5}}, tenancies={"t1": [{"tenant": "serf", "lessor": "lord", "share": 0.5, "arrears": 0.0}]}))
 		released = flight_year.tenants_flee(record, {"work@a": 1.0})
 		self.assertEqual(released, {"t1": 0.5})
 		self.assertEqual(record.land.titles["t1"], {})

@@ -35,7 +35,8 @@ class YearInputsBuilder:
         economy = self._agent.economy()
         harmed = sim.farm.externality_yield_factors(sim.scenario.year)
         yields = port_sites.crop_yields(economy, weather, sim.farm.weather_by_tile(sim.scenario.year))
-        yields = port_sites.harmed_yields(yields, harmed, economy_api.producers_of(economy))
+        listed = economy_api.producer_list(economy)
+        yields = port_sites.harmed_yields(yields, harmed, dict(zip(listed.ids, listed.tiles)))
         people = sim.labour.settlement_tiles()
         bands = sim.state.regional_people_by_band()    # demography's (children, working age, elderly) by tile
         return EconomyYearInputs(year=sim.scenario.year, population_by_tile=people,

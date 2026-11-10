@@ -16,8 +16,30 @@ def declared_signatures():
     def array(element, dimensions):
         return types.Array(element, dimensions, "C")
 
-    return {
+    from numba import typeof
+    from sim.economy.api import GOODS_MARKETS, GoodsMarkets
+    markets = typeof(GOODS_MARKETS.new_table(GoodsMarkets, 1))      # the namedtuple of columns a goods market kernel takes
+    floats, whole, whole_grid = array(number, 1), array(integer, 1), array(integer, 2)
+
+    signatures = {
+        "sim.economy.market_table_kernels.remap_goods_markets": [(markets, markets, whole, whole, whole, whole, whole)],
+        "sim.economy.market_table_kernels.put_floats": [(floats, whole, whole, whole, integer, whole, floats)],
+        "sim.economy.market_table_kernels.drop_floats": [(floats, whole, integer, whole)],
+        "sim.economy.market_table_kernels.put_counts": [(whole, whole, whole, whole, whole, integer, integer, whole, whole)],
+        "sim.economy.market_table_kernels.drop_counts": [(whole, whole, integer, integer, whole)],
+        "sim.economy.market_table_kernels.market_of_good_tile": [(whole_grid, whole_grid)],
+        "sim.economy.market_column_kernels.add_in_order_by_group": [(whole, floats, integer)],
+        "sim.economy.notional_kernel.costed_goods": [(integer, whole, whole, whole) + (whole, whole, floats) * 5 + (
+            floats, floats, array(flag, 1), floats, number, array(flag, 1), flag, floats, floats, number)],
+        "sim.economy.market_column_kernels.traded_price_by_group": [(whole, array(flag, 1), floats, floats)],
+        "sim.economy.price_kind_kernels.kinds_by_good": [(markets, whole, integer)],
+        "sim.economy.goods_table_quotes.untraded_figures": [(whole, whole, floats, floats, floats, floats, floats, array(flag, 1))],
+        "sim.economy.goods_table_quotes.wanted_by_market": [(whole, floats, floats, floats, floats, floats, floats, floats)],
         "sim.economy.merchants_kernel.lost_share": [(number, integer)],
+        "sim.economy.carriage_wear_kernel.wear_takes": [(whole, floats, floats)],
+        "sim.economy.merchants_book_kernel.search_goods": [(
+            floats, array(flag, 1), array(flag, 1), whole, whole, whole, whole, floats, floats, whole, whole, floats, floats,
+            number, number, number)],
         "sim.economy.merchants_kernel.search_good": [(
             array(number, 1), array(number, 2), array(integer, 2), array(integer, 1), array(flag, 1),
             number, number, number, number, number)],
@@ -25,4 +47,211 @@ def declared_signatures():
             array(integer, 1), array(integer, 1), array(number, 1), array(number, 1), array(integer, 1),
             array(number, 1), array(number, 1), flag)],
         "sim.labour.market.sold_hours_kernel.sold_hours": [(number, array(number, 2), number)],
+        "sim.labour.market.state_read_kernels.people_weighted_wage_by_area": [(
+            integer, array(flag, 1), floats, array(flag, 1), array(number, 2), whole)],
+        "sim.labour.market.state_read_kernels.working_people_in_areas": [(whole, integer, array(flag, 1), array(number, 2), whole)],
+        "sim.labour.market.state_read_kernels.scale_pairs": [(integer, integer, number, array(flag, 1), array(number, 2), whole)],
+        "sim.labour.market.state_read_kernels.scale_areas": [(
+            whole, floats, integer, array(flag, 1), array(number, 2), whole, whole, whole, array(number, 2), whole)],
+        "sim.labour.market.state_read_kernels.scale_cohorts": [(integer, integer, number, array(number, 2), whole)],
+        "sim.labour.market.training_kernel.age_cohorts": [(
+            array(integer, 1), array(number, 1), array(number, 1), array(number, 2), integer, integer, array(number, 1), array(flag, 1),
+            integer, array(number, 1), number, number, array(number, 2), array(flag, 1), array(integer, 1), array(integer, 1),
+            array(flag, 1), array(integer, 1), array(integer, 1), array(number, 1), array(flag, 1), array(flag, 1))],
+    }
+    signatures.update(book_signatures(types))
+    signatures.update(ledger_signatures(types))
+    signatures.update(bondage_signatures(types))
+    signatures.update(compiled_tables_signatures(types))
+    signatures.update(priced_need_signatures(types))
+    signatures.update(loan_signatures(types))
+    signatures.update(crossing_signatures(types))
+    signatures.update(entry_plan_signatures())
+    signatures.update(household_offer_signatures(types))
+    signatures.update(stability_signatures(types))
+    signatures.update(government_signatures(types))
+    signatures.update(dispatch_signatures(types))
+    return signatures
+
+
+def dispatch_signatures(types):
+    """The kernel that reads the merchants' routes for the wear they call for of a fleet, which only a game whose carriers are a fleet reaches
+    (the dispatch kernel it shares helpers with compiles with the year), typed from the tables the boundary builds."""
+    from numba import typeof
+    from sim.economy.api import (DISPATCH_LEGS, DISPATCH_MERCHANTS, DISPATCH_PAIRS, DISPATCH_ROUTES, DispatchLegs, DispatchMerchants,
+                                 DispatchPairs, DispatchRoutes)
+    pairs = typeof(DISPATCH_PAIRS.new_table(DispatchPairs, 1, widths={"crew_key": 1, "crew_hours": 1, "wear_carrier": 1, "wear_units": 1, "dues_owed": 1}))
+    merchants = typeof(DISPATCH_MERCHANTS.new_table(DispatchMerchants, 1, widths={
+        name: 1 for name in ("market_wage", "hired_hours", "paid_wage", "fleet_capacity", "own_capacity", "fleet_hired", "fleet_hired_named")}))
+    return {"sim.economy.merchants_dispatch_kernel.wear_needed_all": [(
+        pairs, typeof(DISPATCH_ROUTES.new_table(DispatchRoutes, 1)), typeof(DISPATCH_LEGS.new_table(DispatchLegs, 1)), merchants,
+        types.Array(types.boolean, 1, "C"), types.float64)]}
+
+
+def government_signatures(types):
+    """The government's year kernels (the keep of the bonded and the revenue assessments), which only a game with a state reaches (their
+    helpers compile with them), typed from the tables the boundary builds."""
+    from numba import typeof
+    from sim.agents.api import KEEP_OWNERS, KEEPS, REVENUE_FORMS, REVENUE_PAYERS, KeepOwners, Keeps, RevenueForms, RevenuePayers
+    forms, payers = typeof(REVENUE_FORMS.new_table(RevenueForms, 1)), typeof(REVENUE_PAYERS.new_table(RevenuePayers, 1))
+    floats, whole = types.Array(types.float64, 1, "C"), types.Array(types.int64, 1, "C")
+    number, integer = types.float64, types.int64
+    return {
+        "sim.agents.keep_table.plan_keeps": [(typeof(KEEPS.new_table(Keeps, 1)), typeof(KEEP_OWNERS.new_table(KeepOwners, 1)))],
+        "sim.agents.assessment_kernels.assess_forms": [(forms, payers)],
+        "sim.agents.assessment_kernels.plan_collection": [(payers,)],
+        "sim.agents.assessment_kernels.receipts": [(forms, number)],
+        "sim.agents.assessment_kernels.collectors_needed": [(forms, number, floats)],
+        "sim.agents.assessment_kernels.accumulate_by_group": [(floats, whole, floats, integer)],
+    }
+
+
+def stability_signatures(types):
+    """The stability phase's per-tile kernel, which only a game with a state reaches (its helpers compile with it)."""
+    floats = types.Array(types.float64, 1, "C")
+    number = types.float64
+    return {"sim.campaigns.stability_kernels.read_tiles": [(
+        (floats,) * 9 + (number, types.boolean, number, number, number, floats))]}
+
+
+def priced_need_signatures(types):
+    """The baskets-priced-at-tiles kernel, which no game year calls (the year prices needs one basket at a time; see the plan): typed from
+    the tables a batch makes (its helpers compile with it)."""
+    from numba import typeof
+    from sim.economy.api import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows
+    return {"sim.economy.priced_need_kernel.price_needs": [(
+        typeof(NEED_ROWS.new_table(PricedNeedRows, 1)), typeof(GOOD_ROWS.new_table(PricedGoodRows, 1)), types.Array(types.float64, 2, "C"),
+        types.float64, types.boolean)]}
+
+
+def loan_signatures(types):
+    """The loan table's kernel that only a write-off reaches, typed from the table the economy keeps."""
+    from numba import typeof
+    from sim.loans.columns import LOAN_TABLE, Loans
+    loan_table = typeof(LOAN_TABLE.new_table(Loans, 1))
+    number, integer, flag = types.float64, types.int64, types.boolean
+    return {"sim.loans.write_down_kernel.write_down": [(
+        loan_table, types.Array(integer, 1, "C"), types.Array(number, 1, "C"), number, types.Array(number, 1, "C"),
+        types.Array(flag, 1, "C"))]}
+
+
+def compiled_tables_signatures(types):
+    """The shared table utilities and the documented example table, which no game year calls yet."""
+    from numba import typeof
+    from sim.compiled_tables.example_loans import LOANS, Loans
+    loans = typeof(LOANS.new_table(Loans, 1))
+    integer, number = types.int64, types.float64
+    return {
+        "sim.compiled_tables.sums.ordered_total": [(types.Array(number, 1, "C"), integer)],
+        "sim.compiled_tables.example_loans.lend": [(loans, integer, integer, number, number)],
+        "sim.compiled_tables.example_loans.interest_due": [(loans, integer)],
+        "sim.compiled_tables.example_loans.accrue_interest": [(loans,)],
+        "sim.compiled_tables.example_loans.owed_by_agent": [(loans, integer)],
+    }
+
+
+def book_signatures(types):
+    """The book's entry kernels that only a batch holding both transfers and goods moves, or a goods total, reaches: typed from
+    the tables a fresh book passes them (their callees compile with them)."""
+    import numpy
+    from numba import typeof
+    from sim.book import Book
+    from sim.book_apply import RULE_BATCH
+    from sim.book_post import new_scratch
+    from sim.book_tables import BATCH_OUTCOMES, BatchOutcomes
+    book = Book()
+    starts = numpy.zeros(2, dtype=numpy.int64)
+    apply_arguments = (book._transfer_table([]), starts, book._move_table([]), starts, 1, book.tables(), new_scratch(1, 1),
+                       BATCH_OUTCOMES.new_table(BatchOutcomes, 1), RULE_BATCH, True)
+    return {
+        "sim.book_apply.apply_batches": [tuple(typeof(argument) for argument in apply_arguments)],
+        "sim.book_read_kernels.good_quantities": [(typeof(book.stock_rows.table), types.int64)],
+        "sim.compiled_tables.grouping.group_starts": [(typeof(starts), types.int64, types.int64)],
+    }
+
+
+
+def ledger_signatures(types):
+    """The year ledger's kernels that only a rare branch reaches (a replaced or removed entry, money across the border), typed from
+    the tables a fresh ledger passes them."""
+    from numba import typeof
+    from sim.economy.api import LedgerTables
+    target = typeof(LedgerTables().pairs["received"].target())
+    pair_rows = typeof(LedgerTables().pairs["hours_hired"].rows.table)
+    number, integer = types.float64, types.int64
+    whole, floats = types.Array(integer, 1, "C"), types.Array(number, 1, "C")
+    module = "sim.economy.year_ledger_kernels."
+    return {
+        "sim.economy.year_ledger_note_kernels.note_settlement_foreign": [(target, target, whole, floats, floats, whole, whole)],
+        module + "clear_agent_rows": [(target, integer)],
+        module + "kill_row": [(target, integer)],
+        module + "set_pair": [(target, integer, integer, integer, number, number)],
+        module + "remove_from_figure": [(whole, whole, integer, integer)],
+        "sim.economy.goods_production_reads.pair_amounts": [(pair_rows, whole, whole, whole)],
+    }
+
+
+def bondage_signatures(types):
+    """The bondage placement kernels, which a year with no bought bonded people and no bonded cohorts never calls: typed from the
+    arrays `bondage_hours` passes them."""
+    number, integer, flag = types.float64, types.int64, types.boolean
+    floats, whole, flags = types.Array(number, 1, "C"), types.Array(integer, 1, "C"), types.Array(flag, 1, "C")
+    return {
+        "sim.economy.bondage_kernels.place_held_kernel": [(
+            whole, floats, floats, whole, whole, whole, whole, whole, whole, floats, floats, number, floats, floats, whole, whole, floats,
+            whole, floats, floats)],
+        "sim.economy.bondage_kernels.place_bonds_kernel": [(
+            whole, whole, whole, floats, whole, floats, floats, whole, whole, whole, floats, whole, number, number, floats, floats, floats,
+            floats, flags, flags, whole, floats, floats)],
+    }
+
+
+def crossing_signatures(types):
+    """The price search over a market's columns, which only an expansion judged in the close or a price response reaches: typed from
+    the prepared columns of one small market (the helpers compile with these)."""
+    import numpy
+    from numba import typeof
+    from sim.economy.api import BidColumns, demand_columns
+    columns = BidColumns(*(numpy.ones(2) for _ in range(6)))
+    order = numpy.arange(2, dtype=numpy.int64)
+    demand = typeof(demand_columns(columns, order))
+    floats, flags, number = types.Array(types.float64, 1, "C"), types.Array(types.int64, 1, "C"), types.float64
+    return {
+        "sim.economy.crossing_columns.prepare_demand": [tuple(typeof(each) for each in (*columns, order))],
+        "sim.economy.crossing_price.minimum_price_of": [(floats, number)],
+        "sim.economy.crossing_price.single_supply_price": [(demand, types.boolean, number, number, flags)],
+        "sim.economy.crossing_price.price_at_levels": [(floats, floats, number, number, demand, flags)],
+        "sim.economy.curve_clearing.clear_summary": [(floats, floats, types.boolean, number, number, demand, flags)],
+    }
+
+
+def entry_plan_signatures():
+    """The entry plan loops a warm year may not reach (the trial's, when no market lacks a maker; the bids block's many demands): typed from
+    small samples of what `entry_margin_tables` and `year_bids` pass them."""
+    import numpy
+    from numba import typeof
+    from sim.economy.api import entry_plan_steps, entry_plan_table
+    floats, whole = numpy.ones(2), numpy.zeros(2, dtype=numpy.int64)
+    grid, whole_grid = numpy.ones((2, 2)), numpy.zeros((2, 2), dtype=numpy.int64)
+    block = tuple(numpy.ones(2) for _ in range(6)) + (numpy.zeros(3, dtype=numpy.int64),)
+    tables = (numpy.zeros((3, 2, 2)), numpy.zeros((2, 2, 2)), whole_grid, whole_grid, numpy.zeros((2, 2, 2)), grid, grid, grid, grid,
+              numpy.zeros(3))
+    siting = (grid, grid, numpy.zeros((2, 2), dtype=numpy.bool_), grid, grid, grid, grid, numpy.zeros(2, dtype=numpy.bool_), floats, grid, floats)
+    widths = {"order": 2, "fits": 2, "suited": 2, "supply_tiles": 2}
+    sites = entry_plan_steps.SITES.new_table(entry_plan_steps.SiteTables, 2, 2, widths=widths)
+    plans = entry_plan_table.empty(2)
+    trial = (whole, whole, whole, floats, whole, whole, whole, floats, block, tables, grid, siting, sites, whole_grid, plans)
+    many = (*block[:6], block[6], whole, floats, floats)
+    return {
+        "sim.economy.entry_margin_kernel.trial_plans": [tuple(typeof(each) for each in trial)],
+        "sim.economy.year_bids_kernels.demand_at_many": [tuple(typeof(each) for each in many)],
+    }
+
+
+def household_offer_signatures(types):
+    """The household offer kernels a fixture year may not reach, typed as `household_offer_reads` passes them."""
+    whole, number = types.Array(types.int64, 1, "C"), types.Array(types.float64, 1, "C")
+    return {
+        "sim.economy.household_offer_kernels.hour_value_by_worker": [(whole, whole, number, number, number, number)],
+        "sim.economy.household_offer_kernels.sum_in_order_by_group": [(whole, types.int64, number)],
     }

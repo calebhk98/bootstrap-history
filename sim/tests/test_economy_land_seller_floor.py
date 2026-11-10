@@ -7,6 +7,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.producer_store import ProducerStore
 from sim.economy import unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, GoodSpec, Offer, Recipe
@@ -31,7 +32,7 @@ def held(stock, expected_sales, rent=RENT, rate=RATE, portable=True):
     recipe = Recipe("claim", {LAND: 1.0}, {}, {})
     setup = types.SimpleNamespace(specs={LAND: spec}, recipes={"claim": recipe}, opening_rate=OPENING_RATE)
     producer = Producer("seller", "lord", "claim", TILE, 10.0, expected_sales=expected_sales)
-    record = types.SimpleNamespace(producers={"seller": producer}, land=types.SimpleNamespace(land_rent={TILE: rent}))
+    record = types.SimpleNamespace(producers=ProducerStore({"seller": producer}), land=types.SimpleNamespace(land_rent={TILE: rent}))
     return unsold_search._held_value(setup, record, View(rate), Offer("seller", LAND, AREA, TILE, stock, ASK))
 
 
@@ -64,7 +65,7 @@ class AskFallsToTheCapitalisedRentTests(unittest.TestCase):
         setup = types.SimpleNamespace(specs={LAND: spec}, recipes={"claim": Recipe("claim", {LAND: 1.0}, {}, {})},
                                       opening_rate=OPENING_RATE)
         producer = Producer("seller", "lord", "claim", TILE, 10.0, expected_sales=expected_sales)
-        record = types.SimpleNamespace(producers={"seller": producer}, land=types.SimpleNamespace(land_rent={TILE: RENT}))
+        record = types.SimpleNamespace(producers=ProducerStore({"seller": producer}), land=types.SimpleNamespace(land_rent={TILE: RENT}))
         offer = Offer("seller", LAND, AREA, TILE, stock, ASK)
         bids = [Bid("buyer", LAND, AREA, TILE, 0.0, stock, worth, 0.0, 1e9, 1, maximum_price=worth)]
         offers, result = unsold_search.clear_with_search(setup, record, View(), bids, [offer], [offer], LAND, AREA,

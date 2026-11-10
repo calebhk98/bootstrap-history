@@ -12,11 +12,16 @@ part in 10^12, is not compared, and nine in ten must be.
 QUICK_TOPIC = True
 
 import random
+from collections.abc import Mapping
 import unittest
 from types import SimpleNamespace
 
 from sim.book import Book
 from sim.economy import goods_market, goods_respend, goods_respend_year, settlement
+from sim.economy.goods_market_rows import MarketRows
+from sim.economy.goods_order_book import GoodsOrderBook
+from sim.economy.goods_table_views import LazyObjects
+from sim.economy.market_tables import MarketTables
 from sim.economy.entry import wanted_in_round
 from sim.economy.goods_market_fills import sold_by_seller_tile
 from sim.economy.households_cohort import Cohort
@@ -124,7 +129,7 @@ def snapshot(book):
 
 def largest(value):
     """The largest absolute number in a nested structure."""
-    if isinstance(value, dict):
+    if isinstance(value, Mapping):
         return max([largest(each) for each in value.values()] + [0.0])
     if isinstance(value, (list, tuple)):
         return max([largest(each) for each in value] + [0.0])
@@ -135,7 +140,7 @@ def agree(left, right, scale=None, path=""):
     """None when the two nested structures of numbers agree within TOLERANCE of the largest number in `left`, else where."""
     if scale is None:
         scale = max(1.0, largest(left))
-    if isinstance(left, dict) or isinstance(right, dict):
+    if isinstance(left, Mapping) or isinstance(right, Mapping):
         for key in sorted(set(left) | set(right), key=str):
             found = agree(left.get(key, 0.0), right.get(key, 0.0), scale, "%s/%s" % (path, key))
             if found:
@@ -154,12 +159,14 @@ def agree(left, right, scale=None, path=""):
     return None if left == right or abs(left - right) <= TOLERANCE * scale else "%s %r %r" % (path, left, right)
 
 
-def traded_rounds(results):
-    """The market's results up to the last that traded: a round at the end that traded nothing (a bid at dust) is no figure."""
-    results = list(results)
-    while len(results) > 1 and results[-1].quantity == 0.0:
-        results.pop()
-    return results
+def traded_rounds(market):
+    """The market's rounds as (quantity, price, demand at price, offered at price) up to the last that traded: a round at the end that traded
+    nothing (a bid at dust) is no figure. The first round and the plain path's rounds are results; the kernel's are rows of `later`."""
+    rounds = [(result.quantity, result.price or 0.0, result.demand_at_price, result.offered_at_price) for result in market.results]
+    rounds.extend((quantity, price or 0.0, demand, offered) for quantity, price, demand, offered in market.later)
+    while len(rounds) > 1 and rounds[-1][0] == 0.0:
+        rounds.pop()
+    return rounds
 
 
 def market_figures(markets):
@@ -167,14 +174,30 @@ def market_figures(markets):
                   "offers": [(offer.seller, offer.tile, offer.quantity) for offer in market.offers],
                   "bids": [(bid.buyer, bid.budget, bid.flexible_quantity, bid.reference_price, bid.maximum_price)
                            for bid in market.all_bids],
-                  "results": [(result.quantity, result.price or 0.0, result.demand_at_price, result.offered_at_price)
-                              for result in traded_rounds(market.results)]}
+                  "results": traded_rounds(market)}
             for key, market in markets.items()}
 
 
 def ledger_figures(ledger):
     return {name: getattr(ledger, name) for name in ("money_out", "sales_in", "received", "sold", "imports_paid",
                                                      "exports_received", "delivered_by_market")}
+
+
+def on_the_tables(world):
+    """The world with every market's first-round bids and offers left written into a book of orders and read from its rows."""
+    setup, record, view, ledger, markets, basket_of = world
+    orders = GoodsOrderBook(record.book, MarketTables())
+    for market in markets.values():
+        bid_first, offer_first = orders.bid_count(), orders.offer_count()
+        for bid in market.bids:
+            orders.add_bid(bid)
+        for offer in market.offers:
+            orders.add_offer(offer)
+        market.rows = MarketRows(orders, range(bid_first, orders.bid_count()), range(offer_first, orders.offer_count()))
+        market.bids = LazyObjects(lambda rows=market.rows: orders.bids_of(rows.bid_rows), len(market.rows.bid_rows))
+        market.offers = LazyObjects(lambda rows=market.rows: orders.offers_of(rows.left_rows), len(market.rows.left_rows))
+        market.all_bids, market.added = None, None
+    return orders
 
 
 def run(seed, rounds, factor=1.0):
@@ -192,6 +215,23 @@ def difference(one, other):
 
 
 class RespendKernelAgreesWithThePythonRounds(unittest.TestCase):
+
+    def test_random_economies_read_from_the_order_tables(self):
+        def on_tables(seed, factor=1.0):
+            world = build(seed)
+            nudged(world[4], factor)
+            goods_respend_year.respend(*world, on_the_tables(world))
+            return world
+
+        compared = 0
+        for seed in range(60):
+            found = difference(run(seed, respend_reference.respend_plain), on_tables(seed))
+            if found and (difference(run(seed, respend_reference.respend_plain), run(seed, respend_reference.respend_plain, 1.0 + 1e-12))
+                          or difference(on_tables(seed), on_tables(seed, 1.0 + 1e-12))):
+                continue      # one of the two moves when every budget and offer is nudged by one part in 10^12
+            compared += 1
+            self.assertIsNone(found, "seed %d" % seed)
+        self.assertGreater(compared, 0.9 * 60)
 
     def test_random_economies(self):
         compared, skipped = 0, 0

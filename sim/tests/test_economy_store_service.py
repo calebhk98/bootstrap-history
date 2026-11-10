@@ -19,7 +19,7 @@ def spec(good, life=50.0):
 
 def display_need(price_index, goods):
     """A priced need standing in for the real one: only its price index and goods are read."""
-    return SimpleNamespace(price_index=price_index,
+    return SimpleNamespace(spec=None, ceilings=(), price_index=price_index,
                            goods=tuple((good, price, effect, 1.0 / len(goods)) for good, price, effect in goods))
 
 

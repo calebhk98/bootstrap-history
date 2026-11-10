@@ -24,6 +24,9 @@ class Holdings:
     def holdings(self, agent):
         return {"goods": {}}
 
+    def goods_held(self, agent):
+        return {}
+
     def move_many(self, moves):
         pass
 

@@ -19,6 +19,8 @@ import unittest
 
 import numpy as np
 
+from sim.economy.producer_store import ProducerStore
+from sim.tests.goods_fixtures import goods_on
 from sim.economy import entry, entry_kernels, entry_practice, entry_trial, entry_year, location, practice
 from sim.economy.entry_tables import EntryTables
 from sim.economy.entrant_rent import site_rent_per_run
@@ -26,6 +28,7 @@ from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, YearView
 from sim.economy.producers import Producer
 from sim.economy.setup import labour_area
 from sim.economy.types import Bid, GoodSpec, MarketArea, Recipe, SiteLimit, TileSpec
+from sim.labour.api import MarketState
 from sim.economy.year_arrays import YearArrays
 from sim.economy.year_arrays_producers import ProducerColumns
 from sim.book import Book
@@ -124,15 +127,15 @@ def economy(seed, producer_count=60):
         producers[agent] = Producer(agent, "household:T0:0", recipe_id, tile, capacity, rng.uniform(0.6, 1.2), {}, 0, 5.0,
                                     rng.uniform(0.0, 30.0), capacity * rng.uniform(0.9, 1.0) if rng.random() < 0.9 else -1.0,
                                     land_run_cap=rng.choice((None, None, rng.uniform(0.0, 20.0))), crew_runs=crew)
-    labour = types.SimpleNamespace(workers={labour_area(tile): {trade: [rng.uniform(0.0, 80.0), rng.uniform(0.0, 40.0)]
-                                                                for trade in fixture.TRADES if rng.random() < 0.8}
-                                            for tile in TILES if rng.random() < 0.85})
+    labour = MarketState(workers={labour_area(tile): {trade: [rng.uniform(0.0, 80.0), rng.uniform(0.0, 40.0)]
+                                                          for trade in fixture.TRADES if rng.random() < 0.8}
+                                      for tile in TILES if rng.random() < 0.85})
     record = types.SimpleNamespace(
-        producers=producers, cohorts={}, memory=memory, book=Book(),
+        producers=ProducerStore(producers), cohorts={}, memory=memory, book=Book(),
         credit=types.SimpleNamespace(loans=[], expansion_runs={each: rng.uniform(0.0, 10.0) for each in sorted(producers)[::7]}),
         land=types.SimpleNamespace(land_rent={tile: rng.uniform(0.0, 3.0) for tile in TILES[:4]},
                                    land_mean_value={tile: rng.choice((0.0, rng.uniform(1.0, 30.0))) for tile in TILES[:4]}),
-        labour=types.SimpleNamespace(workforce=labour), goods=types.SimpleNamespace(volumes={}, margin_years={}))
+        labour=types.SimpleNamespace(workforce=labour), goods=goods_on(memory))
     area_map = AreaMap()
     view = YearView(memory, record.book, area_map, MONEY, setup, labour_area)
     return setup, record, view, area_map, Carriage(rng)
@@ -295,25 +298,7 @@ class WholeEntry(unittest.TestCase):
 
 
 class ProducerColumnsInBulk(unittest.TestCase):
-    def test_columns_read_a_column_at_a_time_are_the_columns_read_by_row(self):
-        for seed in range(3):
-            setup, record, view, area_map, carriage = economy(seed, producer_count=150)
-            for index, producer_id in enumerate(sorted(record.producers)):
-                if index % 3 == 0:
-                    record.producers[producer_id] = dataclasses.replace(
-                        record.producers[producer_id], expected_prices={"good0": 1.5 + index}, net_earnings_history=(1.0, float(index)),
-                        revenue_history=(2.0,) * (index % 4))
-            arrays = YearArrays.build(setup, record, area_map, view)
-            bulk = arrays.producers
-            by_row = ProducerColumns._empty(bulk.ids, bulk.records, bulk.earnings_history.shape[1], bulk.matrices, bulk.tiles)
-            for position in range(len(bulk.ids)):
-                by_row._read(position)
-            for name in dataclasses.fields(bulk):
-                held, expected = getattr(bulk, name.name), getattr(by_row, name.name)
-                if isinstance(held, np.ndarray):
-                    np.testing.assert_equal(held, expected, err_msg=name.name)
-
-    def test_columns_rebuilt_after_an_entry_keep_the_rows_of_producers_that_stayed(self):
+    def test_columns_after_an_entry_and_an_exit_are_the_columns_of_a_fresh_read(self):
         setup, record, view, area_map, carriage = economy(4, producer_count=150)
         arrays = YearArrays.build(setup, record, area_map, view)
         before = arrays.producers

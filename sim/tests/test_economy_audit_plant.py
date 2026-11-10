@@ -7,6 +7,8 @@ import types as pytypes
 import unittest
 from unittest import mock
 
+from sim.economy.cohort_store import CohortStore
+from sim.economy.producer_store import ProducerStore
 from sim.economy import economy, producers, unit_cost
 from sim.book import Book
 from sim.economy.economy import Economy
@@ -32,7 +34,7 @@ def economy_of():
     """An Economy with only the pieces the plant methods read."""
     self = object.__new__(Economy)
     self.setup = pytypes.SimpleNamespace(recipes={"recipe": RECIPE}, currency_id="coin", unskilled_trade="labourer")
-    self.record = pytypes.SimpleNamespace(book=Book(), producers={"mill": producers.Producer("mill", "owner", "recipe", "t1", 1.0)}, cohorts={}, labour=LabourRecord(), credit=Credit({"mill": 1.0}))
+    self.record = pytypes.SimpleNamespace(book=Book(), producers=ProducerStore({"mill": producers.Producer("mill", "owner", "recipe", "t1", 1.0)}), cohorts=CohortStore(), labour=LabourRecord(), credit=Credit({"mill": 1.0}))
     self.area_map = pytypes.SimpleNamespace(goods=lambda: ("iron", "wood"))
     return self
 
@@ -56,9 +58,9 @@ class PlantBidCeilingTests(unittest.TestCase):
         view = pytypes.SimpleNamespace(interest_rate=lambda money: rate, area_of=lambda good, tile: "area",
                                        price=lambda good, area: 1.0)
         order_book = {}
-        with mock.patch.object(producers, "live_input_prices", return_value={}), \
-                mock.patch.object(producers, "live_wages", return_value={}), \
-                mock.patch.object(producers, "expected_output_prices", return_value={}), \
+        with mock.patch.object(producers, "live_input_prices_at", return_value={}), \
+                mock.patch.object(producers, "live_wages_at", return_value={}), \
+                mock.patch.object(producers, "expected_output_prices_at", return_value={}), \
                 mock.patch.object(unit_cost, "return_on_capital", return_value=0.5):
             rebuilding._rebuild_worn_plant(view, order_book)
         return order_book[("iron", "area")][0][0].maximum_price

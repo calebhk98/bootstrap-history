@@ -8,10 +8,15 @@ from typing import ClassVar, Dict, List, Tuple
 from sim.constants import declare
 
 from . import currency, households_basket, state_finance, trade_wages
-from .home_scope import home_cohorts
+from .goods_order_tables import STATE
+from .home_scope import home_working_by_tile
+from .labour_results_table import bought_value
+from .order_rows import OrderRows
+from .priced_need_list import priced_needs_of
 from .setup import labour_area
 from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
-from .types import Bid, EDGE_CONSUMPTION, GoodsMove, LabourBid
+from .labour_bid_sink import BidFigures, bid_objects, put_bids
+from .types import EDGE_CONSUMPTION, GoodsMove, LabourBid
 
 STATE_MAX_SHARE_OF_TILE_HOURS = declare(
     "STATE_MAX_SHARE_OF_TILE_HOURS", 0.3, kind="temporary_heuristic",
@@ -67,13 +72,12 @@ def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     budget.deficit = deficit
     budget.financed = supplied
     budget.issued_total += supplied.get("issue", 0.0) + supplied.get("debase", 0.0)
-    labour_bids.extend(wage_labour_bids(setup, record, view, budget.wage_budget))
+    put_bids(labour_bids, wage_bid_figures(setup, record, view, budget.wage_budget))
 
 
 def wages_paid(labour_results, state) -> float:
     """What the state paid for the hours it bought: its bought hours at their wage, over every trade's result."""
-    return math.fsum(fill.quantity * fill.price for result in labour_results for fill in result.fills
-                     if fill.agent == state and fill.side == "buy")
+    return bought_value(labour_results, state)
 
 
 def lapse_unspent_wages(budget: StateBudget, paid: float) -> None:
@@ -93,12 +97,16 @@ def _trades(setup):
 
 
 def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]:
-    """The home state's bids for hours, spread over the home cohorts' tiles and the trades it hires."""
+    """The home state's bids for hours as records (an edge: the workforce's figures)."""
+    return bid_objects(wage_bid_figures(setup, record, view, wage_budget))
+
+
+def wage_bid_figures(setup, record, view, wage_budget: float) -> List[BidFigures]:
+    """The home state's bids for hours, spread over the home cohorts' tiles and the trades it hires: (employer, trade, area, hours,
+    maximum wage) each."""
     if wage_budget <= 0.0:
         return []
-    working: Dict[str, float] = {}
-    for cohort in home_cohorts(setup, record):
-        working[cohort.tile] = working.get(cohort.tile, 0.0) + cohort.working_people
+    working = home_working_by_tile(setup, record)
     total_working = math.fsum(working.values())
     if total_working <= 0.0:
         return []
@@ -112,7 +120,7 @@ def wage_labour_bids(setup, record, view, wage_budget: float) -> List[LabourBid]
             hours = min(wage_budget / len(trades) * people / total_working / ceiling,
                         people * setup.working_hours_per_year * STATE_MAX_SHARE_OF_TILE_HOURS)
             if hours > 0.0:
-                bids.append(LabourBid(setup.state_agent, trade, area, hours, ceiling))
+                bids.append((setup.state_agent, trade, area, hours, ceiling))
     return bids
 
 
@@ -128,18 +136,22 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
         return
     tile = setup.capital_tile
     basket = setup.basket_for(tile)
-    priced = households_basket.need_prices(basket, view, tile)
-    weight_total = math.fsum(need.spec.budget_weight for need in priced)
+    priced = priced_needs_of(households_basket.tile_need_prices(setup, view, tile))
+    weight_total = math.fsum(spec.budget_weight for spec, _index, _first, _end in priced.blocks())
     if weight_total <= 0.0:
         return
     state = setup.state_agent
     moves = []
-    for need in priced:
-        need_budget = budget.goods_budget * need.spec.budget_weight / weight_total
-        for good, price, _effect, share in need.goods:
+    rows = OrderRows(order_book, STATE)
+    state_held = record.book.goods_held(state)      # the moves are posted after the loop, so the stores stay as read
+    names, prices, shares = priced.columns.names, priced.columns.price, priced.columns.share
+    for spec, _index, first, end in priced.blocks():
+        need_budget = budget.goods_budget * spec.budget_weight / weight_total
+        for row in range(first, end):
+            good, price, share = names[row], prices[row], shares[row]
             wanted = need_budget * share / price
             held = [(held_tile, quantity) for held_tile, quantity in
-                    sorted(record.book.holdings(state)["goods"].get(good, {}).items()) if quantity > 0.0]
+                    sorted(state_held.get(good, {}).items()) if quantity > 0.0]
             for held_tile, quantity in held:
                 reserved = min(quantity, kept.get(good, 0.0)) if held_tile == tile else 0.0
                 used = min(wanted, quantity - reserved)
@@ -149,10 +161,10 @@ def goods_bids(setup, record, view, area_map, order_book, kept=None) -> None:
                 continue
             budget.need_wanted[good] = budget.need_wanted.get(good, 0.0) + wanted
             area = view.area_of(good, tile)
-            order_book.setdefault((good, area), ([], []))[0].append(
-                Bid(state, good, area, tile, wanted if budget.real_programme else 0.0,
-                    0.0 if budget.real_programme else wanted, price, basket.substitution, wanted * price))
+            rows.bid(state, good, area, tile, wanted if budget.real_programme else 0.0,
+                     0.0 if budget.real_programme else wanted, price, basket.substitution, wanted * price)
     record.book.move_many(moves)
+    rows.write()
 
 
 def close_year(setup, record, ledger, tax_received: float) -> None:

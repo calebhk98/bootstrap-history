@@ -1,7 +1,7 @@
 """What a state asks the simulated world when it assesses revenue: its declared forms and the bases they read."""
-from typing import Any, Dict, FrozenSet, List, Optional, Tuple
+from typing import Any, Dict, FrozenSet, List, Optional, Sequence, Tuple
 
-from sim.agents.api import government_levers, observed_incomes, revenue
+from sim.agents.api import assessment_table, government_levers, observed_incomes, revenue
 from sim.geography.api import arable_hectares, territory, tiles_held
 from sim.labour.api import wage_provider
 from sim.reporting.api import output_rules
@@ -35,12 +35,12 @@ class Revenue:
 		total = sum(people.values())
 		return sum(count * away.get(tile, 0.0) for tile, count in people.items()) / total if total > 0.0 else 0.0
 
-	def revenue_assessments(self) -> List[revenue.Assessment]:
+	def revenue_assessments(self) -> Sequence[revenue.Assessment]:
 		return once(self._memo, "assessments", lambda: revenue.assess(self.world))  # type: ignore[no-any-return]
 
 	def state_revenue(self) -> float:
 		"""Money's worth of what the declared forms yield this year, coin and goods taken in kind alike."""
-		return sum(assessment.money for assessment in self.revenue_assessments())
+		return assessment_table.as_table(self.revenue_assessments()).total_money()
 
 	def society_output(self) -> float:
 		"""Yearly value of what the society's market sells: quantities this year at the opening's prices

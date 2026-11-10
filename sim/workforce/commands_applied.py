@@ -2,7 +2,7 @@
 from sim.assembly.api import Part
 from sim.reporting.api import RecordEvent
 
-from .state import ONCE_COMMISSION
+from .state import CLEARED_WAGE, ONCE_COMMISSION
 
 
 class Applying(Part):
@@ -45,6 +45,7 @@ class Applying(Part):
 		"""The unskilled hour's wage the clearing set: the last reading becomes the one before."""
 		self.world.cleared_wage_before = self.world.cleared_wage
 		self.world.cleared_wage = command.wage
+		self.bump(CLEARED_WAGE)
 
 	def hours_arrived(self, command):
 		"""The clearing filled the seat's one-year order of a purpose; the order is spent."""

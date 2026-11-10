@@ -9,6 +9,8 @@ from unittest import mock
 
 importlib.import_module("sim.economy.api")     # loads the package in its own import order
 from sim.economy import home_scope, state_budget, year_accounts
+from sim.economy.cohort_store import CohortStore
+from sim.economy.households_cohort import Cohort
 from sim.economy.goods_market_fills import make_fill, without_washed
 from sim.markets import port_late
 from sim.resources.costs import MineCosts
@@ -23,7 +25,7 @@ class RealProgrammeLevel(unittest.TestCase):
         setup = types.SimpleNamespace(state_policy=policy, currency_id="coin", state_agent="state")
         view = types.SimpleNamespace(chained_price_level=lambda money: 1.0, opening_wage_level=lambda money: 3.0)
         with mock.patch.object(state_budget.state_finance, "finance_deficit", lambda *arguments: (0.0, 0.0, {})), \
-                mock.patch.object(state_budget, "wage_labour_bids", lambda *arguments: []):
+                mock.patch.object(state_budget, "wage_bid_figures", lambda *arguments: []):
             state_budget.plan_year(setup, record, view, [])
         self.assertAlmostEqual(record.state_budget.goods_budget, 300.0)
 
@@ -40,8 +42,8 @@ class HomeCohorts(unittest.TestCase):
     def test_only_cohorts_on_home_tiles_are_home_cohorts(self):
         setup = types.SimpleNamespace(countries=lambda: ["home", "away"], civ_id="home",
                                       country_of=lambda tile: "home" if tile.startswith("h") else "away")
-        record = types.SimpleNamespace(cohorts={"a": types.SimpleNamespace(tile="h1"), "b": types.SimpleNamespace(tile="x1")})
-        self.assertEqual([cohort.tile for cohort in home_scope.home_cohorts(setup, record)], ["h1"])
+        record = types.SimpleNamespace(cohorts=CohortStore({"a": Cohort("a", "h1", 0, 1.0, 1.0, 1.0), "b": Cohort("b", "x1", 0, 1.0, 1.0, 1.0)}))
+        self.assertEqual(home_scope.home_cohort_ids(setup, record), ["a"])
 
     def test_a_tile_changing_hands_changes_the_answer(self):
         owners = {}

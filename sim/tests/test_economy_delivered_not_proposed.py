@@ -8,7 +8,9 @@ import types
 import unittest
 from unittest import mock
 
-from sim.economy import producers, producers_close, producers_working_capital, year_goods
+from sim.tests.goods_fixtures import goods_on
+from sim.economy.producer_store import ProducerStore
+from sim.economy import producers, producers_close, producers_working_capital, seller_offers, year_goods
 from sim.book import Book
 from sim.economy.market_memory import MarketMemory
 from sim.economy.types import EDGE_MINT, Bid, Fill, GoodsMove, LabourResult, Offer, Transfer
@@ -70,16 +72,18 @@ class DeliveredVolumeTests(unittest.TestCase):
         offers = [Offer("seller", "timber", "area", "t", 10.0, 1.0)]
         setup = types.SimpleNamespace(recipes={}, tax_forms=[], currency_id="coin", port_tile="t", capital_tile="t",
                                       opening_prices={}, state_agent="state")
-        record = types.SimpleNamespace(producers={}, cohorts={}, book=book, currency=CurrencySpec("coin", "fiat", None, 0.0, None), memory=MarketMemory(),
-                                       goods=types.SimpleNamespace(curves={}, volumes={}, unsold={}, unmet={}))
+        memory = MarketMemory()
+        record = types.SimpleNamespace(producers=ProducerStore(), cohorts={}, book=book, currency=CurrencySpec("coin", "fiat", None, 0.0, None), memory=memory,
+                                       goods=goods_on(memory))
         area_map = types.SimpleNamespace(area_of=lambda good, tile: "area", goods=lambda: {"timber"})
         ledger = YearLedger()
-        with mock.patch.object(year_goods.seller_offers, "strategic_offers", lambda s, r, v, b, o, p, costs=None: list(o)), \
+        with mock.patch.object(seller_offers, "strategic_offers", lambda s, r, v, b, o, p, costs=None: list(o)), \
                 mock.patch.object(year_goods.market_curves, "kept_areas", lambda *args: set()):
             year_goods.clear_goods(setup, record, None, area_map, {("timber", "area"): (bids, offers)}, {}, ledger)
         delivered = 10.0 - book.stock("seller", "timber", "t")
         self.assertLess(delivered, 10.0)        # the buyer could not pay in full
-        self.assertLess(delivered, ledger.clearings[0].quantity)
+        ledger.tables.flush()
+        self.assertLess(delivered, float(ledger.tables.rounds.quantity[0]))       # the round matched more than changed hands
         self.assertAlmostEqual(record.goods.volumes["timber|area"], delivered)
         self.assertAlmostEqual(record.memory.volume_weights["timber|area"], delivered)
 

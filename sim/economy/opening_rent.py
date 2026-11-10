@@ -12,7 +12,6 @@ from typing import Dict, Iterable, Mapping, Set, Tuple
 
 from . import producer_table
 from . import land_market, land_rents, opening_income, opening_runs, ownership, unit_cost
-from .replaced import replaced
 from .types import AgentId, GoodId, Recipe
 
 # numerical bounds, not behaviour: passes of the price fixed point (a dearer input raises the price of what uses it)
@@ -115,7 +114,7 @@ def settle(setup, record, view, plot_hectares_by_tile: Mapping[str, float],
         before = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, producer.yield_factor)
         after = opening_income.working_share(recipe, setup.opening_prices, setup.opening_wages, producer.yield_factor,
                                              producer.land_rent_per_run)
-        producer_table.put_producer(record.producers, replaced(producer, capacity_runs=producer.capacity_runs * before / after))
+        producer_table.set_fields(record.producers, producer_id, capacity_runs=producer.capacity_runs * before / after)
     owners = {tile: ownership.owner_cohort(record, tile) for tile in result.rent_per_hectare_by_tile}
     postings = land_market.rent_postings(result, demands, owners, setup.currency_id)
     record.land.rent_paid = land_rents.booked_by_tile(postings, record.producers)

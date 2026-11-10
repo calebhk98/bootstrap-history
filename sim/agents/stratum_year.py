@@ -6,7 +6,7 @@ settled by `settle_strata` after every stratum has had its turn, since a stratum
 import math
 from typing import Any, Dict
 
-from . import ledger
+from . import keep_boundary, ledger
 from .edges import EDGE_ECONOMY
 from .tuning_strata import (BIRTH_RATE, BIRTH_WELFARE_RESPONSE, BONDAGE_EXIT_RATE,
 							DEATH_RATE, EDUCATION_EFFORT_SCALE, FALL_WELFARE, FAMINE_DEATH_RATE,
@@ -169,34 +169,15 @@ def settle_moves(registry: Any) -> None:
 
 def settle_keep(registry: Any, world: Any) -> None:
 	"""Each keeper stratum is paid for the year's work of the bonded it holds, at the going pay of their
-	trade (bonded people naming no trade add none), and pays their food for the coming year."""
-	for actor in registry.of_kind("stratum"):
-		if not actor.is_bonded():
-			continue
-		owner = registry.actors.get(actor.neighbour_id(str(actor.record.plan.get("owner") or "")))
-		if owner is None or owner is actor:
-			continue
-		if actor.record.labour_product > 0.0:
-			ledger.transfer(registry.state.edge(EDGE_ECONOMY), owner, actor.record.labour_product, EDGE_ECONOMY)
-			actor.record.labour_product = 0.0
-		cost = actor.record.members * registry.countries.world_for(actor, world).people.subsistence_cost_per_person_year()
-		actor.record.allowance += ledger.pay_up_to(owner, actor, cost, "keep of bonded")   # a keeper pays what it can
+	trade (bonded people naming no trade add none), and pays their food for the coming year (a table, `keep_table.py`)."""
+	keep_boundary.pay_keeps(registry, world, top_up=False)
 
 
 def true_up_keep(registry: Any, world: Any) -> None:
 	"""Before the year's turns, each keeper makes up the bonded's food to the year's own prices: a keep set at
 	the end of last year used last year's prices, and a stratum founded since has none. A fall in prices
 	takes nothing back."""
-	for actor in registry.of_kind("stratum"):
-		if not actor.is_bonded():
-			continue
-		owner = registry.actors.get(actor.neighbour_id(str(actor.record.plan.get("owner") or "")))
-		if owner is None or owner is actor:
-			continue
-		cost = actor.record.members * registry.countries.world_for(actor, world).people.subsistence_cost_per_person_year()
-		shortfall = cost - actor.record.allowance
-		if shortfall > 0.0:
-			actor.record.allowance += ledger.pay_up_to(owner, actor, shortfall, "keep of bonded")
+	keep_boundary.pay_keeps(registry, world, top_up=True)
 
 
 def settle_strata(registry: Any, world: Any) -> None:

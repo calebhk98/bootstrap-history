@@ -7,6 +7,9 @@ from sim.demography.api import rules as demography_rules
 from sim.world import agriculture as farm_rules
 
 
+FARM_LAND = "farm_land"   # version channel: the cleared hectares and their quality (`set_farm_land` is the one writer)
+
+
 class FarmState(Part):
 
     def farm_land(self):
@@ -35,6 +38,7 @@ class FarmState(Part):
         farm_rules.Land(command.hectares, command.quality)   # validates the inputs before anything is stored
         self.world.cleared_hectares = float(command.hectares)
         self.world.cleared_quality = float(command.quality)
+        self.bump(FARM_LAND)
 
     def set_farm_technique(self, command):
         self.world.technique_this_year = command.technique

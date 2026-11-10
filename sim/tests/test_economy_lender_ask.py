@@ -6,6 +6,8 @@ QUICK_TOPIC = True
 
 import types
 import unittest
+
+from sim.tests.credit_stub import credit_of
 from unittest import mock
 
 from sim.economy import bank_spread, banks, credit, lender_ask, loss_memory
@@ -64,13 +66,13 @@ class BankSpreadTests(unittest.TestCase):
     def test_a_standing_bank_asks_its_depositors_rate_plus_the_spread_of_its_record(self):
         deposits = [Loan("deposit-a", "a", "bank", "coin", 300.0, rate=0.03, years_left=1e9, issued_year=0),
                     Loan("deposit-b", "b", "bank", "coin", 100.0, rate=0.07, years_left=1e9, issued_year=0)]
-        record = types.SimpleNamespace(credit=types.SimpleNamespace(loans=deposits))
+        record = types.SimpleNamespace(credit=credit_of(deposits))
         with mock.patch.object(banks, "spread_of", lambda *_args: 0.02):
             ask = banks.ask_of(record, types.SimpleNamespace(agent_id="bank"), "coin")
         self.assertAlmostEqual(ask, (300.0 * 0.03 + 100.0 * 0.07) / 400.0 + 0.02)
 
     def test_a_bank_asks_the_rate_of_the_funds_pledged_to_it_in_place_of_its_standing_deposits(self):
-        record = types.SimpleNamespace(credit=types.SimpleNamespace(loans=[Loan("deposit", "a", "bank", "coin", 300.0, rate=0.03, years_left=1e9, issued_year=0)]))
+        record = types.SimpleNamespace(credit=credit_of([Loan("deposit", "a", "bank", "coin", 300.0, rate=0.03, years_left=1e9, issued_year=0)]))
         pledged = [FundsOffer("c", "coin", 100.0, 0.05)]
         with mock.patch.object(banks, "spread_of", lambda *_args: 0.0):
             self.assertAlmostEqual(banks.ask_of(record, types.SimpleNamespace(agent_id="bank"), "coin", pledged), 0.05)
@@ -134,7 +136,7 @@ class AgingTests(unittest.TestCase):
         self.assertLess(rate, 1.1 * floor)
 
     def test_age_reads_the_record_and_leaves_the_loss_stock_alone(self):
-        record = types.SimpleNamespace(credit=types.SimpleNamespace(credit_losses={"lender": 100.0}, losses_seen={}, loss_rates={}, loans=[]))
+        record = types.SimpleNamespace(credit=credit_of(credit_losses={"lender": 100.0}, losses_seen={}, loss_rates={}))
         loss_memory.age(record, "coin")
         first = record.credit.loss_rates["lender"]
         loss_memory.age(record, "coin")

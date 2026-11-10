@@ -14,6 +14,7 @@ import unittest
 import numpy
 
 from sim.economy import goods_respend, goods_respend_basket_kernel, goods_respend_pack
+from sim.tests.respend_plain import plain_flatten_baskets
 from sim.world.need_basket import Basket, NeedSpec
 
 GOODS = ["bread", "cloth", "fish", "oil", "salt", "wine"]     # sorted, as the pack numbers them
@@ -28,6 +29,19 @@ def random_basket(rng):
         limits = tuple((good, rng.uniform(0.2, 0.7)) for good, _effect in goods if rng.random() < 0.3)
         needs.append(NeedSpec("need%d" % index, rng.choice([0.0, 1.0]), rng.uniform(0.5, 3.0), goods, share_limits=limits))
     return Basket(needs=tuple(needs), substitution=rng.choice([0.4, 1.0, 1.3, 2.0, 3.5]), need_data={})
+
+
+class FlattenedBasketsAreTheTripleLoops(unittest.TestCase):
+
+    def test_random_baskets(self):
+        rng = random.Random(9)
+        good_index = {good: index for index, good in enumerate(GOODS)}
+        for _case in range(200):
+            baskets = [random_basket(rng) for _each in range(rng.randint(1, 5))]
+            got, expected = goods_respend_pack.flatten_baskets(baskets, good_index), plain_flatten_baskets(baskets, good_index)
+            self.assertEqual([each.tolist() if hasattr(each, "tolist") else each for each in got],
+                             [each.tolist() if hasattr(each, "tolist") else each for each in expected])
+            self.assertEqual([each.dtype for each in got[:-1]], [each.dtype for each in expected[:-1]])
 
 
 class BuyerBidsAreTheRespendBids(unittest.TestCase):

@@ -17,7 +17,7 @@ with its interest. A draw beyond what the borrower may be lent, or beyond what l
 from typing import Any, Callable, Dict, List, Optional, Set, Tuple
 
 from sim.book import EDGE_EXCHANGE, ROUNDING_SHARE, Book, InsufficientFunds, Transfer, is_edge
-from sim.contracts import DEPOSIT, FACILITY, Contracts
+from sim.contracts import FACILITY, Contracts
 from sim.rekey import rekey
 
 from .bonds import BondBook
@@ -94,8 +94,7 @@ class Purses:
         """What the lender has out (its deposit and its loans); every lender's loans when none is named."""
         if lender is not None:
             return self.contracts.exposure(lender, COIN)
-        return (sum(contract.principal for contract in self.contracts.all() if contract.kind != DEPOSIT and contract.currency == COIN)
-                + self.bonds.total_paid())
+        return self.contracts.lent_total(COIN) + self.bonds.total_paid()
 
     def drawable(self, account: str, shortfall: float, taking: float = 0.0) -> float:
         """The most of a draw of `shortfall` the account is lent now: what its borrower may be lent (`limit`), and what the pool

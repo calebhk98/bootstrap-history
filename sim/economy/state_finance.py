@@ -46,7 +46,9 @@ def finance_deficit(policy, record, view, setup, deficit: float, revenue: float)
         if remaining <= 0.0:
             break
         if method == "borrow":
-            owed = sum(loan.principal + loan.arrears for loan in record.credit.loans if loan.borrower == state)
+            store = record.credit.contracts.loan_store
+            owing = store.rows_of(borrower=state)
+            owed = sum((store.table.principal[owing] + store.table.arrears[owing]).tolist())
             headroom = max(0.0, DEBT_LIMIT_YEARS_OF_REVENUE * revenue - owed)
             amount = min(remaining, headroom)
             if amount <= 0.0:

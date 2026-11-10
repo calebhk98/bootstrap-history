@@ -15,9 +15,14 @@ recipe's tile) and the capital charge. A market with no maker at all is entry_tr
 import math
 from typing import Dict, List, Mapping, Sequence, Set, Tuple
 
+import numpy
+
 from sim.constants import declare
 
+from . import year_bids
 from .entry import EntryPlan, UnmetDemand
+from .entry_bid_markets import makers_of, weigh
+from .goods_market_column import MarketColumn
 from .entry_trial import ENTRY_PRICE_MARGIN_SHARE, demand_at, reachable_capacity, recipes_by_cost, recipes_by_cost_many
 from .market_memory import market_key
 from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR
@@ -50,42 +55,47 @@ def gap_at_entry_price(bids: Sequence[Bid], entry_price: float, price_now: float
     return max(0.0, demand_at(bids, entry_price, price_now if price_now > 0.0 else entry_price) - capacity)
 
 
-def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tuple[GoodId, AreaId], Sequence[Bid]],
-                       planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None, costs=None) -> List[EntryPlan]:
+def keep_streaks(record, kept: Dict[str, int]) -> None:
+    """`record.goods.margin_years` holds the streaks of `kept` (market key -> years) and no other market's: a market not weighed this year
+    starts its wait again. The column (or dictionary) is changed in place."""
+    margin_years = record.goods.margin_years
+    if isinstance(margin_years, MarketColumn):
+        margin_years.replace_rows(margin_years.rows_of(list(kept)), numpy.array(list(kept.values()), dtype=numpy.float64))
+        return
+    for key in [key for key in margin_years if key not in kept]:
+        del margin_years[key]
+    margin_years.update(kept)
+
+
+def margin_entry_plans(setup, record, view, area_map, bids_by_market, planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None, costs=None,
+                       weighed=None) -> List[EntryPlan]:
     """Newcomers for each market with makers whose expected price has stood above its entry price for
     long enough: every recipe whose entry price is under the expected price, cheapest first, shares the
     year's growth. Keeps the market's streak in `record.goods.margin_years`; a market with no maker, no costable recipe, no price or no bids this year loses its streak.
-    With `costs` (entry_tables.EntryTables) the recipes of all the markets are costed at once."""
-    makers: Dict[GoodId, List[str]] = {}
-    for recipe_id in sorted(setup.recipes):
-        for good in setup.recipes[recipe_id].outputs:
-            makers.setdefault(good, []).append(recipe_id)
+    With `costs` (entry_tables.EntryTables) the recipes of all the markets are costed at once. `bids_by_market` is the year's bids block
+    (`year_bids.YearBids`) or a mapping of market to bids; `weighed` the block's markets as `entry_bid_markets.weigh` made them (made here when
+    not given). The demands at every entry price a market could reach are worked out first in one call (they do not depend on the plans
+    made); the plans are then taken market by market in order."""
+    block = year_bids.of(bids_by_market)
+    makers = makers_of(setup.recipes)
     skip = set(planned)
-    capacity_in = reachable_capacity(record, setup, costs)
-    areas_of: Dict[GoodId, Dict[AreaId, object]] = {}
-    known_goods = set(area_map.goods())
-    weighed = []
-    for (good, area_id), bids in sorted(bids_by_market.items()):
-        if good not in makers or good not in known_goods:
-            continue
-        if good not in areas_of:
-            areas_of[good] = {each.area_id: each for each in area_map.areas(good)}
-        area = areas_of[good].get(area_id)
-        capacity = capacity_in(good, area) if area is not None else 0.0
-        key = market_key(good, area_id)
-        if capacity <= 0.0:
-            record.goods.margin_years.pop(key, None)
-            continue                                        # no maker: the trial newcomer's market
-        price = view.price(good, area_id)
-        if price is None:
+    if weighed is None:
+        weighed = weigh(block, makers, area_map, view, reachable_capacity(record, setup, costs))
+    markets = []
+    for each in weighed:
+        key = market_key(each.good, each.area_id)
+        if each.capacity <= 0.0 or each.price is None:       # no maker: the trial newcomer's market; or no price
             record.goods.margin_years.pop(key, None)
             continue
-        weighed.append((good, area_id, bids, area, capacity, key, price))
-    ranked_all = recipes_by_cost_many(setup, record, view, [(good, area.anchor_tile, makers[good], MARGIN_ENTRY_GROWTH_SHARE * capacity)
-                                                           for good, _area_id, _bids, area, capacity, _key, _price in weighed], costs, recipes_by_cost)
-    plans = []
+        markets.append(each)
+    ranked_all = recipes_by_cost_many(setup, record, view, [(each.good, each.area.anchor_tile, makers[each.good],
+                                                            MARGIN_ENTRY_GROWTH_SHARE * each.capacity) for each in markets], costs, recipes_by_cost)
     counted: Set[str] = set()
-    for (good, area_id, bids, area, capacity, key, price), ranked in zip(weighed, ranked_all):
+    reached = []            # (market, expected price, [(recipe id, cost)] the market's price would let in, where its questions start)
+    places, prices, prices_now = [], [], []
+    for each, ranked in zip(markets, ranked_all):
+        key = market_key(each.good, each.area_id)
+        price = each.price
         expected = record.memory.usual_prices.get(key, price)
         if not ranked:
             record.goods.margin_years.pop(key, None)
@@ -96,26 +106,41 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market: Mapping[Tu
         record.goods.margin_years[key] = margin_streak(
             record.goods.margin_years.get(key, 0), min(expected, price) if price > 0.0 else expected,
             ranked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE))
-        if (good, area_id) in skip or not margin_has_lasted(record.goods.margin_years[key]):
+        if (each.good, each.area_id) in skip or not margin_has_lasted(record.goods.margin_years[key]):
             continue
-        room = MARGIN_ENTRY_GROWTH_SHARE * capacity
+        ceiling = min(expected, price if price > 0.0 else expected)
+        entries = []
         for recipe_id, cost in ranked:
             entry_price = cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)
-            if entry_price >= min(expected, price if price > 0.0 else expected) or room <= 0.0:
+            if entry_price >= ceiling:
                 break
-            gap = gap_at_entry_price(bids, entry_price, price, capacity)
+            entries.append((recipe_id, cost))
+            places.append(each.place)
+            prices.append(entry_price)
+            prices_now.append(price if price > 0.0 else entry_price)
+        reached.append((each, expected, entries, len(places) - len(entries)))
+    demands = block.demand_at_many(places, prices, prices_now).tolist()
+    plans = []
+    for each, expected, entries, asked in reached:
+        capacity = each.capacity
+        room = MARGIN_ENTRY_GROWTH_SHARE * capacity
+        for recipe_id, cost in entries:
+            if room <= 0.0:
+                break
+            gap = max(0.0, demands[asked] - capacity)
+            asked += 1
             added = min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
-            runs = added / setup.recipes[recipe_id].outputs[good]
-            tile = area.anchor_tile
+            runs = added / setup.recipes[recipe_id].outputs[each.good]
+            tile = each.area.anchor_tile
             if siting is not None and runs > 0.0:
-                picked = siting(recipe_id, UnmetDemand(good, area_id, area.anchor_tile, added), runs)
+                picked = siting(recipe_id, UnmetDemand(each.good, each.area_id, each.area.anchor_tile, added), runs)
                 if picked is None:
                     continue
                 tile, runs = picked
             if runs > 0.0 and math.isfinite(runs):
-                plans.append(EntryPlan(recipe_id, tile, good, runs, (expected - cost) / cost))
-                room -= runs * setup.recipes[recipe_id].outputs[good]
-                capacity += runs * setup.recipes[recipe_id].outputs[good]
+                plans.append(EntryPlan(recipe_id, tile, each.good, runs, (expected - cost) / cost))
+                room -= runs * setup.recipes[recipe_id].outputs[each.good]
+                capacity += runs * setup.recipes[recipe_id].outputs[each.good]
     for key in set(record.goods.margin_years) - counted:     # a market that was not weighed this year starts its wait again
         del record.goods.margin_years[key]
     return plans

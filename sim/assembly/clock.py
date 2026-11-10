@@ -13,6 +13,7 @@ class Clock:
 		self.shadow_every = shadow_every              # recompute every Nth cached read and compare; 0 turns it off
 		self._world: Dict[Tuple[str, str], int] = {}
 		self._seat: Dict[Tuple[str, str, Optional[str]], int] = {}
+		self._replaced: Dict[str, int] = {}           # seat id -> times a seat under that id was put there whole (a handover, a new seat)
 
 	def bump(self, module_id: str, channel: str) -> None:
 		key = (module_id, channel)
@@ -22,6 +23,11 @@ class Clock:
 	def bump_seat(self, module_id: str, channel: str, seat_id: Optional[str] = None) -> None:
 		key = (module_id, channel, self.acting_seat if seat_id is None else seat_id)
 		self._seat[key] = self._seat.get(key, 0) + 1
+		self.epoch += 1
+
+	def seat_replaced(self, seat_id: str) -> None:
+		"""The state under `seat_id` is another seat's now: what was cached for that seat recomputes."""
+		self._replaced[seat_id] = self._replaced.get(seat_id, 0) + 1
 		self.epoch += 1
 
 	def act_as(self, seat_id: Optional[str]) -> None:
@@ -39,3 +45,7 @@ class Clock:
 		if not seat_scoped:
 			return (world, 0)
 		return (world, self._seat.get((module_id, channel, self.acting_seat), 0))
+
+	def replaced(self, seat_id: Optional[str]) -> int:
+		"""How many times the state under `seat_id` was put there whole (`seat_replaced`)."""
+		return self._replaced.get(seat_id, 0)

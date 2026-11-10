@@ -8,12 +8,13 @@ WALL = "two-way"  # nothing here reaches sim/engine/; the markets module's port 
 
 import math
 
-from . import route_dues, carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, need_roles, labour_state, land_rents, market_curves, prices_at as tile_prices, taxes, tile_costs, workforce_settle
+from . import route_dues, carried_book, carriage_wear, national_prices, crop_sites, unit_cost, country_figures, diagnostics, late_recipes, opening_metal, household_grinding, households, households_work, need_roles, labour_state, land_rents, market_curves, response_memo, prices_at as tile_prices, taxes, tile_costs, workforce_settle
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
 from . import banks
 from .banks import DEPOSIT_BANKING
+from .cohort_reads import figures_in_id_order
 from .funds import POOLED_FUNDS
 from .insurance import INSURANCE_UNDERWRITING, RISK_POOLING
 from .secondary_trade import BOND_MARKET, SHARE_TRADING
@@ -23,9 +24,19 @@ from .currency import currency_from_coin_standard
 from .economy import Economy
 from . import market_memory as market_memory_module
 from .market_memory import KEY_SEPARATOR, market_key
+from .merchants_dispatch_tables import (DispatchLegs, DispatchMerchants, DispatchPairs, DispatchRoutes, LEGS as DISPATCH_LEGS,      # the dispatch tables (kernel_signatures declares the kernels only a fleet year reaches)
+                                        MERCHANTS as DISPATCH_MERCHANTS, PAIRS as DISPATCH_PAIRS, ROUTES as DISPATCH_ROUTES)
+from .market_table_specs import GOODS_MARKETS, GoodsMarkets      # the goods market table's spec and type (kernel_signatures declares its kernels from them)
+from .priced_need_tables import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows      # the priced-need batch's specs and types (kernel_signatures declares its kernel from them)
+from . import entry_plan_steps, entry_plan_table      # entry's plan tables (kernel_signatures declares the plan kernels from them)
+from . import household_offer_kernels      # the household offer kernels (kernel_signatures declares the ones no fixture year reaches)
 from .opening_rate import opening_market_rate
+from .bid_columns import BidColumns      # the price search kernels' input (kernel_signatures declares its kernels from a sample)
+from .crossing_columns import demand_columns
+from .year_ledger_store import LedgerTables      # the year ledger's tables (kernel_signatures declares its kernels from a fresh one)
 from .metal_stock import COIN_WEAR_PER_YEAR
 from .notional import costing_wages, shown_prices, shown_prices_with_kinds
+from .producer_views import capacity_units_by_material, producer_list
 from .producers import Producer, expected_output_prices, live_input_prices, live_wages
 from .protocols import AgentOrders, EconomyYearInputs
 from .recipes import recipes_from_production_data
@@ -66,7 +77,7 @@ __all__ = [
     "person_equivalent_unemployment", "labour_market_rows",
     "actor_fundable_amount", "risk_premium", "lender_listing", "note_pool_posting",
     "found_bank_from_outside", "people_by_trade", "people_by_tile_and_trade", "hours_paid_by_employer", "add_workers", "hours_offered_in_area_of",
-    "all_producers", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
+    "all_producers", "producer_list", "capacity_units_by_material", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
     "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
     "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
@@ -171,6 +182,17 @@ def hours_paid_by_employer(economy, employer):
     return dict(economy.record.labour.hours_paid_by_employer.get(employer, {}))
 
 
+def watch_memory_writes(callback):
+    """Call `callback()` after every write to the market memory (a bound method, held weakly): a reader that keeps what it read from
+    the memory (the markets module's wage views) learns when to read again."""
+    market_memory_module.add_write_listener(callback)
+
+
+def note_memory_changed():
+    """The memory's answers changed without a write to it (the economy was built or finished opening): its watchers are told."""
+    market_memory_module.note_written()
+
+
 def add_workers(economy, tile, trade, people):
     """`people` more workers of `trade` in the labour core, on `tile`'s labour area: they are hired at the clearing like anyone.
     Worker-weighted wages and the figures kept between steps read the workforce, so the memory's write stamp moves."""
@@ -184,15 +206,10 @@ def labour_market_rows(economy):
     of the hours and people) is left out, so the unsold-hours share, which keeps it, is a different population."""
     record = economy.record
     plot = labour_state.plot_trade(economy.setup)
-    rows = []
-    for key in sorted(record.labour.hours_idle):
-        trade, area = key.split(KEY_SEPARATOR, 1)
-        if trade == plot:
-            continue
-        people = math.fsum(record.labour.workforce.workers.get(area, {}).get(trade, ()))
-        hired = record.labour.hours_cleared_in(key)
-        rows.append((people, hired + record.labour.hours_idle[key], hired))
-    return rows
+    keys = [key for key in sorted(record.labour.hours_idle) if key.split(KEY_SEPARATOR, 1)[0] != plot]
+    people = record.labour.people_in_markets(keys)
+    hired = record.labour.hours_cleared_in_markets(keys)
+    return [(workers, hours + record.labour.hours_idle[key], hours) for key, workers, hours in zip(keys, people, hired)]
 
 
 def hours_offered_in_area_of(economy, trade, tile):
@@ -255,7 +272,7 @@ def _ranked_cohorts(economy, country=None):
     """The home country's household cohorts, poorest per head first (ties by people, then id)."""
     scope = country_figures.home_when_shared(economy, country)
     tiles = country_figures.country_tiles(economy, scope)
-    cohorts = [cohort for cohort in economy.record.cohorts.values() if cohort.people > 0.0 and cohort.tile in tiles]
+    cohorts = [cohort for cohort in figures_in_id_order(economy.record.cohorts) if cohort.people > 0.0 and cohort.tile in tiles]
     return sorted(cohorts, key=lambda cohort: (cohort.last_year_income / cohort.people, cohort.people, cohort.agent_id))
 
 
@@ -306,7 +323,7 @@ def price_response(economy, good, landed_units, taken_units, tile=None):
     if curve is None:
         return None
     memory = economy.record.memory
-    factor = market_curves.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
+    factor = response_memo.price_response(curve, good, memory.prices.get(market_key(good, area)), landed_units, taken_units)
     if factor is None or not math.isfinite(factor):
         return factor
     return 1.0 + national_prices.port_share(economy.record, good, market_key(good, area)) * (factor - 1.0)
@@ -489,7 +506,7 @@ def settle_agent_takings(economy, agent_id, edge_id, tile_note="agent's takings"
     if proceeds > 0.0:
         book.transfer(Transfer(agent_id, edge_id, money, proceeds, tile_note))
     returns = [GoodsMove(agent_id, edge_id, good, tile, quantity, "unsold concern output")
-               for good, tiles in book.holdings(agent_id)["goods"].items()
+               for good, tiles in book.goods_held(agent_id).items()
                for tile, quantity in tiles.items() if quantity > 0.0]
     book.move_many(returns)
     return proceeds

@@ -6,6 +6,10 @@ QUICK_TOPIC = True
 import types
 import unittest
 
+from sim.economy.cohort_store import CohortStore
+from sim.economy.households_cohort import Cohort
+from sim.economy.producer_store import ProducerStore
+from sim.economy.producers import Producer
 from sim.economy import mint
 from sim.economy.metal_stock import COIN_WEAR_PER_YEAR, METAL_GOODS_LOSS_PER_YEAR
 from sim.economy.types import CurrencySpec, GoodSpec
@@ -24,6 +28,9 @@ class StandInBook:
     def holdings(self, agent):
         return {"goods": {}}
 
+    def goods_held(self, agent):
+        return {}
+
     def edge_net(self, edge, currency_id):
         return 0.0
 
@@ -35,8 +42,8 @@ def setup_and_record(regime, cash_target=40.0):
     setup = types.SimpleNamespace(specs={METAL: GoodSpec(METAL, 1.0, SPOILAGE, 0.0, "metal")}, tiles={"town": None}, currency_id="coin", mint_recipe=None)
     record = types.SimpleNamespace(
         currency=spec, book=StandInBook(),
-        cohorts={name: types.SimpleNamespace(cash_target=cash_target) for name in ("a", "b")},
-        producers={"p": types.SimpleNamespace(cash_target=cash_target)},
+        cohorts=CohortStore({name: Cohort(name, "town", 0, 1.0, 1.0, 1.0, cash_target=cash_target) for name in ("a", "b")}),
+        producers=ProducerStore({"p": Producer("p", "owner", "recipe", "tile", 1.0, cash_target=cash_target)}),
         merchants={"m": types.SimpleNamespace(capital_base=cash_target)})
     return setup, record
 

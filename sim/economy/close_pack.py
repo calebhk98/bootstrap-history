@@ -1,14 +1,17 @@
 """What the close kernel reads that the year arrays do not hold: the year's flows (ledger), the book's stocks and balances,
 the loans and the clearing prices, packed once per close into arrays indexed like the producer columns.
 
-`pack(...)` returns a `ClosePack`; `constants_array()` is the rules' declared numbers in the order close_kernel names them."""
-import math
+`pack(...)` returns a `ClosePack`; `constants_array()` is the rules' declared numbers in the order close_kernel names them.
+The book and the ledger are read by the kernels of close_pack_kernels.py, one call each for every producer."""
 from dataclasses import dataclass
-from typing import Dict, Mapping
 
 import numpy as np
 
-from . import ask_adjust, credit, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
+from sim.loans.close_kernel import producer_loans
+
+from . import ask_adjust, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
+from .close_pack_markets import clearing_and_unmet, columns_of_markets
+from .close_pack_kernels import held_goods, pair_values_by_slot, slot_stocks
 from .year_arrays import YearArrays
 from .year_arrays_memory import NO_AREA
 
@@ -49,36 +52,42 @@ class ClosePack:
     currencies: list
 
 
-def slot_of_good(matrices) -> list:
-    """For each recipe row, {good column: slot}."""
-    return [{int(column): slot for slot, column in enumerate(row) if column >= 0} for row in matrices.slot_goods]
-
-
-def _fill_by_slot(target: np.ndarray, flows: Mapping, arrays: YearArrays, slots_of_recipe) -> None:
-    """`flows` keyed (agent, good): into target[producer row, the recipe's slot of the good]."""
-    columns = arrays.producers
-    goods_row = arrays.matrices.goods.row
-    for (agent, good), quantity in flows.items():
-        row = columns.row.get(agent)
-        column = goods_row.get(good)
-        if row is None or column is None:
-            continue
-        slot = slots_of_recipe[columns.recipe_row[row]].get(column)
-        if slot is not None:
-            target[row, slot] += quantity
-
-
 def _loans(record, arrays: YearArrays, pack_arrays) -> None:
+    """Each producer's interest, commitments, arrears and debt on its loans (one kernel pass over the loan table, loans in table order)."""
     interest, commitments, arrears, debt = pack_arrays
+    store = record.credit.contracts.loan_store
     row_of = arrays.producers.row
-    for loan in record.credit.loans:
-        row = row_of.get(loan.borrower)
-        if row is None:
-            continue
-        interest[row] += loan.principal * loan.rate
-        commitments[row] += loan.principal * loan.rate + credit.installment_of(loan)
-        arrears[row] += loan.arrears
-        debt[row] += loan.principal + loan.arrears
+    producer_row = np.array([row_of.get(name, -1) for name in store.agents.name_list], dtype=np.int64)
+    producer_loans(store.table, len(store), producer_row, interest, commitments, arrears, debt)
+
+
+def _currencies(setup, view, arrays: YearArrays, area_column: np.ndarray):
+    """(the currency of each producer's market, as a list of names): a producer's area has one currency; a producer with no area
+    has the currency of the area of its recipe's first output on its tile. Asked once for each distinct place."""
+    columns = arrays.producers
+    recipes = arrays.matrices.recipes.ids
+    area_ids = arrays.area_index.areas.ids
+    place = np.where(area_column != NO_AREA, area_column, -1 - (columns.recipe_row * len(arrays.tiles.ids) + columns.tile_row))
+    _places, first_row, inverse = np.unique(place, return_index=True, return_inverse=True)
+    names = []
+    tiles = columns.tile_names()
+    for row in first_row.tolist():
+        area = int(area_column[row])
+        if area != NO_AREA:
+            names.append(view.currency_of(area_ids[area]))
+        else:
+            names.append(view.currency_of(view.area_of(min(setup.recipes[recipes[columns.recipe_row[row]]].outputs), tiles[row])))
+    return names, inverse.reshape(-1)
+
+
+def _slot_keys(matrices, subkey_of_column: np.ndarray, slot_columns: np.ndarray) -> np.ndarray:
+    """For each recipe and slot, the subkey of the good or trade in the slot (-1 where there is none)."""
+    return np.where(slot_columns >= 0, subkey_of_column[np.maximum(slot_columns, 0)], -1)
+
+
+def _subkeys(names, numbers) -> np.ndarray:
+    """The number each name has in `numbers` (a dict of name to number), -1 for a name without one."""
+    return np.array([numbers.get(name, -1) for name in names], dtype=np.int64)
 
 
 def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
@@ -92,83 +101,53 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
     first = matrices.first_output[columns.recipe_row]
     area_column = arrays.area_index.of_good_tile[first, columns.tile_row]
     rate_of = np.where(area_column == NO_AREA, own_rate, memory.rate[np.maximum(area_column, 0)])
-    currencies: Dict[object, str] = {}
-    currency_of_row = []
-    balance = book.balance
-    goods_of = book.goods_of
-    cash_in_currency_list, cash_in_money_list = [], []
-    slots_of_row = [[(slot, matrices.goods.ids[column]) for slot, column in enumerate(row) if column >= 0] for row in matrices.slot_goods]
-    stock_rows, stock_slots, stock_values = [], [], []
-    held_start = [0]
-    held_good, held_quantity = [], []
+    currency_names, currency_index = _currencies(setup, view, arrays, area_column)
+    currencies = [currency_names[each] for each in currency_index.tolist()]
+    agent_numbers = book.rows_of(columns.ids)
+    cash_in_money = book.balances_at(agent_numbers, money)
+    cash_in_currency = book.balances_by_currency(agent_numbers, currency_index, currency_names)
     goods_row = matrices.goods.row
-    recipe_list, tile_list, area_list = columns.recipe_row.tolist(), columns.tile_row.tolist(), area_column.tolist()
-    area_ids = arrays.area_index.areas.ids
-    for position, producer_id in enumerate(columns.ids):
-        producer = columns.records[position]
-        area = area_list[position]
-        key = area if area != NO_AREA else (recipe_list[position], tile_list[position])     # an area has one currency
-        currency = currencies.get(key)
-        if currency is None:
-            currency = currencies[key] = view.currency_of(
-                area_ids[area] if area != NO_AREA else view.area_of(min(setup.recipes[producer.recipe_id].outputs), producer.tile))
-        currency_of_row.append(currency)
-        cash_in_currency_list.append(balance(producer_id, currency))
-        cash_in_money_list.append(balance(producer_id, money))
-        held = goods_of(producer_id)
-        if held:
-            tile = producer.tile
-            for slot, good in slots_of_row[recipe_list[position]]:
-                by_tile = held.get(good)
-                if by_tile:
-                    quantity = by_tile.get(tile)
-                    if quantity:
-                        stock_rows.append(position)
-                        stock_slots.append(slot)
-                        stock_values.append(quantity)
-            for good in sorted(held):        # goods in name order, whatever order the book holds them in
-                column = goods_row.get(good)
-                tiles = held[good]
-                if column is not None and any(value != 0.0 for value in tiles.values()):
-                    held_good.append(column)
-                    held_quantity.append(math.fsum(value for value in tiles.values() if value > 0.0))
-        held_start.append(len(held_good))
-    cash_in_currency, cash_in_money = np.array(cash_in_currency_list), np.array(cash_in_money_list)
-    held_start = np.array(held_start, dtype=np.int64)
-    stock = np.zeros((count, matrices.good_slots))
-    stock[stock_rows, stock_slots] = stock_values
-    revenue = np.array([ledger.sales_in.get(each, 0.0) for each in columns.ids])
-    running = np.array([ledger.running_costs(each) for each in columns.ids])
-    sold = np.zeros_like(stock)
-    made = np.zeros_like(stock)
-    slots_of_recipe = slot_of_good(matrices)
-    _fill_by_slot(sold, ledger.sold, arrays, slots_of_recipe)
-    _fill_by_slot(made, ledger.output, arrays, slots_of_recipe)
-    hours = np.zeros((count, matrices.slot_trades.shape[1]))
-    trade_slots = [{int(column): slot for slot, column in enumerate(row) if column >= 0} for row in matrices.slot_trades]
-    for agent, trades in ledger.hours_hired.items():
-        row = columns.row.get(agent)
-        if row is None:
-            continue
-        slots = trade_slots[columns.recipe_row[row]]
-        for trade, value in trades.items():
-            slot = slots.get(matrices.trades.row.get(trade, -1))
-            if slot is not None:
-                hours[row, slot] += value
+    book_goods = book.good_ids.numbers
+    book_good_of_column = _subkeys(matrices.goods.ids, book_goods)
+    column_of_book_good = np.full(len(book.good_ids), -1, dtype=np.int64)
+    for name, column in goods_row.items():
+        number = book_goods.get(name)
+        if number is not None:
+            column_of_book_good[number] = column
+    tile_numbers = _subkeys(arrays.tiles.ids, book.tile_ids.numbers)[columns.tile_row]
+    good_keys = _slot_keys(matrices, book_good_of_column, matrices.slot_goods)
+    stock = slot_stocks(book.stock_rows.table, book.stock_rows.index, agent_numbers, tile_numbers, columns.recipe_row, good_keys)
+    held_start, held_good, held_quantity = held_goods(book.agent_table.first_slot, book.stock_rows.table, agent_numbers,
+                                                      column_of_book_good)
+    ledger.tables.flush()
+    ledger_book = ledger.tables.book
+    if ledger_book is book:
+        ledger_agents, ledger_good_keys = agent_numbers, good_keys
+    else:       # a ledger with a numbering of its own (a test's)
+        ledger_agents = _subkeys(columns.ids, ledger_book.agent_ids.numbers)
+        ledger_good_keys = _slot_keys(matrices, _subkeys(matrices.goods.ids, ledger_book.good_ids.numbers), matrices.slot_goods)
+    figures = ledger.tables.figures
+    revenue = figure_values(figures.sales_in, figures.order_sales_in, ledger_agents)
+    paid = figure_values(figures.money_out, figures.order_money_out, ledger_agents)
+    plant = figure_values(figures.plant_spend, figures.order_plant_spend, ledger_agents)
+    running = np.maximum(0.0, paid - plant)
+    pairs = ledger.tables.pairs
+    sold = _pair_figures(pairs["sold"], ledger_agents, columns.recipe_row, ledger_good_keys)
+    made = _pair_figures(pairs["output"], ledger_agents, columns.recipe_row, ledger_good_keys)
+    trade_keys = _slot_keys(matrices, _subkeys(matrices.trades.ids, ledger.tables.markets.trades.numbers), matrices.slot_trades)
+    hours = _pair_figures(pairs["hours_hired"], ledger_agents, columns.recipe_row, trade_keys)
     interest, commitments, arrears, debt = (np.zeros(count) for _name in range(4))
     _loans(record, arrays, (interest, commitments, arrears, debt))
     shape = memory.price.shape
-    clearing, unmet = np.full(shape, np.nan), np.zeros(shape)
-    traded, round_prices = ledger.market_totals()
-    area_row = arrays.area_index.areas.row
-    for (good, area), price in round_prices.items():
-        column, good_column = area_row.get(area), goods_row.get(good)
-        if column is not None and good_column is not None and traded[(good, area)] > 0.0 and price is not None:
-            clearing[good_column, column] = price
-    for (good, area), quantity in ledger.unmet_demand.items():
-        column, good_column = area_row.get(area), goods_row.get(good)
-        if column is not None and good_column is not None:
-            unmet[good_column, column] = quantity
+    delivered, priced = ledger.market_total_columns()
+    market_tables = ledger.tables.markets
+    market_figures = ledger.tables.market_figures
+    market_count = min(len(market_tables.goods_markets), int(market_figures.row_count[0]))
+    table = market_tables.goods_table
+    good_column, area_column = columns_of_markets(table.first[:market_count], table.area[:market_count], market_tables.goods.name_list,
+                                                  market_tables.areas.name_list, goods_row, arrays.area_index.areas.row)
+    clearing, unmet = clearing_and_unmet(shape, delivered, priced, market_figures.unmet, market_figures.order_unmet,
+                                         good_column, area_column)
     spoilage = np.zeros(len(matrices.goods.ids))
     ground = np.zeros(len(matrices.goods.ids), dtype=bool)
     for good, spec in setup.specs.items():
@@ -177,5 +156,15 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
             spoilage[column] = spec.spoilage_per_year
             ground[column] = not spec.portable
     return ClosePack(rate_of, cash_in_currency, cash_in_money, revenue, running, stock, sold, made, hours, interest, commitments,
-                     arrears, debt, held_start, np.array(held_good, dtype=np.int64), np.array(held_quantity), clearing, unmet,
-                     spoilage, ground, currency_of_row)
+                     arrears, debt, held_start, held_good, held_quantity, clearing, unmet, spoilage, ground, currencies)
+
+
+def figure_values(values: np.ndarray, orders: np.ndarray, agent_numbers: np.ndarray) -> np.ndarray:
+    """An agent figure of each agent number: zero for an agent (or number -1) that is not a member of the figure."""
+    inside = (agent_numbers >= 0) & (agent_numbers < len(orders))
+    safe = np.where(inside, agent_numbers, 0)
+    return np.where(inside & (orders[safe] != 0), values[safe], 0.0)
+
+
+def _pair_figures(store, agent_numbers: np.ndarray, recipe_rows: np.ndarray, slot_keys: np.ndarray) -> np.ndarray:
+    return pair_values_by_slot(store.rows.table, store.rows.index, agent_numbers, recipe_rows, slot_keys)

@@ -96,7 +96,17 @@ def _built_worths(setup, record, view) -> Dict[AgentId, float]:
 
 def holdings(setup, record, view, arrays=None) -> Dict[AgentId, float]:
     """Each cohort's share of the net worth of the producers its tile's owners hold. What holders of a producer's
-    shares own is valued at the share index price (household_portfolio.py), the price their portfolio orders trade at."""
+    shares own is valued at the share index price (household_portfolio.py), the price their portfolio orders trade at. With the
+    year's `arrays` the split is one kernel (year_arrays_holdings.py); without, it is `share_out_by_producer`."""
+    worths = producer_worths(setup, record, view, arrays)
+    if arrays is not None:
+        from .year_arrays_holdings import share_out
+        return share_out(record, worths)
+    return share_out_by_producer(record, worths)
+
+
+def share_out_by_producer(record, worths: Dict[AgentId, float]) -> Dict[AgentId, float]:
+    """`holdings` over the producers' `worths`, producer by producer."""
     shares_of_tile: Dict[str, Tuple[float, list]] = {}      # tile -> (sum of ownership shares, [(cohort id, share)])
     for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
         total, parts = shares_of_tile.setdefault(cohort.tile, (0.0, []))
@@ -105,7 +115,7 @@ def holdings(setup, record, view, arrays=None) -> Dict[AgentId, float]:
     factor = record.capital_markets.capital.share_price_factor
     outside_shares = record.capital_markets.shares
     held: Dict[AgentId, float] = {}
-    for producer_id, worth in producer_worths(setup, record, view, arrays).items():
+    for producer_id, worth in worths.items():
         owner = record.cohorts[record.producers[producer_id].owner]
         outside = outside_shares.get(producer_id)
         if outside:                      # what holders of its shares own is theirs, not the owner tile's

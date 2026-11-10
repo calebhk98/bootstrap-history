@@ -8,7 +8,7 @@ move, and the share is one."""
 import math
 from typing import Callable, Dict, Mapping, Optional, Sequence, Tuple
 
-from . import goods_market
+from . import bid_columns, crossing_price, goods_market
 from .types import AreaId, Bid, GoodId, Offer, TileId
 
 SELLER = "expansion:price"
@@ -16,18 +16,37 @@ PriceShare = Callable[[GoodId, float], float]     # (good, units added a year) -
 
 
 class PreparedMarket:
-    """One market's buyers prepared once, with the prices already found for quantities offered to them."""
+    """One market's buyers prepared once, with the prices already found for quantities offered to them. The search runs on the
+    bids' columns (crossing_price.py); only a figure the kernels do not reproduce makes `Buyers` of the `Bid` objects."""
 
     def __init__(self, bids: Sequence[Bid]):
-        self.buyers = goods_market.Buyers(bids, None)
+        self.bids = bids
+        self._demand: Optional[crossing_price.ColumnDemand] = None
+        self._objects: Optional[goods_market.Buyers] = None
         self.prices: Dict[Tuple[GoodId, AreaId, float], Optional[float]] = {}
+
+    @property
+    def buyers(self) -> goods_market.Buyers:
+        """The bids as objects in clearing order, built when the columns cannot answer."""
+        if self._objects is None:
+            self._objects = goods_market.Buyers(self.bids, None)
+        return self._objects
 
     def price_with_supply(self, good: GoodId, area: AreaId, quantity: float) -> Optional[float]:
         key = (good, area, quantity)
         price = self.prices.get(key)
         if price is None:
-            price = self.prices[key] = price_with_supply(None, good, area, quantity, self.buyers)
+            price = self.prices[key] = self._price(good, area, quantity)
         return price
+
+    def _price(self, good: GoodId, area: AreaId, quantity: float) -> Optional[float]:
+        try:
+            if self._demand is None:
+                self._demand = crossing_price.ColumnDemand(bid_columns.columns_of(self.bids), bid_columns.clearing_order_of(self.bids),
+                                                           goods_market.MINIMUM_PRICE_SHARE_OF_REFERENCE)
+            return self._demand.price_with_supply(quantity)
+        except crossing_price.NeedsObjects:
+            return price_with_supply(None, good, area, quantity, self.buyers)
 
 
 def price_with_supply(bids: Optional[Sequence[Bid]], good: GoodId, area: AreaId, quantity: float,

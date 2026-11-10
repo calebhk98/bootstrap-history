@@ -10,12 +10,17 @@ from the memory's prices, not these; the engine's agents are shown these (`price
 import math
 from typing import Dict, Optional, Set, Tuple
 
+import numpy
+
 from sim.constants import declare
 
 from . import trade_wages, unit_cost
 from .market_memory import KEY_SEPARATOR, PRICE_REMEMBERED, PRICE_SMOOTHED_TRADE, RECENT_TRADE_YEARS, MarketMemory
+from .market_column_kernels import add_in_order_by_group
+from .market_store import figures_for
+from .notional_kernel import COSTS_ONLY, ESTIMATES, cost_estimates
 from .national_prices import national_prices, national_wages, usual_volumes
-from .recipes import input_depth_order
+from .recipes import input_depth_order, recipes_making
 
 KIND_MAKING_COST_ESTIMATE = "making_cost_estimate"   # what the cheapest recipe costs at today's prices; nothing traded lately
 KIND_THIN_TRADE_BLEND = "thin_trade_blend"           # a market price blended toward making cost; the market trades a sliver
@@ -31,7 +36,7 @@ THIN_MARKET_SHARE_OF_OPENING_DEMAND = declare(
 
 def recently_traded_goods(memory: MarketMemory) -> Set[str]:
     """Goods with a market that cleared within RECENT_TRADE_YEARS."""
-    return {key.split(KEY_SEPARATOR, 1)[0] for key in memory.trade_age if memory.traded_within(key, RECENT_TRADE_YEARS)}
+    return memory.goods_traded_within(RECENT_TRADE_YEARS)
 
 
 def _estimated_prices(setup, record, market, thin: bool, wages: Optional[Dict[str, float]] = None) -> Dict[str, float]:
@@ -43,34 +48,32 @@ def _estimated_prices(setup, record, market, thin: bool, wages: Optional[Dict[st
     recent = recently_traded_goods(memory)
     traded = _traded_volumes(record) if thin else {}
     wages = costing_wages(setup, record) if wages is None else wages
-    rate = memory.rates[setup.currency_id]
-    live = dict(market)
-    estimated: Dict[str, float] = {}
-    for good in input_depth_order(setup.recipes):
-        if good not in recent:
-            cost = cheapest_cost(setup, good, live, wages, rate)
-            if cost is not None:
-                estimated[good] = live[good] = cost
-            continue
-        wanted = record.goods.opening_basket.get(good, 0.0)
-        if not thin or wanted <= 0.0 or good not in live:     # a good traded only outside this country's markets has no price here
-            continue
-        depth = min(1.0, traded.get(good, 0.0) / (THIN_MARKET_SHARE_OF_OPENING_DEMAND * wanted))
-        if depth >= 1.0:
-            continue
-        cost = cheapest_cost(setup, good, live, wages, rate)
-        if cost is not None:
-            estimated[good] = live[good] = depth * live[good] + (1.0 - depth) * cost
-    return estimated
+    return cost_estimates(ESTIMATES, setup.recipes, market, wages, memory.rates[setup.currency_id], recent, thin,
+                          record.goods.opening_basket, traded, THIN_MARKET_SHARE_OF_OPENING_DEMAND)
 
 
 def _traded_volumes(record) -> Dict[str, float]:
     """What each good's markets trade, a market counting for the smaller of what it usually trades and what
-    it traded last year, so a market that has dried up does not stand for the good on its remembered volume."""
+    it traded last year, so a market that has dried up does not stand for the good on its remembered volume. The memory's own
+    usual volumes are read from the table's columns, added in the order the markets entered the store."""
+    usual = usual_volumes(record)
+    if usual is not record.memory.volume_weights:
+        return _traded_volumes_by_key(record, usual)
+    markets = record.memory.tables.goods_table
+    rows = usual.rows()
+    last_year = numpy.array(figures_for(record.goods.volumes, list(usual), 0.0), dtype=float)
+    totals, first_seen, appeared = add_in_order_by_group(markets.first[rows], numpy.minimum(markets.volume_weight[rows], last_year),
+                                                         len(record.memory.tables.goods))
+    names = record.memory.tables.goods.names
+    return {names[good]: totals[good].item() for good in first_seen[:appeared].tolist()}
+
+
+def _traded_volumes_by_key(record, usual) -> Dict[str, float]:
+    """`_traded_volumes` over usual volumes that are not the memory's own (this year's volumes, before any is remembered)."""
     traded: Dict[str, float] = {}
-    for key, usual in usual_volumes(record).items():
+    for key, volume in usual.items():
         good = key.split(KEY_SEPARATOR, 1)[0]
-        traded[good] = traded.get(good, 0.0) + min(usual, record.goods.volumes.get(key, 0.0))
+        traded[good] = traded.get(good, 0.0) + min(volume, record.goods.volumes.get(key, 0.0))
     return traded
 
 
@@ -88,15 +91,7 @@ def costing_wages(setup, record) -> Dict[str, float]:
 def making_costs(setup, record) -> Dict[str, float]:
     """What each good costs to make by its cheapest recipe at the live prices and wages, traded or not."""
     memory = record.memory
-    live = national_prices(record)
-    wages = costing_wages(setup, record)
-    rate = memory.rates[setup.currency_id]
-    costs: Dict[str, float] = {}
-    for good in input_depth_order(setup.recipes):
-        best = cheapest_cost(setup, good, live, wages, rate)
-        if best is not None:
-            costs[good] = best
-    return costs
+    return cost_estimates(COSTS_ONLY, setup.recipes, national_prices(record), costing_wages(setup, record), memory.rates[setup.currency_id])
 
 
 def cheapest_cost(setup, good, live, wages, rate):
@@ -104,7 +99,7 @@ def cheapest_cost(setup, good, live, wages, rate):
     (`unit_cost.full_cost_per_unit`; no maker or site is named, so yield 1 and no rent); None when no recipe making it
     can be priced."""
     best = min((unit_cost.full_cost_per_unit(recipe, good, live, live, wages, rate)
-                for recipe in setup.recipes.values() if recipe.outputs.get(good, 0.0) > 0.0), default=math.inf)
+                for recipe in recipes_making(setup.recipes, good)), default=math.inf)
     return best if math.isfinite(best) and best > 0.0 else None
 
 

@@ -5,6 +5,8 @@ from typing import Any, Dict, List, Optional, Set
 ONCE_COMMISSION = "commission"   # one-year orders by purpose: hours of a trade bought for this year only
 ONCE_STOCK = "stock"             # the herds' growth labour
 STAFF = "staff"     # version channel: the seat's people (employees, scholars, artisans, deputies, slaves, freedmen)
+BASE_TILE = "base_tile"     # version channel: the tile the seat's household chose to operate from (`move_base`)
+CLEARED_WAGE = "cleared_wage"   # version channel: the unskilled hour's wage at the last two clearings
 
 
 @dataclass

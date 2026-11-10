@@ -1156,6 +1156,13 @@ def main():
     subparser.add_argument("--reload-check", action="store_true",
                            help="also save and load the game after its first year and check the digest is the same")
     subparser.add_argument("--keep", default=None, metavar="PATH", help="write the stepped game here, to compare with another build's")
+    subparser.add_argument("--count-instructions", action="store_true",
+                           help="also report user-space instructions per stepped year, counted under valgrind cachegrind with "
+                           "PYTHONHASHSEED=0 (load-independent; about 30x slower; runs the game 0..N years in child processes "
+                           "and differences them). Counts instructions only: not cache misses, not kernel or syscall time; a "
+                           "numpy vector op counts by its machine instructions. The first year (kernel loading) is reported "
+                           "apart from the warm years. Refuses with a cause when valgrind is missing. Wall time on a quiet "
+                           "machine remains the final check for the speed goal.")
     sub.add_parser("compile-kernels", help="compile every numba kernel the game uses into numba's cache, so a first game "
                    "year does not spend a minute compiling (run once per environment; minutes on a cold cache)")
     subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "

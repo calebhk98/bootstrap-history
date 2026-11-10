@@ -12,7 +12,7 @@ def draws(recipe: Recipe, held: Mapping[GoodId, float], runs: float) -> Tuple[Di
     first, the runs it cannot cover by the next fallback that is held, the rest by hand."""
     used: Dict[GoodId, float] = {}
     extra_hours: Dict[TradeId, float] = {}
-    for good, per_run in sorted(recipe.tool_wear.items()):
+    for good, per_run in recipe.tool_wear_sorted:
         first = min(runs, held.get(good, 0.0) / per_run) if per_run > 0.0 else runs
         if first > 0.0:
             used[good] = used.get(good, 0.0) + first * per_run

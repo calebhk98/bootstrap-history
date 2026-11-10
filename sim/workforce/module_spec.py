@@ -1,8 +1,19 @@
 """The workforce module's spec (sim/assembly).
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge (sim/engine/bridge_*.py) under the name the owner will publish, or a view of a module that has moved. A view the module publishes
-is uncached while labour writes the seat's people and hours in place (it keeps no count of its writes), so no channel can say
-when they changed; only the payroll reports its changes (the `staff` channel)."""
+is cached only when everything it reads reports its changes: the trade registry and what is derived from it (inputs `trade_records`,
+`trade_family`), the cleared wage (the `cleared_wage` channel, bumped by `note_cleared_wage`, its one writer), the constants, and
+the hour and the wage of a trade: they read the markets module's `agent_wage_cell` (its `memory` channel moves with every write to the
+agent economy's market memory), the seat's base tile (the `base_tile` channel, bumped when `move_base` returns) over the land module's
+`home_tiles_held` (its `owners` channel), the opening schedule (inputs `civilisation` and `trade_records`) and the coin module's
+`home_price_level` (its `ratios` channel and the foreign trade books it reads). `farm_land_hectares` reads `farm_land` (agriculture's
+`farm_land` channel).
+The rest stay uncached (`_LIVE`, `_SEAT`) for one of three reasons: labour writes the seat's people, trades and hours in place and keeps
+no count of its writes (only the payroll reports, the `staff` channel); the view reads what is paid before the economy prices the money
+(cost-of-living factors, the price index, the housing of the town, output per head: `labour_quote`, `market_annual_wage`,
+`wage_signature`), or the hours of a person-year (`base_annual_wage`) before the economy opens; or it reads a view that other modules
+publish uncached with no channel (the people by tile, the working day's mechanics and the works that run). Each becomes cacheable when
+its owner bumps."""
 from sim.assembly.api import KEYED, LIST, QUOTE, ExtensionPoint, ModuleSpec, PhaseHook, ViewSpec
 from sim.ledger.api import NoteSpend, PayEdge
 from sim.polity.api import GainReputation, ScaleFamiliarity, ScaleProtection
@@ -16,7 +27,7 @@ from .commands_people import (BuySlaves, CommissionHours, FireStaff, FoundTradeS
 from .commands_hours import (AllocateHours, BleedStaff, CancelWork, DisperseDependants, DrawTradeHours, LoseCrew, OrderWork, ReleaseHours,
                              ResetTradeHours, SetReserve, WatchStaff)
 from .commands_bondage import AutoBuyPeople, AutoManumit, ChargeLivingCost, FadeMarketPressure, NoteBuyRefusal
-from .state import STAFF, WorkforceSeat, WorkforceSociety
+from .state import BASE_TILE, CLEARED_WAGE, STAFF, WorkforceSeat, WorkforceSociety
 from .module import Workforce
 
 READS_BY_OWNER = {
@@ -27,7 +38,7 @@ READS_BY_OWNER = {
     "ledger": ("acting_balance",),
     "polity": ("rep_factor",),
     "reporting": ("last_market_price_ratio", "real_output_per_head"),
-    "markets": ("agent_wage_at", "agent_hours_offered_at", "agent_working_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_trades"),
+    "markets": ("agent_wage_cell", "agent_hours_offered_cell", "agent_working_hours", "agent_people_by_trade", "agent_people_by_tile_and_trade", "agent_trades"),
     "demography": ("population", "pop_scale", "people_by_tile", "urban_fraction"),
     "agriculture": ("farm_land",),
     "land": ("home_tiles_held", "built_ways", "held_techniques"),
@@ -48,15 +59,20 @@ READS_BY_OWNER = {
 _LIVE = dict(cached=False)
 _SEAT = dict(cached=False, seat_scoped=True)
 
+# what an hour of the unskilled trade, and the wage of any trade, is worth: the economy's wage at the seat's base tile (the markets
+# module's `memory` channel), or before the economy prices the money the opening schedule (the civilisation and the trade records)
+# times the home price level
+_HOUR_WAGE_INPUTS = ("unskilled_trade", "agent_wage_cell", "base_tile", "opening_money_per_labour_hour", "home_price_level")
+
 MODULE_SPECS = (ModuleSpec(
-    "workforce", Workforce, channels=(STAFF,), world_state=WorkforceSociety, seat_state=WorkforceSeat,
+    "workforce", Workforce, channels=(STAFF, CLEARED_WAGE, BASE_TILE), world_state=WorkforceSociety, seat_state=WorkforceSeat,
     publishes=(
         ViewSpec("staff", "staff", **_SEAT),
         ViewSpec("staff_wanted", "staff_wanted", **_SEAT),
         ViewSpec("staff_version", "staff_version", **_SEAT),
         ViewSpec("wage_bill", "wage_bill", **_SEAT),
         ViewSpec("wages_charged_last_year", "wages_charged_last_year", **_SEAT),
-        ViewSpec("unskilled_trade", "unskilled_trade", **_LIVE),
+        ViewSpec("unskilled_trade", "unskilled_trade", inputs=("trade_registry",)),
         ViewSpec("wage_schedule_for", "wage_schedule_for", kind=QUOTE, **_LIVE),
         ViewSpec("settlement_tiles", "settlement_tiles", **_LIVE),
         ViewSpec("labour_need_shares", "labour_need_shares", **_LIVE),
@@ -70,7 +86,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("hours_available", "hours_available", kind=KEYED, **_SEAT),
         ViewSpec("hours_you_can_call_on", "hours_you_can_call_on", kind=KEYED, **_SEAT),
         ViewSpec("effective_scholars", "effective_scholars", **_SEAT),
-        ViewSpec("literacy_references", "literacy_references", **_LIVE),
+        ViewSpec("literacy_references", "literacy_references"),
         ViewSpec("literacy_capacity", "literacy_capacity", kind=KEYED, **_SEAT),
         ViewSpec("farm_share_of_hours", "farm_share_of_hours", **_SEAT),
         ViewSpec("trade_spread", "trade_spread", **_SEAT),
@@ -81,17 +97,17 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("market_supply", "market_supply", kind=KEYED, **_LIVE),
         ViewSpec("trade_available", "trade_available", kind=KEYED, **_LIVE),
         ViewSpec("labour_quote", "labour_quote", kind=QUOTE, **_LIVE),
-        ViewSpec("wage", "wage", kind=KEYED, **_LIVE),
+        ViewSpec("wage", "wage", kind=KEYED, seat_scoped=True, inputs=_HOUR_WAGE_INPUTS),
         ViewSpec("base_annual_wage", "base_annual_wage", kind=KEYED, **_LIVE),
         ViewSpec("trade_population", "trade_population", kind=KEYED, **_LIVE),
-        ViewSpec("money_per_labour_hour", "money_per_labour_hour", **_LIVE),
-        ViewSpec("opening_money_per_labour_hour", "opening_money_per_labour_hour", **_LIVE),
-        ViewSpec("labour_state_weights", "labour_state_weights", **_LIVE),
+        ViewSpec("money_per_labour_hour", "money_per_labour_hour", seat_scoped=True, inputs=_HOUR_WAGE_INPUTS),
+        ViewSpec("opening_money_per_labour_hour", "opening_money_per_labour_hour", inputs=("civilisation", "trade_records")),
+        ViewSpec("labour_state_weights", "labour_state_weights"),
         ViewSpec("town_mortality_premium_by_tile", "town_mortality_premium_by_tile", **_LIVE),
-        ViewSpec("cleared_wage_change", "cleared_wage_change", **_LIVE),
+        ViewSpec("cleared_wage_change", "cleared_wage_change", channels=(CLEARED_WAGE,)),
         ViewSpec("wage_materials", "wage_materials", **_LIVE),
-        ViewSpec("trade_registry", "trade_registry", **_LIVE),
-        ViewSpec("labour_market", "labour_market", **_LIVE),
+        ViewSpec("trade_registry", "trade_registry", inputs=("trade_records",)),
+        ViewSpec("labour_market", "labour_market"),
         ViewSpec("wage_signature", "wage_signature", **_LIVE),
         ViewSpec("market_annual_wage", "market_annual_wage", kind=KEYED, **_LIVE),
         ViewSpec("standing_job_pay", "standing_job_pay", kind=KEYED, **_LIVE),
@@ -99,11 +115,12 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("hours_for_sale", "hours_for_sale", **_SEAT),
         ViewSpec("best_wage_trade", "best_wage_trade", **_SEAT),
         ViewSpec("available_trades", "available_trades", **_LIVE),
-        ViewSpec("is_craft_trade", "is_craft_trade", kind=KEYED, **_LIVE),
+        ViewSpec("is_craft_trade", "is_craft_trade", kind=KEYED, inputs=("trade_family",)),
         ViewSpec("taught_trade_people", "taught_trade_people", kind=KEYED, **_LIVE),
         ViewSpec("people_who_exist", "people_who_exist", kind=KEYED, **_LIVE),
         ViewSpec("reachable_trade_population", "reachable_trade_population", kind=KEYED, **_LIVE),
-        ViewSpec("base_tile", "base_tile", **_SEAT),
+        ViewSpec("labour_reach_block", "labour_reach_block", **_LIVE),
+        ViewSpec("base_tile", "base_tile", seat_scoped=True, channels=(BASE_TILE,), inputs=("home_tiles_held",)),
         ViewSpec("last_buy_refusal", "last_buy_refusal", **_SEAT),
         ViewSpec("society_labour_hours", "society_labour_hours", **_LIVE),
         ViewSpec("staff_posting", "staff_posting", **_SEAT),
@@ -114,7 +131,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("occupation_people_by_trade", "occupation_people_by_trade", **_LIVE),
         ViewSpec("occupation_hours_by_trade", "occupation_hours_by_trade", **_LIVE),
         ViewSpec("farming_technique", "farming_technique", **_LIVE),
-        ViewSpec("farm_land_hectares", "farm_land_hectares", **_LIVE),
+        ViewSpec("farm_land_hectares", "farm_land_hectares", inputs=("farm_land",)),
         ViewSpec("hours_per_person_year", "hours_per_person_year", **_LIVE),
         ViewSpec("housing_price_per_place", "housing_price_per_place", **_LIVE),
         ViewSpec("trade_school_price_per_seat", "trade_school_price_per_seat", **_LIVE),

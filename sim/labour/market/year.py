@@ -1,7 +1,7 @@
 """One year of the labour market: clear, graduate, switch, migrate, form empty trades (DESIGN.md)."""
 from typing import Tuple
 
-from . import clearing, expectations, formation, migration, switching, training
+from . import clearing, formation, migration, switching, training
 from .records import MarketState, YearInputs, YearReport, copy_state
 
 
@@ -12,9 +12,8 @@ def run_year(state: MarketState, inputs: YearInputs, owned: bool = False) -> Tup
         state = copy_state(state)
     report = YearReport()
     report.clearings = clearing.clear_all(state, inputs)
-    clearings = expectations.index_clearings(report.clearings)
     training.advance(state, inputs, report)
-    switching.switch_trades(state, inputs, clearings, report)
-    migration.migrate(state, inputs, clearings, report)
-    formation.form_trades(state, inputs, clearings, report)
+    switching.switch_trades(state, inputs, report.clearings, report)
+    migration.migrate(state, inputs, report.clearings, report)
+    formation.form_trades(state, inputs, report.clearings, report)
     return state, report

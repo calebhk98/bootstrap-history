@@ -6,6 +6,8 @@ from sim.economy import api as economy_api
 from sim.ledger.api import RescaleHouseholdMoney
 from sim.refusal import Refusal
 
+from .channels import MEMORY
+
 
 class Applying(Part):
 
@@ -42,6 +44,7 @@ class Applying(Part):
 		"""From now the money an hour of work is worth is the economy's unskilled wage. `command.before` is the figure the
 		game's money was counted at; every seat's purse and the tree's money fields move by the ratio of the two."""
 		self.world.money_from_economy = True
+		self.bump(MEMORY)
 		ratio = self.needs.money_per_labour_hour() / command.before
 		for seat_id in self.needs.registered_seats():
 			with self.act_as(seat_id):

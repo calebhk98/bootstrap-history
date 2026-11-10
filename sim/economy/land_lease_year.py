@@ -10,6 +10,7 @@ falls when labour is scarce.
 from typing import Dict, List, Mapping, Tuple
 
 from . import land_bid_year, land_tenancy, titles, titles_ground, titles_worked
+from .cohort_reads import figures_in_id_order, tiles_by_first_id
 from .households_own import Option, plot_hectares
 from .setup import labour_area
 
@@ -17,11 +18,11 @@ from .setup import labour_area
 def _margins(setup, record, view, options: Mapping[str, List[Option]]) -> Dict[str, Tuple[float, str]]:
     """Tile -> (crop margin per hectare net of the wage, the recipe it is grown with), read at a cohort of the tile."""
     margins: Dict[str, Tuple[float, str]] = {}
-    for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
-        tile = setup.tiles.get(cohort.tile)
-        if tile is not None and cohort.tile not in margins:
-            margin, _hours, recipe_id = land_bid_year.best_margin(setup, view, cohort, options, tile)
-            margins[cohort.tile] = (margin, recipe_id)
+    for tile_id in tiles_by_first_id(record.cohorts):
+        tile = setup.tiles.get(tile_id)
+        if tile is not None:
+            margin, _hours, recipe_id = land_bid_year.best_margin(setup, view, tile_id, options, tile)
+            margins[tile_id] = (margin, recipe_id)
     return margins
 
 
@@ -51,7 +52,7 @@ def asks(setup, record, view, options: Mapping[str, List[Option]]) -> Dict[str, 
 
 
 def _own_hectares(setup, record, cohort, tile, options, recipe_id: str, held_tools_of) -> Tuple[float, float]:
-    """(hectares the cohort's floors need, hectares its hands and tools can work)."""
+    """(hectares the cohort's floors need, hectares its hands and tools can work); `cohort` is a `Cohort` or its `CohortFigures`."""
     floors = {need.need_id: need.subsistence_per_person * cohort.people for need in setup.basket_for(cohort.tile).needs}
     needed = plot_hectares(floors, options, setup.recipes, setup.land_per_run, tile.fertility)
     recipe = setup.recipes.get(recipe_id)
@@ -78,7 +79,7 @@ def lease_in_market(setup, record, view, options: Mapping[str, List[Option]]) ->
     lots: List[land_tenancy.Lot] = []
     arable_by_tile: Dict[str, float] = {}
     capacity: Dict[Tuple[str, str], float] = {}
-    for cohort in sorted(record.cohorts.values(), key=lambda each: each.agent_id):
+    for cohort in figures_in_id_order(record.cohorts):
         tile = setup.tiles.get(cohort.tile)
         if tile is None or cohort.tile not in margins:
             continue
