@@ -1,7 +1,8 @@
 """The households' respend bids as numba kernels: a need priced at the cheapest asks still offered (need_basket.priced_need
 and price_ceilings) and the bids one rationed buyer places with the money it was rationed of (goods_respend.respend_bids).
 Baskets are flattened to arrays (goods_respend_pack.py): needs of a basket in order, the goods of a need in order.
-Every function takes and returns numpy arrays and numbers only.
+`price_basket` prices a basket's goods once for the asks, `place_priced_bids` spends a buyer's money on them. Every function takes and
+returns numpy arrays and numbers only.
 """
 import numpy
 
@@ -114,18 +115,6 @@ def price_basket(basket, need_ptr, need_good_ptr, need_has_limits, goods, effect
         need_priced[need] = need_shares(need_good_ptr[need], need_good_ptr[need + 1], need_has_limits[need], goods, effects,
                                         limits, limited, exponent, ask_of_good, shares, ceilings, priced, units, fixed_value,
                                         fixed_flag)
-
-
-@njit(**KERNEL)
-def buyer_bids(basket, money, need_ptr, need_weight, need_has_limits, need_good_ptr, goods, effects, limits, limited,
-               exponent, ask_of_good, shares, ceilings, priced, units, fixed_value, fixed_flag, spend, ceiling, touched,
-               out_good, out_spend, out_ceiling):
-    """The bids a buyer places with `money` (see `place_priced_bids`) at `ask_of_good`; the others as `need_shares`."""
-    need_priced = numpy.zeros(len(need_weight), dtype=numpy.int64)
-    price_basket(basket, need_ptr, need_good_ptr, need_has_limits, goods, effects, limits, limited, exponent, ask_of_good,
-                 shares, ceilings, priced, units, fixed_value, fixed_flag, need_priced)
-    return place_priced_bids(basket, money, need_ptr, need_weight, need_good_ptr, need_priced, goods, priced, shares,
-                             ceilings, spend, ceiling, touched, out_good, out_spend, out_ceiling)
 
 
 @njit(**KERNEL)
