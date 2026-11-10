@@ -13,6 +13,7 @@ import numpy as np
 from .practice import practised_multiplier
 from .producer_blocks import crews_of
 from .producer_store import ProducerStore
+from .year_arrays_price_kernel import expected_prices_by_slot
 from .year_arrays_recipes import NO_SLOT, Names, RecipeMatrices
 
 
@@ -112,24 +113,12 @@ def _expected_prices(store: ProducerStore, rows: np.ndarray, recipe_row: np.ndar
     """producer by the recipe's good slot: the price the producer expects for the slot's good, NaN where it holds none. A price for
     a good outside the recipe's slots is not a column."""
     table = store.table
-    prices = np.full((len(rows), matrices.good_slots), np.nan)
-    held = table.price_count[rows]
-    if not len(rows) or not held.max():
-        return prices
-    width = int(held.max())
-    names = store.names["goods"].name_list
-    producer, place = np.nonzero(np.arange(width)[None, :] < held[:, None])          # every held price: its producer and its place in the producer's list
-    numbers = table.price_good[rows, :width][producer, place]
-    column_of = np.full(len(names) + 1, -1, dtype=np.int64)
-    for number in np.nonzero(np.bincount(numbers))[0].tolist():          # only the goods some producer holds a price for
-        if number < len(names):
-            column_of[number] = matrices.goods.row.get(names[number], -1)
-    slots = matrices.slot_goods[recipe_row][producer]
-    pair, slot = np.nonzero((column_of[numbers][:, None] == slots) & (slots != NO_SLOT))          # each held price with the slots of its producer that name its good
-    _keys, first = np.unique(producer[pair] * matrices.good_slots + slot, return_index=True)      # a slot takes the producer's first held price of its good
-    pair, slot = pair[first], slot[first]
-    prices[producer[pair], slot] = table.price_value[rows, :width][producer[pair], place[pair]]
-    return prices
+    if not len(rows) or not table.price_count[rows].max():
+        return np.full((len(rows), matrices.good_slots), np.nan)
+    good_row = matrices.goods.row
+    column_of = np.array([good_row.get(name, -1) for name in store.names["goods"].name_list], dtype=np.int64)
+    return expected_prices_by_slot(rows, recipe_row, table.price_count, table.price_good, table.price_value, column_of,
+                                   matrices.slot_goods, NO_SLOT)
 
 
 def _crews(store: ProducerStore, rows: np.ndarray) -> Dict[int, Dict[str, float]]:
