@@ -12,9 +12,10 @@ import numpy
 
 from sim.jit import njit
 
-from .goods_market_kernels import KERNEL, allocate_arrays, total_wanted
+from .goods_market_kernels import KERNEL, allocate_arrays
 from .goods_respend_basket_kernel import place_priced_bids, price_basket
-from .goods_respend_market_kernel import lowest_ask, quantity_of, wanted_adding
+from .goods_respend_market_kernel import (lowest_ask, quantity_of, quote_of, units_at_quote, wanted_adding,
+                                          wanted_adding_untraded, wants_at)
 
 
 @njit(**KERNEL)
@@ -26,12 +27,18 @@ def fill_asks(markets_of_good, low_ask, asks):
 
 
 @njit(**KERNEL)
+def same_ask(first, second):
+    """Whether two asks are equal (a NaN, no ask, equals a NaN)."""
+    return first == second or (first != first and second != second)
+
+
+@njit(**KERNEL)
 def asks_unchanged(valid, before, now):
     """Whether `now` equals the asks a basket was priced at (a NaN equals a NaN)."""
     if not valid:
         return False
     for good in range(len(now)):
-        if before[good] != now[good] and not (before[good] != before[good] and now[good] != now[good]):
+        if not same_ask(before[good], now[good]):
             return False
     return True
 
@@ -131,9 +138,12 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
     touched = numpy.zeros(good_count, dtype=numpy.bool_)
     # the asks each area's buyers face this round, and the asks the basket's shares were last priced at
     area_asks = numpy.zeros(area_market.shape)
-    area_round = numpy.full(area_market.shape[0], -1, dtype=numpy.int64)
+    ask_version = 0                       # counts the changes of any market's lowest ask
+    area_version = numpy.full(area_market.shape[0], -1, dtype=numpy.int64)
     basket_asks = numpy.zeros((len(need_ptr) - 1, good_count))
     basket_valid = numpy.zeros(len(need_ptr) - 1, dtype=numpy.bool_)
+    basket_version = numpy.full(len(need_ptr) - 1, -1, dtype=numpy.int64)
+    basket_area = numpy.zeros(len(need_ptr) - 1, dtype=numpy.int64)
     need_priced = numpy.zeros(len(need_weight), dtype=numpy.int64)
     out_good = numpy.zeros(good_count, dtype=numpy.int64)
     out_spend = numpy.zeros(good_count)
@@ -165,6 +175,9 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
     maximum_buffer = numpy.zeros(buyers)
     adding_buffer = numpy.zeros(buyers, dtype=numpy.bool_)
     units_buffer = numpy.zeros(buyers)
+    first_wants = numpy.zeros(buyers)
+    quote_units = numpy.zeros(buyers)
+    nan = numpy.nan
     paid_buffer = numpy.zeros(buyers)
     most_offers = 0
     for market in range(markets):
@@ -197,16 +210,19 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                     amount = amount * cash / total
                 money_local[slot] = amount
             area_row = buyer_area_row[buyer]
-            if area_round[area_row] != round_number:
-                area_round[area_row] = round_number
+            if area_version[area_row] != ask_version:
+                area_version[area_row] = ask_version
                 fill_asks(area_market[area_row], low_ask, area_asks[area_row])
             ask_of_good = area_asks[area_row]
-            if not asks_unchanged(basket_valid[basket], basket_asks[basket], ask_of_good):
-                basket_valid[basket] = True
-                basket_asks[basket, :] = ask_of_good
-                price_basket(basket, need_ptr, need_good_ptr, need_has_limits, goods, effects, limits, limited,
-                             basket_exponent[basket], ask_of_good, shares, ceilings, priced, units_scratch, fixed_value,
-                             fixed_flag, need_priced)
+            if basket_version[basket] != ask_version or basket_area[basket] != area_row:
+                basket_version[basket] = ask_version
+                basket_area[basket] = area_row
+                if not asks_unchanged(basket_valid[basket], basket_asks[basket], ask_of_good):
+                    basket_valid[basket] = True
+                    basket_asks[basket, :] = ask_of_good
+                    price_basket(basket, need_ptr, need_good_ptr, need_has_limits, goods, effects, limits, limited,
+                                 basket_exponent[basket], ask_of_good, shares, ceilings, priced, units_scratch, fixed_value,
+                                 fixed_flag, need_priced)
             spent = place_priced_bids(basket, money_local, need_ptr, need_weight, need_good_ptr, need_priced, goods, priced,
                                       shares, ceilings, spend, ceiling, touched, out_good, out_spend, out_ceiling)
             for index in range(spent):
@@ -281,7 +297,8 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                     slot += 1
             trades = False
             if active > 0:
-                wanted_first = total_wanted(asks[0], floors, flexibles, budgets, references, exponents, maximums, capped)
+                wanted_first = wants_at(asks[0], floors, flexibles, budgets, references, exponents, maximums, capped,
+                                        first_wants[:bids])
                 trades = wanted_first > 0.0 and supply > rounding_share * wanted_first
             traded = 0.0
             requested = 0.0
@@ -329,8 +346,16 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                 else:
                     log_clear_price[clears_logged] = asks[0]
                     log_clear_has_price[clears_logged] = True
-            market_wanted[market] += wanted_adding(before, adding, wanted_share, requested, traded > 0.0, floors,
-                                                   flexibles, budgets, references, exponents, maximums)
+            quote = nan
+            if traded > 0.0:
+                market_wanted[market] += wanted_adding(before, adding, wanted_share, requested, True, floors, flexibles,
+                                                       budgets, references, exponents, maximums)
+            else:
+                quote = quote_of(before, maximums, budgets)
+                if quote == quote:
+                    units_at_quote(quote, asks[0] if active > 0 else nan, first_wants, floors, flexibles, budgets,
+                                   references, exponents, maximums, quote_units[:bids])
+                market_wanted[market] += wanted_adding_untraded(quote, quote_units[:bids], adding, wanted_share)
             for position in range(bids):
                 has_bid[market, gen_buyer[placed[first + position]]] = True
             # settlement: pairs in offer-major order, scaled to the stock and purses, then walked
@@ -470,7 +495,10 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
             market_offered[market] = supply
             market_last_delivered[market] = delivered
             market_cleared[market] = True
-            low_ask[market] = lowest_ask(offer_ptr[market], offer_ptr[market + 1], offer_reservation, offer_quantity)
+            lowest = lowest_ask(offer_ptr[market], offer_ptr[market + 1], offer_reservation, offer_quantity)
+            if not same_ask(lowest, low_ask[market]):
+                ask_version += 1
+                low_ask[market] = lowest
             # what each buyer was rationed of here, to spend next round
             for position in range(bids):
                 bid = placed[first + position]
@@ -486,8 +514,11 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                     price = low_ask[market]
                     ok = price == price
                 if ok and price > 0.0:
-                    wanted = quantity_of(price, floors[position], flexibles[position], budgets[position],
-                                         references[position], exponents[position], maximums[position])
+                    if traded <= 0.0 and price == quote:      # nothing sold: the bid wants what it did at the quote
+                        wanted = quote_units[position]
+                    else:
+                        wanted = quantity_of(price, floors[position], flexibles[position], budgets[position],
+                                             references[position], exponents[position], maximums[position])
                     amount = min(budgets[position] - money, (wanted - units) * price)
                     if amount > 0.0:
                         rationed[buyer, need] += amount

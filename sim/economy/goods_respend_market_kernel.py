@@ -72,3 +72,55 @@ def wanted_adding(price, adding, share, requested, traded, floors, flexibles, bu
     if total <= 0.0:
         return 0.0
     return share * wanted * added / total
+
+
+@njit(**KERNEL)
+def wants_at(price, floors, flexibles, budgets, references, exponents, maximums, capped, wants):
+    """`total_wanted` that keeps each bid's quantity: fills `wants` and returns the sum, added in the same order."""
+    total = 0.0
+    for bid in range(len(floors)):
+        wants[bid] = want_at(price, floors[bid], flexibles[bid], budgets[bid], references[bid], exponents[bid],
+                             maximums[bid], capped)
+        total += wants[bid]
+    return total
+
+
+@njit(**KERNEL)
+def quote_of(price, maximums, budgets):
+    """The price a round's demand is read at when nothing traded: the lowest ask before it, else the highest ceiling (NaN: none)."""
+    ceiling = best_bid_ceiling(maximums, budgets)
+    return price if price == price else ceiling
+
+
+@njit(**KERNEL)
+def units_at_quote(quote, first_price, first_wants, floors, flexibles, budgets, references, exponents, maximums, units):
+    """Fills `units` with `quantity_of` each bid at `quote`. `first_wants` are the bids' `want_at` the market's cheapest ask
+    `first_price` (NaN: none), the same figure where the two prices are equal and a bid has a budget."""
+    same = quote == first_price
+    for bid in range(len(floors)):
+        if same:
+            units[bid] = first_wants[bid] if budgets[bid] > 0.0 else 0.0
+        else:
+            units[bid] = quantity_of(quote, floors[bid], flexibles[bid], budgets[bid], references[bid], exponents[bid],
+                                     maximums[bid])
+
+
+@njit(**KERNEL)
+def wanted_adding_untraded(quote, units, adding, share):
+    """`wanted_adding` of a round that traded nothing, from the bids' `units` at `quote`: what the buyers asked for, less what
+    buyers already counted in the market asked again."""
+    if quote != quote:
+        return 0.0
+    total = 0.0
+    added = 0.0
+    adds = 0
+    for bid in range(len(units)):
+        total += units[bid]
+        if adding[bid]:
+            adds += 1
+            added += units[bid]
+    if adds == len(units):
+        return total
+    if total <= 0.0:
+        return 0.0
+    return share * total * added / total
