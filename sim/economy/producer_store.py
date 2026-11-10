@@ -20,6 +20,7 @@ from sim.compiled_tables.growth import reserve_rows
 from sim.compiled_tables.ids import IdTable
 
 from .producer_rows import (NAME_COLUMNS, OPTIONAL_FLOATS, PRODUCER_ROWS_SPEC, SCALAR_FLOATS, SCALAR_INTS, WIDE_COLUMNS, ProducerRows)
+from .producer_plain import plain_rows
 from .producer_blocks import crews_of, owners_at
 from .producers import Producer
 
@@ -412,10 +413,8 @@ class ProducerStore(MutableMapping):
     def to_plain(self) -> Dict[str, dict]:
         """{id: the record's fields as plain data} in id order, written from the columns."""
         self.compact()
-        plain = {}
-        for row in self.order().tolist():
-            plain[self.ids[row]] = self._fields(row)
-        return plain
+        rows = self.order()
+        return dict(zip([self.ids[row] for row in rows.tolist()], plain_rows(self, rows, _FIELDS)))
 
     @classmethod
     def from_plain(cls, saved: Mapping[str, dict]) -> "ProducerStore":
