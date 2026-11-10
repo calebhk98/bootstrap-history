@@ -15,6 +15,7 @@ from . import currency, mint_price, market_curves, market_curves_rows, market_qu
 from . import goods_turn, year_bids, year_remember
 from .year_bids_by_market import BidsByMarket
 from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
+from .goods_clearing_kernel import ON_OBJECTS
 from .goods_table_context import ClearingContext
 from .goods_year_markets import YearMarkets
 from .goods_left_markets import LeftMarkets
@@ -138,9 +139,11 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         first_row = year_markets.claim(len(cleared))
         left_markets.add_good(good, cleared, answer, first_row)
         for place in [place for place, area in enumerate(cleared.areas) if area in kept]:
-            each = cleared[place]
-            record.goods.curves[memory_names[each.market]] = (market_curves.summarize(*each.objects()) if each.rows is None else
-                                                              market_curves_rows.of_rows(orders, each.rows.bid_array, each.rows.offer_array))
+            if cleared.way[place] == ON_OBJECTS:
+                curve = market_curves.summarize(*cleared[place].objects())
+            else:
+                curve = market_curves_rows.of_rows(orders, cleared.rows.bids_of_market(place), cleared.rows.offers_of_market(place))
+            record.goods.curves[memory_names[cleared.market[place]]] = curve
         delivered = answer.delivered
         if len(cleared):
             left_units = orders.tables()[1].quantity_left[cleared.left_grouped]

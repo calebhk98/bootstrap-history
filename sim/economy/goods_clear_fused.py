@@ -53,13 +53,11 @@ def fused_clear(context, good: str, good_id: int):
     orders, arrays = context.orders, context.arrays
     producers, matrices, costs = arrays.producers, arrays.matrices, context.costs
     spec = context.setup.specs.get(good)
-    goods_table = orders.memory_tables.goods_table
     book = context.book
-    agent_rank = context.agent_rank()
-    tile_rank = context.tile_rank()
     context.reserve_cleared_rows()
     while True:
-        bids, offers = orders.tables()
+        bids, offers = orders.tables()           # first: it numbers the names of the orders waiting, which the ranks and tables read below follow
+        goods_table = orders.memory_tables.goods_table
         rates, known = context.area_rates()
         band_multiples = context.band_multiple_table()
         scratch = context.scratch(len(known), len(band_multiples))
@@ -67,7 +65,7 @@ def fused_clear(context, good: str, good_id: int):
             found = clear_good_columns(
                 (bids, offers, orders.bid_order, orders.offer_order, orders.pairs, orders.results), good_id, matrices.goods.row[good],
                 (goods_table.area, goods_table.price, goods_table.volume_weight, context.record.goods.unmet.values),
-                (orders.area_ranks(), agent_rank, tile_rank), book.agent_table.is_edge, (book.stock_rows.table, book.stock_rows.index),
+                (orders.area_ranks(), context.agent_rank(), context.tile_rank()), book.agent_table.is_edge, (book.stock_rows.table, book.stock_rows.index),
                 context.producer_row_table(), (producers.recipe_row, producers.workshops, producers.expected_sales, producers.yield_factor),
                 (costs.slot_of, costs.cost, costs.input_share, costs.expected), matrices.outputs, band_multiples,
                 spec.spoilage_per_year if spec is not None else 0.0, rates, known, STEPS, MINIMUM_PRICE_SHARE_OF_REFERENCE, *scratch)

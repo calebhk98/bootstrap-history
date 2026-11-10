@@ -306,6 +306,14 @@ tested bit for bit against the numpy chain it replaced, kept as plain code in `s
   `post_settled_by_numbers` (`write_settlement` falls back to the old by-name route when the book has not numbered a name, which then numbers it in the
   order it always did). `flatten_baskets` makes a need's flat columns once per distinct need (`_flat_spec`), not once per basket.
 
+**One call per good.** `goods_clear_kernel.clear_good_columns` runs that whole chain for a good in one call (`good_rows`, the stock slots, `pack_arrays`,
+`decide_inputs`, `decide_markets`, `final_allocations`, `write_batch`, `untraded_columns`, `clearing_columns`), and `goods_clear_fused.fused_clear` makes the
+`GoodClearing` from the arrays it returns. A lending rate or a band multiple not asked for yet, and a full table to append to, are raised as
+`NeedsInputs` before any row is written; Python answers (`note_area_rate`, `note_band_multiple`, `reserve_rows`) and calls again. `ClearingContext.reserve_cleared_rows`
+reserves room once a year so that the retry is rare. A ground good (not portable: its held value is a land rent read in Python,
+`goods_table_clear._ground_values`) and a good outside the year arrays keep the separate steps (`goods_good_clear.clear_good`). Test:
+`test_goods_clear_kernel.py` against the chain written out in `goods_clear_chain_plain.py`.
+
 `MarketRows` and the batch's `HeldViews` make their lists when first read. Other helpers that cut calls: `few_ids.in_ids` answers "is this agent
 one of the watchers / customs accounts" from a lookup table (`watched_buys`, `settlement_ids._in_accounts`) in place of `numpy.isin`, and
 `settle_by_ids` takes the distinct sellers by counting; the respend's `goods_respend_unpack.summed` and `paid_and_received` count dense agent and
