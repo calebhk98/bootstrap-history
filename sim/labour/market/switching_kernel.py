@@ -112,10 +112,14 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, discoun
                                                                  planned_targets[source, young_flag], vacancies, tolerance):
                 continue
             planned_valid[source, young_flag] = True
-            planned_then[source, young_flag, :] = later
-            planned_targets[source, young_flag, :] = False
-            planned_moves[source, young_flag, :] = False
-            planned_shares[source, young_flag, :, :] = 0.0
+            for destination in range(count_destinations):      # forget the odds planned before
+                planned_then[source, young_flag, destination] = later[destination]
+                if planned_targets[source, young_flag, destination]:
+                    planned_targets[source, young_flag, destination] = False
+                    for band in range(count_bands):
+                        planned_shares[source, young_flag, band, destination] = 0.0
+            for band in range(count_bands):
+                planned_moves[source, young_flag, band] = False
             count = 0
             leaves_for_unskilled = young and income[source] < own and not source_is_fallback[source]
             for destination in range(count_destinations):

@@ -185,8 +185,12 @@ def _record_net(switched, area, trade_count, destinations, moves_source, moves_d
 def _school_and_cohort_inputs(book, destinations, area, trade_count, group_destination, seats, school_bonus, enrolled, last_years, last_bonus,
                               last_exists):
     """For the destinations the groups go to: school seats and bonus, people enrolled, and the newest cohort's years and bonus."""
+    seen = np.zeros(seats.shape[0], np.bool_)
     for group in range(group_destination.shape[0]):
         destination = group_destination[group]
+        if seen[destination]:       # a destination's other training length reads the same
+            continue
+        seen[destination] = True
         row = area * trade_count + destinations.trade[destination]
         seats[destination] = destinations.seats[row]
         school_bonus[destination] = destinations.school_bonus[row]
