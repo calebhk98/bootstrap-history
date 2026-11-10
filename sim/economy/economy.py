@@ -289,7 +289,8 @@ class Economy:
         received = dict(interest)
         for payment in rent:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
-        arrays = self._year_arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
+        arrays = self._year_arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received,
+                                                 lambda kept: setattr(self, "_year_arrays", kept))
         arrays = self._year_arrays = arrays.sync(setup, record, close_view)      # the memory is read once for entry and the restake
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       standing_block(ledger, inputs.standing_bids), arrays)

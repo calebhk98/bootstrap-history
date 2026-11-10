@@ -96,10 +96,12 @@ def money_taxes(setup, record, view, ledger: YearLedger) -> None:
 
 
 def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, arrays,
-                 income_received: Mapping[str, float] = MappingProxyType({})) -> YearArrays:
+                 income_received: Mapping[str, float] = MappingProxyType({}), arrays_kept=lambda arrays: None) -> YearArrays:
     """Close every agent's year. `income_received` is the year's other property income by payee (interest, rent); it is
     added to the dividends and profits paid out here, so the households close on this year's property income and it is
-    what the record keeps. Returns the year arrays as the close leaves them."""
+    what the record keeps. `arrays_kept(arrays)` is told the year arrays as soon as the producers have closed, so the households' equity, which
+    the view reads from the economy's arrays, finds them in step with the producers instead of reading the table again. Returns the year
+    arrays as the close leaves them."""
     money = setup.currency_id
     property_income: Dict[str, float] = dict(income_received)
     cohorts_by_tile: Dict = {}           # the tiles' cohorts, unchanged until the households close below
@@ -111,6 +113,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
             pool_by_recipe_trade[(recipe_id, trade)] = practice.pool_units(crews_of_recipe[recipe_id], trade)
         return pool_by_recipe_trade[(recipe_id, trade)]
     arrays = close_producers_of_year(setup, record, view, ledger, arrays, property_income, pooled)
+    arrays_kept(arrays)
     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     news = merchants_news.YearNews(prices, volumes, anchors)

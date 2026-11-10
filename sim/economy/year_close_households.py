@@ -13,7 +13,9 @@ from sim.book_post import table_from
 from sim.book_tables import GOODS_MOVE_POSTINGS, TRANSFER_POSTINGS, GoodsMovePostings, TransferPostings
 from sim.compiled_tables.causes import OK
 
-from . import cohort_close_write, cohort_prime, household_work_year, households_close, households_close_pack
+from . import cohort_close_write, cohort_prime, household_work_year, households_close_pack
+from .households_close_figures import closed_scalars_of
+from .households_own import next_own_plan
 from .close_pack import figure_values
 from .types import EDGE_CONSUMPTION, GoodsMove
 from .year_close_household_kernels import consumption_postings, receipts_with_grown
@@ -23,11 +25,6 @@ _READ = ("expected_inflation", "last_basket_price_level", "cash_target", "share_
          "planned_spending", "expected_floor_cost")      # the float fields a close reads from the table
 _WRITTEN = ("expected_inflation", "last_basket_price_level", "cash_target", "share_wealth", "last_year_income", "expected_spending",
             "planned_spending", "expected_floor_cost")    # and writes back
-
-
-def _wealth(value):
-    """`share_wealth` as a cohort holds it: None where the column is empty (NaN)."""
-    return None if value != value else value
 
 
 def _good_ranks(names) -> np.ndarray:
@@ -121,15 +118,12 @@ def close_households(setup, record, view, ledger, property_income: Dict[str, flo
     unmet = households_close_pack.unmet_by_cohort(book, packed, cohort_ids, tiles_of, people, numbers, start, goods, amounts)     # every cohort's shortfall in one kernel call
     columns = {name: store.floats(name, order) for name in _READ}
     plans = [store.pairs_of("plan", row) for row in order.tolist()]
-    closed = [households_close.closed_figures(
-        cohort_ids[position], tiles_of[position], people[position], columns["expected_inflation"][position],
-        columns["last_basket_price_level"][position], columns["cash_target"][position], _wealth(columns["share_wealth"][position]),
-        columns["last_year_income"][position], columns["expected_spending"][position], columns["planned_spending"][position],
-        columns["expected_floor_cost"][position], plans[position], view, packed.baskets[numbers[position]],
-        wages[position] + property_income.get(cohort_ids[position], 0.0), spent[position], floor_costs[position], unmet[position])
-        for position in range(len(cohort_ids))]
-    cohort_close_write.write_close(store, order, {name: [each[name] for each in closed] for name in _WRITTEN},
-                                   [each["unmet_floor_by_need"] for each in closed], [each["own_plan_by_need"] for each in closed])
+    income = np.array([wages[position] + property_income.get(cohort_ids[position], 0.0) for position in range(len(cohort_ids))])
+    scalars = closed_scalars_of(view, cohort_ids, tiles_of, [packed.baskets[number] for number in numbers], columns, people, income,
+                                np.array(spent, dtype=np.float64), np.array(floor_costs, dtype=np.float64))
+    cohort_close_write.write_close(store, order, {name: scalars[name] for name in _WRITTEN}, unmet,
+                                   [next_own_plan(plans[position], unmet[position], spent[position] < income[position])
+                                    for position in range(len(cohort_ids))])
     tile_numbers = np.array([book.tile_ids.numbers.get(each, -1) for each in tiles_of], dtype=np.int64)
     book_agents = np.array([book.agent_ids.numbers.get(each, -1) for each in cohort_ids], dtype=np.int64)
     rows = consumption_postings(start, goods, amounts, book_agents, tile_numbers, _durable_flags(book, setup.specs),
