@@ -16,7 +16,7 @@ import tempfile
 from typing import Any, Callable, Dict, Iterator, List, Optional, Tuple
 
 from sim import cache_root
-from sim.prices import engine_seam
+from sim.prices import engine_seam, solve_key_text
 
 try:
     import fcntl
@@ -78,8 +78,7 @@ def forget_environment_digest() -> None:
 
 def solve_key(inputs: Dict[str, Any], source_modules: Optional[Tuple[str, ...]] = None) -> str:
     """Hash of the in-memory solve inputs together with the environment digest."""
-    payload = json.dumps({"inputs": inputs, "environment": environment_digest(source_modules)},
-                         sort_keys=True, default=lambda value: sorted(value))
+    payload = solve_key_text.payload_text(inputs, environment_digest(source_modules))
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:_DIGEST_LENGTH]
 
 
