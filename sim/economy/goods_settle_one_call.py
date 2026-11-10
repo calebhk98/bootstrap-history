@@ -7,7 +7,7 @@ from typing import Dict, Optional
 
 import numpy
 
-from sim.book_post import grown_settled
+from sim.book_settled import reserve_for_settlement, settlement_plans
 
 from .goods_settle_kernel import NEEDS_PURPOSE, NEEDS_ROOM, NO_CODE, NO_PAIRS, SETTLED, settle_good_markets
 from .year_ledger_tables import SETTLEMENTS
@@ -29,10 +29,7 @@ def _numbers(book, names) -> numpy.ndarray:
 
 def reserve_for(book, tables, keys: int, batch_agents: int, rows: int, money_across: bool) -> None:
     """Room for a settlement of that size on the book and in the ledger's pair tables (what the unfused path reserved as it went)."""
-    book.stock_rows.reserve(keys)
-    book.edge_goods_rows.reserve(keys)
-    book.flow_rows.reserve(1)
-    book.settled_plans = grown_settled(book.settled_plans, batch_agents, keys)
+    reserve_for_settlement(book, batch_agents, keys)
     tables.pairs["received"].reserve(rows)
     tables.pairs["sold"].reserve(rows)
     if money_across:
@@ -58,13 +55,11 @@ def settle_in_one_call(record, ledger, cleared, good: str, plant_makers: Dict[st
     across = len(imports) > 0 or len(exports) > 0          # else no money can cross the border: the kernel is given no tables for it
     pairs = tables.pairs
     for _attempt in range(ATTEMPTS):
-        if book.settled_plans is None:
-            book.settled_plans = grown_settled(None, 8, 8)
         answer = settle_good_markets(
             cleared.quantity, cleared.way, cleared.slots, batch.pair_ptr, batch.pair_bid, batch.pair_offer, batch.pair_quantity, batch.ask,
             pack.bid_rows, pack.offer_rows, bids.buyer, bids.tile, offers.seller, offers.tile, len(book.tile_ids) + 1,
             book.tile_ids.numbers.get("", -1), good_number, currency_number, imports, exports, makers, codes[0], codes[1], book.tables(),
-            book.settled_plans, tables.figures, tables.counters, pairs["received"].target(), pairs["sold"].target(),
+            settlement_plans(book), tables.figures, tables.counters, pairs["received"].target(), pairs["sold"].target(),
             pairs["imports_paid"].target() if across else None, pairs["exports_received"].target() if across else None)
         status = answer[0]
         if status == NEEDS_ROOM:

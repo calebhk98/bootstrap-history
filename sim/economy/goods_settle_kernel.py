@@ -13,8 +13,7 @@ import numpy
 
 from sim.book_apply import apply_settled
 from sim.book_commit import add_flow
-from sim.book_index import index_find, pack_key
-from sim.book_read_kernels import read_balances, read_stocks_at
+from sim.book_read_kernels import find_slots, read_balances, read_stocks_at
 from sim.compiled_tables.causes import OK
 from sim.economy.goods_clearing_kernel import TABLE_TRADED
 from sim.economy.settlement_batch_kernel import settle_markets
@@ -64,17 +63,18 @@ def _picked(quantity, way):
 
 @njit
 def _sellers_stock(stocks, stock_index, holder, tile, sold_from, good):
-    """The stock each (agent, tile) key holds of the good, read for the keys some pair sells from (zero for the rest), as
-    `book_read_kernels.find_slots` and `read_stocks_at` read it."""
+    """The stock each (agent, tile) key holds of the good, read for the distinct keys some pair sells from (zero for the rest)."""
     sells = numpy.zeros(len(holder), dtype=numpy.bool_)
     for pair in range(len(sold_from)):
         sells[sold_from[pair]] = True
-    state = numpy.zeros(len(holder))
+    sellers = numpy.zeros(sells.sum(), dtype=numpy.int64)
+    at = 0
     for key in range(len(holder)):
-        if sells[key] and holder[key] >= 0 and tile[key] >= 0:
-            slot = index_find(stocks.key, stock_index, pack_key(holder[key], good, tile[key]))
-            if slot >= 0:
-                state[key] = stocks.quantity[slot]
+        if sells[key]:
+            sellers[at] = key
+            at += 1
+    state = numpy.zeros(len(holder))
+    state[sellers] = read_stocks_at(stocks, find_slots(stocks, stock_index, holder[sellers], good, tile[sellers]))
     return state
 
 
@@ -110,16 +110,16 @@ def _note_across(imports_target, exports_target, money_across, agent, imports, e
 
 
 @njit
-def _record_totals(currencies, goods, currency, good, batch_paid, batch_given, purpose_template, purpose_reference, flows, flow_index):
+def _record_totals(currency_table, good_table, currency, good, batch_paid, batch_given, purpose_template, purpose_reference, flows, flow_index):
     """`book_settled.record_totals`: the exact sums added to the currency's and the good's gross totals, and the good's flow for the purpose."""
-    before = currencies.gross_posted[currency] if currencies.gross_seen[currency] else 0.0
-    currencies.gross_posted[currency] = before + exact_sum(batch_paid, len(batch_paid))
-    currencies.gross_seen[currency] = 1
+    before = currency_table.gross_posted[currency] if currency_table.gross_seen[currency] else 0.0
+    currency_table.gross_posted[currency] = before + exact_sum(batch_paid, len(batch_paid))
+    currency_table.gross_seen[currency] = 1
     moved = exact_sum(batch_given, len(batch_given))
     if moved > 0.0:
-        before = goods.gross_moved[good] if goods.gross_seen[good] else 0.0
-        goods.gross_moved[good] = before + moved
-        goods.gross_seen[good] = 1
+        before = good_table.gross_moved[good] if good_table.gross_seen[good] else 0.0
+        good_table.gross_moved[good] = before + moved
+        good_table.gross_seen[good] = 1
         add_flow(flows, flow_index, good, purpose_template, purpose_reference, moved)
 
 
