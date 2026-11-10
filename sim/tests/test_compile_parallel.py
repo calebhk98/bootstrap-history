@@ -26,5 +26,17 @@ class SharesTest(unittest.TestCase):
         self.assertEqual([len(share) for share in shares], [1, 1])
 
 
+class ClosureSizesTest(unittest.TestCase):
+    def test_a_kernel_counts_every_kernel_it_reaches_once(self):
+        class Kernel:
+            def __init__(self, name, size, callees=()):
+                self.__module__, self.__name__, self.size, self.callees = "sim.k", name, size, list(callees)
+        leaf = Kernel("leaf", 10)
+        middle = Kernel("middle", 20, [leaf])
+        top = Kernel("top", 5, [middle, leaf])
+        sizes = compile_parallel.closure_sizes([leaf, middle, top], lambda kernel: kernel.size, lambda kernel: kernel.callees)
+        self.assertEqual(sizes, {"sim.k.leaf": 10, "sim.k.middle": 30, "sim.k.top": 35})
+
+
 if __name__ == "__main__":
     unittest.main()

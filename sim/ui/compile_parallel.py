@@ -90,6 +90,29 @@ def _source_size(kernel):
         return 0
 
 
+def closure_sizes(registry, own_size, callees_of):
+    """{kernel name: its source size plus that of every kernel it calls, directly or not}: a kernel compiles with its
+    callees, so a fused kernel over many others costs far more than its own source says."""
+    names = {id(kernel): kernel_name_of(kernel) for kernel in registry}
+    sizes = {}
+    for kernel in registry:
+        seen, waiting = {id(kernel)}, [kernel]
+        total = 0
+        while waiting:
+            current = waiting.pop()
+            total += own_size(current)
+            for callee in callees_of(current):
+                if id(callee) not in seen:
+                    seen.add(id(callee))
+                    waiting.append(callee)
+        sizes[names[id(kernel)]] = total
+    return sizes
+
+
+def kernel_name_of(kernel):
+    return kernel.__module__ + "." + kernel.__name__
+
+
 def compile_in_parallel(jobs):
     """Record the signatures, merge the declared ones, compile them in `jobs` processes; the workers' exit codes."""
     from sim.ui import cli_compile_kernels
@@ -105,7 +128,7 @@ def compile_in_parallel(jobs):
         cli_compile_kernels.import_kernel_modules()
         for name, declared in declared_signatures().items():
             signatures.setdefault(name, []).extend(tuple(signature) for signature in declared)
-        sizes = {cli_compile_kernels.kernel_name(kernel): _source_size(kernel) for kernel in jit.REGISTRY}
+        sizes = closure_sizes(jit.REGISTRY, _source_size, cli_compile_kernels.called_kernels)
         planned = os.path.join(directory, "shares.pickle")
         with open(planned, "wb") as handle:
             pickle.dump(shares(signatures, sizes, jobs), handle)
