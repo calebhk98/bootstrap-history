@@ -11,7 +11,7 @@ from sim.compiled_tables.growth import NO_ROOM, claim_row
 from sim.jit import njit
 
 
-@njit
+@njit(inline="always")
 def commit_money(plan, balances, agents):
     """Write every planned balance, mark it seen, and mark its agent known."""
     keys, holders, after = plan.key, plan.holder, plan.after
@@ -47,7 +47,7 @@ def create_slot(stocks, stock_index, agents, key):
     return slot
 
 
-@njit
+@njit(inline="always")
 def commit_stock(plan, stocks, stock_index, agents):
     """Write every planned stock quantity, making the slots that do not exist yet in plan order, and mark the agent known.
     Returns OK or TABLE_FULL. The columns are held in hand; a table is passed on whole only to make a slot."""
@@ -127,7 +127,7 @@ def gross_so_far(total, seen):
     return total if seen != 0 else 0.0
 
 
-@njit
+@njit(inline="always")
 def record_transfers(transfers, first, last, money):
     """The records of transfer postings first .. last - 1: the currency's gross total, and the edge payer's and payee's year
     volume and net."""
@@ -143,7 +143,7 @@ def record_transfers(transfers, first, last, money):
             record_edge_money(money.balances, payee * money.stride + currency, amount, -amount)
 
 
-@njit
+@njit(inline="always")
 def record_moves(moves, first, last, goods):
     """The records of goods-move postings first .. last - 1, in order: the good's gross total, the purpose flow, the edge giver's
     and receiver's goods. OK or TABLE_FULL. The columns are held in hand and a table is passed on whole only to make a row: a kernel

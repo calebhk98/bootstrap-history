@@ -14,7 +14,7 @@ from sim.compiled_tables.causes import OK
 from sim.jit import njit
 
 
-@njit
+@njit(inline="always")
 def clear_plan(plan, local_index):
     """Forget the plan's cells (and their places in the plan's own index) so it can take the next batch."""
     for row in range(plan.row_count[0]):
@@ -46,7 +46,7 @@ def touch(plan_keys, plan_holders, plan_slots, plan_failing, plan_positions, row
         position = (position + 1) & mask
 
 
-@njit
+@njit(inline="always")
 def plan_transfers(transfers, first, last, balances, stride, plan, local_index):
     """Plan transfer postings first .. last - 1 as one batch over balance cells. Returns (OK, 0), or (NEGATIVE_AMOUNT, the
     posting row) at the first negative amount, which is checked before any overdraft. A cell's first touch starts from what
@@ -86,7 +86,7 @@ def held_in_slot(stocks, slot):
     return 0.0 if slot == FREE else stocks.quantity[slot]
 
 
-@njit
+@njit(inline="always")
 def plan_moves(moves, first, last, stocks, stock_index, plan, local_index):
     """Plan goods-move postings first .. last - 1 as one batch over stock cells. Returns (OK, 0), or (NEGATIVE_QUANTITY, the
     posting row). A cell's slot is looked up when the batch first touches it."""
@@ -173,7 +173,7 @@ def overdrawn(before, after, moved):
     return after < min(0.0, before) - max(ROUNDING_SHARE * moved, UNDERFLOW)
 
 
-@njit
+@njit(inline="always")
 def mark_overdrafts(plan, agents):
     """Set `failing` on every planned cell of an agent that is not an edge account and would be overdrawn. Returns how many."""
     holders, failing, before, after, moved, is_edge = plan.holder, plan.failing, plan.before, plan.after, plan.moved, agents.is_edge
@@ -185,7 +185,7 @@ def mark_overdrafts(plan, agents):
     return count
 
 
-@njit
+@njit(inline="always")
 def first_failing_cell(plan):
     """The cell of the first planned row marked failing, or -1."""
     for row in range(plan.row_count[0]):
@@ -194,7 +194,7 @@ def first_failing_cell(plan):
     return -1
 
 
-@njit
+@njit(inline="always")
 def check_batch(plan, agents, cause):
     """(OK, 0) when no planned cell is overdrawn, else (cause, the first overdrawn cell)."""
     if mark_overdrafts(plan, agents) == 0:
@@ -202,7 +202,7 @@ def check_batch(plan, agents, cause):
     return cause, first_failing_cell(plan)
 
 
-@njit
+@njit(inline="always")
 def check_one_payer(plan, agents, amount, cause):
     """The rule for a single posting made on its own: its payer (the plan's first cell), unless an edge account, must hold at
     least the amount less a rounding share. (OK, 0) or (cause, the payer's cell). The payer's row is marked failing."""
