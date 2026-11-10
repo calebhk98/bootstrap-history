@@ -98,6 +98,8 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
         offering = (arrays, costs) if year_goods_offers.usable() else None
     context = ClearingContext(setup, record, view, orders, arrays, costs)
+    if arrays is not None:
+        context.ask_known_areas_and_tiles()
     world = goods_turn.TurnWorld.of(setup, record, view, ledger, arrays, costs, plans) if arrays is not None else None
     by_output: Dict[str, List[str]] = {}
     sorted_ids = sorted(record.producers) if world is None else []

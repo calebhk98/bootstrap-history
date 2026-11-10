@@ -62,6 +62,15 @@ class ClearingContext:
         rate[area_id] = self.rate_in(self.orders.memory_tables.areas.name_list[area_id])
         known[area_id] = True
 
+    def ask_known_areas_and_tiles(self) -> None:
+        """Ask now for the lending rate of every area and the band multiple of every tile numbered so far, so the packing and decision
+        kernels do not find them missing and run again. Both are reads of the memory and the setup that do not change within the
+        year, so asking early gives the figures asking late would; an area or tile numbered later is still asked when found missing."""
+        for area_id in range(len(self.orders.memory_tables.areas.name_list)):
+            self.note_area_rate(area_id)
+        for tile in range(len(self.band_multiple_table())):
+            self.note_band_multiple(tile)
+
     def good_is_batchable(self, good: str) -> bool:
         """The good is in the year arrays (ground has a rent to hold for, read off the land record: `goods_table_clear._ground_values`)."""
         return self.arrays is not None and good in self.arrays.matrices.goods.row
