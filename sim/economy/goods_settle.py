@@ -15,6 +15,7 @@ import numpy
 from . import settlement
 from .goods_idle_years import note_idle_years as note_idle_years_kernel
 from .goods_good_clear import ON_OBJECTS, TABLE_TRADED, TABLE_UNTRADED
+from .goods_settle_one_call import NO_PAIRS, settle_in_one_call
 from .settlement_ids import SettledByIds, settle_by_ids
 from .settlement_note_kernel import FOREIGN_MARKET, note_columns
 from .year_ledger_tables import SALES_PURPOSE
@@ -55,11 +56,11 @@ class GoodSettlement:
     its settlement `takes` to the mint by (seller, tile) (`takes`, only for markets that have any). `settlement[place]` is the tuple of the three
     that earlier callers read."""
 
-    def __init__(self, count: int):
-        self.delivered = numpy.zeros(count)
+    def __init__(self, count: int, delivered: Optional[numpy.ndarray] = None):
+        self.delivered = numpy.zeros(count) if delivered is None else delivered
         self.takes: Dict[int, dict] = {}
         self._objects: Dict[int, dict] = {}          # place -> bought mapping, for a market settled on objects
-        self._by_ids = None                           # (names, settled columns, slots) when settled by ids
+        self._by_ids = None                           # (names, settled columns, markets that traded) when settled by ids
 
     def __len__(self) -> int:
         return len(self.delivered)
@@ -70,6 +71,9 @@ class GoodSettlement:
             return self._objects[place]
         if self._by_ids is not None:
             names, settled, slots = self._by_ids
+            if not isinstance(slots, dict):
+                slots = {position: index for index, position in enumerate(slots.tolist())}
+                self._by_ids = (names, settled, slots)
             if place in slots:
                 index = slots[place]
                 first, last = int(settled.agent_offset[index]), int(settled.agent_offset[index + 1])
@@ -86,10 +90,15 @@ def settle_good(record, ledger, cleared, good: str, plant_makers: Dict[str, list
     """Settle the traded markets of `cleared` (a `GoodClearing`) on the book and note them in the ledger; returns the `GoodSettlement`.
     `plant_makers` maps a good to the producers whose plant is built from it (`ledger.note_settlement`'s `plant_goods`)."""
     book = record.book
-    slots = numpy.flatnonzero(cleared.quantity > 0.0).tolist() if len(cleared) else []
+    if not len(cleared) or not (cleared.quantity > 0.0).any():
+        return GoodSettlement(len(cleared))
+    fused = settle_in_one_call(record, ledger, cleared, good, plant_makers)
+    if fused is NO_PAIRS:
+        return GoodSettlement(len(cleared))
+    if fused is not None:
+        return _answer_of_one_call(book, cleared, *fused)
+    slots = numpy.flatnonzero(cleared.quantity > 0.0).tolist()
     answer = GoodSettlement(len(cleared))
-    if not slots:
-        return answer
     if (cleared.way[slots] == TABLE_TRADED).all():
         settled = settle_by_ids(book, cleared.batch, cleared.slots[slots], cleared.context.setup.currency_id, good, "sale of %s" % good,
                                 ledger.import_accounts, ledger.export_accounts)
@@ -107,6 +116,16 @@ def settle_good(record, ledger, cleared, good: str, plant_makers: Dict[str, list
         else:
             answer.takes[position] = {}
         ledger.pending_mint_takes = {}
+    return answer
+
+
+def _answer_of_one_call(book, cleared, delivered, settled, positions, bought, any_to_mint) -> GoodSettlement:
+    """The `GoodSettlement` of a good settled in one call, and the buyers the respend reads (`cleared.bought`)."""
+    answer = GoodSettlement(len(cleared), delivered)
+    cleared.bought = bought
+    answer._by_ids = (book.agent_ids.name_list, settled, positions)
+    if any_to_mint:
+        _note_mint_takes(book, settled, positions.tolist(), answer)
     return answer
 
 
