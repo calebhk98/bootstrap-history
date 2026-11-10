@@ -109,6 +109,12 @@ opening is a quicker first test but did not show this bug. A batched kernel's te
 different lengths (here an order shorter than its columns): a random test that builds every part from the same list never
 meets the case.
 
+**A correction to commit "the close's share pricing asked about recipe slots after a row's first empty slot".** Its message
+says that change fixed a `KeyError: 'meat_kg'` in one civilisation's opening. It did not: the crash is Complaint 966 (the
+mod civilisation `sample_egypt_100bc_e7k2:egypt`, which raises the same error on `main` through `expected_sales`; on this
+branch the share pricer reaches `area_of` first). The change itself stands: it makes the batched pricer read the same slots
+the row-by-row one read (tested against that loop).
+
 **One-digit changes grow.** A hiring-kernel variant that moved floats by about 1e-14 and no discrete outcome on its own
 calls gave a Rome save differing in hundreds of thousands of leaves two stepped years later: a change that moves any bit
 cannot be checked by comparing games, only by tests of the kernel itself. Every change merged here is bit-identical.
