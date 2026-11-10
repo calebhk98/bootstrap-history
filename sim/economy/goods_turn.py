@@ -16,7 +16,9 @@ from sim.compiled_tables.causes import OK
 from . import goods_turn_spec, year_goods_offers
 from .goods_order_tables import PRODUCER_OUTPUT
 from .goods_turn_kernel import produce_turn
-from .goods_turn_offers_kernel import offer_pairs
+from .goods_turn_offer_kernel import offer_turn
+from .inventory import DISTRESS_CURVE_EXPONENT
+from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR
 from .types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
 from .year_arrays_memory import markets_by_good_tile
 
@@ -175,26 +177,14 @@ class TurnWorld:
         columns, spec, book = self.arrays.producers, self.spec, self.record.book
         stock = book.stock_rows
         agents = self.agents.array()[positions]
-        tiles = self.tiles.array()[columns.tile_row[positions]]
-        pair_ptr, pair_good, pair_units, pair_price, pair_spoilage, slow = offer_pairs(
-            positions, agents, tiles, columns.recipe_row[positions], columns.capacity_runs[positions], spec.output_ptr, spec.output_good,
-            spec.output_kept, spec.spoilage, self.goods.array(), self.costs.expected, self.costs.slot_of, stock.table.key,
-            stock.table.quantity, stock.index)
-        counts = numpy.diff(pair_ptr)
-        place = numpy.repeat(numpy.arange(len(positions)), counts)
-        kept = ~slow[place]
         cash = book.balances_at(agents, self.setup.currency_id)
-        shortfall = numpy.maximum(0.0, columns.cash_target[positions] - cash - self.ledger.running_costs_at(agents))
-        quick = numpy.flatnonzero(~slow)
-        reservation = numpy.empty(0)
-        if len(quick):
-            pointer = numpy.zeros(len(quick) + 1, dtype=numpy.int64)
-            pointer[1:] = numpy.cumsum(counts[quick])
-            reservation = year_goods_offers.reservations_for(
-                self.arrays, self.costs, positions[quick], pointer, pair_price[kept], pair_spoilage[kept], pair_units[kept],
-                shortfall[quick], rate)
-        quick_place = place[kept]
-        pairs = (pair_good[kept], pair_units[kept], reservation)
+        slow, shortfall, quick_place, pair_good, pair_units, reservation = offer_turn(
+            positions, self.agents.array(), self.tiles.array(), columns.tile_row, columns.recipe_row, columns.capacity_runs,
+            spec.output_ptr, spec.output_good, spec.output_kept, spec.spoilage, self.goods.array(), self.costs.expected,
+            self.costs.slot_of, stock.table.key, stock.table.quantity, stock.index, cash, self.ledger.running_costs_at(agents),
+            columns.cash_target, columns.last_runs, columns.expected_sales, self.costs.pays, float(rate),
+            OUTPUT_CHANGE_SHARE_PER_YEAR, DISTRESS_CURVE_EXPONENT)
+        pairs = (pair_good, pair_units, reservation)
         written = 0
         for each in numpy.flatnonzero(slow).tolist() + [len(positions)]:
             upto = int(numpy.searchsorted(quick_place, each, side="left"))
