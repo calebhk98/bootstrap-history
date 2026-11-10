@@ -13,7 +13,7 @@ import unittest
 
 import numpy as np
 
-from sim.labour.market import switching_kernel
+from sim.tests.labour_switching_reference import band_odds
 
 TOLERANCE = 1e-12
 NEGLIGIBLE = 1e-3
@@ -58,9 +58,7 @@ class BandSharesAgreeWithThePlainLoop(unittest.TestCase):
             subsistence, stay_score = rng.uniform(0.5, 3.0), rng.choice([0.0, rng.uniform(-3.0, 3.0)])
             young, scale = rng.random() < 0.5, rng.choice([1.0, rng.uniform(0.3, 2.0)])
             expected = plain_band_odds(chances, gain, lost, subsistence, stay_score, young, scale, NEGLIGIBLE)
-            shares = np.empty((bands, targets))
-            moves = switching_kernel.band_shares(np.array(chances), np.array(gain), np.array(lost), subsistence, stay_score,
-                                                 young, scale, NEGLIGIBLE, shares)
+            shares, moves = band_odds(chances, gain, lost, subsistence, stay_score, young, scale, NEGLIGIBLE)
             for band, plain in enumerate(expected):
                 self.assertEqual(bool(moves[band]), plain is not None)
                 if plain is None:

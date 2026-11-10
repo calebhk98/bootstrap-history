@@ -39,19 +39,45 @@ def vacant_hours(results, row):
 
 
 @njit
-def hours_arrived(rates, results, people, present, area, trade, row):
-    """`expectations.hours_arrived_since`: hours offered by workers who joined a trade needing no training since its clearing."""
-    held = results.hours_held[row]
-    if math.isnan(held) or rates.training_years[trade] > 0.0:
-        return 0.0
-    now = 0.0
+def headcount(people, present, row):
+    """The people of a pair, all bands (`math.fsum`); none where the pair is not there."""
     if present[row]:
-        now = exact_sum(people[row], people.shape[1])
+        return exact_sum(people[row], people.shape[1])
+    return 0.0
+
+
+@njit
+def counted_headcount(people, present, totals, counted, row):
+    """`headcount`, kept in `totals` until the caller clears `counted[row]` because the pair's people changed."""
+    if not counted[row]:
+        totals[row] = headcount(people, present, row)
+        counted[row] = True
+    return totals[row]
+
+
+@njit
+def can_have_arrivals(rates, results, trade, row):
+    """Whether hands could have joined the trade since its clearing: it needs no training and a clearing held hours."""
+    return not (math.isnan(results.hours_held[row]) or rates.training_years[trade] > 0.0)
+
+
+@njit
+def hours_arrived_among(rates, results, now, row):
+    """`expectations.hours_arrived_since` for a trade that `can_have_arrivals`, `now` people being in it."""
+    held = results.hours_held[row]
     arrived = now * rates.hours - held
     if arrived <= 0.0:
         return 0.0
     sold_share = results.hours_offered[row] / held if held > 0.0 else 1.0
     return arrived * min(1.0, sold_share)
+
+
+@njit
+def hours_arrived(rates, results, people, present, area, trade, row):
+    """`expectations.hours_arrived_since`: hours offered by workers who joined a trade needing no training since its clearing."""
+    if not can_have_arrivals(rates, results, trade, row):
+        return 0.0
+    return hours_arrived_among(rates, results, headcount(people, present, row), row)
 
 
 @njit
@@ -94,10 +120,11 @@ def idle_share(results, row):
 
 
 @njit
-def income_at_graduation(rates, results, caps, hours, people, present, book, area, trade, chances, scratch_caps, scratch_hours):
+def income_at_graduation(rates, results, caps, hours, people, present, totals, counted, book, area, trade, chances, scratch_caps,
+                         scratch_hours):
     """`expectations.income_at_graduation`: what a trade is expected to pay once someone starting its training now has finished,
     keeping today's premium over the outside option only for the part of today's shortage the people already training will
-    not fill; NaN where the area states no subsistence."""
+    not fill; NaN where the area states no subsistence. `totals`, `counted` keep the pairs' headcounts (`counted_headcount`)."""
     floor = rates.subsistence[area]
     row = area * rates.risk.shape[0] + trade
     if math.isnan(floor):
@@ -105,7 +132,9 @@ def income_at_graduation(rates, results, caps, hours, people, present, book, are
     if not results.cleared[row] or results.hours_wanted[row] <= 0.0:
         return floor
     reservation = reservation_wage(rates, area, trade)
-    arrived = hours_arrived(rates, results, people, present, area, trade, row)
+    arrived = 0.0
+    if can_have_arrivals(rates, results, trade, row):
+        arrived = hours_arrived_among(rates, results, counted_headcount(people, present, totals, counted, row), row)
     heading = results.wage[row] if math.isnan(results.target_wage[row]) else results.target_wage[row]
     if arrived > 0.0 and results.demand_count[row] > 0:
         heading = slid_wage(heading, reservation, results.hours_offered[row], arrived, results, caps, hours, row, scratch_caps, scratch_hours)
