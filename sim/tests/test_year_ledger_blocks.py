@@ -112,6 +112,16 @@ class PairBlockTests(unittest.TestCase):
         self.assertEqual(listed(block.hours_hired), listed(plain.hours_hired))
         self.assertEqual(block.grown.as_plain(), plain.grown.as_plain())
 
+    def test_as_plain_of_some_agents_is_those_agents_of_the_whole(self):
+        ledger = YearLedger()
+        ledger.received.replace_many(["c", "a", "d", "b"], [{"rye": 1.0, "oil": 2.0}, {"rye": 3.0}, {}, {"oil": 4.0}])
+        whole = ledger.received.as_plain()
+        self.assertEqual(list(whole), ["c", "a", "d", "b"])
+        chosen = ledger.received.as_plain(["b", "c", "zz"])
+        self.assertEqual(list(chosen), ["c", "b"])
+        self.assertEqual(chosen, {name: whole[name] for name in ("c", "b")})
+        self.assertEqual(ledger.received.as_plain([]), {})
+
 
 if __name__ == "__main__":
     unittest.main()

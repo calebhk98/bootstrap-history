@@ -122,10 +122,14 @@ def build(setup, record, ledger, stocks_at_start: Mapping[str, float], prices: M
                         real_wages=_real_wages(setup, record, prices, wages))
 
 
-def plain_rows(view) -> Dict[str, Dict[str, float]]:
-    """A ledger's agent -> (sub -> amount) view as plain dicts, read from its table in one pass (a plain mapping in a test is copied)."""
+def plain_rows(view, agents=None) -> Dict[str, Dict[str, float]]:
+    """A ledger's agent -> (sub -> amount) view as plain dicts, read from its table in one pass (a plain mapping in a test is copied);
+    with `agents`, only those agents' rows."""
     block = getattr(view, "as_plain", None)
-    return block() if block is not None else {name: dict(rows.items()) for name, rows in view.items()}
+    if block is not None:
+        return block(agents)
+    wanted = None if agents is None else set(agents)
+    return {name: dict(rows.items()) for name, rows in view.items() if wanted is None or name in wanted}
 
 
 def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
@@ -134,8 +138,8 @@ def _goods(setup, record, ledger, stocks_at_start) -> Dict[str, GoodAccount]:
     other_edges = [edge for edge in book.edge_goods_agents()
                    if edge not in (EDGE_PRODUCTION, EDGE_CONSUMPTION, EDGE_SPOILAGE)]
     cohort_ids = list(record.cohorts)
-    bought = summed_by_key(*row_columns(plain_rows(ledger.received), cohort_ids))
-    grown = summed_by_key(*row_columns(plain_rows(ledger.grown), cohort_ids))
+    bought = summed_by_key(*row_columns(plain_rows(ledger.received, cohort_ids), cohort_ids))
+    grown = summed_by_key(*row_columns(plain_rows(ledger.grown, cohort_ids), cohort_ids))
     delivered = ledger.delivered_by_market.items()     # what traded is what was delivered
     turnover = summed_by_key([good for (good, _area), _quantity in delivered], [quantity for _market, quantity in delivered])
     names = sorted(set(stocks_now) | set(stocks_at_start) | set(turnover) | set(setup.specs))
@@ -197,11 +201,12 @@ def _need_units(kept, nothing, quantities: Mapping[str, float]) -> float:
 
 def _cohorts(setup, record, ledger, prices) -> List[CohortAccount]:
     cost = basket_cost_per_head(record.goods, prices, math.fsum(setup.opening_population_by_tile.values()))
-    received_by_cohort, grown_by_cohort = plain_rows(ledger.received), plain_rows(ledger.grown)
     needs_by_tile: Dict[str, tuple] = {}     # tile -> (hunger need or None, its kept goods, its zero); the basket is the tile's
     rows = []
     store = table_of(record.cohorts)
     order = store.order()
+    cohort_ids = [store.ids[row] for row in order.tolist()]
+    received_by_cohort, grown_by_cohort = plain_rows(ledger.received, cohort_ids), plain_rows(ledger.grown, cohort_ids)
     people_of, income_of = store.floats("people", order), store.floats("last_year_income", order)
     classes = store.table.income_class[order].tolist()
     for place, (row, tile) in enumerate(zip(order.tolist(), store.tile_names(order))):

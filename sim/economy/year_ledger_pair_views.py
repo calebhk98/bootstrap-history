@@ -234,10 +234,15 @@ class NestedView(Show):
         return [view for _name, view in self.items()]
 
     @flushed
-    def as_plain(self) -> dict:
+    def as_plain(self, only=None) -> dict:
         """Every agent's rows as plain `sub -> amount` dicts, agents in entry order and each agent's rows in the order they were made:
-        what `{name: dict(inner.items()) for name, inner in self.items()}` gives, read from the table in one pass. Not live."""
+        what `{name: dict(inner.items()) for name, inner in self.items()}` gives, read from the table in one pass. Not live. With `only`
+        (names), just those agents, in the same order."""
         members, names = self._members()
+        if only is not None:
+            wanted = set(only)
+            kept = [place for place, name in enumerate(names) if name in wanted]
+            members, names = members[kept], [names[place] for place in kept]
         table = self._store.rows.table
         live = numpy.flatnonzero(table.live[:self._store.row_count])
         return plain_by_agent(members, names, table.agent[live], table.subkey[live], table.extra[live], table.amount[live], self._sub.names)
