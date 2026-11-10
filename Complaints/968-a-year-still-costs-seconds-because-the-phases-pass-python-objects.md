@@ -99,6 +99,16 @@ market with a figure that is not finite (`goods_market_kernels.allocate_arrays` 
 exponent, so they must reach `sorted_figures`), and a test that injects inf and nan into random books against
 `allocate_arrays`. Worth about a third of those stages (about 10 ms of a Rome year).
 
+**Warm-save digests do not cover a new game.** A bug in the close's batched share pricing (a market's bids read at the wrong
+place when its clearing order was shorter than its columns) left both warm digests unchanged but changed a new Rome game's
+opening entirely; only the slow tier's `protocol_golden` caught it. Check every change on a new game too, not only on saves:
+from an empty `ROME_CACHE_DIR` (with `NUMBA_CACHE_DIR` pointed at the checkout's compiled kernels), run
+`printf '{"cmd":"state"}\n{"cmd":"quit"}\n' | PYTHONHASHSEED=1 python3 sim/simulator.py agent --civ rome_100ad --seed 7
+--deterministic --no-events --horizon 30 --session NEW.json` on the base and on the change and compare the replies; England's
+opening is a quicker first test but did not show this bug. A batched kernel's test must include inputs whose parts have
+different lengths (here an order shorter than its columns): a random test that builds every part from the same list never
+meets the case.
+
 **One-digit changes grow.** A hiring-kernel variant that moved floats by about 1e-14 and no discrete outcome on its own
 calls gave a Rome save differing in hundreds of thousands of leaves two stepped years later: a change that moves any bit
 cannot be checked by comparing games, only by tests of the kernel itself. Every change merged here is bit-identical.
