@@ -43,14 +43,15 @@ def wrap_kernels():
 
 def _timed(name, function, totals):
     def phase_call(*arguments, **keywords):
-        started, kernel_before = time.perf_counter(), _kernel["seconds"]
+        started, kernel_before, calls_before = time.perf_counter(), _kernel["seconds"], _kernel["calls"]
         try:
             return function(*arguments, **keywords)
         finally:
-            entry = totals.setdefault(name, [0.0, 0.0, 0])
+            entry = totals.setdefault(name, [0.0, 0.0, 0, 0])
             entry[0] += time.perf_counter() - started
             entry[1] += _kernel["seconds"] - kernel_before
             entry[2] += 1
+            entry[3] += _kernel["calls"] - calls_before
     return phase_call
 
 
@@ -112,13 +113,14 @@ def main(save_path, repeat):
     print("kernels wrapped %d; kernel calls per year %d; years %d; wall per year %s"
           % (kernels, _kernel["calls"] // repeat, repeat, " ".join("%.3f" % wall for wall in walls)))
     print("kernel time per year %.3f s" % (_kernel["seconds"] / repeat))
-    print("%-58s %8s %8s %8s %7s" % ("phase or economy call (per year)", "wall", "kernel", "python", "calls"))
-    for name, (wall, kernel, calls) in sorted(totals.items(), key=lambda item: -(item[1][0] - item[1][1])):
+    print("%-58s %8s %8s %8s %7s %8s" % ("phase or economy call (per year)", "wall", "kernel", "python", "calls", "kernels"))
+    for name, (wall, kernel, calls, kernel_calls) in sorted(totals.items(), key=lambda item: -(item[1][0] - item[1][1])):
         if wall / repeat < 0.002:
             continue
-        print("%-58s %8.3f %8.3f %8.3f %7d" % (name, wall / repeat, kernel / repeat, (wall - kernel) / repeat, calls // repeat))
-    print("\n%-76s %8s %7s" % ("kernel called from Python (per year)", "seconds", "calls"))
-    for name, (seconds, calls) in sorted(_by_kernel.items(), key=lambda item: -item[1][0])[:25]:
+        print("%-58s %8.3f %8.3f %8.3f %7d %8d" % (name, wall / repeat, kernel / repeat, (wall - kernel) / repeat, calls // repeat,
+                                                kernel_calls // repeat))
+    print("\n%-76s %8s %7s" % ("kernel called from Python, most called first (per year)", "seconds", "calls"))
+    for name, (seconds, calls) in sorted(_by_kernel.items(), key=lambda item: -item[1][1])[:25]:
         print("%-76s %8.3f %7d" % (name, seconds / repeat, calls // repeat))
 
 
