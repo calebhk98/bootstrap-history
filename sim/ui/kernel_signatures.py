@@ -17,11 +17,14 @@ def declared_signatures():
         return types.Array(element, dimensions, "C")
 
     from numba import typeof
-    from sim.economy.api import GOODS_MARKETS, GoodsMarkets
+    from sim.economy.api import GOODS_BIDS, GOODS_MARKETS, GOODS_OFFERS, GoodsBids, GoodsMarkets, GoodsOffers
     markets = typeof(GOODS_MARKETS.new_table(GoodsMarkets, 1))      # the namedtuple of columns a goods market kernel takes
+    goods_bids, goods_offers = typeof(GOODS_BIDS.new_table(GoodsBids, 1)), typeof(GOODS_OFFERS.new_table(GoodsOffers, 1))
     floats, whole, whole_grid = array(number, 1), array(integer, 1), array(integer, 2)
 
     signatures = {
+        # the clearing chain a ground good keeps (the fused call holds every other good's): the fixture has no ground good
+        "sim.economy.goods_rows_kernel.good_rows": [(goods_bids, goods_offers, integer, whole, whole, array(types.uint8, 1), flag)],
         "sim.economy.market_table_kernels.remap_goods_markets": [(markets, markets, whole, whole, whole, whole, whole)],
         "sim.economy.market_table_kernels.put_floats": [(floats, whole, whole, whole, integer, whole, floats)],
         "sim.economy.market_table_kernels.drop_floats": [(floats, whole, integer, whole)],
