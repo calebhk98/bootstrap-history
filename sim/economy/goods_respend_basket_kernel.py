@@ -105,32 +105,49 @@ def need_shares(first, last, has_limits, goods, effects, limits, limited, expone
 
 
 @njit(**KERNEL)
+def price_basket(basket, need_ptr, need_good_ptr, need_has_limits, goods, effects, limits, limited, exponent, ask_of_good,
+                 shares, ceilings, priced, units, fixed_value, fixed_flag, need_priced):
+    """`need_shares` of every need of a basket, priced at `ask_of_good`; `need_priced[need]` is how many goods of the need are
+    priced. What it fills depends on the asks alone, not on the money to spend, so buyers of one basket facing the same asks
+    share it."""
+    for need in range(need_ptr[basket], need_ptr[basket + 1]):
+        need_priced[need] = need_shares(need_good_ptr[need], need_good_ptr[need + 1], need_has_limits[need], goods, effects,
+                                        limits, limited, exponent, ask_of_good, shares, ceilings, priced, units, fixed_value,
+                                        fixed_flag)
+
+
+@njit(**KERNEL)
 def buyer_bids(basket, money, need_ptr, need_weight, need_has_limits, need_good_ptr, goods, effects, limits, limited,
                exponent, ask_of_good, shares, ceilings, priced, units, fixed_value, fixed_flag, spend, ceiling, touched,
                out_good, out_spend, out_ceiling):
+    """The bids a buyer places with `money` (see `place_priced_bids`) at `ask_of_good`; the others as `need_shares`."""
+    need_priced = numpy.zeros(len(need_weight), dtype=numpy.int64)
+    price_basket(basket, need_ptr, need_good_ptr, need_has_limits, goods, effects, limits, limited, exponent, ask_of_good,
+                 shares, ceilings, priced, units, fixed_value, fixed_flag, need_priced)
+    return place_priced_bids(basket, money, need_ptr, need_weight, need_good_ptr, need_priced, goods, priced, shares,
+                             ceilings, spend, ceiling, touched, out_good, out_spend, out_ceiling)
+
+
+@njit(**KERNEL)
+def place_priced_bids(basket, money, need_ptr, need_weight, need_good_ptr, need_priced, goods, priced, shares, ceilings,
+                      spend, ceiling, touched, out_good, out_spend, out_ceiling):
     """The bids a buyer places with `money` (by need, indexed as the basket's needs: the money it was rationed of, zero where
-    none), as goods_respend.respend_bids: a need's money goes to its goods still offered by the basket's choice rule; money of
-    a need with none offered passes to the needs that have goods, by their budget weights. Writes the goods bid for in
-    ascending order to `out_good`, with the money bid and the price ceiling, and returns how many. `spend`, `ceiling` and
-    `touched` are scratch over goods; the others as `need_shares`."""
+    none), as goods_respend.respend_bids, from the shares, ceilings and priced goods `price_basket` left: a need's money goes
+    to its goods still offered by the basket's choice rule; money of a need with none offered passes to the needs that have
+    goods, by their budget weights. Writes the goods bid for in ascending order to `out_good`, with the money bid and the
+    price ceiling, and returns how many. `spend`, `ceiling` and `touched` are scratch over goods."""
     first_need, last_need = need_ptr[basket], need_ptr[basket + 1]
     weight_total = 0.0
     passed = 0.0
     for need in range(first_need, last_need):
-        count = need_shares(need_good_ptr[need], need_good_ptr[need + 1], need_has_limits[need], goods, effects, limits,
-                            limited, exponent, ask_of_good, shares, ceilings, priced, units, fixed_value, fixed_flag)
-        if count > 0:
+        if need_priced[need] > 0:
             weight_total += need_weight[need]
         elif money[need - first_need] > 0.0:
             passed += money[need - first_need]
     spent = 0
     for need in range(first_need, last_need):
         first, last = need_good_ptr[need], need_good_ptr[need + 1]
-        has_goods = False
-        for row in range(first, last):
-            if priced[row]:
-                has_goods = True
-        if not has_goods:
+        if need_priced[need] == 0:
             continue
         amount = money[need - first_need]
         if amount < 0.0:

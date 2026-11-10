@@ -13,8 +13,27 @@ import numpy
 from sim.jit import njit
 
 from .goods_market_kernels import KERNEL, allocate_arrays, total_wanted
-from .goods_respend_basket_kernel import buyer_bids
+from .goods_respend_basket_kernel import place_priced_bids, price_basket
 from .goods_respend_market_kernel import lowest_ask, quantity_of, wanted_adding
+
+
+@njit(**KERNEL)
+def fill_asks(markets_of_good, low_ask, asks):
+    """The lowest ask offered for each good in an area (NaN for a good with no market there)."""
+    for good in range(len(markets_of_good)):
+        market = markets_of_good[good]
+        asks[good] = low_ask[market] if market >= 0 else numpy.nan
+
+
+@njit(**KERNEL)
+def asks_unchanged(valid, before, now):
+    """Whether `now` equals the asks a basket was priced at (a NaN equals a NaN)."""
+    if not valid:
+        return False
+    for good in range(len(now)):
+        if before[good] != now[good] and not (before[good] != before[good] and now[good] != now[good]):
+            return False
+    return True
 
 
 @njit(**KERNEL)
@@ -110,7 +129,12 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
     spend = numpy.zeros(good_count)
     ceiling = numpy.zeros(good_count)
     touched = numpy.zeros(good_count, dtype=numpy.bool_)
-    ask_of_good = numpy.zeros(good_count)
+    # the asks each area's buyers face this round, and the asks the basket's shares were last priced at
+    area_asks = numpy.zeros(area_market.shape)
+    area_round = numpy.full(area_market.shape[0], -1, dtype=numpy.int64)
+    basket_asks = numpy.zeros((len(need_ptr) - 1, good_count))
+    basket_valid = numpy.zeros(len(need_ptr) - 1, dtype=numpy.bool_)
+    need_priced = numpy.zeros(len(need_weight), dtype=numpy.int64)
     out_good = numpy.zeros(good_count, dtype=numpy.int64)
     out_spend = numpy.zeros(good_count)
     out_ceiling = numpy.zeros(good_count)
@@ -132,6 +156,24 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
     paid_sum = numpy.zeros(len(agent_cash))
     received_sum = numpy.zeros(len(agent_cash))
     owed = numpy.zeros(len(agent_cash))
+    # per-market scratch (a market has at most one bid per buyer); `no_floors` stays zero
+    no_floors = numpy.zeros(buyers)
+    flexible_buffer = numpy.zeros(buyers)
+    budget_buffer = numpy.zeros(buyers)
+    reference_buffer = numpy.zeros(buyers)
+    exponent_buffer = numpy.zeros(buyers)
+    maximum_buffer = numpy.zeros(buyers)
+    adding_buffer = numpy.zeros(buyers, dtype=numpy.bool_)
+    units_buffer = numpy.zeros(buyers)
+    paid_buffer = numpy.zeros(buyers)
+    most_offers = 0
+    for market in range(markets):
+        most_offers = max(most_offers, offer_ptr[market + 1] - offer_ptr[market])
+    offer_buffer = numpy.zeros(most_offers, dtype=numpy.int64)
+    ask_buffer = numpy.zeros(most_offers)
+    quantity_buffer = numpy.zeros(most_offers)
+    nothing = numpy.zeros(0)
+    no_flow = numpy.zeros((0, 0))
     paid_so_far = 0.0
     overflow = False
 
@@ -154,13 +196,19 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                 if total > cash:
                     amount = amount * cash / total
                 money_local[slot] = amount
-            for good in range(good_count):
-                market = area_market[buyer_area_row[buyer], good]
-                ask_of_good[good] = low_ask[market] if market >= 0 else numpy.nan
-            spent = buyer_bids(basket, money_local, need_ptr, need_weight, need_has_limits, need_good_ptr, goods, effects,
-                               limits, limited, basket_exponent[basket], ask_of_good, shares, ceilings, priced,
-                               units_scratch, fixed_value, fixed_flag, spend, ceiling, touched, out_good, out_spend,
-                               out_ceiling)
+            area_row = buyer_area_row[buyer]
+            if area_round[area_row] != round_number:
+                area_round[area_row] = round_number
+                fill_asks(area_market[area_row], low_ask, area_asks[area_row])
+            ask_of_good = area_asks[area_row]
+            if not asks_unchanged(basket_valid[basket], basket_asks[basket], ask_of_good):
+                basket_valid[basket] = True
+                basket_asks[basket, :] = ask_of_good
+                price_basket(basket, need_ptr, need_good_ptr, need_has_limits, goods, effects, limits, limited,
+                             basket_exponent[basket], ask_of_good, shares, ceilings, priced, units_scratch, fixed_value,
+                             fixed_flag, need_priced)
+            spent = place_priced_bids(basket, money_local, need_ptr, need_weight, need_good_ptr, need_priced, goods, priced,
+                                      shares, ceilings, spend, ceiling, touched, out_good, out_spend, out_ceiling)
             for index in range(spent):
                 good = out_good[index]
                 gen_market[count] = area_market[buyer_area_row[buyer], good]
@@ -190,13 +238,13 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
             if bids_logged + bids > capacity or clears_logged + 1 > capacity:
                 overflow = True
                 break
-            floors = numpy.zeros(bids)
-            flexibles = numpy.zeros(bids)
-            budgets = numpy.zeros(bids)
-            references = numpy.zeros(bids)
-            exponents = numpy.zeros(bids)
-            maximums = numpy.zeros(bids)
-            adding = numpy.zeros(bids, dtype=numpy.bool_)
+            floors = no_floors[:bids]
+            flexibles = flexible_buffer[:bids]
+            budgets = budget_buffer[:bids]
+            references = reference_buffer[:bids]
+            exponents = exponent_buffer[:bids]
+            maximums = maximum_buffer[:bids]
+            adding = adding_buffer[:bids]
             scale = 0.0
             for position in range(bids):
                 bid = placed[first + position]
@@ -221,9 +269,9 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                 if offer_quantity[offer] > 0.0:
                     active += 1
                     supply += offer_quantity[offer]
-            offers = numpy.zeros(active, dtype=numpy.int64)
-            asks = numpy.zeros(active)
-            quantities = numpy.zeros(active)
+            offers = offer_buffer[:active]
+            asks = ask_buffer[:active]
+            quantities = quantity_buffer[:active]
             slot = 0
             for offer in range(offer_ptr[market], offer_ptr[market + 1]):
                 if offer_quantity[offer] > 0.0:
@@ -238,8 +286,8 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
             traded = 0.0
             requested = 0.0
             mean = 0.0
-            sold = numpy.zeros(active)
-            flow = numpy.zeros((active, bids))
+            sold = nothing          # what a market that does not trade never reads
+            flow = no_flow
             if trades:
                 bounds = numpy.zeros(2, dtype=numpy.int64)
                 bounds[1] = bids
@@ -286,8 +334,10 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
             for position in range(bids):
                 has_bid[market, gen_buyer[placed[first + position]]] = True
             # settlement: pairs in offer-major order, scaled to the stock and purses, then walked
-            units_got = numpy.zeros(bids)
-            money_paid = numpy.zeros(bids)
+            units_got = units_buffer[:bids]
+            money_paid = paid_buffer[:bids]
+            units_got[:] = 0.0
+            money_paid[:] = 0.0
             delivered = 0.0
             if traded > 0.0:
                 pair_count = 0
@@ -309,36 +359,48 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                             pair_bid[pair] = position
                             pair_amount[pair] = flow[slot, position]
                             pair += 1
+                # who each pair is between, found once
+                pair_buyer = numpy.zeros(pair_count, dtype=numpy.int64)
+                pair_offer = numpy.zeros(pair_count, dtype=numpy.int64)
+                pair_key = numpy.zeros(pair_count, dtype=numpy.int64)
+                pair_held = numpy.zeros(pair_count, dtype=numpy.int64)
+                pair_payer = numpy.zeros(pair_count, dtype=numpy.int64)
+                pair_seller = numpy.zeros(pair_count, dtype=numpy.int64)
                 for pair in range(pair_count):
-                    asked[offer_key[offers[pair_slot[pair]]]] += pair_amount[pair]
+                    pair_buyer[pair] = gen_buyer[placed[first + pair_bid[pair]]]
+                    pair_offer[pair] = offers[pair_slot[pair]]
+                    pair_key[pair] = offer_key[pair_offer[pair]]
+                    pair_held[pair] = buyer_key[pair_buyer[pair], market_good[market]]
+                    pair_payer[pair] = buyer_agent[pair_buyer[pair]]
+                    pair_seller[pair] = offer_agent[pair_offer[pair]]
                 for pair in range(pair_count):
-                    key = offer_key[offers[pair_slot[pair]]]
+                    asked[pair_key[pair]] += pair_amount[pair]
+                for pair in range(pair_count):
+                    key = pair_key[pair]
                     if asked[key] > key_stock[key] and not agent_edge[key_agent[key]]:
                         pair_amount[pair] *= max(key_stock[key], 0.0) / asked[key]
                 for pair in range(pair_count):
-                    asked[offer_key[offers[pair_slot[pair]]]] = 0.0
+                    asked[pair_key[pair]] = 0.0
                 for pair in range(pair_count):
-                    payer = buyer_agent[gen_buyer[placed[first + pair_bid[pair]]]]
-                    owed[payer] += pair_amount[pair] * asks[pair_slot[pair]]
+                    owed[pair_payer[pair]] += pair_amount[pair] * asks[pair_slot[pair]]
                 for pair in range(pair_count):
-                    payer = buyer_agent[gen_buyer[placed[first + pair_bid[pair]]]]
+                    payer = pair_payer[pair]
                     if owed[payer] > agent_cash[payer] and not agent_edge[payer]:
                         pair_amount[pair] *= max(agent_cash[payer], 0.0) / owed[payer]
                 for pair in range(pair_count):
-                    owed[buyer_agent[gen_buyer[placed[first + pair_bid[pair]]]]] = 0.0
+                    owed[pair_payer[pair]] = 0.0
                 for pair in range(pair_count):
-                    stock_walk[offer_key[offers[pair_slot[pair]]]] = key_stock[offer_key[offers[pair_slot[pair]]]]
-                    cash_walk[buyer_agent[gen_buyer[placed[first + pair_bid[pair]]]]] = \
-                        agent_cash[buyer_agent[gen_buyer[placed[first + pair_bid[pair]]]]]
+                    stock_walk[pair_key[pair]] = key_stock[pair_key[pair]]
+                    cash_walk[pair_payer[pair]] = agent_cash[pair_payer[pair]]
                 for pair in range(pair_count):
                     amount = pair_amount[pair]
                     if amount <= 0.0:
                         continue
-                    offer = offers[pair_slot[pair]]
-                    buyer = gen_buyer[placed[first + pair_bid[pair]]]
-                    payer = buyer_agent[buyer]
-                    seller = offer_agent[offer]
-                    key = offer_key[offer]
+                    offer = pair_offer[pair]
+                    buyer = pair_buyer[pair]
+                    payer = pair_payer[pair]
+                    seller = pair_seller[pair]
+                    key = pair_key[pair]
                     if not agent_edge[seller]:
                         if stock_walk[key] < amount:
                             amount = stock_walk[key]
@@ -349,7 +411,7 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                             pay = cash_walk[payer]
                         cash_walk[payer] -= pay
                     given_sum[key] += amount
-                    held = buyer_key[buyer, market_good[market]]
+                    held = pair_held[pair]
                     if held >= 0:
                         taken_sum[held] += amount
                     paid_sum[payer] += pay
@@ -377,14 +439,12 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                     pairs_logged += 1
                 # the purses and stocks become what the book makes of the summed settlement: start less out, plus in
                 for pair in range(pair_count):
-                    key = offer_key[offers[pair_slot[pair]]]
-                    held = buyer_key[gen_buyer[placed[first + pair_bid[pair]]], market_good[market]]
-                    for each in (key, held):
+                    for each in (pair_key[pair], pair_held[pair]):
                         if each >= 0:
                             key_stock[each] = key_stock[each] - given_sum[each] + taken_sum[each]
                             given_sum[each] = 0.0
                             taken_sum[each] = 0.0
-                    for each in (buyer_agent[gen_buyer[placed[first + pair_bid[pair]]]], offer_agent[offers[pair_slot[pair]]]):
+                    for each in (pair_payer[pair], pair_seller[pair]):
                         agent_cash[each] = agent_cash[each] - paid_sum[each] + received_sum[each]
                         paid_sum[each] = 0.0
                         received_sum[each] = 0.0
