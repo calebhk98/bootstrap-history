@@ -13,8 +13,8 @@ from typing import Iterable, Optional
 import numpy
 
 from .merchant_figures import MarketFigures
-from .market_table_specs import KEY_SEPARATOR
 from .market_tables import MarketTables
+from .saved_name_order import in_saved_order
 
 
 class MarketColumn(MarketFigures):
@@ -34,14 +34,15 @@ class MarketColumn(MarketFigures):
 
     def __iter__(self):
         """The markets with a figure in the order of (good, area): the order a dictionary written market by market in sorted order had."""
-        names = self.named()[0]
-        return iter(sorted(names, key=lambda name: name.replace(KEY_SEPARATOR, "\x00")))
+        return iter([name for name, _figure in self.items()])
 
     def items(self) -> list:
         """[(market name, figure)] in (good, area) order, read from the column in one pass."""
-        names, figures = self.named()
-        ordered = sorted(zip(names, figures), key=lambda pair: pair[0].replace(KEY_SEPARATOR, "\x00"))
-        return [(name, int(figure) if self.integer else figure) for name, figure in ordered]
+        self._chosen()
+        names = self._numbering.name_list
+        rows = in_saved_order(self._present_rows(), names)
+        figures = self._current()[rows].tolist()
+        return [(names[row], int(figure) if self.integer else figure) for row, figure in zip(rows.tolist(), figures)]
 
     def get(self, key, default=None):
         figure = super().get(key, default)

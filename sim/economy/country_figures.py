@@ -135,7 +135,7 @@ def _traded_volumes(economy, country: Optional[str]) -> Dict[str, float]:
             by_area = areas_of.get(good)
             if by_area is None:
                 by_area = areas_of[good] = _area_tiles(economy, good)
-            if area in by_area and not (by_area[area] & tiles):
+            if area in by_area and by_area[area].isdisjoint(tiles):
                 continue
         totals[good] = totals.get(good, 0.0) + volume
     return totals

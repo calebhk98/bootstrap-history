@@ -80,3 +80,19 @@ class MarketColumnTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class MarketColumnOrderTests(unittest.TestCase):
+    def test_items_and_iteration_match_the_sorted_names_of_random_columns(self):
+        import random
+        from sim.tests.goods_market_column_plain import items_by_sorting
+        goods = ["iron", "iron_ore", "iron2", "salt", "grain", "a b"]
+        for seed in range(40):
+            generator = random.Random(seed)
+            names = ["%s|%s" % (generator.choice(goods), generator.choice(["a0", "a1", "a10", "b", "a"])) for _ in range(generator.randint(0, 30))]
+            figures = {name: float(generator.randint(0, 9)) for name in names}
+            for integer in (False, True):
+                column = MarketColumn(MarketTables(), figures, integer=integer)
+                expected = items_by_sorting(list(column.named()[0]), column.named()[1], integer)
+                self.assertEqual(column.items(), expected)
+                self.assertEqual(list(column), [name for name, _figure in expected])
