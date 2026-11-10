@@ -32,3 +32,17 @@ def _by_sorting_rows(agents, goods, tiles, quantities, agent_ids, good_ids, tile
     for holder, kind, place, quantity in entries:
         nested.setdefault(holder, {}).setdefault(kind, {})[place] = quantity
     return nested
+
+
+def money_nested(agents, currencies, amounts, agent_ids, currency_ids) -> dict:
+    """{holder: {currency: amount}} from parallel arrays of agent and currency numbers (each pair once) and amounts, both levels in name order."""
+    order = numpy.lexsort((currency_ids.name_rank()[currencies], agent_ids.name_rank()[agents]))
+    agent_names, currency_names = agent_ids.name_list, currency_ids.name_list
+    nested: dict = {}
+    last_agent = None
+    for agent, currency, amount in zip(agents[order].tolist(), currencies[order].tolist(), amounts[order].tolist()):
+        if agent != last_agent:
+            by_currency = nested[agent_names[agent]] = {}
+            last_agent = agent
+        by_currency[currency_names[currency]] = amount
+    return nested
