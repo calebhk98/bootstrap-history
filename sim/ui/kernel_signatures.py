@@ -74,6 +74,7 @@ def declared_signatures():
     signatures.update(stability_signatures(types))
     signatures.update(government_signatures(types))
     signatures.update(dispatch_signatures(types))
+    signatures.update(share_price_signatures(types))
     return signatures
 
 
@@ -257,4 +258,23 @@ def household_offer_signatures(types):
     return {
         "sim.economy.household_offer_kernels.hour_value_by_worker": [(whole, whole, number, number, number, number)],
         "sim.economy.household_offer_kernels.sum_in_order_by_group": [(whole, types.int64, number)],
+    }
+
+
+def share_price_signatures(types):
+    """The kernels that price producers' shares in one call (`share_price_kernel`); the buyers' columns are those of a one-bid market."""
+    import numpy
+    from numba import typeof
+    from sim.economy.bid_columns import columns_of_bids
+    from sim.economy.crossing_columns import demand_columns
+    from sim.economy.types import Bid
+    bids = [Bid("buyer", "good", "area", "tile", 0.0, 1.0, 1.0, 1.0, 1.0)]
+    demand = typeof(demand_columns(columns_of_bids(bids), numpy.zeros(1, dtype=numpy.int64)))
+    number, integer, flag = types.float64, types.int64, types.boolean
+    floats, whole, flags = types.Array(number, 1, "C"), types.Array(integer, 1, "C"), types.Array(flag, 1, "C")
+    return {
+        "sim.economy.share_price_kernel._price_at": [(demand, flag, number, number)],
+        "sim.economy.share_price_kernel._share_after": [(demand, flag, number, number, number)],
+        "sim.economy.share_price_kernel.shares_after_additions": [(
+            floats, floats, floats, floats, floats, floats, whole, whole, floats, whole, floats, number, floats, flags)],
     }
