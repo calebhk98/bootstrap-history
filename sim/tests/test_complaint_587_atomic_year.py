@@ -9,7 +9,8 @@ from unittest import mock
 from sim.refusal import cause_of, facts_of
 from sim.ui.proto import step_atomic
 
-HELD = '{"year":100}'
+HELD_TEXT = '{"year":100}'
+HELD = ("text", HELD_TEXT)      # a held game as `saveload.state_snapshot` gives it
 
 
 class FailedYearTests(unittest.TestCase):
@@ -21,7 +22,7 @@ class FailedYearTests(unittest.TestCase):
 
     def test_the_game_is_restored_from_the_text_held_before_the_year(self):
         game, restore, _description = self.failed()
-        restore.assert_called_once_with(game, HELD)
+        restore.assert_called_once_with(game, HELD_TEXT)
 
     def test_the_description_has_the_cause_year_failed(self):
         description = self.failed()[2]
@@ -46,8 +47,8 @@ class FailedYearTests(unittest.TestCase):
 
 
 class SnapshotTests(unittest.TestCase):
-    def test_the_snapshot_is_the_games_state_text(self):
-        with mock.patch.object(step_atomic, "state_text", lambda game: HELD):
+    def test_the_snapshot_is_the_games_held_state(self):
+        with mock.patch.object(step_atomic, "state_snapshot", lambda game: HELD):
             self.assertEqual(step_atomic.snapshot(object()), HELD)
 
 
