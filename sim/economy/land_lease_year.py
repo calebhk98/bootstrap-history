@@ -28,12 +28,11 @@ def _margins(setup, record, view, options: Mapping[str, List[Option]]) -> Dict[s
 
 def _outside_options(setup, margins: Mapping[str, Tuple[float, str]], posted: Mapping[str, float]) -> Dict[str, float]:
     """Per tile, what a tenant would keep per hectare by taking land on another tile of its labour area instead."""
-    options: Dict[str, float] = {}
-    for tile in margins:
-        options[tile] = land_tenancy.outside_option(
-            [margin - posted.get(other, 0.0) for other, (margin, _recipe) in margins.items()
-             if other != tile and labour_area(other) == labour_area(tile)])
-    return options
+    net_by_area: Dict[str, List[Tuple[str, float]]] = {}      # labour area -> (tile, margin net of its posted rent), in the margins' order
+    for tile, (margin, _recipe) in margins.items():
+        net_by_area.setdefault(labour_area(tile), []).append((tile, margin - posted.get(tile, 0.0)))
+    return {tile: land_tenancy.outside_option([net for other, net in net_by_area[labour_area(tile)] if other != tile])
+            for tile in margins}
 
 
 def own_plot_returns(setup, record, view, options: Mapping[str, List[Option]]) -> Dict[str, float]:

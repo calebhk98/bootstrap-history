@@ -55,7 +55,8 @@ class LabourIds(NamedTuple):
     areas: IdTable
 
     def market_names(self, market_trades, market_areas) -> Sequence[Tuple[str, str]]:
-        return [(self.trades.name(trade), self.areas.name(area)) for trade, area in zip(market_trades.tolist(), market_areas.tolist())]
+        trades, areas = self.trades.names, self.areas.names
+        return [(trades[trade], areas[area]) for trade, area in zip(market_trades.tolist(), market_areas.tolist())]
 
 
 def labour_ids(offers: Union[LabourOfferRows, Sequence[LabourOffer]], extra_cohorts: Sequence[AgentId] = ()) -> LabourIds:
