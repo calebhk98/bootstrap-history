@@ -53,14 +53,15 @@ def producer_worths(recipe_row, tile_row, capacity, cash, debt, eligible, stock_
     return worth, has
 
 
-def packed_stock(record, view, ids, tiles, matrices):
+def packed_stock(record, view, ids, tiles, matrices, agent_numbers=None):
     """The stock the book holds, as lists sorted by producer row and good column: (producer rows, good columns, quantities), and
     by producer row the value of goods with no column, priced through the view. The book is read in one kernel call
     (`close_pack_kernels.held_goods`); a good with no column is given a column past the matrices' own, so it comes back in the
     same call and is priced here."""
     book = record.book
     column_of_book_good, others = _columns_of_book_goods(book, matrices)
-    agent_numbers = book.rows_of(ids)
+    if agent_numbers is None:
+        agent_numbers = book.rows_of(ids)
     start, columns, quantities = held_goods(book.agent_table.first_slot, book.stock_rows.table, agent_numbers, column_of_book_good)
     rows = np.repeat(np.arange(len(ids), dtype=np.int64), np.diff(start))
     positive = quantities > 0.0
@@ -145,9 +146,10 @@ def worths_from_arrays(setup, record, view, arrays) -> Dict[str, float]:
     cohorts = record.cohorts
     debts = credit_claims.debts_by_borrower(record.credit.loans, money)
     eligible = eligible_owners(columns, cohorts)
-    cash = record.book.balances_at(record.book.rows_of(ids), money)
+    agent_numbers = record.book.rows_of(ids)
+    cash = record.book.balances_at(agent_numbers, money)
     debt = debts_by_row(columns, debts)
-    rows, goods, quantities, extra = packed_stock(record, view, ids, columns.tile_names(), matrices)
+    rows, goods, quantities, extra = packed_stock(record, view, ids, columns.tile_names(), matrices, agent_numbers)
     worth, has = producer_worths(recipe_row, tile_row, capacity, cash, debt, eligible, rows, goods, quantities, extra,
                                  matrices.plant_goods, matrices.plant_labour_hours, matrices.plant_life_years, price, wage,
                                  arrays.area_index.of_good_tile)
