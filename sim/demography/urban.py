@@ -8,18 +8,18 @@ town can feed. `urban_fraction` is the one reading of the national share; no oth
 from typing import Dict
 
 from sim.assembly.api import Part
-from sim.geography.api import parameter_value, route_costs, settlement, usable_modes
+from sim.geography.api import parameter_value, relevant_route_nodes, route_costs, settlement, usable_modes
 from sim.world import agriculture, urban_share
 
 
-def kept_carriage_costs(kept, sources, towns, modes, held, improvements, search=route_costs) -> Dict[str, Dict[str, float]]:
+def kept_carriage_costs(kept, sources, towns, modes, held, improvements, search=route_costs, relevant=None) -> Dict[str, Dict[str, float]]:
     """{source tile: least carriage cost per tonne to each town}. A source's costs to a tile depend on the techniques held
     and the ways built only (the towns just let the search stop early), so `kept` (a dict the caller owns) holds each
     source's costs across years while those are unchanged, and a source is searched again only for towns it has not
-    covered."""
+    covered. With `relevant` (the nodes a search can read) a technique outside it leaves the costs kept."""
     ways = tuple(sorted((way, tuple(sorted((edge, str(built)) for edge, built in edges.items())))
                         for way, edges in improvements.items()))
-    key = (held, ways)
+    key = (held if relevant is None else held & relevant, ways)
     if kept.get("key") != key:
         kept.clear()
         kept["key"] = key
@@ -80,7 +80,8 @@ class Urban(Part):
                                  / kcal_per_worker)
         modes = usable_modes([held])
         towns = sorted(people)
-        carriage = kept_carriage_costs(self._carriage_cache, [tile for tile in towns if surplus[tile] > 0.0], towns, modes, held, improvements)
+        carriage = kept_carriage_costs(self._carriage_cache, [tile for tile in towns if surplus[tile] > 0.0], towns, modes, held, improvements,
+                                    relevant=relevant_route_nodes())
         return urban_share.town_ceilings(surplus, carriage, tonne_hours)
 
     def urban_people_by_tile(self) -> Dict[str, float]:

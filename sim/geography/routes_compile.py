@@ -142,10 +142,24 @@ def compile_graph(world_map: WorldMap, mode_ids, improvements, mode_costs, handl
                     ordered, links, modes_at, handling, waits)
 
 
+def relevant_nodes(world_map: WorldMap) -> FrozenSet[str]:
+    """Every tech node a search on this map can read: the nodes a sea leg needs (edges, harbour edges and cuts
+    included) and the nodes a mode needs. A search's answer depends on the nodes held only through these. Kept on the map."""
+    kept = world_map.__dict__.get("_route_relevant_nodes")
+    if kept is None:
+        needed = set()
+        for edge in routes_graph.graph(world_map).edges:
+            needed.update(edge.lane_nodes)
+        for mode in routes_modes.modes(world_map).values():
+            needed.update(mode.get("requires_nodes") or ())
+        kept = world_map.__dict__["_route_relevant_nodes"] = frozenset(needed)
+    return kept
+
+
 def compiled_for(world_map: WorldMap, mode_ids, improvements, mode_costs, handling_costs,
                  held_nodes) -> Compiled:
     """The compiled graph for these inputs, kept on the map's route graph (a few are kept)."""
-    held = frozenset(held_nodes or ())
+    held = frozenset(held_nodes or ()) & relevant_nodes(world_map)
     key = (frozenset(mode_ids), json.dumps(improvements or {}, sort_keys=True),
            json.dumps(mode_costs, sort_keys=True) if mode_costs is not None else None,
            json.dumps(handling_costs, sort_keys=True) if handling_costs is not None else None, held)
