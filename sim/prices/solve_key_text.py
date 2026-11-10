@@ -8,7 +8,7 @@ import json
 import marshal
 from typing import Any, Dict, List, Tuple
 
-# TEMPORARY HEURISTIC (CLAUDE.md 4.4): a value this long is worth keeping the text of; retire: Complaint 968.
+# a shorter value is encoded on every call, which is cheaper than checking a kept copy; no result depends on it
 LARGE_INPUT = 100
 _KEPT_VALUES = 4
 _kept: List[Tuple[Any, bytes, str]] = []     # (the value itself, its marshal bytes, its text), newest last
