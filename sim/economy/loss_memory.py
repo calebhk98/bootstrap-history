@@ -30,7 +30,7 @@ def blend(remembered: Mapping[str, float], lost: Mapping[str, float], claims: Ma
           share: float) -> Dict[str, float]:
     """Each lender's remembered rate moved `share` of the way to this year's losses over its exposure."""
     rates: Dict[str, float] = {}
-    for agent in set(remembered) | {agent for agent, amount in lost.items() if amount > 0.0}:
+    for agent in sorted(set(remembered) | {agent for agent, amount in lost.items() if amount > 0.0}):    # name order: a save must not follow string hashing
         year_lost = lost.get(agent, 0.0)
         exposure = year_lost + max(0.0, claims.get(agent, 0.0))
         year_rate = year_lost / exposure if exposure > 0.0 else 0.0
