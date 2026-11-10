@@ -80,12 +80,6 @@ def plan_transfers(transfers, first, last, balances, stride, plan, local_index):
     return OK, 0
 
 
-@njit
-def held_in_slot(stocks, slot):
-    """What the stock slot holds; zero when the cell has no slot yet."""
-    return 0.0 if slot == FREE else stocks.quantity[slot]
-
-
 @njit(inline="always")
 def plan_moves(moves, first, last, stocks, stock_index, plan, local_index):
     """Plan goods-move postings first .. last - 1 as one batch over stock cells. Returns (OK, 0), or (NEGATIVE_QUANTITY, the

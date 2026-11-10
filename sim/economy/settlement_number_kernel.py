@@ -40,12 +40,6 @@ def first_use(values):
 
 
 @njit
-def number_of(values, distinct):
-    """The first-use number of each of `values`, all of which are among `distinct` (listed in first-use order)."""
-    return first_use(numpy.concatenate((distinct, values)))[0][len(distinct):]
-
-
-@njit
 def pair_positions(pair_ptr, slots):
     """(pairs per market, the positions of all those markets' pairs one market after another) for the markets `slots`."""
     sizes = pair_ptr[slots + 1] - pair_ptr[slots]
