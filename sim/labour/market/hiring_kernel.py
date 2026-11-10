@@ -81,6 +81,8 @@ def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ce
     group_hours[0] = pool
     group_ask[0] = ask
     paid_sum = np.empty(count_employers)
+    ranked_hired, ranked_taken = np.empty(count_employers), np.empty(count_employers)
+    ranked_paid, ranked_offer = np.empty(count_employers), np.empty(count_employers)
     ranked = np.empty(count_employers, np.int64)
     vacancies = np.empty(count_employers)
     applicants = np.empty(count_employers)
@@ -160,22 +162,31 @@ def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ce
         furthest = 0
         for group in range(groups):
             furthest = max(furthest, group_reach[group])
-        for position in range(furthest):        # an employer some group reaches starts its tally the first time it is reached
+        for position in range(furthest):        # the posters some group reaches, in rank order, start their tally the first time they are reached
             employer = ranked[position]
             if not taken_flag[employer]:
                 taken_flag[employer] = True
                 taken_amount[employer] = 0.0
                 paid_sum[employer] = 0.0
+            ranked_hired[position] = hired[employer]
+            ranked_taken[position] = taken_amount[employer]
+            ranked_paid[position] = paid_sum[employer]
+            ranked_offer[position] = offers[employer]
         for group in range(groups):
             slot = slot_of[group_reach[group]]
             hours_of_group = group_hours[group]
+            shares_of_slot = slot_shares[slot]
             for position in range(slot_count[slot]):
-                employer = ranked[position]
-                amount = hours_of_group * slot_shares[slot, position]
-                hired[employer] += amount
-                taken_amount[employer] += amount
-                paid_sum[employer] += amount * offers[employer]
+                amount = hours_of_group * shares_of_slot[position]
+                ranked_hired[position] += amount
+                ranked_taken[position] += amount
+                ranked_paid[position] += amount * ranked_offer[position]
             group_hours[group] = hours_of_group - hours_of_group * slot_total[slot]
+        for position in range(furthest):
+            employer = ranked[position]
+            hired[employer] = ranked_hired[position]
+            taken_amount[employer] = ranked_taken[position]
+            paid_sum[employer] = ranked_paid[position]
         survivors = 0
         for group in range(groups):
             if group_hours[group] > 1e-9:
