@@ -115,6 +115,16 @@ mod civilisation `sample_egypt_100bc_e7k2:egypt`, which raises the same error on
 branch the share pricer reaches `area_of` first). The change itself stands: it makes the batched pricer read the same slots
 the row-by-row one read (tested against that loop).
 
+**A new year's price solves were hidden from every measurement.** `year-time` steps the same years from the same save, so
+the price solves a year needs (`prices/prices.py` `solved_prices_at_wages`, reached from `price_tables` and
+`material_prices`; the cache key includes the year's wages) are computed on the first run and read from `price_solves`
+after. In play every year is new: about four to six solves a Rome year, about half a second, paid every year. Measure with
+the `price_solves` cache emptied (or over years never stepped before) and count the misses of `solve_cache.cached_json`.
+
+**A write stamp on the book is cheap to place.** Balances are committed in `sim/book_commit.py` (`commit_money`,
+`commit_stock`); the other writers are `book_record.py` (a direct stock setter and the merge of duplicate rows on load).
+A stamp bumped there would let views over balances (the coin stock's value, read several times a year) be cached.
+
 **One-digit changes grow.** A hiring-kernel variant that moved floats by about 1e-14 and no discrete outcome on its own
 calls gave a Rome save differing in hundreds of thousands of leaves two stepped years later: a change that moves any bit
 cannot be checked by comparing games, only by tests of the kernel itself. Every change merged here is bit-identical.

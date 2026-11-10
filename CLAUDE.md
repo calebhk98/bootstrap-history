@@ -257,6 +257,15 @@ Tooling: `python3 -m pylint sim/ | grep C0103` (worklist). Plan:
   on a long branch), and fix what it finds there. A topic joins the quick tier
   (`QUICK_TOPIC = True`) only when it tests functions or small fixtures and runs
   in well under a second; anything that builds a whole game stays out of it.
+- **Shipped openings are rebuilt before a pull request.** A fresh environment
+  reads `openings/` only while it matches the code; a stale set makes every
+  first game spin up from scratch. Rebuild them as the PR's last commit
+  (`python3 sim/simulator.py openings --prune`) and check that
+  `python3 tools/check_openings_current.py` lists none stale.
+- **Time new years, not reruns.** In play every year is new: a disk cache that
+  only helps when the same year runs again (the price solves are keyed on the
+  year's wages) hides a cost a player pays every year. A cache that lets a
+  later year reuse an earlier year's work counts.
 - **Green tests do not mean unchanged behaviour.** The suite asserts on
   outputs and messages. `python3 -m sim.tests.fingerprint` checks the
   simulation itself (it does not cover the protocol layer).
