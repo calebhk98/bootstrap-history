@@ -16,6 +16,7 @@ from typing import Iterator, List, Optional, Tuple
 
 import numpy
 
+from sim.economy.year_ledger_block_kernels import set_in_order
 from sim.economy.year_ledger_kernels import add_to_figure, remove_from_figure, set_figure
 from sim.economy.year_ledger_store import LedgerTables
 from sim.economy.year_ledger_tables import DELIVERED, FIGURE_KIND, MEMBERS, NEXT_ENTRY, ROUNDS, UNMET
@@ -72,6 +73,10 @@ class _Dense(Show):
         raise NotImplementedError
 
     def _key_of(self, row: int):
+        raise NotImplementedError
+
+    def _fit(self) -> None:
+        """Give the table a row for every number the numbering holds."""
         raise NotImplementedError
 
     def _members(self) -> Tuple[numpy.ndarray, list]:
@@ -168,6 +173,14 @@ class _Dense(Show):
         set_figure(getattr(table, self._column), getattr(table, self._order), self._counters(), self._figure, row, float(value))
 
     @flushed
+    def set_rows(self, rows, amounts) -> None:
+        """`self[key] = amount` for each (row, amount) in order, where a row is the key's number (an int64 array) and an amount a float64
+        array: one kernel call. The rows must be numbered already (a key of `self.set_many` is numbered on the way)."""
+        self._fit()
+        table = self._table()
+        set_in_order(getattr(table, self._column), getattr(table, self._order), self._counters(), self._figure, rows, amounts)
+
+    @flushed
     def add(self, key, amount: float) -> None:
         """`self[key] = self.get(key, 0.0) + amount`."""
         row = self._row_for_write(key)
@@ -201,6 +214,14 @@ class AgentFigureView(_Dense):
     def _key_of(self, row: int):
         return self._tables.book.agent_ids.name_list[row]
 
+    def _fit(self) -> None:
+        self._tables.fit_agents()
+
+    def set_many(self, names, amounts) -> None:
+        """`self[name] = amount` for each name and the matching entry of the float64 array `amounts`, in order."""
+        if len(names):
+            self.set_rows(self._tables.agent_numbers(names), amounts)
+
 
 class MarketFigureView(_Dense):
     """(good, area) -> float, one cell per goods market of the market memory."""
@@ -222,3 +243,6 @@ class MarketFigureView(_Dense):
     def _key_of(self, row: int):
         good, _separator, area = self._tables.markets.goods_markets.name_list[row].partition("|")
         return (good, area)
+
+    def _fit(self) -> None:
+        self._tables.fit_markets()

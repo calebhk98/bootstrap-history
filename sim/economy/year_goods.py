@@ -191,8 +191,8 @@ def _record_year_markets(record, ledger: YearLedger, keys, rows, year_markets, c
     goods.volumes.replace_rows(rows, delivered)
     goods.unsold.replace_rows(rows, year_markets.unsold(cells))
     goods.unmet.replace_rows(rows, unmet)
-    for place in numpy.flatnonzero(unmet > 0.0).tolist():
-        ledger.unmet_demand[keys[place]] = float(unmet[place])
+    short = numpy.flatnonzero(unmet > 0.0)
+    ledger.unmet_demand.set_rows(rows[short], unmet[short])
     goods_memory_notes.write_volumes(record.memory, rows, delivered.tolist())
 
 

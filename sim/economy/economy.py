@@ -368,6 +368,7 @@ class Economy:
         offered = sold_hours_by_worker(offers)
         grown_steps = []       # a cohort's grown goods are one batch; the batches are posted together, in cohort order
         store = table_of(record.cohorts)
+        spare_ids, spare_hours, grown_ids, grown_goods = [], [], [], []      # the ledger's figures, written in blocks once all cohorts are done
         for cohort in store.figures(store.order()):
             cohort_id = cohort.agent_id
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
@@ -380,14 +381,18 @@ class Economy:
                                                  held.get(cohort.agent_id, 0.0), hours_used)
             if hours_used:
                 ledger.own_plot_hours[cohort_id] = hours_used
-            ledger.spare_hours[cohort_id] = max(0.0, idle - sum(hours_used.values()))
+            spare_ids.append(cohort_id)
+            spare_hours.append(max(0.0, idle - sum(hours_used.values())))
             if moves:
                 grown_steps.append(((), moves))
-                ledger.grown[cohort_id] = grown
+                grown_ids.append(cohort_id)
+                grown_goods.append(grown)
                 ledger.grown_units[cohort_id] = units
                 hectares = plot_hectares(units, options, setup.recipes, setup.land_per_run,
                                          (tile.fertility if tile else 0.0) * harvest_factor)
                 self._own_hectares[cohort.tile] = self._own_hectares.get(cohort.tile, 0.0) + hectares
+        ledger.spare_hours.set_many(spare_ids, np.array(spare_hours, dtype=np.float64))
+        ledger.grown.replace_many(grown_ids, grown_goods)
         post_in_order(record.book, grown_steps)
 
     def _service_loans(self, year: int) -> Dict[str, float]:
