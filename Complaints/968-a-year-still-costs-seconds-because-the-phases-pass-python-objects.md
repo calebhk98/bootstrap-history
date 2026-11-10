@@ -45,6 +45,66 @@ So the three-second limit is met and the one-second goal is not. The kernels alo
 the year is about one second, spread so thinly that no single function has more than a few hundredths of a second of own
 time.
 
+## Second branch, `year-speed-one-second`: what a player pays, and what was ruled out
+
+Measured on this branch (Rome, a 4-core machine; commands with each). The headline: the year itself moved a little, and
+most of what a player waits for was outside the year that `year-time` measures.
+
+**The owner's accounting.** A game is played on fresh environments with limited internet, so every one-time cost is spread
+over the game's 500 years: a 250 s compile adds half a second to every year. Count first-run costs with the year.
+
+**What a played year costs** (an agent playtest with only `playtest/BRIEF.md`; its command log, then the same save driven
+through the protocol): a one-year `step` was the year plus a full copy of the game made before every year
+(`sim/ui/proto/step_atomic.py`: `state_text`, the whole save as JSON, so a year that raises can be rolled back; the owner
+keeps it per year). `state_text` was made faster with byte-identical text (the economy record's serializers read whole
+columns; time it with a loaded game and `saveload.state_text`).
+
+**Fresh-environment costs.**
+- Kernel compile: one core, minutes. `compile-kernels` now compiles on every core (`sim/ui/compile_parallel.py`: argument
+  types recorded from the small fixture with numba off, shares weighed by each kernel's source plus everything it calls),
+  and a game process on a cold kernel cache starts it itself (`sim/ui/cold_compile.py`). A fused kernel compiles its callees
+  inside itself: the goods clearing kernel alone takes about a minute, which sets a floor on the parallel compile (time one
+  kernel with `kernel.compile(signature)` on a fresh `NUMBA_CACHE_DIR`).
+- The shipped openings (`openings/`) were stale, so a fresh environment spun Rome's opening up from scratch (minutes) and
+  ran a whole second opening solve for the backing margin. `tools/check_openings_current.py` (in `tools/done_check.sh`) lists
+  the stale ones from `openings/manifest.json`; rebuild with `openings --prune` as the last commit before a pull request.
+- Check that a cache built only by `compile-kernels` leaves nothing to compile: count `numba:compile` events
+  (`numba.core.event.register`) over a Rome and an England year. A kernel a fixture reaches only inside a fused kernel
+  needs its own signature in `sim/ui/kernel_signatures.py`.
+
+**Within the year.**
+- One compiled call per phase pays when the phase made many small kernel calls: the close went from about 1250 kernel
+  calls to about 170 and lost about a quarter of its time, bit for bit (`tools/measure/close_breakdown.py`). Plain
+  arithmetic moved into a kernel while the per-item Python gathers stay saves little. `phase_ceiling.py` lists kernel
+  calls per phase: start where they are many.
+- Fusing the goods loop's clearing chain and settlement into one kernel call per good is exact but small (hundredths of a
+  second): the per-good Python is spread over many small steps, and entering a kernel with many table arguments costs tens
+  of microseconds.
+- The route caches keyed on every held technique, so any technique learned re-ran every route search; they now key on the
+  techniques a search reads.
+
+**Measured and ruled out** (numbers in the branch's pull request):
+- Cython over the plain-Python modules (built unchanged, same digest): no faster, slower to start, and a long build.
+- GPU: the kernels are a third of the year; the rest is Python.
+- `parallel=True` kernels (bit-identical when each iteration writes its own outputs): small gain on an idle machine,
+  slower under load (threads sleep between short calls), and more compile.
+- Garbage-collector policies: the collector's cost is in its young collections; freezing each year saves nothing.
+- Skipping the epidemic forecast nobody reads that year changes what later readers see (the forecast is cached by its
+  first reader).
+
+**Measuring.**
+- `year-time` and the warm-year tools freeze the loaded heap as a game process does; without it a full collection of the
+  loaded game falls into some years.
+- `tools/measure/phase_ceiling.py`: per phase and per economy call, wall, kernel and Python time and kernel calls, by
+  perf_counter (cProfile, even split, ranks files wrongly here: it charges its own overhead to code with many small calls).
+- `year-time --count-instructions` is load-independent; its pre-compile must cover every kernel a Rome year reaches, or
+  the counted child compiles under valgrind for an hour.
+
+**The owner's rules, as of this branch.** Reproducible within one build (the same save gives the same game, straight or
+saved and loaded), not bit-identical to an older build: a kernel may sum in its own order. No parallel sums (their order
+follows the thread count). The object-first interface and mod overrides stay: a phase compiled as one call keeps the
+current Python path for a rule a mod replaced.
+
 ## What this branch did (pointers, not a list of everything)
 
 - **The book, the market memory and the year ledger are tables** (`sim/compiled_tables/`: `TableSpec` namedtuples of numpy
