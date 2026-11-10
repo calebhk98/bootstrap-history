@@ -6,6 +6,7 @@ from typing import Callable, Dict, Iterable
 import numpy
 
 from sim.book_commit import create_slot, record_edge_goods
+from sim.book_goods_plain import goods_nested
 from sim.book_index import EMPTY, index_add, pack_key
 from sim.book_tables import FREE
 from sim.book_types import AgentId, CurrencyId
@@ -163,14 +164,8 @@ class BookRecord:
     def _goods_record(self) -> dict:
         table = self.stock_rows.table
         live = numpy.flatnonzero(table.live[:int(table.row_count[0])])
-        agent, good, tile = self.agent_ids.name, self.good_ids.name, self.tile_ids.name
-        entries = sorted(zip([agent(number) for number in table.agent[live].tolist()],
-                             [good(number) for number in table.good[live].tolist()],
-                             [tile(number) for number in table.tile[live].tolist()], table.quantity[live].tolist()))
-        goods: dict = {}
-        for holder, kind, place, quantity in entries:
-            goods.setdefault(holder, {}).setdefault(kind, {})[place] = quantity
-        return goods
+        return goods_nested(table.agent[live], table.good[live], table.tile[live], table.quantity[live],
+                            self.agent_ids, self.good_ids, self.tile_ids)
 
     def _purpose_record(self) -> dict:
         table = self.flow_rows.table
