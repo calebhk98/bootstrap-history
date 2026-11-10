@@ -11,7 +11,7 @@ from typing import Dict
 
 import numpy as np
 
-from . import expansion_price, producer_exit, shares
+from . import producer_exit, shares
 from . import producers_working_capital as working_capital
 from .close_kernel import REQUEST_EXPAND, REQUEST_NONE
 from .close_pack import pack
@@ -24,23 +24,7 @@ from .year_arrays_producers import ProducerColumns
 from .year_close_dividends import add_property_income, dividend_plan, post_dividends
 from .year_close_ledger import note_plant_worn
 from .year_close_owners import Participants
-
-
-def _share_pricer(arrays: YearArrays, ledger, traded, prepared):
-    """`price_share_of(row, added_by_slot)`: the share of each output's price that stays when the producer adds that much."""
-    columns, matrices = arrays.producers, arrays.matrices
-    tiles = columns.tile_names()
-
-    def share_of_row(row: int, added) -> np.ndarray:
-        shares_of_slots = np.ones(len(added))
-        pricer = expansion_price.price_share_of(ledger.bids_by_market, traded, arrays.area_map.area_of, tiles[row], prepared)
-        for slot, column in enumerate(matrices.slot_goods[columns.recipe_row[row]]):
-            if column < 0:
-                break
-            if matrices.slot_is_output[columns.recipe_row[row], slot] and added[slot] > 0.0:
-                shares_of_slots[slot] = pricer(matrices.goods.ids[column], added[slot])
-        return shares_of_slots
-    return share_of_row
+from .year_close_shares import share_pricer
 
 
 def _request_of(producer_id: str, currency: str, kind: int, amount: float, rate: float, term: float, collateral: float):
@@ -56,7 +40,7 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, pro
     columns = arrays.producers
     traded, _round_prices = ledger.market_totals()
     bundle = pack(setup, record, view, ledger, arrays)
-    answer = close_producers(arrays, bundle, _share_pricer(arrays, ledger, traded, {}))
+    answer = close_producers(arrays, bundle, share_pricer(arrays, ledger, traded))
     ids = columns.ids
     ran = columns.idle_years <= 0         # the rows the close kernel ran; the others sat out the year
     exited = answer.exited

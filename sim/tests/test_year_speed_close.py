@@ -65,7 +65,7 @@ class KernelEqualsThePerProducerClose(unittest.TestCase):
             setup, record, view, ledger, area_map = economy_of(seed, producer_count=60)
             arrays = YearArrays.build(setup, record, area_map, view)
             answer = close_producers(arrays, pack(setup, record, view, ledger, arrays),
-                                     lambda row, added: np.full(len(added), SHARE))
+                                     lambda rows, added: np.full(added.shape, SHARE))
             for row, producer_id in enumerate(arrays.producers.ids):
                 producer = record.producers[producer_id]
                 if producer.idle_years > 0:
