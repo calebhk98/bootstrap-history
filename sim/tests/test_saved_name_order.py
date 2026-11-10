@@ -7,6 +7,7 @@ import unittest
 
 import numpy
 
+from sim.economy.merchant_figures import MarketFigures
 from sim.economy.saved_name_order import in_saved_order, saved_rank
 
 
@@ -40,6 +41,13 @@ class SavedNameOrderTests(unittest.TestCase):
         self.assertEqual(saved_rank(names).tolist(), [1, 0])
         names[0] = "0|x"
         self.assertEqual(saved_rank(names).tolist(), [0, 1])
+
+
+class SortedNamedTests(unittest.TestCase):
+    def test_a_column_with_no_numbering_yet_is_saved_in_saved_order(self):
+        figures = MarketFigures(None, {("wheat", "rome_2"): 2.0, ("wheat", "rome"): 1.0, ("iron", "rome"): 3.0})
+        self.assertEqual(figures.sorted_named(), {"iron|rome": 3.0, "wheat|rome": 1.0, "wheat|rome_2": 2.0})
+        self.assertEqual(list(figures.sorted_named()), ["iron|rome", "wheat|rome", "wheat|rome_2"])
 
 
 if __name__ == "__main__":

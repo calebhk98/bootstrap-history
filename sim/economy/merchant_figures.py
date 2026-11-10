@@ -158,6 +158,7 @@ class MarketFigures(MutableMapping):
 
     def sorted_named(self) -> dict:
         """{market name: figure} in the order of the (good, area id) keys, as a save writes it."""
+        self._chosen()
         names = self._numbering.name_list
         rows = in_saved_order(self._present_rows(), names)
         return dict(zip([names[row] for row in rows.tolist()], self._current()[rows].tolist()))
