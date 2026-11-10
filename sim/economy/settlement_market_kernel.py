@@ -73,7 +73,7 @@ def purse_scales(agents, cash_start, edge, owed, purse_scale):
 @njit
 def settle_market_into(first_pair, pairs, first_key, keys, first_agent, agents, buyer_key, seller_key, quantity, ask, delivers, sale,
                        key_agent, stock_start, cash_start, edge, mint, external, imported, exported, amounts, buyer_agent, seller_agent,
-                       payer, unit, asked, scale, stock_left, owed, purse_scale, cash_left, goods, money, payer_out, paid, received,
+                       payer, unit, asked, scale, stock_left, owed, purse_scale, cash_left, goods_moved, money_paid, payer_out, paid, received,
                        goods_in, goods_out, buyer_money, got_goods, paid_as_buyer, imports, exports, key_given, key_taken, key_to_mint):
     """Settle one market: `first_pair`, `first_key` and `first_agent` say where its pairs, keys and agents start in the batch's columns
     (`buyer_key`, `seller_key`, `quantity`, `ask`, `key_agent` and the outputs); `stock_start` and `cash_start` are what its keys and
@@ -101,7 +101,7 @@ def settle_market_into(first_pair, pairs, first_key, keys, first_agent, agents, 
                 if stock_left[seller_key[first_pair + pair]] < amount:
                     amount = stock_left[seller_key[first_pair + pair]]
                 stock_left[seller_key[first_pair + pair]] -= amount
-            goods[first_pair + pair] = amount
+            goods_moved[first_pair + pair] = amount
             goods_in[first_agent + buyer] += amount
             goods_out[first_agent + seller] += amount
             got_goods[first_agent + buyer] = True
@@ -117,7 +117,7 @@ def settle_market_into(first_pair, pairs, first_key, keys, first_agent, agents, 
                 pay = cash_left[paying]
             cash_left[paying] -= pay
         if pay > 0.0:
-            money[first_pair + pair] = pay
+            money_paid[first_pair + pair] = pay
             paid[first_agent + paying] += pay
             received[first_agent + payee] += pay
             if paying == buyer:
