@@ -283,5 +283,5 @@ def share_price_signatures(types):
         "sim.economy.share_price_kernel._price_at": [(demand, flag, number, number)],
         "sim.economy.share_price_kernel._share_after": [(demand, flag, number, number, number)],
         "sim.economy.share_price_kernel.shares_after_additions": [(
-            floats, floats, floats, floats, floats, floats, whole, whole, floats, whole, floats, number, floats, flags)],
+            floats, floats, floats, floats, floats, floats, whole, whole, whole, floats, whole, floats, number, floats, flags)],
     }

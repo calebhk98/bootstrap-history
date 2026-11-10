@@ -63,6 +63,27 @@ class SharesAfterAdditions(unittest.TestCase):
                     continue
                 self.assertAlmostEqual(shares[request], expected, delta=1e-12 * max(1.0, abs(expected)), msg=(seed, request))
 
+    def test_markets_priced_together_match_each_priced_alone_when_an_order_is_shorter_than_its_columns(self):
+        # a clearing order may leave out some of a market's bids (Rome's silver market in the opening's first year): the next
+        # market's columns must still be found at their own start, not at the end of the shorter order
+        for seed in range(40):
+            rng = random.Random(100 + seed)
+            markets = [random_bids(rng, rng.randint(3, 12), ceilings=seed % 2 == 0) for _each in range(rng.randint(2, 4))]
+            columns, orders = [list(each) for each in zip(*[market_of(bids) for bids in markets])]
+            orders[0] = orders[0][:max(1, len(orders[0]) - rng.randint(1, 2))]       # the first market's order leaves bids out
+            traded = [rng.uniform(5.0, 400.0) for _each in markets]
+            request_market = sorted(rng.randrange(len(markets)) for _each in range(rng.randint(1, 8)))
+            added = [rng.uniform(0.1, 50.0) for _each in request_market]
+            try:
+                together, together_objects = share_prices.shares_after_additions(columns, orders, traded, request_market, added)
+                for request, market in enumerate(request_market):
+                    alone, alone_objects = share_prices.shares_after_additions([columns[market]], [orders[market]], [traded[market]],
+                                                                                [0], [added[request]])
+                    self.assertEqual((together[request], together_objects[request]), (alone[0], alone_objects[0]),
+                                     msg=(seed, request, market))
+            except (OverflowError, ZeroDivisionError, ValueError):     # plain Python, ROME_NO_JIT: an exponential that overflows raises
+                continue
+
     def test_a_request_is_never_answered_wrongly_by_leaving_it_to_the_objects(self):
         # a market the columns cannot prepare is handed back to the caller (needs_objects), not given a share
         bids = [Bid("b", "g", "a", "t", float("nan"), 1.0, 1.0, 1.0, 5.0)]

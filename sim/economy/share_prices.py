@@ -21,13 +21,16 @@ def shares_after_additions(columns: Sequence[BidColumns], orders: Sequence[numpy
     """(share, needs_objects) for each request: market `request_market[request]` (an index into `columns`; requests in market order)
     gaining `request_added[request]` units a year over the `traded[market]` units the year cleared."""
     count = len(columns)
-    market_start = numpy.zeros(count + 1, dtype=numpy.int64)
-    market_start[1:] = numpy.cumsum([len(each) for each in orders], dtype=numpy.int64)
+    # a market's columns and its clearing order have their own lengths (an order may leave bids out): one start for each
+    column_start = numpy.zeros(count + 1, dtype=numpy.int64)
+    column_start[1:] = numpy.cumsum([len(each.floor) for each in columns], dtype=numpy.int64)
+    order_start = numpy.zeros(count + 1, dtype=numpy.int64)
+    order_start[1:] = numpy.cumsum([len(each) for each in orders], dtype=numpy.int64)
     request_start = numpy.zeros(count + 1, dtype=numpy.int64)
     request_start[1:] = numpy.cumsum(numpy.bincount(numpy.asarray(request_market, dtype=numpy.int64), minlength=count), dtype=numpy.int64)
     share = numpy.ones(len(request_market))
     needs_objects = numpy.zeros(len(request_market), dtype=numpy.bool_)
     kernel(*(_joined([each[field] for each in columns], numpy.float64) for field in range(6)), _joined(orders, numpy.int64),
-           market_start, numpy.asarray(traded, dtype=numpy.float64), request_start, numpy.asarray(request_added, dtype=numpy.float64),
+           column_start, order_start, numpy.asarray(traded, dtype=numpy.float64), request_start, numpy.asarray(request_added, dtype=numpy.float64),
            goods_market.MINIMUM_PRICE_SHARE_OF_REFERENCE, share, needs_objects)
     return share, needs_objects
