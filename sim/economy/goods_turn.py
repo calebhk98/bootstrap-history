@@ -61,6 +61,7 @@ class TurnWorld:
         self.runs = _runs_column(plans, producers)
         self.done = numpy.zeros(len(producers.ids), dtype=bool)
         self.markets = markets_by_good_tile(record.memory, matrices.goods, arrays.area_index)
+        self._makers: Dict[int, numpy.ndarray] = {}        # a good's column -> the positions of the producers whose recipe makes it
 
     @classmethod
     def of(cls, setup, record, view, ledger, arrays, costs, plans) -> Optional["TurnWorld"]:
@@ -77,7 +78,10 @@ class TurnWorld:
         column = self.arrays.matrices.goods.row.get(good)
         if column is None:
             return numpy.empty(0, dtype=numpy.int64)
-        found = numpy.flatnonzero(self.spec.has_output[self.arrays.producers.recipe_row, column] & ~self.done)
+        makers = self._makers.get(column)
+        if makers is None:
+            makers = self._makers[column] = numpy.flatnonzero(self.spec.has_output[self.arrays.producers.recipe_row, column])
+        found = makers[~self.done[makers]]
         self.done[found] = True
         return found
 

@@ -5,7 +5,13 @@ from typing import Dict, Iterable, Optional, Tuple
 from .home_scope import has_partners, on_home_tile
 from .producer_blocks import recipes_of, tiles_of
 
-HomeOutputs = Dict[str, Tuple[str, Tuple[str, ...]]]      # producer id -> (its tile, the goods its recipe makes)
+class HomeOutputs(dict):
+    """producer id -> (its tile, the goods its recipe makes) for the producers the tax reaches; `known` holds every live producer the
+    table was worked out for, so a producer it does not reach is not asked of the store again."""
+
+    def __init__(self):
+        super().__init__()
+        self.known = set()
 
 
 def taxed_goods(forms) -> Optional[frozenset]:
@@ -24,8 +30,9 @@ def home_outputs(setup, store, taxed) -> HomeOutputs:
     partners = has_partners(setup)
     tile_names, recipe_names = store.names["tiles"].name_list, store.names["recipes"].name_list
     verdict: Dict[Tuple[int, int], bool] = {}
-    found: HomeOutputs = {}
+    found = HomeOutputs()
     for row in store.live_rows().tolist():
+        found.known.add(store.ids[row])
         tile_number, recipe_number = int(store.table.tile[row]), int(store.table.recipe[row])
         key = (tile_number, recipe_number)
         if key not in verdict:
@@ -39,7 +46,8 @@ def reached_by(setup, store, taxed, producer_ids: Iterable[str], table: Optional
     """(producer id, tile, outputs) of the producers among `producer_ids`, in that order, that the tax in kind takes from. Those the
     year's table does not hold (or all of them, with no table) are asked of the store."""
     producer_ids = list(producer_ids)
-    asked = producer_ids if table is None else [each for each in producer_ids if each not in table]
+    known = getattr(table, "known", ())
+    asked = producer_ids if table is None else [each for each in producer_ids if each not in table and each not in known]
     own = {}
     for producer_id, tile, recipe_id in zip(asked, tiles_of(store, asked), recipes_of(store, asked)):
         if reached(setup, tile, recipe_id, taxed):

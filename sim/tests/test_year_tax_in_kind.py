@@ -86,6 +86,20 @@ class ReachedByTest(unittest.TestCase):
         self.assertEqual(year_tax_in_kind.reached_by(setup, store, None, ["p2", "p1"], table),
                          [("p2", "farms", ("iron",)), ("p1", "town", ("wheat",))])
 
+    def test_a_known_producer_the_tax_does_not_reach_is_not_asked_of_the_store_again(self):
+        setup = setup_of()
+        store = store_of([("p1", "grow_wheat", "far"), ("p2", "grow_wheat", "town")])
+        table = year_tax_in_kind.home_outputs(setup, store, None)
+        store.ids_asked = []
+        original = year_tax_in_kind.tiles_of
+        year_tax_in_kind.tiles_of = lambda held, asked: store.ids_asked.extend(asked) or original(held, asked)
+        try:
+            found = year_tax_in_kind.reached_by(setup, store, None, ["p1", "p2"], table)
+        finally:
+            year_tax_in_kind.tiles_of = original
+        self.assertEqual(found, [("p2", "town", ("wheat",))])
+        self.assertEqual(store.ids_asked, [])
+
 
 if __name__ == "__main__":
     unittest.main()
