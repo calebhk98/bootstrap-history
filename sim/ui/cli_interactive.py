@@ -42,7 +42,7 @@ from sim.engine.ui_port import EconomyNotOpened, Sim
 from . import protocol as _protocol
 from sim.engine.ui_port import settings
 from sim.engine.ui_port import money_text, units
-from . import cli_options, cli_units_options, replay
+from . import cli_options, cli_units_options, cold_compile, replay
 from sim.engine.ui_port import normal_seed, valid_seed_text
 from sim.ui.memory import save_session
 from sim.ui.fuzzy_choice import fuzzy_estimates_wanted, turn_fuzzy_estimates_on
@@ -92,6 +92,7 @@ def cmd_play(args, carried_route_ids=()):
     regardless of what a player typed would make the player's choices not
     count. `run --trace` is still the way to watch the optimizer work.
     """
+    cold_compile.compile_if_cold()
     LINES_PUSHED_BACK.clear()
     # building the game, loading it and running the first command allocate a heap that all lives on: the
     # cyclic collector stays off until that command is done
