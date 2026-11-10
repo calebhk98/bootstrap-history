@@ -238,7 +238,11 @@ count of a Rome year found few). The state carried inside one call is the purses
 (`goods_market_kernels.choice_weights`, `requested_round_one`, `allocate_arrays` copy the last ask's wants and weight), and the
 respend kernel's logs (`goods_respend_kernel.respend_rounds`) are not cleared, since the unpack reads them up to the counts it returns
 (a log row written by only some branches is set to its default where the row starts); `goods_respend_year.run_rounds` starts with room for
-the logs of a whole year, so the first run is the only run. What is left in `decide_markets` is the sellers' price search
+the logs of a whole year, so the first run is the only run. A basket's shares and ceilings (`goods_respend_basket_kernel.price_basket`) depend on the asks alone, so the
+kernel prices a basket again only when some market's lowest ask has moved since it did (a version count of those moves, then a
+compare of the basket's asks) and each buyer only spends its money on them (`place_priced_bids`); a market that trades nothing
+reads each bid's quantity at the quote once (`goods_respend_market_kernel.units_at_quote`), and a settled market works out who
+each pair is between once. All of it gives the same bits as the loops it replaced. What is left in `decide_markets` is the sellers' price search
 (`price_setting_kernel.best_prices`, an exponential and a logarithm per rival per candidate price) and the raise search's repeated
 demand sums (`goods_market_kernels.raise_search`), which a candidate price changes for the lifted asks only; both keep the Python's
 summation order, so a cheaper form must give the same bits.
