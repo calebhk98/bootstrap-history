@@ -42,6 +42,7 @@ class ProducerStore(MutableMapping):
         self.row_of: Dict[str, int] = {}
         self.version = 0                            # rises on every write
         self.members_version = 0                    # rises when a producer enters or leaves
+        self._crews_kept = None                     # (version, live rows, their crews) as `crews_by_recipe` last read them
         self.layout = 0                             # rises when rows are renumbered (compaction, reseating in id order)
         self._dead = 0
         self._objects: List[Optional[Producer]] = []
@@ -263,11 +264,23 @@ class ProducerStore(MutableMapping):
 
     def crews_by_recipe(self, in_id_order: bool = True) -> Dict[str, List[Mapping[str, float]]]:
         """Each recipe's producers' crews (the practice by trade; an empty mapping where the crew is established), in producer id
-        order, or in the order the producers entered."""
-        order = self.order() if in_id_order else np.nonzero([each is not None for each in self.ids])[0]
+        order, or in the order the producers entered. The crews are read once for each version of the table and shared by the
+        groupings (callers read them, never change them); each grouping is a new dict of new lists."""
+        if self._crews_kept is None or self._crews_kept[0] != self.version:
+            self.compact()
+            live = np.nonzero([each is not None for each in self.ids])[0]
+            self._crews_kept = (self.version, live, crews_of(self, live))
+        _version, live, crews = self._crews_kept
+        if in_id_order:
+            position_of_row = np.full(len(self.ids), -1, dtype=np.int64)
+            position_of_row[live] = np.arange(len(live))
+            order = self.order()
+            crews = [crews[position] for position in position_of_row[order].tolist()]
+        else:
+            order = live
         recipe_names = self.names["recipes"].name_list
         grouped: Dict[str, List[Mapping[str, float]]] = {}
-        for recipe, crew in zip(self.table.recipe[order].tolist(), crews_of(self, order)):
+        for recipe, crew in zip(self.table.recipe[order].tolist(), crews):
             grouped.setdefault(recipe_names[recipe], []).append(crew)
         return grouped
 

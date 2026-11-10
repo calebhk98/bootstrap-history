@@ -106,10 +106,7 @@ def _entries(setup, record, ledger, area_map, crew, ordered):
     money = setup.currency_id
     index = ledger.hours_hired_by_market if crew is not None else {}
     populated = populated_tiles(record.cohorts)
-    bought_by = {}
     wage_kept: dict = {}     # the wage of each (trade, area), read once for all merchants
-    for (employer, trade, area), (bought, _paid) in index.items():
-        bought_by.setdefault(employer, {})[(trade, area)] = bought
     cash = record.book.balances_of([merchant.agent_id for merchant in ordered], money).tolist()
     entries = []
     for merchant, purse in zip(ordered, cash):
@@ -120,7 +117,7 @@ def _entries(setup, record, ledger, area_map, crew, ordered):
         hire = None
         if crew is not None:
             if carriage_hours.planned(merchant):
-                ledger.crew_hours_bought[merchant.agent_id] = bought_by.get(merchant.agent_id, {})
+                ledger.crew_hours_bought[merchant.agent_id] = carriage_hours.bought_in_plan_markets(record, merchant, index, populated)
             hours_hired, wages = ((carriage_hours.engaged(record, merchant, index, populated)) if carriage_hours.planned(merchant)
                                   else (None, {}))
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
