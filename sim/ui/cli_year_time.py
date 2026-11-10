@@ -7,6 +7,7 @@ reproducible (docs/architecture/NUMBA_PORT_PLAN.md).
 executes, counted under valgrind's cachegrind with PYTHONHASHSEED=0. It counts instructions only (a numpy vector op by its
 machine instructions): not cache misses, not kernel or system-call time. Its first stepped year includes loading cached
 kernels and is reported apart from the warm years. Wall time on a quiet machine remains the final check for the speed goal."""
+import gc
 import hashlib
 import json
 import os
@@ -39,6 +40,7 @@ def save_digest(path):
 def loaded(path, nodes):
     game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_of_save(path)), defer_economy=True)
     load_state(game, path)
+    gc.freeze()     # as a game process does once loaded (sim/ui/process_start.py): later collections skip the loaded heap
     return game
 
 

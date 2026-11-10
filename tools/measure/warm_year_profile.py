@@ -7,6 +7,7 @@ step one more under cProfile and write the profile. Run from the repository root
 The save is read, never written. cProfile inflates times (about two to three times); compare profiles with each other,
 and wall time with `simulator.py year-time`."""
 import cProfile
+import gc
 import random
 import sys
 
@@ -21,6 +22,7 @@ def warmed_game(save_path):
     game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ_of_save(save_path)),
                defer_economy=True)
     load_state(game, save_path)
+    gc.freeze()     # as a game process does once loaded (sim/ui/process_start.py)
     game.step()
     return game
 

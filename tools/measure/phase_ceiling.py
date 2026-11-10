@@ -4,7 +4,7 @@
 
 Times every year phase (`sim/engine/year_phases.py`) and every call the economy's year makes directly
 (`Economy._run_year`, found from its source), and the time spent inside compiled kernels within each. A phase's Python
-time is its wall time less its kernel time. Unlike cProfile this adds only a timer per phase and per kernel call (the
+time is its wall time less its kernel time. Unlike cProfile this adds only a timer per phase and per call from Python into a kernel (the
 number of kernel calls is printed, so their timer cost can be judged). The save is read, never written."""
 import ast
 import inspect
@@ -17,30 +17,28 @@ from numba.core.registry import CPUDispatcher   # noqa: E402
 from tools.measure.warm_year_profile import warmed_game   # noqa: E402
 
 _kernel = {"seconds": 0.0, "calls": 0}
-
-
-def _timed_kernel(dispatcher):
-    def kernel_call(*arguments, **keywords):
-        started = time.perf_counter()
-        try:
-            return dispatcher(*arguments, **keywords)
-        finally:
-            _kernel["seconds"] += time.perf_counter() - started
-            _kernel["calls"] += 1
-    return kernel_call
+_by_kernel = {}
 
 
 def wrap_kernels():
-    """Replace every dispatcher held by a loaded `sim.` module with a timed caller; the number wrapped."""
-    wrapped = {}
-    for module_name, module in list(sys.modules.items()):
-        if module is None or not module_name.startswith("sim."):
-            continue
-        for attribute, value in list(vars(module).items()):
-            if isinstance(value, CPUDispatcher):
-                wrapped.setdefault(id(value), _timed_kernel(value))
-                setattr(module, attribute, wrapped[id(value)])
-    return len(wrapped)
+    """Time every call from Python into a compiled kernel, at the dispatcher class's call: no module's names change,
+    so a kernel compiled for a new signature mid-run still finds the kernels it calls. The number of kernels loaded."""
+    untimed = CPUDispatcher.__call__
+
+    def kernel_call(dispatcher, *arguments, **keywords):
+        started = time.perf_counter()
+        try:
+            return untimed(dispatcher, *arguments, **keywords)
+        finally:
+            seconds = time.perf_counter() - started
+            _kernel["seconds"] += seconds
+            _kernel["calls"] += 1
+            entry = _by_kernel.setdefault(dispatcher.py_func.__module__ + "." + dispatcher.py_func.__name__, [0.0, 0])
+            entry[0] += seconds
+            entry[1] += 1
+    CPUDispatcher.__call__ = kernel_call
+    return sum(1 for module_name, module in list(sys.modules.items()) if module is not None and module_name.startswith("sim.")
+               for value in vars(module).values() if isinstance(value, CPUDispatcher))
 
 
 def _timed(name, function, totals):
@@ -119,6 +117,9 @@ def main(save_path, repeat):
         if wall / repeat < 0.002:
             continue
         print("%-58s %8.3f %8.3f %8.3f %7d" % (name, wall / repeat, kernel / repeat, (wall - kernel) / repeat, calls // repeat))
+    print("\n%-76s %8s %7s" % ("kernel called from Python (per year)", "seconds", "calls"))
+    for name, (seconds, calls) in sorted(_by_kernel.items(), key=lambda item: -item[1][0])[:25]:
+        print("%-76s %8.3f %7d" % (name, seconds / repeat, calls // repeat))
 
 
 if __name__ == "__main__":
