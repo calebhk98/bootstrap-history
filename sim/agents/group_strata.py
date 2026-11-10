@@ -1,7 +1,7 @@
 """Bodies of people (strata) as interest groups: those whose incomes have fallen from what they came to expect."""
 from typing import Any, List
 
-from .group_jobs import jobless_sectors, remember_idle
+from .group_jobs import idle_hours_for, jobless_sectors, remember_idle
 from .group_rent import grievance_parts
 from .group_tuning import STRATUM_GRIEVANCE_THRESHOLD, STRATUM_WELFARE_MEMORY_RATE
 from .sector import Sector
@@ -95,11 +95,12 @@ def stratum_sectors(strata: List[Any], world: Any) -> List[Sector]:
 	sectors = []
 	food_cost = world.people.subsistence_cost_per_person_year()
 	holders = property_holders(strata)
+	idle_hours = idle_hours_for([stratum for stratum in strata if organisable(stratum)], world)
 	for stratum in strata:
 		record = stratum.record
 		if not organisable(stratum):
 			continue
-		named = _fallen_incomes(stratum, holders, world) + jobless_sectors([stratum], world)
+		named = _fallen_incomes(stratum, holders, world) + jobless_sectors([stratum], world, idle_hours)
 		sectors.extend(named)
 		if record.welfare_reference <= 0.0:
 			continue
