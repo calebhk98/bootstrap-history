@@ -223,11 +223,12 @@ class MerchantTable:
     def _history_by_name(self, numbering, only_row: Optional[int] = None) -> Dict[int, Dict[Tuple[str, str], List[float]]]:
         names = numbering.name_list
         found: Dict[int, Dict[Tuple[str, str], List[float]]] = {}
-        for place, key in enumerate(self.history_key.tolist()):
+        keys = self.history_key
+        places = range(len(keys)) if only_row is None else numpy.flatnonzero(keys // HISTORY_STRIDE == only_row).tolist()
+        starts, prices = self.history_starts.tolist(), self.history_price
+        for place, key in zip(places, keys[places].tolist()):
             owner, market = key // HISTORY_STRIDE, key % HISTORY_STRIDE
-            if only_row is None or owner == only_row:
-                found.setdefault(owner, {})[MarketFigures.key_of_name(names[market])] = \
-                    self.history_price[self.history_starts[place]:self.history_starts[place + 1]].tolist()
+            found.setdefault(owner, {})[MarketFigures.key_of_name(names[market])] = prices[starts[place]:starts[place + 1]].tolist()
         return found
 
     def set_history(self, row: int, histories: Dict[Tuple[str, str], List[float]]) -> None:
