@@ -5,7 +5,7 @@ import numpy
 
 from sim.compiled_tables.growth import NO_ROOM, claim_row
 from sim.book_index import EMPTY
-from sim.economy.year_ledger_kernels import add_pair, add_to_figure, add_to_found_pair
+from sim.economy.year_ledger_kernels import add_pair, add_selected_pairs, add_to_figure, add_to_found_pair
 from sim.economy.year_ledger_tables import (DELIVERED, HOURS_SOLD, MONEY_OUT, PLANT_SPEND, SALES_IN, SALES_PURPOSE, WAGES_IN,
                                             WAGES_PURPOSE)
 from sim.jit import njit
@@ -19,38 +19,31 @@ from sim.jit import njit
 def note_settlement_money(figures, counters, agents, paid, received, plant_bought, purpose_kind):
     """Money of settlement rows, in order: what an agent paid goes to `money_out` (and to `plant_spend` where `plant_bought` says
     it bought goods its plant is built from); what it received goes to `wages_in` (row purpose kind WAGES_PURPOSE) or `sales_in`
-    (SALES_PURPOSE) and nowhere for any other purpose."""
+    (SALES_PURPOSE) and nowhere for any other purpose. The figures' columns are taken out of the bundle once, before the rows."""
+    money_out, order_money_out = figures.money_out, figures.order_money_out
+    plant_spend, order_plant_spend = figures.plant_spend, figures.order_plant_spend
+    wages_in, order_wages_in = figures.wages_in, figures.order_wages_in
+    sales_in, order_sales_in = figures.sales_in, figures.order_sales_in
     for i in range(len(agents)):
         agent = agents[i]
         if paid[i] > 0.0:
-            add_to_figure(figures.money_out, figures.order_money_out, counters, MONEY_OUT, agent, paid[i])
+            add_to_figure(money_out, order_money_out, counters, MONEY_OUT, agent, paid[i])
             if plant_bought[i]:
-                add_to_figure(figures.plant_spend, figures.order_plant_spend, counters, PLANT_SPEND, agent, paid[i])
+                add_to_figure(plant_spend, order_plant_spend, counters, PLANT_SPEND, agent, paid[i])
         if received[i] > 0.0:
             if purpose_kind[i] == WAGES_PURPOSE:
-                add_to_figure(figures.wages_in, figures.order_wages_in, counters, WAGES_IN, agent, received[i])
+                add_to_figure(wages_in, order_wages_in, counters, WAGES_IN, agent, received[i])
             elif purpose_kind[i] == SALES_PURPOSE:
-                add_to_figure(figures.sales_in, figures.order_sales_in, counters, SALES_IN, agent, received[i])
+                add_to_figure(sales_in, order_sales_in, counters, SALES_IN, agent, received[i])
 
 
 @njit
 def note_settlement_goods(received_target, sold_target, agents, got_goods, goods_in, goods_out, good, purpose_kind):
     """Goods of the sale rows (purpose kind SALES_PURPOSE), in order: an agent that got goods adds `goods_in` to `received`
-    under the row's good, and one that gave some adds `goods_out` to `sold`."""
-    received_keys, received_amount, received_second = received_target.rows.key, received_target.rows.amount, received_target.rows.second_amount
-    sold_keys, sold_amount, sold_second = sold_target.rows.key, sold_target.rows.amount, sold_target.rows.second_amount
-    received_index, sold_index = received_target.hash_index, sold_target.hash_index
-    for i in range(len(agents)):
-        if purpose_kind[i] != SALES_PURPOSE:
-            continue
-        if got_goods[i]:
-            if add_to_found_pair(received_keys, received_amount, received_second, received_index, agents[i], good[i], 0,
-                                 goods_in[i], 0.0) == EMPTY:
-                add_pair(received_target, agents[i], good[i], 0, goods_in[i], 0.0)
-        if goods_out[i] > 0.0:
-            if add_to_found_pair(sold_keys, sold_amount, sold_second, sold_index, agents[i], good[i], 0, goods_out[i],
-                                 0.0) == EMPTY:
-                add_pair(sold_target, agents[i], good[i], 0, goods_out[i], 0.0)
+    under the row's good, and one that gave some adds `goods_out` to `sold`. The two tables are separate, so each is filled in one
+    pass over the rows."""
+    add_selected_pairs(received_target, agents, good, goods_in, got_goods, purpose_kind, SALES_PURPOSE)
+    add_selected_pairs(sold_target, agents, good, goods_out, goods_out > 0.0, purpose_kind, SALES_PURPOSE)
 
 
 @njit
