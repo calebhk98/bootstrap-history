@@ -192,6 +192,8 @@ def ledger_signatures(types):
         module + "kill_row": [(target, integer)],
         module + "set_pair": [(target, integer, integer, integer, number, number)],
         module + "remove_from_figure": [(whole, whole, integer, integer)],
+        "sim.economy.year_ledger_block_kernels.replace_agents_rows": [(target, whole, whole, whole, whole, floats)],
+        "sim.economy.year_ledger_block_kernels.add_agents_rows": [(target, whole, whole, whole, whole, floats)],
         "sim.economy.goods_production_reads.pair_amounts": [(pair_rows, whole, whole, whole)],
     }
 
