@@ -59,8 +59,7 @@ class Revenue:
 	def output_tonnes(self, material: str, tiles: Optional[FrozenSet[str]] = None) -> float:
 		"""Tonnes of a material the producers on the state's tiles (only `tiles` when given) made last year."""
 		held = set(self.held_tiles()) if tiles is None else set(tiles)
-		by_tile = self.needs.agent_output_tonnes_by_tile()
-		return sum(row.get(material, 0.0) for tile, row in by_tile.items() if tile in held)
+		return sum(tonnes for tile, tonnes in self.needs.agent_output_tonnes_of[material].items() if tile in held)
 
 	def trade_value(self, direction: str) -> float:
 		"""Money's worth of goods imported ("in") or exported ("out") in the last completed year."""

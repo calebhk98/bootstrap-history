@@ -21,7 +21,7 @@ class AgentLandViews(AgentViewPart):
 		"""{tile: share of its people away having fled the state's take}; empty before the agent economy exists."""
 		return self.parts.market_objects.economy.parts.households.fugitive_share_by_tile()
 
-	def agent_output_tonnes_by_tile(self):
-		"""Tonnes of each good made on each tile last year; empty while the economy opens."""
+	def agent_output_tonnes_of(self, material):
+		"""{tile: tonnes of `material` made there last year}, every tile that made anything; empty while the economy opens."""
 		parts = self._answering()
-		return {} if parts is None else parts.producers.output_tonnes_by_tile()
+		return {} if parts is None else parts.producers.output_tonnes_of(material)

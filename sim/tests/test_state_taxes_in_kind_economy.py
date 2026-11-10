@@ -16,17 +16,19 @@ GOOD = "cloth_kg"
 UNITS_BY_TILE = {"a": {GOOD: 4000.0, "wheat_kg": 9000.0}, "b": {GOOD: 1000.0}, "far": {GOOD: 7000.0}}
 
 port = SimpleNamespace(economy=lambda: SimpleNamespace(record=SimpleNamespace(goods=SimpleNamespace(output_by_tile=UNITS_BY_TILE))))
-tonnes_by_tile = ProducerReads(port).output_tonnes_by_tile()
+tonnes_by_tile = ProducerReads(port).output_tonnes_of(GOOD)
 check("the economy's units of a kilogram good are reported in tonnes, a thousand units to the tonne",
-      abs(tonnes_by_tile["a"][GOOD] - 4.0) < 1e-12 and abs(tonnes_by_tile["b"][GOOD] - 1.0) < 1e-12, tonnes_by_tile)
-check("every tile and good is kept", set(tonnes_by_tile) == set(UNITS_BY_TILE) and "wheat_kg" in tonnes_by_tile["a"], tonnes_by_tile)
+      abs(tonnes_by_tile["a"] - 4.0) < 1e-12 and abs(tonnes_by_tile["b"] - 1.0) < 1e-12, tonnes_by_tile)
+check("every tile is kept, with none of a good it did not make", set(tonnes_by_tile) == set(UNITS_BY_TILE), tonnes_by_tile)
+check("a tile that made other goods only has none of this one",
+      ProducerReads(port).output_tonnes_of("wheat_kg") == {"a": 9.0, "b": 0.0, "far": 0.0}, ProducerReads(port).output_tonnes_of("wheat_kg"))
 
 
 class OutputView(Revenue):
     """The revenue part over a stand-in game that holds tiles a and b and answers tonnes by tile."""
 
     def __init__(self, by_tile):
-        super().__init__(SimpleNamespace(needs=fake_needs(agent_output_tonnes_by_tile=lambda: by_tile)))
+        super().__init__(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={GOOD: by_tile, "silk_kg": {}})))
 
     def held_tiles(self):
         return ["a", "b"]

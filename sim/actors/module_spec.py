@@ -29,7 +29,7 @@ READS_BY_OWNER = {
 	            "economy_output_value", "coin_stock_value", "main_material_of", "goods_quote", "purchase_quote",
 	            "household_prices", "household_basket", "agent_trades_good", "agent_lender_listing", "agent_price_response", "agent_country", "agent_cohort_incomes",
 	            "agent_cohort_land_rents", "agent_need_floor_costs", "agent_land_rent_at", "agent_land_rent_paid_by_tile",
-	            "agent_land_rent_per_hectare", "agent_output_tonnes_by_tile", "agent_idle_hours_by_trade", "agent_fugitive_share_by_tile",
+	            "agent_land_rent_per_hectare", "agent_output_tonnes_of", "agent_idle_hours_by_trade", "agent_fugitive_share_by_tile",
 	            "country_opening_basket", "country_volume_baseline", "country_traded_volumes", "fleet_goods", "goods_carried_last_year",
 	            "material_substitutes", "materials_serving", "home_household_tonnes", "border_duty_per_tonne"),
 	"workforce": ("trade_registry", "farm_share_of_hours", "staff", "trade_available", "trade_population", "people_who_exist", "taught_trade_people",

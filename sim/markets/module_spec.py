@@ -78,7 +78,7 @@ _VIEWS = (
 	("agent_people_by_tile_and_trade", None), ("agent_land_rent_per_hectare", None),
 	("agent_land_rent_at", QUOTE), ("agent_land_rent_paid_by_tile", None), ("agent_trades_good", KEYED),
 	("agent_price_response", QUOTE), ("agent_country", KEYED), ("agent_cohort_incomes", None),
-	("agent_cohort_land_rents", QUOTE), ("agent_need_floor_costs", None), ("agent_output_tonnes_by_tile", None),
+	("agent_cohort_land_rents", QUOTE), ("agent_need_floor_costs", None), ("agent_output_tonnes_of", KEYED),
 	("agent_idle_hours_by_trade", None), ("agent_fugitive_share_by_tile", None), ("agent_opening_basket", None),
 	("agent_volume_baseline", None), ("agent_traded_volumes", None), ("agent_producer_capacity", KEYED),
 	("producers_stamp", None), ("producer_capacities", None), ("goods_carried_last_year", None),
