@@ -165,17 +165,24 @@ def bid_figures(setup, record) -> List[BidFigures]:
     return found
 
 
-def crew_wage(setup, record, merchant: Merchant, key: str, populated) -> float:
-    """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the area the merchant hires it in)."""
+def crew_wage(setup, record, merchant: Merchant, key: str, populated, kept=None) -> float:
+    """The wage an hour of the crew `key` is priced at (`trade_wages.wage_in_area` of the area the merchant hires it in).
+    `kept`, a dict the caller shares between merchants, holds the wage by (trade, area) once it is read."""
     trade, tile = _split(key)
-    return trade_wages.wage_in_area(setup, record.memory, trade, hiring_area(record, merchant, tile, populated))
+    area = hiring_area(record, merchant, tile, populated)
+    if kept is None:
+        return trade_wages.wage_in_area(setup, record.memory, trade, area)
+    if (trade, area) not in kept:
+        kept[(trade, area)] = trade_wages.wage_in_area(setup, record.memory, trade, area)
+    return kept[(trade, area)]
 
 
-def engaged(record, merchant: Merchant, index) -> Tuple[Dict[str, float], Dict[str, Optional[float]]]:
+def engaged(record, merchant: Merchant, index, populated=None) -> Tuple[Dict[str, float], Dict[str, Optional[float]]]:
     """({crew key: hours hired}, {crew key: average wage, None where nothing was hired}) for the merchant's plan, from `YearLedger.hours_hired_by_market` (hours the employer paid for, not hours matched). Keys
     that share a labour market (goods leaving unpopulated tiles are bid for at home) share what was hired in
-    proportion to their hours."""
-    populated = populated_tiles(record.cohorts)
+    proportion to their hours. `populated` is the populated tiles when the caller has them."""
+    if populated is None:
+        populated = populated_tiles(record.cohorts)
     plan = merchant.carriage_hours_wanted or {}
     markets: Dict[Tuple[str, str], float] = {}
     market_of = {}

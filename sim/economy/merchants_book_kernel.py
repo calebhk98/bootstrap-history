@@ -104,6 +104,16 @@ def room_of(destination, source, volumes, held, own_into, group_into, group_out,
 
 
 @njit
+def rooms_of(destinations, sources, volumes, held, own_into, group_into, group_out, own_share, group_share, source_share):
+    """`room_of` for each (destination, source) pair, in one call."""
+    rooms = np.empty(destinations.shape[0], np.float64)
+    for row in range(destinations.shape[0]):
+        rooms[row] = room_of(destinations[row], sources[row], volumes, held, own_into, group_into, group_out, own_share,
+                             group_share, source_share)
+    return rooms
+
+
+@njit
 def commit_orders(destinations, sources, outlays, remaining, volumes, held, own_into, group_into, group_out,
                   own_share, group_share, source_share):
     """The units bid for on each row, best row first, while cash remains: the lesser of what the cash buys and the

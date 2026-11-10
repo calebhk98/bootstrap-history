@@ -23,14 +23,8 @@ class _Stock:
         self.held = np.zeros(book.slots, np.float64)
         self.slot_of_stock: Dict[Tuple[GoodId, TileId], int] = {}
         self.tiles_in_slot: Dict[int, List[Tuple[TileId, float]]] = {}     # the held (tile, quantity) of each slot's area, tiles sorted
-        slot_of = book.slot_of
         for (good, tile), quantity in held_stock.items():
-            if good not in book.index_of:
-                continue
-            try:
-                slot = slot_of.get((good, area_map.area_of(good, tile)))
-            except KeyError:                       # a tile outside every area
-                continue
+            slot = route.slot_of_stock(area_map, good, tile)
             if slot is not None:
                 self.slot_of_stock[(good, tile)] = slot
                 self.held[slot] += quantity
@@ -38,12 +32,7 @@ class _Stock:
         for tiles in self.tiles_in_slot.values():
             tiles.sort()
         for each in merchant.in_transit:
-            if each.good not in book.index_of:
-                continue
-            try:
-                slot = slot_of.get((each.good, area_map.area_of(each.good, each.destination_tile)))
-            except KeyError:
-                continue
+            slot = route.slot_of_stock(area_map, each.good, each.destination_tile)
             if slot is not None:
                 self.held[slot] += each.quantity
         self.volumes = merchants_book.merchant_array(book, merchant.expected_volumes)
@@ -142,7 +131,11 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
     if stock.tiles_in_slot:
         holding_source = np.zeros(book.slots, np.bool_)
         holding_source[list(stock.tiles_in_slot)] = True
-        for row in np.flatnonzero(holding_source[rows.source_slot]).tolist():
+        held_rows = np.flatnonzero(holding_source[rows.source_slot])
+        room_of_row = merchants_book_kernel.rooms_of(
+            rows.destination_slot[held_rows], rows.source_slot[held_rows], stock.volumes, stock.held, book.zeros, group_into,
+            group_out, *shares_args).tolist()
+        for row, room in zip(held_rows.tolist(), room_of_row):
             good_index = int(rows.good[row])
             good = book.goods[good_index]
             destination = book.areas[good_index][int(rows.destination[row])]
@@ -150,9 +143,7 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
                 if quantity > 0.0 and tile != destination.anchor_tile:
                     leg = (destination.anchor_tile, destination.area_id)
                     held_best.setdefault((good, tile), leg)
-                    held_rooms.setdefault((good, tile), {})[leg] = float(merchants_book_kernel.room_of(
-                        int(rows.destination_slot[row]), int(rows.source_slot[row]), stock.volumes, stock.held,
-                        book.zeros, group_into, group_out, *shares_args))
+                    held_rooms.setdefault((good, tile), {})[leg] = room
     for key, rooms in held_rooms.items():
         weights = merchants_legs.held_weights(rooms) or {held_best[key]: 1.0}     # stock with nowhere to go still follows the best route
         merchant.routes[key] = merchants_legs.from_weights(weights)
