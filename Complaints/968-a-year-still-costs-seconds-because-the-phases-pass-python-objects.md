@@ -83,6 +83,26 @@ columns; time it with a loaded game and `saveload.state_text`).
 - The route caches keyed on every held technique, so any technique learned re-ran every route search; they now key on the
   techniques a search reads.
 
+**Kernel algorithms (bit-identical, merged):** the goods price search, the respend rounds, labour switching and hiring,
+and the settlement and book kernels were each sped up with every output bit-equal on a captured year (work done once and
+reused across buyers or steps, incremental updates where few terms move, index chains resolved once, a table's columns
+taken out of their bundle before a hot loop: reading `table.column` inside a loop costs reference counting on every array
+in the table). Capture a kernel's real arguments over a warm year and run old and new side by side; keep the old kernel as
+the test's reference.
+
+**Not merged, for a follow-up:** a faster `clear_figures` / `salvage_and_search` inside `decide_markets` (shared price curves,
+kept rows, rounds over the short bids only) was bit-equal on Rome's and England's captured calls, but on books with an
+infinite or undefined ask, budget, maximum or wanted quantity it answers differently from the old rules (where the old
+rounds spread NaN over the market, the new ones give some finite quantities). Such values do occur upstream
+(`goods_decide_inputs_kernel` sets infinite costs and undefined expected prices). Redo it with the old full rounds for any
+market with a figure that is not finite (`goods_market_kernels.allocate_arrays` needs each bid's curve reference and
+exponent, so they must reach `sorted_figures`), and a test that injects inf and nan into random books against
+`allocate_arrays`. Worth about a third of those stages (about 10 ms of a Rome year).
+
+**One-digit changes grow.** A hiring-kernel variant that moved floats by about 1e-14 and no discrete outcome on its own
+calls gave a Rome save differing in hundreds of thousands of leaves two stepped years later: a change that moves any bit
+cannot be checked by comparing games, only by tests of the kernel itself. Every change merged here is bit-identical.
+
 **Measured and ruled out** (numbers in the branch's pull request):
 - Cython over the plain-Python modules (built unchanged, same digest): no faster, slower to start, and a long build.
 - GPU: the kernels are a third of the year; the rest is Python.
