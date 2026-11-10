@@ -18,7 +18,7 @@ from sim.compiled_tables.growth import reserve_rows
 
 from .goods_order_tables import (BID_ORDER, GOODS_BIDS, GOODS_MARKET_RESULTS, GOODS_OFFERS, GOODS_PAIRS, OFFER_ORDER, OTHER, BidOrder,
                                  GoodsBids, GoodsMarketResults, GoodsOffers, GoodsPairs, OfferOrder)
-from .goods_order_items import ObjectBids, ObjectOffers, items_of, number_names
+from .goods_order_items import ObjectBids, ObjectOffers, items_of, joined_runs, number_names
 from .goods_order_objects import make_bid, make_offer
 from .market_memory import market_key
 from .protocols import AgentOrders
@@ -165,7 +165,7 @@ class GoodsOrderBook:
         if not waiting:
             return
         self._waiting_bids = []
-        items = items_of(waiting, ObjectBids)
+        items = joined_runs(items_of(waiting, ObjectBids))
         number_names(self, items)
         for item in items:
             self._write_bids(*item.rows(self), item.source)
@@ -175,7 +175,7 @@ class GoodsOrderBook:
         if not waiting:
             return
         self._waiting_offers = []
-        items = items_of(waiting, ObjectOffers)
+        items = joined_runs(items_of(waiting, ObjectOffers))
         number_names(self, items)
         for item in items:
             seller, good, tile, market, quantity, reservation = item.rows(self)

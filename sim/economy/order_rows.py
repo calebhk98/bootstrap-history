@@ -25,6 +25,17 @@ class NamedBids:
     def __init__(self, buyer, good, area, tile, priority, figures, source: int):
         self.buyer, self.good, self.area, self.tile, self.priority, self.figures, self.source = buyer, good, area, tile, priority, figures, source
 
+    def run_key(self) -> tuple:
+        """Items with this key that wait one after another are written as one (`goods_order_items.joined_runs`)."""
+        return NamedBids, self.source
+
+    @classmethod
+    def joined(cls, run: list) -> "NamedBids":
+        """One item of the run's items' rows, in the run's order."""
+        return cls([name for item in run for name in item.buyer], [name for item in run for name in item.good],
+                   [name for item in run for name in item.area], [name for item in run for name in item.tile],
+                   [value for item in run for value in item.priority], [row for item in run for row in item.figures], run[0].source)
+
     def names(self) -> tuple:
         return self.buyer, self.good, self.tile, list(dict.fromkeys(zip(self.good, self.area)))
 
@@ -39,6 +50,15 @@ class NamedOffers:
     def __init__(self, seller, good, area, tile, quantity, reservation, source: int):
         self.seller, self.good, self.area, self.tile, self.quantity, self.reservation, self.source = (
             seller, good, area, tile, quantity, reservation, source)
+
+    def run_key(self) -> tuple:
+        return NamedOffers, self.source
+
+    @classmethod
+    def joined(cls, run: list) -> "NamedOffers":
+        return cls([name for item in run for name in item.seller], [name for item in run for name in item.good],
+                   [name for item in run for name in item.area], [name for item in run for name in item.tile],
+                   [value for item in run for value in item.quantity], [value for item in run for value in item.reservation], run[0].source)
 
     def names(self) -> tuple:
         return self.seller, self.good, self.tile, list(dict.fromkeys(zip(self.good, self.area)))
