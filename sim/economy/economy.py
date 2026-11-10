@@ -55,7 +55,7 @@ from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import standing_block
 from .year_ledger import YearLedger
-from .collection_paused import collection_paused
+from sim.collection_paused import collection_paused
 
 
 @dataclass

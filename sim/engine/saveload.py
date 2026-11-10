@@ -5,6 +5,7 @@ import gzip, json, os, random
 from sim.game_version import GAME_VERSION
 from sim.refusal import Refusal, cause_of
 
+from sim.collection_paused import collection_paused
 from .data import WAGES
 from . import game_assembly, node_rederive
 from sim.knowledge.api import RevealNodes, fog_mismatch
@@ -26,7 +27,8 @@ class EconomyNotOpened(ValueError):
 
 def state_text(sim):
 	"""The whole game as JSON text, from the live sim.state."""
-	sim.view("flush_agent_record")()
+	with collection_paused():      # building the text makes many lists that live to its end; a collection walks the whole heap for none
+		sim.view("flush_agent_record")()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
 	sim.state._seed = sim.seed
@@ -35,7 +37,7 @@ def state_text(sim):
 	sim.send(CaptureReadings())      # the demand the last throttle saw is carried in the save
 
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
-	with verbatim(sim.view("agent_economy_store")().get("record")):
+	with verbatim(sim.view("agent_economy_store")().get("record")), collection_paused():
 		return state_json(serialize_state(sim.state))
 
 
