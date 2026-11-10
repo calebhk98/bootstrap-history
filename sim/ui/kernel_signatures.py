@@ -25,6 +25,10 @@ def declared_signatures():
     signatures = {
         # the clearing chain a ground good keeps (the fused call holds every other good's): the fixture has no ground good
         "sim.economy.goods_rows_kernel.good_rows": [(goods_bids, goods_offers, integer, whole, whole, array(types.uint8, 1), flag)],
+        # the search of asks on objects (demand_search, goods_market); the year's call uses economy.raise_search_kernel
+        "sim.economy.goods_market_kernels.covers_at": [(floats, floats, floats, number, flag) + (floats,) * 6 + (flag,)],
+        "sim.economy.goods_market_kernels.raise_search": [(floats, floats, array(flag, 1), floats, number, number, number, flag) + (floats,) * 6 + (flag,)],
+        "sim.economy.goods_market_kernels.requested_round_one": [(floats, floats) + (floats,) * 6 + (flag,)],
         "sim.economy.market_table_kernels.remap_goods_markets": [(markets, markets, whole, whole, whole, whole, whole)],
         "sim.economy.market_table_kernels.put_floats": [(floats, whole, whole, whole, integer, whole, floats)],
         "sim.economy.market_table_kernels.drop_floats": [(floats, whole, integer, whole)],
