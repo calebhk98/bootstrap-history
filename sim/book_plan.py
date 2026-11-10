@@ -121,42 +121,50 @@ def plan_moves(moves, first, last, stocks, stock_index, plan, local_index):
 def plan_settled_money(agents_in, paid, received, currency, stride, balances, plan):
     """Plan a market's summed settlement: for every position where something was paid or received, the agent's balance
     less what it paid plus what it received (in that order). One plan row per position, no merging, none for a position
-    with nothing. Returns the number of plan rows."""
+    with nothing. Returns the number of plan rows. The plan's and the balances' columns are taken out of the bundles once."""
+    keys, holders, slots, failing, before, after, moved = plan.key, plan.holder, plan.slot, plan.failing, plan.before, plan.after, plan.moved
+    amounts = balances.amount
+    row = plan.row_count[0]
     for position in range(len(agents_in)):
         if paid[position] == 0.0 and received[position] == 0.0:
             continue
         agent = agents_in[position]
         cell = agent * stride + currency
-        row = plan.row_count[0]
-        plan.row_count[0] = row + 1
-        plan.key[row] = cell
-        plan.holder[row] = agent
-        plan.slot[row] = FREE
-        plan.failing[row] = 0
-        plan.before[row] = balances.amount[cell]
-        plan.after[row] = balances.amount[cell] - paid[position] + received[position]
-        plan.moved[row] = paid[position] + received[position]
-    return plan.row_count[0]
+        keys[row] = cell
+        holders[row] = agent
+        slots[row] = FREE
+        failing[row] = 0
+        before[row] = amounts[cell]
+        after[row] = amounts[cell] - paid[position] + received[position]
+        moved[row] = paid[position] + received[position]
+        row += 1
+    plan.row_count[0] = row
+    return row
 
 
 @njit
 def plan_settled_stock(holders, tiles, good, given, taken, stocks, stock_index, plan):
     """plan_settled_money for one good's stock cells (holder, tile): less what was given plus what was taken. Returns the
     number of plan rows."""
+    plan_keys, plan_holders, plan_slots, failing, before, after, moved = (plan.key, plan.holder, plan.slot, plan.failing, plan.before,
+                                                                          plan.after, plan.moved)
+    stock_keys, stock_quantity = stocks.key, stocks.quantity
+    row = plan.row_count[0]
     for position in range(len(holders)):
         if given[position] == 0.0 and taken[position] == 0.0:
             continue
         key = pack_key(holders[position], good, tiles[position])
-        row = plan.row_count[0]
-        plan.row_count[0] = row + 1
-        plan.key[row] = key
-        plan.holder[row] = holders[position]
-        plan.slot[row] = index_find(stocks.key, stock_index, key)
-        plan.failing[row] = 0
-        plan.before[row] = held_in_slot(stocks, plan.slot[row])
-        plan.after[row] = plan.before[row] - given[position] + taken[position]
-        plan.moved[row] = given[position] + taken[position]
-    return plan.row_count[0]
+        plan_keys[row] = key
+        plan_holders[row] = holders[position]
+        slot = index_find(stock_keys, stock_index, key)
+        plan_slots[row] = slot
+        failing[row] = 0
+        before[row] = 0.0 if slot == FREE else stock_quantity[slot]
+        after[row] = before[row] - given[position] + taken[position]
+        moved[row] = given[position] + taken[position]
+        row += 1
+    plan.row_count[0] = row
+    return row
 
 
 @njit
@@ -168,11 +176,12 @@ def overdrawn(before, after, moved):
 @njit
 def mark_overdrafts(plan, agents):
     """Set `failing` on every planned cell of an agent that is not an edge account and would be overdrawn. Returns how many."""
+    holders, failing, before, after, moved, is_edge = plan.holder, plan.failing, plan.before, plan.after, plan.moved, agents.is_edge
     count = 0
     for row in range(plan.row_count[0]):
-        failing = agents.is_edge[plan.holder[row]] == 0 and overdrawn(plan.before[row], plan.after[row], plan.moved[row])
-        plan.failing[row] = 1 if failing else 0
-        count += 1 if failing else 0
+        fails = is_edge[holders[row]] == 0 and overdrawn(before[row], after[row], moved[row])
+        failing[row] = 1 if fails else 0
+        count += 1 if fails else 0
     return count
 
 

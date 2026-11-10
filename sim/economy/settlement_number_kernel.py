@@ -92,10 +92,13 @@ def batch_keys(positions, pair_bid, pair_offer, bid_rows, offer_rows, bid_buyer,
     count = len(positions)
     bid_used = numpy.zeros(len(bid_rows), dtype=numpy.bool_)
     offer_used = numpy.zeros(len(offer_rows), dtype=numpy.bool_)
+    untiled = 0
     for pair in range(count):
         bid_used[pair_bid[positions[pair]]] = True
         offer_used[pair_offer[positions[pair]]] = True
-    most = int(bid_used.sum()) + int(offer_used.sum()) + count
+        if bid_tile[bid_rows[pair_bid[positions[pair]]]] == empty_tile:
+            untiled += 1
+    most = int(bid_used.sum()) + int(offer_used.sum()) + untiled
     held = numpy.full(table_size(most), -1, dtype=numpy.int64)
     number_at = numpy.zeros(len(held), dtype=numpy.int64)
     keys = numpy.zeros(most, dtype=numpy.int64)
@@ -178,17 +181,20 @@ def market_keys(sizes, receipt, seller, key_agent, agent_total):
                 receipt.copy(), seller.copy(), numpy.arange(key_total, dtype=numpy.int64), numpy.arange(agent_total, dtype=numpy.int64),
                 key_agent.astype(numpy.int64))
     pairs_total = pair_offset[markets]
+    most_keys = 0
+    for market in range(markets):
+        most_keys += min(key_total, 2 * sizes[market])
     key_stamp = numpy.zeros(key_total, dtype=numpy.int64)
     agent_stamp = numpy.zeros(agent_total, dtype=numpy.int64)
     key_local = numpy.zeros(key_total, dtype=numpy.int64)
     agent_local = numpy.zeros(agent_total, dtype=numpy.int64)
-    listed_keys = numpy.zeros(2 * pairs_total, dtype=numpy.int64)
-    listed_agents = numpy.zeros(2 * pairs_total, dtype=numpy.int64)
+    listed_keys = numpy.zeros(most_keys, dtype=numpy.int64)
+    listed_agents = numpy.zeros(most_keys, dtype=numpy.int64)
     key_offset = numpy.zeros(markets + 1, dtype=numpy.int64)
     agent_offset = numpy.zeros(markets + 1, dtype=numpy.int64)
     buyer_key = numpy.zeros(pairs_total, dtype=numpy.int64)
     seller_key = numpy.zeros(pairs_total, dtype=numpy.int64)
-    key_agent_local = numpy.zeros(2 * pairs_total, dtype=numpy.int64)
+    key_agent_local = numpy.zeros(most_keys, dtype=numpy.int64)
     for market in range(markets):
         first, last = pair_offset[market], pair_offset[market + 1]
         first_key, first_agent = key_offset[market], agent_offset[market]
