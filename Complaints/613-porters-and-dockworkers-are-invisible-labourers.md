@@ -52,6 +52,21 @@ handling to it. Every mode's crew is bid in its own trade (the heuristic `CARRIA
     next year's shipments go out through the household-fee fallback. No code fix is made yet: the lever is how a merchant's expected
     prices follow the price level (they stay near the opening-wage spread while the wage moves), which belongs to the merchants'
     expectation rule, and a bid ceiling raised without it would hire hours the merchant's own prices cannot pay for.
+- Re-examined for the bid-ceiling lever (no code change made; the diagnosis above is not confirmed). Read in code: merchants'
+  expected prices do follow observed prices every year (`merchant_year.learn_year`, `MERCHANT_EXPECTATION_SPEED` closes a share of the
+  gap to each year's cleared price), so "expectations stay at the opening level" is not what the rule does. What fixes a bid is
+  `ask_crew` (`gain` = expected spread less the fee's non-crew part, shared by hours), stored as `carriage_money_wanted` at the
+  year's dispatch and bid the next year (`carriage_hours.bid_figures`): a bid is the worth of an hour at last year's expectations
+  and last year's wage. Where the spread of a route sits at its fee (arbitrage leaves little more), a wage that has risen since
+  the plan was made puts the bid under the wage whatever the speed of learning, and the fee's crew part is already re-priced each
+  year (`carriage_hours.wage_scale`), but as one multiplier from the carried-flow mean wage, so an area whose porter wage is
+  above that mean has a fee per crew hour under its wage while the bid, being the spread over hours, ignores the fee there.
+  Not reproduced on this commit: `python3 sim/simulator.py economy-check --accounts --carriage --years 4 --civs mexica_1500`
+  (shipped openings current, numba installed) shows porter demanded 5.5e-08 in year 1, no bid in year 2, 1.33e8 in year 3 (hired 100.59)
+  and 1.25e8 in year 4 (hired 118.35), with porter wages by area from 0.02 to 68 in a trace of the dispatch tables, so the
+  one-area picture above (honduras_02, wage near 2) no longer holds and the commits since the measurement (the 977 pool-stock
+  series) change the trade volumes. Re-measure before choosing a fix; a design that follows from the code reading is to re-price a
+  plan's bid at bid time from the current fee and wage (the plan would then need the per-route spread and hours, not their sums).
 - `sea_freight.PORT_HANDLING_HOURS_PER_TONNE` (read in `sim/markets/port_setup.py`, `sim/freight/models.py`) stays a labelled heuristic: no source found (a port-economics page gives a longshore crew
   5 to 10 tons an hour but not the crew size, so no per-worker figure follows).
 - The sea handling money (`handling_rates`, `sim/markets/port_setup.py`) is still priced at the unskilled wage; porter and dockworker wages come from the
