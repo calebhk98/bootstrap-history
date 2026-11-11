@@ -156,15 +156,15 @@ _ROOT = os.path.dirname(os.path.dirname(_THIS_DIR))
 PRODUCTION_DIR = os.path.join(_ROOT, "data", "production")
 
 
-def _load_production_data() -> Dict[str, Any]:
-    """Return the canonical base-and-enabled-mod production graph."""
+def _load_production_data(mods_dir: Optional[str] = None) -> Dict[str, Any]:
+    """Return the canonical base-and-enabled-mod production graph of `mods_dir` (the repository's when none is named)."""
     from sim.content.api import load_production_catalog
-    return load_production_catalog(_ROOT)
+    return load_production_catalog(_ROOT, mods_dir)
 
 
-def production_data() -> Dict[str, Any]:
-    """The shared canonical production graph used by every subsystem."""
-    return _load_production_data()
+def production_data(mods_dir: Optional[str] = None) -> Dict[str, Any]:
+    """The production graph of the mods directory a game is over, read once per directory."""
+    return _load_production_data(mods_dir)
 
 
 # ============================================================================

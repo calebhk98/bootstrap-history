@@ -60,7 +60,7 @@ class CivilizationRecordTests(unittest.TestCase):
         default = types.SimpleNamespace(record=record("default_civ"))
         with mock.patch("sim.prices.engine_seam.load_civ", return_value=default.record) as loaded:
             self.assertIs(prices.civilization_record(None), default.record)
-        loaded.assert_called_once_with(None)
+        loaded.assert_called_once_with(None, None)
 
     def test_an_id_that_names_no_record_is_an_error_not_an_empty_territory(self):
         with mock.patch("sim.prices.engine_seam.load_civ", side_effect=SystemExit("unknown civilization")):

@@ -25,7 +25,7 @@ def read_quantity(cmd, key, default, dimension, native_unit, sim):
     quantity, error = _qty({key: value}, key, default)
     if error or unit_text in (None, ""):
         return quantity, error
-    registry = units.registry()
+    registry = units.registry(sim.view("mods_directory")())
     civ_id = sim.view("civilisation")().get("id")
     if str(unit_text).strip().lower() in SHOWN_WORDS:
         unit_id = units.chosen_units().get(dimension) or native_unit

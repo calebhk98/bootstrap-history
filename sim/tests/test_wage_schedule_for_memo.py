@@ -8,7 +8,7 @@ from unittest import mock
 from sim.workforce import wage_schedule
 
 
-def build_fresh(registry, civ):
+def build_fresh(registry, civ, mods_dir=None):
     return object()
 
 

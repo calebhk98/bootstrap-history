@@ -60,7 +60,7 @@ class Sim:
             civilisation=copy.deepcopy(civ or load_civ(mods_dir=self.mods_dir)), configuration=dict(DEFAULTS, **(cfg or {})), manual=bool(manual),
             events=events, bounty_set=set(bounty_set or ()),
             sources=ScenarioSources(load_civilisation=lambda civilisation_id: load_civ(civilisation_id, mods_dir=self.mods_dir), kit_capital=lambda kit_id, civ: kit_capital(kit_id, civ, self.mods_dir),
-                                    display_units=lambda: (units.registry(), units.chosen_units(), lambda: units.unit_context(self))),
+                                    display_units=lambda: (units.registry(self.mods_dir), units.chosen_units(), lambda: units.unit_context(self))),
             dice=rng))
         self.nodes = nodes_in_civ_money(nodes, self.civ, self.mods_dir)
         node_rederive.remember_derived_gates(self, self.civ["starting_techs"])

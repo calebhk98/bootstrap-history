@@ -15,6 +15,7 @@ from sim.json_files import read_json
 from sim.scenario.api import from_base, to_base, unit_factor, unit_label  # the conversions are the scenario module's (it writes the text)
 
 from sim.content.api import get_ordered_mods
+from sim.content.directory_stamp import DirectoryMemo
 from sim.content.api import ModError
 from sim.content.api import check_new_id
 from sim.default_civilisation import REPOSITORY_ROOT as ROOT
@@ -66,10 +67,17 @@ def check_registry(registry: Registry) -> None:
             raise ModError("field rule %r has a per unit of another dimension" % rule.get("pattern"))
 
 
-def registry() -> Registry:
+_by_directory = DirectoryMemo()
+
+
+def registry(mods_dir: Optional[str] = None) -> Registry:
+    """The unit registry: the replacement set by `set_registry` if any, else the one of `mods_dir`'s mods (the repository's when
+    none is named), read once per directory until a file under it changes."""
     global _default_registry
     if _registry_override is not None:
         return _registry_override
+    if mods_dir is not None:
+        return _by_directory.get(mods_dir, lambda: load_units(ROOT, mods_dir))
     if _default_registry is None:
         _default_registry = load_units()
     return _default_registry

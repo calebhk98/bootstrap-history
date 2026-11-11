@@ -10,6 +10,9 @@ from types import SimpleNamespace
 from typing import Any, Dict, List, Optional
 
 from sim.assembly.api import Clock
+from sim.default_civilisation import REPOSITORY_ROOT
+
+REPOSITORY_MODS = REPOSITORY_ROOT + "/mods"
 
 
 _ASSEMBLY_NAMES = ("parts", "needs", "world", "seat", "clock", "module_id", "kernels")
@@ -32,6 +35,8 @@ class _FakeNeeds:
 		self._answers = answers
 		for name, value in views.items():
 			setattr(self, name, None if value is None else _FakeView(value))
+		if "mods_directory" not in views:
+			self.mods_directory = _FakeView(REPOSITORY_MODS)   # a game over the repository's mods unless the test names a directory
 
 	def send(self, command: Any) -> Any:
 		self.sent.append(command)

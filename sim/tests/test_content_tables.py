@@ -122,6 +122,15 @@ class TwoDirectoriesTwoTables(unittest.TestCase):
         tech_effects.load_tech_effects(self.with_mod)[MOD + ":spark"]["w_magic_fear"] = 9.0
         self.assertEqual(tech_effects.load_tech_effects(self.with_mod)[MOD + ":spark"]["w_magic_fear"], 0.2)
 
+    def test_two_directories_give_two_production_catalogues(self):
+        from sim.prices import prices
+        write_json(os.path.join(self.with_mod, MOD, "data", "production", "extra.json"),
+                   {"materials": {MOD + ":gizmo": {"outputs": {MOD + ":gizmo": 1.0}, "labour_hours": {"labourer": 1.0}}}})
+        with_mod = prices.default_production_entries(self.with_mod)
+        without_mod = prices.default_production_entries(self.without_mod)
+        self.assertEqual(set(with_mod) - set(without_mod), {MOD + ":gizmo"})
+        self.assertIs(prices.default_production_entries(self.with_mod), with_mod)
+
 
 class ForeignEconomyTests(unittest.TestCase):
     def setUp(self):

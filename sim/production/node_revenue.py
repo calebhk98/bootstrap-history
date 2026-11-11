@@ -34,10 +34,10 @@ _DERIVED_FOR_CIVILISATION: Dict[Tuple[Any, ...], Dict[str, Dict[str, Any]]] = {}
 
 def apply_revenue(nodes: Iterable[dict], goods: Mapping[str, float],
                   wages: Mapping[str, float], money_per_labour_hour: float,
-                  energy: Optional[energy_prices.EnergyPrices] = None) -> None:
+                  energy: Optional[energy_prices.EnergyPrices] = None, mods_dir: Optional[str] = None) -> None:
     """Set each node's `cap_hours`, `rev_hours`, `up_hours` and their bases."""
     from sim.world.demand import production_data
-    production = production_data()
+    production = production_data(mods_dir)
     energy = energy or energy_prices.pool_only(goods)
     for node in nodes:
         node["_cap_hours_authored"] = node.get("_cap_hours_authored", node.get("cap_hours"))
@@ -104,31 +104,32 @@ def _apply_output(node: dict, baskets: node_output.Baskets, goods: Mapping[str, 
 
 
 def for_civilisation(nodes: Mapping[str, dict], civ: Mapping[str, Any], schedule: Any,
-                     held_techs: Optional[Iterable[str]] = None, unskilled_trade: Optional[str] = None) -> Dict[str, dict]:
+                     held_techs: Optional[Iterable[str]] = None, unskilled_trade: Optional[str] = None,
+                     mods_dir: Optional[str] = None) -> Dict[str, dict]:
     """Copies of `nodes` with revenue and upkeep derived at this civilisation's prices and wages, in its
     coin, for the techniques held (default: its starting techniques). Cached on what the figures depend
     on: the civilisation (its people, ground and staple), the gate technologies held, its wages, the trade whose hour is
-    the wage unit (`unskilled_trade`: the live registry's, else the committed one's) and the nodes."""
+    the wage unit (`unskilled_trade`: the live registry's, else the committed one's), the mods directory and the nodes."""
     from sim.prices.api import prices as price_solver, solve_prices_core
     civilization_id = civ["id"]
     held = list(civ["starting_techs"] if held_techs is None else held_techs)
-    held_gates = frozenset(price_solver.all_gate_nodes()) & frozenset(held)
+    held_gates = frozenset(price_solver.all_gate_nodes(price_solver.default_production_entries(mods_dir))) & frozenset(held)
     document = schedule.document()
     rate = schedule.money_per_labour_hour
     key = (civilization_id, held_gates,
-           tuple(sorted(solve_prices_core.wage_ratios_by_trade(document, unskilled_trade).items())), rate,
+           tuple(sorted(solve_prices_core.wage_ratios_by_trade(document, unskilled_trade, mods_dir).items())), rate,
            _what_nodes_state(nodes),
-           float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ), unskilled_trade)
+           float(civ["starting_interest_rate"]), price_solver.territory_fingerprint(civ), unskilled_trade, mods_dir)
     cached = _DERIVED_FOR_CIVILISATION.get(key)
     if cached is None:
         derivation_calls.append(key)
         interest_rate = float(civ["starting_interest_rate"])
         goods, _provenance = price_solver.priced_goods_table(
-            held, document, civilization_id=civilization_id, civilization=civ, unskilled_trade=unskilled_trade)
+            held, document, civilization_id=civilization_id, civilization=civ, unskilled_trade=unskilled_trade, mods_dir=mods_dir)
         energy = energy_prices.graded(held, document, goods, civilization_id, interest_rate,
-                                      civilization=civ, unskilled_trade=unskilled_trade)
+                                      civilization=civ, unskilled_trade=unskilled_trade, mods_dir=mods_dir)
         copies = {node_id: dict(node) for node_id, node in nodes.items()}
-        apply_revenue(copies.values(), goods, schedule.wages_per_hour(), rate, energy)
+        apply_revenue(copies.values(), goods, schedule.wages_per_hour(), rate, energy, mods_dir)
         cached = {node_id: {field: node[field] for field in DERIVED_FIELDS if field in node}
                   for node_id, node in copies.items()}
         _DERIVED_FOR_CIVILISATION[key] = cached

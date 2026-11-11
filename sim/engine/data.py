@@ -155,7 +155,7 @@ def _mods(mods_dir: Optional[str]) -> str:
 def schedule_of_civilisation(civ: JSONDict, mods_dir: Optional[str] = None) -> wage_provider.wages.WageSchedule:
     """The opening wage schedule of a civilisation record the caller holds (it may exist only in memory), over the
     trade registry of `mods_dir`; remembered by the record's whole content so a variant is never served another's schedule."""
-    return opening_schedule(trade_registry(_mods(mods_dir)), civ)
+    return opening_schedule(trade_registry(_mods(mods_dir)), civ, _mods(mods_dir))
 
 
 def unskilled_numeraire(mods_dir: Optional[str] = None) -> str:
@@ -302,7 +302,7 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
         held_technology_ids = load_civ(civilization_id, mods_dir=mods_dir)["starting_techs"]
     from sim.prices.api import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id, unskilled_trade=unskilled_numeraire(mods_dir))
+        held_technology_ids, document, civilization_id=civilization_id, unskilled_trade=unskilled_numeraire(mods_dir), mods_dir=mods_dir)
     production = load_production_catalog(ROOT, mods_dir)
     load_trade_registry(ROOT, production, mods_dir, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
@@ -316,8 +316,8 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
     energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id,
-                                  unskilled_trade=unskilled_numeraire(mods_dir))
-    node_revenue.apply_revenue(nodes.values(), goods, wages, rate, energy)
+                                  unskilled_trade=unskilled_numeraire(mods_dir), mods_dir=mods_dir)
+    node_revenue.apply_revenue(nodes.values(), goods, wages, rate, energy, mods_dir)
     for node in nodes.values():
         node["_derived_for"] = civilization_id or default_civilisation_id()
     money_units.price_nodes(nodes.values(), wages, rate)
@@ -341,7 +341,7 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
                 else starting_schedule(civilization_id, mods_dir))
     _goods, provenance = price_solver.priced_goods_table(
         held_technology_ids, schedule.document(),
-        civilization_id=civilization_id, civilization=civilization, unskilled_trade=unskilled_numeraire(mods_dir))
+        civilization_id=civilization_id, civilization=civilization, unskilled_trade=unskilled_numeraire(mods_dir), mods_dir=mods_dir)
     return provenance
 
 
@@ -359,7 +359,7 @@ def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
     document = schedule.document()
     goods, _provenance = price_solver.priced_goods_table(
         held_technology_ids, document, civilization_id=civilization_id, civilization=civilization,
-        unskilled_trade=unskilled_numeraire(mods_dir))
+        unskilled_trade=unskilled_numeraire(mods_dir), mods_dir=mods_dir)
     if money_per_labour_hour is not None:
         goods = {material: _in_coin(price, document, money_per_labour_hour)
                  for material, price in goods.items()}
@@ -371,7 +371,8 @@ def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict, mods_dir: Opti
     schedule = schedule_of_civilisation(civ, mods_dir)
     first = next(iter(nodes.values()), None)
     if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
-        nodes = node_revenue.for_civilisation(nodes, civ, schedule, unskilled_trade=unskilled_numeraire(mods_dir))
+        nodes = node_revenue.for_civilisation(nodes, civ, schedule, unskilled_trade=unskilled_numeraire(mods_dir),
+                                              mods_dir=mods_dir)
         money_units.price_nodes(nodes.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
         return nodes
     return money_units.rebased_nodes(

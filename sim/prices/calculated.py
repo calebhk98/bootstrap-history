@@ -28,7 +28,7 @@ class CalculatedViews(Part):
         farming the civilisation opens with (one solve per set)."""
         hours, _provenance = price_solver.goods_in_hours(
             held, self.opening_schedule(self.needs.civilisation()).document(), self.held_civilisation(),
-            unskilled_trade=self.needs.unskilled_trade())
+            unskilled_trade=self.needs.unskilled_trade(), mods_dir=self.needs.mods_directory())
         return hours
 
     def partner_own_economy(self, civilization_id: str) -> Dict[str, Any]:
@@ -40,7 +40,7 @@ class CalculatedViews(Part):
             schedule = self.opening_schedule(record)
             hours, provenance = price_solver.goods_in_hours(
                 frozenset(record["starting_techs"]), schedule.document(), record,
-                unskilled_trade=self.needs.unskilled_trade())
+                unskilled_trade=self.needs.unskilled_trade(), mods_dir=self.needs.mods_directory())
             found = self._partner_economies[civilization_id] = {
                 "solved_materials": rules.solved_materials(provenance),
                 "prices_in_own_coin": rules.money_prices(hours, schedule.money_per_labour_hour),

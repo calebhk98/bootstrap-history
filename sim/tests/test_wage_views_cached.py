@@ -213,7 +213,7 @@ class WorkforceWageViews(unittest.TestCase):
         self.workforce.world, self.workforce.seat = WorkforceSociety(), WorkforceSeat(base_tile=TOWN)
         self.views = self.assembly.views
         schedule = wages.WageSchedule({"digger": 0.0, "smith": 4.0}, self.opening_money, 0.0, HOUSEHOLD_TIME_PREFERENCE, CAREER_YEARS)
-        patch = mock.patch("sim.workforce.views_facts.opening_schedule", side_effect=lambda records, civ: schedule)
+        patch = mock.patch("sim.workforce.views_facts.opening_schedule", side_effect=lambda records, civ, mods_dir=None: schedule)
         patch.start()
         self.addCleanup(patch.stop)
 
@@ -244,7 +244,7 @@ class WorkforceWageViews(unittest.TestCase):
         self.assertEqual(self.asked, [("digger", TOWN)])
 
     def test_the_opening_hour_is_kept_until_the_civilisation_or_the_records_report_a_change(self):
-        with mock.patch("sim.workforce.views_facts.opening_schedule", wraps=lambda records, civ: SimpleNamespace(money_per_labour_hour=0.5)) as built:
+        with mock.patch("sim.workforce.views_facts.opening_schedule", wraps=lambda records, civ, mods_dir=None: SimpleNamespace(money_per_labour_hour=0.5)) as built:
             self.views["opening_money_per_labour_hour"]()
             self.views["opening_money_per_labour_hour"]()
             self.assertEqual(built.call_count, 1)

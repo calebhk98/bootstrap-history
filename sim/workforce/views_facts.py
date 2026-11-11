@@ -10,7 +10,7 @@ class FactViews(Part):
 	def wage_schedule_for(self, civ):
 		"""The wage schedule a civilisation record opens on, built from the trade registry and the price solver once per
 		record."""
-		return opening_schedule(self.needs.trade_records(), civ)
+		return opening_schedule(self.needs.trade_records(), civ, self.needs.mods_directory())
 
 	def wages_charged_last_year(self):
 		"""What the last clearing charged the acting seat for its staff and one-year orders; before any clearing, the payroll

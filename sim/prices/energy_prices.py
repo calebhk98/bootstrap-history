@@ -108,14 +108,15 @@ def grade_bands(entries: Mapping[str, Any], available: Mapping[str, Any], prices
 
 def graded(held_technology_ids, prices_json: Dict[str, Any], goods: Mapping[str, float],
            civilization_id: Optional[str] = None, interest_rate: Optional[float] = None,
-           civilization: Optional[Mapping[str, Any]] = None, unskilled_trade: Optional[str] = None) -> EnergyPrices:
+           civilization: Optional[Mapping[str, Any]] = None, unskilled_trade: Optional[str] = None,
+           mods_dir: Optional[str] = None) -> EnergyPrices:
     """The graded carrier prices of a society holding these technologies, in the coin of `prices_json`; the wages are
-    stated against `unskilled_trade`'s hour (the committed registry's when none)."""
-    entries = price_solver.default_production_entries()
+    stated against `unskilled_trade`'s hour (the committed registry's when none), over the production of `mods_dir`."""
+    entries = price_solver.default_production_entries(mods_dir)
     solved = price_solver.solved_prices(held_technology_ids, prices_json, civilization_id=civilization_id,
                                         interest_rate=interest_rate, civilization=civilization,
-                                        unskilled_trade=unskilled_trade)
-    ratios = solve_prices_core.wage_ratios_by_trade(prices_json, unskilled_trade)
+                                        unskilled_trade=unskilled_trade, production_entries=entries)
+    ratios = solve_prices_core.wage_ratios_by_trade(prices_json, unskilled_trade, mods_dir)
     dump_distance = price_solver.waste_dump_minimum_distance(civilization)
     key = (dump_distance, solved.gate_nodes_held, solved.civilization_id, tuple(sorted(ratios.items())),
            prices_json["money_per_labour_hour"], solved.interest_rate,

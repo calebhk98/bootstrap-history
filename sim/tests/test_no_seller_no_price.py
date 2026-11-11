@@ -41,7 +41,7 @@ class NoFallbackPriceTests(unittest.TestCase):
                                 requires_node="far_node"),
         }
         steps = {"near_node": 1, "far_node": 5}
-        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held: steps[node]):
+        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held, mods_dir=None: steps[node]):
             goods, provenance = engine_prices.priced_goods_table(set(), _wage_document(), production_entries=entries)
         self.assertEqual(provenance["copper_kg"], "gated")
         self.assertNotIn("zinc_kg", goods)
@@ -55,7 +55,7 @@ class NoFallbackPriceTests(unittest.TestCase):
                             requires_node="flock_node"),
         }
         steps = {"rear_node": 3, "flock_node": 1}
-        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held: steps[node]):
+        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held, mods_dir=None: steps[node]):
             goods, provenance = engine_prices.priced_goods_table(set(), _wage_document(), production_entries=entries)
         self.assertEqual(provenance["draught_kg"], "gated")
         self.assertEqual(provenance["wool_kg"], "gated")

@@ -57,10 +57,10 @@ PRODUCTION_DIR = os.path.join(ROOT, "data", "production")
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 
-def load_production():
-    """Load the one canonical base-and-enabled-mod production graph."""
+def load_production(mods_dir=None):
+    """Load the one canonical base-and-enabled-mod production graph of `mods_dir` (the repository's when none is named)."""
     from sim.content.api import load_production_catalog
-    return load_production_catalog(ROOT), []
+    return load_production_catalog(ROOT, mods_dir), []
 
 
 def materials_the_tree_consumes(nodes):
