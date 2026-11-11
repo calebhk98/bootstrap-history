@@ -53,6 +53,7 @@ READS_BY_OWNER = {
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat"),
 	"projects": ("substitute_quality_discount", "project_cost", "effective_risk", "seat_review"),
 	"content": ("declared_actor_kinds", "trades_absent", "not_traded_materials", "mods_directory"),
+	"resources": ("mine_output_by_tile",),
 	"land": ("home_tiles_held", "home_modes", "reach_days"),
 	"ledger": ("transfer_listening", "seat_balance", "acting_balance"),
 	"materials": ("material_commodity", "materials_without_a_seller"),

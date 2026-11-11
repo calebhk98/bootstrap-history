@@ -61,6 +61,16 @@ class Workings(Part):
         """Tonnes a year all the workings of `material` raise this year."""
         return sum(self.yield_of(working) for working in self.workings_of(material))
 
+    def mine_output_by_tile(self, material: str) -> Dict[str, float]:
+        """Tonnes a year every seat's workings of `material` raise, by the tile of the deposit each names."""
+        pairs: List[Any] = []
+        tile_of_deposit: Dict[str, str] = {}
+        for seat_id in self.needs.seat_list()["joined"]:
+            with self.act_as(seat_id):
+                tile_of_deposit.update({row["id"]: row["tile_id"] for row in self.parts.deposits.found_deposits(material)})
+                pairs.extend((working, self.yield_of(working)) for working in self.workings_of(material))
+        return rules.mined_tonnes_by_tile(pairs, tile_of_deposit)
+
     def mine_depletion_note(self, material: str) -> Any:
         """Why the material's workings, on average, yield less than the tonnage sunk; None with nothing to explain."""
         if not self.workings_of(material):

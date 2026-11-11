@@ -40,6 +40,17 @@ def working_yield(capacity: float, depletion: float, deposit_remaining: Optional
     return tonnes if deposit_remaining is None else min(tonnes, deposit_remaining)
 
 
+def mined_tonnes_by_tile(workings_with_yield: Iterable[Tuple[Dict[str, Any], float]], tile_of_deposit: Dict[str, str]) -> Dict[str, float]:
+    """Tonnes a year raised on each tile, from (working, tonnes) pairs; a working naming no deposit that has a tile
+    sits on no tile and is left out."""
+    tonnes_by_tile: Dict[str, float] = {}
+    for working, tonnes in workings_with_yield:
+        tile = tile_of_deposit.get(working.get("deposit") or "")
+        if tile is not None:
+            tonnes_by_tile[tile] = tonnes_by_tile.get(tile, 0.0) + tonnes
+    return tonnes_by_tile
+
+
 def depletion_note(depletion: float) -> Optional[str]:
     """Why a working yields less than the tonnage sunk into it; None when there is nothing to explain."""
     if abs(depletion - 1.0) < 0.01:

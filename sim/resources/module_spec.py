@@ -26,7 +26,7 @@ READS_BY_OWNER = {
     "land": ("mineral_scale", "deposit_catalogue", "deposits_listed", "deposits_worked_before", "deposit_working_rate", "prospect_finds",
              "tile_endowment", "tiles_listed_by", "land_area_of", "felled_after_cuts", "felled_after_regrowth"),
     "agriculture": ("weather_seed",),
-    "seats": ("automatic_policy", "founder"),
+    "seats": ("automatic_policy", "founder", "seat_list"),
     "reporting": ("money_text", "mass_text", "area_text", "mass_rate_text", "mass_per_area_text"),
 }
 
@@ -54,6 +54,7 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("mine_works_materials", "works_materials", **_LIVE),
         ViewSpec("mine_demand_goods", "mine_demand_goods", kind=KEYED, **_LIVE),
         ViewSpec("mine_yield", "mine_yield", kind=KEYED, seat_scoped=True, **_LIVE),
+        ViewSpec("mine_output_by_tile", "mine_output_by_tile", kind=KEYED, **_LIVE),
         ViewSpec("mine_depletion_note", "mine_depletion_note", kind=KEYED, seat_scoped=True, **_LIVE),
         ViewSpec("empire_output", "empire_output"),
         ViewSpec("found_deposits", "found_deposits", kind=KEYED, seat_scoped=True, **_LIVE),

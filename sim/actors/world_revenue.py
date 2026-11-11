@@ -9,6 +9,11 @@ from sim.reporting.api import output_rules
 from .world_memo import once
 
 
+def tonnes_on_tiles(tonnes_by_tile_maps: Sequence[Dict[str, float]], tiles: Any) -> float:
+	"""Tonnes on `tiles`, summed over each owner's output by tile (firms, the seats' workings)."""
+	return sum(tonnes for by_tile in tonnes_by_tile_maps for tile, tonnes in by_tile.items() if tile in tiles)
+
+
 class Revenue:
 	"""Read-only questions behind a state's revenue. `world` is the root that hands out the parts."""
 
@@ -57,9 +62,9 @@ class Revenue:
 		return tonnes if tonnes > 0.0 else self.needs.farm_food_demand_kg() / 1000.0
 
 	def output_tonnes(self, material: str, tiles: Optional[FrozenSet[str]] = None) -> float:
-		"""Tonnes of a material the producers on the state's tiles (only `tiles` when given) made last year."""
+		"""Tonnes of a material the producers on the state's tiles (only `tiles` when given) made last year, the seats' own workings included."""
 		held = set(self.held_tiles()) if tiles is None else set(tiles)
-		return sum(tonnes for tile, tonnes in self.needs.agent_output_tonnes_of[material].items() if tile in held)
+		return tonnes_on_tiles([self.needs.agent_output_tonnes_of[material], self.needs.mine_output_by_tile[material]], held)
 
 	def trade_value(self, direction: str) -> float:
 		"""Money's worth of goods imported ("in") or exported ("out") in the last completed year."""
