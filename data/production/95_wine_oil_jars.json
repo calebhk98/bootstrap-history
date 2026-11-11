@@ -40,6 +40,7 @@
     }
    ],
    "conf": "C",
+   "retire": "Complaint 656",
    "requires_node": null
   },
   "olives_kg": {
@@ -79,6 +80,7 @@
     }
    ],
    "conf": "C",
+   "retire": "Complaint 656",
    "requires_node": "mat_olive_oil"
   },
   "amphora_count": {
@@ -86,16 +88,17 @@
     "amphora_count": 100.0
    },
    "inputs": {
-    "ceramic_kg": 1500.0
+    "ceramic_kg": 2500.0
    },
    "labour_hours": {
     "potter": 40.0
    },
    "unit_dimension": "count",
-   "unit_mass_kg": 15.0,
+   "unit_mass_kg": 25.0,
    "basis": "per hundred empty transport jars (amphorae) of about 26 litres",
-   "yield_basis": "MADE. The jar is fired earthenware, so its clay and fuel are the ceramic_kg recipe's (clay at the pit, firewood, wheel time); this entry adds the neck, handles and stamp. Capacity: the Roman amphora quadrantal, the standard liquid measure, is \"approximately 25.9 L\" (Wikipedia, Ancient Roman units of measurement, https://en.wikipedia.org/wiki/Ancient_Roman_units_of_measurement, which tabulates 26.2 L); a Dressel 20 oil jar averaged 62.83 litres (Peacock and Williams, listed on Roman Inscriptions of Britain, https://romaninscriptionsofbritain.org/instrumentum/2494), so 26 litres is a small standard jar, not the large oil type. The one empty mass found is for another type: a Dressel 20 oil jar (about 70 litres) had an empty weight (tara) of \"unos 30 kg\" (Aguilera Martin, as cited under olive_oil_kg p. 15); no source found for the mass of this 26-litre jar (15 kg) or the 40 extra potter hours per hundred: LABELLED HEURISTICS, conf D, retire: Complaint 656.",
+   "yield_basis": "MADE. The jar is fired earthenware, so its clay and fuel are the ceramic_kg recipe's (clay at the pit, firewood, wheel time); this entry adds the neck, handles and stamp. Capacity: the Roman amphora quadrantal, the standard liquid measure, is \"approximately 25.9 L\" (Wikipedia, Ancient Roman units of measurement, https://en.wikipedia.org/wiki/Ancient_Roman_units_of_measurement, which tabulates 26.2 L); a Dressel 20 oil jar averaged 62.83 litres (Peacock and Williams, listed on Roman Inscriptions of Britain, https://romaninscriptionsofbritain.org/instrumentum/2494), so 26 litres is a small standard jar, not the large oil type. The one empty mass found is for another type: a Dressel 20 oil jar (about 70 litres) had an empty weight (tara) of \"unos 30 kg\" (Aguilera Martin, as cited under olive_oil_kg p. 15); EMPTY MASS: SOURCED. Arthur de Graauw, 'From Amphora to TEU: Journey of a container' (Coastal Engineering and Shiphandling, Grenoble, 22/10/2016; PDF read at https://www.ancientportsantiques.com/wp-content/uploads/Documents/ETUDESarchivees/Containers/Containers1.pdf), section 1 on the amphora quadrantal: \"one amphora quadrantal is one Roman cubic foot ... or 26 litres. A full amphora (olive oil, wine, fish sauce) weights around 50 kg, out of which around half is tare\", so about 25 kg empty for this 26-litre jar; page 2 gives the Dressel 1B wine jar as \"Weight: 24 to 26 kg (empty)\" and \"Capacity: 24 to 26 l.\". The 25 kg used is half of 50 kg and the middle of the 24 to 26 kg range (a secondary conference paper, so conf C for the mass); it replaces 15 kg, and the ceramic_kg input is 100 jars times 25 kg. The 40 extra potter hours per hundred (neck, handles, stamp) have no source found: LABELLED HEURISTIC, conf D, retire: Complaint 656.",
    "conf": "D",
+   "retire": "Complaint 656",
    "requires_node": "cap_heat_0700"
   },
   "wine_common_kg": {
@@ -130,6 +133,7 @@
     }
    ],
    "conf": "C",
+   "retire": "Complaint 656",
    "requires_node": null
   },
   "olive_oil_kg": {
@@ -164,6 +168,7 @@
     }
    ],
    "conf": "C",
+   "retire": "Complaint 656",
    "requires_node": "mat_olive_oil"
   }
  }

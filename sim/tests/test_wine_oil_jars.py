@@ -106,6 +106,17 @@ class PressAndJars(unittest.TestCase):
         self.assertIn("clay_kg", _PRODUCTION["ceramic_kg"]["inputs"])
         self.assertGreater(jar["unit_mass_kg"], 0.0)
 
+    def test_the_jar_empty_mass_is_half_a_full_26_litre_amphora_of_50_kg(self):
+        # de Graauw 2016: full amphora quadrantal about 50 kg, about half tare; Dressel 1B 24 to 26 kg empty
+        jar = _PRODUCTION["amphora_count"]
+        self.assertGreaterEqual(jar["unit_mass_kg"], 24.0)
+        self.assertLessEqual(jar["unit_mass_kg"], 26.0)
+        self.assertAlmostEqual(jar["inputs"]["ceramic_kg"], jar["outputs"]["amphora_count"] * jar["unit_mass_kg"])
+
+    def test_every_wine_and_oil_entry_names_its_retirement(self):
+        for material in ("grapes_kg", "olives_kg", "amphora_count", "wine_common_kg", "olive_oil_kg"):
+            self.assertEqual(_PRODUCTION[material].get("retire"), "Complaint 656", material)
+
     def test_a_press_holds_the_land_one_press_served_in_cato(self):
         # 3 presses to 100 iugera of vines, 5 to 240 of olives, at 2,523 square metres to the iugerum
         wine = _PRODUCTION["wine_common_kg"]["capital"][0]["annual_output_at_basis"]
