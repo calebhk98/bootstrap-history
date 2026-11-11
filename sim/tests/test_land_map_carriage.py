@@ -53,7 +53,18 @@ class ModeCarrierTests(unittest.TestCase):
         self.assertIsNone(carrier["train"])
 
     def test_the_cart_is_neither(self):
-        self.assertEqual(small_land().mode_carrier("cart"), {"train": None, "droving": None})
+        self.assertEqual(small_land().mode_carrier("cart"), {"train": None, "droving": None, "porter": None})
+
+
+    def test_foot_is_a_porter_carrier_with_the_hours_of_its_load_and_pace(self):
+        carrier = small_land().mode_carrier("foot")
+        self.assertIsNone(carrier["train"])
+        self.assertIsNone(carrier["droving"])
+        inputs = carrier["porter"]["inputs"]
+        self.assertAlmostEqual(inputs.cargo_tonnes, 0.027)
+        self.assertAlmostEqual(inputs.driver_hours_per_tonne_km, 10.0 / (0.027 * 22.0))
+        self.assertEqual(inputs.feed_kg_per_tonne_km, 0.0)
+        self.assertEqual(inputs.carried_kg_per_day, 1.0)
 
 
 class ModeCrewsTests(unittest.TestCase):

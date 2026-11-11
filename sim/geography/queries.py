@@ -10,7 +10,7 @@ from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Mapping, Opti
 
 from sim.geography.food_crops import CropSite, CropTechnique
 from sim.geography.json_copy import copied
-from sim.geography import (droving, endemic, food_capacity, food_crops, forest_timber, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
+from sim.geography import (droving, endemic, food_capacity, food_crops, forest_timber, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight, porter_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
                            reach_bands, resources_summary, routes_carriage, routes_compile, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_isthmus, ways_works)
@@ -199,6 +199,15 @@ def droving_carrier(mode_id: str, world_map: Optional[WorldMap] = None) -> Optio
     if mode is None or mode.get("model") != "droving":
         return None
     return {"inputs": droving.freight_physical_inputs(mode["carrier"])}
+
+
+def porter_carrier(mode_id: str, world_map: Optional[WorldMap] = None) -> Optional[Dict[str, Any]]:
+    """{inputs} of a mode carried on foot, as a freight carrier (physical inputs per tonne-km: the porters' hours),
+    or None for any other mode."""
+    mode = routes_modes.modes(_map(world_map)).get(mode_id)
+    if mode is None or mode.get("model") != "porter":
+        return None
+    return {"inputs": porter_freight.freight_physical_inputs(mode["carrier"])}
 
 
 def dues_hours_per_tonne(world_map: Optional[WorldMap] = None) -> Dict[str, float]:

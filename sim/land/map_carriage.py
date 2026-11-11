@@ -3,7 +3,7 @@ cheapest and fastest ways between tiles. Mixed into `Land`."""
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from sim.assembly.api import Part
-from sim.geography.api import (cargo_loss_per_day, carriage_rates, droving_carrier, dues_hours_per_tonne, modes_carrying, reach,
+from sim.geography.api import (cargo_loss_per_day, carriage_rates, droving_carrier, dues_hours_per_tonne, modes_carrying, porter_carrier, reach,
                                route, train_carrier, usable_modes, walking_cargo_modes)
 
 
@@ -26,8 +26,9 @@ class MapCarriage(Part):
                 "dues_hours_per_tonne": dues_hours_per_tonne(self.parts.map_views.world_map)}
 
     def mode_carrier(self, mode: str) -> Dict[str, Optional[Dict[str, Any]]]:
-        """{train, droving}: the mode as a rail carrier or a droving carrier (each None where the mode is not that)."""
-        return {"train": train_carrier(mode, self.parts.map_views.world_map), "droving": droving_carrier(mode, self.parts.map_views.world_map)}
+        """{train, droving, porter}: the mode as a rail carrier, a droving carrier or a porter carrier (each None where the mode is not that)."""
+        world_map = self.parts.map_views.world_map
+        return {"train": train_carrier(mode, world_map), "droving": droving_carrier(mode, world_map), "porter": porter_carrier(mode, world_map)}
 
     def mode_crews(self, modes: Iterable[str]) -> Dict[str, Dict[str, Any]]:
         """{mode: {crew_trade, crew_hours_per_tonne_km, handling_hours_per_tonne, edge_classes}} for the modes that name a crew."""

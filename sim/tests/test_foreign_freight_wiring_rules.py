@@ -35,7 +35,8 @@ def freight_game(rate=0.1, implementation=_Carriers, **more_views):
         "trade_registry": lambda: {"labourer": {"fallback": True}, "sailor": {"role": "sailor"}, "merchant": {"role": "merchant"}},
         "labour_quote": lambda trade: SEA_WAGE if trade == "sailor" else LAND_WAGE, "market_rate": lambda: rate,
         "carriage_facts": lambda: {"walking_modes": ["drove"], "loss_per_day": {}, "dues_hours_per_tonne": {}},
-        "modes_carrying": lambda cargo: ["cart", "sail"], "material_price": lambda material: 0.5, **more_views})
+        "modes_carrying": lambda cargo: ["cart", "sail"], "held_techniques": lambda include_starting=True: frozenset(),
+        "modes_usable": lambda parties, cargo="goods": ["cart", "sail"], "material_price": lambda material: 0.5, **more_views})
 
 
 def mode_costs(game, **kwargs):
@@ -67,6 +68,11 @@ class FreightModeCostTests(unittest.TestCase):
     def test_goods_modes_leave_out_a_mode_that_does_not_carry_the_cargo(self):
         self.assertEqual(sorted(mode_costs(freight_game(), imbalance=0.0, cargo="goods")), ["cart", "sail"])
         self.assertIn("drove", mode_costs(freight_game(), imbalance=0.0))
+
+    def test_goods_modes_leave_out_a_mode_whose_means_the_society_does_not_hold(self):
+        game = freight_game(modes_usable=lambda parties, cargo="goods": ["sail"])
+        self.assertEqual(sorted(mode_costs(game, imbalance=0.0, cargo="goods")), ["sail"])
+        self.assertIn("cart", mode_costs(game, imbalance=0.0))
 
 
 class FlowImbalanceTests(unittest.TestCase):

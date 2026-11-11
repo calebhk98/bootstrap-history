@@ -1,6 +1,6 @@
 # Porters and dockworkers have no trade, so the largest labour group of a society without draught animals is hidden
 
-**Status:** partly - porter and dockworker trades exist and carriage books to them; `economy-check --accounts --carriage` now prints porter and dockworker hours demanded and hired; not yet run on a whole game (see "What is left")
+**Status:** partly - porter and dockworker trades exist, carriage books to them, and the economy's carriage table now offers only modes whose means are held and prices foot with porter crew; `economy-check --accounts --carriage` prints porter and dockworker hours demanded and hired; the whole-game measurement in "What is left" has not been run
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming). Depends on 609.
 
@@ -17,7 +17,20 @@ handling to it. Every mode's crew is bid in its own trade (the heuristic `CARRIA
 
 **What is left.**
 
-- Measured (2026-11-11), `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500`: no porter row appears at all (no porter hours bid), merchants bid for carter hours although the Mexica hold no draught animals, and none of them are hired; sailor hours are bid and none hired. In Rome dockworkers are bid and nearly all hired. So land carriage in a society without draught animals still does not reach porters.
+- Cause found and fixed in code (not yet measured in a game). The economy's carriage table was built from every mode the
+  freight module could price (`Models.freight_mode_costs(cargo="goods")`, read by `sim/markets/port_setup.py` `opening_values`) with
+  no check of the mode's `requires_nodes`, so a society without draught animals or ships still had cart, pack, river boat and
+  sail in its table and its merchants bid carter and sailor hours for them; the labour core's need shares
+  (`sim/labour/workforce_carriage.py`, usable modes only) never seeded those trades, so nothing was hired. And `foot` had no
+  carrier model in `Models.build_carrier_models`, so it was never priced and never routed, so no porter hours were ever bid.
+  Now `freight_mode_costs(cargo=...)` offers only the modes whose required nodes the society holds (`rules.usable_mode_costs`),
+  and the porter mode is a freight carrier from its mode data (`sim/geography/porter_freight.py`, `geography.porter_carrier`),
+  priced by its crew hours with no vehicle. Tests: `LandCarriageMeansTests` in `sim/tests/test_porters_and_dockworkers.py`,
+  `test_foot_is_a_porter_carrier_...` in `test_land_map_carriage.py`, `test_goods_modes_leave_out_a_mode_whose_means_...` in
+  `test_foreign_freight_wiring_rules.py`.
+- Known limit: the mode set is fixed when the economy opens (`opening_values`), so a node a player learns later (a draught
+  animal herd, the cart) does not add its mode to the economy's carriage table until a new opening; the freight module's
+  own route searches do follow the nodes held. Domestic fallback hauls (`Haul.unjoined_haul`) still price `cart` whatever is held.
 
 - Verify in a whole game that porter and dockworker hours are bid and hired: `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500` (`sim/economy/carriage_report.py`); the porter row should show hired hours near the demanded ones. The `occupational_distribution` slow topic is now only a data lint (619).
 - `sea_freight.PORT_HANDLING_HOURS_PER_TONNE` (read in `sim/markets/port_setup.py`, `sim/freight/models.py`) stays a labelled heuristic: no source found (a port-economics page gives a longshore crew

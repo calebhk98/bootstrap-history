@@ -128,6 +128,10 @@ class Models(Part):
         if "pack" not in unpriced:
             models["pack"] = (_caravan_inputs(), freight_cost.CarrierPrices(
                 string * freight_physics.PACK_SADDLE.self_mass_kg * vehicle_wood, string * mule_price), land_days, 0.0)
+        for mode in self.needs.modes_carrying("goods"):
+            porter = self.needs.mode_carrier(mode)["porter"]
+            if porter:
+                models[mode] = (porter["inputs"], freight_cost.CarrierPrices(0.0), land_days, 0.0)
         if RAIL_MODE not in unpriced:
             models[RAIL_MODE] = (train["inputs"], freight_cost.CarrierPrices(train["stock_kg"] * stock_price), land_days, 0.0)
         if SEA_MODE not in unpriced:
@@ -140,7 +144,8 @@ class Models(Part):
     def freight_mode_costs(self, imbalance=1.0, modes=None, cargo=None):
         """{mode: home money per tonne-km}: feed and crew, the carrier's capital at the market rate, hull losses, and
         the return leg (`imbalance` 0 when flows balance, 1 when the carrier comes back empty). The same function
-        prices foreign legs and domestic hauls. A mode whose feed or carrier has no price is absent."""
+        prices foreign legs and domestic hauls. A mode whose feed or carrier has no price is absent. With `cargo`,
+        only the modes that carry it and whose required nodes this society holds are offered."""
         land_wage = self.needs.labour_quote(self.trade_of_role("unskilled"))
         sea_wage = self.needs.labour_quote(self.trade_of_role("sailor"))
         rate = self.needs.market_rate()
@@ -153,11 +158,14 @@ class Models(Part):
             if material not in feed_prices:
                 feed_prices[material] = self.needs.material_price[material]
             return feed_prices[material]
-        return {mode: freight_cost.freight_money_per_tonne_km(
+        costs = {mode: freight_cost.freight_money_per_tonne_km(
                     inputs, feed_price(mode), sea_wage if mode == SEA_MODE else land_wage, prices, rate, working_days,
                     imbalance, loss, cargo_walks=mode in walking)
                 for mode, (inputs, prices, working_days, loss) in self.carrier_models().items()
                 if (modes is None or mode in modes) and (cargo is None or mode in carrying) and feed_price(mode) is not None}
+        if cargo is None:
+            return costs
+        return rules.usable_mode_costs(costs, self.needs.modes_usable((self.needs.held_techniques(False),), cargo))
 
     def freight_handling_costs(self):
         """{mode: home money per tonne} charged once per leg of that mode: port handling at sea, and the tolls or port
