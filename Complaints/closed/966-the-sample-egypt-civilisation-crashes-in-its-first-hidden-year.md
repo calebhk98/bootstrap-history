@@ -1,6 +1,6 @@
 # The sample Egypt civilisation crashes in its first hidden year
 
-**Status:** closed - the setup kept recipes whose inputs have no price (nothing the society can run makes them); it now leaves them out until a technique prices them. The cold Egypt opening itself was not run here; the orchestrator re-runs it
+**Status:** closed - the setup kept recipes whose inputs have no price (nothing the society can run makes them); it now leaves out a recipe with an unpriced input or output until a technique prices them; the reproduction command below now opens the game and answers `state`
 
 `sample_egypt_100bc_e7k2:egypt` is a mod civilisation with no shipped opening, so a new game runs its own spin-up, and
 the first hidden year raises `KeyError: 'meat_kg'` in `MarketAreaMap.area_of` (`sim/economy/market_areas.py`), reached
