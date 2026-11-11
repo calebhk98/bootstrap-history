@@ -140,10 +140,6 @@
   "cooked_meal_kg": {"satisfies": {"food": 0.32}, "ready_to_eat": true, "basis": "The food of the ingredients over the mass of the meal, (300 * 1.0 + 200 * 0.1) / 1000 (data/production/95_household_services.json); boiling adds no food energy.", "conf": "D"},
   "wine_common_kg": {"satisfies": {"food": 0.2}},
 
-  "brick_1000": {"satisfies": {"shelter": 1.4}},
-  "timber_m3": {"satisfies": {"shelter": 1.0}},
-  "stone_blocks": {"satisfies": {"shelter": 0.054}},
-  "cement_portland_kg": {"satisfies": {"shelter": 0.003}},
 
   "cloth_kg": {"satisfies": {"clothing": 1.0}},
   "dyed_cloth_kg": {"satisfies": {"clothing": 1.0}, "basis": "Dye adds colour, not cover or warmth, so a kilogram counts as plain cloth does. Labelled placeholder, conf D; retire: Complaints/533 when a need for appearance separates the two."},
