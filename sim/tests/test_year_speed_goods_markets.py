@@ -41,7 +41,7 @@ def near(left, right):
 
 def with_markets(seed):
     setup, record, view, _ledger, area_map = economy_of(seed)
-    setup.basket_for = lambda tile: types.SimpleNamespace(substitution=1.0 + (hash(tile) % 3) * 0.7)
+    setup.basket_for = lambda tile: types.SimpleNamespace(substitution=1.0 + (hash(tile) % 3) * 0.7, needs=())
     record.goods = goods_on(record.memory)
     record.land = types.SimpleNamespace(land_rent={tile: random.Random(seed).uniform(0.0, 3.0) * (index % 3) for index, tile in enumerate(TILES)})
     setup.opening_rate = getattr(setup, "opening_rate", 0.04)

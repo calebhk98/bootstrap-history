@@ -8,7 +8,7 @@ import types
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
-from sim.economy import goods_market, seller_offers, unsold_search
+from sim.economy import ask_adjust, goods_market, seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -85,7 +85,7 @@ class AggregateProducerTests(unittest.TestCase):
         ask = 1.5 * cost
         price, _sold = cleared([producer("only", 1)], [TOTAL], ask=ask)
         self.assertGreater(price, ask)     # it raises its ask against the residual demand, within the band
-        self.assertLessEqual(price, cost * seller_offers.ASK_BAND_CEILING * (1.0 + 1e-9))
+        self.assertLessEqual(price, cost * ask_adjust.ASK_BAND_CEILING * (1.0 + 1e-9))
 
     def test_an_aggregate_keeps_the_price_taking_ask(self):
         setup, record = game([producer("whole", SHOPS)])

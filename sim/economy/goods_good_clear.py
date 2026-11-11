@@ -49,7 +49,7 @@ class Untraded:
 
 def _plain(context, good: str, area: str, last_price, bids: list, offers: list):
     """The old rules on objects: the sellers' re-pricing, the unsold search, the clearing. Returns (offers after, result)."""
-    costs = seller_offers.UnitCosts()
+    costs = seller_offers.UnitCosts(context.alternatives)
     chosen = seller_offers.strategic_offers(context.setup, context.record, context.view, bids, offers, last_price, costs)
     return unsold_search.clear_with_search(context.setup, context.record, context.view, bids, offers, chosen, good, area,
                                            context.setup.currency_id, last_price, costs)

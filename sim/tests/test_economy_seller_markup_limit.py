@@ -9,7 +9,7 @@ import types
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
-from sim.economy import seller_offers, unsold_search
+from sim.economy import ask_adjust, seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -85,7 +85,7 @@ class MarkupLimitTests(unittest.TestCase):
 
     def test_without_substitution_the_stated_band_still_bounds_the_ask(self):
         ask = asked([fixed_budget_buyer()], 1000.0, RUN_COST_PER_UNIT * 2.9, 10.0, substitution=1.0)
-        self.assertLessEqual(ask, seller_offers.ASK_BAND_CEILING * RUN_COST_PER_UNIT * (1.0 + 1e-9))
+        self.assertLessEqual(ask, ask_adjust.ASK_BAND_CEILING * RUN_COST_PER_UNIT * (1.0 + 1e-9))
 
 
 if __name__ == "__main__":

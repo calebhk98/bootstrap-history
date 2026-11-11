@@ -31,13 +31,13 @@ def can_fuse(context, good: str) -> bool:
     return spec is None or spec.portable
 
 
-def _answer(context, flags_to_ask: tuple, room: numpy.ndarray) -> None:
+def _answer(context, good: str, flags_to_ask: tuple, room: numpy.ndarray) -> None:
     """Ask Python's questions the kernel raised for: lending rates, band multiples, room in the appended tables."""
     missing_areas, missing_tiles = flags_to_ask
     for area in numpy.flatnonzero(missing_areas).tolist():
         context.note_area_rate(area)
     for tile in numpy.flatnonzero(missing_tiles).tolist():
-        context.note_band_multiple(tile)
+        context.note_band_multiple(tile, good)
     orders = context.orders
     for name, extra in zip(("bid_order", "offer_order", "pairs", "results"), room.tolist()):
         table = getattr(orders, name)
@@ -59,7 +59,7 @@ def fused_clear(context, good: str, good_id: int):
         bids, offers = orders.tables()           # first: it numbers the names of the orders waiting, which the ranks and tables read below follow
         goods_table = orders.memory_tables.goods_table
         rates, known = context.area_rates()
-        band_multiples = context.band_multiple_table()
+        band_multiples = context.band_multiple_table(good)
         scratch = context.scratch(len(known), len(band_multiples))
         try:
             found = clear_good_columns(
@@ -70,7 +70,7 @@ def fused_clear(context, good: str, good_id: int):
                 (costs.slot_of, costs.cost, costs.input_share, costs.expected), matrices.outputs, band_multiples,
                 spec.spoilage_per_year if spec is not None else 0.0, rates, known, STEPS, MINIMUM_PRICE_SHARE_OF_REFERENCE, *scratch)
         except NeedsInputs:
-            _answer(context, scratch[:2], scratch[2])
+            _answer(context, good, scratch[:2], scratch[2])
             continue
         break
     rows, flags, flags_of, pack, allocated, quotes, clearing, on_objects, bid_count, last_price = found

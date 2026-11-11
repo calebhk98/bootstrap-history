@@ -5,7 +5,7 @@ Eurace@Unibi's firm (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_
 current stock), which Eurace's own price rule (Market_Research/Firm_market_research_functions.c, Firm_set_price)
 reads only as a cap on expected sales. The search for unsold stock inside the year (unsold_search.py) is the other
 half of the cut: this is the price the seller carries into next year. A seller whose stock is all gone but whose ask is
-already a multiple of what a unit costs it learns nothing more by asking higher (ASK_BAND_CEILING), and a good whose
+already a multiple of what a unit costs it learns nothing more by asking higher (ASK_BAND_CEILING, or the narrower ask_ceiling.py width), and a good whose
 supply cannot respond does not climb for decades."""
 import math
 from typing import List, Optional
@@ -30,9 +30,11 @@ ASK_BAND_CEILING = declare(
     source=None, confidence="D", retire="Complaints/643-a-seller-facing-inelastic-demand-has-an-unbounded-ask.md",
     why="Lengnick 2013 (eq 8-9) holds each firm's price between two multiples of its marginal cost and Caiani "
         "et al. 2016 (eq 3.6-3.7) set it as a markup on expected unit cost, so no seller's ask is unbounded. "
-        "Where buyers substitute toward other goods the band's width is derived (substitution_markup in "
-        "seller_offers.py); where they do not, a width from the seller's cost structure (the buyers' cheapest "
-        "alternative way to meet the need, priced from the recipes) is not yet built, so a stated multiple stands in.")
+        "The band's width is derived at clearing time wherever the good has another good in its need to turn to "
+        "(ask_ceiling.py: that good's price or making cost) or buyers substitute (the substitution markup). It stands in "
+        "for a good with no alternative in a need, and for the between-year expectation (close_kernel.py, "
+        "planning_price.py), which does not yet read the per-good width; the buyers' budget as the bound for a good "
+        "with no alternative is not built.")
 
 
 def band_edge(break_even_price: float, input_share: float = 0.0, ceiling_multiple: float = ASK_BAND_CEILING) -> float:

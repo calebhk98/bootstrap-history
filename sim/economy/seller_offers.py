@@ -21,7 +21,8 @@ import numpy
 
 from . import price_setting
 from . import unit_cost as run_cost
-from .ask_adjust import ASK_BAND_CEILING, band_edge
+from .ask_adjust import band_edge
+from .ask_ceiling import NO_ALTERNATIVES, band_multiple
 from .market_memory import market_key
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import Bid, Offer
@@ -44,9 +45,10 @@ class UnitCosts(dict):
     """(seller, tile) -> the offer's `unit_cost`, with `shares` the same keys -> its `input_share_of_cost`: the figures a
     market's sellers worked out once, for the unsold search of the same market to read."""
 
-    def __init__(self):
+    def __init__(self, alternatives=None):
         super().__init__()
         self.shares = {}
+        self.alternatives = alternatives      # the year's `ask_ceiling.AskAlternatives`, which bound the asks of this market's sellers
 
 
 def cost_figures(setup, record, view, offer: Offer) -> Tuple[Optional[float], float]:
@@ -105,18 +107,13 @@ def unit_value(offer: Offer, cost: float) -> float:
     return min(cost, max(offer.reservation_price, 0.0))
 
 
-def substitution_markup(setup, offer: Offer) -> float:
-    """The ratio of price to cost a seller can charge when buyers substitute toward other goods meeting the
-    same need at the basket's elasticity of substitution (the constant-elasticity monopolist's markup);
-    where buyers do not substitute more than one for one the stated band (ASK_BAND_CEILING) stands in."""
-    elasticity = setup.basket_for(offer.tile).substitution
-    return elasticity / (elasticity - 1.0) if elasticity > 1.0 else ASK_BAND_CEILING
-
-
-def ask_band_multiple(setup, offer: Offer) -> float:
-    """The most, as a multiple of a unit's cost, any seller's ask may be: the derived substitution markup,
-    never past ASK_BAND_CEILING, so inelastic demand gives a finite ask."""
-    return min(substitution_markup(setup, offer), ASK_BAND_CEILING)
+def ask_band_multiple(setup, offer: Offer, alternatives=None) -> float:
+    """The most, as a multiple of a unit's cost, any seller's ask may be (`ask_ceiling.band_multiple`): bounded by what the
+    buyers' cheapest alternative costs when `alternatives` (the year's `AskAlternatives`) is given, else by the substitution
+    markup the basket's elasticity derives, else by the stated multiple."""
+    if alternatives is not None:
+        return alternatives.multiple(offer.good, offer.tile)
+    return band_multiple(setup.basket_for(offer.tile).substitution, NO_ALTERNATIVES, None)
 
 
 def stands_for_many(record, offer: Offer) -> bool:
@@ -133,6 +130,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
     each offer's `unit_cost` by (seller, tile), for the unsold search of the same market to read."""
     original = list(offers)
     offers = list(offers)
+    alternatives = getattr(costs, "alternatives", None)
     if not bids or not offers:
         return offers
     pricing = []      # (index, unit value, market size, ceiling) of the sellers that search a price, all against the book as it stood
@@ -150,7 +148,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         if offer.reservation_price <= 0.0:       # a perishable or a distressed holder: it asks a price, never nothing
             producer = record.producers[offer.seller]
             recipe = setup.recipes[producer.recipe_id]
-            limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer))
+            limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer, alternatives))
                      if math.isfinite(cost) else math.inf)
             opened = opened_ask(offer.reservation_price, cost,
                                 expected_output_prices(producer, recipe, view).get(offer.good), limit)
@@ -170,7 +168,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         size = market_size(record, offer)
         if offer.reservation_price <= 0.0 or size is None:
             continue      # a seller that sells at any price, or a market with no sales to judge by, keeps its ask
-        limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer))
+        limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer, alternatives))
                  if math.isfinite(cost) else math.inf)
         pricing.append((index, value, size, max(limit, value)))
     if pricing:
