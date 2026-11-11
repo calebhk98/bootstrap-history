@@ -82,7 +82,7 @@ __all__ = [
     "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
     "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
-    "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs",
+    "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs", "crop_suitability_inputs",
 ]
 
 
@@ -670,6 +670,11 @@ def health_figures(economy, outcomes, staple, metals):
 def crop_site_inputs(economy):
     """(yield factor by recipe and tile, land a run takes by recipe) for the producers that crop land."""
     return economy.setup.yield_factor_by_recipe_tile, economy.setup.land_per_run
+
+
+def crop_suitability_inputs(economy):
+    """{recipe@tile: the crop's yield against the reference field's on the tile} (the crops that state a climate)."""
+    return economy.setup.crop_suitability_by_recipe_tile
 
 
 def actor_fundable_amount(economy, amount, existing_debt, collateral_value, arrears):

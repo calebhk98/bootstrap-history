@@ -14,7 +14,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import dues_hours_per_tonne, sea_freight, settlement
 from sim.labour import api as labour_api
 
-from . import port_closure, port_crop_prices, port_sites
+from . import port_closure, port_crop_choice, port_crop_prices, port_sites
 from .port_stores import opening_store_values
 from sim.freight.api import SEA_MODE
 
@@ -196,6 +196,7 @@ def build_setup(sim, opening=None, production=None):
     recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.scenario.HOURS_PER_PERSON_YEAR))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
+    crop_suitability_by_recipe_tile = port_crop_choice.crop_suitabilities(production, recipes, tiles, world_map, recipe_tile_key)
     need_data = sim.household_need_data()
     basket = need_basket.make_basket(need_data, production, civ_values=society_at_opening(civ, opening))
     goods = set()
@@ -252,7 +253,8 @@ def build_setup(sim, opening=None, production=None):
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
-        yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
+        yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles, crop_suitability_by_recipe_tile),
+        crop_suitability_by_recipe_tile=crop_suitability_by_recipe_tile,
         basket_by_tile=baskets_by_tile(basket, need_data, sim.map.tile_climates(all_tile_ids), all_tile_ids), coin_per_unit=unit,
         household_work=sim.household_work_data(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         milled_as=household_grinding.milled_as_map(need_data),
@@ -281,10 +283,12 @@ def tool_wear_recipes(recipes, trades_data, life_years, hours_per_worker_year):
     return {recipe_id: with_tool_wear(recipe, wear_per_hour, makeable, order, factors) for recipe_id, recipe in recipes.items()}
 
 
-def cropland_yields(production, recipes, tiles):
+def cropland_yields(production, recipes, tiles, suitability=None):
     """{recipe@tile: yield factor} for the recipes that grow on arable land: the tile's soil, climate and water
-    (geography's crop_site) against the reference field. Pasture, forest and mines do not read it."""
-    return {recipe_tile_key(recipe_id, tile_id): tile.fertility
+    (geography's crop_site) against the reference field, times the crop's own suitability for the tile
+    (`port_crop_choice`; one where the recipe states none). Pasture, forest and mines do not read it."""
+    suitability = suitability or {}
+    return {recipe_tile_key(recipe_id, tile_id): tile.fertility * suitability.get(recipe_tile_key(recipe_id, tile_id), 1.0)
             for recipe_id in sorted(recipes) if str(production[recipe_id].get("extracted_from") or "").startswith(port_crop_prices.ARABLE_SOURCE)
             for tile_id, tile in sorted(tiles.items())}
 

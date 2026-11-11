@@ -65,6 +65,12 @@ def crop_site(tile_id: str, open_field_cropped_share: float, world_map: Optional
     return food_crops.crop_site(_map(world_map), tile_id, open_field_cropped_share, nutrient_factor, tillage_capacity)
 
 
+def crop_suitability(tile_id: str, temperature_envelope, water_envelope, world_map: Optional[WorldMap] = None) -> float:
+    """A crop's yield on the tile against the reference field's, from the crop's own temperature and water envelopes
+    (rows of layer, optimal, tolerated)."""
+    return food_crops.crop_suitability(_map(world_map), tile_id, food_crops.CropEnvelopes(temperature_envelope, water_envelope))
+
+
 def endemic_animal_loss(tile_id: str, species: Iterable[str], world_map: Optional[WorldMap] = None) -> float:
     """Share of a herd lost in a year to endemic disease on the tile: the hardiest listed species' loss."""
     return endemic.animal_loss(_map(world_map), tile_id, species)

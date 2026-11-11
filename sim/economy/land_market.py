@@ -6,9 +6,9 @@ hectares households work for themselves. The best land is used first, so hectare
 yield less: land is let at a Ricardian differential rent, per hectare the value of the extra output the
 land in use gives over the marginal hectare, at the output price producers expected; it rises
 continuously with the land used. Where demand exceeds all the arable land the marginal hectare is the
-worst and rent also rises to ration it: LAND_SCARCITY_RENT_SHARE of what a hectare of the worst land
-still earns above the other costs of working it. Producers are then granted only a share of what they
-asked for, which caps their runs.
+worst and rent also rises to ration it: it reaches the surplus (output value less other costs) the best use
+left out would still make on the worst land, since that use would bid it away. Producers are then granted
+only a share of what they asked for, which caps their runs.
 
 Pure functions: `clear_land` and `rent_postings`. `settle_year` applies them to an economy record.
 Households pay no rent on the plots they work while they hold the title; producers pay the tile's owner
@@ -47,14 +47,6 @@ LAND_BAND_RELATIVE_FERTILITY = declare(
     unit="yield of the band relative to the tile's mean fertility", source=None, confidence="D",
     why="Pairs with LAND_BAND_AREA_SHARES (area-weighted mean one). The spread of fertility inside a "
         "tile is not in the data; soil-class and slope layers per tile would replace it.")
-LAND_SCARCITY_RENT_SHARE = declare(
-    "LAND_SCARCITY_RENT_SHARE", 0.5, kind="temporary_heuristic",
-    unit="share of the worst band's surplus per hectare charged as rent when land is short",
-    source=None, confidence="D",
-    why="With every hectare spoken for, landlords can ask up to all of what the worst land earns above "
-        "its other costs; producers need no demand curve for land here, so how much they get to keep "
-        "is a bargaining outcome the model does not derive. A land auction or tenancy contract model "
-        "would replace the share.")
 
 
 @dataclass(frozen=True)
@@ -116,6 +108,13 @@ def _bid_per_hectare(demand: LandDemand) -> float:
     return max(0.0, demand.output_value_per_hectare - demand.other_cost_per_hectare)
 
 
+def _left_out_surplus(demands: Sequence[LandDemand], granted: Sequence[float], marginal_fertility: float) -> float:
+    """The most a use that was granted less than it asked for would still earn a hectare of the marginal land above its
+    other costs: the rent that use would bid, the next best use of that hectare (Ricardo's margin when no land is free)."""
+    return max([max(0.0, demand.output_value_per_hectare * marginal_fertility - demand.other_cost_per_hectare)
+                for demand, hectares in zip(demands, granted) if hectares < demand.hectares * (1.0 - 1e-12)], default=0.0)
+
+
 def _split_land(supply: float, own: float, demands: Sequence[LandDemand], own_value: Optional[float]):
     """(hectares granted to each demand, hectares the plots keep, hectares granted to demands that outbid the plots).
     Land goes to the higher bid (land_priority), the plots being a claim at their return a hectare; where that is not known
@@ -140,7 +139,7 @@ def _clear_tile(supply: float, own_plots: float, demands: Sequence[LandDemand], 
     marginal, mean_fertility = _used_land_quality(in_use / supply if supply > 0.0 else 1.0)
     differential = value * max(0.0, mean_fertility - marginal)
     short = own + wanted > supply * (1.0 + 1e-12)
-    scarcity = LAND_SCARCITY_RENT_SHARE * max(0.0, value * marginal - cost) if short else 0.0
+    scarcity = _left_out_surplus(demands, granted, marginal) if short else 0.0
     return differential + scarcity, granted, ceded
 
 

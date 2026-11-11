@@ -14,9 +14,37 @@
    "extracted_from": "arable land",
    "unit_dimension": "mass",
    "basis": "per hectare CROPPED with foxtail or broomcorn millet for one growing season, as kg of threshed grain net of seed",
-   "yield_basis": "GROWN. Dry-farmed foxtail or broomcorn millet of the northern Chinese plains, sown in rows and hoed: on the order of eight hundred to a thousand kilograms of grain per hectare (Hsu Cho-yun, Han Agriculture, 1980; Bray, Science and Civilisation in China vol. 6 pt 2, 1984; archaeobotanical estimates for the Neolithic to Han), so 900 net of the few kilograms of seed held back (conf C). Labour: hoeing and thinning the rows, hand reaping and threshing by flail, about 200 hours per hectare; traditional records run higher, so this is the low end for a skilled Han household with the seed drill (conf C). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg. STRAW: the stalks come off the same hectare as the grain. Pre-modern cereals had a harvest index (grain share of above-ground dry matter) of about a quarter to a third (Donald and Hamblin, 'The biological yield and harvest index of cereals as agronomic and plant breeding criteria', Advances in Agronomy 28, 1976, searched for but its text could not be opened; no source found for the range, a labelled heuristic), so the stalk is two to three times the grain; a sickle cut leaves stubble and chaff falls at the threshing floor, so a kilogram and a half of straw is taken for each kilogram of grain (conf D, an estimate). Stacking is inside the harvest labour already charged. Straw is a joint output with no reference price, a recorded waste (data/world/waste_heaps.json): it carries no share of the grain's cost, and it is fed to herds and draught animals (95_herds.json, 94_agri_organics_gaps.json).",
+   "yield_basis": "GROWN. Dry-farmed foxtail or broomcorn millet of the northern Chinese plains, sown in rows and hoed: on the order of eight hundred to a thousand kilograms of grain per hectare (Hsu Cho-yun, Han Agriculture, 1980; Bray, Science and Civilisation in China vol. 6 pt 2, 1984; archaeobotanical estimates for the Neolithic to Han), so 900 net of the few kilograms of seed held back (conf C). Labour: hoeing and thinning the rows, hand reaping and threshing by flail, about 200 hours per hectare; traditional records run higher, so this is the low end for a skilled Han household with the seed drill (conf C). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg. STRAW: the stalks come off the same hectare as the grain. Pre-modern cereals had a harvest index (grain share of above-ground dry matter) of about a quarter to a third (Donald and Hamblin, 'The biological yield and harvest index of cereals as agronomic and plant breeding criteria', Advances in Agronomy 28, 1976, searched for but its text could not be opened; no source found for the range, a labelled heuristic), so the stalk is two to three times the grain; a sickle cut leaves stubble and chaff falls at the threshing floor, so a kilogram and a half of straw is taken for each kilogram of grain (conf D, an estimate). Stacking is inside the harvest labour already charged. Straw is a joint output with no reference price, a recorded waste (data/world/waste_heaps.json): it carries no share of the grain's cost, and it is fed to herds and draught animals (95_herds.json, 94_agri_organics_gaps.json). CLIMATE (`grows_where`): a labelled heuristic (conf D, retire: Complaint 543's water-balance and growing-degree crop model): no source opened for these ranges; they set only how well the crop suits a tile against the reference field.",
    "conf": "C",
-   "requires_node": null
+   "requires_node": null,
+   "grows_where": {
+    "temperature": [
+     {
+      "layer": "mean_temperature_c",
+      "optimal": [
+       10,
+       26
+      ],
+      "tolerated": [
+       3,
+       38
+      ]
+     }
+    ],
+    "water": [
+     {
+      "layer": "annual_precipitation_mm",
+      "optimal": [
+       350,
+       900
+      ],
+      "tolerated": [
+       150,
+       2000
+      ]
+     }
+    ]
+   }
   },
   "maize_kg": {
    "outputs": {
@@ -31,9 +59,82 @@
    "extracted_from": "arable land",
    "unit_dimension": "mass",
    "basis": "per hectare CROPPED with maize for one growing season, as kg of shelled grain net of seed",
-   "yield_basis": "GROWN. Hand-planted maize in hills with the digging stick and no draught animal: traditional milpa returns about a thousand to fifteen hundred kilograms of shelled grain per hectare after shelling and drying losses (Sanders, Parsons and Santley, The Basin of Mexico, 1979; milpa field studies in Guatemala, Scientific Reports 2021, and the review in Frontiers in Agronomy 2023), so 1100 net of seed (conf C). Labour: planting each hill, repeated hoeing, hand harvest, husking and shelling; ethnographic totals vary widely and harvest alone runs to several hundred hours, so about 400 hours per hectare (conf C). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg. STRAW: the stalks come off the same hectare as the grain. Pre-modern cereals had a harvest index (grain share of above-ground dry matter) of about a quarter to a third (Donald and Hamblin, 'The biological yield and harvest index of cereals as agronomic and plant breeding criteria', Advances in Agronomy 28, 1976, searched for but its text could not be opened; no source found for the range, a labelled heuristic), so the stalk is two to three times the grain; a sickle cut leaves stubble and chaff falls at the threshing floor, so a kilogram and a half of straw is taken for each kilogram of grain (conf D, an estimate). Stacking is inside the harvest labour already charged. Straw is a joint output with no reference price, a recorded waste (data/world/waste_heaps.json): it carries no share of the grain's cost, and it is fed to herds and draught animals (95_herds.json, 94_agri_organics_gaps.json).",
+   "yield_basis": "GROWN. Hand-planted maize in hills with the digging stick and no draught animal: traditional milpa returns about a thousand to fifteen hundred kilograms of shelled grain per hectare after shelling and drying losses (Sanders, Parsons and Santley, The Basin of Mexico, 1979; milpa field studies in Guatemala, Scientific Reports 2021, and the review in Frontiers in Agronomy 2023), so 1100 net of seed (conf C). Labour: planting each hill, repeated hoeing, hand harvest, husking and shelling; ethnographic totals vary widely and harvest alone runs to several hundred hours, so about 400 hours per hectare (conf C). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg. STRAW: the stalks come off the same hectare as the grain. Pre-modern cereals had a harvest index (grain share of above-ground dry matter) of about a quarter to a third (Donald and Hamblin, 'The biological yield and harvest index of cereals as agronomic and plant breeding criteria', Advances in Agronomy 28, 1976, searched for but its text could not be opened; no source found for the range, a labelled heuristic), so the stalk is two to three times the grain; a sickle cut leaves stubble and chaff falls at the threshing floor, so a kilogram and a half of straw is taken for each kilogram of grain (conf D, an estimate). Stacking is inside the harvest labour already charged. Straw is a joint output with no reference price, a recorded waste (data/world/waste_heaps.json): it carries no share of the grain's cost, and it is fed to herds and draught animals (95_herds.json, 94_agri_organics_gaps.json). CLIMATE (`grows_where`): a labelled heuristic (conf D, retire: Complaint 543's water-balance and growing-degree crop model): no source opened for these ranges; they set only how well the crop suits a tile against the reference field.",
    "conf": "C",
-   "requires_node": "fud_maize"
+   "requires_node": "fud_maize",
+   "grows_where": {
+    "temperature": [
+     {
+      "layer": "mean_temperature_c",
+      "optimal": [
+       18,
+       28
+      ],
+      "tolerated": [
+       8,
+       36
+      ]
+     }
+    ],
+    "water": [
+     {
+      "layer": "annual_precipitation_mm",
+      "optimal": [
+       600,
+       1600
+      ],
+      "tolerated": [
+       300,
+       3500
+      ]
+     }
+    ]
+   }
+  },
+  "rice_kg": {
+   "outputs": {
+    "rice_kg": 1450.0,
+    "straw_kg": 2175.0
+   },
+   "inputs": {},
+   "labour_hours": {
+    "farmer": 800.0
+   },
+   "land_hectare_years": 0.99999105,
+   "extracted_from": "arable land",
+   "unit_dimension": "mass",
+   "basis": "per hectare CROPPED with transplanted paddy rice for one growing season, as kg of threshed unhusked grain net of seed",
+   "yield_basis": "GROWN. Pre-modern Chinese grain yields of the Song dynasty are given as about 2 tan of grain per mu (a tan about 50 kg; Wikipedia, 'Economy of the Song dynasty', citing Guo Junning 2010, opened 2026-11), which at fifteen mu to the hectare is about 1500 kg per hectare; paddy is the best of the grains, so this entry takes that as the grain harvest and holds back about 50 kg per hectare as seed (the 50 kg per hectare planting material of RICE_PLANTING_MATERIAL_KG_PER_HA in sim/world/agriculture_core.py), so 1450 net (conf D: a general grain figure applied to paddy, and a tan of 50 kg is itself a rounded conversion). Labour: transplanting, weeding and water tending, harvest and threshing, at the 800 hours per hectare of RICE_BASE_LABOUR_HOURS_PER_HECTARE (conf D). WATER (`grows_where`): the FAO wetland characterisation (fao.org/4/x6611e/x6611e03c.htm, opened) says an area with 1200 mm of rain or more a year supplies at least one rainfed wetland rice crop, so the water envelope is optimal from 1200 mm and a tile with less is rained on too little unless a river waters it (geography's crop_site gives river-watered land the irrigated yield whatever the rain). TEMPERATURE: the FAO good agricultural practices text puts rice as a tropical and subtropical plant, most favoured near 30 C by day and 20 C by night, and below 10 C unsuitable (openknowledge.fao.org GAP bitstream, read in search results, not opened in full), so the optimum is an annual mean of 20 to 30 and the tolerated floor 10 C (conf D for the ramp shapes, retire: Complaint 543's growing-degree crop model). LAND: the batch is the one hectare-year the basis states, charged at hectare_land's rent like wheat_kg. STRAW: the stalks come off the same hectare as the grain, one and a half kilograms for each of grain like the other grains here (conf D, an estimate); a recorded waste with no share of the grain's cost.",
+   "grows_where": {
+    "temperature": [
+     {
+      "layer": "mean_temperature_c",
+      "optimal": [
+       20,
+       30
+      ],
+      "tolerated": [
+       10,
+       38
+      ]
+     }
+    ],
+    "water": [
+     {
+      "layer": "annual_precipitation_mm",
+      "optimal": [
+       1200,
+       3000
+      ],
+      "tolerated": [
+       500,
+       5000
+      ]
+     }
+    ]
+   },
+   "conf": "D",
+   "requires_node": "fud_rice_cultivation"
   }
  }
 }

@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy.setup import recipe_tile_key
-from sim.markets import port_setup
+from sim.markets import port_cropland, port_setup
 from sim.economy.types import TileSpec
 
 PRODUCTION = {"wheat": {"extracted_from": "arable land"},
@@ -33,6 +33,22 @@ class CroplandYieldsTests(unittest.TestCase):
     def test_pasture_and_mine_recipes_carry_no_tile_yield(self):
         recipes_keyed = {key.partition("@")[0] for key in self.yields}
         self.assertEqual(recipes_keyed, {"wheat", "barley"})
+
+    def test_a_crops_suitability_scales_the_tiles_fertility_for_that_crop_only(self):
+        suitability = {recipe_tile_key("barley", "good"): 0.5}
+        yields = port_setup.cropland_yields(PRODUCTION, PRODUCTION, tiles(), suitability)
+        self.assertEqual(yields[recipe_tile_key("barley", "good")], 0.7)
+        self.assertEqual(yields[recipe_tile_key("wheat", "good")], 1.4)
+        self.assertEqual(yields[recipe_tile_key("barley", "poor")], 0.6)
+
+
+class FollowedFactorsTests(unittest.TestCase):
+    def test_a_changed_tile_gives_each_crop_the_new_fertility_times_its_suitability(self):
+        factors = {recipe_tile_key("wheat", "good"): 1.4, recipe_tile_key("rice", "good"): 0.7, recipe_tile_key("rice", "poor"): 0.3}
+        suitability = {recipe_tile_key("rice", "good"): 0.5, recipe_tile_key("rice", "poor"): 0.5}
+        followed = port_cropland.followed_factors(factors, {"good": 2.0}, suitability)
+        self.assertEqual(followed, {recipe_tile_key("wheat", "good"): 2.0, recipe_tile_key("rice", "good"): 1.0,
+                                    recipe_tile_key("rice", "poor"): 0.3})
 
 
 if __name__ == "__main__":

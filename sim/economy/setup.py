@@ -81,6 +81,7 @@ class EconomySetup:
     need_share_by_trade: Dict[str, float] = field(default_factory=dict)   # trade -> its share of the society's non-farm labour need (recipes and carriage), seeds the trades no producer's runs staff
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
+    crop_suitability_by_recipe_tile: Dict[str, float] = field(default_factory=dict)   # recipe@tile -> the crop's own yield against the reference field on the tile (its climate envelopes); a key absent counts as one, so a tile's new fertility carries to every crop through it
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
     household_work: Dict[str, Any] = field(default_factory=dict)      # hours of household work by task (data/world/household_work.json); empty: none is modelled

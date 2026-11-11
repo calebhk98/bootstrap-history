@@ -126,6 +126,8 @@
   "wheat_kg": {"satisfies": {"food": 1.0}, "milled_as": "flour_kg"},
   "millet_kg": {"satisfies": {"food": 1.11}, "milled_as": "flour_kg"},
   "maize_kg": {"satisfies": {"food": 1.08}, "milled_as": "flour_kg"},
+  "rice_kg": {"satisfies": {"food": 1.06},
+              "basis": "Food energy against wheat: RICE_ENERGY_KCAL_PER_KG over WHEAT_ENERGY_KCAL_PER_KG in sim/world (3600 over 3400). Eaten boiled, not milled."},
   "milk_kg": {"satisfies": {"food": 0.2}},
   "olive_oil_kg": {"satisfies": {"food": 2.7}},
   "fat_kg": {"satisfies": {},

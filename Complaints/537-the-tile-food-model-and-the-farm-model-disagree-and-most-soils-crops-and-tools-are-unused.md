@@ -1,6 +1,6 @@
 # The tile food model and the farm model disagree, and most soils, crops and tools are unused
 
-**Status:** partly done. The tile crop capacity, the farm model's land and quality and the economy's farm producers read one yield per tile; each tile's own weather, a hand-hoe toolkit and a tillage limit on heavy ground now reach it. The national farm path is deleted; what remains ("What is left") is per-tile crops (rice, maize), separate land-class supplies, `land.py`'s rent margin and irrigation as a work.
+**Status:** partly done. One food model per tile, tile weather, a hand-hoe toolkit, tillage limits and now a crop per tile (rice, maize, millet carry their own climate envelopes) and a Ricardian scarcity rent are in. What remains: separate land-class supplies (arable, pasture, woodland) per tile, `land.py`'s stand-in rent margin on the farm's ladder, and irrigation as a work (see "What is left").
 
 Reference (an outside design note, not code-aware): carrying capacity is arable land times the
 planted share (fallow by rotation, none under flood silt) times gross yield (soil and crop) net of
@@ -113,19 +113,34 @@ Within the farm model:
 
 ## What is left
 
-The national farm path (`run_farm_year`, `farm_land`, `_farm_ladder`) and the engine's farm allocation are deleted: the economy's
-farm producers and households' plots are the one food model, and `Sim.farm_sites()` (read by `sim/markets/port_cropland.py`
-`follow_farm_sites`) gives each tile's cropped share and yield factor to it. Still open (confirm each with grep):
-
-- **A crop per tile.** `RICE` and maize cannot be adopted per tile; geography does not choose, per tile, the crop its water and
-  warmth suit. The economy has `maize_kg`, `millet_kg`, `wheat_kg` and `wheat_hoe_kg` recipes with a tile yield factor each; no rice
-  recipe exists in `data/production/`.
-- **Separate land-class supplies** (arable, pasture, woodland) per tile: the land market pools them on one cropland supply.
-- **`land.py` rent margin** (`margin_outcome_for_civilization`, `cultivable_land_for_civilization`) as the third ladder, read by
-  `sim/prices/rent_standin.py`; moving it to `territory_cropland` changes every civilisation's opening prices.
+- **Separate land-class supplies** (arable, pasture, woodland) per tile: the land market (`land_market.clear_land`) still clears one
+  arable supply per tile, and recipes whose `extracted_from` is pasture or forest bid on it. Needs a hectares-per-class figure per tile
+  from geography, a `land_class` on `LandDemand`, rent per (tile, class), and the tenancy and title code that keys rent by tile.
+- **`land.py` stand-in rent** (`margin_outcome_for_civilization`, `cultivable_land_for_civilization`), read by
+  `sim/prices/rent_standin.py`: still sized on raw tile lands, not on `territory_cropland`'s ladder; moving it changes every
+  civilisation's opening prices (needs the opening-checks run). It is a stand-in the economy's own land rent retires.
 - **Irrigation as a work** that silts up or needs clearing labour: river strips are free and permanent (`food_irrigation_*` in
-  `data/world/geography/parameters/food.json`).
+  `data/world/geography/parameters/food.json`). No works recipe or tile state for it exists yet.
+- Opening prices (`port_crop_prices.opening_costs_at_tiles`) still read the reference fertility, not each crop's suitability; the
+  crop's tile yield shows from the first hidden year.
 - Pasture, dairy and fishing are not read by the crop-only farm path; Norse tiles yield little under crops.
+
+## Done: a crop per tile and the scarcity rent (this round)
+
+- A crop recipe may state `grows_where` (temperature and water envelopes, `data/production/_SCHEMA.md`). `food_crops.crop_suitability`
+  gives the crop's yield on a tile against the reference field's (its envelopes in place of the reference ones; river-watered land
+  ignores the water envelope), `port_crop_choice.crop_suitabilities` builds it per recipe and tile, and `cropland_yields` multiplies the
+  tile's fertility by it. `EconomySetup.crop_suitability_by_recipe_tile` keeps it so `follow_farm_sites` (`followed_factors`) and
+  `late_recipes` carry it. Which crop a tile grows is then the entry rules' choice: each crop is sited where a run pays at the tile's
+  prices and yield (`crop_sites.sites`, `location`), so the crop that pays best wins the land.
+- `rice_kg` is a new recipe (`data/production/95_staple_grains.json`, gated on `fud_rice_cultivation`; yield 1500 kg/ha from the Song
+  grain yield of 2 tan per mu in Wikipedia's Economy of the Song dynasty citing Guo 2010, conf D; rainfed water optimum from FAO's
+  1200 mm for one rainfed wetland rice crop, fao.org/4/x6611e/x6611e03c.htm). Millet and maize envelopes are labelled heuristics
+  (retire: Complaint 543). `rice_kg` is a food in `needs.json` and listed as unsupplied in each civilisation that lacks the node.
+- Land rent when land is short is the surplus the best use left out would still earn on the marginal land
+  (`land_market._left_out_surplus`), replacing `LAND_SCARCITY_RENT_SHARE` (a half-share heuristic, deleted).
+- Tests: `test_crop_suitability` (wet and dry crops on wet and dry tiles, reference envelopes give one), `test_economy_port_cropland_yields`
+  (suitability scales one crop's tile factor; a changed tile re-scales it), `test_economy_land_market` (scarcity rent is the left-out use's surplus).
 
 ## Done: tile weather, the hand hoe and tillage (this round)
 

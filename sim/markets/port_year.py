@@ -31,7 +31,8 @@ class YearRun:
         # the year's working day is set before any hours are posted, so posting and settling convert people and hours alike;
         # the tariff the home state holds is read now, as the landed goods are priced
         economy.change_setup(**port_cropland.follow_farm_sites(world, economy_api.economy_tiles(economy),
-                                                                      economy_api.crop_site_inputs(economy)[0]),
+                                                                      economy_api.crop_site_inputs(economy)[0],
+                                                                      economy_api.crop_suitability_inputs(economy)),
                              working_hours_per_year=float(world.scenario.HOURS_PER_PERSON_YEAR),
                              carried_tariff=port_duty.carried_tariffs(
                                  economy_api.economy_countries(economy), economy_api.home_country(economy),

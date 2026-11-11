@@ -5,6 +5,7 @@ The physical yield of a reference hectare, its seed, loss and energy come from t
 `CropTechnique` the caller supplies (the actor's crop, tools and rotation); this module owns only the tile's side.
 A contribution is (source_id, species_id or None, kcal per year).
 """
+import json
 from typing import List, Mapping, NamedTuple, Optional, Tuple
 
 from sim.geography import content_rules, food_land, tile_layers
@@ -24,6 +25,17 @@ class CropTechnique(NamedTuple):
     loss_fraction: float                # share lost between field and meal
     kcal_per_kg: float
     tillage_capacity: float = 1.0       # share of the tile's heavy ground the toolkit's draught can open
+
+
+class CropEnvelopes(NamedTuple):
+    """One crop's climate requirements, as content-rule envelopes (rows of layer, optimal, tolerated)."""
+    temperature: list
+    water: list
+
+
+def envelope_key(envelopes: Optional[CropEnvelopes]):
+    """A hashable stand-in for the envelopes (None for the reference field)."""
+    return None if envelopes is None else json.dumps([envelopes.temperature, envelopes.water], sort_keys=True)
 
 
 class CropSite(NamedTuple):
@@ -58,29 +70,34 @@ def _tillable_scale(world_map: WorldMap, tile_id: str, tillage_capacity: float) 
 
 
 def crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_share: float, nutrient_factor: float = 1.0,
-              tillage_capacity: float = 1.0) -> CropSite:
+              tillage_capacity: float = 1.0, envelopes: Optional[CropEnvelopes] = None) -> CropSite:
     """`computed_crop_site`, kept on the map per (tile, rotation share, nutrient factor, tillage): the map is read-only, so the
     answer is a function of the arguments alone (the tile layers are kept on the map the same way)."""
     cache = world_map.__dict__.setdefault("_crop_site_cache", {})
-    key = (tile_id, open_field_cropped_share, nutrient_factor, tillage_capacity)
+    key = (tile_id, open_field_cropped_share, nutrient_factor, tillage_capacity, envelope_key(envelopes))
     site = cache.get(key)
     if site is None:
-        site = cache[key] = computed_crop_site(world_map, tile_id, open_field_cropped_share, nutrient_factor, tillage_capacity)
+        site = cache[key] = computed_crop_site(world_map, tile_id, open_field_cropped_share, nutrient_factor, tillage_capacity,
+                                               envelopes)
     return site
 
 
 def computed_crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_share: float, nutrient_factor: float = 1.0,
-                       tillage_capacity: float = 1.0) -> CropSite:
+                       tillage_capacity: float = 1.0, envelopes: Optional[CropEnvelopes] = None) -> CropSite:
     """The tile's cropland under a rotation that crops `open_field_cropped_share` of open fields each year.
     `nutrient_factor` is what the tile's soil nitrogen stock does to a cropped hectare's yield (sim/geography/soil_nutrients.py).
-    `tillage_capacity` is the share of the tile's heavy ground the society's toolkit can open; the rest is not arable to it."""
+    `tillage_capacity` is the share of the tile's heavy ground the society's toolkit can open; the rest is not arable to it.
+    `envelopes` are one crop's own temperature and water envelopes in place of the reference field's (rice wants warmth
+    and wet ground, millet tolerates dry); a river-watered hectare ignores the water envelope."""
     area = tile_layers.number(world_map, tile_id, "land_area_km2", 0.0)
     arable_hectares = (area * HECTARES_PER_SQUARE_KM * food_land.arable_fraction(world_map, tile_id)
                        * _tillable_scale(world_map, tile_id, tillage_capacity))
     fertility = tile_layers.number(world_map, tile_id, "fertility_quality_multiplier", 0.0)
     reader = lookup(world_map, tile_id)
-    by_temperature = content_rules.suitability(parameter(world_map, "food_crop_temperature_envelope"), reader)
-    by_rain = content_rules.suitability(parameter(world_map, "food_crop_water_envelope"), reader)
+    temperature_envelope = envelopes.temperature if envelopes else parameter(world_map, "food_crop_temperature_envelope")
+    water_envelope = envelopes.water if envelopes else parameter(world_map, "food_crop_water_envelope")
+    by_temperature = content_rules.suitability(temperature_envelope, reader)
+    by_rain = content_rules.suitability(water_envelope, reader)
     # Land a large river waters is farmable whatever the rain, on alluvium of its own fertility.
     large_river_km = tile_layers.number(world_map, tile_id, "river_km_navigable", 0.0)
     small_river_km = max(0.0, tile_layers.number(world_map, tile_id, "river_km_all", 0.0) - large_river_km)
@@ -100,6 +117,15 @@ def computed_crop_site(world_map: WorldMap, tile_id: str, open_field_cropped_sha
         return CropSite(arable_hectares, 0.0, 0.0, 0.0)
     harvest_weight = irrigated * irrigated_cropped_share * irrigated_quality + rainfed * rainfed_cropped_share * rainfed_quality
     return CropSite(arable_hectares, cropped, harvest_weight / cropped * nutrient_factor, irrigated)
+
+
+def crop_suitability(world_map: WorldMap, tile_id: str, envelopes: CropEnvelopes) -> float:
+    """How one crop's yield on the tile compares with the reference field's there (soil, rotation and tools the same):
+    the crop's climate and water envelopes against the reference envelopes. Above one where the crop likes the tile
+    better than the reference does. Where the reference field yields nothing, the crop's own factor."""
+    own = crop_site(world_map, tile_id, 1.0, envelopes=envelopes).yield_factor
+    reference = crop_site(world_map, tile_id, 1.0).yield_factor
+    return own / reference if reference > 0.0 else own
 
 
 def crop_contributions(world_map: WorldMap, tile_id: str, wild_stock: Optional[Mapping] = None,
