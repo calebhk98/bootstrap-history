@@ -33,4 +33,3 @@ The runner fails any topic still running after `TOPIC_SECONDS` (`sim/tests/__mai
 
 `python3 -m sim.tests --slow --jobs 2 --timing` pinned to 7f6cad64 with current openings: four topics time out at the default limit
 (`mod_kernels_smoke`, `player_available_smoke`, `pollution_mod_smoke`, `religion_mod_smoke`), all passing alone with a longer limit.
-A mod that changes content cannot read the shipped openings, so each of these spins up its own game.
