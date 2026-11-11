@@ -486,7 +486,7 @@ class Economy:
             recipe = setup.recipes[producer.recipe_id]
             inputs = producers.live_input_prices_at(producer.tile, recipe, view)
             wages = producers.live_wages_at(producer.tile, recipe, view)
-            earning = unit_cost.return_on_capital(recipe, producers.expected_output_prices_at(
+            earning = unit_cost.return_on_capital(recipe, producers.kept_output_prices_at(
                 producer.expected_prices, producer.tile, recipe, view), inputs, wages)
             cash = cash_of[producer_id]
             if earning is None or not earning > rate or cash <= 0.0:

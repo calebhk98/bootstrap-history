@@ -3,7 +3,9 @@
 `share_by_good` is the share of the harvest of each good that the state's forms on the harvest take from growers (agents'
 `tax_burden.harvest_share_taken`, handed in by the port each year, so the farmer's rule and the producers' rules read one figure).
 A grower keeps the rest, so what a harvest fetches him is the price times the share he keeps. Plain functions."""
-from typing import Dict, Mapping
+from typing import Dict, Mapping, Sequence
+
+import numpy as np
 
 from . import unit_cost
 from .types import GoodId
@@ -31,3 +33,18 @@ def net_output_prices(prices: Mapping[GoodId, float], share_by_good: Mapping[Goo
 def net_revenue_per_run(recipe, expected_output_prices: Mapping[GoodId, float], share_by_good: Mapping[GoodId, float]) -> float:
     """What a run's outputs fetch at the expected prices (`unit_cost.revenue_per_run`) once the state has taken its share of each harvest."""
     return unit_cost.revenue_per_run(recipe, net_output_prices(expected_output_prices, share_by_good))
+
+
+def revenue_outputs(outputs: np.ndarray, good_ids: Sequence[GoodId], share_by_good: Mapping[GoodId, float]) -> np.ndarray:
+    """The recipes' outputs (recipe row by good column) as they fetch a grower once the state has taken its share of each harvest:
+    the quantity made times the kept share of the good. The kernels value a run's revenue at these and size its supply at the
+    physical `outputs`. With no tax the very same matrix."""
+    if not share_by_good:
+        return outputs
+    kept = np.array([kept_share(good, share_by_good) for good in good_ids], dtype=np.float64)
+    return outputs * kept[None, :]
+
+
+def share_of_view(view) -> Mapping[GoodId, float]:
+    """The harvest share the setup behind a market view holds this year; none for a view with no setup."""
+    return getattr(getattr(view, "setup", None), "harvest_share_by_good", None) or {}

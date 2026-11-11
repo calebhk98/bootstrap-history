@@ -14,8 +14,8 @@ from typing import Callable, Collection, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import capacity_growth, credit, equity, firm_finance as finance, producer_losses, idle_capacity, inventory, plant_investment, producers_working_capital, unit_cost
-from .producers import (EXPECTATION_ADJUSTMENT_SHARE, OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, expected_output_prices, live_input_prices,
+from . import capacity_growth, credit, harvest_tax, equity, firm_finance as finance, producer_losses, idle_capacity, inventory, plant_investment, producers_working_capital, unit_cost
+from .producers import (EXPECTATION_ADJUSTMENT_SHARE, OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, kept_output_prices, live_input_prices,
                         live_wages, next_expectations, runs_for_stock, share_working, within_a_years_change)
 from .protocols import MarketView
 from .types import GoodId, LoanRequest, Recipe, Transfer
@@ -148,7 +148,7 @@ def _expected_run(producer, recipe, view, expectations, inputs, wages, ground_go
     cost = unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
     if not math.isfinite(cost):
         return 0.0, math.inf
-    return unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor, cost
+    return unit_cost.revenue_per_run(recipe, harvest_tax.net_output_prices(prices, harvest_tax.share_of_view(view))) * producer.yield_factor, cost
 
 
 def _behind_the_stock(producer, recipe, view, prices, ground_goods, spoilage=None):
@@ -207,7 +207,7 @@ def _investment(producer, recipe, view, capacity, worked, cost_per_run, wear) ->
     worked, so it replaces wear it uses and grows on no guess."""
     if recipe.plant_life_years <= 0.0:
         return 0.0, 0.0
-    wanted = runs_for_stock(producer, recipe, view, cost_per_run, expected_output_prices(producer, recipe, view) or {})
+    wanted = runs_for_stock(producer, recipe, view, cost_per_run, kept_output_prices(producer, recipe, view) or {})
     planned = within_a_years_change(replaced(producer, last_runs=worked, staffed_runs=None, capacity_runs=producer.capacity_runs),
                                     worked if math.isinf(wanted) else wanted)
     return plant_investment.split(plant_investment.investment_runs(planned, capacity, wear), wear)
@@ -221,7 +221,7 @@ def _expansion(producer, recipe, view, currency, rate, runs, inputs, wages, pric
     value = unit_cost.plant_value_per_run(recipe, inputs, wages)
     if recipe.plant_life_years <= 0.0 or value <= 0.0 or not math.isfinite(value) or runs <= 0.0:
         return None, 0.0
-    prices = expected_output_prices(producer, recipe, view) or {}
+    prices = kept_output_prices(producer, recipe, view) or {}
     if price_share_after is not None:
         before = unit_cost.return_after_recovery(recipe, prices, inputs, wages, rate)
         if before is None or before <= rate:

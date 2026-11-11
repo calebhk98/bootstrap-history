@@ -136,7 +136,8 @@ class DemandNetOfHarvestTaxTests(unittest.TestCase):
     def value_per_hectare(self, share_by_good):
         setup, record = economy_of({"short": 100.0}, {"short": 300.0})
         setup.harvest_share_by_good = share_by_good
-        demands = land_market.demands_of(setup, record, View({"grain": 1.0}, {"hand": 0.5}), {"producer:short": 300.0})
+        view = View({"grain": 1.0}, {"hand": 0.5})
+        demands = land_market.demands_of(setup, record, view, {"producer:short": 300.0})
         return demands[0].output_value_per_hectare
 
     def test_a_producer_values_a_hectare_at_what_the_harvest_leaves_it(self):

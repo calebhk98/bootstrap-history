@@ -57,7 +57,7 @@ def _kernel_arguments(rows, arrays: YearArrays, pack: ClosePack, market_capacity
     matrices, columns, memory = arrays.matrices, arrays.producers, arrays.memory
     return (rows, constants_array(),
             matrices.slot_goods, matrices.slot_trades, matrices.slot_is_input, matrices.slot_is_output, matrices.slot_is_plant,
-            matrices.inputs, matrices.outputs, matrices.plant_goods, matrices.labour_hours, matrices.plant_labour_hours,
+            matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.plant_goods, matrices.labour_hours, matrices.plant_labour_hours,
             matrices.plant_life_years, matrices.idle_wear_share,
             columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor, columns.years_of_loss,
             columns.cash_target, columns.expected_sales, columns.last_runs, columns.land_rent_per_run,

@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_adjust, inventory, practice, tool_fallback, trade_wages, unit_cost
+from . import ask_adjust, harvest_tax, inventory, practice, tool_fallback, trade_wages, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
 from .priced_reads import cleared_prices_for, offered_prices_for
@@ -135,6 +135,17 @@ def expected_output_prices_at(expected_prices: Mapping[GoodId, float], tile: Til
         if price is not None:
             prices[good] = price
     return prices
+
+
+def kept_output_prices(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
+    """`expected_output_prices` as they fetch the producer once the state has taken its share of each harvest: what it plans its
+    runs, its plant and its land on (the asks it posts stay at the gross price)."""
+    return kept_output_prices_at(producer.expected_prices, producer.tile, recipe, view)
+
+
+def kept_output_prices_at(expected_prices: Mapping[GoodId, float], tile: TileId, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
+    """`kept_output_prices` for a producer on `tile` holding `expected_prices`, read from the store's row with no `Producer`."""
+    return harvest_tax.net_output_prices(expected_output_prices_at(expected_prices, tile, recipe, view), harvest_tax.share_of_view(view))
 
 
 _names_of_recipe: Dict[int, tuple] = {}      # id of a recipe -> (recipe, its goods and its trades, sorted)
@@ -267,7 +278,7 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
     inputs = _with_expected(live_input_prices(producer, recipe, view) if live_inputs is None else dict(live_inputs),
                             recipe, prices)
     wages = live_wages(producer, recipe, view) if wages is None else wages
-    revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
+    revenue = unit_cost.revenue_per_run(recipe, harvest_tax.net_output_prices(prices, harvest_tax.share_of_view(view))) * producer.yield_factor
     rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
     if rate is None:
         return None, 0.0
@@ -285,7 +296,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     if producer.idle_years > 0:
         return Plan(0.0)
     recipe = practice.recipe_for(recipe, producer.crew_runs)
-    outputs = expected_output_prices(producer, recipe, view)
+    outputs = kept_output_prices(producer, recipe, view)
     market_inputs = paid_input_prices(producer, recipe, view, live_input_prices(producer, recipe, view))
     inputs = expected_input_prices(producer, recipe, view, market_inputs)
     wages = live_wages(producer, recipe, view)
@@ -346,7 +357,7 @@ def share_that_pays(producer: Producer, recipe: Recipe, view: MarketView,
     limit): none when a run's expected revenue does not cover its variable cost or an input cannot be
     priced. `outputs` is `expected_output_prices` when the caller has it already."""
     if outputs is None:
-        outputs = expected_output_prices(producer, recipe, view)
+        outputs = kept_output_prices(producer, recipe, view)
     variable = (unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
                                                 live_wages(producer, recipe, view), producer.land_rent_per_run))
     if not math.isfinite(variable):
