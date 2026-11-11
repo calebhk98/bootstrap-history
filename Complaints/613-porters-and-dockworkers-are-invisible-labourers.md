@@ -17,6 +17,8 @@ handling to it. Every mode's crew is bid in its own trade (the heuristic `CARRIA
 
 **What is left.**
 
+- Measured (2026-11-11), `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500`: no porter row appears at all (no porter hours bid), merchants bid for carter hours although the Mexica hold no draught animals, and none of them are hired; sailor hours are bid and none hired. In Rome dockworkers are bid and nearly all hired. So land carriage in a society without draught animals still does not reach porters.
+
 - Verify in a whole game that porter and dockworker hours are bid and hired: `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500` (`sim/economy/carriage_report.py`); the porter row should show hired hours near the demanded ones. The `occupational_distribution` slow topic is now only a data lint (619).
 - `sea_freight.PORT_HANDLING_HOURS_PER_TONNE` (read in `sim/markets/port_setup.py`, `sim/freight/models.py`) stays a labelled heuristic: no source found (a port-economics page gives a longshore crew
   5 to 10 tons an hour but not the crew size, so no per-worker figure follows).

@@ -1,6 +1,8 @@
 # Carriage pays the poor without using their hours or any carriers
 
-**Status:** partly - hours, fleets, wear, storage and fee split are built (627 to 632, all closed); crew is bid in each mode's own trade and the labour core is seeded with the carrier trades (556); open: run the carriage report on Rome and Mexica (the report is built, not yet run)
+**Status:** closed - carriage fees reach carriers only through hours hired at the labour clearing; on Rome and Mexica the fallback that paid the poorest household paid nothing in every year measured
+
+**Measured (2026-11-11)** with `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs rome_100ad` and the same for `mexica_1500`: every year the fee paid to a household of the source tile is zero; in Rome dockworker and sailor hours are bid and hired at the clearing (dockworkers nearly all, sailors a part), carter hours small. Mexica's carriers are a separate defect: merchants bid for carters in a society with no draught animals and bid no porter hours (Complaint 613).
 
 Found by an outside reviewer reading the repository; checked against the code. Full history of the split: `Complaints/reports/552-history.md`.
 
