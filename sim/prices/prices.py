@@ -295,9 +295,13 @@ def solver_wage_ratios(production_entries: ProductionEntries,
 
 def default_production_entries(mods_dir: Optional[str] = None) -> ProductionEntries:
     """The production catalogue of `mods_dir`, read once per directory; the committed one when none is named."""
+    default = _default_production_entries()
     if mods_dir is None:
-        return _default_production_entries()
-    return engine_seam.load_production(mods_dir)[0]
+        return default
+    entries = engine_seam.load_production(mods_dir)[0]
+    # The repository's own directory is the default object, so the engine tolerance and the disk cache apply to it
+    # whichever way the caller named it.
+    return default if entries is engine_seam.load_production(None)[0] else entries
 
 
 def waste_dump_minimum_distance(civilization: Optional[Mapping[str, Any]]) -> float:
