@@ -9,7 +9,8 @@ from sim.ledger import pool_rules
 from sim.ledger.rules import StockLedger, settled_stock
 
 COMMODITIES = {"iron": {"material_keys": ["iron_bar_kg", "iron_ore_kg", "iron_bloom_kg"], "raised_material": "iron_ore_kg"},
-               "coal": {"material_keys": ["coal_kg"]}}
+               "coal": {"material_keys": ["coal_kg"]},
+               "gold": {"material_keys": ["gold_kg", "gold_g"], "price_material": "gold_kg"}}
 
 
 class PoolTotalTests(unittest.TestCase):
@@ -42,6 +43,11 @@ class WriterTests(unittest.TestCase):
     def test_the_mines_flow_is_held_under_the_form_they_raise(self):
         self.assertEqual(pool_rules.raised_key("iron", COMMODITIES), "iron_ore_kg")
         self.assertEqual(pool_rules.raised_key("coal", COMMODITIES), "coal")
+
+    def test_a_pool_with_no_distinct_raised_form_banks_its_mines_as_the_form_it_is_priced_as(self):
+        # so a bill for that form (held under its own key) is met by the pool's mines
+        self.assertEqual(pool_rules.raised_key("gold", COMMODITIES), "gold_kg")
+        self.assertEqual(pool_rules.raised_key("gold", COMMODITIES), pool_rules.form_key("gold_kg", "gold", COMMODITIES))
 
     def test_banking_sets_exactly_the_key_and_leaves_the_other_forms(self):
         stock = {"iron_bar_kg": 2.0, "iron_ore_kg": 1.0}

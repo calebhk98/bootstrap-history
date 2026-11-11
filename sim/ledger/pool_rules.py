@@ -27,8 +27,14 @@ def form_key(material: str, commodity: str, commodities: Mapping[str, Mapping[st
 
 
 def raised_key(commodity: str, commodities: Mapping[str, Mapping[str, Any]]) -> str:
-	"""The key a pool's mine flow is held under: the form its mines raise, else the pool's id."""
-	return (commodities.get(commodity) or {}).get("raised_material") or commodity
+	"""The key a pool's mine flow is held under: the form its mines raise; a pool with no distinct raised form raises the
+	material it is priced as, when that is one of its forms; else the pool's id."""
+	record = commodities.get(commodity) or {}
+	if record.get("raised_material"):
+		return record["raised_material"]
+	if record.get("price_material") in record.get("material_keys", ()):
+		return record["price_material"]
+	return commodity
 
 
 def held_enough(stock: Mapping[str, float], key: str, tonnes: float) -> bool:
