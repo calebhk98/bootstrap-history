@@ -122,6 +122,7 @@ class FakeWorld:
 		# trade family -> people that can be put on research; node -> materials no one sells
 		self.hands: Dict[str, float] = {}
 		self.unsold: Dict[str, List[str]] = {}
+		self.research_tonnes: Dict[str, Dict[str, float]] = {}
 		# the parts of the world protocol, each answered by the flat member of this class
 		for part in world_surface():
 			setattr(self, part, FakePart(self))
@@ -189,6 +190,12 @@ class FakeWorld:
 
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
 		return list(self.unsold.get(node_id, ()))
+
+	def material_tonnes(self, node_id: str) -> Dict[str, float]:
+		return dict(self.research_tonnes.get(node_id, {}))
+
+	def commodity_of(self, material: str) -> str:
+		return material
 
 	def research_cost(self, node_id: str, max_age_years: int) -> float:
 		return self.copy_cost(node_id)

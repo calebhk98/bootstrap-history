@@ -110,6 +110,7 @@ class StartChecks(Part):
 	def _check_missing_prereqs(self, node_id, node, ignore_trade, memo, why) -> Verdict:
 		done = self.needs.techniques_held()
 		missing = research_gate.unmet_prerequisites(node, lambda prereq_id: prereq_id in done)
+		missing = sorted(set(missing) | set(research_gate.unmet_samples(node, self.needs.tree_nodes(), lambda source: source in done)))
 		if missing:
 			# NAME ONLY WHAT YOU HAVE HEARD OF: the sentence is built by knowledge's `prerequisite_message`, the one fog
 			# filter for it. The boolean needs only that there ARE missing prerequisites.

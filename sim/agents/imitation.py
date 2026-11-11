@@ -6,7 +6,7 @@ money and calendar time like any project, and it can fail.
 import math
 from typing import Any, Dict, List, Optional
 
-from . import ledger
+from . import ledger, research_materials
 from .edges import EDGE_WORKERS
 from .tuning import COPY_EFFORT_SHARE, COPY_RISK_SHARE, COPY_TIME_SHARE, HIRING_PREMIUM
 from .tuning_player import PLAYER_VISIBLE_EXPOSURE
@@ -105,6 +105,11 @@ def work_year(actor: Any, node_id: str, work: Dict[str, Any], world: Any, produc
 		affordable = 1.0
 	done = want * affordable
 	owed = done * work["money"]
+	if actor.keeps_purchases:   # its materials come from its stores or are bought as goods, not paid for again here
+		owed = max(0.0, owed - research_materials.cover_year(
+			actor.record.stores, {material: tonnes * done for material, tonnes in world.research.material_tonnes(node_id).items()},
+			world.quotes.material_cost, lambda material, tonnes, budget: world.market.market_purchase(
+				actor.actor_id, world.quotes.commodity_of(material), tonnes, budget)))
 	paid = ledger.pay_up_to(actor, world.setting.edge(EDGE_WORKERS), owed, "copying")
 	if owed > 0.0 and paid < owed:   # the lenders held back: the work goes as far as what was paid
 		done *= paid / owed

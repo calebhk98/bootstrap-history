@@ -3,11 +3,12 @@
 A node's `returns` is {kind: [ids]}. A result stands while the action that returned it is held and
 running (sim/land/held.py). Knowledge is the named node, held as if it were done; a route or a
 partner is the token `kind:id`, which a carriage mode, a sea lane or a partner asks for in
-`requires_nodes` in place of a node. Nothing here names a content id.
+`requires_nodes` in place of a node. A sample (a specimen brought back from a region) is a token too; a node
+asks for it in `samples`, and whoever has done an action that returns it holds it. Nothing here names a content id.
 """
 from typing import AbstractSet, Iterable, Mapping, Set
 
-RESULT_KINDS = ("knowledge", "route", "partner")
+RESULT_KINDS = ("knowledge", "route", "partner", "sample")
 KNOWLEDGE = "knowledge"
 
 
@@ -35,6 +36,11 @@ def results_of(nodes: Mapping[str, Mapping], held: Iterable[str]) -> Set[str]:
 def partner_ids(nodes: Mapping[str, Mapping]) -> Set[str]:
     """Every trading partner some node returns."""
     return {ident for node in nodes.values() for ident in (node.get("returns") or {}).get("partner") or ()}
+
+
+def sample_sources(nodes: Mapping[str, Mapping], sample_token: str) -> list:
+    """The nodes whose action returns the sample token, sorted."""
+    return sorted(node_id for node_id, node in nodes.items() if sample_token in returned_by(node))
 
 
 def expand(nodes: Mapping[str, Mapping], held: AbstractSet[str]) -> frozenset:

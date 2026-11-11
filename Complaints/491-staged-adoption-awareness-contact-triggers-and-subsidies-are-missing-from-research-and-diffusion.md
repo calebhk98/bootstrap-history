@@ -1,6 +1,6 @@
 # Staged adoption, awareness, contact triggers and subsidy levers are missing from research and diffusion
 
-**Status:** partly (awareness, staged adoption, technique levers, own stock, contact events and share-weighted plants are built and tested; the remainder is at the end)
+**Status:** partly (every mechanism is built and tested, including samples and firm material purchases; open: sources for the labelled constants, and the whole-game measurement)
 
 What is wrong now:
 
@@ -78,9 +78,19 @@ unit count; subsidy and mandate levers on the government (481).
   migration (`sim/demography/regions.py` sends `RecordMigrantContact`, applied in `sim/actors/contact.py`).
 - Done: purchases a buyer that `keeps_purchases` (a firm) makes at the market are delivered to its `stores`
   (`port_actors.close` returns the delivery by good; `stock_keeping.add_delivery`).
-- Remainder: (3) no node requires samples brought back from a region (expedition `returns`, rubber and latex);
-  (4) the contact and speed constants are heuristics (`sim/agents/tuning_adoption.py`): contact would be retired by a
-  measured carrier (tonnes, migrants, routes) and the logistic speed by a curve fitted to Griliches-style adoption
-  data, neither of which has a source opened yet; (5) no firm calls `market_purchase` yet (a plant's inputs are
-  costed in its books, not bought as goods), so firm stores fill only once a firm buys inputs or research materials as
-  goods; (6) the effect of the share on a whole game is unmeasured (needs the slow suite and a baseline run).
+- Done: a node can ask for a sample brought back from a region (`samples`, tokens `sample:<id>`; an action returns one in `returns.sample`,
+  `sim/land/action_results.py`). `research_gate.unmet_samples` holds the node back (refusal `samples_missing`, and for the founder the
+  returning action is listed among the missing prerequisites in `sim/projects/start_checks.py`) until the researcher has done an action
+  that returns it; `validate` refuses a sample nothing returns. Data: the West Africa voyage returns a vine sample and natural rubber asks
+  for it. Test: `--only research_start_gates`. Decided 2026-11-11 by the orchestrator, owner may overrule: a sample counts as held by
+  whoever has done the returning action (own knowledge), so knowledge that reached an actor by diffusion carries the sample with it; a
+  specimen that is carried as stock is not modelled.
+- Done: an actor that keeps its purchases (a firm) covers the materials a year of research or copying consumes from its stores first and bids at the
+  market for the rest, so the goods reach its stores and the money is not paid a second time (`sim/agents/research_materials.py`, called from
+  `imitation.work_year`). The bid is taken as filled (labelled, retire: Complaint 492). Test: `--only research_materials_covered`. A plant's
+  inputs in a firm's books are still costed, not bought as goods.
+- Remainder: (4) the contact and speed constants are labelled heuristics (`sim/agents/tuning_adoption.py`); retiring them needs a source
+  opened for how fast news travels with a carrier and for Griliches-style adoption slopes, and none has been opened. Decided 2026-11-11 by the
+  orchestrator, owner may overrule: they stay labelled until a source is read; no new constant is added. (6) The effect of the share, the
+  awareness gate and firm purchases on a whole game is unmeasured: needs `python3 -m sim.tests --slow` and a baseline run compared before and
+  after; the orchestrator runs it.
