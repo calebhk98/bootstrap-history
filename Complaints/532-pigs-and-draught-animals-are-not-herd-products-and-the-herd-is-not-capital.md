@@ -1,6 +1,6 @@
 # Pigs and draught animals are not herd products, and the herd is not capital
 
-**Status:** closed - mules and horses are herds, bristle is a pig-herd product, the late cost split reads the economy's prices, the herd's births offset its wear; the unsourced figures are labelled with retire pointers (670, 671)
+**Status:** partly - horse and mule herds, bristle from the pig herd, value-based late cost split and births offsetting wear are built; open: the herd figures still at confidence D with no source read (each row's `source` says which were read)
 
 **Done.** `data/production/95_herds.json` (one batch of 100 head-years each) from the species rows in
 `data/world/living_stock.json`, gated on holding the herd (nodes `fud_sheep_flock`, `fud_goat_herd`, `fud_cattle_herd`; Rome,
