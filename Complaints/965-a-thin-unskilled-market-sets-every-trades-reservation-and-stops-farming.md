@@ -1,6 +1,6 @@
 # A thin unskilled labour market sets every trade's reservation wage, stops farming in its area, and leaves a neighbour hungry
 
-**Status:** fixed in code, awaiting measurement - the unskilled wage is an option only for the hours its jobs can take (`sim/labour/market/unskilled_reach.py`); the england_1300 hunger measurement below has not been rerun
+**Status:** partly - the unskilled wage is an option only for the hours its jobs can take (`sim/labour/market/unskilled_reach.py`); measured on england_1300, hungry spin-up years fall to about a third, in count and in food short, and the first traced year is fed, but some remain
 
 **What is wrong.** In England's spin-up, households on some partner tiles go short of food in single years while holding years
 of income in cash. On the branch the spin-up has several such years, the worst short by a large share of the whole economy's
@@ -42,7 +42,9 @@ market has jobs for every hour of the trade or no option is stated, and a handfu
 whole trade's reservation. Regression tests: `sim/tests/test_unskilled_reach.py` (the rule, a thin and a deep unskilled
 market through `clear_all`, and the plain rule against the packed kernel).
 
-**What is left.** The game measurement: wrap `sim.economy.api.spin_up_state` to print `sum(outcome.hunger_by_tile.values())`
+**Measured (2026-11-11), with the wrapper below and a fresh spin-up cache, against the branch before the change:** fewer hungry spin-up years and about a third of the food short over the whole spin-up; the traced years after the opening are all fed, where before the second traced year was hungry. Hungry years remain in the later spin-up, so the rule is not the whole cause. No committed command runs this; it is the wrapper this paragraph names.
+
+**What is left.** Find the cause of the remaining hungry years (the open questions below). The game measurement: wrap `sim.economy.api.spin_up_state` to print `sum(outcome.hunger_by_tile.values())`
 each year and run `port_trace.spin_up_trace(game, 4)` on a `Sim` built as `sim/ui/cli_spin_up_trace.py` builds one, for
 `england_1300`; the hungry years should be gone or as small as before the contract removal. If a hungry year remains, the
 open questions below are next. The commit and branch this text once named are not in the repository.
