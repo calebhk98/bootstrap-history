@@ -30,3 +30,8 @@ inputs and `admit_recipes` brings the recipe in. Test: `sim/tests/test_complaint
 
 **Not part of this.** Three recipes with priced inputs but an unpriced output (`cassia_kg`, `sugar_cane_sett_native_kg`,
 `tea_plant_stock_native_kg`) are in every civilisation's setup, Rome's included, and do not crash there.
+
+**Second path (output slot).** `runnable_recipes` also leaves out a recipe with an unpriced output, and
+`opening_with_techniques` prices the goods of every entry the held techniques allow (not only the added ones), so a known
+recipe (cheese, salted meat) whose input a late technique newly prices gets its output priced too. Every slot good of every
+setup recipe then has a market area, checked on Egypt's setup with and without the herd techniques added.

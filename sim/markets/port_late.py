@@ -68,8 +68,8 @@ def opening_with_techniques(sim, opening, held_nodes, production, wage_level):
     added = [entry_id for entry_id in allowed_entries(production, held_nodes) if entry_id not in known]
     if not added:
         return None
-    touched = set()
-    for entry_id in added:
+    touched = set()      # every good of the entries the techniques allow: an entry already known can now be made from what an added one makes
+    for entry_id in allowed_entries(production, held_nodes):
         entry = production[entry_id]
         touched.update(entry.get("outputs") or {}, entry.get("inputs") or {})
     prices = dict(opening["prices"])

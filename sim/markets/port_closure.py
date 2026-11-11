@@ -26,7 +26,8 @@ def makeable_prices(prices, production, recipes):
 
 
 def runnable_recipes(recipes, prices):
-    """`recipes` without those with a hard input that has no price: nothing the society can run makes it, so a producer
-    could not run the recipe and its goods have no market area. A recipe left out is admitted when a later technique prices
-    its inputs (`economy.api.admit_recipes`)."""
-    return {recipe_id: recipe for recipe_id, recipe in recipes.items() if all(item in prices for item in recipe.hard_inputs)}
+    """`recipes` without those with a hard input or an output that has no price: nothing the society can run makes the input,
+    or the output has no market, so the recipe has no producer to place and its goods have no market area. A recipe left out is
+    admitted when a later technique prices its goods (`economy.api.admit_recipes`)."""
+    return {recipe_id: recipe for recipe_id, recipe in recipes.items()
+            if all(item in prices for item in recipe.hard_inputs) and all(good in prices for good in recipe.outputs)}
