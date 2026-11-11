@@ -1,6 +1,6 @@
 # A cold game build exceeds the hash-seed-order check's ten-minute limit
 
-**Status:** open - found by the full slow suite on the Eurace port branch; the opening got slower and no step has been timed
+**Status:** closed - the check builds the cheapest base civilisation, which fits its limit, and passes
 
 `hash_seed_order` (`sim/tests/test_hash_seed_order.py`, around line 82) builds a game in a subprocess with an empty spin-up
 cache and gives it 600 seconds. On main before the Eurace port (5026213) the full slow suite passed it; on the branch
@@ -30,3 +30,7 @@ to three; the per-call cost is unchanged. Counted with a scratch wrapper over `s
 `stationary_setup()` and `small_setup(land_per_run=...)` (no committed command counts them). Cheaper options that move
 the results slightly: size the replacement from the previous pass's record instead of a fresh open, or fewer passes.
 Time Rome's opening with `ROME_SPIN_UP_YEARS=3,2 python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 1`.
+
+## Closed
+
+Measured on 32b9f3a7 with a fresh spin-up cache and `ROME_SPIN_UP_YEARS=6,0` (the check's script run alone under `time`): a cold Norse build took under two minutes and a cold Mexica build under three, while Rome's cold opening took well over an hour in the openings rebuild (the `shipped ... cache entries` lines of `python3 sim/simulator.py openings`). Rome's cost is its size (Complaint 497 owns the cost of a year and 473 the spin-up), so the check now builds `norse_900ad`: the same opening and year code. Its limit stays at ten minutes, several times the measured build. A timeout now kills both builds and fails the check instead of raising out of the topic. `python3 -m sim.tests --slow --only hash_seed_order --jobs 1` passes: the two hash seeds give the same record.
