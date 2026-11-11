@@ -242,6 +242,26 @@ def check_animal_gate(where, entry):
     return []
 
 
+def check_durable_gate(entries, serving_durables):
+    """A durable good that serves a need is held by households wherever it has a price, so every entry making it
+    names the node that lets a society make it (a price alone must not create a stock)."""
+    return ["%s: makes %s, a durable that serves a need, but states no requires_node, so a society that never made it "
+            "would hold it" % (name, good)
+            for name, entry in sorted(entries.items())
+            for good in sorted(set(entry.get("outputs") or {}) & set(serving_durables))
+            if not entry.get("requires_node")]
+
+
+def need_serving_durables():
+    """Goods that serve a need (data/world/needs.json) and have a service life (data/world/service_lives.json)."""
+    import json
+
+    def load(name):
+        with open(os.path.join(ROOT, "data", "world", name), encoding="utf-8") as handle:
+            return json.load(handle)
+    return set(load("needs.json")["goods"]) & set(load("service_lives.json")["years"])
+
+
 def check_operated_by(where, entry, known_nodes):
     """`operated_by` lists the tree nodes whose concern runs this technique."""
     if "operated_by" not in entry:
@@ -548,4 +568,5 @@ def production_problems(nodes):
     known_trades = set(load_trade_registry(ROOT, entries))
     known_materials = material_namespace(entries, nodes.values())
     return (["duplicate %s" % duplicate for duplicate in duplicates]
-            + check(entries, known_materials, known_trades, known_nodes=set(nodes)))
+            + check(entries, known_materials, known_trades, known_nodes=set(nodes))
+            + check_durable_gate(entries, need_serving_durables()))

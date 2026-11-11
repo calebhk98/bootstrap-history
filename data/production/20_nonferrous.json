@@ -617,7 +617,7 @@
    "unit_dimension": "mass",
    "basis": "per tonne of raw alluvial gravel worked for native platinum, at a representative placer grade",
    "yield_basis": "EXTRACTED. Before the Sudbury/Bushveld nickel-copper by-product route existed, the world's platinum came from alluvial placers, above all the Ural Mountains of Russia from the 1820s. A representative placer grade of 0.05 g Pt per cubic metre of gravel is assumed here - rarer than the gold placer grade assumed in gold_kg, since most placers carry far less platinum than gold, though a few exceptional deposits (Colombia's Choco) ran much richer; this is a representative, not universal, figure. Labour uses the same gravel-processing throughput assumed for gold (roughly 0.25 m3/hour of washed gravel per labourer).",
-   "requires_node": null,
+   "requires_node": "mt2_platinum_group_metals",
    "conf": "C"
   },
   "platinum_g": {
@@ -634,7 +634,7 @@
    "unit_dimension": "mass",
    "basis": "per gram of native platinum recovered from alluvial placer gravel by washing",
    "yield_basis": "At 0.05 g Pt per cubic metre of gravel and the labour throughput described in platinum_ore_kg, one gram of platinum needs roughly 20 cubic metres of gravel (400 kg represented here as the ore input) and about 80 labourer-hours. Unlike placer gold, native platinum grains are typically coarse and dense enough to be captured by simple gravity washing alone, without mercury amalgamation - this is a real, documented difference between the two metals' placer behaviour (indeed Ural miners for decades discarded platinum as a nuisance mixed with their gold, before it was recognised as valuable). See nickel_kg for the later, industrial-era by-product route to the same metal, which largely superseded placer mining in the 20th century.",
-   "requires_node": null,
+   "requires_node": "mt2_platinum_group_metals",
    "conf": "C"
   },
   "wolframite_kg": {

@@ -1,6 +1,6 @@
 # Households are seeded with tonnes of platinum in a society that never worked it
 
-**Status:** open
+**Status:** closed - platinum_g and platinum_ore_kg are gated on mt2_platinum_group_metals; the opening already drops a priced good no held technique makes (port_closure.makeable_prices), so no price means no seeded stock; validate now refuses an ungated entry making a need-serving durable (validate_production.check_durable_gate); the five civilisations declare platinum_g in unsupplied_basket_goods. The 5.4e4 g wear figure is for the orchestrator to re-measure with economy-check once openings are rebuilt.
 
 `python3 sim/simulator.py economy-check --accounts --years 1 --civs mexica_1500` shows `platinum_g` worn at
 about 5.4e4 in year one against about 7.6 made. At the good's fifty-year life (data/world/service_lives.json)
