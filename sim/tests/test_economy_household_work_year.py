@@ -227,6 +227,19 @@ class HearthTests(unittest.TestCase):
         self.assertTrue(household_work_year.has_hearth(rec, tenant))
         self.assertIn("wheat_kg", self._foods(household_work_year.cohort_basket(setup(), rec, owner)))
 
+    def test_a_cohort_on_a_plot_in_a_tile_where_most_people_have_none_has_no_hearth(self):
+        # the tile is urban: 300 of its 400 people work no land (household_urban.is_urban)
+        owner, townsfolk = cohort("owner", people=100.0), cohort("townsfolk", people=300.0)
+        rec = record({"t1": {"owner": 0.5}}, cohorts=[owner, townsfolk])
+        self.assertFalse(household_work_year.has_hearth(rec, owner))
+        self.assertEqual(household_work_year.hearths_of(rec, ["t1", "t1"], ["owner", "townsfolk"]), [False, False])
+
+    def test_the_same_cohort_in_a_tile_where_most_people_hold_land_has_a_hearth(self):
+        owner, other = cohort("owner", people=300.0), cohort("other", people=100.0)
+        rec = record({"t1": {"owner": 0.5}}, cohorts=[owner, other])
+        self.assertTrue(household_work_year.has_hearth(rec, owner))
+        self.assertEqual(household_work_year.hearths_of(rec, ["t1", "t1"], ["owner", "other"]), [True, False])
+
 
 class CookingFuelTests(unittest.TestCase):
     def _warmth_floor(self, basket):

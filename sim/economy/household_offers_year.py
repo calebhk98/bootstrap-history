@@ -50,7 +50,8 @@ def plans(setup, record, view, reads: OfferReads) -> Dict[AgentId, Tuple[float, 
             hired, own, milled = 0.0, 0.0, ()
         else:
             value, needed, price, milled = household_work_year.work_terms_at(setup, record, view, cohort, values.get(cohort.agent_id, 0.0))
-            hired, own, milled = household_work_year.planned_hours(needed, value, price, 0.0, milled)
+            hired, own, milled = household_work_year.planned_hours(needed, value, price, 0.0, milled,
+                                                                  household_work_year.whole_servant_terms(setup, cohort))
         result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, milled)
     return result
 

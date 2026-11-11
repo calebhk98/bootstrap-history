@@ -1,6 +1,6 @@
 # Household work is not a need, so there are no servants, cooks or taverns
 
-**Status:** partly - household choice by logit, own-hours withholding, hearth and cooked food, grinding make-or-buy and full-cost hiring are built; land after the opening (473), a whole-game re-measure, an urban marker and servant indivisibility remain
+**Status:** partly - household choice by logit, own-hours withholding, hearth and cooked food, grinding make-or-buy, full-cost hiring, an urban marker and whole-servant hiring are built; landing after the opening settles (blocked on 473) and a whole-game re-measure (the orchestrator's) remain
 
 Owner decision (530, 2026-10-20): cooking, fetching water and fuel, cleaning, grinding and childcare take hours every
 household spends, and they are a need met by the household's own hours or by hiring. Religion as a need is out of scope;
@@ -27,7 +27,13 @@ it is a mod (`mods/TASKS.md`).
 - Own hours are kept back: `HourSupply` in `sim/economy/labour_supply.py` adds each cohort's own household-work hours to its own-plot hours, so
   `withhold_hours` cuts the offers. Every other hour is offered to the market (no leisure split); household work is fixed
   against the labour offer, not chosen against leisure.
-- Hearth: a cohort has one when it holds a title or a tenancy on its tile (`household_work_year.has_hearth`). A hearth-less
+- Urban marker (`sim/economy/household_urban.py`): a tile is urban when the people of its cohorts who work no land are at least
+  `URBAN_LANDLESS_SHARE` of its people (a labelled heuristic, retire in the declaration). A cohort on an urban tile has no hearth.
+- Whole servants (`sim/economy/household_servants.py`): with `servant_year_hours` in the data file (absent: hiring stays divisible), each
+  household of a cohort hires a whole servant's year or none. It hires none if last year's income per household is below the cost
+  of that year; of those that can pay, the share that hires is a logit of the cost against the worth of the hours freed (at most
+  the household's own work). Tests: `sim/tests/test_economy_household_servants.py`.
+- Hearth: a cohort has one when it holds a title or a tenancy on its tile and the tile is not urban (`household_work_year.has_hearth`). A hearth-less
   cohort gets `without_hearth_basket` (food only from goods marked `ready_to_eat`, no cooking in its household work) and burns
   no fuel; a cohort with one pays the cooking fuel added to its warmth floor (`households_work.with_cooking_fuel`).
 - Grinding is make-or-buy (`sim/economy/household_grinding.py`, used by `household_work_year.grinding_plan`): the needs file
@@ -39,16 +45,17 @@ it is a mod (`mods/TASKS.md`).
 
 ## What is wrong now
 
-- Land after the opening settles (473), since a new need moves the opening's demand.
-- No whole-game re-measure since the logit hiring and the Eurace rules: hired hours a person, the service share of the
-  opening basket, the market rate and fuel prices have not been measured together. Measure on a default Rome game with
+- Land after the opening settles (473): blocked. The shipped openings fail `spin_up_settled` for every civilisation (Complaint 970,
+  473 Status), so the opening is a point on a cycle and the household-work split it fixes moves with that cycle. This lands when 473
+  closes; nothing here can settle it.
+- No whole-game re-measure since the logit hiring, the Eurace rules, the urban marker and whole servants: hired hours a person, the
+  service share of the opening basket, the market rate and fuel prices have not been measured together. Measure on a default Rome game with
   `python3 sim/simulator.py economy-check` and `PYTHONPATH=. python3 -W ignore -c "from sim.tests.harness import sim; print(sim(civ='rome_100ad').market_rate())"`.
-- Servants are divisible: a servant below some share of a year cannot be hired. The worth of a freed hour is the average wage
-  its offers face, not the marginal one.
-- No urban marker exists in the economy; when one does, it should also remove the hearth.
+  Check that the hired share falls within the range sources give (below).
+- The worth of a freed hour is the average wage its offers face, not the marginal one.
 - Cooked food, cleaning and childcare as bought substitutes are not yet data in `household_work.json`.
-- Pre-modern sources put domestic service between a small share of the population and about a third where wealthy; whether the
-  model's hired share falls in that range is not re-measured.
+- A whole servant's year is paid in full while only the hours the household needs count toward its floor; the unused rest of a
+  servant's year is not shared with another household.
 
 ## Research needed
 
