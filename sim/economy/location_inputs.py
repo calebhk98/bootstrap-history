@@ -62,6 +62,18 @@ def input_haul_cost(recipe: Recipe, specs, carriage, supplies: Mapping[GoodId, M
                      for good, tonnes in tonnes_of(recipe.inputs, specs).items())
 
 
+def output_haul_cost(carriage, tile: TileId, shares: Sequence[Tuple[MarketArea, float]]) -> float:
+    """Carriage per tonne of a run's output from `tile`, the mean over the market areas it can reach weighted by the runs wanted for each;
+    an area no path from the tile leads to is left out (it cannot be served from here, and must not make every tile's cost infinite).
+    Infinite when the tile reaches none of them."""
+    reached = [(runs, carriage.cost_per_tonne(tile, area.anchor_tile)) for area, runs in shares]
+    reached = [(runs, cost) for runs, cost in reached if math.isfinite(cost)]
+    weight = math.fsum(runs for runs, _cost in reached)
+    if weight <= 0.0:
+        return math.inf
+    return math.fsum(runs * cost for runs, cost in reached) / weight
+
+
 def input_supplies(record, setup, recipe: Recipe, goods=None, shared=None) -> Dict[GoodId, Dict[TileId, float]]:
     """Where each of the recipe's inputs (or of `goods` among them) is made now. `shared` keeps what is read for a good
     across recipes, for a caller whose producers do not change between them."""
@@ -137,7 +149,7 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
     for tile in tiles:
         if setup.opening_population_by_tile.get(tile, 0.0) <= 0.0:
             continue
-        out_cost = math.fsum(runs * carriage.cost_per_tonne(tile, area.anchor_tile) for area, runs in shares) / wanted
+        out_cost = output_haul_cost(carriage, tile, shares)
         costed.append((input_haul_cost(recipe, setup.specs, carriage, supplies, tile) + output_tonnes * out_cost, tile))
     fed: Dict[TileId, float] = {}
     left = wanted

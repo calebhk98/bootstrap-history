@@ -114,6 +114,21 @@ class MaterialOrientationTests(unittest.TestCase):
         self.assertEqual(location_inputs.tonnes_of({ORE: 2000.0, "heat": 5.0}, specs), {ORE: 2.0})
 
 
+class OutputHaulCostTests(unittest.TestCase):
+    """Complaint 970: an output area no tile can reach (an island cut off from the rest) must not make every tile's output carriage infinite."""
+
+    def test_the_mean_is_over_the_areas_the_tile_reaches_weighted_by_runs(self):
+        shares = [(area("mine"), 3.0), (area("market"), 1.0)]
+        self.assertEqual(location_inputs.output_haul_cost(Carriage(), "mine", shares), 25.0)
+
+    def test_an_area_the_tile_cannot_reach_is_left_out_of_the_mean(self):
+        shares = [(area("market"), 9.0), (area("island"), 1.0)]
+        self.assertEqual(location_inputs.output_haul_cost(Carriage(), "mine", shares), 100.0)
+
+    def test_a_tile_that_reaches_none_of_the_areas_has_no_finite_cost(self):
+        self.assertEqual(location_inputs.output_haul_cost(Carriage(), "mine", [(area("island"), 1.0)]), math.inf)
+
+
 class SitingCostTests(unittest.TestCase):
     def test_hauling_inputs_adds_to_a_runs_cost(self):
         variable = unit_cost.variable_cost_per_run(SMELT, {ORE: 1.0, FUEL: 1.0}, {"labourer": 1.0})
