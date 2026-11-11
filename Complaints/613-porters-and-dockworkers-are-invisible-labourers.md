@@ -86,3 +86,13 @@ search summaries), the Karwansaray blog quoting Hassig pp. 32-33 for a load and 
 searches for Ostia and Portus saccarii and early-modern stevedoring found no per-worker rate; the one opened-in-summary source
 gives pay per ton, not hours. Still open: open Hassig (Aztec Warfare 1988, pp. 32-35) in print, Bastien 2005 full text, and a
 port-history rate for tons per gang-day with the gang size.
+
+## The porter picture moves with the opening (orchestrator, 2026-11)
+
+`python3 sim/simulator.py economy-check --accounts --carriage --years 3 --civs mexica_1500` on a cold full spin-up at three commits gives
+three different pictures: at 09fcea68 (where the bid-ceiling trace above was made on that day's shipped openings) porter demand is
+under 1e-6 hours every year; at 1ffc8ef8 demand is about 1e8 hours with about 1 percent hired; at e69ab838 on the rebuilt openings,
+year 1 demands under 1e-7, year 2 pays a large household fallback fee, and years 3 to 5 demand about 1.3e8 with about a hundred hired.
+So there is no single commit to bisect: the merchants' porter plan swings between nothing and a large demand the labour market barely
+fills, depending on the opening draw (473, the spin-up does not settle). Open on the current openings: why a large porter demand finds
+almost no hire when porter wages sit near the opening wage.
