@@ -14,7 +14,8 @@ import math
 from typing import Dict, List, Mapping, Optional
 
 from sim.constants import declare
-from sim.world.need_basket import Basket, PricedNeed, need_units, price_ceilings, quality_reach, with_quality_reach
+from sim.world.need_basket import (Basket, PricedNeed, need_units, price_ceilings, quality_reach, satiation_limit,
+                                   with_quality_reach)
 
 from . import durable_stock, households_buffer_stock, households_store, lender_ask, opening_resting
 from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
@@ -22,6 +23,7 @@ from .households_basket import need_prices
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
+from .satiated_demand import bid_elasticity, is_satiated
 from .types import Bid, FundsOffer, GoodId, GoodSpec
 
 FLOOR_BUDGET_PRICE_MARGIN = declare(
@@ -161,6 +163,8 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     for need in priced:
         need_id = need.spec.need_id
         ceilings = need.ceilings or price_ceilings(need.goods)
+        limit = satiation_limit(basket, need_id, need.spec.subsistence_per_person)
+        satiated = is_satiated(totals[need_id], math.nan if limit is None else limit, cohort.people)
         affordable, _affordable_share, household_cap = affordable_goods(
             need.goods, household_budget_for_need(totals[need_id], need.price_index, cohort.people),
             need.spec.subsistence_per_person > 0.0)
@@ -181,7 +185,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                 ratio = durable_stock.replacement_for_flow(stock_flow, specs[good]) / flow
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 rows.append((need.spec.subsistence_per_person > 0.0, good, price,
-                             floor_quantity * ratio, flexible_quantity * ratio, ceiling))
+                             floor_quantity * ratio, flexible_quantity * ratio, ceiling, satiated))
     floor_spend = math.fsum(row[2] * row[3] for row in rows)
     flexible_spend = math.fsum(row[2] * row[4] for row in rows)
     floor_wanted = floor_spend * (1.0 + FLOOR_BUDGET_PRICE_MARGIN)
@@ -192,14 +196,14 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     bids = []
     budget_total = 0.0
-    for has_floor, good, price, floor, flex, ceiling in sorted(rows, key=lambda row: row[1]):
+    for has_floor, good, price, floor, flex, ceiling, satiated in sorted(rows, key=lambda row: row[1]):
         budget = (floor * price * (1.0 + FLOOR_BUDGET_PRICE_MARGIN) * floor_scale
                   + flex * price * flexible_scale)
         if budget <= 0.0:
             continue
         budget_total += budget
         bids.append(Bid(cohort.agent_id, good, view.area_of(good, cohort.tile), cohort.tile,
-                        floor, flex, price, basket.substitution, budget, 0 if has_floor else 1,
+                        floor, flex, price, bid_elasticity(basket.substitution, satiated), budget, 0 if has_floor else 1,
                         maximum_price=ceiling))
     funds = ()
     savings = cash - budget_total - target

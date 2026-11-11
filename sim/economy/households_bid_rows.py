@@ -11,7 +11,8 @@ import numpy
 from sim.jit import njit
 
 from .households_store import STORE_PRIORITY
-from .households_orders_kernel import RO_BUDGET, RO_CAP, RO_FLEX, RO_FLOOR, RO_ON, SO_BUDGET, SO_FLEX
+from .households_orders_kernel import RO_BUDGET, RO_CAP, RO_FLEX, RO_FLOOR, RO_ON, RO_SATIATED, SO_BUDGET, SO_FLEX
+from .satiated_demand import bid_elasticity
 
 
 
@@ -63,7 +64,7 @@ def cohort_bid_rows(cohort_agent, cohort_tile, cohort_template, cohort_row_start
             if rows[row, RO_ON] > 0.0:
                 _emit(figures, buyer, good, tile, market, priority, count, cohort_agent[cohort], row_good[row0 + local],
                       cohort_tile[cohort], row_market[row0 + local], row_priority[row0 + local], rows[row, RO_FLOOR], rows[row, RO_FLEX],
-                      row_price[row0 + local], substitution, rows[row, RO_BUDGET], rows[row, RO_CAP])
+                      row_price[row0 + local], bid_elasticity(substitution, rows[row, RO_SATIATED] > 0.0), rows[row, RO_BUDGET], rows[row, RO_CAP])
                 total, carry = _add(total, carry, rows[row, RO_BUDGET])
                 count += 1
         if cohort_plan[cohort] > 0.0:

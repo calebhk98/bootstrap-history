@@ -12,11 +12,12 @@ import numpy as np
 from sim.jit import njit
 
 from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_FLOOR_MARGIN, K_HOUSEHOLD_SIZE, K_SAFETY,
-                                    K_WEALTH_TARGET, NF_HAS_FLOOR, NF_PIDX, NF_QUALITIES, NF_SUB, NI_ROW0, NI_ROW1, RF_CEIL, RF_LIFE, RF_PRICE,
+                                    K_WEALTH_TARGET, NF_HAS_FLOOR, NF_LIMIT, NF_PIDX, NF_QUALITIES, NF_SUB, NI_ROW0, NI_ROW1, RF_CEIL, RF_LIFE, RF_PRICE,
                                     RF_SHARE, RI_GOOD, RI_UNIT, SF_LIFE, SF_PRICE, SF_WEIGHT, V_FLOORS, V_PIDX, V_SFLOORS, V_STOTALS, V_TOTALS, W_AFF,
                                     W_BUDGET, W_CAP, W_CEIL, W_COUNT, W_FLEX, W_FLOOR, W_ON, W_QTY, W_SHARE, _add, _affordable, _need_units,
                                     _resting_purse, _store_value_target, _total)
 from .opening_demand_kernel import RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
+from .satiated_demand import is_satiated
 from .priced_need_kernel import limit_shares, price_ceilings, units_per_money
 
 # template ints (one row per basket)
@@ -57,7 +58,8 @@ RO_FLOOR = 1
 RO_FLEX = 2
 RO_BUDGET = 3
 RO_CAP = 4
-RO_COUNT = 5
+RO_SATIATED = 5        # 1.0 when the row's need sits at its satiation limit: its bid does not respond to a fall in price
+RO_COUNT = 6
 # store answers
 SO_BUDGET = 0
 SO_FLEX = 1
@@ -161,7 +163,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
     for r in range(r0, r1):
         row_scratch[r, W_ON] = 0.0
         row_scratch[r, W_BUDGET] = 0.0
-        for column in range(5):
+        for column in range(RO_COUNT):
             row_out[row_base + r, column] = 0.0
     for s in range(s0, s1):
         store_out[store_base + s, SO_BUDGET] = 0.0
@@ -272,6 +274,8 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
             per_unit = row_scratch[r, W_QTY]
             floor_quantity = floors[n] * per_unit
             flexible_quantity = max(0.0, totals[n] - floors[n]) * per_unit
+            if is_satiated(totals[n], need_floats[n, NF_LIMIT], people):
+                row_out[row_base + r, RO_SATIATED] = 1.0
             flow = floor_quantity + flexible_quantity
             good = row_ints[r, RI_GOOD]
             good_scratch[good, G_FLOW] += flow

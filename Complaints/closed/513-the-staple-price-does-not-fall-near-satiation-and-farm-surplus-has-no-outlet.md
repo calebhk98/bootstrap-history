@@ -1,6 +1,6 @@
 # The staple price does not fall near satiation and a farm surplus has no outlet: need-sized hands remain the floor
 
-**Status:** partly - the farm allocation and `sim/labour/farm_intake.py` this complaint was about are deleted; farms and plots are the economy's. Open: the staple price does not fall near satiation, and surplus beyond satiation is not sold, stored or fed to animals
+**Status:** closed - a satiated need's bid has no price response (`sim/economy/satiated_demand.py`), so a glut clears at a lower price; surplus is carried by its holder with the good's spoilage (`inventory.py`); measure the staple price with `python3 sim/simulator.py economy-check --civs rome_100ad --years 30`
 
 Found closing 480. The engine's farm allocation (`_allocate_farm_workforce`, `farm_workers_needed`, `farm_intake`) has since been deleted with the national farm path (Complaint 537); what follows is the history of that mechanism, then what is left. It put just enough people on the land to meet
 the population's food need (`farm_workers_needed`): a better technique frees hands, a shortfall calls for hands
@@ -75,3 +75,9 @@ Test migration (rule-tests-05): `farm_surplus_intake` (nutrition above need afte
   `test_population_farm_technique.WorkersMoveOnlyAsFastAsTheMarketLetsThem`; the decades-long farm share is measured by
   `python3 sim/simulator.py economy-check` (it prints hunger and the staple price over labour cost) and, for the opening, by
   `python3 sim/simulator.py opening-checks`.
+
+## Closed
+
+- Price near satiation: the household rule (units capped at the need's satiation limit, spending moved to the needs still short) now carries into the bid schedule. A bid whose need sits at its limit has elasticity zero (`satiated_demand.bid_elasticity`), so its flexible units no longer grow past the limit as the price falls and its budget holds the units down as the price rises. Both bid paths use it (`households_orders.py`, and `households_orders_kernel.py` with `households_bid_rows.py`). Tests: `test_satiated_demand.py`.
+- Outlet: unsold stock stays with its holder, loses the good's `spoilage_per_year` each year and is offered again at its holding reservation (`inventory.spoilage_moves`, `holding_reservation`; `test_economy_idle_producer_holds_stock.py`). No herd recipe in `data/production/95_herds.json` takes grain as fodder (rations are straw and bran), so there is no feed outlet; a grain-fed herd is new authored data, not a rule gap.
+- Not measured here (no games run): the staple's price under a glut in a played Rome.
