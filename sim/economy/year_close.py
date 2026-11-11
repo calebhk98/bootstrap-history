@@ -10,7 +10,6 @@ from .expected_sales import demand_seen, market_capacities
 from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, currency, expansion_price, merchants, ownership, producer_exit, shares,
                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
 from .cohort_store import table_of
-from .labour_results_table import offered_by_market
 from .home_scope import has_partners, home_cohort_ids, on_home_tile
 from . import households_cohort
 from .market_memory import market_key
@@ -126,8 +125,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
         for payment in paid:
             property_income[payment.payee] = property_income.get(payment.payee, 0.0) + payment.amount
     if carriage_hours.hires(setup):    # after the owners took their profit: the cash left is what next year's carriers can be paid from
-        record.credit.ask_for_loans(carriage_hours.wage_loans(setup, record, ledger.crew_hours_bought,
-                                                           offered_by_market(ledger.labour_results)))
+        record.credit.ask_for_loans(carriage_hours.wage_loans(setup, record))
     for lender, interest in record.capital_markets.take_pool_income().items():     # the actors' pool paid this year
         property_income[lender] = property_income.get(lender, 0.0) + interest
     close_households(setup, record, view, ledger, property_income)

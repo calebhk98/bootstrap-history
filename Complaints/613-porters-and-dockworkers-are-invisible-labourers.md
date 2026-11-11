@@ -136,3 +136,24 @@ people into the porter trade, so the Caribbean tiles would never get porters; si
 hours paid) feeds a request of tens of millions to a credit market that cannot fill it. Both need the owner of merchant working capital
 (and of how a merchant sizes a shipment to its purse and to the crew it can hire: `plan_merchant` caps the plan by the fleet but not by
 the purse or the crew on offer) to decide. No ceiling multiplier is warranted: the ceiling already clears the wage.
+
+## Merchants follow the producers' funding rule (porter-hire-gap, second step)
+
+Decision (orchestrator; the owner may overrule): a merchant is an actor like a producer, so its carrier bids are bounded by what it can pay.
+Built in `sim/economy/carriage_funding.py` (plain functions, tests in `sim/tests/test_carriage_funding.py`):
+
+1. `carriage_hours.wage_loans` asks for the wage bill of the hours the plan wants (hours wanted times the hiring area's wage, minus cash),
+   not of last year's paid hours; the credit market's pledge cap (`credit_cap.fundable_amount`) rations it, with no new cap here.
+2. `carriage_hours.write_bids` scales each merchant's bids by the share of their wage bill its cash pays (`fund_bids`), cash being the
+   purse after the facility granted at the close has landed; a funded vacancy still posts, so porters can still be drawn in. The bids
+   returned (and so the report's "demanded") are the funded ones. `bid_figures` (the plan's full demand) is unchanged. The shipments are cut
+   by `crew_cuts` to the hired share, which now equals the funded share because only funded hours are bid.
+
+Not yet measured in a whole game (openings are stale after the edit): run `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500`
+cold and read the porter row (demanded against hired) and the fallback fee.
+
+Foot haul from the Caribbean to mainland Mexico: it does cross water. `data/world/geography/tile_grid.json` lists `united_states_of_america_02`
+among the `borders` of `cuba_03`, and `routes_graph._land_and_river_edges` makes a `land` edge for every pair in a tile's `borders` with no
+test that the two tiles share ground; the foot mode takes any `land` edge. The chain found by a breadth-first walk of `borders` is Cuba,
+`united_states_of_america_02` (across the Florida Strait), the US tiles, `mexico_13`, `mexico_12`. Dominican tiles reach it through `cuba_02`.
+Not fixed here (geography data and graph rule, another owner).
