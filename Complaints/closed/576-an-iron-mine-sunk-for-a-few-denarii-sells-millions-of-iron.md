@@ -1,6 +1,6 @@
 # An iron mine sunk for a few denarii sells millions of iron
 
-**Status:** closed - sales of a pool are priced and cleared as the form its mines raise (`raised_material`), so mined ore can no longer be sold at the bar price; the whole-game re-measure is pending
+**Status:** closed - sales of a pool are priced and cleared as the form its mines raise (`raised_material`), so mined ore can no longer be sold at the bar price; re-measured in a whole game (below)
 
 Found by an agent playtest (`Complaints/reports/playtest-rome-seed11-agent-legitimate-log.md`, Rome, seed 11, around 109 AD). `buy mine iron 100` cost a few denarii to sink and
 tens a year to stand; the founder's iron then sold at thousands of denarii a tonne, so a few thousand tonnes raised
@@ -64,3 +64,10 @@ Splitting the pool's stock by form is a wider change and is not made here; no en
 
 Whole-game re-measure is pending (orchestrator): `buy mine iron 100`, four `step`, `sell iron 99`, `step` on `rome_100ad`; the
 sale should now settle near the ore price (about 15 coin a tonne), a small multiple of the mine's cost per tonne.
+
+## Whole-game re-measure (commit d846ed11, rebuilt openings)
+
+`env -u ROME_SPIN_UP_YEARS python3 sim/simulator.py agent --civ rome_100ad` with `buy mine iron 100`, `step 4`, `sell iron 99`,
+`step 1`, `state`. The sale is posted at a quote and limit of 3.58 coin a tonne (it was 1605 before the fix), which sits below
+the mine's running cost per tonne measured above, so a sunk mine no longer pays for itself by selling ore at the bar price. The
+founder's capital fell over the sale year (2841.5 to 2457.6), and the mine's running charge is larger than the takings.

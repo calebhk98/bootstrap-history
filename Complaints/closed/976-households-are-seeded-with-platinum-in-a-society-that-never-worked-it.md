@@ -16,3 +16,5 @@ What it would take: a good that serves a need is seeded only where the society h
 worked before the start, a partner's supply, or a gate on a node it holds), and the platinum entry carries a
 `requires_node` or a deposit site so that a price alone does not create a stock. Not touched by Complaint 975,
 which gates the animals and linen and keeps households off mines.
+
+Re-measured on the rebuilt openings (commit d846ed11): `python3 sim/simulator.py economy-check --accounts --years 1 --civs mexica_1500` has no platinum row (nothing made, bought or worn).

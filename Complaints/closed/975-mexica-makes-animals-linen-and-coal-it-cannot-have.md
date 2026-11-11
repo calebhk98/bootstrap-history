@@ -23,3 +23,5 @@ already offered are the porters'; without linen households wear the cloth the so
 
 Left: platinum, see Complaint 976. The shipped openings are stale until rebuilt, and the after-fix
 economy-check row check was not completed within the five-minute limit (stale openings force a full spin-up).
+
+Re-measured on the rebuilt openings (commit d846ed11): `python3 sim/simulator.py economy-check --accounts --years 1 --civs mexica_1500` has no row for mule, ox, coal or linen.
