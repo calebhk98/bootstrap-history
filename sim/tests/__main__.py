@@ -425,7 +425,9 @@ def _run_topics_forked(run_now, harness, jobs, topic_seconds):
     child of its own, the quick ones shared out over a few. A child still running after `topic_seconds` is
     stopped and its unfinished topics fail."""
     quick = set(harness.QUICK_TOPICS)
-    starts = warming.civilisations_to_warm(run_now, quick, discovery.discover_civilisations())
+    every_civilisation = sorted(name[:-len(".json")] for name in os.listdir(os.path.join(_REPO_ROOT, "data", "civilizations"))
+                                if name.endswith(".json") and not name.startswith("_"))
+    starts = warming.civilisations_to_warm(run_now, quick, discovery.discover_civilisations(), every_civilisation)
     if starts:
         _warm_starts(harness, jobs, starts)
     seconds_before = _load_topic_seconds()

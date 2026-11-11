@@ -14,6 +14,6 @@ even when the topic builds no game at all (a fixture test that takes seconds out
 runs a few hundred hand-built years).
 
 **What was done.** A topic names the civilisations it builds with a module-level `CIVILISATIONS` tuple (empty when it
-builds no game); an undeclared non-quick topic is taken to build the default start; quick topics build none.
-`civilisations_to_warm` (`sim/tests/warming.py`) picks the starts, and a start a topic builds without declaring is built
-by that topic behind the cache's per-key lock. Making the cold opening itself fast is 497/968, not this complaint.
+builds no game); an undeclared non-quick topic still warms every civilisation, as before; quick topics build none.
+`civilisations_to_warm` (`sim/tests/warming.py`) picks the starts. A topic that builds no game declares `CIVILISATIONS = ()`
+and then waits for no opening (`grep -l '^CIVILISATIONS' sim/tests/test_*.py` lists the declared topics). Making the cold opening itself fast is 497/968, not this complaint.
