@@ -64,6 +64,26 @@ class SlugifyTests(unittest.TestCase):
         self.assertEqual(tiles_module.slugify("---"), "unknown")
 
 
+class LandTouchesTests(unittest.TestCase):
+    def test_land_that_meets_at_the_shared_edge_touches(self):
+        from shapely.geometry import box
+        west_land = box(0.0, 0.0, 100000.0, 100000.0)
+        east_land = box(100000.0, 20000.0, 200000.0, 80000.0)
+        self.assertTrue(tiles_module.land_touches(west_land, east_land))
+
+    def test_land_across_a_strait_does_not_touch(self):
+        from shapely.geometry import box
+        west_land = box(0.0, 0.0, 50000.0, 100000.0)
+        east_land = box(150000.0, 0.0, 200000.0, 100000.0)
+        self.assertFalse(tiles_module.land_touches(west_land, east_land))
+
+    def test_a_sliver_of_coast_touching_does_not_link_a_cell_whose_main_land_is_cut_off(self):
+        from shapely.geometry import box, MultiPolygon
+        island_with_sliver = MultiPolygon([box(0.0, 0.0, 100000.0, 100000.0), box(190000.0, 0.0, 195000.0, 20000.0)])
+        mainland = box(195000.0, 0.0, 300000.0, 100000.0)
+        self.assertFalse(tiles_module.land_touches(island_with_sliver, mainland))
+
+
 class OldRegionMappingTests(unittest.TestCase):
     """old_region_for_tile() is used only for the migration report, never
     for a tile's own geometry or fertility - see the generator's own
@@ -175,6 +195,13 @@ class TileStructureTests(unittest.TestCase):
     def test_no_tile_borders_itself(self):
         for tile_id, tile in self.tiles.items():
             self.assertNotIn(tile_id, tile["borders"], tile_id)
+
+    def test_an_island_tile_does_not_border_the_mainland_across_a_strait(self):
+        self.assertNotIn("united_states_of_america_02", self.tiles["cuba_03"]["borders"])
+
+    def test_a_real_land_border_is_kept(self):
+        self.assertTrue(any(neighbour.startswith("spain_") for tile_id, tile in self.tiles.items()
+                            if tile_id.startswith("france_") for neighbour in tile["borders"]))
 
     def test_borders_are_symmetric(self):
         # If A lists B as a border, B must list A back - both are read off
