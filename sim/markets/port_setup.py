@@ -207,6 +207,7 @@ def build_setup(sim, opening=None, production=None):
                         sim.materials.spoilage_rates(), life_years)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = port_closure.makeable_prices(prices, production, recipes)
+    recipes = port_closure.runnable_recipes(recipes, prices)
     recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}
     training_years = labour_api.wage_provider.training_years_by_trade(trades_data)
     trades = {trade: SetupTrade(trade, training_years[trade],
@@ -255,7 +256,7 @@ def build_setup(sim, opening=None, production=None):
         basket_by_tile=baskets_by_tile(basket, need_data, sim.map.tile_climates(all_tile_ids), all_tile_ids), coin_per_unit=unit,
         household_work=sim.household_work_data(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         milled_as=household_grinding.milled_as_map(need_data),
-        recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
+        recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners, recipes),
         tile_owners=sim.farm.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),
         kernels=dict(sim.bound_kernels()),
@@ -288,13 +289,13 @@ def cropland_yields(production, recipes, tiles):
             for tile_id, tile in sorted(tiles.items())}
 
 
-def recipes_by_country(home_id, home_recipes, partners):
-    """Which recipes each country's producers can run; empty when there is only the home country."""
+def recipes_by_country(home_id, home_recipes, partners, known):
+    """Which recipes each country's producers can run; empty when there is only the home country. Only the recipes in `known`."""
     if not partners:
         return {}
     by_country = {home_id: tuple(sorted(home_recipes))}
     by_country.update({partner: tuple(sorted(opened["recipes"])) for partner, opened in partners.items()})
-    return by_country
+    return {country: tuple(recipe_id for recipe_id in ids if recipe_id in known) for country, ids in by_country.items()}
 
 
 def _counted_currency(civ, unit):

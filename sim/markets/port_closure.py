@@ -23,3 +23,10 @@ def makeable_prices(prices, production, recipes):
                 del kept[good]
                 changed = True
     return kept
+
+
+def runnable_recipes(recipes, prices):
+    """`recipes` without those with a hard input that has no price: nothing the society can run makes it, so a producer
+    could not run the recipe and its goods have no market area. A recipe left out is admitted when a later technique prices
+    its inputs (`economy.api.admit_recipes`)."""
+    return {recipe_id: recipe for recipe_id, recipe in recipes.items() if all(item in prices for item in recipe.hard_inputs)}
