@@ -35,7 +35,7 @@ READS_BY_OWNER = {
 	            "material_substitutes", "materials_serving", "home_household_tonnes", "border_duty_per_tonne"),
 	"workforce": ("trade_registry", "farm_share_of_hours", "staff", "trade_available", "trade_population", "people_who_exist", "taught_trade_people",
 	              "available_trades", "is_craft_trade", "base_tile", "labour_market",
-	              "money_per_labour_hour", "hours_per_person_year", "staff_on_all_books"),
+	              "money_per_labour_hour", "hours_per_person_year", "staff_on_all_books", "town_mortality_premium_by_tile"),
 	"production": ("is_venture", "revenue_estimate", "upkeep", "concern_takings", "concern_gross", "concern_upkeep",
 	               "node_output_market_factor", "concern_volume_ratio", "concern_baskets_now", "industry_depth", "industry_scale_ceiling",
 	               "ramp_share_at_full_depth", "basket_market_factor"),

@@ -7,6 +7,7 @@ import math
 from typing import Any, Dict
 
 from . import keep_boundary, ledger
+from .bonded_residence import residence_death_rate
 from .edges import EDGE_ECONOMY
 from .tuning_strata import (BIRTH_RATE, BIRTH_WELFARE_RESPONSE, BONDAGE_EXIT_RATE,
 							DEATH_RATE, EDUCATION_EFFORT_SCALE, FALL_WELFARE, FAMINE_DEATH_RATE,
@@ -104,7 +105,7 @@ def run_year(stratum: Any, world: Any) -> None:
 	if observed.get("members") is not None:
 		record.last_growth = record.members / previous_members - 1.0 if previous_members > 0.0 else 0.0
 		return
-	grow(stratum)
+	grow(stratum, world.people.urban_mortality_premium() if stratum.is_bonded() else None)
 	decide_moves(stratum)
 
 
@@ -121,11 +122,13 @@ def school(stratum: Any, surplus: float, food_bill: float, buffer: float, world:
 	record.literacy = min(1.0, max(0.0, record.literacy + gain - loss))
 
 
-def grow(stratum: Any) -> None:
-	"""Births rise gently with welfare, deaths rise steeply with the food unmet; growth follows with a lag."""
+def grow(stratum: Any, urban_premium: Any = None) -> None:
+	"""Births rise gently with welfare, deaths rise steeply with the food unmet; growth follows with a lag. A stratum whose
+	plan names `residence` shares (urban, rural, malarial) has its base death rate set by where its members live."""
 	record = stratum.record
 	births = BIRTH_RATE * (1.0 + BIRTH_WELFARE_RESPONSE * math.tanh(record.welfare - 1.0))
-	deaths = DEATH_RATE + FAMINE_DEATH_RATE * record.shortfall.get("food", 0.0)
+	base_deaths = residence_death_rate(DEATH_RATE, record.plan.get("residence") or {}, {"urban": urban_premium or 0.0})
+	deaths = base_deaths + FAMINE_DEATH_RATE * record.shortfall.get("food", 0.0)
 	record.last_growth += GROWTH_LAG_SHARE * ((births - deaths) - record.last_growth)
 	record.members = max(0.0, record.members * (1.0 + record.last_growth))
 

@@ -22,6 +22,16 @@ class People:
 	def urban_population(self) -> float:
 		return self.population_total() * self.needs.urban_fraction()
 
+	def urban_mortality_premium(self) -> Optional[float]:
+		"""The extra share of the baseline death rate a town resident bears: the tiles' town premiums (averaged over each tile's
+		people) summed over the people and divided by the urban people. None where no town provider or tile count gives one."""
+		premiums = self.needs.town_mortality_premium_by_tile()
+		by_tile = self.needs.people_by_tile()
+		urban = self.urban_population()
+		if not premiums or not by_tile or urban <= 0.0:
+			return None
+		return sum(premium * by_tile.get(tile, 0.0) for tile, premium in premiums.items()) / urban
+
 	def subsistence_kg_per_person_year(self) -> float:
 		return demand.FOOD_SUBSISTENCE_QUANTITY_KG_PER_CAPITA_PER_YEAR
 

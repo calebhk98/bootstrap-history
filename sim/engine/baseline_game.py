@@ -12,11 +12,18 @@ def society_technologies(game: Any) -> Set[str]:
     return set(game.view("state_treasury")().knowledge) | set(game.view("actor_world")().knowledge.baseline_knowledge()) | set(game.granted)
 
 
+def bonded_share(rows: List[Dict[str, Any]]) -> float:
+    """The bonded bodies' share of the home people the rows count (`home_strata_rows`); 0.0 where nobody is counted or none is bonded."""
+    total = sum(row["members"] for row in rows)
+    return sum(row["members"] for row in rows if row["bonded"]) / total if total > 0.0 else 0.0
+
+
 def snapshot(game: Any) -> Dict[str, Any]:
     return {"year": game.year, "population": float(game.view("population")().total), "wage_per_hour": float(game.view("money_per_labour_hour")()),
             "literacy_general": float(game.view("literacy")("literacy_general", None)),
             "literacy_elite": float(game.view("literacy")("literacy_elite", None)),
             "territory_tiles": len(game.view("tiles_listed_by")(game.civ)),
+            "bonded_share": bonded_share(game.view("home_strata_rows")()),
             "technologies": sorted(society_technologies(game))}
 
 

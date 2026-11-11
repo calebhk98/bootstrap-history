@@ -24,7 +24,7 @@ class FakePart:
 		self.__dict__["_world"] = world
 
 	def __getattr__(self, name: str) -> Any:
-		if name in ("frontier_disease_loss", "fugitive_share") and not hasattr(self.__dict__["_world"], name):
+		if name in ("frontier_disease_loss", "fugitive_share", "urban_mortality_premium") and not hasattr(self.__dict__["_world"], name):
 			return lambda: None      # a world that does not follow its regions' disease or its people's flight
 		return getattr(self.__dict__["_world"], name)
 
@@ -50,7 +50,7 @@ def flat_world(cls: Any) -> Any:
 
 def flat_namespace(**members: Any) -> Any:
 	"""A stand-in world of plain members (`SimpleNamespace(**members)`) whose parts answer them, as `flat_world` does a class."""
-	world = SimpleNamespace(**{"frontier_disease_loss": lambda: None, "fugitive_share": lambda: None, **members})
+	world = SimpleNamespace(**{"frontier_disease_loss": lambda: None, "fugitive_share": lambda: None, "urban_mortality_premium": lambda: None, **members})
 	for part in world_surface():
 		if part not in members:
 			setattr(world, part, FakePart(world))

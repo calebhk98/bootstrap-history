@@ -1,6 +1,6 @@
 # Rome's bonded share has no ensemble check against its sourced range, and captives and imports are not a modelled supply
 
-**Status:** partly - the births drift is fixed; captives of battles and conquests and a merchants' trade of bonded people between areas are built; the ensemble check is a rule test on the declared share, the played-years share is measured by `baseline-ensemble`; the share of the defeated taken and the age and sex of captives are labelled heuristics with no sourced figure, and the residence-driven mortality of item 3 is open
+**Status:** partly - births drift fixed; captives of battles and conquests and a merchants' trade built; the bonded share is now in `baseline-ensemble`; residence-driven mortality is built as a rule (`sim/agents/bonded_residence.py`) but no civilisation declares residence shares; the share of the defeated taken and the age and sex of captives are still labelled heuristics (no opened source gives a figure)
 
 Found rewriting `rome_slave_stratum` (640). Rome seeds its bonded stratum at its declared share of the people; after two
 simulated years the share fell below the low end of the range its source note gives (Scheidel 2005, cited in
@@ -30,7 +30,7 @@ is fixed too (`true_up_keep`).
 3. The ensemble check. The slow game test is deleted (it read an unsettled whole economy and named no rule). What remains as
    a rule test is `sim/tests/test_rome_bonded_share_sourced_range.py`: the declared bonded share is inside the range the civilisation
    file's own source note gives (8 to 15 per cent). The share after played years is measured by
-   `python3 sim/simulator.py baseline-ensemble --civ rome_100ad` (the bonded stratum's share is not in its distributions yet; add it there).
+   `python3 sim/simulator.py baseline-ensemble --civ rome_100ad` (the bonded stratum's share is a `bonded_share` metric of its distributions, from `home_strata_rows`; tabulation test `test_baseline_ensemble.py`). Run it with `python3 sim/simulator.py baseline-ensemble --civ rome_100ad --seeds 3 --years 2` to read the played-years share.
 
 **Measured (seeds 1 to 3, `rome_100ad`, two market years, one seed per run of about two minutes):** the bonded share went from 0.1000 to 0.0995
 under every seed (about 63,780 people bought out of the stratum into the employers' hands by vacancies; no captives, no war in a
@@ -40,8 +40,8 @@ deaths vary by seed. The test that produced this is deleted; see item 3 for the 
 
 **What is left.**
 
-- A residence-driven mortality difference (Scheidel pp. 69 and 75): the stratum model does not carry urban or malarial residence.
-- A measured captive share and the age and sex of captives; piracy and the frontier trade as suppliers are not modelled.
+- Residence-driven mortality is built: a stratum plan may carry `residence` shares (`urban`, `rural`, `malarial`); `grow` sets the base death rate with `residence_death_rate` (`sim/agents/bonded_residence.py`; the urban premium is `People.urban_mortality_premium`, the demography's town premium per resident; malarial land adds Scheidel 2005, JRS 95, pp. 76-77, 'annual excess mortality of 1 per cent', which he assumes for a tenth to a third of rural slaves). Open: no civilisation file declares residence shares for its bonded (no opened source gives the split; Scheidel says urban slaves lived in their owners' houses), the home stratum's headcount follows the population model (`follow_population`) so the rule bites only where strata grow on their own, and the demography holds no mine mortality figure, so `mine` adds nothing.
+- A sourced captive share and the age and sex of captives: searched this session; Scheidel 2005 (read, pp. 70-71 and n. 56) cites ancient authors for the enslavement of non-combatants and women and children and disputes Harris's male-prisoner claim, but gives no share; Wickham (Liverpool thesis) and Abgrall (campaign mapping) were found as abstracts only. Both captive constants stay labelled. Piracy and the frontier trade as suppliers are not modelled.
 - Purchases fire only where vacancies exist and a route runs; a thick slave market (an auction, a dealer holding stock) is not
   modelled, and the buyers' people count in the economy is working people while a stratum counts all ages.
 - People do not move: a purchase moves money (ask to the owner, carriage to the merchants) and lowers the seller's bonded

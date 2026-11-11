@@ -141,6 +141,10 @@ class PeoplePart(Protocol):
 	def urban_population(self) -> float:
 		...
 
+	def urban_mortality_premium(self) -> Optional[float]:
+		"""The extra share of the baseline death rate a town resident bears, or None where no figure is kept."""
+		...
+
 	def subsistence_kg_per_person_year(self) -> float:
 		...
 
