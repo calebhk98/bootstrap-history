@@ -69,7 +69,7 @@ def register(api):
                              "figure, its range, source and confidence, and the days from your base. "
                              "A tile holds several towns at once; the sizes are cited start-date figures, "
                              "not the simulation's own town estimate.")
-    def towns(access, nodes, cmd, ended):
+    def towns(access, cmd, ended):
         held = access.view("settlement_tiles")()
         words = str(cmd.get("text") or "").strip()
         found = [(town, record) for town, record in _present(_towns(access), access.view("year")())
@@ -87,7 +87,7 @@ def register(api):
                  usage=["go <town>"], options={"<town>": "a town from `towns`"},
                  description="Finds the town in the town table and runs the ordinary move to its tile, "
                              "with the same costs and refusals.")
-    def go(access, nodes, cmd, ended):
+    def go(access, cmd, ended):
         if ended:
             return {"ok": False, "error": "the run has ended (%s)" % ended}
         words = str(cmd.get("text") or "").strip()

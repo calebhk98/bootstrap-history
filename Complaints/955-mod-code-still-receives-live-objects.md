@@ -1,6 +1,6 @@
 # Mod code still receives live objects beside its declared access
 
-**Status:** partly - every hand-out is a declared `ModAccess` or a narrowed surface except one: command handlers still receive `nodes`
+**Status:** partly - every hand-out is a declared `ModAccess` or a narrowed surface; what is left is the `cast` view a mod may declare, which answers a live object and is tracked nowhere else
 
 A code mod declares the views it reads and the commands it sends (`ModCodeApi.reads`, `ModCodeApi.sends`) and is handed a
 `ModAccess` (`sim/assembly/mod_access.py`) that refuses anything else with `UndeclaredRead` or `UndeclaredSend`, naming the mod and the
@@ -14,6 +14,8 @@ name. Done:
   without it is refused naming the mod. Goods move by the markets module's `MoveGoods`, people by the actors module's
   `MoveStratumPeople`; the unchecked `FrameworkDoor` and `door_of` are gone, and a mod store's handle reads and writes through the
   access too.
+- Command handlers (`api.command`) are called `(access, cmd, ended)`; the tech tree's node table is the `tree_nodes` view the
+  mod declares with `api.reads` (the shipped hierarchy command does).
 - Spawners (`api.spawner`) are called `function(access)` and found an actor by sending `AddActor`; player commands
   (`api.player_command`) are called `handler(access, actor_id, order)`. Neither sees the registry, the player object or the world.
   `api.provide` refuses the three points whose answers carry the actors module's own objects (`actor_kinds`, `actor_spawners`,
@@ -28,12 +30,11 @@ name. Done:
 
 What is left:
 
-- Command handlers are still called `(access, nodes, cmd, ended)`: `nodes` is the tech tree's node table the UI passes. It needs the
-  interface module to publish the table as a view the handler reads (`tree_nodes`) and the registry's call to drop the argument,
-  which changes every shipped and test handler; not part of this pass.
-- The `cast` view a mod may declare answers the actors module's live registry (a `legacy_` view, counted by
-  `tools/measure/module_graph.py`); a mod that declares it reads a live object, and the effects `pay`, `pay_edge` and
-  `receive_from_edge` check their actors through it. Retiring it belongs to the actors module's views, not to the mod door.
+- The `cast` view a mod may declare answers the actors module's live registry; a mod that declares it reads a live object, and the effects `pay`, `pay_edge` and
+  `receive_from_edge` check their actors through it. Retiring it belongs to the actors module's views, not to the mod door. Not
+  tracked elsewhere: the view is not named `legacy_`, so `tools/measure/module_graph.py` does not count it, and
+  `docs/architecture/MODULE_MIGRATION_TASKS.md` has no item for it. This complaint closes when a mod can reach actors only through
+  typed views and commands that return no live registry (or a decision is recorded that the mod door keeps it).
 - `api.kernel` takes plain functions: a kernel reads nothing of the game (it is checked against the reference's stored samples).
 
 Check: `bash tools/done_check.sh` (mods importing `sim.engine` outside mod_code; mods importing `sim` beyond `sim.mod_api`).

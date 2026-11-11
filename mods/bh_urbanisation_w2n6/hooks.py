@@ -130,7 +130,7 @@ def register(api):
                              "reachable within a haul allow, the water and housing it needs and the mortality "
                              "premium crowding adds while water and sanitation technologies are missing.",
                  options={"days": "days of haul that count as food reach (default %s)" % DEFAULT_FOOD_HAUL_DAYS})
-    def towns(access, nodes, cmd, ended):
+    def towns(access, cmd, ended):
         days = DEFAULT_FOOD_HAUL_DAYS
         if isinstance(cmd, dict) and cmd.get("days") is not None:
             try:

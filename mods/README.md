@@ -189,7 +189,7 @@ handed an `access` that answers exactly that.
 * `access.memory()`: the mod's own JSON dict inside the saved game.
 
 `register(api)` registers commands (`@api.command(name, group=..., summary=...,
-usage=[...], description=...)` with a handler `(access, nodes, cmd, ended) -> dict`), headline figures (`@api.figure(name, label, unit=...)` on
+usage=[...], description=...)` with a handler `(access, cmd, ended) -> dict`), headline figures (`@api.figure(name, label, unit=...)` on
 `compute(access) -> {"value", "components", "flows", "drivers"}`), actor kinds (`api.actor_kind`),
 policies (`api.policy`), spawners (`api.spawner`, `function(access)`; it founds an actor by sending `AddActor`) and a player actor's
 orders (`api.player_command`, `handler(access, actor_id, order)`); every name is forced into `<mod_id>:`. An actor kind's class runs

@@ -164,7 +164,7 @@ def register(api):
                              "can lose coin to theft and fail, and then repays only what its purse can pay. A fire, a sack, "
                              "banditry, a plague or a treasury demand take from your own purse, not from the holder's.",
                  shape="text")
-    def deposit(access, nodes, cmd, ended):
+    def deposit(access, cmd, ended):
         problem = stopped(ended)
         if problem:
             return problem
@@ -202,7 +202,7 @@ def register(api):
                              "everything it owes pays each claim in the same share, and the rest of the claim is lost. "
                              "Bringing the coin home costs the same carriage as taking it there.",
                  shape="text")
-    def withdraw(access, nodes, cmd, ended):
+    def withdraw(access, cmd, ended):
         problem = stopped(ended)
         if problem:
             return problem
@@ -242,7 +242,7 @@ def register(api):
                              "your claim moves with it. The coin never passes through your own purse, so nothing of it is "
                              "exposed to your disasters on the way. The issuer pays only what its purse can.",
                  shape="text")
-    def letter(access, nodes, cmd, ended):
+    def letter(access, cmd, ended):
         problem = stopped(ended)
         if problem:
             return problem
@@ -294,7 +294,7 @@ def register(api):
                              "share of goods); a treasury demand takes a share of the wealth the state can see. Then lists "
                              "each holder, your claim, what it could pay today and the fee a year. Dated hazards are not "
                              "listed here: the risk screen lists those.")
-    def exposure(access, nodes, cmd, ended):
+    def exposure(access, cmd, ended):
         purse = access.view("acting_balance")()
         cash = max(0.0, purse)
         rows = []

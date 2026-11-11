@@ -192,7 +192,8 @@ class ModCodeApi:
         return name if name.startswith(self.mod_id + SEPARATOR) else self.mod_id + SEPARATOR + name
 
     def command(self, name: str, **fields: Any) -> Callable:
-        """Decorator for a handler `(access, nodes, cmd, ended) -> dict`; fields as in sim/ui/proto/command_registry.py
+        """Decorator for a handler `(access, cmd, ended) -> dict` (the tech tree's node table is the `tree_nodes` view, declared
+        with `api.reads`); fields as in sim/ui/proto/command_registry.py
         (group, summary, usage and description are required). Offered to the interface module's `interface_commands` point."""
         missing = [required for required in ("group", "summary", "usage", "description") if required not in fields]
         if missing:
@@ -200,7 +201,8 @@ class ModCodeApi:
 
         def decorate(handler: Callable) -> Callable:
             declaration = CommandDeclaration(self.mod_id, self.qualified(name), CODE,
-                                             dict(fields, aliases=list(fields.get("aliases", ()))), self.with_access(handler))
+                                             dict(fields, aliases=list(fields.get("aliases", ()))),
+                                             lambda game, _nodes, cmd, ended: handler(self.access_of(game), cmd, ended))
             self.record_answer("interface_commands", lambda: [declaration])
             return handler
         return decorate
