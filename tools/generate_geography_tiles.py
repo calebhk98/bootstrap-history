@@ -59,10 +59,10 @@ for it (CLAUDE.md SS3.1):
   8. BORDERS. Two tiles border each other if and only if they are edge-
      adjacent (not merely corner-touching) in the SAME regular grid rule 1
      built - i.e. one of (row-1,col), (row+1,col), (row,col-1), (row,col+1)
-     is also a kept tile. This is the "cheap neighbour lookup" the task
-     asks for: an O(1) dict lookup, the same property an H3 or S2 discrete
-     global grid would give (see WHY A CUSTOM GRID, NOT H3/S2 below for why
-     this script uses a square grid instead of one of those).
+     is also a kept tile - AND their clipped land touches (`land_touches`,
+     within LAND_TOUCH_TOLERANCE_METRES, and the touching landmasses are not mere slivers). Cells on two sides of a strait are grid
+     neighbours but no land border (Complaint 978); `coastal` (rule 9) is
+     unaffected, and the sea routes reach such tiles through their coast.
   9. SEA ACCESS. A tile is `coastal` if either (a) its own clipped land
      covers less than 98% of the nominal cell area, i.e. part of the cell
      itself is open water, or (b) any of its four rule-8 grid neighbours
@@ -223,6 +223,8 @@ TARGET_TILE_AREA_KM2 = 150000.0
 EQUAL_AREA_CRS = 6933  # EPSG:6933, WGS 84 / NSIDC EASE-Grid 2.0 Global
 MINIMUM_LAND_FRACTION_TO_KEEP_A_TILE = 0.10  # rule 2
 OWN_CELL_COASTAL_LAND_FRACTION = 0.98        # rule 9(a)
+LAND_TOUCH_TOLERANCE_METRES = 1000.0          # rule 8: slack for 1:50m coastline data
+LAND_TOUCH_MINIMUM_SHARE = 0.05               # rule 8: touching landmass share of each cell's land below which it is a sliver
 CLIMATE_SAMPLES_PER_AXIS = 5   # rule 6: a 5x5 = 25-point grid per tile,
                                # not one centroid - see the module
                                # docstring's rule 6 for why
@@ -381,6 +383,26 @@ def assign_tile_ids(tiles):
 # THE MAIN PIPELINE
 # ============================================================================
 
+def land_touches(land_of_one_cell, land_of_other_cell, tolerance_metres=None, minimum_share=None):
+    """True when two cells' clipped land meets across their shared edge, so the cells share a
+    land border. Geometries are in the equal-area CRS (metres). Only landmasses that reach the
+    other cell's land count, and on each side they must hold at least `minimum_share` of that
+    cell's land, so a sliver of one coast (the Florida
+    Keys inside a Cuban cell) does not link a tile to a neighbour its main land is cut off from."""
+    import shapely
+    if tolerance_metres is None:
+        tolerance_metres = LAND_TOUCH_TOLERANCE_METRES
+    if minimum_share is None:
+        minimum_share = LAND_TOUCH_MINIMUM_SHARE
+
+    def reaching_share(land, other_land):
+        return sum(shapely.area(part) for part in shapely.get_parts(land)
+                   if shapely.dwithin(part, other_land, tolerance_metres)) / shapely.area(land)
+
+    return bool(reaching_share(land_of_one_cell, land_of_other_cell) >= minimum_share
+                and reaching_share(land_of_other_cell, land_of_one_cell) >= minimum_share)
+
+
 def build_tiles(cache_dir, sources=None, verbose=True):
     sources = sources or map_data_sources.resolve_sources()
     chosen = {layer: map_data_sources.SOURCES[layer][option] for layer, option in sources.items()}
@@ -530,7 +552,9 @@ def build_tiles(cache_dir, sources=None, verbose=True):
     id_by_row_col = {(t["row"], t["col"]): t["id"] for t in tiles}
     for tile in tiles:
         tile["borders"] = sorted(
-            id_by_row_col[key] for key in tile["_neighbour_keys"] if key in id_by_row_col)
+            id_by_row_col[key] for key in tile["_neighbour_keys"]
+            if key in id_by_row_col and land_touches(tile["geometry"], kept_by_row_col[key]["geometry"]))
+    for tile in tiles:
         del tile["_neighbour_keys"]
         del tile["geometry"]  # not JSON-serialisable and not part of the output schema
         del tile["row"]
@@ -600,7 +624,7 @@ def build_land_tiles_section(tiles):
             "Natural Earth 1:50m land; cells under 10%% land dropped; "
             "Antarctica dropped outright; each tile's arable_fraction and "
             "fertility_quality_multiplier derived from the tile's water balance, growing "
-            "months and ruggedness (sim/geography/soil_derivation.py, rederive_soils); borders are grid edge-adjacency; a tile is "
+            "months and ruggedness (sim/geography/soil_derivation.py, rederive_soils); borders are grid edge-adjacency where the two tiles' land touches; a tile is "
             "coastal if part of its own cell is water or a grid neighbour "
             "was dropped." % TARGET_TILE_AREA_KM2
         ),

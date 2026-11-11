@@ -1,6 +1,6 @@
 # Land borders cross sea straits, so porters walk from Cuba to Florida
 
-**Status:** open - found tracing Complaint 613; not fixed
+**Status:** open - generator and data fixed on branch `land-borders-not-across-straits`; awaiting a whole-game check before closing
 
 **What is wrong.** A tile's `borders` (`data/world/geography/tile_grid.json`) are grid edge-adjacency (`tools/generate_geography_tiles.py`,
 rule 8): two cells that each hold some land and share a grid edge border each other even when the water between them is a strait.
@@ -17,3 +17,12 @@ bind through normal rules), and carriage hours and costs on such routes are wron
 Natural Earth land along the shared edge (or that the two cells' land polygons intersect), and pairs that touch only across water become
 sea neighbours, reached by the sea modes. Test: a rule test on two built cells with water between them gives no land border; a data
 test that `cuba_03` does not border a mainland tile by land.
+
+**What changed.** `tools/generate_geography_tiles.py` rule 8 now keeps a grid-adjacent pair as a land border only where `land_touches` holds:
+each cell's clipped land has landmasses within `LAND_TOUCH_TOLERANCE_METRES` of the other cell's land, and those landmasses hold at least
+`LAND_TOUCH_MINIMUM_SHARE` of that cell's land (a labelled threshold: the plain "land polygons touch" test still joined `cuba_03` to
+`united_states_of_america_02` through the Florida Keys, a sliver of the Cuban cell's land). `coastal` is unchanged (it never read `borders`),
+so sea access works as before. `tile_grid.json` was regenerated; only the `borders` lists and the rule-summary text changed (the tiles'
+`source` prose in the generator is newer than the committed file and was left as committed). `cuba_03` no longer borders the mainland by
+land, and the France-Spain tiles still do. Tests: `LandTouchesTests` and the island-border and real-border checks in
+`sim/tests/test_geography_tiles.py`. Count removed pairs with a diff of `borders` against `origin/complaints-cleanup`.
