@@ -487,7 +487,7 @@ def remember_stretches(merchants_by_id: Mapping[AgentId, Merchant]) -> None:
     (`merchants_stretch.after_year`)."""
     for merchant in merchants_by_id.values():
         merchant.traded_tiles = merchants_stretch.after_year(
-            merchant.traded_tiles, merchants_stretch.routes_tiles(merchant.routes), merchants_stretch.MERCHANT_STRETCH_MEMORY_YEARS)
+            merchant.traded_tiles, merchants_stretch.routes_tiles(merchant.routes), merchants_stretch.memory_years())
 
 
 def close_all(tables: MarketTables, book, area_map: AreaMap, currency: CurrencyId, interest_rate: float) -> Sequence[Transfer]:

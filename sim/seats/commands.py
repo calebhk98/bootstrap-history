@@ -169,3 +169,11 @@ class DropLapsedOffers(Command):
 class NextOfferSerial(Command):
     """The seat `seat_id` has made one more offer. Answers the count, which numbers the offer."""
     seat_id: str
+
+
+@dataclass(frozen=True)
+class PlaceSpies(Command):
+    """The acting seat funds `count` spies against another seat (zero withdraws them). They cost a year's labour each, every year,
+    and lapse when the purse cannot pay. Answers the count placed, or a Refusal that changed nothing."""
+    target_id: str
+    count: int

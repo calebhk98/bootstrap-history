@@ -1,21 +1,20 @@
 """The stretch of country a merchant knows (Complaints/517).
 
 A merchant knows the prices of the areas a year's haul reaches from its home tile and from each tile it has traded at,
-and acts on no others. Trading at a tile keeps it in the stretch; a tile unvisited for `MERCHANT_STRETCH_MEMORY_YEARS`
+and acts on no others. Trading at a tile keeps it in the stretch; a tile unvisited for `memory_years()`
 drops out, so a stretch grows by trading outward and shrinks when left alone. A good that crosses more than a year's
 haul passes through the stretches of several merchants, each buying at the end of its own and selling to the next.
 """
 from typing import Dict, FrozenSet, Iterable, List, Mapping
 
-from sim.constants import declare
+from sim.world import belief
 
 from . import merchants_search
 
-MERCHANT_STRETCH_MEMORY_YEARS = declare(
-    "MERCHANT_STRETCH_MEMORY_YEARS", 8, kind="temporary_heuristic", unit="years",
-    source=None, confidence="D", retire="Complaints/488-no-belief-or-intelligence-model.md",
-    why="How many years a merchant keeps a tile it has stopped trading at in the stretch it knows. Real memory "
-        "follows correspondents, contracts and habit; the belief model of 488 would replace a fixed span.")
+def memory_years() -> int:
+    """Years a merchant keeps a tile it has stopped trading at: the years a firsthand belief about the tile stays reliable
+    (`sim.world.belief`)."""
+    return belief.years_until_unreliable(belief.TRADE_OBSERVATION_VARIANCE, belief.VARIANCE_GROWTH_PER_YEAR, belief.UNRELIABLE_VARIANCE)
 
 
 def stretch_of(home_tile: str, traded_tiles: Iterable[str]) -> FrozenSet[str]:

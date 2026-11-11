@@ -2,7 +2,7 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/; the seat registry is the assembly's
 
-from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer,
+from .commands import (AnswerOffer, ApplyForPatent, EndRun, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, MakeOffer, PlaceSpies,
                        RecordGoalReached, RememberGoalClosure, RememberGoalFloor, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder,
                        AddLicensee, DropLapsedOffers, DropOffer, GiveShares, KeepOffer, NextOfferSerial, ReceivePatent, ReleasePatent, TakeShares)
 from .builds import builders_of, built_by_any, disclosure_modes, holders_of, licensors_of, operating_anywhere

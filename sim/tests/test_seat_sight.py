@@ -89,17 +89,17 @@ def known_to_second():
 
 first_operating = {"loom"}   # what the first seat runs (the ventures module keeps it)
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "secret", "published_year": None, "licensees": {}}
-heard_near = nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), 0.0, lambda node_id: 1.0)
+heard_near = nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), 0.0, lambda node_id: 1.0, lambda node_id: SECRET_EXPOSURE)
 check("a concern run in public is heard of from beside it, a secret is not",
       heard_near == {"loom"}, heard_near)
-heard_far = nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), 10 * OBSERVATION_RANGE_KM, lambda node_id: 1.0)
+heard_far = nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), 10 * OBSERVATION_RANGE_KM, lambda node_id: 1.0, lambda node_id: SECRET_EXPOSURE)
 check("distance hides it", heard_far == set(), heard_far)
 disclosed[FIRST_SEAT_ID]["lathe"] = {"mode": "publish", "published_year": 125, "licensees": {}}
 check("a published invention is heard of from a fair way off",
-      "lathe" in nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), OBSERVATION_RANGE_KM * 0.5, lambda node_id: 1.0), None)
+      "lathe" in nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), OBSERVATION_RANGE_KM * 0.5, lambda node_id: 1.0, lambda node_id: SECRET_EXPOSURE), None)
 held_fixture.hear(second_knowledge, {"loom"})
 check("what a seat has already heard of is not heard again",
-      "loom" not in nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), 0.0, lambda node_id: 1.0), None)
+      "loom" not in nodes_heard_of(built_by_first(), first_operating, disclosed[FIRST_SEAT_ID], known_to_second(), 0.0, lambda node_id: 1.0, lambda node_id: SECRET_EXPOSURE), None)
 check("a secret leaks less than the visibility that makes an invention heard of",
       SECRET_EXPOSURE < PLAYER_VISIBLE_EXPOSURE, (SECRET_EXPOSURE, PLAYER_VISIBLE_EXPOSURE))
 

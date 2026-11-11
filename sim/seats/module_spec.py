@@ -6,14 +6,14 @@ assembly's commands `AddSeat` and `MoveSeat`."""
 from sim.assembly.api import FIRST, KEYED, QUOTE, AddSeat, ExtensionPoint, ModuleSpec, MoveSeat, PhaseHook, ViewSpec
 from sim.diffusion.api import RekeyDisclosures
 from sim.knowledge.api import ForgetTechnique, LearnTechnique, RevealNodes
-from sim.ledger.api import OpenPurse
+from sim.ledger.api import DebitSeat, OpenPurse
 from sim.projects.api import WatchActive
 from sim.reporting.api import RecordEvent
 from sim.ventures.api import StopOperating, WatchBusiness
 from sim.workforce.api import WatchStaff
 
 from .commands import (EndRun, ForgetGoalClosure, HandOverSeat, JoinCastSeats, JoinSeat, RecordGoalReached,
-                       RememberGoalClosure, RememberGoalFloor, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder,
+                       PlaceSpies, RememberGoalClosure, RememberGoalFloor, SetFounderLife, SetGoal, SetPolicy, SetSeatHolder,
                        AddLicensee, DropLapsedOffers, DropOffer, GiveShares, KeepOffer, NextOfferSerial, ReceivePatent, ReleasePatent, TakeShares)
 from .module import Seats
 from .state import SeatsSeat
@@ -27,11 +27,12 @@ READS_BY_OWNER = {
     "assembly": ("registered_seats", "seat_holds"),
     "hazards": ("hazard_relief", "hazard_relief_entries"),
     "mechanics": ("running_mechanics", "corpus_dispersed"),
-    "workforce": ("staff", "seat_base_tile"),
+    "workforce": ("staff", "seat_base_tile", "money_per_labour_hour"),
     "content": ("win_condition_labels",),
     "materials": ("generation_breakdown",),
     "prices": ("price_index",),
     "ventures": ("operating_by_seat",),
+    "ledger": ("seat_balance",),
 }
 
 _LIVE = dict(cached=False)
@@ -68,6 +69,8 @@ MODULE_SPECS = (ModuleSpec(
         ViewSpec("win_condition_anatomy", "win_condition_anatomy", kind=QUOTE, seat_scoped=True, **_LIVE),
         ViewSpec("seat_dealings", "seat_dealings", kind=KEYED, **_LIVE),
         ViewSpec("dealings_listing", "dealings_listing", seat_scoped=True, **_LIVE),
+        ViewSpec("seat_beliefs", "seat_beliefs", seat_scoped=True, **_LIVE),
+        ViewSpec("seat_spies", "seat_spies", seat_scoped=True, **_LIVE),
     ),
     applies=((JoinSeat, "join_seat"), (JoinCastSeats, "join_cast_seats"), (HandOverSeat, "hand_over_seat"),
              (SetGoal, "set_goal"), (RecordGoalReached, "record_goal_reached"), (EndRun, "end_run"),
@@ -76,9 +79,9 @@ MODULE_SPECS = (ModuleSpec(
              (RememberGoalFloor, "remember_goal_floor"),
              (ReleasePatent, "release_patent"), (ReceivePatent, "receive_patent"), (AddLicensee, "add_licensee"), (GiveShares, "give_shares"),
              (TakeShares, "take_shares"), (KeepOffer, "keep_offer"), (DropOffer, "drop_offer"), (DropLapsedOffers, "drop_lapsed_offers"),
-             (NextOfferSerial, "next_offer_serial")),
+             (NextOfferSerial, "next_offer_serial"), (PlaceSpies, "place_spies")),
     reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
-    sends=(AddSeat, MoveSeat, SetSeatHolder, OpenPurse, WatchActive, WatchBusiness, WatchStaff, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),
+    sends=(AddSeat, MoveSeat, SetSeatHolder, OpenPurse, DebitSeat, WatchActive, WatchBusiness, WatchStaff, LearnTechnique, ForgetTechnique, RevealNodes, RekeyDisclosures, RecordEvent, StopOperating),
     phases=(PhaseHook("hear_of_other_seats", "hear_of_other_seats"), PhaseHook("win_conditions", "check_win_conditions"),
             PhaseHook("founder_mortality", "founder_mortality")),
     # (condition) -> [(label, value, unit)] rows for a measurement goal's anatomy, or None for the shipped rows
