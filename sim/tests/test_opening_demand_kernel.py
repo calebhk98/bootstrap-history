@@ -76,8 +76,9 @@ class View(ViewDefaults):
         return self.held.get((agent, good), 0.0)
 
 
-def random_world(rng):
-    basket = need_basket.make_basket(NEED_DATA, {})
+def random_world(rng, need_data=None):
+    """The need data is an argument, not a patched module attribute: a topic module can be loaded twice in one process (as another topic's helper, then as itself), and a patch on one copy does not reach a function of the other."""
+    basket = need_basket.make_basket(NEED_DATA if need_data is None else need_data, {})
     prices = {"bread": rng.uniform(0.2, 0.6), "millet": rng.uniform(0.15, 0.7), "wool": rng.uniform(2.0, 9.0),
               "linen": rng.uniform(3.0, 12.0), "tallow": rng.uniform(0.5, 2.0), "oil": rng.uniform(0.8, 3.0),
               "wax": rng.uniform(1.0, 6.0), "hoe": rng.uniform(5.0, 40.0), "gold": rng.uniform(300.0, 900.0)}

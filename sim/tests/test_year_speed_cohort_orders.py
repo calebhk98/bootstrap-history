@@ -51,8 +51,8 @@ class YearView(View):
         return None
 
 
-def year_world(rng):
-    basket, view, cohorts = random_world(rng)
+def year_world(rng, need_data=None):
+    basket, view, cohorts = random_world(rng, need_data)
     held = dict(view.held)
     claims, equity = {}, {}
     for cohort in cohorts:
