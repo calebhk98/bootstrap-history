@@ -1,6 +1,6 @@
 # One producer per tile and recipe prices as a monopolist
 
-**Status:** partly - entrants join as a crowd of price takers, a lone owner prices by Eurace's grid, and a producer of a recipe with a plant counts its workshops from its capacity (`workshop_count.py`, at the opening and each year's close); a producer of a recipe with no plant (farms, mines) still opens as one workshop
+**Status:** partly - entrants join as a crowd of price takers, a lone owner prices by Eurace's grid, and a producer counts its workshops from its capacity (`workshop_count.py`, at the opening and each year's close) for a recipe with a plant, a crop (household holdings) or a herd (herder-years); a producer of a seam, pit, quarry or wood still opens as one workshop
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -28,10 +28,17 @@ Found by an outside reviewer reading the repository; checked against the code.
   after each year's close writes capacity, so a shrunk producer does not keep a count from its past size. Test:
   `sim/tests/test_economy_workshop_count.py`.
 
+- A crop with no plant counts workshops as its cropped land over a household's holding (`household_holding_hectares`: the land
+  `farmland_for_population` gives `PERSONS_PER_HOUSEHOLD` people, from Columella's labour days, the harvest window and
+  Laslett's household size, all already declared). A herd with no plant counts a herder's working year of its herding hours
+  (`setup.working_hours_per_year`). Tests: `LandRunsPerWorkshopTests`.
+
 ## What is left
 
-- A recipe with no plant has nothing in the data that bounds a workshop (no crew size, no site area per workshop), so its
-  opening producer still counts one and only entry adds to the count. That is the grain farm, mine and herd case below.
+- A seam, pit, quarry or wood has nothing in the data that bounds a workshop (no crew per working, no output per pit, no
+  holding of woodland), so its opening producer still counts one and only entry adds to the count. Needs a sourced crew
+  or output per working by deposit class.
+- A crop's holding is the reference crop's (wheat, default toolkit); a recipe on other crops uses the same holding.
 
 ## What it would take
 

@@ -7,7 +7,7 @@ import unittest
 from sim.economy import seller_offers, workshop_count
 from sim.economy.producer_store import ProducerStore
 from sim.economy.producers import Producer
-from sim.economy.types import Offer, PlantBuild, PlantPart
+from sim.economy.types import Offer, PlantBuild, PlantPart, Recipe
 
 BUILD = (PlantBuild({}, {}, 20.0),)
 
@@ -30,6 +30,31 @@ class WorkshopsForRunsTests(unittest.TestCase):
 
     def test_no_plant_counts_one_workshop(self):
         self.assertEqual(workshop_count.workshops_for_runs(5000.0, ()), 1)
+
+
+class LandRunsPerWorkshopTests(unittest.TestCase):
+    def test_a_farm_workshop_is_one_household_holding(self):
+        # holding 4 ha, a run takes 0.5 hectare-years: 8 runs fill a holding
+        self.assertEqual(workshop_count.land_runs_per_workshop("arable land", 100.0, 0.5, 4.0, 2000.0), 8.0)
+
+    def test_a_herd_workshop_is_one_herders_working_year(self):
+        # a run takes 500 herder hours of a 2000 hour year: four runs are one herder's charge
+        self.assertEqual(workshop_count.land_runs_per_workshop("pasture", 500.0, 66.0, 4.0, 2000.0), 4.0)
+
+    def test_other_ground_and_deposits_have_no_unit(self):
+        self.assertIsNone(workshop_count.land_runs_per_workshop("forest", 500.0, 66.0, 4.0, 2000.0))
+        self.assertIsNone(workshop_count.land_runs_per_workshop("", 500.0, 0.0, 4.0, 2000.0))
+
+    def test_no_land_or_no_hours_gives_no_unit(self):
+        self.assertIsNone(workshop_count.land_runs_per_workshop("arable land", 100.0, 0.0, 4.0, 2000.0))
+        self.assertIsNone(workshop_count.land_runs_per_workshop("pasture", 0.0, 66.0, 4.0, 2000.0))
+
+    def test_the_table_takes_plant_recipes_by_plant_and_plantless_land_recipes_by_land(self):
+        recipes = {"oven": Recipe("oven", {"x": 1.0}, {}, {}, plant_parts=(part(40.0),)),
+                   "field": Recipe("field", {"x": 1.0}, {}, {"farmer": 100.0}, ground="arable land"),
+                   "mine": Recipe("mine", {"x": 1.0}, {}, {"miner": 100.0}, site_bound=True, deposit_bound=True)}
+        table = workshop_count.runs_per_workshop_by_recipe(recipes, {"field": 0.5, "oven": 0.5}, 4.0, 2000.0)
+        self.assertEqual(table, {"oven": 40.0, "field": 8.0})
 
 
 class RefreshWorkshopsTests(unittest.TestCase):

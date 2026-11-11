@@ -81,6 +81,12 @@ def works_a_deposit(entry: Mapping[str, Any]) -> bool:
     return bool(source) and not source.startswith(LAND_SOURCES)
 
 
+def ground_of(entry: Mapping[str, Any]) -> str:
+    """The `LAND_SOURCES` word the entry's `extracted_from` starts with, empty when it works none."""
+    source = str(entry.get("extracted_from") or "")
+    return next((word for word in LAND_SOURCES if source.startswith(word)), "")
+
+
 def recipe_from_entry(recipe_id: str, entry: Mapping[str, Any]) -> Recipe:
     outputs = {good: float(quantity) for good, quantity in entry["outputs"].items() if quantity > 0}
     inputs = {good: float(quantity) for good, quantity in (entry.get("inputs") or {}).items() if quantity > 0}
@@ -92,7 +98,7 @@ def recipe_from_entry(recipe_id: str, entry: Mapping[str, Any]) -> Recipe:
     plant_goods, plant_labour, plant_life = fold_plant((part.runs_per_year, part.builds[0]) for part in parts)
     return Recipe(recipe_id, outputs, inputs, labour, plant_goods, plant_labour, plant_life,
                   plant_parts=parts,
-                  site_bound=bool(entry.get("extracted_from")), deposit_bound=works_a_deposit(entry), service=entry.get("service") is True,
+                  site_bound=bool(entry.get("extracted_from")), deposit_bound=works_a_deposit(entry), ground=ground_of(entry), service=entry.get("service") is True,
                   climate_classes=tuple(entry.get("grown_in_climate_classes") or ()))
 
 

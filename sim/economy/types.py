@@ -138,6 +138,7 @@ class Recipe:
     climate_classes: Tuple[str, ...] = ()   # climates it can be worked in, from data; empty: any
     service: bool = False            # a good made from hours and used where it is made (data: "service"); the opening places it after the producers that need a site
     site_bound: bool = False         # runs only where a site is declared (sites.py); the economy knows nothing else of it
+    ground: str = ""                 # the kind of land it works ("arable land", "pasture", ...: recipes.LAND_SOURCES), empty for a deposit or none
     deposit_bound: bool = False      # works a seam, pit or lode (not a field, wood or pasture): a household's plot cannot
     tool_wear: Mapping[GoodId, float] = field(default_factory=dict)   # per run: the part of `inputs` that is its workers' tools wearing out
     tool_fallbacks: Mapping[GoodId, Tuple[ToolFallback, ...]] = field(default_factory=dict)   # per wear good: what is drawn, in order, when it is short

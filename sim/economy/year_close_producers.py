@@ -58,7 +58,7 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, pro
                         np.concatenate([plan.payee, np.array(exit_payees, dtype=np.int64)]),
                         np.concatenate([plan.amount, np.array(exit_amounts, dtype=np.float64)]))
     write_close(record.producers, columns, answer, pooled)
-    workshop_count.refresh_workshops(record.producers, workshop_count.runs_per_workshop_by_recipe(setup.recipes))
+    workshop_count.refresh_workshops(record.producers, workshop_count.runs_per_workshop_of_setup(setup))
     return replace_fields(arrays, producers=ProducerColumns.of(record.producers, columns.matrices, columns.tiles))
 
 
