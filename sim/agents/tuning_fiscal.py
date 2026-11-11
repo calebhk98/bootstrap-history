@@ -21,20 +21,12 @@ FISCAL_PRICE_RISE_WEIGHT = declare(
 	"FISCAL_PRICE_RISE_WEIGHT", 0.15, kind="temporary_heuristic", unit="cost per share of coin metal cut",
 	source=None, confidence="D", retire=_RETIRE,
 	why="What a state counts as lost for each share of its coin's metal it cuts, which raises prices.")
-FISCAL_BURDEN_WEIGHT = declare(
-	"FISCAL_BURDEN_WEIGHT", 0.1, kind="temporary_heuristic", unit="cost per share of income taken",
-	source=None, confidence="D", retire=_RETIRE,
-	why="What a state counts as lost for each share of its taxpayers' income it takes more. Stays: the menu now nets the "
-		"base a raise sends away by flight (fiscal_flight.py, by the migration rule), but unrest (Complaints/486) is not "
-		"modelled and the levy and the demand in kind do not net flight, so the burden still has a loss no derived "
-		"figure stands in for (Complaints/657 files the rest).")
 RATE_RAISE_STEP = declare(
 	"RATE_RAISE_STEP", 0.25, kind="temporary_heuristic", unit="share of the present rate",
 	source=None, confidence="D", retire=_RETIRE,
 	why="The most a state raises the rate of each of its forms collected in coin in one year when it covers a shortfall "
 		"that way. A harvest tax and a land tax reach the farmer's and the owner's own decisions (tax_burden.py), and a raise's yield "
-		"nets the base lost to hiding and flight (fiscal_response.rate_raise_yield); the loss to unrest is not foreseen, so "
-		"it counts the burden (FISCAL_BURDEN_WEIGHT); Complaints/657 files the rest.")
+		"nets the base lost to hiding and flight (fiscal_response.rate_raise_yield) and the unrest it arms (fiscal_unrest.py).")
 KIND_DEMAND_RATE_STEP = declare(
 	"KIND_DEMAND_RATE_STEP", 0.25, kind="temporary_heuristic", unit="share of the present rate",
 	source=None, confidence="D", retire=_RETIRE,

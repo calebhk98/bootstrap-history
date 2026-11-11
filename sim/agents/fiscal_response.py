@@ -12,12 +12,12 @@ nothing set against them cannot be paid.
 import dataclasses
 from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
 
-from . import arrears, evasion, fiscal_flight, government_levers_tax
+from . import arrears, evasion, fiscal_flight, fiscal_unrest, government_levers_tax
 from .policy import CallbackPolicy, Decision, IdlePolicy, Option, Policy
 from .tuning import LEVY_RATE_CEILING
 from .tuning_coinage import COIN_RESTRIKE_SHARE_PER_YEAR, DEBASEMENT_SHARE_CEILING
-from .tuning_fiscal import (FISCAL_BURDEN_WEIGHT, FISCAL_DEBT_CARRY_YEARS, FISCAL_LOYALTY_WEIGHT,
-							FISCAL_PRICE_RISE_WEIGHT, FISCAL_SERVICE_LOSS_WEIGHT, KIND_DEMAND_RATE_STEP, RATE_RAISE_STEP)
+from .tuning_fiscal import (FISCAL_DEBT_CARRY_YEARS, FISCAL_LOYALTY_WEIGHT, FISCAL_PRICE_RISE_WEIGHT,
+							FISCAL_SERVICE_LOSS_WEIGHT, KIND_DEMAND_RATE_STEP, RATE_RAISE_STEP)
 
 FISCAL_DECISION = "fiscal_response"
 BORROW, CUT, ARREARS, DEBASE, LEVY, KIND, RATE = ("borrow", "cut_lines", "arrears", "debase", "levy", "demand_in_kind",
@@ -31,6 +31,13 @@ _TINY = 1e-12
 def _option(subject: str, capacity: float, consequences: Dict[str, float]) -> Option:
 	"""`worth` is the money of shortfall the response can cover; `detail` its consequences per share of the need covered."""
 	return Option(subject=subject, worth=max(0.0, capacity), cost=0.0, detail=consequences)
+
+
+def _taxed_option(subject: str, gross: float, taxpayer_income: float, carry: Dict[str, float]) -> Option:
+	"""An option that takes `gross` more from the taxpayers: it covers what they still pay once the unrest it arms is out
+	(fiscal_unrest.py), and states the money lost to that unrest per money it brings in."""
+	return _option(subject, fiscal_unrest.net_of_unrest(gross, taxpayer_income),
+				   dict(carry, unrest_lost=fiscal_unrest.lost_per_money_kept(gross, taxpayer_income)))
 
 
 def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decision:
@@ -50,15 +57,16 @@ def menu(government: Any, world: Any, lines: Sequence[Any], gap: float) -> Decis
 	if struck_again > 0.0:
 		options.append(_option(DEBASE, struck_again * DEBASEMENT_SHARE_CEILING, dict(carry, coin_cut=need / struck_again)))
 	visible = sum(world.taxpayers.notice_over(scale) * income for scale, income in world.taxpayers.visible_taxpayers())
+	income = sum(income for _scale, income in world.taxpayers.visible_taxpayers())   # what the taxpayers earn: the base of their grievance
 	if visible > 0.0:
-		options.append(_option(LEVY, visible * LEVY_RATE_CEILING, dict(carry, income_taken=need / visible)))
+		options.append(_taxed_option(LEVY, visible * LEVY_RATE_CEILING, income, carry))
 	kind_base = in_kind_base(government.record, world)
 	if kind_base > 0.0:
-		options.append(_option(KIND, kind_base * KIND_DEMAND_RATE_STEP, dict(carry, income_taken=need / kind_base)))
+		options.append(_taxed_option(KIND, kind_base * KIND_DEMAND_RATE_STEP, income, carry))
 	coin_base = coin_rate_base(world)
 	if coin_base > 0.0:
-		options.append(_option(RATE, rate_raise_yield(world), dict(carry, income_taken=need / coin_base)))
-		options.extend(flight_options(government, world, need, coin_base, carry))
+		options.append(_taxed_option(RATE, rate_raise_yield(world), income, carry))
+		options.extend(flight_options(government, world, income, carry))
 	return Decision(FISCAL_DECISION, options, gap)
 
 
@@ -99,7 +107,7 @@ def rate_raise_yield(world: Any) -> float:
 	return max(0.0, extra)
 
 
-def flight_options(government: Any, world: Any, need: float, coin_base: float, carry: Dict[str, float]) -> List[Option]:
+def flight_options(government: Any, world: Any, taxpayer_income: float, carry: Dict[str, float]) -> List[Option]:
 	"""The tax-response levers as ways to raise money next year through the payers' own choices (fiscal_flight.py): remitting
 	part of the rate (worth money only where the rate is past the one that yields most), an amnesty that brings fugitives
 	home, collective liability that puts the leavers' assessment on the stayers. Each is offered only when it yields."""
@@ -107,14 +115,14 @@ def flight_options(government: Any, world: Any, need: float, coin_base: float, c
 	forms = raisable_coin_forms(world)
 	remitted = rate_cut_yield(world)
 	if remitted > 0.0:
-		options.append(_option(REMISSION, remitted, dict(carry, income_taken=-need / coin_base)))
+		options.append(_option(REMISSION, remitted, dict(carry)))
 	away = fiscal_flight.fugitive_share(world)
 	amnesty = amnesty_yield(forms, away)
 	if amnesty > 0.0 and government_levers_tax.amnesty_share(government.record) < 1.0:
 		options.append(_option(AMNESTY, amnesty, dict(carry)))
 	recovered, lost = fiscal_flight.collective_yield(world, forms)
 	if recovered > lost and government_levers_tax.liability_rule(government.record) != collective_rule():
-		options.append(_option(LIABILITY, recovered - lost, dict(carry, income_taken=need / coin_base)))
+		options.append(_taxed_option(LIABILITY, recovered - lost, taxpayer_income, carry))
 	return options
 
 
@@ -201,7 +209,7 @@ class FiscalPolicy(Policy):
 
 DEFAULT_WEIGHTS = {"interest": FISCAL_DEBT_CARRY_YEARS, "services_lost": FISCAL_SERVICE_LOSS_WEIGHT,
 				   "unpaid_pay": FISCAL_LOYALTY_WEIGHT, "coin_cut": FISCAL_PRICE_RISE_WEIGHT,
-				   "income_taken": FISCAL_BURDEN_WEIGHT}
+				   "unrest_lost": 1.0}   # money lost counts as money, per money kept
 
 
 class OrderedFiscalPolicy(FiscalPolicy):
@@ -228,7 +236,7 @@ def fiscal_policy_factories() -> Dict[str, Callable[[], Policy]]:
 		"fiscal_cascade": lambda: OrderedFiscalPolicy(CASCADE_ORDER),
 		"fiscal_austere": lambda: FiscalPolicy({"interest": 10.0 * FISCAL_DEBT_CARRY_YEARS,
 												"coin_cut": 10.0 * FISCAL_PRICE_RISE_WEIGHT,
-												"income_taken": 10.0 * FISCAL_BURDEN_WEIGHT,
+												"unrest_lost": 10.0,
 												"services_lost": 0.01 * FISCAL_SERVICE_LOSS_WEIGHT}),
 	}
 

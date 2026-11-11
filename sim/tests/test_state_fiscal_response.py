@@ -9,7 +9,7 @@ QUICK_TOPIC = True
 from .harness import check
 
 from sim.agents.tuning_fiscal import RATE_RAISE_STEP
-from sim.agents import arrears, fiscal_response, government_levers, group_servants, revenue
+from sim.agents import arrears, fiscal_response, fiscal_unrest, government_levers, group_servants, revenue
 from sim.agents.api import ActorRecord
 from sim.agents.budget_line import Line
 from sim.agents.government import Government
@@ -118,17 +118,19 @@ coin_state, coin_world = short_state(coin_form=True)
 coin_offered = {option.subject: option for option in fiscal_response.menu(coin_state, coin_world, lines(), NEED).options}
 check("the menu offers every response but a rate raise, which needs a form collected in coin",
 	  set(offered) == set(fiscal_response.RESPONSES) - {fiscal_response.RATE, fiscal_response.LIABILITY, fiscal_response.AMNESTY, fiscal_response.REMISSION}, sorted(offered))
-check("a state with a form collected in coin is offered raising its rate, and the cost is the burden on its base",
-	  coin_offered[fiscal_response.RATE].detail["income_taken"] > 0.0
-	  and abs(coin_offered[fiscal_response.RATE].worth - COIN_STOCK * WEALTH_FORM["rate"] * RATE_RAISE_STEP) < 1e-9, coin_offered.get(fiscal_response.RATE))
+raised = COIN_STOCK * WEALTH_FORM["rate"] * RATE_RAISE_STEP
+check("a state with a form collected in coin is offered raising its rate, for what the raise yields less the unrest it arms",
+	  coin_offered[fiscal_response.RATE].detail["unrest_lost"] > 0.0
+	  and abs(coin_offered[fiscal_response.RATE].worth - fiscal_unrest.net_of_unrest(raised, VISIBLE_INCOME)) < 1e-9
+	  and coin_offered[fiscal_response.RATE].worth < raised, coin_offered.get(fiscal_response.RATE))
 check("borrowing costs the interest the lender asks", offered["borrow"].detail["interest"] == 0.08, offered["borrow"].detail)
 check("cutting lines loses the services", offered["cut_lines"].detail["services_lost"] > 0.0)
 check("deferring pay leaves pay unpaid, which the army and officials feel",
 	  offered["arrears"].detail["unpaid_pay"] > 0.0, offered["arrears"].detail)
 check("debasing cuts the coin's metal, which is what raises prices",
 	  offered["debase"].detail["coin_cut"] > 0.0, offered["debase"].detail)
-check("levying and demanding in kind take more of the taxpayers' income",
-	  offered["levy"].detail["income_taken"] > 0.0 and offered["demand_in_kind"].detail["income_taken"] > 0.0)
+check("levying and demanding in kind arm unrest among the taxpayers they take from",
+	  offered["levy"].detail["unrest_lost"] > 0.0 and offered["demand_in_kind"].detail["unrest_lost"] > 0.0)
 check("each response covers no more than it can",
 	  offered["borrow"].worth == BORROWING_CEILING and offered["cut_lines"].worth == NEED
 	  and offered["arrears"].worth == 900.0, {name: option.worth for name, option in offered.items()})

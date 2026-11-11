@@ -214,7 +214,7 @@ class FlightOptionsInTheMenu(unittest.TestCase):
 
 	def offered(self, away):
 		state, world = self.state_and_world(away)
-		options = fiscal_response.flight_options(state, world, 1000.0, 400.0, {})
+		options = fiscal_response.flight_options(state, world, 5000.0, {})
 		return {option.subject for option in options}
 
 	def test_an_amnesty_and_collective_liability_are_offered_only_where_people_have_fled(self):
@@ -224,7 +224,7 @@ class FlightOptionsInTheMenu(unittest.TestCase):
 	def test_a_state_already_collective_is_not_offered_it_again(self):
 		state, world = self.state_and_world(0.3)
 		state.record.levers[government_levers_tax.LIABILITY] = liability.COLLECTIVE
-		names = {option.subject for option in fiscal_response.flight_options(state, world, 1000.0, 400.0, {})}
+		names = {option.subject for option in fiscal_response.flight_options(state, world, 5000.0, {})}
 		self.assertNotIn(fiscal_response.LIABILITY, names)
 
 	def test_the_levers_a_choice_covered_money_with_are_set_the_way_a_player_sets_them(self):
