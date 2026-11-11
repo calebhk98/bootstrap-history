@@ -32,6 +32,9 @@ class _Market(GoodsMarket):
     def posted_tonnes(self, side, commodity, seat_id=None):
         return 0.0
 
+    def ordered_to_sell(self, material):
+        return 0.0
+
 
 market = _Market(OFFERED)
 quote = market.quote("wheat")

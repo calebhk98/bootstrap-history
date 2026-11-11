@@ -60,7 +60,8 @@ def stub_game():
             prices=lambda: TABLE_PRICE_PER_UNIT,
             tag=lambda material: (material, material),
             priced_key=lambda tag, prices: tag if tag in prices else None,
-            sold_material=lambda tag: tag,
+            sold_material=lambda tag: tag, sale_forms=lambda tag: [tag], stock_form=lambda material: material,
+            form_stock_t=lambda key: 0.0,
             price_per_unit=TABLE_PRICE_PER_UNIT.get,
             market_tonnes=lambda key: 1000.0),
         foreign=types.SimpleNamespace(

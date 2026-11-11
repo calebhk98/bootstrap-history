@@ -34,11 +34,23 @@ def priced_key(tag: str, prices: Mapping[str, Any], commodity: Mapping[str, Any]
     return None
 
 
-def sold_material(material: str, commodity: Mapping[str, Any]) -> str:
-    """The material key a held tonne of the commodity sells as: the form its mines raise (`raised_material`) where the commodity
-    names one, else the material itself. The commodity's tonnes are one pool, so a tonne a mine raised is never priced as a
-    worked form of the pool."""
-    return commodity.get("raised_material") or material
+def sale_forms(material: str, commodity_id: str, commodity: Mapping[str, Any], held_by_form: Mapping[str, float]) -> List[str]:
+    """The materials a sale of `material` offers, each priced and cleared as its own good. A material the commodity names as a
+    form sells as itself. The pool's own name (`commodity_id`) sells the forms the seat holds: the form its mines raise first,
+    then the rest in key order; with none held, the form its mines raise. Any other material sells as itself."""
+    keys = list(commodity.get("material_keys", ()))
+    raised = commodity.get("raised_material")
+    if material in keys or material != commodity_id or not keys:
+        return [material]
+    held = [key for key in sorted(keys) if held_by_form.get(key, 0.0) > 0.0]
+    held.sort(key=lambda key: key != raised)
+    return held or [raised or material]
+
+
+def sold_material(material: str, commodity_id: str, commodity: Mapping[str, Any], held_by_form: Mapping[str, float]) -> str:
+    """The material key a sale of `material` is priced and cleared as: the first of `sale_forms`. Mined ore is never priced as
+    the bar the pool is priced as, and bar the seat bought is never priced as ore."""
+    return sale_forms(material, commodity_id, commodity, held_by_form)[0]
 
 
 def basis_with_imports(basis: Optional[str], seller: Optional[str]) -> Optional[str]:

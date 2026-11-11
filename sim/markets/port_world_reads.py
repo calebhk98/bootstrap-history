@@ -74,9 +74,14 @@ class MaterialReads:
 	def priced_key(self, tag, prices):
 		return price_rules.priced_key(tag, prices, self._needs.commodity_record[tag])
 
+	def sale_forms(self, tag):
+		"""The materials a sale of `tag` offers: the form it names, or for a pool's own name the forms the seat holds."""
+		commodity = self._needs.material_pool[tag][0]
+		return price_rules.sale_forms(tag, commodity, self._needs.commodity_record[commodity], self._needs.held_by_form[commodity])
+
 	def sold_material(self, tag):
-		"""The material a held tonne of `tag`'s pool sells as (the form its mines raise)."""
-		return price_rules.sold_material(tag, self._needs.commodity_record[self._needs.material_pool[tag][0]])
+		"""The material a sale of `tag` is priced and cleared as (the first of `sale_forms`)."""
+		return self.sale_forms(tag)[0]
 
 	def stock_form(self, material):
 		"""The key a held tonne of `material` is kept under in the ledger: the material itself where its pool names it as a

@@ -77,7 +77,7 @@ class QuoteVolume(unittest.TestCase):
             materials=types.SimpleNamespace(tag=lambda material: (material, None), market_tonnes=lambda key: market),
             economy=types.SimpleNamespace(agent_offered_tonnes=lambda material: offered))
         stand_in = types.SimpleNamespace(
-            _sim=sim, acting_party_id="founder", posted_tonnes=lambda side, key: 0.0,
+            _sim=sim, acting_party_id="founder", posted_tonnes=lambda side, key: 0.0, ordered_to_sell=lambda material: 0.0,
             pricing=types.SimpleNamespace(
                 price_at_tile_per_tonne=lambda material: 10.0, carriage_per_tonne=lambda material, price: 1.0,
                 purchase_cost=lambda material, tonnes: (0.0, 11.0), sale_proceeds=lambda *args: (0.0, 9.0),

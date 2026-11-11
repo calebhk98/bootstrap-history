@@ -47,7 +47,7 @@ READS_BY_OWNER = {
 	                    "hours_per_person_year", "staff_posting", "once_posting", "wage_work_offered", "newcomers",
 	                    "employed_by_trade", "trade_schools"),
 	"port: money and prices": ("market_rate", "credit_line_sought", "debt_bondage_term_years", "home_coin_stock",
-	                           "material_price", "material_commodity_map", "material_market_tonnes", "goods_stock", "goods_pool_stock",
+	                           "material_price", "material_commodity_map", "material_market_tonnes", "goods_stock", "goods_pool_stock", "held_by_form",
 	                           "can_pay", "spending_power",
 	                           "real_output_hours", "held_techniques", "techniques_spread", "mechanic"),
 	"port: foreign trade and freight": ("partner_facts", "partners_in_agent_economy", "civilisation_record",

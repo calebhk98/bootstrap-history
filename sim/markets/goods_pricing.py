@@ -65,8 +65,8 @@ class GoodsPricing:
         return self._sim.materials.priced_key(material, self.market.offers.home_prices())
 
     def sold_as(self, material):
-        """The material a sale of `material` is priced and cleared as: the pool's tonnes are what the seat's mines raised, so a
-        worked form of the pool (bar from ore) is not what is sold."""
+        """The material a sale of `material` is priced and cleared as: the form it names, or for a pool's own name the form the seat
+        holds (the one its mines raise first). Ore is never priced as bar, nor bar as ore."""
         return self._sim.materials.sold_material(material)
 
     def _climb(self, material, taken_before, tonnes, selling=False):

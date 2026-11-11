@@ -72,6 +72,12 @@ def posted_tonnes(stored, seat_id, side, stock_key):
                if order["side"] == side and order["stock_key"] == stock_key)
 
 
+def posted_form_tonnes(stored, seat_id, side, form_key):
+    """Tonnes of one form of a pool (a ledger key) the seat has ordered to buy or sell and the year's clearing has not yet settled."""
+    return sum(order["tonnes"] for order in stored.get("seat_orders", {}).get(seat_id, ())
+               if order["side"] == side and order.get("form_key", order["stock_key"]) == form_key)
+
+
 def traded_tonnes(stored, seat_id, side):
     """{commodity: tonnes} the seat bought ("bought") or sold ("sold") in the last clearing."""
     return dict(stored.get("seat_trades", {}).get(seat_id, {}).get(side, {}))
