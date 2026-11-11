@@ -145,7 +145,6 @@ def bids(setup, record) -> List[LabourBid]:
 def write_bids(sink, setup, record) -> List[BidFigures]:
     """Add every merchant's bid for carriers to the year's labour bids (a `LabourBidTable`, or a list of records), each merchant's bounded by
     what its cash pays at the area wages (`carriage_funding.fund_bids`); the bids written are returned."""
-    populated = populated_tiles(record.cohorts)
     wages: Dict[Tuple[str, str], float] = {}
 
     def wage_of(trade: str, area: str) -> float:
