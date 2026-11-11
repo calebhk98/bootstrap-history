@@ -36,3 +36,11 @@ Gulf of Bothnia (the Torne pair `finland_02`-`sweden_05` stays), `north_korea_01
 Known limit: a tile that holds a minor piece of another landmass above the share (for example `algeria_15`-`spain_02`,
 `cuba_02`-`dominican_rep_01`) still gets a land border; that needs per-landmass nodes, not a different threshold. The share is declared
 `temporary_heuristic` `LAND_TOUCH_MINIMUM_SHARE` in the generator with `retire="Complaints/978"`.
+
+## Cut-off islands drop out of the carriage table (found tracing Norse, 2026-11-11)
+
+The Svalbard tiles (`norway_04` to `norway_06`) are Norse home tiles with people but lost their only land links. `CarriageTable.costs_from`
+now omits them entirely, although `data/world/geography/sea_links/links.json` lists sea links for them, so an island cut off by land
+does not trade by sea. A processor's output haul now averages only over the areas a tile reaches (`location_inputs.output_haul_cost`),
+so the unreachable area no longer stops every placement; `mean_haul_cost` for inputs has the same shape and is not yet changed. Open:
+an island tile with sea links is reached by the sea modes in the carriage table.
