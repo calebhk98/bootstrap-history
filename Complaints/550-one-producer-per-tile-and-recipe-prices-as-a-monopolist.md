@@ -37,7 +37,13 @@ Found by an outside reviewer reading the repository; checked against the code.
 
 - A seam, pit, quarry or wood has nothing in the data that bounds a workshop (no crew per working, no output per pit, no
   holding of woodland), so its opening producer still counts one and only entry adds to the count. Needs a sourced crew
-  or output per working by deposit class.
+  or output per working by deposit class. Searched and not found: Agricola, De Re Metallica (Hoover translation, Project
+  Gutenberg ebook 38015), gives the shift length (Book IV: three shifts of seven hours), the kinds of workmen, and the
+  crew of one windlass (Book VI: "Two robust men turn the windlass", or one, or three at greater depth), but no number of
+  men for a shaft or a mine ("the number of workmen which the mine or tunnel requires", Book IV, is left unstated); a
+  windlass crew is one hoist, not a working unit, so it is not used. No source found for a quarry gang or a woodcutter or
+  charcoal-burner crew in an opened text. The rule once a crew is sourced: runs per workshop = crew size x working hours
+  per year / the recipe's labour hours per run (the herd rule times the crew), wired in `land_runs_per_workshop`.
 - A crop's holding is the reference crop's (wheat, default toolkit); a recipe on other crops uses the same holding.
 
 ## What it would take
