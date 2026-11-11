@@ -22,6 +22,27 @@ def _trace(first, last, years=30):
     return rows
 
 
+class UnmeasuredCauseTests(unittest.TestCase):
+    prices = {"bronze_kg": 3.0, "free_kg": 0.0}
+    costs = {"bronze_kg": 2.0, "tin_kg": 1.0}
+
+    def test_each_reason_a_good_has_no_ratio_is_named(self):
+        cause = lambda good, stale=(): opening_checks.unmeasured_cause(good, self.prices, self.costs, stale)
+        self.assertEqual(cause(None), "no_good")
+        self.assertEqual(cause("bronze_kg", {"bronze_kg"}), "market_did_not_clear")
+        self.assertEqual(cause("tin_kg"), "no_price")
+        self.assertEqual(cause("free_kg"), "no_price")
+        self.assertEqual(opening_checks.unmeasured_cause("copper_kg", {"copper_kg": 1.0}, {}, ()), "no_making_cost")
+
+    def test_a_good_with_price_and_cost_that_traded_has_no_cause(self):
+        self.assertIsNone(opening_checks.unmeasured_cause("bronze_kg", self.prices, self.costs, ()))
+
+    def test_the_cause_is_kept_in_the_check_detail(self):
+        result = opening_checks.price_over_cost("coin", {}, unmeasured={"bronze_kg": "market_did_not_clear"})
+        self.assertFalse(result.passed)
+        self.assertEqual(result.detail["unmeasured"], {"bronze_kg": "market_did_not_clear"})
+
+
 class PriceOverCostTests(unittest.TestCase):
     def test_a_ratio_beyond_the_band_either_way_fails_and_is_named(self):
         result = opening_checks.price_over_cost("ore", {"a": 2.0, "b": 50.0, "c": 0.01})

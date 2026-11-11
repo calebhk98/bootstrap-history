@@ -37,3 +37,19 @@ or a bound that does not describe a working opening should change, each with its
 - `rome_100ad`, `england_1300`, `han_china_100ad`: `money_against_wear`, each a little under its bound
 - `han_china_100ad`: `price_over_cost_coin_metal` reads n/a (the coin metal has no price at the opening)
 - `mexica_1500` and `norse_900ad`: only `spin_up_settled`
+
+## han_china_100ad `price_over_cost_coin_metal` n/a (read from code; the opened state was not inspected)
+
+The check reads `bronze_kg` (Han's `coin_standard.material`, the economy's `backing_good`), not a coin-metal id of its own.
+`price_ratios` in `sim/engine/opening_checks_run.py` left a named good out when any of four things held (no good, stale,
+no price, no making cost) and printed n/a without saying which. Rome, England and Norse back their money with `silver_kg`,
+Mexica with `cacao_kg`; Han is the only base civilisation whose money metal is an alloy made from two other goods (copper and
+tin, recipe `bronze_kg` in `data/production/20_nonferrous.json`). The likeliest cause is that `bronze_kg` is stale at the opening:
+the mint draws the opening metal from the book directly (`seed_opening_metal`, `sim/economy/mint.py`), nothing buys or sells
+bronze on a market until copper and tin are both in reach, and the only tin site in the data near Han is `gejiu_tin`
+(`data/world/geography/deposits/reference_output_sites.json`). That is a guess: a cold opening of Han takes longer than the
+five minutes allowed here, so neither the shipped-opening load nor `opening-checks` could be run.
+No price was invented. The check now records the cause per left-out good in `detail["unmeasured"]`
+(`opening_checks.unmeasured_cause`: no_good, market_did_not_clear, no_price, no_making_cost), so the next
+`opening-checks --civs han_china_100ad` run names it. If it reads `market_did_not_clear` or `no_making_cost` for `bronze_kg`,
+the open question is whether Han's tin and copper reach the bronze recipe at the opening, not the check.

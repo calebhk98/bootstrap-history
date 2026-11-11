@@ -52,17 +52,19 @@ def sited_ore_ratios(game, prices, costs, stale) -> Dict[str, float]:
             for ore in ores if prices.get(ore) and costs.get(ore) and ore not in stale}
 
 
-def price_ratios(game) -> Dict[str, Dict[str, float]]:
-    """{group: {good: price over making cost}} for the sited ores, the staple and the coin metal, after one step;
-    only goods whose markets cleared lately (a stale good's shown price is its cost, not a trade)."""
+def price_ratios(game) -> Dict[str, Dict[str, Dict[str, object]]]:
+    """{group: {"ratios": {good: price over making cost}, "unmeasured": {good: cause}}} for the sited ores, the staple
+    and the coin metal, after one step; only goods whose markets cleared lately (a stale good's shown price is its
+    cost, not a trade). A named good left out says why (`opening_checks.unmeasured_cause`)."""
     opened = game.view("agent_opening_figures")()
     prices, costs, stale = game.view("agent_prices")(), game.view("material_prices")(), game.view("agent_stale_goods")()
     named = {"staple": game.view("agent_traded_staple")(), "coin_metal": opened["backing_good"]}
-    ratios = {"sited_ores": sited_ore_ratios(game, prices, costs, stale)}
+    groups = {"sited_ores": {"ratios": sited_ore_ratios(game, prices, costs, stale), "unmeasured": {}}}
     for group, good in named.items():
-        usable = good and good not in stale and prices.get(good) and costs.get(good)
-        ratios[group] = {good: prices[good] / costs[good]} if usable else {}
-    return ratios
+        cause = opening_checks.unmeasured_cause(good, prices, costs, stale)
+        groups[group] = {"ratios": {good: prices[good] / costs[good]} if cause is None else {},
+                         "unmeasured": {} if cause is None else {good or group: cause}}
+    return groups
 
 
 def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
@@ -75,7 +77,7 @@ def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
     outcome = game.view("agent_last_outcome")()
     opened = game.view("agent_opening_figures")()
     ratios = price_ratios(game)
-    return [opening_checks.price_over_cost("price_over_cost_" + group, ratios[group])
+    return [opening_checks.price_over_cost("price_over_cost_" + group, ratios[group]["ratios"], unmeasured=ratios[group]["unmeasured"])
             for group in ("sited_ores", "staple", "coin_metal")] + [
         opening_checks.money_against_wear(rows),
         opening_checks.wage_over_floor(outcome.wages.get(opened["unskilled_trade"]), outcome.wage_floor_per_hour),
