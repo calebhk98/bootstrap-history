@@ -364,6 +364,22 @@ def civilization_record(civilization: Optional[Mapping[str, Any]], civilization_
     return engine_seam.load_civ(civilization_id, mods_dir)
 
 
+def producers_with_admitted(available_entries: ProductionEntries, admitted_entry_keys: FrozenSet[str]
+                            ) -> Dict[str, List[str]]:
+    """The producers index of a solve, where an admitted recipe (one the society does not hold) produces only the
+    outputs no held recipe makes: it prices its new outputs and cannot undercut a held route to the rest."""
+    held_entries = {key: entry for key, entry in available_entries.items() if key not in admitted_entry_keys}
+    held_outputs = set(production_entries_outputs(held_entries))
+    producers_of = solve_prices_core.build_producers_index(held_entries)
+    for key in available_entries:
+        if key not in admitted_entry_keys:
+            continue
+        for material in available_entries[key].get("outputs") or {}:
+            if material not in held_outputs:
+                producers_of.setdefault(material, []).append(key)
+    return producers_of
+
+
 def _solve_to_json(production_entries: ProductionEntries,
                    gate_nodes_held: FrozenSet[str],
                    document_ratios: Dict[str, float],
@@ -385,7 +401,7 @@ def _solve_to_json(production_entries: ProductionEntries,
         solve_prices_core.techniques_available_to(production_entries, gate_nodes_held)
     for entry_key in admitted_entry_keys:
         available_entries[entry_key] = production_entries[entry_key]
-    producers_of = solve_prices_core.build_producers_index(available_entries)
+    producers_of = producers_with_admitted(available_entries, admitted_entry_keys)
     wage_by_trade = solver_wage_ratios(production_entries, document_ratios)
 
     if rent_hours_per_kg_by_material is None:
