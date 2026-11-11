@@ -1,6 +1,6 @@
 # Slow-suite checks that are red on main
 
-**Status:** open - the full slow run on ff30f1e6 had seven red topics, all fixed (below); the six topics that timed out at the default limit pass with a longer one, except one real failure, now fixed; the protocol goldens need re-recording once more at the PR's last commit
+**Status:** closed - the full slow run pinned to 7f6cad64 fails no check; the only red topics are four that run past the default topic limit (`mod_kernels_smoke`, `player_available_smoke`, `pollution_mod_smoke`, `religion_mod_smoke`), which pass with a longer one and are 464 and 557's
 
 A red slow suite on the default branch means every branch's slow run starts red and its own regressions are read against
 noise. This file is the current list: one entry per failing topic, naming the complaint that owns the fix. Where the subject
@@ -45,3 +45,9 @@ with `ROME_SPIN_UP_YEARS=3,2` at the suite's seed, the coin figure moved at the 
 the debt rate, seeded herds) follow those fixes and were not attributed one by one. Re-recorded with
 `python3 -m sim.tests.test_protocol_golden --record`; the topic is green. Not yet attributed: the steps between the last
 recording and the carriage commit.
+
+## Full run on 7f6cad64 (2026-11-11, after the fixes above, rebuilt openings and re-recorded goldens)
+
+`python3 -m sim.tests --slow --jobs 2 --timing` in a checkout pinned to 7f6cad64: no check fails. Four topics time out at the default
+limit (named in the status line); the same topics pass alone with `--jobs 1 --topic-seconds 1800` (the run on ff30f1e6 above).
+Their time is 464 and 557. Closed: the default branch's slow suite is no longer red.
