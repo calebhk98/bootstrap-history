@@ -28,6 +28,8 @@ class CreditRecord(OwnedRecord):
     remembered_defaults: Dict[AgentId, float] = field(default_factory=dict)   # losses a borrower caused, fading
     credit_losses: Dict[AgentId, float] = field(default_factory=dict)    # what each lender has lost to default
     loss_rates: Dict[AgentId, float] = field(default_factory=dict)       # each lender's expected loss per year of exposure, aging (loss_memory.py)
+    claim_lives: Dict[AgentId, float] = field(default_factory=dict)       # each lender's mean loan term in years at the last year's close (claim_terms.py), before this year's defaults left the book
+    book_claim_life: Optional[float] = None                              # the same over every claim on the book; None when the book was empty
     losses_seen: Dict[AgentId, float] = field(default_factory=dict)      # credit_losses as of the last year's close
     expansion_runs: Dict[AgentId, float] = field(default_factory=dict)   # capacity a loan request would build
     worn_runs: Dict[AgentId, float] = field(default_factory=dict)        # plant that wore out last year, to rebuild
@@ -44,9 +46,9 @@ class CreditRecord(OwnedRecord):
     lent_in_clearings: float = 0.0                                       # principal the year's clearings lent
     last_clearing_cause: Optional[str] = None                            # why the last clearing lent nothing or held the rate (Clearing.cause); None when it priced loans
     land_yield: Optional[float] = None                                   # what a hectare of land earns over the price titles last sold at (title_sales_year.py); None before a sale
-    public_yield: Optional[float] = None                                 # yield the state's bonds offer households this year; None when out of reach (lender_ask.reachable_public_yield)
+    public_premium: Optional[float] = None                                 # premium over the going rate the state's bonds offer households this year; None when out of reach (lender_ask.reachable_public_premium)
 
-    AGENT_KEYED = ("remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "expansion_runs", "worn_runs",
+    AGENT_KEYED = ("remembered_defaults", "credit_losses", "loss_rates", "claim_lives", "losses_seen", "expansion_runs", "worn_runs",
                    "offered_by_lender", "ask_by_lender", "lent_by_borrower", "lent_by_lender", "credit_granted")
     SAVED_KEYS = {"contracts": "loans"}
     ENCODERS = {"contracts": lambda contracts: contracts.to_records(facilities=False)}
@@ -184,9 +186,9 @@ class CreditRecord(OwnedRecord):
         self.rate_times_lent += rate * lent
         self.lent_in_clearings += lent
 
-    def set_public_yield(self, yield_rate: Optional[float]) -> None:
-        """The yield the state's bonds offer households this year; None when out of their reach."""
-        self.public_yield = yield_rate
+    def set_public_premium(self, premium: Optional[float]) -> None:
+        """The premium over the going rate the state's bonds offer households this year; None when out of their reach."""
+        self.public_premium = premium
 
     def set_land_yield(self, yield_rate: Optional[float]) -> None:
         """What a hectare earns over the price titles last changed hands at; None before any sale."""

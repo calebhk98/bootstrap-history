@@ -52,7 +52,7 @@ class YearInputsBuilder:
                           harvest_share_by_good=port_land.harvest_share_by_good(sim),
                           **port_flight.flight_values(sim, economy),
                           institutions=port_institutions.held(sim),
-                          state_bond_yield=port_public_debt.bond_yield_above_coupon(sim),
+                          state_bond_premium=port_public_debt.bond_premium_over_coupon(sim),
                           durable_users=tuple(port_actors.held_account(buyer)
                                               for buyer in sorted(sim.scenario.actors.actors)),
                           bondage_tiles=port_bondage.bondage_tiles(sim, economy),

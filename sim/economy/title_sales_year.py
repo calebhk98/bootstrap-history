@@ -25,7 +25,7 @@ def _arrears_by_borrower(loans) -> Dict[AgentId, float]:
     return owed
 
 
-def run(setup, record, public_yield: Optional[float], cost_of_cash: Optional[float],
+def run(setup, record, public_premium: Optional[float], cost_of_cash: Optional[float],
         pledges: Optional[Mapping[tuple, float]] = None) -> List[title_sales.Sale]:
     """Clear each tile's title sales and settle them. `cost_of_cash` is the rate a holder short of money pays for it (the market's
     loan rate, None before one); `pledges` is `titles.pledges_by_title` when the caller has it. Returns the sales made."""
@@ -39,7 +39,7 @@ def run(setup, record, public_yield: Optional[float], cost_of_cash: Optional[flo
     arrears = _arrears_by_borrower(record.credit.loans)
     pledges = titles.pledges_by_title(record.credit) if pledges is None else pledges
     cohorts_on = {tile: [store.ids[row] for row in store.rows_on_tile(tile).tolist()] for tile in store.tiles_present()}
-    rates = {cohort_id: title_sales.discount_rate(HOUSEHOLD_TIME_PREFERENCE, inflation[cohort_id], public_yield) for cohort_id in ids}
+    rates = {cohort_id: title_sales.discount_rate(HOUSEHOLD_TIME_PREFERENCE, inflation[cohort_id], public_premium) for cohort_id in ids}
     made: List[title_sales.Sale] = []
     year_prices: Dict[str, float] = {}
     year_hectares: Dict[str, float] = {}

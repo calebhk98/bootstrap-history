@@ -29,7 +29,7 @@ class ValuationTests(unittest.TestCase):
 
     def test_the_discount_rate_is_the_best_alternative_without_the_land_yield(self):
         self.assertAlmostEqual(title_sales.discount_rate(0.05, 0.02), 0.07)
-        self.assertAlmostEqual(title_sales.discount_rate(0.05, 0.02, public_yield=0.09), 0.09)
+        self.assertAlmostEqual(title_sales.discount_rate(0.05, 0.02, public_premium=0.02), 0.09)
 
     def test_an_offer_asks_the_rent_over_the_rate(self):
         offer = title_sales.asking_offer("seller", 10.0, RENT, 0.20)

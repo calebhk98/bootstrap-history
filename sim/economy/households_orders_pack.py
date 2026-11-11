@@ -211,6 +211,6 @@ def _orders_of(cohort, template, stores, store_start, answer, cash, view, specs)
     if answer[kernel.CA_SAVINGS] > 0.0:
         ask = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, cohort.expected_inflation,
                                     expected_loss_rate=view.loss_rate(agent, template.area_currency),
-                                    land_yield=view.land_yield(template.area_currency), public_yield=view.public_yield(template.area_currency))
+                                    land_yield=view.land_yield(template.area_currency), public_premium=view.public_premium(template.area_currency))
         funds = (FundsOffer(agent, template.area_currency, answer[kernel.CA_SAVINGS], ask),)
     return AgentOrders(offers=offers, funds_offers=funds)

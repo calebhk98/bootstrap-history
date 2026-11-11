@@ -47,7 +47,7 @@ class YearView(View):
     def land_yield(self, currency):
         return None
 
-    def public_yield(self, currency):
+    def public_premium(self, currency):
         return None
 
 

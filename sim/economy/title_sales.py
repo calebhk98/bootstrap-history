@@ -36,9 +36,9 @@ class Sale:
     price_per_hectare: float
 
 
-def discount_rate(time_preference: float, expected_inflation: float, public_yield: Optional[float] = None) -> float:
+def discount_rate(time_preference: float, expected_inflation: float, public_premium: Optional[float] = None) -> float:
     """The rate an actor discounts a rent stream at: the best return its money earns elsewhere (no land yield, no loss)."""
-    return lender_ask.lowest_ask(time_preference, expected_inflation, public_yield=public_yield)
+    return lender_ask.lowest_ask(time_preference, expected_inflation, public_premium=public_premium)
 
 
 def seller_discount_rate(own_rate: float, cost_of_cash: Optional[float]) -> float:

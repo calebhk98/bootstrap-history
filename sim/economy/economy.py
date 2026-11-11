@@ -152,7 +152,7 @@ class Economy:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, self.setup,
                           labour_area, loans=lambda: self.record.credit.loans, equity=self._equity_read,
                           loss_rates=lambda: self.record.credit.loss_rates,
-                          pooled=self.record.credit.contracts.deposit_value, public_yield=lambda: self.record.credit.public_yield,
+                          pooled=self.record.credit.contracts.deposit_value, public_premium=lambda: self.record.credit.public_premium,
                           land_yield=lambda: self.record.credit.land_yield)
 
     def _equity_read(self, view) -> Dict[str, float]:
@@ -200,7 +200,7 @@ class Economy:
                              state_capacity=inputs.state_capacity, book=record.book, markets=record.memory.tables)
         self._follow_population(inputs)
         self._follow_yields(inputs)
-        record.credit.set_public_yield(lender_ask.reachable_public_yield(inputs.state_bond_yield, secondary_trade.BOND_MARKET in inputs.institutions))
+        record.credit.set_public_premium(lender_ask.reachable_public_premium(inputs.state_bond_premium, secondary_trade.BOND_MARKET in inputs.institutions))
         sites.apply_site_limits(record, setup)
         view = self.view()
         arrays = self._year_arrays = YearArrays.carried(self._year_arrays, setup, record, self.area_map, view)
@@ -208,7 +208,7 @@ class Economy:
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
-        title_sales_year.run(setup, record, record.credit.public_yield, record.memory.rates.get(money))
+        title_sales_year.run(setup, record, record.credit.public_premium, record.memory.rates.get(money))
         lending.lend_working_capital(setup, record, view)
         plans = plan_year.plans_of(setup, record, view, arrays, money)
         labour_bids = LabourBidTable()

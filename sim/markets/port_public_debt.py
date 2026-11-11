@@ -1,10 +1,10 @@
-"""The yield the home state's bonds offer a lender, handed to the economy as a rate. Part of the port."""
+"""What the home state's bonds pay a lender over the going rate, handed to the economy as a rate. Part of the port."""
 
 
-def bond_yield_above_coupon(sim):
-    """The yield the home state's bonds sell at when it exceeds their coupon (the going rate they are issued at), else None.
-    At the coupon the yield is the going rate itself, which a lender already has as its own market; above it the state's
-    default record has made it pay more, which is a return a lender can weigh. None without a government or bonds."""
+def bond_premium_over_coupon(sim):
+    """How far the yield the home state's bonds sell at exceeds their coupon (the going rate they are issued at); zero
+    where it does not. The going rate is the lender's own market, so only the premium is a return it can add; the
+    state's default record is what makes it pay one. None without a government or bonds."""
     government = sim.scenario.actors.countries.government_of(None)
     if government is None:
         return None
@@ -12,4 +12,4 @@ def bond_yield_above_coupon(sim):
     if not bonds.issues(government.account_id):
         return None
     coupon, yield_rate = bonds.terms[government.account_id]
-    return yield_rate if yield_rate > coupon else None
+    return max(0.0, yield_rate - coupon)

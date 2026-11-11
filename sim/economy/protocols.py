@@ -147,5 +147,5 @@ class EconomyYearInputs:
     credit_asks: Tuple[LoanRequest, ...] = ()               # credit lines the engine's seats ask for: they join the year's clearing and are granted a room (credit_lines.py)
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears
     state_capacity: float = 1.0                             # share of what the state assesses its officials collect this year (0..1); follows the officials (taxes.assess)
-    state_bond_yield: Optional[float] = None                # the yield the home state's bonds sell at where it exceeds their coupon (the going rate), else None; households reach it only with a bond market (lender_ask.reachable_public_yield)
+    state_bond_premium: Optional[float] = None                # how far the yield the home state's bonds sell at exceeds their coupon (the going rate), zero when it does not, None without bonds; households reach it only with a bond market (lender_ask.reachable_public_premium)
     working_people_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # demography's working-age people on each tile; a tile it names sets its cohorts' working people (the working-age share follows demography)

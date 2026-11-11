@@ -665,8 +665,8 @@ class YearView:
         """The yield of land over the price titles sold at in `currency`; None in a view that has none."""
         return None
 
-    def public_yield(self, currency: CurrencyId) -> Optional[float]:
-        """The yield the state's bonds offer a lender in `currency`; None in a view that has none in reach."""
+    def public_premium(self, currency: CurrencyId) -> Optional[float]:
+        """The premium over the going rate the state's bonds offer a lender in `currency`; None in a view that has none in reach."""
         return None
 
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:

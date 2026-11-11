@@ -21,15 +21,19 @@ def land_yield(rent_per_hectare: float, price_per_hectare: Optional[float]) -> O
     return max(0.0, rent_per_hectare) / price_per_hectare
 
 
-def reachable_public_yield(state_yield: Optional[float], bond_market_held: bool) -> Optional[float]:
-    """The yield a household can earn on the state's bonds: the state's, where the society holds a bond market; None otherwise."""
-    return state_yield if bond_market_held else None
+def reachable_public_premium(state_premium: Optional[float], bond_market_held: bool) -> Optional[float]:
+    """The premium a household can earn on the state's bonds over the going rate: the state's, where the society holds a bond
+    market; None otherwise (a state with no bonds on offer has none either)."""
+    return state_premium if bond_market_held else None
 
 
 def lowest_ask(time_preference: float, expected_inflation: float, expected_loss_rate: float = 0.0,
-               land_yield: Optional[float] = None, public_yield: Optional[float] = None) -> float:
-    """The nominal return the lender's best alternative earns (its time preference plus expected inflation, the land
-    yield, the public yield), plus its expected loss rate."""
-    alternatives = [time_preference + expected_inflation]
-    alternatives.extend(each for each in (land_yield, public_yield) if each is not None)
+               land_yield: Optional[float] = None, public_premium: Optional[float] = None) -> float:
+    """The nominal return the lender's best alternative earns, plus its expected loss rate. The alternatives are its time
+    preference plus expected inflation, with the state's bond premium on top where bonds are in reach, and the land yield.
+    The premium is what the state pays over the going rate, never the bond's whole yield, which tracks the cleared rate."""
+    own = time_preference + expected_inflation
+    alternatives = [own + max(0.0, public_premium) if public_premium is not None else own]
+    if land_yield is not None:
+        alternatives.append(land_yield)
     return max(0.0, *alternatives) + max(0.0, expected_loss_rate)

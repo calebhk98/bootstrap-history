@@ -137,12 +137,27 @@ class AgingTests(unittest.TestCase):
 
     def test_age_reads_the_record_and_leaves_the_loss_stock_alone(self):
         record = types.SimpleNamespace(credit=credit_of(credit_losses={"lender": 100.0}, losses_seen={}, loss_rates={}))
-        loss_memory.age(record, "coin")
+        loss_memory.age(record, "coin", 10)
         first = record.credit.loss_rates["lender"]
-        loss_memory.age(record, "coin")
+        loss_memory.age(record, "coin", 10)
         self.assertEqual(record.credit.credit_losses["lender"], 100.0)
         self.assertGreater(first, 0.0)
         self.assertLess(record.credit.loss_rates["lender"], first)
+
+    def test_age_spreads_a_lost_claim_over_the_life_the_books_last_close_gave_its_lender(self):
+        record = types.SimpleNamespace(credit=credit_of(credit_losses={"lender": 100.0}, losses_seen={}, loss_rates={},
+                                                        claim_lives={"lender": 4.0}, book_claim_life=2.0))
+        loss_memory.age(record, "coin", 10, share=1.0)
+        self.assertAlmostEqual(record.credit.loss_rates["lender"], 0.25)
+        self.assertEqual(record.credit.claim_lives, {})
+        self.assertIsNone(record.credit.book_claim_life)
+
+    def test_age_keeps_the_current_books_terms_for_the_next_close(self):
+        loans = [Loan("a", "lender", "b", "coin", 100.0, rate=0.05, years_left=2.0, issued_year=8)]
+        record = types.SimpleNamespace(credit=credit_of(loans, credit_losses={}, losses_seen={}, loss_rates={}))
+        loss_memory.age(record, "coin", 10)
+        self.assertAlmostEqual(record.credit.claim_lives["lender"], 4.0)
+        self.assertAlmostEqual(record.credit.book_claim_life, 4.0)
 
 
 class _Areas:

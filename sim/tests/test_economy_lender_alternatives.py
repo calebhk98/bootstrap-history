@@ -4,9 +4,11 @@ loan-weighted average."""
 
 QUICK_TOPIC = True
 
+import types
 import unittest
 
-from sim.economy import credit, lender_ask, loss_memory
+from sim.economy import claim_terms, credit, lender_ask, loss_memory
+from sim.markets import port_public_debt
 from sim.economy.credit_record import CreditRecord
 from sim.economy.credit_view import CreditView
 from sim.economy.market_memory import MarketMemory, YearView
@@ -18,26 +20,25 @@ class _Areas:
         return ()
 
 
-class PublicYieldTests(unittest.TestCase):
-    def test_a_bond_yield_above_the_time_preference_lifts_the_ask(self):
-        plain = lender_ask.lowest_ask(0.05, 0.0)
-        lifted = lender_ask.lowest_ask(0.05, 0.0, public_yield=0.09)
-        self.assertAlmostEqual(plain, 0.05)
-        self.assertAlmostEqual(lifted, 0.09)
+class PublicPremiumTests(unittest.TestCase):
+    def test_a_state_premium_is_added_to_the_lenders_own_alternative(self):
+        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.02, public_premium=0.04), 0.11)
 
-    def test_a_bond_yield_below_the_time_preference_leaves_the_ask(self):
-        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.0, public_yield=0.03), 0.05)
+    def test_a_state_paying_no_premium_leaves_the_ask_whatever_the_going_rate(self):
+        plain = lender_ask.lowest_ask(0.05, 0.02)
+        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.02, public_premium=0.0), plain)
+        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.02, public_premium=-0.01), plain)
 
     def test_the_loss_a_lender_expects_is_added_to_the_best_alternative(self):
-        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.0, expected_loss_rate=0.02, public_yield=0.09), 0.11)
+        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.0, expected_loss_rate=0.02, public_premium=0.04), 0.11)
 
-    def test_a_bond_yield_is_reachable_only_with_a_bond_market(self):
-        self.assertEqual(lender_ask.reachable_public_yield(0.09, True), 0.09)
-        self.assertIsNone(lender_ask.reachable_public_yield(0.09, False))
-        self.assertIsNone(lender_ask.reachable_public_yield(None, True))
+    def test_a_bond_premium_is_reachable_only_with_a_bond_market(self):
+        self.assertEqual(lender_ask.reachable_public_premium(0.09, True), 0.09)
+        self.assertIsNone(lender_ask.reachable_public_premium(0.09, False))
+        self.assertIsNone(lender_ask.reachable_public_premium(None, True))
 
     def test_a_lifted_ask_is_the_rate_a_glut_clears_at(self):
-        ask = lender_ask.lowest_ask(0.05, 0.0, public_yield=0.09)
+        ask = lender_ask.lowest_ask(0.05, 0.0, public_premium=0.04)
         offers = [FundsOffer("saver:%d" % index, "coin", 1000.0, ask) for index in range(3)]
         request = LoanRequest("borrower", "coin", 10.0, 0.5, 1.0, 1e9, "working capital")
         _loans, rate, _unmet = credit.clear([request], offers, "coin", 0.0, {})
@@ -53,27 +54,85 @@ class LandYieldTests(unittest.TestCase):
         self.assertIsNone(lender_ask.land_yield(4.0, 0.0))
 
     def test_a_land_yield_above_the_other_alternatives_lifts_the_ask(self):
-        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.0, land_yield=0.08, public_yield=0.06), 0.08)
+        self.assertAlmostEqual(lender_ask.lowest_ask(0.05, 0.0, land_yield=0.08, public_premium=0.01), 0.08)
+
+
+class ClaimTermTests(unittest.TestCase):
+    def test_a_lenders_life_is_the_worth_weighted_mean_term_of_its_claims(self):
+        loans = [Loan("a", "lender", "b1", "coin", 100.0, rate=0.05, years_left=2.0, issued_year=8),     # ran 2 years, 2 left: term 4
+                 Loan("b", "lender", "b2", "coin", 300.0, rate=0.05, years_left=6.0, issued_year=10),    # ran 0, 6 left: term 6
+                 Loan("c", "other", "b3", "coin", 50.0, rate=0.05, years_left=1.0, issued_year=10)]      # term 1
+        by_lender, book = claim_terms.mean_term_years(loans, 10, "coin")
+        self.assertAlmostEqual(by_lender["lender"], (100.0 * 4.0 + 300.0 * 6.0) / 400.0)
+        self.assertAlmostEqual(by_lender["other"], 1.0)
+        self.assertAlmostEqual(book, (400.0 + 1800.0 + 50.0) / 450.0)
+
+    def test_other_currencies_are_left_out(self):
+        loans = [Loan("a", "lender", "b1", "coin", 100.0, rate=0.05, years_left=2.0, issued_year=10),
+                 Loan("b", "lender", "b2", "shell", 100.0, rate=0.05, years_left=8.0, issued_year=10)]
+        self.assertAlmostEqual(claim_terms.mean_term_years(loans, 10, "coin")[0]["lender"], 2.0)
+
+    def test_an_empty_book_has_no_life(self):
+        self.assertEqual(claim_terms.mean_term_years([], 10, "coin"), ({}, None))
+
+    def test_the_table_and_the_list_agree(self):
+        from sim.loans.store import LoanStore
+        from sim.loans.view import LoanList
+        loans = LoanList(LoanStore())
+        loans.extend([Loan("a", "lender", "b1", "coin", 100.0, rate=0.05, years_left=2.0, issued_year=8),
+                      Loan("b", "lender", "b2", "coin", 300.0, rate=0.05, years_left=6.0, issued_year=10)])
+        by_lender, book = claim_terms.mean_term_years(loans, 10, "coin")
+        self.assertAlmostEqual(by_lender["lender"], 5.5)
+        self.assertAlmostEqual(book, 5.5)
+
+
+class PublicPremiumPortTests(unittest.TestCase):
+    @staticmethod
+    def _sim(terms):
+        from sim.agents.bonds import BondBook
+        bonds = BondBook()
+        if terms:
+            bonds.set_terms("state", *terms)
+        government = types.SimpleNamespace(account_id="state", purses=types.SimpleNamespace(bonds=bonds))
+        countries = types.SimpleNamespace(government_of=lambda _none: government)
+        return types.SimpleNamespace(scenario=types.SimpleNamespace(actors=types.SimpleNamespace(countries=countries)))
+
+    def test_a_state_selling_above_its_coupon_offers_the_difference(self):
+        self.assertAlmostEqual(port_public_debt.bond_premium_over_coupon(self._sim((0.05, 0.08))), 0.03)
+
+    def test_a_state_selling_at_its_coupon_offers_no_premium(self):
+        self.assertEqual(port_public_debt.bond_premium_over_coupon(self._sim((0.05, 0.05))), 0.0)
+
+    def test_a_state_with_no_bonds_offers_none(self):
+        self.assertIsNone(port_public_debt.bond_premium_over_coupon(self._sim(None)))
 
 
 class ViewTests(unittest.TestCase):
-    def test_the_view_gives_the_bond_yield_for_its_own_currency_only(self):
-        view = CreditView(MarketMemory(), None, _Areas(), "coin", None, public_yield=lambda: 0.07)
-        self.assertEqual(view.public_yield("coin"), 0.07)
-        self.assertIsNone(view.public_yield("other"))
+    def test_the_view_gives_the_bond_premium_for_its_own_currency_only(self):
+        view = CreditView(MarketMemory(), None, _Areas(), "coin", None, public_premium=lambda: 0.07)
+        self.assertEqual(view.public_premium("coin"), 0.07)
+        self.assertIsNone(view.public_premium("other"))
 
-    def test_a_plain_view_has_no_bond_yield(self):
-        self.assertIsNone(YearView(MarketMemory(), None, _Areas(), "coin", None).public_yield("coin"))
+    def test_a_plain_view_has_no_bond_premium(self):
+        self.assertIsNone(YearView(MarketMemory(), None, _Areas(), "coin", None).public_premium("coin"))
 
 
 class LostClaimTests(unittest.TestCase):
-    def test_a_lender_that_lost_its_only_claim_does_not_read_the_whole_as_one_years_loss(self):
-        rates = loss_memory.blend({}, {"lender": 100.0}, {"lender": 0.0}, 1.0)
-        self.assertAlmostEqual(rates["lender"], 1.0 / loss_memory.LOSS_CLAIM_LIFE_YEARS)
+    def test_a_lender_that_lost_its_only_claim_spreads_it_over_that_lenders_claim_life(self):
+        rates = loss_memory.blend({}, {"lender": 100.0}, {"lender": 0.0}, 1.0, {"lender": 4.0}, 2.0)
+        self.assertAlmostEqual(rates["lender"], 0.25)
+
+    def test_a_lender_with_no_claims_on_the_book_takes_the_books_mean_life(self):
+        rates = loss_memory.blend({}, {"lender": 100.0}, {"lender": 0.0}, 1.0, {"other": 4.0}, 2.0)
+        self.assertAlmostEqual(rates["lender"], 0.5)
+
+    def test_with_no_claim_anywhere_the_life_is_one_year(self):
+        rates = loss_memory.blend({}, {"lender": 100.0}, {"lender": 0.0}, 1.0, {}, None)
+        self.assertAlmostEqual(rates["lender"], 1.0)
 
     def test_a_lost_claim_over_a_longer_life_is_a_smaller_yearly_rate(self):
-        short = loss_memory.blend({}, {"lender": 100.0}, {"lender": 900.0}, 1.0, claim_life_years=1.0)["lender"]
-        long = loss_memory.blend({}, {"lender": 100.0}, {"lender": 900.0}, 1.0, claim_life_years=5.0)["lender"]
+        short = loss_memory.blend({}, {"lender": 100.0}, {"lender": 900.0}, 1.0, {"lender": 1.0})["lender"]
+        long = loss_memory.blend({}, {"lender": 100.0}, {"lender": 900.0}, 1.0, {"lender": 5.0})["lender"]
         self.assertAlmostEqual(short, 0.1)
         self.assertAlmostEqual(long, 100.0 / 1400.0)
 

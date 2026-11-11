@@ -32,7 +32,7 @@ from .rates import own_rate
 def service(record, money: str, year: int, bondage_years: float = 0.0) -> Dict[str, float]:
     """The year's payments (`_collect`), then every lender's loss rate ages by the year's losses."""
     received = _collect(record, money, year, bondage_years)
-    loss_memory.age(record, money)
+    loss_memory.age(record, money, year)
     return received
 
 
@@ -100,7 +100,7 @@ def lend_working_capital(setup, record, view) -> None:
     offers = [FundsOffer(cohort_id, money, amount, lender_ask.lowest_ask(
                   HOUSEHOLD_TIME_PREFERENCE, expected_inflation[cohort_id],
                   expected_loss_rate=lender_ask.loss_rate(record.credit.loss_rates.get(cohort_id, 0.0)),
-                  land_yield=record.credit.land_yield, public_yield=record.credit.public_yield))
+                  land_yield=record.credit.land_yield, public_premium=record.credit.public_premium))
               for cohort_id, amount in spare.items()]
     clearing = credit.clear_with_cause(
         asked, offers, money, record.memory.rates.get(money), credit_claims.principal_by_borrower(record.credit.loans),

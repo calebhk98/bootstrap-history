@@ -19,14 +19,14 @@ class CreditView(YearView):
                  equity: Callable[["CreditView"], Mapping[AgentId, float]] = lambda view: {},
                  loss_rates: Callable[[], Mapping[AgentId, float]] = lambda: {},
                  pooled: Callable[[AgentId], float] = lambda agent: 0.0,
-                 public_yield: Callable[[], Optional[float]] = lambda: None,
+                 public_premium: Callable[[], Optional[float]] = lambda: None,
                  land_yield: Callable[[], Optional[float]] = lambda: None, **keywords) -> None:
         super().__init__(*arguments, **keywords)
         self._loans = loans
         self._pooled = pooled             # what the actors' pool owes an agent, in the economy's unit
         self._loss_rates = loss_rates
         self._land_yield = land_yield      # what a hectare earns over the price titles last sold at, in the economy's own currency
-        self._public_yield = public_yield  # the state's bond yield in reach of a lender, in the economy's own currency
+        self._public_premium = public_premium  # the state's bond premium in reach of a lender, in the economy's own currency
         self._equity_of_all = equity      # reads the view once, when first asked, and keeps the answer
         self._equity = None
         self._worths = None               # the producers' net worths (equity.producer_worths), built once for the view
@@ -54,9 +54,9 @@ class CreditView(YearView):
         """What a title to land yields its holder over the price titles last changed hands at (title_sales_year); only the economy's own currency has one."""
         return self._land_yield() if currency == self._currency else None
 
-    def public_yield(self, currency: CurrencyId) -> Optional[float]:
-        """The yield of the state's bonds where a lender can buy them (lender_ask.reachable_public_yield); only the economy's own currency has one."""
-        return self._public_yield() if currency == self._currency else None
+    def public_premium(self, currency: CurrencyId) -> Optional[float]:
+        """The premium over the going rate of the state's bonds where a lender can buy them (lender_ask.reachable_public_premium); only the economy's own currency has one."""
+        return self._public_premium() if currency == self._currency else None
 
     def equity(self, agent: AgentId) -> float:
         """What the agent owns of the firms (equity.py), at the prices this view carries."""

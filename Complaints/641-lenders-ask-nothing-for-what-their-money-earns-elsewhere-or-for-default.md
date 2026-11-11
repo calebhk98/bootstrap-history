@@ -1,6 +1,6 @@
 # Lenders ask nothing for what their money earns elsewhere or for default, so the rate clears at zero
 
-**Status:** partly - lowest ask now takes the land yield (rent over the recent title sale price, `title_sales_year.py`) and a public-debt alternative, loss rates spread over a claim's life, `market_rate()` is the loan-weighted average of the year's clearings bounded by expected inflation; open: the opening rate is not re-measured (the orchestrator's command is below), `LOSS_CLAIM_LIFE_YEARS` and the public-debt gate are labelled heuristics that retire here (`loss_memory.py`, `credit_rate.py`), so the complaint stays open until they are derived
+**Status:** partly - the heuristics are gone (a lost claim's life is the mean term of the claims the lender held at the last close, `claim_terms.py`; the state's bond premium over the going rate is added to the lender's own alternative, no gate); only the opening rate re-measure on a civilisation (the orchestrator's) remains
 
 **What was wrong.** Households lent at `max(0, expected_inflation)`, `credit.clear` (`sim/economy/credit.py`) floored the rate at zero
 and dropped it to the lowest ask when funds sat idle, and a bank asked its depositors' rate plus a fixed margin. So a
@@ -40,12 +40,11 @@ sides would agree to.
 ## What is wrong now
 
 - Land yield is fed: titles sell at a price in the title sale market (`title_sales.py`, `title_sales_year.py`, 538), the year's price per tile is kept in `record.land.sale_price_by_tile`, and `rent / price` of the tiles that sold is `CreditRecord.land_yield`, read through `CreditView.land_yield` into `lowest_ask` by households' offers and working-capital lending. Buyers bid the rent over their own alternative rate (time preference plus expected inflation, the state's bonds where in reach), never the lending rate, so the yield is not the rate by construction; it is kept from the last year that sold. Tests: `test_economy_title_sales.py`.
-- The public-debt alternative is fed only the state's bond yield where it exceeds the bond's coupon (the going rate): at the coupon the yield is the market
-  rate itself, which would make the rate its own floor. A state with a default record pays above it, and a lender with a bond market weighs that
-  (`port_public_debt.py`, `EconomyYearInputs.state_bond_yield`, `CreditRecord.public_yield`). A bond yield that tracks the cleared rate cannot be a
-  floor under it without a ratchet; the state's coupon being set from the lenders' own floor, not the cleared rate, would remove the gate (the state's
-  files are another agent's).
-- `LOSS_CLAIM_LIFE_YEARS` (loss_memory) is a labelled single life for a lost claim; the default record carries no loan term.
+- The public-debt alternative is the state's bond premium: how far the yield it sells at exceeds its coupon (the going rate), zero when it does not
+  (`port_public_debt.bond_premium_over_coupon`, `EconomyYearInputs.state_bond_premium`, `CreditRecord.public_premium`). `lowest_ask` adds it to the lender's
+  own alternative (time preference plus expected inflation), never the bond's whole yield, which tracks the cleared rate and would ratchet it. A society with no bond market or a state with no bonds offers none.
+- A lost claim's life is the claim-weighted mean term (years run plus years left) of the loans the lender held at the last year's close, else of the whole book,
+  else one year (`claim_terms.mean_term_years`, `loss_memory.age`, `CreditRecord.claim_lives`); `LOSS_CLAIM_LIFE_YEARS` is deleted.
 - The opening rate and the entry of firms in the default game have not been re-measured since the Eurace price, wage,
   credit and finance rules landed, nor since the changes above. Measure: `from sim.tests import harness; game = harness.sim(capital=1e7)` on Rome with the
   full spin-up, then `game.economy._answering_agent().economy().record.memory.rates` and `game.actors.active_firms()`
