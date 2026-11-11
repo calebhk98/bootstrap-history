@@ -60,7 +60,8 @@ for it (CLAUDE.md SS3.1):
      adjacent (not merely corner-touching) in the SAME regular grid rule 1
      built - i.e. one of (row-1,col), (row+1,col), (row,col-1), (row,col+1)
      is also a kept tile - AND their clipped land touches (`land_touches`,
-     within LAND_TOUCH_TOLERANCE_METRES, and the touching landmasses are not mere slivers). Cells on two sides of a strait are grid
+     within LAND_TOUCH_TOLERANCE_METRES, and the touching landmasses hold at least
+     LAND_TOUCH_MINIMUM_SHARE of each cell's land). Cells on two sides of a strait are grid
      neighbours but no land border (Complaint 978); `coastal` (rule 9) is
      unaffected, and the sea routes reach such tiles through their coast.
   9. SEA ACCESS. A tile is `coastal` if either (a) its own clipped land
@@ -179,6 +180,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from sim.geography import api as geography_api  # noqa: E402
+from sim.constants import declare  # noqa: E402
 
 map_data_sources = geography_api.map_data_sources
 
@@ -224,7 +226,13 @@ EQUAL_AREA_CRS = 6933  # EPSG:6933, WGS 84 / NSIDC EASE-Grid 2.0 Global
 MINIMUM_LAND_FRACTION_TO_KEEP_A_TILE = 0.10  # rule 2
 OWN_CELL_COASTAL_LAND_FRACTION = 0.98        # rule 9(a)
 LAND_TOUCH_TOLERANCE_METRES = 1000.0          # rule 8: slack for 1:50m coastline data
-LAND_TOUCH_MINIMUM_SHARE = 0.05               # rule 8: touching landmass share of each cell's land below which it is a sliver
+LAND_TOUCH_MINIMUM_SHARE = declare(
+    "LAND_TOUCH_MINIMUM_SHARE", 0.05, kind="temporary_heuristic",
+    unit="fraction of a cell's clipped land", source=None, confidence="D",
+    retire="Complaints/978: tiles that hold one landmass each (or a per-landmass walk inside a tile) replace the cut-off",
+    why="A tile is one node, so a small separate piece of its land (the Keys in a Cuban cell) cannot be told apart "
+        "from its main land by the walker; below this share the touching piece does not make a land border. Chosen "
+        "in the gap the measured shares leave (no touching pair sits between 0.03 and 0.05), not derived.")
 CLIMATE_SAMPLES_PER_AXIS = 5   # rule 6: a 5x5 = 25-point grid per tile,
                                # not one centroid - see the module
                                # docstring's rule 6 for why
@@ -387,8 +395,8 @@ def land_touches(land_of_one_cell, land_of_other_cell, tolerance_metres=None, mi
     """True when two cells' clipped land meets across their shared edge, so the cells share a
     land border. Geometries are in the equal-area CRS (metres). Only landmasses that reach the
     other cell's land count, and on each side they must hold at least `minimum_share` of that
-    cell's land, so a sliver of one coast (the Florida
-    Keys inside a Cuban cell) does not link a tile to a neighbour its main land is cut off from."""
+    cell's land, so a sliver of one coast (the Florida Keys inside a Cuban cell, a strip of
+    Spain inside a Moroccan cell) does not link a tile to a neighbour its main land is cut off from."""
     import shapely
     if tolerance_metres is None:
         tolerance_metres = LAND_TOUCH_TOLERANCE_METRES

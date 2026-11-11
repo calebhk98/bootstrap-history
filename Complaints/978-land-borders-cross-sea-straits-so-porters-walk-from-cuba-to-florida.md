@@ -26,3 +26,13 @@ so sea access works as before. `tile_grid.json` was regenerated; only the `borde
 `source` prose in the generator is newer than the committed file and was left as committed). `cuba_03` no longer borders the mainland by
 land, and the France-Spain tiles still do. Tests: `LandTouchesTests` and the island-border and real-border checks in
 `sim/tests/test_geography_tiles.py`. Count removed pairs with a diff of `borders` against `origin/complaints-cleanup`.
+
+**Review of the removed pairs.** Each removed pair was classified from the Natural Earth clip (compare `borders` against `origin/complaints-cleanup`):
+no land within the tolerance of the shared edge (grid adjacency only, so the land meets, if at all, at a corner through another tile, and
+the pair stays joined in the land graph by a short detour through the other two cells of the square), or land touches only through a
+minor piece of one cell (a sliver of the tile's land). The flagged pairs: `norway_05` is Svalbard, `finland_01` meets Sweden across the
+Gulf of Bothnia (the Torne pair `finland_02`-`sweden_05` stays), `north_korea_01`-`south_korea_03` has no land near the shared edge
+(Korea stays joined through `china_58`-`south_korea_02`), `india_08`-`india_09` meets only through a sliver (`india_08` keeps `india_13`).
+Known limit: a tile that holds a minor piece of another landmass above the share (for example `algeria_15`-`spain_02`,
+`cuba_02`-`dominican_rep_01`) still gets a land border; that needs per-landmass nodes, not a different threshold. The share is declared
+`temporary_heuristic` `LAND_TOUCH_MINIMUM_SHARE` in the generator with `retire="Complaints/978"`.
