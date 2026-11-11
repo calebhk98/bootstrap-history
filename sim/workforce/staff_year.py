@@ -12,7 +12,7 @@ from .constants import (
     TRADE_REPLACEMENT_TARGET_HEADCOUNT,
 )
 from .staff_phase_rules import approach, artisan_goal, craft_headcount, directors_next, has_room_to_hire, scholar_goal
-from .staff_replacement import replacement_wanted, staff_grows
+from .staff_replacement import replacement_targets, staff_grows
 
 
 class StaffYear(Part):
@@ -72,14 +72,9 @@ class StaffYear(Part):
             # draws on (see idle_specialists).
             _drawn_on = self.parts.core.labour.ledger.trades_drawn_on()
             _generic = generic_staff_trades(self.parts.core.labour.allocation.unskilled_trade())
-            for trade_id in sorted(set(workforce.employees) | set(workforce.trades_created)):
-                have = workforce.employees.get(trade_id, 0.0)
-                want = replacement_wanted(trade_id, have, trade_id in workforce.trades_created, _drawn_on,
-                                          TRADE_REPLACEMENT_TARGET_HEADCOUNT, _generic)
-                if want is None:
-                    continue
-                if want - have > 0.02:
-                    _grow_to(trade_id, want)
+            for trade_id, want in replacement_targets(workforce.employees, workforce.trades_created, _drawn_on,
+                                                      TRADE_REPLACEMENT_TARGET_HEADCOUNT, _generic):
+                _grow_to(trade_id, want)
             self.parts.core.labour.pools.resync_pools()
         self.parts.core.labour.controls.hold_staff_reserve()
         # Contracted craftsmen count toward a project's staff requirement; the optimizer commissions when hands are the only block.

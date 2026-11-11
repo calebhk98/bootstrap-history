@@ -1,6 +1,6 @@
 # Most tests check a rule through a whole game, so a failure cannot say which rule broke
 
-**Status:** partly - every test module that builds a whole game is declared a scenario, validation or smoke test or converted (the guard's leftover list is empty); open: rules still inside `Sim` methods whose checks can only run in a scenario until they are plain functions
+**Status:** closed - every rule the list named is a plain function with a direct test, or is a thin call sequence over such functions (see Remaining)
 
 A large share of `sim/tests/test_*.py` builds a whole game (`harness.sim()`, `opened()`, `close_years`) and reads a
 value off it, to check a rule that is one function. Such a test passes only while the live game happens to hold the
@@ -299,20 +299,26 @@ Split, the rule checks staying quick and the game-building checks moving to a `_
 `concerns_that_pay`, `dynamic_wages`, `demography_history`, `alerts_staffing_finish`, `automation_audit`. `concerns_that_pay`
 had been failing before this pass (its fake world lacked `plant_costs`, which the scan reads); the stub now has it.
 
-## Remaining: rules still checked only through a game
+## Remaining: none (verified 2026-11)
 
-(The guard and its list were deleted later; see "Guards removed" below.) The guard's leftover list (a file since removed) was empty: `python3 -m sim.tests --whole-game-checks` lists no
-undeclared module, and the quick topic `whole_game_declared` fails on any new one. Some modules were declared rather than converted
-because their rule sits inline in a `Sim` mixin or a phase; their `_scenario` files hold rule checks until the rule is a plain
-function. What is left, after the rules named in the list below were pulled out (each with a quick rule test):
+Every item the old list named was checked against the code:
 
-- the state's year as a ledger: how a reserve finances a deficit and the rest is cut, and the founder paying the ordinary share
-  and the need-driven levy (`Government.pay_standing_need`, `Sim._state_pressure`; `state_budget_scenario`); the requisition,
-  office and confiscation reports that call the extracted functions stay as wiring in `state_notices_scenario`;
-- the expected calendar years of a risky project and the calendar floor (`Sim.expected_calendar_years`, `calendar_floor`;
-  `project_retry_and_risk_scenario`, now rule tests on stand-ins in `test_project_retry_and_risk_rules`);
-- the rest of `_step_staff`: the `_grow_to` closure and the per-trade replacement loop (the arithmetic around them is plain);
-- the `Sim` methods that compose the domestic haul from prices (`_freight_mode_costs`, `_haul_route`), which only run in a game.
+- the state's year as a ledger: `Government.pay_standing_need` (`sim/agents/government.py`) is a sequence of calls into plain
+  functions (`budget.standing_lines`, `budget.army_next_year`, `budget.unfunded_by_line`, `budget.share_paid`, `arrears`, `headcount`);
+  it is itself called directly on a stand-in world in `test_state_headcount`, `test_country_state`, `test_state_corvee`, and
+  `meet_shortfall` in `test_state_fiscal_response`. `Sim._state_pressure` is now `society_state_pressure` over the plain
+  `sim/polity/state_notice_rules.py` (rule-tested in `test_state_budget_rules`). `state_budget_scenario` no longer exists;
+- the expected calendar years of a risky project: `calendar_floor_years`, `expected_years_to_succeed` and `effective_risk_of`
+  (`sim/projects/completion_schedule.py`, `risk_rules.py`) are plain; tests are `test_expected_calendar_years_floor` and
+  `test_project_retry_and_risk_rules`. `project_retry_and_risk_scenario` no longer exists;
+- the rest of `_step_staff` (now `StaffYear.step_staff`, `sim/workforce/staff_year.py`): the per-trade replacement loop is now the
+  plain `replacement_targets` (`sim/workforce/staff_replacement.py`, rule test `test_staff_replacement_targets`). The `_grow_to`
+  closure is only a one-line delegate to `StaffHiring.grow_trade_toward`; the goals and smoothing it is fed are plain functions
+  (`staff_phase_rules`, `test_staff_phase_rules`);
+- `_freight_mode_costs` and `_haul_route` are now `Models.freight_mode_costs` and `Routes.haul_route` in `sim/freight/`:
+  `freight_mode_costs` is tested on the module harness with written-out views (`test_foreign_freight_wiring_rules`), and the choices
+  inside `haul_route` are plain (`choose_route`, `rules.delivered_share`, `rules.route_with_provisions`, `route.domestic_haul_mode`,
+  `unjoined_haul_cost`; `test_freight_rules`, `test_freight_domestic_haul`, `test_material_haul_pricing_rules`).
 
 Converted in the second round (rule now a plain function with a quick rule test, its checks moved out of the scenario):
 `state_notice_rules` (the notice line, the levy shares, protection bargaining, the confiscation chance and its mitigations,
@@ -334,8 +340,6 @@ the colony rules (`colony_rules`), coverage and disease burden (`coverage_rules`
 dues and handling, settlement owed, halting projects on exhausted credit, non-labour upkeep, project throttles, the nitre deficit,
 instantaneous projects, the eminence hazard rules, dependants beyond means, prerequisite names. `start_and_upkeep_quotes_scenario`'s
 `people_exist` refusal is gone (659, closed).
-
-The complaint closes when the rules above are plain functions and their checks have left the scenarios.
 
 Test migration (rule-tests-05): the generic fog scanner over every command (`fog_and_command_scanners_scenario`, about 9 s, six commands scan the whole tree) is deleted; each command filters its own reply and no quick form exists. No simulator command runs it. The command-pointer half is now the static scan test_command_pointer_scan.
 

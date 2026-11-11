@@ -21,3 +21,15 @@ def replacement_wanted(trade_id, have, taught, drawn_on, target_headcount, gener
     if trade_id in generic_staff or trade_id not in drawn_on:
         return None
     return max(have, target_headcount if taught else 0.0)
+
+
+def replacement_targets(employees, trades_created, drawn_on, target_headcount, generic_staff, tolerance=0.02):
+    """[(trade, headcount)] the yearly staff step tops back up, in sorted trade order: every trade held or taught (a trade drops
+    out of `employees` once its last person is lost) that `replacement_wanted` raises by more than `tolerance` people."""
+    targets = []
+    for trade_id in sorted(set(employees) | set(trades_created)):
+        have = employees.get(trade_id, 0.0)
+        want = replacement_wanted(trade_id, have, trade_id in trades_created, drawn_on, target_headcount, generic_staff)
+        if want is not None and want - have > tolerance:
+            targets.append((trade_id, want))
+    return targets
