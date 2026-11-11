@@ -1,13 +1,13 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** closed - a rate now has consequences in hiding, flight, liability, unrest, and in the producers', households' and AI state's own decisions; the unsourced hiding-cost constants are filed as 972
+**Status:** partly - the base answers a raise by hiding, flight and unrest, and producers, households and the AI state net the tax; open: `HIDEABLE_SHARE_OF_INCOME` and `HIDING_MARGINAL_COST_AT_CEILING` (`sim/agents/tuning_evasion.py`) have no source (see Sourcing the hiding curve)
 
 Follows from 626 (tax rates as a state choice).
 
 **What is wrong now.** Nothing in the list that opened this complaint: the AI state's menu foresees unrest, a harvest tax reaches the
 land demand, the farm-hours choice and the producers' run, plant and entry decisions (`harvest_tax.py`, the plan, close and entry
 kernels and their reference functions), and `FISCAL_BURDEN_WEIGHT` is deleted. The hiding constants' missing source is
-Complaints/972.
+below (Sourcing the hiding curve).
 
 **Why it matters.** Without a full response of the base there is a ceiling to taxation only at the rate cap, and a state
 cannot lose by overtaxing in every way a real one does (CLAUDE.md 4.1: the outcome should come from lower-level state, not
@@ -90,8 +90,24 @@ not measured (a slow topic and the fingerprint are needed). Whole-game effect of
 ## Research needed
 
 No source on pre-modern tax pressure, flight and abandonment was opened, so the hiding constants
-have none (filed as Complaints/972). The question: how did taxpayers respond to a heavier take in the Roman and medieval worlds, by form (flight of
+have none (see Sourcing the hiding curve below). The question: how did taxpayers respond to a heavier take in the Roman and medieval worlds, by form (flight of
 tenants and the abandoned land of the late empire, anachoresis in Roman Egypt, concealment, evasion, revolt), and at what
 share of the harvest did each begin? Sources to open: Roman Egypt tax-flight papyri studies, the Codex Theodosianus on agri
 deserti, and medieval English peasant flight and tallage studies. A response curve fitted to those is a validation of the
 mechanism, not an input to it.
+
+## Sourcing the hiding curve
+
+**Searched, nothing usable opened (2026-11):** web searches for Roman Egypt census and tax evasion (Monson and Scheidel,
+*Fiscal Regimes and the Political Economy of Premodern States*, 2015, pp. 229-257, is named as the general introduction but
+its text was not reachable; the ResearchGate and academia.edu papers on evasion in Roman Egypt returned HTTP 403 or search
+snippets only); pre-modern concealment shares and bribe costs (Mughal, Ming, medieval: only modern evasion studies and
+popular essays); Zhang Juzheng's 1581 Ming land survey (opened *Fir and Empire*, Appendix A, "Forests in Tax Data": surveys
+"added nearly a quarter more farmland", read there as reregistering forest converted to farmland, and registration figures are
+"at best indexes of fiscal acreage"; it does not give a hideable share or a cost of hiding). No source found.
+
+**What it would take.** Open a work that gives, for a pre-modern agrarian state, either the share of land or income found
+off the rolls when officials looked harder (cadastral resurveys: Ming 1581, Roman Egypt census cycle, Domesday, Mughal
+`zabt`), or what concealment cost payers (fees to scribes and surveyors). Cite author, work, page. Set the two constants
+from it, or replace them by the holdings model the `retire` text names. Candidates: Monson and Scheidel (eds.) 2015; Kiser and
+Kane on tax farming; papyrological studies of Roman Egypt land declarations.
