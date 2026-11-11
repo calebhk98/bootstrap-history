@@ -9,7 +9,7 @@ import unittest
 import numpy
 
 from sim.compiled_tables.ids import IdTable
-from sim.economy.ask_adjust import ASK_BAND_CEILING
+from sim.economy.ask_adjust import NO_BOUND_MULTIPLE
 from sim.economy.goods_table_context import ClearingContext
 
 RATES = {"coin": 0.05}
@@ -19,9 +19,9 @@ SUBSTITUTION = {"town": 3.0, "farm": 1.0, "hill": 1.2}
 
 def context_of(areas, tiles):
     view = types.SimpleNamespace(interest_rate=RATES.get, currency_of=lambda area: CURRENCY_OF_AREA[area])
-    setup = types.SimpleNamespace(basket_for=lambda tile: types.SimpleNamespace(substitution=SUBSTITUTION[tile], needs=()))
+    setup = types.SimpleNamespace(recipes={}, basket_for=lambda tile: types.SimpleNamespace(substitution=SUBSTITUTION[tile], needs=()))
     orders = types.SimpleNamespace(memory_tables=types.SimpleNamespace(areas=IdTable("area", areas)))
-    record = types.SimpleNamespace(book=types.SimpleNamespace(tile_ids=IdTable("tile", tiles)))
+    record = types.SimpleNamespace(book=types.SimpleNamespace(tile_ids=IdTable("tile", tiles)), goods=types.SimpleNamespace(buyer_limits={}))
     return ClearingContext(setup, record, view, orders, None, None)
 
 
@@ -34,15 +34,15 @@ class AskKnownTest(unittest.TestCase):
         self.assertTrue(math.isnan(rates[0]))          # areas are numbered in name order: gaul first
         self.assertEqual(rates[1], 0.05)
 
-    def test_every_tile_has_its_band_multiple_capped_at_the_ceiling(self):
+    def test_every_tile_has_its_band_multiple_from_its_substitution(self):
         context = context_of(["grain:rome"], ["farm", "hill", "town"])
         context.ask_known_areas_and_tiles()
         for tile in range(3):
             context.note_band_multiple(tile, "grain")
         multiples = context.band_multiple_table("grain")
-        self.assertEqual(multiples[0], ASK_BAND_CEILING)           # a substitution of one has no markup limit but the ceiling
-        self.assertEqual(multiples[1], min(1.2 / 0.2, ASK_BAND_CEILING))
-        self.assertEqual(multiples[2], min(3.0 / 2.0, ASK_BAND_CEILING))
+        self.assertEqual(multiples[0], NO_BOUND_MULTIPLE)           # a substitution of one gives no markup, and nothing else bounds the good
+        self.assertAlmostEqual(multiples[1], 1.2 / 0.2)
+        self.assertAlmostEqual(multiples[2], 3.0 / 2.0)
 
     def test_a_tile_numbered_later_is_still_missing_until_asked(self):
         context = context_of(["grain:rome"], ["farm"])

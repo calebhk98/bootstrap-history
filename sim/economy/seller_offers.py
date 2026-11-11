@@ -22,7 +22,7 @@ import numpy
 from . import price_setting
 from . import unit_cost as run_cost
 from .ask_adjust import band_edge
-from .ask_ceiling import NO_ALTERNATIVES, band_multiple
+from .ask_ceiling import NO_CEILING, band_multiple
 from .market_memory import market_key
 from .producers import expected_output_prices, live_input_prices, live_wages
 from .types import Bid, Offer
@@ -109,11 +109,11 @@ def unit_value(offer: Offer, cost: float) -> float:
 
 def ask_band_multiple(setup, offer: Offer, alternatives=None) -> float:
     """The most, as a multiple of a unit's cost, any seller's ask may be (`ask_ceiling.band_multiple`): bounded by what the
-    buyers' cheapest alternative costs when `alternatives` (the year's `AskAlternatives`) is given, else by the substitution
-    markup the basket's elasticity derives, else by the stated multiple."""
+    buyers give as a ceiling when `alternatives` (the year's `AskAlternatives`) is given, else by the substitution markup the
+    basket's elasticity derives, else by nothing above cost."""
     if alternatives is not None:
         return alternatives.multiple(offer.good, offer.tile)
-    return band_multiple(setup.basket_for(offer.tile).substitution, NO_ALTERNATIVES, None)
+    return band_multiple(setup.basket_for(offer.tile).substitution, NO_CEILING, None)
 
 
 def stands_for_many(record, offer: Offer) -> bool:

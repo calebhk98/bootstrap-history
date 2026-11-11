@@ -15,6 +15,7 @@ from sim.economy.types import Bid, Offer, Recipe
 
 GOOD, AREA, TILE = "alloy", "area", "tile"
 COST = 2.0 * 3.0 + 4.0 * 0.5      # two of metal at three, four hours at half
+MULTIPLE = 3.0                    # the band the buyers give (ask_ceiling.py derives it from them)
 
 
 class View(ViewDefaults):
@@ -54,21 +55,27 @@ def floor_buyer(quantity=100.0):
 
 class SoldOutRaiseTests(unittest.TestCase):
     def test_a_sold_out_ask_rises_one_step_inside_the_band(self):
-        raised = ask_adjust.adjusted_within_band(1.5 * COST, COST, 0.0, 1.0)
+        raised = ask_adjust.adjusted_within_band(1.5 * COST, COST, 0.0, 1.0, MULTIPLE)
         self.assertAlmostEqual(raised, 1.5 * COST * (1.0 + ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR))
 
     def test_a_sold_out_ask_stops_at_the_band_edge_however_many_years_it_sells_out(self):
         ask = COST
         for _year in range(500):
-            ask = ask_adjust.adjusted_within_band(ask, COST, 0.0, 1.0)
-        self.assertAlmostEqual(ask, COST * ask_adjust.ASK_BAND_CEILING)
+            ask = ask_adjust.adjusted_within_band(ask, COST, 0.0, 1.0, MULTIPLE)
+        self.assertAlmostEqual(ask, COST * MULTIPLE)
 
     def test_an_ask_already_above_the_edge_is_not_cut_by_the_raise(self):
-        self.assertEqual(ask_adjust.adjusted_within_band(10.0 * COST, COST, 0.0, 1.0), 10.0 * COST)
+        self.assertEqual(ask_adjust.adjusted_within_band(10.0 * COST, COST, 0.0, 1.0, MULTIPLE), 10.0 * COST)
+
+    def test_a_seller_whose_buyers_give_no_ceiling_is_not_raised_above_its_cost(self):
+        ask = COST
+        for _year in range(50):
+            ask = ask_adjust.adjusted_within_band(ask, COST, 0.0, 1.0, ask_adjust.NO_BOUND_MULTIPLE)
+        self.assertAlmostEqual(ask, COST)
 
     def test_no_cost_to_anchor_on_means_no_raise(self):
-        self.assertEqual(ask_adjust.adjusted_within_band(5.0, None, 0.0, 1.0), 5.0)
-        self.assertEqual(ask_adjust.adjusted_within_band(5.0, math.inf, 0.0, 1.0), 5.0)
+        self.assertEqual(ask_adjust.adjusted_within_band(5.0, None, 0.0, 1.0, MULTIPLE), 5.0)
+        self.assertEqual(ask_adjust.adjusted_within_band(5.0, math.inf, 0.0, 1.0, MULTIPLE), 5.0)
 
 
 class InelasticBookTests(unittest.TestCase):
@@ -76,18 +83,19 @@ class InelasticBookTests(unittest.TestCase):
         setup, record = game("only")
         ask = 1.2 * COST
         chosen = seller_offers.strategic_offers(setup, record, View(), [floor_buyer()],
-                                                [Offer("only", GOOD, AREA, TILE, 100.0, ask)], 10.0)
+                                                [Offer("only", GOOD, AREA, TILE, 100.0, ask)], 10.0,
+                                                seller_offers.UnitCosts(types.SimpleNamespace(multiple=lambda good, tile: MULTIPLE)))
         price = chosen[0].reservation_price
         self.assertTrue(math.isfinite(price))
         self.assertGreater(price, ask)       # a sole owner still prices strategically
-        self.assertLessEqual(price, COST * ask_adjust.ASK_BAND_CEILING * (1.0 + 1e-9))
+        self.assertLessEqual(price, COST * MULTIPLE * (1.0 + 1e-9))
 
     def test_the_band_is_finite_for_every_elasticity_of_substitution(self):
         for substitution in (0.5, 1.0, 1.05, 3.0):
             setup, _record = game("only", substitution=substitution)
             multiple = seller_offers.ask_band_multiple(setup, Offer("only", GOOD, AREA, TILE, 1.0, 1.0))
             self.assertTrue(math.isfinite(multiple))
-            self.assertGreater(multiple, 1.0)
+            self.assertGreaterEqual(multiple, 1.0)
 
     def test_an_aggregate_of_many_workshops_takes_the_price_and_does_not_search(self):
         setup, record = game("crowd")

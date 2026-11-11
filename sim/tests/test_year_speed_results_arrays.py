@@ -20,7 +20,7 @@ from sim.economy.market_memory import market_key
 from sim.economy.types import ClearingResult, EDGE_PRODUCTION, GoodsMove, Transfer, EDGE_MINT
 from sim.economy.year_arrays import YearArrays
 from sim.economy.year_arrays_costs import OfferCosts, refreshed
-from sim.tests.test_year_speed_goods_markets import near, random_bid, random_offers, with_markets
+from sim.tests.test_year_speed_goods_markets import near, with_written_out_bands, random_bid, random_offers, with_markets
 from sim.tests.test_year_speed_settlement import close, snapshot
 from sim.tests.year_close_fixture import AREAS, GOODS, MONEY
 
@@ -53,6 +53,7 @@ def same_fills(old, new):
         and near(left.price, right.price) for left, right in zip(old, new))
 
 
+@with_written_out_bands
 class ArrayClearingIsTheClearing(unittest.TestCase):
 
     def test_random_markets(self):
@@ -145,6 +146,7 @@ def funded_books(rng, setup, markets, results):
     return books
 
 
+@with_written_out_bands
 class SettlingFromArraysIsSettlingFromPairings(unittest.TestCase):
 
     def test_random_goods(self):

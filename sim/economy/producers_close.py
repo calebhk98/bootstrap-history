@@ -64,7 +64,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
                ground_goods: Collection[GoodId] = (), service_lives: Optional[Mapping[GoodId, float]] = None,
                interest: float = 0.0, demand_runs: Optional[float] = None,
                spoilage: Optional[Mapping[GoodId, float]] = None, inputs: Optional[Mapping[GoodId, float]] = None,
-               wages: Optional[Mapping[str, float]] = None) -> YearClose:
+               wages: Optional[Mapping[str, float]] = None, ask_multiples: Optional[Mapping[GoodId, float]] = None) -> YearClose:
     """`worked_runs` is what the producer ran this year (all its capacity when not given). Idle plant is
     sunk, so the year's capital charge falls only on the capacity worked. `price_share_after(good, added)` is
     the share of a good's price that remains when the producer adds that much output a year (expansion_price.py);
@@ -74,14 +74,15 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     are negative closes that share of its capacity (producer_losses.py), whatever its expected margin says. With
     `demand_runs` (the runs its buyers called for this year, unmet demand included), a producer with no plant to build
     whose runs pay and who lost nothing grows toward the sales it will expect (capacity_growth.py). `inputs` and `wages` are
-    `live_input_prices` and `live_wages` when the caller has them already (the same for every producer of a recipe on a tile)."""
+    `live_input_prices` and `live_wages` when the caller has them already (the same for every producer of a recipe on a tile).
+    `ask_multiples` is `producers.next_expectations`'s."""
     first_output = min(recipe.outputs)
     currency = view.currency_of(view.area_of(first_output, producer.tile))
     rate = view.interest_rate(currency)       # None for a currency with no remembered rate: no capital charge or expansion is judged
     cash = max(0.0, view.cash(producer.agent_id, currency))
     inputs = live_input_prices(producer, recipe, view) if inputs is None else dict(inputs)
     wages = live_wages(producer, recipe, view) if wages is None else dict(wages)
-    expectations = next_expectations(producer, recipe, view, inputs, wages)
+    expectations = next_expectations(producer, recipe, view, inputs, wages, ask_multiples)
     worked = producer.capacity_runs if worked_runs is None else min(max(0.0, worked_runs), producer.capacity_runs)
     charge = None if rate is None else unit_cost.capital_charge_per_run(recipe, inputs, wages, rate) * worked
     loss = worked <= 0.0 or revenue < costs + (charge if charge is not None and math.isfinite(charge) else 0.0)

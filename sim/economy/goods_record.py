@@ -42,9 +42,10 @@ class GoodsRecord(OwnedRecord):
     opening_basket: Dict[str, float] = field(default_factory=dict)       # good -> quantity at the opening, as far as the opening supplies it
     opening_demand: Dict[str, float] = field(default_factory=dict)       # good -> quantity households were seeded to want, supplied or not
     opening_demand_by_country: Dict[str, Dict[str, float]] = field(default_factory=dict)  # country -> good -> quantity its households were seeded to want
+    buyer_limits: Dict[str, float] = field(default_factory=dict)         # good -> the highest price a household bid for it took units at when it last cleared (ask_ceiling.buyer_limit)
     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
 
-    OWNERS = ("goods_record", "year_goods", "entry_margin")
+    OWNERS = ("goods_record", "year_goods", "entry_margin", "goods_good_clear")
     ENCODERS = {"volumes": _saved, "unsold": _saved, "unmet": _saved, "margin_years": _saved}
     DECODERS = {"volumes": _loaded, "unsold": _loaded, "unmet": _loaded, "margin_years": _loaded_streaks}
     COLUMNS = ("volumes", "unsold", "unmet", "margin_years")      # the stores held as columns of the memory's goods-market numbering (`bind_markets`)
@@ -56,6 +57,13 @@ class GoodsRecord(OwnedRecord):
             column = getattr(self, name)
             if isinstance(column, MarketColumn):
                 column.bind(tables)
+
+    def note_buyer_limit(self, good: str, limit) -> None:
+        """The household bids for `good` took units up to `limit` this year (None: no bid took any)."""
+        if limit is None:
+            self.buyer_limits.pop(good, None)
+        else:
+            self.buyer_limits[good] = limit
 
     def reset_output(self) -> None:
         self.output_by_tile = {}

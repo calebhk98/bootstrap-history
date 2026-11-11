@@ -10,6 +10,8 @@ from collections import namedtuple
 import numpy
 
 from . import seller_offers, unsold_search
+from .ask_ceiling import buyer_limit
+from .goods_order_tables import HOUSEHOLD
 from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
 from .goods_market_rows import MarketRows
 from .goods_respend import offers_left
@@ -181,9 +183,20 @@ class GoodClearing:
         return len(self) > 0
 
 
+def note_household_limit(context, good: str, good_id: int) -> None:
+    """Record the highest price the households' bids for `good` take units at (`ask_ceiling.buyer_limit`): the ceiling on an ask for a
+    good that is alone in its need, read by the sellers' re-pricing of this year and by the year's close."""
+    bids = context.orders.tables()[0]
+    count = int(bids.row_count[0])
+    mine = (bids.good[:count] == good_id) & (bids.source[:count] == HOUSEHOLD)
+    context.record.goods.note_buyer_limit(good, buyer_limit(bids.floor_quantity[:count][mine], bids.flexible_quantity[:count][mine],
+                                                            bids.budget[:count][mine], bids.maximum_price[:count][mine]))
+
+
 def clear_good(context, good: str, good_id: int) -> GoodClearing:
     """Clear the markets of `good` that have orders, one after another in area order."""
     from . import goods_clear_fused     # it makes `GoodClearing`s, so it imports this module
+    note_household_limit(context, good, good_id)
     if goods_clear_fused.can_fuse(context, good):
         return goods_clear_fused.fused_clear(context, good, good_id)
     orders = context.orders

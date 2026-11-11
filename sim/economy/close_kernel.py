@@ -14,8 +14,8 @@ from sim.jit import njit
 
 from . import close_kernel_cost as cost
 
-K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_ASK_CEILING, K_CLOSED, K_WORKING_YEARS = range(10)
-K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(10, 19)
+K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_CLOSED, K_WORKING_YEARS = range(9)
+K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(9, 18)
 
 STATE_OK, STATE_CRISIS, STATE_ILLIQUID, STATE_INSOLVENT = 0, 1, 2, 3
 REQUEST_NONE, REQUEST_EXPAND, REQUEST_WORKING_CAPITAL = 0, 1, 2
@@ -73,7 +73,7 @@ def close_rows(rows, constants,
                slot_goods, slot_trades, slot_is_input, slot_is_output, slot_is_plant, inputs, outputs, revenue_outputs, plant_goods, labour,
                plant_labour, plant_life, idle_wear,
                recipe_row, tile_row, capacity, yield_factor, years_of_loss, cash_target, expected_sales, last_runs,
-               land_rent, earnings_history, revenue_history, history_count, expected,
+               land_rent, earnings_history, revenue_history, history_count, expected, ask_multiple,
                area_of, price, offered, cleared, bare_quote, wage, clearing, unmet, market_capacity, spoilage, ground,
                rate_of, cash_in_currency, cash_in_money, revenue, running_costs, stock, sold, made, hours_hired,
                interest, commitments, arrears, debt, held_start, held_good, held_quantity, share,
@@ -184,7 +184,7 @@ def close_rows(rows, constants,
                 exp[slot] += weight * (exp[slot] * break_even - exp[slot])
             for slot in range(count):
                 if has_latest[slot] and cost.flag_at(bare_quote, area_of, slot_goods[recipe, slot], tile):
-                    exp[slot] = cost.held_to_band(exp[slot], old_exp[slot], cover[slot], input_share, constants[K_ASK_CEILING])
+                    exp[slot] = cost.held_to_band(exp[slot], old_exp[slot], cover[slot], input_share, ask_multiple[row, slot])
         else:
             for slot in range(count):
                 cover[slot] = np.nan
@@ -193,7 +193,7 @@ def close_rows(rows, constants,
                 if has_latest[slot]:
                     unsold = stock[row, slot] - q_in[slot] * cap_old
                     exp[slot] = cost.adjusted_within_band(exp[slot], cover[slot], unsold, target_cover * q_out[slot],
-                                                          constants[K_ASK_CEILING], input_share, constants[K_ASK_STEP])
+                                                          ask_multiple[row, slot], input_share, constants[K_ASK_STEP])
         for slot in range(count):
             new_expected[row, slot] = exp[slot]
 

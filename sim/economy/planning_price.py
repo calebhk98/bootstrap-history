@@ -16,13 +16,14 @@ def is_bare_quote(view, good, area) -> bool:
     return view.price_kind(good, area) in BARE_QUOTES
 
 
-def held_to_band(expected: float, previous: Optional[float], unit_cost: Optional[float], input_share: float) -> float:
+def held_to_band(expected: float, previous: Optional[float], unit_cost: Optional[float], input_share: float,
+                 ceiling_multiple: float) -> float:
     """`expected`, drawn from a bare quote, kept no higher than the band edge around `unit_cost` or the `previous`
     expectation, whichever is higher (a quote never cuts an expectation here, and never lifts it past the band).
     Unchanged when no unit cost can be worked out."""
     if unit_cost is None or not unit_cost > 0.0:
         return expected
-    ceiling = ask_adjust.band_edge(unit_cost, input_share)
+    ceiling = ask_adjust.band_edge(unit_cost, input_share, ceiling_multiple)
     if previous is not None:
         ceiling = max(ceiling, previous)
     return min(expected, ceiling)

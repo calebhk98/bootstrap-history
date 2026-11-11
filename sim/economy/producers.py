@@ -222,12 +222,15 @@ def live_wages_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[str, f
 
 def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
                       live_inputs: Optional[Dict[GoodId, float]] = None,
-                      wages: Optional[Dict[str, float]] = None) -> Dict[GoodId, float]:
+                      wages: Optional[Dict[str, float]] = None,
+                      ask_multiples: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, float]:
     """Expected prices, for outputs and for the inputs a run uses up, moved toward the latest clearing
     prices. Output prices also go part of the way back toward what a run costs to make
     (REGRESSIVE_EXPECTATION_WEIGHT): a producer knows a price far above cost brings more output and one
     far below drives makers out. A good with no price keeps its old one. `live_inputs` and `wages` are
-    `live_input_prices` and `live_wages` when the caller has them already."""
+    `live_input_prices` and `live_wages` when the caller has them already. `ask_multiples` is the width of the band above cost
+    each output may rise to (`ask_ceiling.AskAlternatives.multiple`); an output it leaves out has no room above cost."""
+    ask_multiples = ask_multiples or {}
     updated = dict(producer.expected_prices)
     latest_prices = {}
     bare_quotes = set()      # outputs whose latest price is a bid ceiling or an ask, not a price that traded
@@ -262,12 +265,13 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
                    if good in worked else 0.0)
             updated[good] += ask_adjust.regressive_weight(REGRESSIVE_EXPECTATION_WEIGHT, gap) * (updated[good] * break_even - updated[good])
     for good in sorted(bare_quotes & set(cost_covering)):
-        updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share)
+        updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share,
+                                  ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE))
     for good in ask_adjust.worked_outputs(producer, recipe):
         if good in latest_prices:
             updated[good] = ask_adjust.adjusted_within_band(
                 updated[good], cost_covering.get(good), ask_adjust.unsold_stock(producer, recipe, view, good),
-                ask_adjust.target_of(producer, recipe, good), input_share=input_share)
+                ask_adjust.target_of(producer, recipe, good), ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE), input_share=input_share)
     return updated
 
 

@@ -74,23 +74,120 @@ class BandMultipleTests(unittest.TestCase):
         self.assertAlmostEqual(band_multiple(2.0, AskCeiling(5.0, None), 1.0), 2.0)      # markup 2 / (2 - 1)
         self.assertAlmostEqual(band_multiple(2.0, AskCeiling(1.3, None), 1.0), 1.3)
 
-    def test_without_an_alternative_the_stated_multiple_stands_in_for_inelastic_demand(self):
-        self.assertEqual(band_multiple(1.0, ask_ceiling.NO_ALTERNATIVES, None), ask_adjust.ASK_BAND_CEILING)
+    def test_with_no_ceiling_and_no_substitution_the_seller_has_no_room_above_cost(self):
+        self.assertEqual(band_multiple(1.0, ask_ceiling.NO_CEILING, None), ask_adjust.NO_BOUND_MULTIPLE)
 
-    def test_without_an_alternative_the_markup_is_kept_inside_the_stated_multiple(self):
-        self.assertEqual(band_multiple(1.2, ask_ceiling.NO_ALTERNATIVES, None), ask_adjust.ASK_BAND_CEILING)
-        self.assertAlmostEqual(band_multiple(3.0, ask_ceiling.NO_ALTERNATIVES, None), 1.5)
+    def test_with_no_ceiling_the_derived_markup_stands(self):
+        self.assertAlmostEqual(band_multiple(3.0, ask_ceiling.NO_CEILING, None), 1.5)
 
-    def test_a_ceiling_with_no_cost_to_scale_against_falls_back_to_the_stand_in(self):
-        self.assertEqual(band_multiple(1.0, AskCeiling(2.0, None), None), ask_adjust.ASK_BAND_CEILING)
+    def test_a_ceiling_with_no_cost_to_scale_against_leaves_no_room_without_a_markup(self):
+        self.assertEqual(band_multiple(1.0, AskCeiling(2.0, None), None), ask_adjust.NO_BOUND_MULTIPLE)
+
+
+INF = float("inf")
+WAGES = {"labour": 0.5}
+# a smith makes a tool from ore and two hours; a second recipe makes the same tool from scrap with no ore
+SMITH = Recipe("smith", {"tool": 1.0}, {"ore": 2.0}, {"labour": 2.0})
+SCRAP = Recipe("scrap", {"tool": 1.0}, {"scrap": 1.0}, {"labour": 2.0})
+
+
+class BuyerLimitTests(unittest.TestCase):
+    def test_the_limit_is_the_budget_over_the_floor_units_of_the_best_funded_bid(self):
+        self.assertEqual(ask_ceiling.buyer_limit([10.0, 5.0], [0.0, 0.0], [50.0, 100.0], [INF, INF]), 20.0)
+
+    def test_a_bids_own_maximum_price_holds_its_limit_down(self):
+        self.assertEqual(ask_ceiling.buyer_limit([10.0], [0.0], [1000.0], [7.0]), 7.0)
+
+    def test_a_bid_with_no_floor_is_read_at_what_it_asks_for(self):
+        self.assertEqual(ask_ceiling.buyer_limit([0.0], [4.0], [20.0], [INF]), 5.0)
+
+    def test_bids_with_no_budget_or_nothing_wanted_take_none(self):
+        self.assertIsNone(ask_ceiling.buyer_limit([10.0, 0.0], [0.0, 0.0], [0.0, 50.0], [INF, INF]))
+
+    def test_no_bids_give_none(self):
+        self.assertIsNone(ask_ceiling.buyer_limit([], [], [], []))
+
+
+class RecipeCeilingTests(unittest.TestCase):
+    def test_a_maker_with_another_recipe_pays_up_to_where_the_other_is_cheaper(self):
+        # scrap route: 4 + 2 hours * 0.5 = 5 a tool; ore route at price p: 2p + 1; they meet at p = 2
+        ceiling = ask_ceiling.recipe_ceiling("ore", SMITH, [SMITH, SCRAP], {"tool": 20.0, "scrap": 4.0}, WAGES, 0.0)
+        self.assertAlmostEqual(ceiling, 2.0)
+
+    def test_a_maker_with_no_other_recipe_pays_up_to_its_break_even(self):
+        # revenue 20, labour 1: the run breaks even when two ore cost 19
+        ceiling = ask_ceiling.recipe_ceiling("ore", SMITH, [SMITH], {"tool": 20.0}, WAGES, 0.0)
+        self.assertAlmostEqual(ceiling, 9.5)
+
+    def test_the_switch_never_lifts_the_ceiling_past_break_even(self):
+        # the other route is dear (90 a tool) but the tool sells for 20, so the run's break-even binds
+        ceiling = ask_ceiling.recipe_ceiling("ore", SMITH, [SMITH, SCRAP], {"tool": 20.0, "scrap": 89.0}, WAGES, 0.0)
+        self.assertAlmostEqual(ceiling, 9.5)
+
+    def test_a_recipe_that_loses_money_even_with_the_input_free_gives_no_ceiling(self):
+        self.assertIsNone(ask_ceiling.recipe_ceiling("ore", SMITH, [SMITH], {"tool": 0.5}, WAGES, 0.0))
+
+    def test_a_recipe_that_cannot_be_priced_gives_no_ceiling(self):
+        self.assertIsNone(ask_ceiling.recipe_ceiling("ore", SMITH, [SMITH], {}, WAGES, 0.0))
+
+    def test_a_recipe_not_using_the_good_gives_no_ceiling(self):
+        self.assertIsNone(ask_ceiling.recipe_ceiling("ore", SCRAP, [SCRAP], {"tool": 20.0, "scrap": 4.0}, WAGES, 0.0))
+
+    def test_the_main_output_is_the_most_valuable_one(self):
+        joint = Recipe("joint", {"meat": 1.0, "bone": 1.0}, {"cattle": 1.0}, {})
+        self.assertEqual(ask_ceiling.main_output(joint, {"meat": 5.0, "bone": 1.0}), "meat")
+
+
+class BuyerLimitRecordTests(unittest.TestCase):
+    def test_a_limit_is_kept_and_a_year_without_one_forgets_it(self):
+        from sim.economy.goods_record import GoodsRecord
+        record = GoodsRecord()
+        record.note_buyer_limit("lamp_oil_l", 4.0)
+        self.assertEqual(record.buyer_limits, {"lamp_oil_l": 4.0})
+        record.note_buyer_limit("lamp_oil_l", None)
+        self.assertEqual(record.buyer_limits, {})
+
+
+class GoodCeilingTests(unittest.TestCase):
+    def test_the_highest_leg_is_the_ceiling(self):
+        self.assertEqual(ask_ceiling.good_ceiling(AskCeiling(3.0, None), None, [2.0, None, 4.0]), AskCeiling(4.0, None))
+
+    def test_a_good_alone_in_its_need_is_bounded_by_the_households_budget(self):
+        household = AskCeiling(None, ask_ceiling.CAUSE_NO_ALTERNATIVE)
+        self.assertEqual(ask_ceiling.good_ceiling(household, 12.0, []), AskCeiling(12.0, None))
+
+    def test_a_good_in_no_need_is_bounded_by_the_recipes_that_use_it(self):
+        household = AskCeiling(None, ask_ceiling.CAUSE_NO_NEED)
+        self.assertEqual(ask_ceiling.good_ceiling(household, 12.0, [6.0]), AskCeiling(6.0, None))
+
+    def test_a_good_with_no_buyer_that_bounds_it_says_so(self):
+        household = AskCeiling(None, ask_ceiling.CAUSE_NO_NEED)
+        self.assertEqual(ask_ceiling.good_ceiling(household, None, [None]), AskCeiling(None, ask_ceiling.CAUSE_NO_BUYER))
 
 
 class AskAlternativesTests(unittest.TestCase):
-    def alternatives(self, prices, costs):
-        setup = types.SimpleNamespace(basket_for=lambda tile: types.SimpleNamespace(substitution=1.0, needs=(HEAT,)))
-        found = ask_ceiling.AskAlternatives(setup, None)
-        found._prices, found._costs = prices, costs      # the year's national prices and making costs, written out
+    def alternatives(self, prices, costs, needs=(HEAT,), recipes=(), limits=None):
+        setup = types.SimpleNamespace(basket_for=lambda tile: types.SimpleNamespace(substitution=1.0, needs=needs),
+                                      recipes={each.recipe_id: each for each in recipes})
+        found = ask_ceiling.AskAlternatives(setup, types.SimpleNamespace(goods=types.SimpleNamespace(buyer_limits=limits or {})))
+        found._prices, found._costs, found._wages, found._rate = prices, costs, WAGES, 0.0      # the year's figures, written out
         return found
+
+    def test_a_good_alone_in_its_need_is_bounded_by_the_households_budget(self):
+        found = self.alternatives({}, {"lamp_oil_l": 1.0}, needs=(LONE,), limits={"lamp_oil_l": 4.0})
+        self.assertAlmostEqual(found.multiple("lamp_oil_l", "tile"), 4.0)
+
+    def test_an_intermediate_good_is_bounded_by_its_makers_next_best_recipe(self):
+        found = self.alternatives({"tool": 20.0, "scrap": 4.0}, {"ore": 1.0}, needs=(), recipes=(SMITH, SCRAP))
+        self.assertAlmostEqual(found.multiple("ore", "tile"), 2.0)
+
+    def test_an_intermediate_good_whose_makers_have_no_other_recipe_is_bounded_by_their_break_even(self):
+        found = self.alternatives({"tool": 20.0}, {"ore": 1.0}, needs=(), recipes=(SMITH,))
+        self.assertAlmostEqual(found.multiple("ore", "tile"), 9.5)
+
+    def test_a_good_nobody_buys_has_no_room_above_cost(self):
+        found = self.alternatives({}, {"dust": 1.0}, needs=(), recipes=())
+        self.assertEqual(found.multiple("dust", "tile"), ask_adjust.NO_BOUND_MULTIPLE)
 
     def test_charcoal_whose_buyers_can_burn_cheap_wood_is_bounded_by_the_wood(self):
         found = self.alternatives({"wood_kg": 0.5}, {"charcoal_kg": 0.4})
@@ -128,7 +225,7 @@ class View(ViewDefaults):
 
 
 class SellerAskTests(unittest.TestCase):
-    def asked(self, alternatives):
+    def asked(self, alternatives, start=0.97 * 1.5 * RUN_COST_PER_UNIT):
         recipe = Recipe("burn", {GOOD: 1.0}, {"wood_kg": 2.0}, {"labour": 4.0})
         producer = Producer(SELLER, "lord", "burn", TILE, 10.0)
         setup = types.SimpleNamespace(specs={}, currency_id="coin", recipes={"burn": recipe},
@@ -138,18 +235,18 @@ class SellerAskTests(unittest.TestCase):
                                        goods=types.SimpleNamespace(unmet={}))
         buyer = Bid("buyer", GOOD, AREA, TILE, 0.0, 200.0, 10.0, 1.0, 2000.0)      # a sum to spend whatever the price
         costs = seller_offers.UnitCosts(alternatives)
-        chosen = seller_offers.strategic_offers(setup, record, View(), [buyer], [Offer(SELLER, GOOD, AREA, TILE, 1000.0, 0.97 * 1.5 * RUN_COST_PER_UNIT)],
+        chosen = seller_offers.strategic_offers(setup, record, View(), [buyer], [Offer(SELLER, GOOD, AREA, TILE, 1000.0, start)],
                                                 10.0, costs)
         return chosen[0].reservation_price
 
     def test_a_charcoal_seller_facing_inelastic_demand_is_held_to_the_wood_its_buyers_can_burn(self):
         # wood at 0.5 gives one unit of heat, charcoal two: parity is 1.0, about 0.67 of what a unit costs to make, so no markup
-        alternatives = ask_ceiling.AskAlternatives(None, None)
+        alternatives = types.SimpleNamespace()
         alternatives.multiple = lambda good, tile: ask_ceiling.band_multiple(1.0, AskCeiling(1.5 * RUN_COST_PER_UNIT, None), RUN_COST_PER_UNIT)
         self.assertLessEqual(self.asked(alternatives), 1.5 * RUN_COST_PER_UNIT * (1.0 + 1e-9))
 
-    def test_without_the_years_alternatives_the_stated_multiple_is_the_bound(self):
-        self.assertLessEqual(self.asked(None), ask_adjust.ASK_BAND_CEILING * RUN_COST_PER_UNIT * (1.0 + 1e-9))
+    def test_without_the_years_alternatives_a_seller_with_no_markup_derived_asks_no_more_than_cost(self):
+        self.assertLessEqual(self.asked(None, start=RUN_COST_PER_UNIT), RUN_COST_PER_UNIT * (1.0 + 1e-9))
 
 
 if __name__ == "__main__":

@@ -61,7 +61,7 @@ def _kernel_arguments(rows, arrays: YearArrays, pack: ClosePack, market_capacity
             matrices.plant_life_years, matrices.idle_wear_share,
             columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor, columns.years_of_loss,
             columns.cash_target, columns.expected_sales, columns.last_runs, columns.land_rent_per_run,
-            columns.earnings_history, columns.revenue_history, columns.history_count, columns.expected_prices,
+            columns.earnings_history, columns.revenue_history, columns.history_count, columns.expected_prices, pack.ask_multiple,
             arrays.area_index.of_good_tile, memory.price, memory.offered, memory.cleared, memory.bare_quote, memory.wage,
             pack.clearing, pack.unmet, market_capacity, pack.spoilage, pack.ground,
             pack.rate_of, pack.cash_in_currency, pack.cash_in_money, pack.revenue, pack.running_costs, pack.stock, pack.sold,

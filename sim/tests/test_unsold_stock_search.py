@@ -40,6 +40,9 @@ class View(ViewDefaults):
         return 0.0
 
 
+BAND = 3.0
+
+
 def game(*sellers, workshops=1):
     recipe = Recipe("melt", {GOOD: 1.0}, {"metal": 2.0}, {"labour": 4.0})
     producers = {name: Producer(name, "lord", "melt", TILE, 10.0, workshops=workshops) for name in sellers}
@@ -57,10 +60,15 @@ def offer(seller, quantity, ask):
     return Offer(seller, GOOD, AREA, TILE, quantity, ask)
 
 
+def bands():
+    return seller_offers.UnitCosts(types.SimpleNamespace(multiple=lambda good, tile: BAND))     # the width the buyers give, written out
+
+
 def searched(bids, offers, last_price=None, workshops=1):
     setup, record = game(*{each.seller for each in offers}, workshops=workshops)
-    chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, last_price)
-    final, result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen, GOOD, AREA, "coin", last_price)
+    costs = bands()
+    chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, last_price, costs)
+    final, result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen, GOOD, AREA, "coin", last_price, costs)
     return {each.seller: each for each in final}, result
 
 
@@ -91,11 +99,12 @@ class UnsoldStockSearchTests(unittest.TestCase):
 
     def test_a_seller_that_sold_out_keeps_its_ask(self):
         setup, record = game("a")
+        costs = bands()
         bids = [buyer(100.0, 4.0 * COST)]
         offers = [offer("a", 100.0, 1.2 * COST)]
-        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None)
+        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None, costs)
         final, result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
-                                                        GOOD, AREA, "coin", None)
+                                                        GOOD, AREA, "coin", None, costs)
         self.assertEqual(final, chosen)
         self.assertAlmostEqual(sold(result, "a"), 100.0)
 
@@ -114,30 +123,33 @@ class UnsoldStockSearchTests(unittest.TestCase):
 
     def test_a_market_that_sells_out_with_no_excess_demand_is_left_as_chosen(self):
         setup, record = game("a")
+        costs = bands()
         bids = [buyer(50.0, 4.0 * COST)]
         offers = [offer("a", 50.0, 1.2 * COST)]
-        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None)
+        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None, costs)
         final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
-                                                         GOOD, AREA, "coin", None)
+                                                         GOOD, AREA, "coin", None, costs)
         self.assertEqual(final, chosen)
 
     def test_a_seller_that_sells_out_with_buyers_turned_away_asks_up_to_the_buyers_ceiling(self):
         setup, record = game("a")
+        costs = bands()
         bids = [buyer(100.0, 1.45 * COST)]
         offers = [offer("a", 50.0, 1.2 * COST)]
-        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None)
+        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None, costs)
         final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
-                                                         GOOD, AREA, "coin", None)
+                                                         GOOD, AREA, "coin", None, costs)
         self.assertAlmostEqual(final[0].reservation_price, 1.45 * COST, delta=0.01 * COST)
 
     def test_a_seller_turned_buyers_away_asks_no_more_than_the_band_above_its_cost(self):
         setup, record = game("a")
+        costs = bands()
         bids = [buyer(100.0, 40.0 * COST)]
         offers = [offer("a", 50.0, 1.2 * COST)]
-        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None)
+        chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None, costs)
         final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
-                                                         GOOD, AREA, "coin", None)
-        limit = unsold_search.ask_limits(setup, record, View(), offers, [0], {})[0]
+                                                         GOOD, AREA, "coin", None, costs)
+        limit = unsold_search.ask_limits(setup, record, View(), offers, [0], costs)[0]
         self.assertAlmostEqual(final[0].reservation_price, limit, delta=0.01 * limit)
         self.assertLess(limit, 40.0 * COST)
 
@@ -145,6 +157,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
         """How many market crossings one search makes for sellers asking `asks` under `view`."""
         offers = [offer("a", 100.0, ask) for ask in asks]
         setup, record = game("a")
+        costs = bands()
         counted, original = [0], goods_market.crossing
 
         def counting(*arguments, **keywords):

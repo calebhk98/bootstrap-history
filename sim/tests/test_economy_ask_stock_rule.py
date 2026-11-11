@@ -8,11 +8,12 @@ import unittest
 from sim.economy import ask_adjust
 
 COST = 10.0
+MULTIPLE = 3.0
 SUPPLY, TARGET = 100.0, 10.0
 
 
 def next_ask(ask, stock, target=TARGET):
-    return ask_adjust.adjusted_within_band(ask, COST, stock, target)
+    return ask_adjust.adjusted_within_band(ask, COST, stock, target, MULTIPLE)
 
 
 def unsold_at(ask):
@@ -31,7 +32,7 @@ class StockAgainstTargetTests(unittest.TestCase):
         self.assertGreater(next_ask(15.0, 1.5 * TARGET), next_ask(15.0, 3.0 * TARGET))
 
     def test_the_ask_stays_inside_the_band(self):
-        edge = ask_adjust.band_edge(COST)
+        edge = ask_adjust.band_edge(COST, 0.0, MULTIPLE)
         self.assertEqual(next_ask(edge, 0.0), edge)
         self.assertEqual(next_ask(COST, 100.0 * TARGET), COST)
 
@@ -39,7 +40,7 @@ class StockAgainstTargetTests(unittest.TestCase):
         self.assertEqual(next_ask(0.5 * COST, 100.0 * TARGET), 0.5 * COST)
 
     def test_no_cost_to_anchor_on_means_no_move(self):
-        self.assertEqual(ask_adjust.adjusted_within_band(15.0, None, 0.0, TARGET), 15.0)
+        self.assertEqual(ask_adjust.adjusted_within_band(15.0, None, 0.0, TARGET, MULTIPLE), 15.0)
 
     def test_a_cobweb_around_the_stock_target_shrinks(self):
         ask, errors = 25.0, []

@@ -9,7 +9,7 @@ import types
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
-from sim.economy import ask_adjust, seller_offers, unsold_search
+from sim.economy import seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -83,9 +83,9 @@ class MarkupLimitTests(unittest.TestCase):
         eager = [Bid("buyer", GOOD, AREA, TILE, 500.0, 0.0, 200.0, 0.0, 1e9)]
         self.assertGreaterEqual(asked(eager, 100.0, 200.0, 200.0), 0.85 * 200.0)
 
-    def test_without_substitution_the_stated_band_still_bounds_the_ask(self):
-        ask = asked([fixed_budget_buyer()], 1000.0, RUN_COST_PER_UNIT * 2.9, 10.0, substitution=1.0)
-        self.assertLessEqual(ask, ask_adjust.ASK_BAND_CEILING * RUN_COST_PER_UNIT * (1.0 + 1e-9))
+    def test_without_substitution_or_a_ceiling_from_the_buyers_the_seller_has_no_room_above_cost(self):
+        ask = asked([fixed_budget_buyer()], 1000.0, RUN_COST_PER_UNIT, 10.0, substitution=1.0)
+        self.assertLessEqual(ask, RUN_COST_PER_UNIT * (1.0 + 1e-9))
 
 
 if __name__ == "__main__":
