@@ -1,7 +1,7 @@
 """Provisional numbers behind how taxpayers hide income from a form, each awaiting a derivation."""
 from sim.constants import declare
 
-_RETIRE = "Complaints/657: what can be hidden and what hiding costs come from the payers' holdings (which income is in kind, in coin, on the road) and from the officials' records"
+_RETIRE = "Complaints/972: what can be hidden and what hiding costs come from the payers' holdings (which income is in kind, in coin, on the road) and from the officials' records"
 
 HIDEABLE_SHARE_OF_INCOME = declare(
 	"HIDEABLE_SHARE_OF_INCOME", 0.5, kind="temporary_heuristic", unit="share of a payer's income", source=None,

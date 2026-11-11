@@ -1,17 +1,13 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - the AI state's menu foresees unrest and `FISCAL_BURDEN_WEIGHT` is deleted; a harvest tax reaches land demand and the farm-hours choice; what is open is the producers' run decisions (numba kernels) and the unsourced hiding-cost curve
+**Status:** closed - a rate now has consequences in hiding, flight, liability, unrest, and in the producers', households' and AI state's own decisions; the unsourced hiding-cost constants are filed as 972
 
 Follows from 626 (tax rates as a state choice).
 
-**What is wrong now.** The base responds in the ways listed under Built, but:
-
-- The producers' run decisions (`producers.plan` and its kernels `plan_kernel`, `close_kernel`, the entry kernels) read expected
-  output prices gross of the harvest tax; only the land demand and the households' farm hours and land bids net it. Netting the
-  run decision needs the kept share as a per-recipe column in each kernel and the reference functions beside them, which is a
-  change to the kernels' signatures and their cache, not a one-line input.
-- The hiding-cost curve (`HIDING_MARGINAL_COST_AT_CEILING`, `HIDEABLE_SHARE_OF_INCOME`) has no source (Research needed below);
-  both declare `retire` 657, so this complaint cannot close until a source is opened for them.
+**What is wrong now.** Nothing in the list that opened this complaint: the AI state's menu foresees unrest, a harvest tax reaches the
+land demand, the farm-hours choice and the producers' run, plant and entry decisions (`harvest_tax.py`, the plan, close and entry
+kernels and their reference functions), and `FISCAL_BURDEN_WEIGHT` is deleted. The hiding constants' missing source is
+Complaints/972.
 
 **Why it matters.** Without a full response of the base there is a ceiling to taxation only at the rate cap, and a state
 cannot lose by overtaxing in every way a real one does (CLAUDE.md 4.1: the outcome should come from lower-level state, not
@@ -89,12 +85,12 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
 fills a title below one on a tile except a clearer's new ground), so a taker's years without tax are not applied after the first comparison. All net outflow from a taxed area is
 treated as flight (no split of the part that is not about tax); a fugitive's refuge is the area that gained most that year, not tracked per person; arrears accrue as a year's take at
 the area's subsistence, not the person's income, and `Route.expected_penalty` counts this year's take only. The levy and the demand in kind do not net flight (they net unrest). Whole-game effect
-not measured (a slow topic and the fingerprint are needed). (b) Run decisions net no harvest tax (see above). (c) The hiding-cost curve has no source.
+not measured (a slow topic and the fingerprint are needed). Whole-game effect of the harvest tax on runs not measured (a slow topic and the fingerprint are needed).
 
 ## Research needed
 
 No source on pre-modern tax pressure, flight and abandonment was opened, so the hiding constants
-have none. The question: how did taxpayers respond to a heavier take in the Roman and medieval worlds, by form (flight of
+have none (filed as Complaints/972). The question: how did taxpayers respond to a heavier take in the Roman and medieval worlds, by form (flight of
 tenants and the abandoned land of the late empire, anachoresis in Roman Egypt, concealment, evasion, revolt), and at what
 share of the harvest did each begin? Sources to open: Roman Egypt tax-flight papyri studies, the Codex Theodosianus on agri
 deserti, and medieval English peasant flight and tallage studies. A response curve fitted to those is a validation of the
