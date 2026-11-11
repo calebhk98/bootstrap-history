@@ -29,7 +29,7 @@ class OutputView(Revenue):
     """The revenue part over a stand-in game that holds tiles a and b and answers tonnes by tile."""
 
     def __init__(self, by_tile):
-        super().__init__(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={GOOD: by_tile, "silk_kg": {}})))
+        super().__init__(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={GOOD: by_tile, "silk_kg": {}}, mine_output_by_tile={GOOD: {}, "silk_kg": {}})))
 
     def held_tiles(self):
         return ["a", "b"]

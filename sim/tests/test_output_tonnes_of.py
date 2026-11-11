@@ -34,6 +34,6 @@ class OutputTonnesTests(unittest.TestCase):
             held = set(generator.sample(tiles, len(tiles) // 2))
             reads = _reads(output)
             for good in GOODS:
-                view = Revenue(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={good: reads.output_tonnes_of(good)})))
+                view = Revenue(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={good: reads.output_tonnes_of(good)}, mine_output_by_tile={good: {}})))
                 view.held_tiles = lambda held=held: sorted(held)
                 self.assertEqual(view.output_tonnes(good), output_tonnes_by_table(output, good, held), (seed, good))
