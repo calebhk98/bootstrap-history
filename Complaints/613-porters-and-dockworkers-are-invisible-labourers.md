@@ -1,6 +1,6 @@
 # Porters and dockworkers have no trade, so the largest labour group of a society without draught animals is hidden
 
-**Status:** partly - porter and dockworker trades exist, carriage books to them, and the economy's carriage table now offers only modes whose means are held and prices foot with porter crew; `economy-check --accounts --carriage` prints porter and dockworker hours demanded and hired; the whole-game measurement in "What is left" has not been run
+**Status:** partly - porter and dockworker trades exist, carriage books to them, and the economy's carriage table now offers only modes whose means are held and prices foot with porter crew; `economy-check --accounts --carriage` prints porter and dockworker hours demanded and hired; the whole-game measurement is in "What is left": porters are not hired after year 1 because the merchants' worth of an hour stays under the porter wage; open
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming). Depends on 609.
 
@@ -33,6 +33,25 @@ handling to it. Every mode's crew is bid in its own trade (the heuristic `CARRIA
   own route searches do follow the nodes held. Domestic fallback hauls (`Haul.unjoined_haul`) still price `cart` whatever is held.
 
 - Verify in a whole game that porter and dockworker hours are bid and hired: `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500` (`sim/economy/carriage_report.py`); the porter row should show hired hours near the demanded ones. The `occupational_distribution` slow topic is now only a data lint (619).
+- Measured on this commit (`python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500`, shipped
+  openings): porter demanded 2212.5 / hired 1104.6 in year 1, demanded 1475 / hired 0 in year 2, no bid in year 3 (fallback fee
+  421.46 paid to a household of the source tile), demanded 370.47 / hired 0 in year 4, none in year 5. Traced with a wrapper that
+  printed each bid's maximum wage, the porter wage in the bid's area and the porter hours on offer (not committed):
+  - Every porter bid is in one area (`work@honduras_02`). Its maximum wage (`carriage_money_wanted` over `carriage_hours_wanted`,
+    `sim/economy/merchants_dispatch_kernel.py` `ask_crew`) was 2.0068 in year 1, 2.0134 in year 2, 1.934 in year 4, flat across years and
+    identical for the three merchants, while the porter wage the market cleared at was 1.978 before year 1, then 2.080, 2.134 (and 2.42 in year 5).
+  - Year 2 and 4: the maximum is under the wage, so `clearing.eligible_bids` drops the bid ("an employer whose maximum is under the wage
+    wants none"). Hours on offer were not short (porter supply in the area, hours hired plus idle: 84692 in year 2 against 1475 demanded),
+    so supply renewal is not the cause. The hours are booked to the account the clearing reads (`crew_hours_bought` is built from the
+    clearing's own `hours_hired_by_market`).
+  - Year 1 is half hired because the seeded porter workforce offers 1497.3 hours in that area against 2212.5 bid (hired 1104.6, supply
+    left idle about 393); the seed is cut to the plan (`opening_placement.seeds_where_hired`) and the bid ceiling sat within 1.5 percent of the wage.
+  - The cause is therefore the merchant's worth of an hour: gain (expected price at the destination less at the source, less the fee's
+    non-crew part) per crew hour stays near the opening-wage fee, so it lies under a porter wage that the household reservation (the
+    unskilled wage) lifts a few percent a year. A shipment that stops paying at the new wage is cut (`crew_cuts`), the plan then empties and the
+    next year's shipments go out through the household-fee fallback. No code fix is made yet: the lever is how a merchant's expected
+    prices follow the price level (they stay near the opening-wage spread while the wage moves), which belongs to the merchants'
+    expectation rule, and a bid ceiling raised without it would hire hours the merchant's own prices cannot pay for.
 - `sea_freight.PORT_HANDLING_HOURS_PER_TONNE` (read in `sim/markets/port_setup.py`, `sim/freight/models.py`) stays a labelled heuristic: no source found (a port-economics page gives a longshore crew
   5 to 10 tons an hour but not the crew size, so no per-worker figure follows).
 - The sea handling money (`handling_rates`, `sim/markets/port_setup.py`) is still priced at the unskilled wage; porter and dockworker wages come from the
