@@ -12,6 +12,17 @@ The list below predates many test removals and needs a fresh `--slow` run (pinne
 Measured: the full slow run on main 3cb9c9a0, 2026-10-21, `python3 -m sim.tests --slow --jobs 3 --timing` in a checkout pinned to
 that commit. Re-run the same command for the current list; this section is replaced, not appended, each time.
 
+## Price solver reds (branch slow-reds-price-solver)
+
+- `price_book_deleted` "gated material is priced as if the technology were held": engine. `entries_in_reach` dropped a joint
+  recipe whenever any output was already made, so the horse herd (meat beside the draught animal) never priced the draught
+  animal for a society without horses, and the line main's wagon, the electricity and aluminium went unpriced for Mexica.
+  A held co-product now neither shuts a recipe out nor decides which is nearest; regression test
+  `test_entries_in_reach_joint`.
+- `price_solve_undamped_opening` and `price_solver_land`: stale expectations after bristle moved to the pig herd's outputs
+  (Complaint 532). The recorded fixture no longer names the retired `bristles_kg` entry, and the land test now states that
+  the herd recipe is bristle's only maker and carries the land.
+
 ## Full run on 35396164 (2026-10-22)
 
 `python3 -m sim.tests --slow --jobs 3 --timing --topic-seconds 1500` in a checkout pinned to 35396164: the topics that failed

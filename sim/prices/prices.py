@@ -615,22 +615,22 @@ def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable
 def _entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
                       production_entries: ProductionEntries, mods_dir: Optional[str] = None) -> FrozenSet[str]:
     """Keys of techniques not held that make only materials the held set cannot make, where the technique
-    is the fewest research steps away for every material it makes.
+    is the fewest research steps away for every new material it makes.
 
     Such a technique prices a new material through the techniques held for everything else and cannot
     undercut one already held; a later, cheaper route to the same material, or a joint process whose
-    co-product a nearer technique already makes, is left out (the material then prices at the nearer one)."""
+    new co-product a nearer technique already makes, is left out (the material then prices at the nearer one).
+    A joint process that also makes something already held (a herd's meat beside its draught animal) is in reach
+    for its new outputs; the held output neither shuts it out nor decides which technique is nearest."""
     # a waste co-product (manure, straw) is tipped when nobody takes it, so it neither shuts a joint process out
     # because the held set already makes it nor decides which technique is nearest
     products = {material for material in production_entries_outputs(production_entries)
-                if material not in disposal_cost.waste_materials()}
+                if material not in disposal_cost.waste_materials() and material not in resolvable_materials}
     candidates = {}
     for key, entry in production_entries.items():
         gate = entry.get("requires_node")
         outputs = entry.get("outputs") or {}
         if gate is None or gate in held_gate_nodes or not any(material in products for material in outputs):
-            continue
-        if any(material in resolvable_materials and material in products for material in outputs):
             continue
         candidates[key] = (_unheld_steps_to(gate, held, mods_dir), key)
     nearest: Dict[str, Tuple[int, str]] = {}
