@@ -16,7 +16,7 @@ from .name_candidates import candidates_the_player_may_see
 from .compact import compact_state, compact_stuck, compact_why
 from .help import _agent_help
 from .field_check import unknown_field_refusal
-from .nodes import NODE_NAME_NORM, _did_you_mean, _norm_name, _resolve_by_name
+from .nodes import _did_you_mean, _norm_name, _resolve_by_name, names_for
 from sim.ui.memory import load_state, save_state
 from .score import victory_report
 from .why_material import material_story
@@ -445,7 +445,8 @@ def _agent_dispatch_inner(sim, nodes, cmd):
     if (isinstance(cmd.get("cmd"), str) and isinstance(cmd.get("id"), str)
             and cmd["cmd"].strip().lower() in name_commands(table)
             and cmd["id"] not in nodes):
-        _name_cands = _resolve_by_name(cmd["id"])
+        _names = names_for(sim.view("mods_directory")())
+        _name_cands = _resolve_by_name(cmd["id"], _names)
         if sim.view("fog_of_war")():
             # ONLY WHAT THE PLAYER HAS ACTUALLY HEARD OF. Two nodes can share
             # a name where one is built and the other is still beyond the
@@ -464,7 +465,7 @@ def _agent_dispatch_inner(sim, nodes, cmd):
             # of the goal's own name, not the prefix/substring tiers: a vague
             # guess like "transistor" must stay refused, the same way
             # `_did_you_mean` already refuses to suggest the goal for one.
-            _exact_here = NODE_NAME_NORM.get(_norm_name(cmd["id"]), ())
+            _exact_here = _names.by_name.get(_norm_name(cmd["id"]), ())
             _op_lc = cmd["cmd"].strip().lower()
             _name_cands = candidates_the_player_may_see(
                 _name_cands, lambda node_id: sim.view("visibility")(node_id, _name_memo), _goal, _op_lc, _exact_here)
