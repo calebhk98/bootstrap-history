@@ -15,6 +15,7 @@ state (tree_filters._row), and the spelling suggestions (_did_you_mean)."""
 QUICK_TOPIC = True
 
 import json
+import types
 import unittest
 from sim.knowledge.api import KnowledgeSeat, ReplaceTree
 from unittest import mock
@@ -201,8 +202,8 @@ class NotesTests(unittest.TestCase):
         self.assertEqual((reply["project"], reply["project_name"]), (KNOWN, "Iron smelting"))
 
     def test_only_visible_nodes_are_candidates_for_a_typed_project(self):
-        with mock.patch("sim.ui.proto.notes_projects.NODE_IDS_LOWER", {HIDDEN: HIDDEN, KNOWN: KNOWN}), \
-                mock.patch("sim.ui.proto.notes_projects.NODE_NAME_NORM", {"hiddentheory": (HIDDEN,)}):
+        with mock.patch("sim.ui.proto.notes_projects.names_for", lambda mods_dir: types.SimpleNamespace(
+                ids_lower={HIDDEN: HIDDEN, KNOWN: KNOWN}, by_name={"hiddentheory": (HIDDEN,)})):
             self.assertEqual(candidates(stand_in(), HIDDEN), [])
             self.assertEqual(candidates(stand_in(), "Hidden theory"), [])
             self.assertEqual(candidates(stand_in(), KNOWN), [KNOWN])

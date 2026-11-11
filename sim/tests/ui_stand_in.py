@@ -72,6 +72,8 @@ class StandIn:
         self.answers = answers or {}
 
     def view(self, name):
+        if name == "mods_directory" and name not in self._views:
+            return _Answer(lambda: MODDIR)
         if name not in self._views:
             raise KeyError("the stand-in game was given no view %r" % name)
         return _Answer(self._views[name])
