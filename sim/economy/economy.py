@@ -14,7 +14,7 @@ from sim.world import capital_market
 from .cohort_store import table_of
 from .rates import own_rate
 from . import cohort_people, plan_table, plan_year, producer_table
-from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, lender_ask, secondary_trade, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from . import producer_blocks, transfer_rows
 from .market_areas_follow import follow
@@ -148,7 +148,7 @@ class Economy:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, self.setup,
                           labour_area, loans=lambda: self.record.credit.loans, equity=self._equity_read,
                           loss_rates=lambda: self.record.credit.loss_rates,
-                          pooled=self.record.credit.contracts.deposit_value)
+                          pooled=self.record.credit.contracts.deposit_value, public_yield=lambda: self.record.credit.public_yield)
 
     def _equity_read(self, view) -> Dict[str, float]:
         arrays = self._year_arrays
@@ -195,6 +195,7 @@ class Economy:
                              state_capacity=inputs.state_capacity, book=record.book, markets=record.memory.tables)
         self._follow_population(inputs)
         self._follow_yields(inputs)
+        record.credit.set_public_yield(lender_ask.reachable_public_yield(inputs.state_bond_yield, secondary_trade.BOND_MARKET in inputs.institutions))
         sites.apply_site_limits(record, setup)
         view = self.view()
         arrays = self._year_arrays = YearArrays.carried(self._year_arrays, setup, record, self.area_map, view)
@@ -424,6 +425,7 @@ class Economy:
                                            rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
                                            expected_inflation=lending.expected_inflation_of(record))
         loans, unmet = clearing.loans, clearing.unmet
+        record.credit.note_clearing(view.year, clearing.rate, loans, clearing.cause)
         every_loan = loans
         loans, granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
         record.credit.grant_lines(granted, [ask.borrower for ask in credit_asks])

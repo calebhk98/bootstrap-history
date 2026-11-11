@@ -661,6 +661,10 @@ class YearView:
         """The loss the agent expects per year of credit exposure: none in a view that has no loans."""
         return 0.0
 
+    def public_yield(self, currency: CurrencyId) -> Optional[float]:
+        """The yield the state's bonds offer a lender in `currency`; None in a view that has none in reach."""
+        return None
+
     def cash(self, agent: AgentId, currency: CurrencyId) -> float:
         return self._book.balance(agent, currency)
 

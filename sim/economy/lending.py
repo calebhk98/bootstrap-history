@@ -99,14 +99,17 @@ def lend_working_capital(setup, record, view) -> None:
         return
     offers = [FundsOffer(cohort_id, money, amount, lender_ask.lowest_ask(
                   HOUSEHOLD_TIME_PREFERENCE, expected_inflation[cohort_id],
-                  expected_loss_rate=lender_ask.loss_rate(record.credit.loss_rates.get(cohort_id, 0.0))))
+                  expected_loss_rate=lender_ask.loss_rate(record.credit.loss_rates.get(cohort_id, 0.0)),
+                  public_yield=record.credit.public_yield))
               for cohort_id, amount in spare.items()]
-    loans, _rate, _unmet = credit.clear(
+    clearing = credit.clear_with_cause(
         asked, offers, money, record.memory.rates.get(money), credit_claims.principal_by_borrower(record.credit.loans),
         credit_claims.arrears_history(record.credit.loans, record.credit.remembered_defaults), year=view.year - 1,
         clearing="working_capital",
         rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
         expected_inflation=expected_inflation_of(record))
+    loans = clearing.loans
+    record.credit.note_clearing(view.year, clearing.rate, loans, clearing.cause)
     transfer_rows.post_payments(record.book, *credit.disbursement_rows(loans))
     record.credit.add_loans(loans)
     merchants_credit.stake(record.merchants, {loan.borrower: loan.principal for loan in loans})

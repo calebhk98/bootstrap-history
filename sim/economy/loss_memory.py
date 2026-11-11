@@ -16,6 +16,12 @@ LOSS_RATE_SMOOTHING_SHARE = declare(
     unit="share of the year's loss rate blended into the lender's remembered rate each year", source=None, confidence="D",
     retire="Complaints/641: a lender's expectation follows from the default process it faces, not a fixed memory share",
     why="How fast a lender's expected loss follows its latest year. Larger forgets sooner; the size is not derived.")
+LOSS_CLAIM_LIFE_YEARS = declare(
+    "LOSS_CLAIM_LIFE_YEARS", 3.0, kind="temporary_heuristic",
+    unit="years a claim that was lost had been exposed", source=None, confidence="D",
+    retire="Complaints/106: a defaulted claim carries the years it was held, read from the loan itself",
+    why="A claim lost this year was exposed for its whole life, not for the one year it is written off in, so its loss is "
+        "spread over that life. A single typical life stands in for the loan's own term, which the default record omits.")
 
 
 def age(record, money: str, share: float = None) -> None:
@@ -27,12 +33,15 @@ def age(record, money: str, share: float = None) -> None:
 
 
 def blend(remembered: Mapping[str, float], lost: Mapping[str, float], claims: Mapping[str, float],
-          share: float) -> Dict[str, float]:
-    """Each lender's remembered rate moved `share` of the way to this year's losses over its exposure."""
+          share: float, claim_life_years: float = None) -> Dict[str, float]:
+    """Each lender's remembered rate moved `share` of the way to this year's loss rate: what it lost over the years of
+    exposure it had to it (the claims it still holds for the year, what it lost for the life that claim was held), so a
+    lender that lost its only claim does not read the whole of it as one year's loss."""
+    life = max(1.0, LOSS_CLAIM_LIFE_YEARS if claim_life_years is None else claim_life_years)
     rates: Dict[str, float] = {}
     for agent in sorted(set(remembered) | {agent for agent, amount in lost.items() if amount > 0.0}):    # name order: a save must not follow string hashing
         year_lost = lost.get(agent, 0.0)
-        exposure = year_lost + max(0.0, claims.get(agent, 0.0))
+        exposure = year_lost * life + max(0.0, claims.get(agent, 0.0))
         year_rate = year_lost / exposure if exposure > 0.0 else 0.0
         rate = (1.0 - share) * remembered.get(agent, 0.0) + share * year_rate
         if rate > 1e-9:

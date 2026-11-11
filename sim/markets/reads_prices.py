@@ -34,7 +34,7 @@ class PriceReads:
             economy = agent.economy()
             coin = economy_api.coin_per_unit(economy)
             prices, figures.stale = economy_api.shown_prices_of(economy)
-            figures.answers = ({good: price * coin for good, price in prices.items()}, economy_api.interest_rate(economy))
+            figures.answers = ({good: price * coin for good, price in prices.items()}, economy_api.market_rate(economy))
         return figures.answers
 
     def price_kind(self, good):

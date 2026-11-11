@@ -39,6 +39,11 @@ class CreditRecord(OwnedRecord):
     lent_by_borrower: Dict[AgentId, float] = field(default_factory=dict)  # what each borrower was lent at the last lending
     lent_by_lender: Dict[AgentId, float] = field(default_factory=dict)   # what each lender put out at the last lending (lines counted: a room is claimed)
     credit_granted: Dict[AgentId, float] = field(default_factory=dict)   # what the last clearing granted each credit line asked for (credit_lines.py)
+    clearing_year: int = -1                                              # the year the two sums below are of
+    rate_times_lent: float = 0.0                                         # sum over the year's clearings of base rate times principal lent
+    lent_in_clearings: float = 0.0                                       # principal the year's clearings lent
+    last_clearing_cause: Optional[str] = None                            # why the last clearing lent nothing or held the rate (Clearing.cause); None when it priced loans
+    public_yield: Optional[float] = None                                 # yield the state's bonds offer households this year; None when out of reach (lender_ask.reachable_public_yield)
 
     AGENT_KEYED = ("remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "expansion_runs", "worn_runs",
                    "offered_by_lender", "ask_by_lender", "lent_by_borrower", "lent_by_lender", "credit_granted")
@@ -166,6 +171,25 @@ class CreditRecord(OwnedRecord):
         self.credit_granted = granted
         for borrower in asked:
             granted.setdefault(borrower, 0.0)
+
+    def note_clearing(self, year: int, rate: Optional[float], loans: Sequence[Loan], cause: Optional[str]) -> None:
+        """A clearing of `year` priced `loans` at `rate` (or none: `cause` says why); the year's rate-times-principal sums gain it."""
+        self.last_clearing_cause = cause
+        lent = sum(loan.principal for loan in loans)
+        if rate is None or lent <= 0.0:
+            return
+        if year != self.clearing_year:      # the first clearing of a new year that lent starts its sums afresh
+            self.clearing_year, self.rate_times_lent, self.lent_in_clearings = year, 0.0, 0.0
+        self.rate_times_lent += rate * lent
+        self.lent_in_clearings += lent
+
+    def set_public_yield(self, yield_rate: Optional[float]) -> None:
+        """The yield the state's bonds offer households this year; None when out of their reach."""
+        self.public_yield = yield_rate
+
+    def average_rate(self) -> Optional[float]:
+        """The loan-weighted average base rate of the clearings of the latest year that lent; None before any did."""
+        return self.rate_times_lent / self.lent_in_clearings if self.lent_in_clearings > 0.0 else None
 
     def note_lent(self, loan: Loan) -> None:
         self.lent_by_borrower[loan.borrower] = self.lent_by_borrower.get(loan.borrower, 0.0) + loan.principal

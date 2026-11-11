@@ -85,7 +85,7 @@ class AnswersTests(unittest.TestCase):
         api = reads_prices.economy_api
         for patcher in (
                 mock.patch.object(api, "shown_prices_of", lambda economy, country=None: ({"iron": 3.0}, {"salt"})),
-                mock.patch.object(api, "interest_rate", lambda economy: 0.07)):
+                mock.patch.object(api, "market_rate", lambda economy: 0.07)):
             patcher.start()
             self.addCleanup(patcher.stop)
 

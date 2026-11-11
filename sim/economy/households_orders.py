@@ -226,6 +226,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                                      above_buffer, real_rate, cash, floor_cost))
     if savings > 0.0:
         ask = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, cohort.expected_inflation,
-                                    expected_loss_rate=view.loss_rate(cohort.agent_id, area_currency))
+                                    expected_loss_rate=view.loss_rate(cohort.agent_id, area_currency),
+                                    public_yield=view.public_yield(area_currency))
         funds = (FundsOffer(cohort.agent_id, area_currency, savings, ask),)
     return AgentOrders(bids=tuple(bids), offers=offers, funds_offers=funds)

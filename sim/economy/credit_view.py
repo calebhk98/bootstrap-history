@@ -2,7 +2,7 @@
 
 A plain `YearView` answers the same three questions (`equity`, `claims`, `loss_rate`) with zero: it has no loans or firms.
 """
-from typing import Callable, Mapping, Sequence
+from typing import Callable, Mapping, Optional, Sequence
 
 from sim.loans.view import LoanList
 
@@ -18,11 +18,13 @@ class CreditView(YearView):
     def __init__(self, *arguments, loans: Callable[[], Sequence[Loan]] = lambda: (),
                  equity: Callable[["CreditView"], Mapping[AgentId, float]] = lambda view: {},
                  loss_rates: Callable[[], Mapping[AgentId, float]] = lambda: {},
-                 pooled: Callable[[AgentId], float] = lambda agent: 0.0, **keywords) -> None:
+                 pooled: Callable[[AgentId], float] = lambda agent: 0.0,
+                 public_yield: Callable[[], Optional[float]] = lambda: None, **keywords) -> None:
         super().__init__(*arguments, **keywords)
         self._loans = loans
         self._pooled = pooled             # what the actors' pool owes an agent, in the economy's unit
         self._loss_rates = loss_rates
+        self._public_yield = public_yield  # the state's bond yield in reach of a lender, in the economy's own currency
         self._equity_of_all = equity      # reads the view once, when first asked, and keeps the answer
         self._equity = None
         self._worths = None               # the producers' net worths (equity.producer_worths), built once for the view
@@ -45,6 +47,10 @@ class CreditView(YearView):
     def loss_rate(self, agent: AgentId, currency: CurrencyId) -> float:
         """The loss the agent expects per year of credit exposure (lender_ask.loss_rate)."""
         return lender_ask.loss_rate(self._loss_rates().get(agent, 0.0))
+
+    def public_yield(self, currency: CurrencyId) -> Optional[float]:
+        """The yield of the state's bonds where a lender can buy them (lender_ask.reachable_public_yield); only the economy's own currency has one."""
+        return self._public_yield() if currency == self._currency else None
 
     def equity(self, agent: AgentId) -> float:
         """What the agent owns of the firms (equity.py), at the prices this view carries."""

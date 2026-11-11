@@ -44,6 +44,9 @@ class YearView(View):
     def loss_rate(self, agent, currency):
         return 0.01
 
+    def public_yield(self, currency):
+        return None
+
 
 def year_world(rng):
     basket, view, cohorts = random_world(rng)

@@ -37,10 +37,10 @@ def record(requests, balances):
 
 def lend(the_record, loans=()):
     setup = types.SimpleNamespace(currency_id=MONEY, opening_rate=0.1)
-    clear = mock.Mock(return_value=(list(loans), 0.05, []))
+    clear = mock.Mock(return_value=types.SimpleNamespace(loans=list(loans), rate=0.05, unmet=[], cause=None))
     payments = mock.Mock()
     with mock.patch.object(lending, "credit", types.SimpleNamespace(
-            clear=clear, disbursement_rows=lambda made: (["paid:%s" % loan.borrower for loan in made],))), \
+            clear_with_cause=clear, disbursement_rows=lambda made: (["paid:%s" % loan.borrower for loan in made],))), \
             mock.patch.object(lending.transfer_rows, "post_payments", payments), \
             mock.patch.object(lending, "lender_ask", types.SimpleNamespace(lowest_ask=lambda *a, **k: 0.02, loss_rate=lambda x: 0.0)), \
             mock.patch.object(lending, "credit_claims", types.SimpleNamespace(

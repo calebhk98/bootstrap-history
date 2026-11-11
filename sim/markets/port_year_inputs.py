@@ -7,7 +7,7 @@ from sim.economy.api import EconomyYearInputs
 from sim.labour import api as labour_api
 from .unit_mass import tonnes_per_unit
 
-from . import port_actors, port_bondage, port_flight, port_institutions, port_land, port_levy, port_sites
+from . import port_actors, port_bondage, port_flight, port_institutions, port_land, port_levy, port_public_debt, port_sites
 
 
 def recipe_outputs(economy):
@@ -53,6 +53,7 @@ class YearInputsBuilder:
                           harvest_share_by_good=port_land.harvest_share_by_good(sim),
                           **port_flight.flight_values(sim, economy),
                           institutions=port_institutions.held(sim),
+                          state_bond_yield=port_public_debt.bond_yield_above_coupon(sim),
                           durable_users=tuple(port_actors.held_account(buyer)
                                               for buyer in sorted(sim.scenario.actors.actors)),
                           bondage_tiles=port_bondage.bondage_tiles(sim, economy),

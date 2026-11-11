@@ -19,6 +19,7 @@ RATE_ELASTICITY = declare(
 RATE_FLOOR_SHARE = declare(
     "RATE_FLOOR_SHARE", 0.25, kind="temporary_heuristic",
     unit="share of the starting rate", source=None, confidence="D",
+    retire="Complaints/106: the discount rate of a perpetuity (equity, secondary trade) is the holder's own lowest ask, not a share of the opening rate",
     why="The lowest the market rate falls however plentiful funds are; lenders always have the option of "
         "holding grain or coin, whose return is not modelled.")
 RATE_CEILING_SHARE = declare(
@@ -47,9 +48,9 @@ def bounded_rate(starting_rate: float, rate: float, expected_inflation: float = 
 
 
 def market_rate_answered(opening_rate: float, agent_rate: Optional[float]) -> float:
-    """The market rate: the agent credit market's answer held under the ceiling, or the rate the opening solved while
-    that market has not yet answered."""
-    return opening_rate if agent_rate is None else bounded_rate(opening_rate, agent_rate)
+    """The market rate: the agent credit market's answer (already held under the nominal ceiling, sim/economy/reported_rate.py),
+    or the rate the opening solved while that market has not yet answered."""
+    return opening_rate if agent_rate is None else agent_rate
 
 
 def capital_recovery_factor(rate: float, life_years: float) -> float:

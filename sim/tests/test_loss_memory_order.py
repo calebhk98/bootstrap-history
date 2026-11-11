@@ -12,7 +12,7 @@ class BlendOrderTest(unittest.TestCase):
         remembered = {"zeta_bank": 0.02, "alpha_bank": 0.01, "mu_fund": 0.03}
         lost = {"beta_bank": 5.0, "alpha_bank": 1.0}
         claims = {"alpha_bank": 99.0, "beta_bank": 45.0, "zeta_bank": 10.0, "mu_fund": 30.0}
-        rates = loss_memory.blend(remembered, lost, claims, 0.5)
+        rates = loss_memory.blend(remembered, lost, claims, 0.5, claim_life_years=1.0)
         self.assertEqual(list(rates), ["alpha_bank", "beta_bank", "mu_fund", "zeta_bank"])
         self.assertEqual(rates, {"alpha_bank": 0.5 * 0.01 + 0.5 * (1.0 / 100.0), "beta_bank": 0.5 * (5.0 / 50.0),
                                  "mu_fund": 0.5 * 0.03, "zeta_bank": 0.5 * 0.02})
