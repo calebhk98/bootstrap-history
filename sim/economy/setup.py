@@ -67,6 +67,7 @@ class EconomySetup:
     fuel_need: str  # the basket need fuel meets (need_roles.FUEL_ROLE); a hearth's cooking fuel is added to its floor
     hunger_need: str  # the basket need whose unmet floor counts as hunger (need_roles.HUNGER_ROLE)
     work_need: str  # the basket need met by hours of household work (need_roles.HOUSEHOLD_WORK_ROLE)
+    harvest_share_by_good: Dict[GoodId, float] = field(default_factory=dict)   # good -> share of its harvest the state's forms take from growers this year (the port sets it; harvest_tax.py)
     hiding: Any = None  # (rate, reach) -> share of its base a payer hides; the port hands in the actor layer's rule, None: none
     flight: Any = None  # the actors' flight rules (expected_penalty_of_leaving, arrears_owed_by_fugitive, share_after_immunity), handed in by the port; None: no flight
     debt_bondage_years: float = 0.0               # term of service a landless household in default owes its creditor; 0: the society has no debt bondage (bondage.py)

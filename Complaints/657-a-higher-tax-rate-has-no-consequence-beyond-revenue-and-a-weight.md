@@ -1,19 +1,17 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; the flight comparison, the liability rule and the amnesty, immunity and remission levers are rules, fed by the engine into the labour market's year inputs (tenants flee, fugitives are kept and return) and into the AI state's menu, which nets the base lost to flight; unrest is built (`sim/agents/unrest.py`, read by `sim/campaigns/stability.py`) but the AI state's menu does not foresee it, so `FISCAL_BURDEN_WEIGHT` stays
+**Status:** partly - the AI state's menu foresees unrest and `FISCAL_BURDEN_WEIGHT` is deleted; a harvest tax reaches land demand and the farm-hours choice; what is open is the producers' run decisions (numba kernels) and the unsourced hiding-cost curve
 
 Follows from 626 (tax rates as a state choice).
 
-**What is wrong now.** A state can raise the rate of a form (a player's lever, or an AI state's `raise_rate` response). The
-base responds in the ways listed under Built below (hiding, flight, liability), but not in these:
+**What is wrong now.** The base responds in the ways listed under Built, but:
 
-- Unrest from a heavy burden is built (`sim/agents/unrest.py`; `sim/campaigns/stability.py` reads `tax_burden.harvest_share_taken`
-  and the liability burden), but nothing in the AI state's menu (`fiscal_response.py`, `fiscal_flight.py`, `government_fiscal.py`)
-  foresees it.
-- The producers' land demand and run decisions in the economy do not net a harvest tax off expected revenue
-  (`land_market.demands_of`), and the farm-hours choice has no tax input.
-- The AI state's `raise_rate` option does not count the base lost through unrest (it does net hiding and flight). It weighs a
-  raise by `FISCAL_BURDEN_WEIGHT` (`sim/agents/tuning_fiscal.py`), a labelled stand-in; it retires when the menu values unrest too.
+- The producers' run decisions (`producers.plan` and its kernels `plan_kernel`, `close_kernel`, the entry kernels) read expected
+  output prices gross of the harvest tax; only the land demand and the households' farm hours and land bids net it. Netting the
+  run decision needs the kept share as a per-recipe column in each kernel and the reference functions beside them, which is a
+  change to the kernels' signatures and their cache, not a one-line input.
+- The hiding-cost curve (`HIDING_MARGINAL_COST_AT_CEILING`, `HIDEABLE_SHARE_OF_INCOME`) has no source (Research needed below);
+  both declare `retire` 657, so this complaint cannot close until a source is opened for them.
 
 **Why it matters.** Without a full response of the base there is a ceiling to taxation only at the rate cap, and a state
 cannot lose by overtaxing in every way a real one does (CLAUDE.md 4.1: the outcome should come from lower-level state, not
@@ -72,19 +70,30 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
   and `Government.pull_tax_response_levers` sets the levers the choice covered money with.
 - Tests: `test_tax_flight_wiring.py` (rules called with built inputs; the engine's year is covered only by the whole-game smoke topics).
 
-**`FISCAL_BURDEN_WEIGHT` stays.** The menu now nets flight for a rate raise, but (1) unrest (built, `sim/agents/unrest.py`) is the other loss it stood in for and the menu does not foresee it;
-(2) the levy and the demand in kind, which also carry `income_taken`, do not net flight; (3) with the migration rule's cap on the share who consider
-moving in a year, flight alone never makes a raise yield less in any rate or reach tried, so the loss the weight stands for is not all flight.
+- **The AI state's menu foresees unrest.** `sim/agents/fiscal_unrest.py` calls `unrest.grievance` and `unrest.unrest` (the rules the
+  stability phase reads) on the extra take of an option: a take above the one people are used to is their grievance, the share it
+  makes discontented does not pay it, so `net_of_unrest` is the money the option still raises and `lost_per_money_kept` is the
+  consequence (`unrest_lost`) the policies value. The levy, the demand in kind, a rate raise and collective liability go through
+  it (`fiscal_response._taxed_option`). `FISCAL_BURDEN_WEIGHT` and the `income_taken` consequence are deleted. Unrest is counted
+  from the extra take alone (hunger and the liability burden of the tiles are not in the menu's reading). Test: `test_fiscal_unrest.py`,
+  `test_state_fiscal_response.py` (a rate raise is offered for less than its gross yield).
+- **Harvest tax reaches land demand and farm hours.** `tax_burden.harvest_share_by_material` (the figure `stability.py` reads, per
+  material) goes to the economy as `EconomyYearInputs.harvest_share_by_good` and `EconomySetup.harvest_share_by_good`; `sim/economy/harvest_tax.py`
+  nets it off the output prices in `land_market.demands_of`, in `land_bid_year.best_margin` (a household's land bid) and in
+  `labour_ask_floor.plot_return_per_hour` (the next plot hour against the wage, so `plot_hours_kept` and the wage floor fall with the tax).
+  Tests: `test_economy_harvest_tax.py`, `test_economy_land_market.py`, `test_economy_labour_ask_floor.py`.
+- **Remission** is offered exactly where a cut yields more (`rate_cut_yield`), which is past the rate that yields most; it is not
+  offered below it by design (tested in `test_tax_flight_wiring.py`).
 
 **Still open.** (a) Immunity is read only where a fugitive weighs returning to deserted land: released land is still never taken up by anyone else (nothing in the economy
 fills a title below one on a tile except a clearer's new ground), so a taker's years without tax are not applied after the first comparison. All net outflow from a taxed area is
 treated as flight (no split of the part that is not about tax); a fugitive's refuge is the area that gained most that year, not tracked per person; arrears accrue as a year's take at
-the area's subsistence, not the person's income, and `Route.expected_penalty` counts this year's take only (the fugitives' arrears are not added to a new leaver's). Whole-game effect not
-measured (a slow topic and the fingerprint are needed). (b) `remission` is never offered in the cases tried (see above). (d) The AI state's menu does not foresee unrest. (e) The hiding-cost curve has no source.
+the area's subsistence, not the person's income, and `Route.expected_penalty` counts this year's take only. The levy and the demand in kind do not net flight (they net unrest). Whole-game effect
+not measured (a slow topic and the fingerprint are needed). (b) Run decisions net no harvest tax (see above). (c) The hiding-cost curve has no source.
 
 ## Research needed
 
-No source on pre-modern tax pressure, flight and abandonment was opened, so the hiding constants and `FISCAL_BURDEN_WEIGHT`
+No source on pre-modern tax pressure, flight and abandonment was opened, so the hiding constants
 have none. The question: how did taxpayers respond to a heavier take in the Roman and medieval worlds, by form (flight of
 tenants and the abandoned land of the late empire, anachoresis in Roman Egypt, concealment, evasion, revolt), and at what
 share of the harvest did each begin? Sources to open: Roman Egypt tax-flight papyri studies, the Codex Theodosianus on agri

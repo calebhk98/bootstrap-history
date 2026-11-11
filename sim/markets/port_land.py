@@ -44,6 +44,14 @@ def farmed_forms(sim, economy):
     return tuple(policy_land.farmed_forms(government, economy_api.money_revenue_forms(economy)))
 
 
+def harvest_share_by_good(sim):
+    """(good, share) the home state's forms on the harvest take from growers of the good, one per good the forms touch and the
+    staple; none without a government."""
+    if sim.scenario.actors.countries.government_of(None) is None:
+        return ()
+    return tuple(sorted(tax_burden.harvest_share_by_material(sim.state.actor_world()).items()))
+
+
 def land_tax_share_of_rent(sim):
     """Share of a rent the home state's forms on land take from the owner; none without a government."""
     if sim.scenario.actors.countries.government_of(None) is None:

@@ -44,7 +44,7 @@ def world(rent=20.0):
         tiles={TILE: tile}, recipes=recipes, land_per_run={**LAND, "farm": 2.0}, servant_trade="servant", unskilled_trade="labourer", opening_wages={},
         trades={"servant": types.SimpleNamespace(training_years=0.0), "hand": types.SimpleNamespace(training_years=0.0)}, working_hours_per_year=2000.0,
         specs={GROUND: GoodSpec(GROUND, float("inf"), 0.0, 0.0, "")}, opening_rate=0.05, currency_id="coin",
-        basket_for=lambda tile_id: BASKET)
+        basket_for=lambda tile_id: BASKET, harvest_share_by_good={})
     from sim.book import Book
     record = types.SimpleNamespace(cohorts={POOR: Cohort(POOR, TILE, 0, 10.0, 10.0, 0.0), LANDLORD: Cohort(LANDLORD, TILE, 2, 0.0, 0.0, 1.0)}, producers=ProducerStore({CLEARER: Producer(CLEARER, LANDLORD, "clear", TILE, 10.0)}), book=Book(), land=LandRecord(titles={TILE: {LANDLORD: 1.0}}, land_rent={TILE: rent}), credit=CreditRecord())
     return setup, record, own_production_options(recipes, LAND, BASKET)

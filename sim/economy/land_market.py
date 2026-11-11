@@ -29,7 +29,7 @@ import numpy as np
 from sim.constants import declare
 
 from . import producer_table
-from . import land_priority, land_rents, ownership, titles, titles_ground, unit_cost
+from . import harvest_tax, land_priority, land_rents, ownership, titles, titles_ground, unit_cost
 from .land_lease import posted_rents
 from .producer_blocks import row_figures
 from .producers import expected_output_prices_at, live_input_prices_at, live_wages_at
@@ -199,8 +199,8 @@ def _value_and_cost_per_hectare(setup, view, figures, land_per_run: float):
     """(output value, other cost) a hectare gives the producer's runs at the prices it expects (`figures`: its row's
     `producer_blocks.RowFigures`), or None when the cost cannot be worked out."""
     recipe = setup.recipes[figures.recipe_id]
-    revenue = unit_cost.revenue_per_run(recipe, expected_output_prices_at(figures.expected_prices, figures.tile, recipe, view)
-                                        ) * figures.yield_factor
+    revenue = harvest_tax.net_revenue_per_run(recipe, expected_output_prices_at(figures.expected_prices, figures.tile, recipe, view),
+                                              setup.harvest_share_by_good) * figures.yield_factor
     cost = unit_cost.variable_cost_per_run(recipe, live_input_prices_at(figures.tile, recipe, view),
                                            live_wages_at(figures.tile, recipe, view))
     return None if not math.isfinite(cost) else (revenue / land_per_run, cost / land_per_run)

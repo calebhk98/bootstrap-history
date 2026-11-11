@@ -179,6 +179,7 @@ class Economy:
         changes: Dict[str, Any] = {}
         if inputs.tax_rates:
             changes["tax_forms"] = taxes.with_rates(self.setup.tax_forms, inputs.tax_rates)
+        changes["harvest_share_by_good"] = dict(inputs.harvest_share_by_good)      # a tax lifted this year is lifted here
         if inputs.site_limits:   # empty keeps the last declared
             changes["site_limits"] = tuple(inputs.site_limits)
         if changes:

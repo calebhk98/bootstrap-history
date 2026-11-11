@@ -134,6 +134,7 @@ class EconomyYearInputs:
     farmed_forms: Tuple[str, ...] = ()                      # money revenue forms the state lets to the best bidder this year (tax_farming.py)
     tax_rates: Tuple[Tuple[str, float], ...] = ()           # (form, rate) the state holds this year; a form not named keeps its rate (taxes.with_rates)
     land_tax_share_of_rent: float = 0.0                     # share of a rent the state's land forms take from the owner (land_market.settle_year)
+    harvest_share_by_good: Tuple[Tuple[str, float], ...] = ()   # (good, share of its harvest the state's forms take from growers): producers and households net it off what a harvest fetches (harvest_tax.py)
     taxed_share_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # share of a stayer's income the state takes on each tile, liability rule included (flight_routes.py)
     state_reach_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # share of the people on each tile the state's officials reach: the chance a leaver is recaptured there
     amnesty_share: float = 0.0                              # share of a fugitive's arrears the state waives (government_levers_tax.amnesty_share)

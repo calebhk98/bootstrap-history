@@ -50,6 +50,7 @@ class YearInputsBuilder:
                           farmed_forms=port_land.farmed_forms(sim, economy),
                           tax_rates=port_land.tax_rates(sim),
                           land_tax_share_of_rent=port_land.land_tax_share_of_rent(sim),
+                          harvest_share_by_good=port_land.harvest_share_by_good(sim),
                           **port_flight.flight_values(sim, economy),
                           institutions=port_institutions.held(sim),
                           durable_users=tuple(port_actors.held_account(buyer)

@@ -128,8 +128,22 @@ def economy_of(arable_by_tile, runs_by_tile):
         book.transfer(Transfer(EDGE_MINT, producer_id, "coin", 1e6, "opening"))
     record = SimpleNamespace(producers=ProducerStore(producers), book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
     titles.seed(record)
-    setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run=LAND_PER_RUN, currency_id="coin")
+    setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run=LAND_PER_RUN, currency_id="coin", harvest_share_by_good={})
     return setup, record
+
+
+class DemandNetOfHarvestTaxTests(unittest.TestCase):
+    def value_per_hectare(self, share_by_good):
+        setup, record = economy_of({"short": 100.0}, {"short": 300.0})
+        setup.harvest_share_by_good = share_by_good
+        demands = land_market.demands_of(setup, record, View({"grain": 1.0}, {"hand": 0.5}), {"producer:short": 300.0})
+        return demands[0].output_value_per_hectare
+
+    def test_a_producer_values_a_hectare_at_what_the_harvest_leaves_it(self):
+        self.assertAlmostEqual(self.value_per_hectare({"grain": 0.25}), 0.75 * self.value_per_hectare({}))
+
+    def test_a_tax_on_a_good_it_does_not_grow_changes_nothing(self):
+        self.assertAlmostEqual(self.value_per_hectare({"barley": 0.5}), self.value_per_hectare({}))
 
 
 class SettleYearTests(unittest.TestCase):

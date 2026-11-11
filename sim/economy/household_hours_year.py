@@ -43,7 +43,8 @@ def cohort_plot_parameters(setup, cohort, available: float, priced, options: Map
     usable = usable_plot_hours(setup, cohort, options, held)
     per_worker_hours = available / cohort.working_people
     marginal = plot_return_per_hour(priced, options, tile.fertility, per_worker_hours,
-                                    cohort.people / cohort.working_people, hectares_per_hour, held / cohort.working_people)
+                                    cohort.people / cohort.working_people, hectares_per_hour, held / cohort.working_people,
+                                    setup.harvest_share_by_good)
     return PlotParameters(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
 
 

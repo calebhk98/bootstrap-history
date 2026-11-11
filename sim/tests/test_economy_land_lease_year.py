@@ -48,7 +48,7 @@ def world(people=10.0, working=10.0):
     setup = types.SimpleNamespace(tiles={TILE: tile}, recipes={"grow_grain": GRAIN_RECIPE}, land_per_run=LAND,
                                   servant_trade="servant", unskilled_trade="labourer", currency_id="coin", opening_wages={},
                                   trades={"servant": types.SimpleNamespace(training_years=0.0), "hand": types.SimpleNamespace(training_years=0.0)}, working_hours_per_year=2000.0,
-                                  basket_for=lambda tile_id: BASKET)
+                                  basket_for=lambda tile_id: BASKET, harvest_share_by_good={})
     record = types.SimpleNamespace(cohorts={POOR: Cohort(POOR, TILE, 0, people, working, 0.0)}, land=types.SimpleNamespace(titles={TILE: {LANDLORD: 1.0}}, tenancies={}, land_rent={TILE: 24.0}, cleared_hectares={}), credit=CreditRecord())
     return setup, record, own_production_options(setup.recipes, LAND, BASKET)
 
