@@ -36,3 +36,7 @@ money stock, which makes the second year's mint bid large (check `cash_target` i
 - Sizing a named district at the size-weighted mean was dropped: it lifts iron districts to a tonnage nobody worked in antiquity.
 - Site room was a cause for the common ores (ore grade defaulting to pure metal; yearly room a flat share of endowment); both
   fixed (`resources_district.district_grade`, `mine_deposits.found_deposits`).
+
+## Measured on 2094a71f
+
+The opening checks printed by the openings rebuild (`python3 sim/simulator.py opening-checks` gives the same rows) put `price_over_cost_coin_metal` inside its band (0.1 to 10) for Rome, England, Norse and Mexica; Rome and England sit about five times cost, so the metal no longer opens at tens of times its cost there. Han's reads n/a (no price for its coin metal; 970). The ores' own ratios (silver ore, Han gold lode ore) are not printed by that command and were not re-measured.

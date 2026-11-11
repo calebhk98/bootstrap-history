@@ -28,3 +28,12 @@ Run `python3 sim/simulator.py opening-checks` for the current values and bounds 
 opening is opened). Why it matters: a check that every opening fails no longer tells a regression from the usual state, and
 shipping needs `--allow-failing`, which also lets a real regression through. Either the openings should meet the bounds,
 or a bound that does not describe a working opening should change, each with its reason.
+
+## Measured on 2094a71f (rebuilding the five base openings)
+
+`python3 sim/simulator.py openings --civs rome_100ad,mexica_1500,england_1300,han_china_100ad,norse_900ad --prune --allow-failing ...` printed the opening checks for each:
+
+- every civilisation: `spin_up_settled` (473)
+- `rome_100ad`, `england_1300`, `han_china_100ad`: `money_against_wear`, each a little under its bound
+- `han_china_100ad`: `price_over_cost_coin_metal` reads n/a (the coin metal has no price at the opening)
+- `mexica_1500` and `norse_900ad`: only `spin_up_settled`
