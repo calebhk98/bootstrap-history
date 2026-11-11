@@ -2,6 +2,7 @@
 the firms that fell wood are limited to, and made dearer by, the stock of the tile they work."""
 QUICK_TOPIC = True
 
+from sim.tests import repository_tables
 import types
 import unittest
 
@@ -22,7 +23,7 @@ def _host(felled=None):
     """A game for the port's timber hooks: the resources module holds the felled ledger and applies the commands."""
     module = resources_stand_in.build(world=ResourcesWorld(forest_felled=dict(felled or {})))
     handlers = {FellTimber: module.fell_timber, RegrowTimber: module.regrow_timber}
-    return types.SimpleNamespace(module=module, farm=types.SimpleNamespace(timber_felled=module.timber_felled),
+    return types.SimpleNamespace(module=module, production_catalog=repository_tables.production_catalog, farm=types.SimpleNamespace(timber_felled=module.timber_felled),
                                  send=lambda command: handlers[type(command)](command),
                                  map=types.SimpleNamespace(**land_views.of({}, ("mode_crews", "modes_carrying", "timber_on_tile"))))
 
@@ -43,7 +44,7 @@ def _limit(host, tile):
 class StockTests(unittest.TestCase):
 
     def test_firewood_is_a_timber_recipe_and_other_goods_are_not(self):
-        self.assertEqual(set(port_timber.timber_recipes(OUTPUTS)), {FIREWOOD})
+        self.assertEqual(set(port_timber.timber_recipes(OUTPUTS, repository_tables.production_catalog())), {FIREWOOD})
 
     def test_felling_lowers_the_standing_stock_and_never_below_nothing(self):
         tile = _forest_tile()

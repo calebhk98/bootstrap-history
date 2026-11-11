@@ -16,6 +16,9 @@ class HouseholdNeeds(Part):
 	def opening_population(self):
 		return float(self.needs.civilisation().get("population", self.needs.default_population()))
 
+	def tonnes_per_unit(self, material):
+		return self.parts.market_objects.reads.tonnes_per_unit(material)
+
 	def _household_model(self):
 		return household_needs.household_model((self.needs.mods_directory(), self.needs.installed_mod_ids()), self.needs.household_need_data,
 		                                       self.parts.market_objects.reads.production_catalog())
@@ -58,7 +61,7 @@ class HouseholdNeeds(Part):
 		population = self.opening_population()
 		units = household_needs.demand_by_material(base, prices_in_hours, population, MEAN_INCOME_HOURS_PER_CAPITA,
 		                                           self._civilisation_basket(base))
-		return household_needs.budget_scaled_final_tonnes(units, prices_in_hours, population, final, self.parts.market_objects.reads.tonnes_per_unit)
+		return household_needs.budget_scaled_final_tonnes(units, prices_in_hours, population, final, self.tonnes_per_unit)
 
 	def _household_need_floors_per_person(self):
 		"""What one person's floor of each need costs a year on the seat's tile: the economy's prices and the tile's climate

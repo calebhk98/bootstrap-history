@@ -32,7 +32,7 @@ def stand_in_society(live_prices=None, land_rent=LAND_RENT):
     economy = types.SimpleNamespace(agent_prices=lambda: live_prices, agent_land_rent_per_hectare=lambda: land_rent,
                                     labour=types.SimpleNamespace(quote=lambda trade: WAGES.get(trade, 0.0)))
     registry = {"labourer": {"fallback": True}, "kilnman": {}}      # the trades the labour side knows; the unskilled one is the fallback
-    return types.SimpleNamespace(economy=economy, scenario=types.SimpleNamespace(held_civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0),
+    return types.SimpleNamespace(production_catalog=lambda: PRODUCTION, economy=economy, scenario=types.SimpleNamespace(held_civ={"id": "testland"}), finance=types.SimpleNamespace(market_rate=lambda: 0.0),
                                  state=types.SimpleNamespace(trade_registry=registry))
 
 
@@ -112,13 +112,13 @@ class AdmitTechniquesWiring(unittest.TestCase):
 
     def test_held_nodes_unchanged_since_the_last_look_leave_the_opening_alone(self):
         port = self.port(["a", "b"], {"b"})
-        with mock.patch.object(agent_economy.price_solver, "default_production_entries", lambda: PRODUCTION):
+        with mock.patch.object(agent_economy.AgentEconomy, "production_catalog", lambda self: PRODUCTION):
             AgentEconomy.admit_techniques(port)
         self.assertEqual(port.stored["opening"], opening())
 
     def test_held_nodes_that_allow_no_new_entry_are_remembered_and_change_nothing(self):
         port = self.port(None, {"b"})
-        with mock.patch.object(agent_economy.price_solver, "default_production_entries", lambda: PRODUCTION):
+        with mock.patch.object(agent_economy.AgentEconomy, "production_catalog", lambda self: PRODUCTION):
             AgentEconomy.admit_techniques(port)
         self.assertEqual(port.stored["techniques_admitted"], ["a", "b"])
         self.assertEqual(port.stored["opening"], opening())

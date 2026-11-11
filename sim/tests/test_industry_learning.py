@@ -92,7 +92,7 @@ def concern_world(producers, days, depths=None):
 class ConcernInputs(unittest.TestCase):
 
     def setUp(self):
-        patched = mock.patch.object(concern_learning.price_solver, "default_production_entries", lambda: {
+        patched = mock.patch.object(concern_learning.price_solver, "default_production_entries", lambda mods_dir=None: {
             "mine_ore": {"requires_node": "mining"}, "grow": {"requires_node": None}})
         patched.start()
         self.addCleanup(patched.stop)

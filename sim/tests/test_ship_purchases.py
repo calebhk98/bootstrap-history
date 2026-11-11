@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from sim.content.api import service_life_years
 from sim.content.tree_source import NO_MODS_DIRECTORY
+from sim.tests import repository_tables
 
 from sim.agents import budget_lines
 from sim.book import Book, GoodsMove
@@ -29,7 +30,8 @@ def storage_economy(capital_asset):
 
 class ShipPurchases(unittest.TestCase):
     def test_fleet_planning_does_not_open_an_unopened_economy(self):
-        world = SimpleNamespace(production=SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"})),
+        world = SimpleNamespace(production_catalog=repository_tables.production_catalog,
+                                production=SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"})),
                                 materials=SimpleNamespace(service_life_years=lambda: service_life_years(NO_MODS_DIRECTORY)))
         port = EconomyPort(world)
         port._opening = True
@@ -39,7 +41,7 @@ class ShipPurchases(unittest.TestCase):
         self.assertGreater(goods[0]["life"], 0.0)
 
     def test_a_new_good_without_a_curated_commodity_group_can_be_bought(self):
-        world = SimpleNamespace(materials=SimpleNamespace(commodity_map=lambda: {"iron_bar_kg": "iron"}))
+        world = SimpleNamespace(production_catalog=repository_tables.production_catalog, materials=SimpleNamespace(commodity_map=lambda: {"iron_bar_kg": "iron"}))
         port = EconomyPort(world)
         self.assertEqual(port.materials_in("warship"), ["warship"])
         self.assertEqual(port.materials_in("iron"), ["iron_bar_kg"])

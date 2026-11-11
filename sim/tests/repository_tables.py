@@ -15,3 +15,14 @@ ANNUAL_WAGE = {trade: STARTING_SCHEDULE.annual_wage(trade) for trade in WAGES}
 
 def trade_family(trade):
     return TRADE_FAMILY.get(trade, "craft")
+
+
+def production_catalog():
+    """The production entries of the repository's mods, as a game over them hands them out."""
+    from sim.world.demand import production_data
+    return production_data(MODDIR)
+
+
+def tonnes_per_unit(material):
+    from sim.markets.unit_mass import tonnes_per_unit as tonnes
+    return tonnes(material, production_catalog())

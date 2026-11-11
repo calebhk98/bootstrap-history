@@ -3,6 +3,7 @@ prospecting finds hidden deposits and the finds are kept; a worked-out deposit c
 QUICK_TOPIC = True
 UNDER_TEST = {"open_mine", "commission_mines"}
 
+from sim.tests import repository_tables
 import types
 import unittest
 
@@ -26,6 +27,7 @@ class _Host:
         module.mine_opex = lambda material: 1.0
         module.mine_land_ceiling = lambda material: 1e12
         module.mine_trade = lambda: "miner"
+        module.production_catalog = repository_tables.production_catalog
         self.holdings = module.seat
         self.world_map, self.civ = geography.open_map(), resources_stand_in.rome()
         self.mine_refusal = None

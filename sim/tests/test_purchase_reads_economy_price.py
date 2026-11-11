@@ -4,6 +4,7 @@ game counts it. The market runs on a stub sim (its economy's prices, book and ca
 test_complaint_147_project_materials::test_the_missing_part_is_priced_at_the_market_quote."""
 QUICK_TOPIC = True
 
+from sim.tests import repository_tables
 from types import SimpleNamespace
 
 from .harness import check
@@ -60,7 +61,7 @@ class _Market(GoodsMarket):
     def __init__(self, paid, cost_table=None):
         self.economy = _Economy(paid)
         sim = SimpleNamespace(
-            economy=self.economy, **market_stand_in.market_memory(), state=SimpleNamespace(acting_seat="seat"),
+            economy=self.economy, tonnes_per_unit=repository_tables.tonnes_per_unit, **market_stand_in.market_memory(), state=SimpleNamespace(acting_seat="seat"),
             materials=SimpleNamespace(
                 prices=lambda: dict(cost_table if cost_table is not None else paid),
                 priced_key=lambda material, prices: material if material in prices else None,

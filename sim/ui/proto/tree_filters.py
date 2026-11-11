@@ -26,17 +26,22 @@ def stem(term):
     return term
 
 
-def tags_of(node):
-    """The broad topic tags a node belongs to, by its category."""
+def tags_for(sim):
+    """The topic tags of the mods directory the game is over."""
+    return topic_tags.current(sim.view("mods_directory")())
+
+
+def tags_of(node, tags=None):
+    """The broad topic tags a node belongs to, by its category (`tags` is the game's table; the repository's when none)."""
     cat = node.get("cat", "")
-    return [tag for tag, spec in topic_tags.current().items() if cat in spec["cats"]]
+    return [tag for tag, spec in (topic_tags.current() if tags is None else tags).items() if cat in spec["cats"]]
 
 
-def _tag_words_hit(tag, term):
+def _tag_words_hit(tag, term, tags=None):
     root = stem(term)
     return any(term == word or root == stem(word) or
                (len(root) >= 4 and word.startswith(root))
-               for word in topic_tags.current()[tag]["words"])
+               for word in (topic_tags.current() if tags is None else tags)[tag]["words"])
 
 
 def _search_terms(find):
@@ -53,21 +58,21 @@ def _haystack(nodes, node_id):
                     + aliases).lower()
 
 
-def term_hits(nodes, node_id, term, haystack=None):
+def term_hits(nodes, node_id, term, haystack=None, tags=None):
     """Whether one search word reaches a node: text, stem, or topic vocabulary."""
     haystack = haystack if haystack is not None else _haystack(nodes, node_id)
     if term in haystack or stem(term) in haystack:
         return True
-    return any(_tag_words_hit(tag, term) for tag in tags_of(nodes[node_id]))
+    return any(_tag_words_hit(tag, term, tags) for tag in tags_of(nodes[node_id], tags))
 
 
-def matches_find(nodes, find, node_id, any_term=False):
+def matches_find(nodes, find, node_id, any_term=False, tags=None):
     """Every query word (or, with any_term, at least one) reaches the node."""
     terms = _search_terms(find)
     if not terms:
         return False
     haystack = _haystack(nodes, node_id)
-    hits = [term_hits(nodes, node_id, term, haystack) for term in terms]
+    hits = [term_hits(nodes, node_id, term, haystack, tags) for term in terms]
     return any(hits) if any_term else all(hits)
 
 
@@ -89,18 +94,19 @@ def subject_names():
     return list(SUBJECTS.values())
 
 
-def parse_topic(cmd, nodes):
+def parse_topic(cmd, nodes, tags=None):
     """(tag, category, error) from the tag and category options."""
     tag = str(cmd.get("tag") or "").strip().strip('"\'').lower().replace(" ", "_")
     category = str(cmd.get("category") or cmd.get("cat") or "").strip().strip('"\'').lower()
     category = category.replace(" ", "_")
-    if tag and tag not in topic_tags.current():
-        near = difflib.get_close_matches(tag, list(topic_tags.current()), n=3)
+    tags = topic_tags.current() if tags is None else tags
+    if tag and tag not in tags:
+        near = difflib.get_close_matches(tag, list(tags), n=3)
         return "", "", Refusal("unknown_tag", "unknown tag %r%s. The tags are: %s. Tags and subjects are different lists; "
                                "to look for a word or a subject type 'available %s' (subjects: %s)." % (
             tag, (" (did you mean %s?)" % ", ".join(near)) if near else "",
-            ", ".join(topic_tags.current()), tag.replace("_", " "), ", ".join(subject_names())),
-            choices=topic_tags.current())
+            ", ".join(tags), tag.replace("_", " "), ", ".join(subject_names())),
+            choices=tags)
     if category:
         cats = {node["cat"] for node in nodes.values()}
         if category not in cats:
@@ -111,11 +117,11 @@ def parse_topic(cmd, nodes):
     return tag, category, None
 
 
-def topic_keeper(nodes, tag, category):
+def topic_keeper(nodes, tag, category, tags=None):
     """A predicate for the tag and category filters, or None when neither is set."""
     if not tag and not category:
         return None
-    return lambda node_id: ((not tag or tag in tags_of(nodes[node_id]))
+    return lambda node_id: ((not tag or tag in tags_of(nodes[node_id], tags))
                             and (not category or nodes[node_id]["cat"] == category))
 
 
@@ -148,7 +154,7 @@ def ids_in_state(sim, state, known, startable):
 def _row(sim, nodes, node_id, state):
     node = nodes[node_id]
     row = {"id": node_id, "name": node["name"], "cat": node["cat"],
-           "tags": tags_of(node), "state": state,
+           "tags": tags_of(node, tags_for(sim)), "state": state,
            "cost": round(sim.view("project_cost")(node_id), 1)}
     if state == "blocked":
         missing = [prereq for prereq in node["pre"] if prereq not in sim.view("techniques_held")()]
@@ -178,11 +184,12 @@ def tag_overview(sim, nodes, known, startable, terms=()):
     """
     startable_set = set(startable)
     entries = []
-    for tag in topic_tags.current():
-        members = [node_id for node_id in known if tag in tags_of(nodes[node_id])]
+    tags = tags_for(sim)
+    for tag in tags:
+        members = [node_id for node_id in known if tag in tags_of(nodes[node_id], tags)]
         if not members:
             continue
-        related = any(_tag_words_hit(tag, term) or stem(term) in tag for term in terms)
+        related = any(_tag_words_hit(tag, term, tags) or stem(term) in tag for term in terms)
         entries.append({"tag": tag, "visible": len(members),
                         "startable": sum(1 for node_id in members if node_id in startable_set),
                         "blocked": sum(1 for node_id in members
@@ -200,7 +207,7 @@ def try_instead(sim, nodes, find, known, startable):
     terms = _search_terms(find)
     startable_set = set(startable)
     close = [node_id for node_id in sorted(known)
-             if terms and matches_find(nodes, find, node_id, any_term=True)]
+             if terms and matches_find(nodes, find, node_id, any_term=True, tags=tags_for(sim))]
     close.sort(key=lambda node_id: (node_id not in startable_set, node_id))
     return {
         "tags": tag_overview(sim, nodes, known, startable, terms),
@@ -223,7 +230,7 @@ def _state_of(sim, node_id, startable_set):
 def blocked_match_count(sim, nodes, find, keep, known, startable):
     """How many known, blocked nodes a search or topic would show."""
     return sum(1 for node_id in blocked_ids(sim, known, startable)
-               if (not find or matches_find(nodes, find, node_id))
+               if (not find or matches_find(nodes, find, node_id, tags=tags_for(sim)))
                and (keep is None or keep(node_id)))
 
 
@@ -235,7 +242,7 @@ def state_reply(sim, nodes, state, find, want_subject, keep, known, startable, p
     show_all, offset, limit = paging
     ids = ids_in_state(sim, state, known, startable)
     if find:
-        ids = [node_id for node_id in ids if matches_find(nodes, find, node_id)]
+        ids = [node_id for node_id in ids if matches_find(nodes, find, node_id, tags=tags_for(sim))]
     elif want_subject:
         ids = [node_id for node_id in ids if want_subject in subject_of(nodes[node_id]).lower()]
     if keep is not None:

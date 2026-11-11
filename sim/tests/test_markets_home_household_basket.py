@@ -14,6 +14,7 @@ class HomeHouseholdBasket(unittest.TestCase):
 		views = object.__new__(HouseholdNeeds)
 		views._household_model = lambda: ("model", frozenset())
 		views.opening_population = lambda: 10.0
+		views.tonnes_per_unit = lambda material: 1.0
 		views._civilisation_basket = lambda base: ("climate basket of", base)
 		with mock.patch.object(household_needs, "demand_by_material", return_value={}) as demand:
 			views.home_household_tonnes({"wheat_kg": 1.0})
