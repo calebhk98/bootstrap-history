@@ -739,7 +739,12 @@ class ResearchPart(Protocol):
 		...
 
 	def research_cost(self, node_id: str, max_age_years: int) -> float:
-		"""Money to pioneer the node, labour included; a figure at most `max_age_years` old may be reused."""
+		"""Money to pioneer the node, labour included, in the asking actor's country; a figure at most `max_age_years` old may be
+		reused. A country that quotes one of its materials nowhere refuses (NoCountryEconomy)."""
+		...
+
+	def material_tonnes(self, node_id: str) -> Dict[str, float]:
+		"""Tonnes of each material pioneering the node consumes."""
 		...
 
 

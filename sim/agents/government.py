@@ -56,6 +56,7 @@ class Government(RecordedActor):
 	`credit_ceiling`, `rate_on_loan`, `borrowing_rate`, `sell_output`) and the year's order."""
 
 	kind = "government"
+	researches = True   # every country's state originates research, priced at its own country's figures
 
 	def __init__(self, *args: Any, **kwargs: Any) -> None:
 		super().__init__(*args, **kwargs)
@@ -89,12 +90,6 @@ class Government(RecordedActor):
 
 	def borrowing_rate(self, world: Any) -> float:
 		return super().borrowing_rate(world) + self.credit_record.default_premium(self.debt())
-
-	@property
-	def researches(self) -> bool:  # type: ignore[override]
-		"""Only the founder's country's state originates research: it spends the founder's research hands. A
-		country's state copies what it sees; its research would be priced at the founder's figures (retire: Complaint 676)."""
-		return self.record.country is None
 
 	def imitation_worth(self, node_id: str, world: Any) -> float:
 		gains = invention_gains(world.setting.nodes[node_id])

@@ -8,6 +8,7 @@ import zlib
 from typing import Any, List
 
 from . import business_books, research
+from .no_country_economy import NoCountryEconomy
 from .player_commands import CommandRejected
 from .policy import Decision, Option
 from .tuning import ATTENTION_SPAN, RESEARCH_PROGRAMMES_AT_ONCE, RESEARCH_REVIEW_YEARS, VALUE_HORIZON_YEARS
@@ -45,10 +46,13 @@ def options(actor: Any, world: Any, room: int = RESEARCH_PROGRAMMES_AT_ONCE, bud
 	for worth, node_id in candidates[:ATTENTION_SPAN]:
 		if len(offers) >= PRICED_PER_REVIEW:   # pricing a plan is dear: look at the best few only
 			break
-		if worth * research.chance(node_id, world) <= research.labour_floor(actor, node_id, world):
-			continue        # its labour alone outruns what it is worth, whatever else it costs
-		offer = Option(subject=node_id, worth=worth, cost=research.plan(actor, node_id, world)["total"],
-					   chance=research.chance(node_id, world))
+		try:
+			if worth * research.chance(node_id, world) <= research.labour_floor(actor, node_id, world):
+				continue        # its labour alone outruns what it is worth, whatever else it costs
+			cost = research.plan(actor, node_id, world)["total"]
+		except NoCountryEconomy:     # the actor's country quotes no price for something the work needs
+			continue
+		offer = Option(subject=node_id, worth=worth, cost=cost, chance=research.chance(node_id, world))
 		offers.append(offer)
 		viable += 1 if offer.net > 0.0 and offer.cost <= budget else 0
 		if viable >= room:       # the best that pay are priced; the rest are not worth the evaluation

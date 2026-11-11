@@ -235,11 +235,11 @@ check("money enters and leaves a foreign government only for taxes, the lines it
 		  for label in list(income) + list(outlays)), (income, outlays))
 check("it keeps what it does not spend", government.money > 0.0)
 check("it never levies the founder's side of the world", world.government_actor.asked == [])
-check("it copies the founder's invention it values, from its own tree",
-	  "wheel" in government.knowledge or "wheel" in government.works, (government.knowledge, government.works))
+check("a state that researches takes up only what it has heard of: the founder's invention, unheard of, is not yet copied",
+	  "wheel" not in government.knowledge and "wheel" not in government.works, (government.knowledge, government.works))
 check("its staff stay out of the founder's labour pool", government.workforce == {})
 check("a foreign government's army follows its funded share", government.record.army > 0.0)
-check("a foreign state does not research with the founder's hands", not government.researches)
+check("a foreign state researches, with its own country's hands and prices (Complaint 676)", government.researches)
 check("every actor's money other than the foreign government's is untouched", total_money(
 	[actor for actor_id, actor in registry2.actors.items() if actor_id != "government:beta"]) == 0.0)
 

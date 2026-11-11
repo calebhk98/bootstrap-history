@@ -1,6 +1,6 @@
 # A country's state originates no research: what research costs and the labour quote its plan prices hours at are the founder's
 
-**Status:** open
+**Status:** closed - a country's research cost and labour quote are its own (sim/agents/research_pricing.py, `CountryResearch.research_cost`); every government researches; pinned by sim/tests/test_country_research_cost.py
 
 Follow-up to Complaint 649. The hands a country's actor can put on research are now its own country's people by trade
 (`CountryCrewView.research_hands`), but `Government.researches` (`sim/agents/government.py`) is still true for the home state alone, so

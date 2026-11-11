@@ -11,6 +11,7 @@ from typing import Any, Dict, Iterable, List
 from sim.refusal import Refusal
 
 from . import awareness, imitation, research_gate
+from .no_country_economy import NoCountryEconomy
 from .player_commands import CommandRejected
 from .tuning import HIRING_PREMIUM, RESEARCH_REVIEW_YEARS
 
@@ -23,8 +24,8 @@ def plan(actor: Any, node_id: str, world: Any) -> Dict[str, Any]:
 	"""Hours, money and calendar for pioneering one node at full effort."""
 	node = world.setting.nodes[node_id]
 	hours = dict(node.get("lab") or {})
-	base_labour = sum(amount * world.labour.labour_market.quote(trade) for trade, amount in hours.items())
-	premium = sum(amount * world.labour.labour_market.quote(trade) * HIRING_PREMIUM
+	base_labour = sum(amount * world.labour.hourly_pay(trade) for trade, amount in hours.items())
+	premium = sum(amount * world.labour.hourly_pay(trade) * HIRING_PREMIUM
 				  for trade, amount in hours.items() if actor.workforce.get(trade, 0.0) <= 0)
 	other_money = max(0.0, world.research.research_cost(node_id, RESEARCH_REVIEW_YEARS) - base_labour)
 	return {"hours": hours, "money": other_money + premium, "labour_cost": base_labour,
@@ -34,7 +35,7 @@ def plan(actor: Any, node_id: str, world: Any) -> Dict[str, Any]:
 
 def labour_floor(actor: Any, node_id: str, world: Any) -> float:
 	"""The least the node can cost: its labour hours at the going quote (cheap; the full plan prices the rest)."""
-	return sum(amount * world.labour.labour_market.quote(trade)
+	return sum(amount * world.labour.hourly_pay(trade)
 			   for trade, amount in (world.setting.nodes[node_id].get("lab") or {}).items())
 
 
@@ -49,7 +50,11 @@ def begin(actor: Any, node_id: str, world: Any) -> str:
 	found = research_gate.refusals(actor, node_id, world)
 	if found:
 		raise CommandRejected(found[0])
-	costs = plan(actor, node_id, world)
+	try:
+		costs = plan(actor, node_id, world)
+	except NoCountryEconomy as error:     # the actor's country quotes no price for something the work needs
+		raise CommandRejected(Refusal("no_country_prices", "the actor's country quotes no price for %s" % error.figure,
+									  country=error.country, figure=error.figure))
 	if actor.research_price(costs, node_id, world) > actor.copy_budget(world):
 		raise CommandRejected(Refusal("cannot_afford", "cannot afford the research", total=costs["total"]))
 	return actor.commit_research(node_id, costs, world)
