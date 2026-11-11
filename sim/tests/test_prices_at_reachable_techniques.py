@@ -4,6 +4,8 @@ Complaints/302: steel plate was priced at the mature technique (cheap iron bar f
 iron bar its own cementation works buys was priced at the civilisation's route, so the concern bought dearer
 than it sold and earned nothing."""
 
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
+
 import json
 import os
 import unittest

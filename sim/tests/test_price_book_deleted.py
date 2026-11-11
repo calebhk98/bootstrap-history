@@ -5,6 +5,8 @@ defaults, a gated material is priced as if the technology were held (labelled
 transitional), and nothing in the engine opens a price file.
 """
 
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
+
 import os
 import unittest
 

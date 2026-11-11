@@ -1,5 +1,7 @@
 """VALIDATION of the shipped tree: what apply_revenue derives for the nodes that earn from output. The rules on hand-written baskets
 are test_node_revenue_rules."""
+
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
 import copy
 import unittest
 

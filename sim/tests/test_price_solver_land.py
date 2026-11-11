@@ -21,6 +21,8 @@ files.
 
 Land-limited materials state land_hectare_years and the solver charges rent for it.
 """
+
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
 import unittest
 
 from sim.prices import solve_prices_core, rent_standin, engine_seam

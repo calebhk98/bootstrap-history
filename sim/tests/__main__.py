@@ -71,6 +71,7 @@ from sim import cache_root
 from sim.tests import machine_slots
 from sim.tests import topic_import_guard
 from sim.tests import discovery  # noqa: E402
+from sim.tests import warming  # noqa: E402
 from sim.tests.discovery import discover_topics  # noqa: E402
 
 # Every sim/tests/test_*.py is a topic, in sorted order (see discovery.py).
@@ -344,11 +345,9 @@ def _fork_topics(slugs, harness, result_dir, held_slots=()):
         os._exit(status)
 
 
-def _warm_starts(harness, jobs):
-    """Build one game of every civilisation, `jobs` at a time in forked children, so each start's spin-up is
-    on disk before any topic's time limit runs; then warm this process with the default game."""
-    starts = sorted(name[:-len(".json")] for name in os.listdir(os.path.join(_REPO_ROOT, "data", "civilizations"))
-                    if name.endswith(".json") and not name.startswith("_"))
+def _warm_starts(harness, jobs, starts):
+    """Build one game of each civilisation in `starts`, `jobs` at a time in forked children, so each start's
+    spin-up is on disk before any topic's time limit runs; then warm this process with the default game."""
     running = set()
     for civ in starts:
         if len(running) >= jobs:
@@ -365,7 +364,8 @@ def _warm_starts(harness, jobs):
         running.add(pid)
     while running:
         running.discard(os.wait()[0])
-    harness.sim()
+    if warming.DEFAULT_CIVILISATION in starts:
+        harness.sim()
 
 
 def _current_topic_started(worker_started_at, result_path):
@@ -425,8 +425,9 @@ def _run_topics_forked(run_now, harness, jobs, topic_seconds):
     child of its own, the quick ones shared out over a few. A child still running after `topic_seconds` is
     stopped and its unfinished topics fail."""
     quick = set(harness.QUICK_TOPICS)
-    if any(slug not in quick for slug in run_now):
-        _warm_starts(harness, jobs)     # quick topics build no game
+    starts = warming.civilisations_to_warm(run_now, quick, discovery.discover_civilisations())
+    if starts:
+        _warm_starts(harness, jobs, starts)
     seconds_before = _load_topic_seconds()
     known = sorted(seconds_before.values())
     unknown_guess = known[len(known) // 2] if known else 0.0

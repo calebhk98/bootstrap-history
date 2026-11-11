@@ -1,5 +1,7 @@
 """VALIDATION of the shipped tree: the graded energy prices the solver leaves and the energy baskets of the nodes that earn from output.
 The rules on hand-written bands are test_energy_prices_rules."""
+
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
 import unittest
 
 from sim.prices import energy_prices

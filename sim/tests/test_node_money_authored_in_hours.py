@@ -1,5 +1,7 @@
 """Node capital, upkeep and revenue are authored in labour hours: no branch file states them as a number of coins. The conversion of
 those hours into a coin is test_coin_scale_rules."""
+
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
 import glob
 import json
 import os

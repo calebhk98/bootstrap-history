@@ -1,4 +1,6 @@
 """VALIDATION of the shipped tree: capital is derived, never typed, and every output node is operated by the entries it runs."""
+
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
 import glob
 import json
 import os

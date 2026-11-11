@@ -1,6 +1,6 @@
 # The test runner opens a game of every civilisation before any topic outside the quick tier
 
-**Status:** open - found on branch speed-year-step-and-openings
+**Status:** closed - the runner warms only the starts the chosen topics build (`sim/tests/warming.py`); the cold opening itself is 497/968
 
 `_run_topics_forked` (`sim/tests/__main__.py`) calls `_warm_starts` whenever the topics to run include one outside the
 quick tier, and `_warm_starts` builds `harness.sim(civ=...)` for every civilisation and then the default game. The
@@ -13,6 +13,7 @@ So `python3 -m sim.tests --slow --only <one topic>` after an economy edit waits 
 even when the topic builds no game at all (a fixture test that takes seconds outside the quick tier only because it
 runs a few hundred hand-built years).
 
-**What it would take.** Warm only the civilisations the chosen topics build (a topic's games are found when it first
-calls the harness, so the runner could warm lazily: the first worker to need a start builds it under the cache's
-per-key lock, which `solve_cache.cached_json` already holds), and make the cold opening itself fast (497).
+**What was done.** A topic names the civilisations it builds with a module-level `CIVILISATIONS` tuple (empty when it
+builds no game); an undeclared non-quick topic is taken to build the default start; quick topics build none.
+`civilisations_to_warm` (`sim/tests/warming.py`) picks the starts, and a start a topic builds without declaring is built
+by that topic behind the cache's per-key lock. Making the cold opening itself fast is 497/968, not this complaint.
