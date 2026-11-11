@@ -31,3 +31,20 @@ constant. Re-measure the settled ratio with `python3 sim/simulator.py spin-up-tr
 **Sourced so far.** `Complaints/reports/research-pre-modern-interest-rates.md`: national wealth in France and Britain around
 1700 was several times national income and mostly land, with coin a small share (Gregory King for England). Household-level
 multiples from probate: no source found.
+
+Opened for this complaint:
+
+- `HOUSEHOLD_TIME_PREFERENCE`: Clark, Econ 110A chapter 9 (`faculty.econ.ucdavis.edu/faculty/gclark/ecn110a/readings/chapter9.pdf`),
+  Table 2: English rent-charge returns stay between 4.0 and 6.0 percent in each half-century from 1451 to 1800; the text cites
+  anthropologists for a Malthusian time preference of 2.3 to 2.8 percent. The stored value sits inside the observed English safe
+  range and is recorded on the constant. It stays a `temporary_heuristic`: English, post-1450, and a lender's rate, not a
+  measured household time preference.
+- `WEALTH_INCOME_RATIO_TARGET`: Gallman and Rhode, "Wealth in the Colonial and Early National Periods"
+  (`nber.org/system/files/chapters/c14402/c14402.pdf`, p. 297 to 298), summarising Jones's 1774 probate sample: wealth is
+  physical wealth with financial assets and liabilities excluded, and specie is $4 million against Blodget's $600 million total.
+  No wealth-to-income multiple for liquid or financial wealth is given. Still no source found.
+- `CARROL_CONSUMPTION_PARAMETER`: Carroll 1997 (QJE 112) was seen only in search summaries, which give no monthly spending
+  share out of wealth; not opened, not cited. Still no source found.
+- `WEALTH_DRAWDOWN_LIMIT`, `SPENDING_CUT_LIMIT`: nothing found in any source opened.
+- Blocked (HTTP 403): the Exeter and Cambridge pages on probate wealth and indebtedness (`core.ac.uk/download/161940745.pdf`,
+  `campop.geog.cam.ac.uk/.../paper29.pdf`); Overton et al. 1600-1750 was not reachable beyond catalogue pages.
