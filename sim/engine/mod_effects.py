@@ -29,9 +29,9 @@ KNOWN_EDGES = frozenset(value for name, value in vars(edge_names).items() if nam
 EDGE_PREFIX = "edge:"
 # effect -> (views it reads, commands it sends): what a mod declares to use it
 EFFECT_NEEDS = {
-    "pay": (("cast",), (PayActor,)),
-    "pay_edge": (("cast",), (PayEdgeFrom,)),
-    "receive_from_edge": (("cast",), (PayActorFromEdge,)),
+    "pay": (("actor_exists",), (PayActor,)),
+    "pay_edge": (("actor_exists",), (PayEdgeFrom,)),
+    "receive_from_edge": (("actor_exists",), (PayActorFromEdge,)),
     "add_goods": ((), (MoveGoods,)),
     "remove_goods": ((), (MoveGoods,)),
     "kill_people": ((), (KillPeople,)),
@@ -149,11 +149,9 @@ class ModEffects:
     def _goods_purpose(self, cause: str) -> str:
         return "%s: %s" % (self.label(), self.need_cause(cause))
 
-    def _actor(self, sim: Any, actor_id: str) -> Any:
-        actor = sim.view("cast")().get(actor_id)
-        if actor is None:
+    def _actor(self, sim: Any, actor_id: str) -> None:
+        if not sim.view("actor_exists")(actor_id):
             raise ModError("%s: no actor %r" % (self.label(), actor_id))
-        return actor
 
 
 

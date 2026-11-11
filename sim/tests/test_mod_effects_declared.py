@@ -33,18 +33,17 @@ class StandInView:
 
 
 def access(reads=(), sends=()):
-	"""A mod's access over an assembly that answers the cast and records what is sent."""
+	"""A mod's access over an assembly that answers whether an actor exists and records what is sent."""
 	sent = []
-	cast = SimpleNamespace(get=lambda actor_id: object())
 	handlers = {kind: (lambda command, kind=kind: sent.append(command) or {"moved": 1.0, "countries": ["home"]}) for kind in
 	            (PayActor, PayEdgeFrom, PayActorFromEdge, MoveGoods, KillPeople, MoveStratumPeople, TransferTile, WriteStore, RecordWorldEvent)}
-	assembly = SimpleNamespace(views={"cast": StandInView("cast", cast)}, handlers=handlers)
+	assembly = SimpleNamespace(views={"actor_exists": StandInView("actor_exists", True)}, handlers=handlers)
 	return ModAccess(assembly, MOD, frozenset(reads), frozenset(sends)), sent
 
 
 class DeclaredSendsAreRequired(unittest.TestCase):
 	def refused_send(self, call, command):
-		given, sent = access(reads=("cast",))
+		given, sent = access(reads=("actor_exists",))
 		with self.assertRaises(UndeclaredSend) as caught:
 			call(given)
 		self.assertEqual((caught.exception.mod_id, caught.exception.command), (MOD, command.__name__))
@@ -82,17 +81,17 @@ class DeclaredSendsAreRequired(unittest.TestCase):
 
 
 class DeclaredReadsAreRequired(unittest.TestCase):
-	def test_pay_reads_the_cast_so_the_mod_declares_it(self):
+	def test_pay_reads_actor_exists_so_the_mod_declares_it(self):
 		given, sent = access(sends=(PayActor,))
 		with self.assertRaises(UndeclaredRead) as caught:
 			effects.pay(given, "a", "b", 1.0, "a gift")
-		self.assertEqual((caught.exception.mod_id, caught.exception.view), (MOD, "cast"))
+		self.assertEqual((caught.exception.mod_id, caught.exception.view), (MOD, "actor_exists"))
 		self.assertEqual(sent, [])
 
 
 class DeclaredEffectsReachTheOwner(unittest.TestCase):
 	def test_a_declared_payment_is_the_owners_command(self):
-		given, sent = access(reads=("cast",), sends=(PayActor,))
+		given, sent = access(reads=("actor_exists",), sends=(PayActor,))
 		effects.pay(given, "a", "b", 2.0, "a gift")
 		self.assertEqual(sent, [PayActor("a", "b", 2.0, "a gift")])
 
@@ -114,7 +113,7 @@ class UsesEffects(unittest.TestCase):
 	def test_naming_an_effect_declares_the_view_and_the_command_it_needs(self):
 		api = ModCodeApi(MOD)
 		api.uses_effects("pay", "kill_people")
-		self.assertEqual((api.operations.reads, api.operations.sends), (("cast",), (PayActor, KillPeople)))
+		self.assertEqual((api.operations.reads, api.operations.sends), (("actor_exists",), (PayActor, KillPeople)))
 
 	def test_an_effect_that_does_not_exist_is_refused_naming_the_mod(self):
 		with self.assertRaises(ModError) as caught:

@@ -22,9 +22,8 @@ ACME = "test_acme_k3f9"
 effects = ModEffects(ACME)
 
 # --- money: the ledger is sent the payment (an actor to an edge, an edge to an actor, an actor to an actor).
-government = object()
 sent_money = []
-money_game = Game(actors=SimpleNamespace(get=lambda actor_id: government if actor_id in ("government:x", "government:y") else None),
+money_game = Game(actor_exists=lambda actor_id: actor_id in ("government:x", "government:y"),
                              send=sent_money.append)
 effects.pay_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe")
 effects.receive_from_edge(money_game, "government:x", edges.EDGE_OFFICIALS, 4.0, "returned")
@@ -32,7 +31,7 @@ effects.pay(money_game, "government:x", "government:y", 2.0, "a gift")
 check("pay_edge sends the ledger the actor, the named edge, the amount and the purpose", sent_money[0] == PayEdgeFrom("government:x", edges.EDGE_OFFICIALS, 10.0, "a bribe"), sent_money)
 check("receive_from_edge sends the payment the other way", sent_money[1] == PayActorFromEdge(edges.EDGE_OFFICIALS, "government:x", 4.0, "returned"), sent_money)
 check("pay sends the payer, the payee, the amount and the purpose", sent_money[2] == PayActor("government:x", "government:y", 2.0, "a gift"), sent_money)
-refusal_game = Game(actors=money_game.actors, send=lambda command: "a refusal")
+refusal_game = Game(actor_exists=money_game.actor_exists, send=lambda command: "a refusal")
 check("pay hands the refusal back to the mod when the payer cannot cover it",
       effects.pay(refusal_game, "government:x", "government:y", 2.0, "a gift") == "a refusal")
 check("pay_edge hands the refusal back to the mod when the payer cannot cover it",

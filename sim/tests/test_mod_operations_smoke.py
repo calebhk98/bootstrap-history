@@ -464,7 +464,7 @@ class EffectsTests(OperationCase):
     def test_an_effect_the_mod_did_not_declare_is_refused_naming_the_mod_and_the_view(self):
         with self.assertRaises(UndeclaredRead) as caught:
             _agent_dispatch_inner(self.modded, {}, {"cmd": ALPHA + ":curse"})
-        self.assertEqual((caught.exception.mod_id, caught.exception.view), (ALPHA, "cast"))
+        self.assertEqual((caught.exception.mod_id, caught.exception.view), (ALPHA, "actor_exists"))
 
 
 class WithdrawTests(OperationCase):

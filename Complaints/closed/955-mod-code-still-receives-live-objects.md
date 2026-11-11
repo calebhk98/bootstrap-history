@@ -1,6 +1,6 @@
 # Mod code still receives live objects beside its declared access
 
-**Status:** partly - every hand-out is a declared `ModAccess` or a narrowed surface; what is left is the `cast` view a mod may declare, which answers a live object and is tracked nowhere else
+**Status:** closed - every hand-out to mod code is a declared `ModAccess` or a narrowed surface; command handlers read the tree through `tree_nodes`, and the live `cast` view is refused to mods
 
 A code mod declares the views it reads and the commands it sends (`ModCodeApi.reads`, `ModCodeApi.sends`) and is handed a
 `ModAccess` (`sim/assembly/mod_access.py`) that refuses anything else with `UndeclaredRead` or `UndeclaredSend`, naming the mod and the
@@ -28,13 +28,11 @@ name. Done:
   `UndeclaredWorldMember`, an `UndeclaredRead` naming the mod and the member. The world it answers from is the actors module's, built
   from the views the actors module declares; it holds no `Sim`.
 
-What is left:
-
-- The `cast` view a mod may declare answers the actors module's live registry; a mod that declares it reads a live object, and the effects `pay`, `pay_edge` and
-  `receive_from_edge` check their actors through it. Retiring it belongs to the actors module's views, not to the mod door. Not
-  tracked elsewhere: the view is not named `legacy_`, so `tools/measure/module_graph.py` does not count it, and
-  `docs/architecture/MODULE_MIGRATION_TASKS.md` has no item for it. This complaint closes when a mod can reach actors only through
-  typed views and commands that return no live registry (or a decision is recorded that the mod door keeps it).
-- `api.kernel` takes plain functions: a kernel reads nothing of the game (it is checked against the reference's stored samples).
+- The `cast` view (the actors module's live registry) cannot be declared by a mod: `api.reads("cast")` is refused naming the mod. A
+  mod reads `actor_exists(actor_id)` and `actor_sheet(actor_id)` (id, kind, purse, headcount, prominence, cause note: plain data,
+  `sim/actors/actor_sheets.py`); the effects `pay`, `pay_edge` and `receive_from_edge` check their actors through `actor_exists`, and
+  the shipped cash shelter reads its holders through `actor_sheet`. A wealth-claims seizer is given the taker's id, not the actor.
+- `api.kernel` takes plain functions: a kernel reads nothing of the game (it is checked against the reference's stored samples); this
+  is a statement, not a todo.
 
 Check: `bash tools/done_check.sh` (mods importing `sim.engine` outside mod_code; mods importing `sim` beyond `sim.mod_api`).

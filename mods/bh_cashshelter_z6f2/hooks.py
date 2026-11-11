@@ -55,7 +55,7 @@ class Holder(RecordedActor):
 
 
 def register(api):
-    api.reads("cast", "year", "acting_seat", "acting_balance", "visible_scale", "coin_keeping_cost", "coin_kg_per_unit",
+    api.reads("actor_sheet", "year", "acting_seat", "acting_balance", "visible_scale", "coin_keeping_cost", "coin_kg_per_unit",
               "state_reach", "money_per_labour_hour", "standing", "household_exposure", "household_visible_scale",
               "confiscation_status")
     api.sends(AddActor, PayActor, PayEdge, TakeFromHouseholdPurse)
@@ -79,13 +79,14 @@ def register(api):
         return sum(entry["amount"] for entry in memory(access).get(name, {}).values())
 
     def holder_actor(access, name):
-        return access.view("cast")().get(holder_id(name))
+        return access.view("actor_sheet")(holder_id(name))
 
     def ensure_holder(access, name):
         actor = holder_actor(access, name)
         if actor is None:
-            actor = access.send(AddActor(holder_id(name), ActorRecord(
+            access.send(AddActor(holder_id(name), ActorRecord(
                 kind=api.qualified(name), name=holders[name]["label"], founded_year=access.view("year")())))
+            actor = holder_actor(access, name)
         return actor
 
     def solvency(access, name):
@@ -94,13 +95,13 @@ def register(api):
         owed = total_claims(access, name)
         if actor is None or owed <= 0.0:
             return 1.0
-        return max(0.0, min(1.0, actor.money / owed))
+        return max(0.0, min(1.0, actor["money"] / owed))
 
     def yearly_cost(access, name, amount):
         """The holder's own yearly cost of keeping `amount` of coin: the engine's guard cost plus the engine's
         expected theft on it, at the holder's own visibility."""
         actor = holder_actor(access, name)
-        scale = access.view("visible_scale")(sum(actor.workforce.values()), actor.money, actor.stance.prominence(), 0.0) if actor else 0.0
+        scale = access.view("visible_scale")(actor["headcount"], actor["money"], actor["prominence"], 0.0) if actor else 0.0
         stolen = theft_exposure.expected_theft_loss(
             {"coin": amount}, {"coin": COIN_GUARD_HOURS_PER_TONNE_YEAR}, scale, access.view("state_reach")(), 0.0)
         return access.view("coin_keeping_cost")(amount) + stolen
@@ -186,7 +187,7 @@ def register(api):
         unpaid = access.send(PayEdge(edges.EDGE_COIN_GUARDS, carry, CARRY_CAUSE))
         if unpaid is not None:
             return refuse("the carriage could not be paid: %s" % unpaid, cause=unpaid.cause)
-        unpaid = access.send(TakeFromHouseholdPurse(holder.actor_id, amount, DEPOSIT_CAUSE))
+        unpaid = access.send(TakeFromHouseholdPurse(holder["actor_id"], amount, DEPOSIT_CAUSE))
         if unpaid is not None:
             return {"ok": False, "error": "the coin could not be lodged: %s The carriage was already paid." % unpaid,
                     "cause": unpaid.cause}
@@ -220,12 +221,12 @@ def register(api):
         asked = min(amount, entry["amount"])
         share = solvency(access, name)
         holder = holder_actor(access, name)
-        paid = min(asked * share, max(0.0, holder.money))
+        paid = min(asked * share, max(0.0, holder["money"]))
         if paid > 0.0:
             unpaid = access.send(PayEdge(edges.EDGE_COIN_GUARDS, carry_cost(access, name, paid), CARRY_CAUSE))
             if unpaid is not None:
                 return refuse("the carriage home could not be paid: %s" % unpaid, cause=unpaid.cause)
-            unpaid = access.send(PayActor(holder.actor_id, seat, paid, PAYOUT_CAUSE))
+            unpaid = access.send(PayActor(holder["actor_id"], seat, paid, PAYOUT_CAUSE))
             if unpaid is not None:
                 return refuse("the holder could not pay out: %s" % unpaid, cause=unpaid.cause)
         entry["amount"] -= asked
@@ -264,11 +265,11 @@ def register(api):
         share = solvency(access, source)
         issuer = holder_actor(access, source)
         fee = asked * letter_fee
-        moved = min(max(0.0, asked - fee) * share, max(0.0, issuer.money))
+        moved = min(max(0.0, asked - fee) * share, max(0.0, issuer["money"]))
         receiver = ensure_holder(access, target)
         settle(access, target, seat)
         if moved > 0.0:
-            unpaid = access.send(PayActor(issuer.actor_id, receiver.actor_id, moved, LETTER_CAUSE))
+            unpaid = access.send(PayActor(issuer["actor_id"], receiver["actor_id"], moved, LETTER_CAUSE))
             if unpaid is not None:
                 return refuse("the issuer could not honour the letter: %s" % unpaid, cause=unpaid.cause)
         entry["amount"] -= asked
@@ -332,9 +333,9 @@ def register(api):
                 "holder": name, "claim": round(entry["amount"], 1), "could_pay_share": round(solvency(access, name), 3),
                 "fee_per_year": round(min(entry["amount"], yearly_cost(access, name, entry["amount"])
                                           * (1.0 + float(holders[name]["custody_markup"]))), 1),
-                "holder_purse": round(actor.money, 1) if actor is not None else 0.0,
+                "holder_purse": round(actor["money"], 1) if actor is not None else 0.0,
                 "own_failure_chance_per_year": holders[name]["failure_chance_per_year"],
-                "note": actor.record.cause if actor is not None and actor.record.cause else ""})
+                "note": actor["cause"] if actor is not None and actor["cause"] else ""})
         total_sheltered = sum(item["claim"] * item["could_pay_share"] for item in sheltered)
         lines = ["purse: %.0f; sheltered (payable today): %.0f" % (cash, total_sheltered)]
         for item in rows:
@@ -352,7 +353,7 @@ def register(api):
         return sum(entry["amount"] * solvency(access, name) for name in holders
                    for entry in [claim_of(access, name, seat)] if entry is not None)
 
-    def seize_claims(access, amount, taker):
+    def seize_claims(access, amount, taker_id):
         """A confiscation that has emptied the purse takes the rest from the holders, in the share they can pay."""
         seat, taken = access.view("acting_seat")(), 0.0
         for name in sorted(holders):
@@ -361,9 +362,9 @@ def register(api):
                 continue
             share = solvency(access, name)
             claim_taken = min(entry["amount"], (amount - taken) / share) if share > 0.0 else 0.0
-            paid = min(claim_taken * share, max(0.0, holder_actor(access, name).money))
+            paid = min(claim_taken * share, max(0.0, holder_actor(access, name)["money"]))
             if paid > 0.0:
-                if access.send(PayActor(holder_actor(access, name).actor_id, taker.actor_id, paid, "confiscation of a claim")) is not None:
+                if access.send(PayActor(holder_actor(access, name)["actor_id"], taker_id, paid, "confiscation of a claim")) is not None:
                     continue   # the holder could not pay: nothing is taken from this claim
                 entry["amount"] -= claim_taken
                 taken += paid
