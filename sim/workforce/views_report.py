@@ -1,6 +1,6 @@
 """The views the workforce module publishes for what the screens tell the player about its people: room, hours, quotes and reports."""
 from sim.assembly.api import Part
-from sim.labour.api import hours_by_trade_of_all_employers, people_by_trade_of_all_employers
+from sim.labour.api import hours_by_trade_of_all_employers, people_by_trade_of_all_employers, society_hours_by_trade
 
 
 class ReportViews(Part):
@@ -33,7 +33,7 @@ class ReportViews(Part):
 
 	def occupation_hours_by_trade(self):
 		"""The year's hours by trade across every employer."""
-		return hours_by_trade_of_all_employers(self.parts.core.labour, self.world.society_labour_hours)
+		return hours_by_trade_of_all_employers(self.parts.core.labour, society_hours_by_trade(self.needs.agent_people_by_trade(), self.needs.agent_working_hours()))
 
 	# ---- room and supervision ----
 

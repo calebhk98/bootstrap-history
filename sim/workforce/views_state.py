@@ -1,5 +1,6 @@
 """The views of the acting seat's people, hours and pay books. Tables hold the live containers: read them, never write to them."""
 from sim.assembly.api import Part
+from sim.labour.api import society_hours_by_trade
 
 
 class ViewsState(Part):
@@ -55,4 +56,4 @@ class ViewsState(Part):
 
     def society_labour_hours(self):
         """{trade: labour hours the society's workers of the trade give in a year}."""
-        return self.world.society_labour_hours
+        return society_hours_by_trade(self.needs.agent_people_by_trade(), self.needs.agent_working_hours())

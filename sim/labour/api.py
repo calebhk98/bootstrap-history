@@ -31,6 +31,7 @@ from .market.sold_hours_kernel import (OFFER_HAS_PLOT, OFFER_HOURS, OFFER_MARGIN
                                        plot_hours_at_wage, sold_hours, sold_hours_range)
 from .market.fetch_wage_samples import samples as fetch_wage_samples
 from .food_gathering import cap_share, capped_kcal, hours_cap_kcal
+from .society_hours import society_hours_by_trade
 from .wage_provider import people_fed_per_worker
 from .wages import CAREER_YEARS
 from .trade_data import (bonded_pseudo_trade, craft_family, farm_trade, generic_craft_trade, generic_staff_trades, role_field, scholar_trade,
@@ -51,7 +52,7 @@ __all__ = [
     "occupational_report", "shares_by_group", "hours_by_trade", "hours_by_trade_of_all_employers", "people_by_trade_of_all_employers", "format_occupational_report", "occupation_groups",
     "wage_provider", "wages", "scholar_target", "stochastic_round", "STATE_WEIGHTS", "add_people", "Labour",
     "people_fed_per_worker", "CAREER_YEARS", "tool_draw", "tool_hours_factors", "tool_order",
-    "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share",
+    "add_tenure", "fade_tenure", "outflow_shares", "tenure_by_trade", "tenure_held", "hours_cap_kcal", "capped_kcal", "cap_share", "society_hours_by_trade",
     # the labour-market core (sim/labour/market/DESIGN.md): plain records in, plain records out
     "run_labour_year", "reservation_wage_per_hour", "migration_shares", "migrant_pairs", "totals_of_pairs", "opening_labour_market", "seed_hours", "bound_by_hirers", "trade_specs", "fallback_trade", "role_field", "trade_of_role", "generic_craft_trade", "bonded_pseudo_trade", "scholar_trade", "craft_family", "farm_trade", "generic_staff_trades", "staff_resource_trade", "people_in",
     "grid_rows_of", "hours_cleared_at", "people_at", "people_by_trade_in_each_area", "people_by_trade_over", "people_in_areas", "people_weighted_wage_by_area", "scale_people_in_area", "scale_people_in_areas",
