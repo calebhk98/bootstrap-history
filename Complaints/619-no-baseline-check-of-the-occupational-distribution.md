@@ -33,7 +33,7 @@ hours of a few thousandths. The test closes this complaint once these are fixed,
 
 ## Changes since that measurement
 
-- The "by hours worked" table read zero for every group because `society_labour_hours` had no writer (Complaint 971, fixed: the hours are the labour core's people times a person-year's hours). Re-measure with `python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad`.
+- The "by hours worked" table read zero for every group because `society_labour_hours` had no writer (Complaint 971, fixed: the hours are the labour core's people times a person-year's hours). Re-measured with `python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad`: by people, agriculture, textiles, transport and services are inside their bands; building and food processing are below theirs, and other crafts and unattributed are above; the hours table now repeats the people table (each person counts one person-year).
 
 - Wheat labour is sourced: `wheat_kg` books about 475 farmer-hours a hectare from Columella 2.12.1 (was 150), built in
   `data/world/farm_labour.json` (Complaint 646, passes 6 and 7). The farm share in the undisturbed Rome scenario fell,

@@ -21,5 +21,6 @@ hours a person-year counts, empty while the agent economy opens). The workforce 
 `agent_people_by_trade` and `agent_working_hours` views. The stored field and its equivalence-table row are deleted.
 Regression test: `sim/tests/test_society_hours_by_trade.py`.
 
-Confirm on a game (long): `python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad` prints
-non-zero shares by hours.
+On a game (`python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad`) the shares by hours are no
+longer zero, and they equal the shares by people: every person counts one person-year, so nothing yet holds the hours a
+trade's people actually worked. That limit is what the table can show, not a defect of this fix.
