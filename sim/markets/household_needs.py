@@ -8,21 +8,21 @@ import copy
 
 from sim.geography.api import settlement
 from sim.world import demand, need_basket, need_demand
-from .unit_mass import tonnes_per_unit
 
+from . import unit_mass
 from .constants import MEAN_INCOME_HOURS_PER_CAPITA
 
 _MODELS = {}             # installed mod ids -> (the need-demand model, the goods households buy for themselves)
 
 
-def household_model(mod_ids, load_need_data):
+def household_model(mod_ids, load_need_data, production=None):
 	"""(the need-demand model, the final goods) for the installed content, built once per process and per set of installed
 	mods (its population is replaced on each use). `load_need_data()` returns {"needs", "goods"} and is called only on a miss."""
 	built = _MODELS.get(mod_ids)
 	if built is None:
 		needs = load_need_data()
 		bins = demand.income_bins(1.0, MEAN_INCOME_HOURS_PER_CAPITA)
-		model = need_demand.NeedDemandModel(needs, demand.production_data(), bins, satiate=True)
+		model = need_demand.NeedDemandModel(needs, demand.production_data() if production is None else production, bins, satiate=True)
 		built = _MODELS[mod_ids] = (model, frozenset(needs["goods"]))
 	return built
 
@@ -54,7 +54,7 @@ def demand_by_material(base, prices_in_hours, population, income_per_capita, bas
 	return model.total_demand(prices_in_hours)
 
 
-def budget_scaled_final_tonnes(units, prices_in_hours, population, final_goods):
+def budget_scaled_final_tonnes(units, prices_in_hours, population, final_goods, tonnes_per_unit=unit_mass.tonnes_per_unit):
 	"""{material: tonnes a year} households buy for themselves of the `units` a year the model gives at these prices (labour
 	hours a unit), scaled down uniformly when the spending exceeds the income they have. Goods bought as inputs to other goods are
 	left out: the model's levels for those are not credible."""

@@ -6,7 +6,7 @@ labelled estimate."""
 import math
 from typing import Dict, Optional
 
-from .unit_mass import tonnes_per_unit
+from . import unit_mass
 from sim.economy.api import (carried_book, cohort_land_rents, country_figures, land_rent_at_tile, coin_per_unit,
                              country_trade_wage, home_country, working_hours_per_year)
 
@@ -25,13 +25,14 @@ def home_answers(port):
     if port.opening or not port.agent.opened():
         return None
     economy = port.agent.economy()
-    return CountryAnswers(economy, home_country(economy))
+    return CountryAnswers(economy, home_country(economy), port.agent.tonnes_per_unit)
 
 
 class CountryAnswers:
     """The questions foreign governments, strata and firms ask about their country, answered from its tiles."""
 
-    def __init__(self, economy, country: str) -> None:
+    def __init__(self, economy, country: str, tonnes_per_unit=None) -> None:
+        self._tonnes_per_unit = tonnes_per_unit or unit_mass.tonnes_per_unit
         self._economy = economy
         self._country = country
         self._coin = coin_per_unit(economy)
@@ -57,7 +58,7 @@ class CountryAnswers:
         """Money for a tonne of a material at the price its market areas touching the country quote; None when
         none of them trades it."""
         price = country_figures.prices(self._economy, self._country).get(material)
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._tonnes_per_unit(material)
         return None if price is None or per_unit is None else price * self._coin / per_unit
 
     def price_per_unit(self, material: str) -> Optional[float]:

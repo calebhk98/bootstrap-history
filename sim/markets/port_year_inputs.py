@@ -5,7 +5,6 @@ or from the port's rule modules (port_land, port_flight, port_bondage, port_inst
 from sim.economy import api as economy_api
 from sim.economy.api import EconomyYearInputs
 from sim.labour import api as labour_api
-from .unit_mass import tonnes_per_unit
 
 from . import port_actors, port_bondage, port_flight, port_institutions, port_land, port_levy, port_public_debt, port_sites
 
@@ -101,6 +100,6 @@ class YearInputsBuilder:
                 continue
             with sim.scenario.act_as(seat_id):
                 tile = self._agent.tile_in_economy(sim.labour.base_tile())
-            bids.extend(port_actors.standing_bids(economy, seat_id, drawn[seat_id], tile, tonnes_per_unit,
+            bids.extend(port_actors.standing_bids(economy, seat_id, drawn[seat_id], tile, sim.tonnes_per_unit,
                                                   sim.economy.materials_in))
         return tuple(bids)

@@ -11,7 +11,6 @@ import math
 
 from sim.constants import declare
 
-from .unit_mass import tonnes_per_unit
 
 # Points along an order at which the economy's response is read; the order's mean climb is their mean.
 PRICE_SLICES = declare(
@@ -38,14 +37,14 @@ class GoodsPricing:
         """Money per tonne it costs the home society to make a material (the cost table); None when no technique
         in reach makes it."""
         cost = self._sim.materials.price_per_unit(material)
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._sim.tonnes_per_unit(material)
         return None if cost is None or per_unit is None else cost / per_unit
 
     def price_at_tile_per_tonne(self, material):
         """Money per tonne to buy a material from the cheapest seller in reach before carriage: the economy's price
         on the acting tile; None when no one in reach sells it."""
         price = self.market.offers.unit_price(material)
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._sim.tonnes_per_unit(material)
         return None if price is None or per_unit is None else price / per_unit
 
     def price_kind(self, material):

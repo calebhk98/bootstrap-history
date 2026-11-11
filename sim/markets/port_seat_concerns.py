@@ -10,7 +10,7 @@ from typing import Optional
 from sim.economy import api as economy_api
 from sim.economy.api import (EDGE_LEGACY, AgentOrders, GoodsMove, Offer, Producer, expected_output_prices,
                              live_input_prices, live_wages, variable_cost_per_run)
-from sim.prices.api import prices as price_solver, rules as price_rules
+from sim.prices.api import rules as price_rules
 
 from . import port_seats
 
@@ -59,7 +59,7 @@ class SeatConcerns:
         the variable cost of the cheapest technique the concern holds that the economy knows, at the
         economy's live prices and wages. None with no such technique: no cost is known."""
         recipes = economy_api.recipes_of(self._agent.economy())
-        keys = price_rules.entry_keys_held_for(node_id, price_solver.default_production_entries(), self._world.production.techniques_spread())
+        keys = price_rules.entry_keys_held_for(node_id, self._world.production_catalog(), self._world.production.techniques_spread())
         best = None
         for key in sorted(keys):
             recipe = recipes.get(key)

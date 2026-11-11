@@ -6,7 +6,7 @@ producers are placed by the economy's own opening from what its people demand an
 allow, and its prices and wages are the economy's. Nothing about output or wages is authored here."""
 from sim.constants import declare
 from sim.geography.api import haversine_km, settlement
-from sim.world import census as census_module, demand
+from sim.world import census as census_module
 
 from .port_setup import allowed_entries
 
@@ -27,7 +27,7 @@ def partner_opening(sim, partner_id):
     home_tiles = set(sim.map.tiles_held_by(sim.scenario.civ))
     tile_ids = [tile for tile in sim.map.tiles_held_by(civ) if tile not in home_tiles]
     people, farthest, source = _people_by_tile(sim, civ, tile_ids)
-    production = demand.production_data()
+    production = sim.production_catalog()
     return {"tiles": tile_ids, "population_by_tile": people, "population_source": source,
             "farthest_seat_km": farthest,
             "recipes": allowed_entries(production, set(civ["starting_techs"])),

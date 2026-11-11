@@ -186,11 +186,12 @@ def recipe_of_tile_key(key: str) -> str:
 
 
 def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, float],
-                service_lives: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, GoodSpec]:
+                service_lives: Optional[Mapping[GoodId, float]] = None,
+                production: Optional[Mapping[str, Any]] = None) -> Dict[GoodId, GoodSpec]:
     """A `GoodSpec` per good (its unit mass from `good_mass`), the spoilage table and any stated
     service life. `goods` maps each good to a category label from data."""
     service_lives = service_lives or {}
-    production = demand.production_data()
+    production = demand.production_data() if production is None else production
     specs = {}
     for good, category in sorted(goods.items()):
         mass = unit_mass(good, production)

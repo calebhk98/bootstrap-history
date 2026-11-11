@@ -28,7 +28,7 @@ class HouseholdReads:
         economy = self._agent.economy()
         if country == economy_api.home_country(economy) or country not in economy_api.economy_countries(economy):
             return None
-        return CountryAnswers(economy, country)
+        return CountryAnswers(economy, country, self._agent.tonnes_per_unit)
 
     def trade_book(self, country):
         """What crossed the country's border last year, by good ({good: {"in_tonnes", "in_value", "out_tonnes", "out_value"}}),

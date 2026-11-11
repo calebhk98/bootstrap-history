@@ -73,7 +73,7 @@ def opening_values(sim):
     civ = sim.scenario.civ
     tile_ids = sim.map.tiles_held_by(civ)
     people = float(sim.scenario.population.total)
-    production = demand.production_data()
+    production = sim.production_catalog()
     registry = sim.state.trade_registry
     allowed = allowed_entries(production, set(sim.production.techniques_granted()))
     mint_recipe = mint_recipe_id(civ, production, set(sim.production.techniques_granted()))
@@ -188,7 +188,7 @@ def build_setup(sim, opening=None, production=None):
     population_by_tile = {tile: float(opening["population_by_tile"].get(tile, 0.0)) for tile in tile_ids}
     for opened in partners.values():
         population_by_tile.update({tile: float(people) for tile, people in opened["population_by_tile"].items()})
-    production = production or demand.production_data()
+    production = production or sim.production_catalog()
     every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
     recipes = recipes_from_production_data(production, every_recipe)
     trades_data = sim.state.trade_registry

@@ -19,7 +19,6 @@ from sim.economy import api as economy_api
 from sim.economy.api import EDGE_EXCHANGE, EDGE_LEGACY, AgentOrders, Bid, GoodsMove, Offer, Transfer
 from sim.ledger.api import ChangeStock, PayEdge, ReceiveFromEdge
 from sim.refusal import Refusal
-from .unit_mass import tonnes_per_unit
 
 from . import port_staff
 
@@ -126,7 +125,7 @@ def post(sim, economy, orders_by_seat, tile_of):
             entries = posted.setdefault(seat_id, [])
             for index, order in enumerate(orders):
                 good = order["good"]
-                per_unit = None if good is None or good not in traded else tonnes_per_unit(good)
+                per_unit = None if good is None or good not in traded else sim.tonnes_per_unit(good)
                 if per_unit is None:
                     entries.append({"refused": refused(order, "not_traded", "%s is not traded in the economy." % order["material"])})
                     continue
@@ -184,7 +183,7 @@ def settle(sim, economy, posted):
                 for tile, quantity in sorted(tiles.items()):
                     if quantity > 0.0:
                         moves.append(GoodsMove(entry["account"], EDGE_LEGACY, good, tile, quantity, "seat goods delivered"))
-                        tonnes += quantity * (tonnes_per_unit(good) or 0.0)
+                        tonnes += quantity * (sim.tonnes_per_unit(good) or 0.0)
             money = max(0.0, book.balance(entry["account"], currency))
             if money > 0.0:
                 transfers.append(Transfer(entry["account"], EDGE_EXCHANGE, currency, money, "exchange"))
