@@ -44,7 +44,7 @@ SKILL_GAP_CLOSED_PER_YEAR = declare(
 SCRAPPED_SHARE_OF_EXTRA_EFFORT = declare(
     "SCRAPPED_SHARE_OF_EXTRA_EFFORT", 0.5, kind="temporary_heuristic",
     unit="share of the extra effort of a novice run that is spoiled output", source=None, confidence="D",
-    retire="Complaints/972: a measured split of a novice's extra effort into slower work and spoiled work",
+    retire="Complaints/973: a measured split of a novice's extra effort into slower work and spoiled work",
     why="A novice run takes more hours than a competent one (the learning curve); part of the extra effort is slower "
         "work and part is work redone or thrown away, which lowers what a run yields. Thornton and Thompson find "
         "quality (errors) learning alongside time, but give no split of the two for a new crew. Chosen as an even "

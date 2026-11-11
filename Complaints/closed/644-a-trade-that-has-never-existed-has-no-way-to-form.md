@@ -1,6 +1,6 @@
 # A trade that has never existed has no way to form
 
-**Status:** closed - service trades form from their taught_from trade, the learning curve spoils a novice crew's output, and more taught_from links are data; the novice spoilage share is a labelled heuristic (Complaint 972)
+**Status:** closed - service trades form from their taught_from trade, the learning curve spoils a novice crew's output, and more taught_from links are data; the novice spoilage share is a labelled heuristic (Complaint 973)
 
 **What was wrong (the service, spoilage and taught_from bullets are answered by Built 10 to 12; the first bullet (trades no recipe books hours to) and the last (the keep of a bonded household) stay as research notes: see 648).**
 
@@ -84,7 +84,7 @@ sale records. See also 648.
 11. Spoilage (`sim/economy/practice.py` `usable_output_share`, `yield_after_practice`): the extra effort of a crew still on the curve
    (one minus booked over practised hours) spoils `SCRAPPED_SHARE_OF_EXTRA_EFFORT` of a run's output, as a lower yield factor in
    `producers.plan` and `production_lines` (`with_practised_yield`) and in the plan and goods-turn kernels
-   (`ProducerColumns.practised_yield`, `year_arrays_producers.practised_yields`). The share is a labelled heuristic (Complaint 972).
+   (`ProducerColumns.practised_yield`, `year_arrays_producers.practised_yields`). The share is a labelled heuristic (Complaint 973).
    Tests: `test_economy_practice.py`, `test_goods_turn_kernel.py`.
 12. `taught_from` links added to `data/world/trades.json`, each a mapping by the work in the trade definitions, no figure: weaver from
    spinner (spun yarn is the weaver's material), fuller from weaver (fulling finishes woven cloth), carter from porter (the same
