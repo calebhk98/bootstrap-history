@@ -3,6 +3,7 @@ naming the mod and the name, guards what a view answers, keeps the mod's own sav
 of a view no module publishes. Each provider a mod gives to an extension point receives its mod's access. Toy assemblies, no game."""
 QUICK_TOPIC = True
 
+from types import SimpleNamespace
 import unittest
 
 from sim.assembly.api import (LIST, AssemblyError, ExtensionPoint, Module, ModuleSpec, Operations, UndeclaredRead, UndeclaredSend,
@@ -137,10 +138,10 @@ class Providers(unittest.TestCase):
         received = []
         game = provided_game(lambda api: (api.reads("raw"), api.wealth_claims(
             lambda access: received.append(("owed", access)) or access.view("raw")() * 5.0,
-            lambda access, amount, taker: received.append(("seized", access, amount, taker)) or 1.0)))
+            lambda access, amount, taker_id: received.append(("seized", access, amount, taker_id)) or 1.0)))
         (owed, seize), = game.points["wealth_claims"]()
         self.assertEqual(owed(), 5.0)
-        self.assertEqual(seize(7.0, "treasury"), 1.0)
+        self.assertEqual(seize(7.0, SimpleNamespace(actor_id="treasury")), 1.0)
         access = game.mod_access[MOD]
         self.assertEqual(received, [("owed", access), ("seized", access, 7.0, "treasury")])
 
