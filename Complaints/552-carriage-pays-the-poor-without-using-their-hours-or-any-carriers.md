@@ -1,6 +1,6 @@
 # Carriage pays the poor without using their hours or any carriers
 
-**Status:** partly - hours, fleets, wear, storage and fee split are built (627 to 632, all closed); crew is bid in each mode's own trade and the labour core is seeded with the carrier trades (556); open: a real-game trace of carter, porter and sailor hours hired
+**Status:** partly - hours, fleets, wear, storage and fee split are built (627 to 632, all closed); crew is bid in each mode's own trade and the labour core is seeded with the carrier trades (556); open: run the carriage report on Rome and Mexica (the report is built, not yet run)
 
 Found by an outside reviewer reading the repository; checked against the code. Full history of the split: `Complaints/reports/552-history.md`.
 
@@ -23,7 +23,8 @@ Found by an outside reviewer reading the repository; checked against the code. F
 
 ## What it would take
 
-- One real-game trace (for example `python3 sim/simulator.py economy-check --accounts --years N --civs rome_100ad`) showing carter, sailor and porter hours demanded and hired, and that shortcut unused.
+- The report exists: `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs rome_100ad` (and `--civs mexica_1500`) prints, per year, the crew hours merchants bid and the hours the labour market sold them per carrier trade, and the carriage fee paid to a household of the source tile (the shortcut) against the edge account (`sim/economy/carriage_report.py`, test `sim/tests/test_carriage_report.py`). Close when carter, sailor (Rome) and porter (Mexica) rows show hired hours near the demanded ones and the fee to households is zero or small against the hired wages.
+- The shortcut is not dead code: `dispatch_merchants` still pays the fees it computes (crew pay owed for hours not hired, notably a merchant's first year with no plan) to `poorest_by_tile`, so it cannot be deleted before the report shows how much it pays.
 
 ## Tried
 

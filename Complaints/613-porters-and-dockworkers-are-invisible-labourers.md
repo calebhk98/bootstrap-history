@@ -1,6 +1,6 @@
 # Porters and dockworkers have no trade, so the largest labour group of a society without draught animals is hidden
 
-**Status:** partly - porter and dockworker trades exist and carriage books to them; a whole-game run with real porter workforces is not yet checked (see "What is left")
+**Status:** partly - porter and dockworker trades exist and carriage books to them; `economy-check --accounts --carriage` now prints porter and dockworker hours demanded and hired; not yet run on a whole game (see "What is left")
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming). Depends on 609.
 
@@ -17,8 +17,7 @@ handling to it. Every mode's crew is bid in its own trade (the heuristic `CARRIA
 
 **What is left.**
 
-- Verify in a whole game that porter workforces form: `python3 -m sim.tests --slow --only occupational_distribution --jobs 1`
-  and a multi-year `mexica_1500` run (a 2-year `economy-check --civs mexica_1500 --years 2` ran clean when this was built).
+- Verify in a whole game that porter and dockworker hours are bid and hired: `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500` (`sim/economy/carriage_report.py`); the porter row should show hired hours near the demanded ones. The `occupational_distribution` slow topic is now only a data lint (619).
 - `sea_freight.PORT_HANDLING_HOURS_PER_TONNE` (read in `sim/markets/port_setup.py`, `sim/freight/models.py`) stays a labelled heuristic: no source found (a port-economics page gives a longshore crew
   5 to 10 tons an hour but not the crew size, so no per-worker figure follows).
 - The sea handling money (`handling_rates`, `sim/markets/port_setup.py`) is still priced at the unskilled wage; porter and dockworker wages come from the

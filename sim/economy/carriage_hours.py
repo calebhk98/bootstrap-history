@@ -142,9 +142,11 @@ def bids(setup, record) -> List[LabourBid]:
     return bid_objects(bid_figures(setup, record))
 
 
-def write_bids(sink, setup, record) -> None:
-    """Add every merchant's bid for carriers to the year's labour bids (a `LabourBidTable`, or a list of records)."""
-    put_bids(sink, bid_figures(setup, record))
+def write_bids(sink, setup, record) -> List[BidFigures]:
+    """Add every merchant's bid for carriers to the year's labour bids (a `LabourBidTable`, or a list of records); the bids written are returned."""
+    figures = bid_figures(setup, record)
+    put_bids(sink, figures)
+    return figures
 
 
 def bid_figures(setup, record) -> List[BidFigures]:

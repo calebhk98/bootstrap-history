@@ -3,7 +3,7 @@ yearly accounts: production, use, consumption, investment and stock per good, fo
 cohort, and the real wage against the opening's basket (sim/economy/year_accounts.py, Complaint 554)."""
 import random
 
-from sim.economy import carried_by_length
+from sim.economy import carried_by_length, carriage_report
 
 from sim.engine import saveload
 from sim.engine.ui_port import Sim, load, load_civ
@@ -67,6 +67,8 @@ def play_for_accounts(args):
 def cmd_economy_accounts(args):
     for outcome in play_for_accounts(args):
         print(format_accounts(outcome.accounts))
+        if getattr(args, "carriage", False):
+            print(carriage_report.format_report(outcome.carriage_hours_report))
         if getattr(args, "routes", False):
             print("\n".join(carried_by_length.format_bands(outcome.merchant_routes)))
     return 0

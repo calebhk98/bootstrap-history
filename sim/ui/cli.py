@@ -1125,6 +1125,9 @@ def main():
                            "need by tile and cohort, the real wage against the opening's basket (Complaint 554)")
     subparser.add_argument("--routes", action="store_true", help="with --accounts: also print each year's merchant tonnes "
                            "by route length and value per kilogram (Complaint 517)")
+    subparser.add_argument("--carriage", action="store_true", help="with --accounts: also print each year's carriage hours "
+                           "demanded and hired by carrier trade, and the carriage fee paid to a household instead of "
+                           "hired crew (Complaints 552, 613)")
     subparser.add_argument("--occupations", action="store_true", help="also print each occupation group's share of "
                            "working hours against its plausibility band (Complaint 619)")
     subparser.add_argument("--session", default=None, help="with --accounts: resume this save instead of a fresh game "

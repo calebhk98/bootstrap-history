@@ -83,6 +83,7 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
                 rents.extend(rent)
     record.book.post(postings, moves)
     ledger.note_postings(fees, "wages")
+    ledger.carriage_fees = fees
     ledger.note_postings(dues_paid)
     ledger.note_postings(rents)
     price_at = _kept(lambda good, tile: _price_on(record, area_map, good, tile))     # a market's price, read once
