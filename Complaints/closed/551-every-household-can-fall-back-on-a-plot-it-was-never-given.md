@@ -1,6 +1,6 @@
 # Every household can fall back on a plot it was never given
 
-**Status:** partly done: own-plot growing is limited to land held or leased; a landless cohort leases land in the market and the lease checks its tools; open: a whole-game measurement of leasing, the team (draught animals, plant) check, and the own-plot growing itself reading the tool fallback hours
+**Status:** closed - own-plot growing is limited to land held or leased; landless cohorts lease and the tools, team and plant a cohort holds set the hours its plot takes (by hand when short); a stepped fixture economy tests it
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -37,12 +37,20 @@ Found by an outside reviewer reading the repository; checked against the code.
   working by hand (`tool_fallback.draws`), so a missing tool slows the work and does not stop it. Tests: `ToolsCheckTests`
   and `test_without_tools_the_same_hours_work_fewer_hectares`.
 
-## Left
+- Tools, team and plant in the growing itself: `sim/economy/plot_means.py` (`hours_for_runs`, `runs_within`) gives the hours
+  runs take with the stock held: a short tool is drawn from by the next tool then by hand (`tool_fallback.draws`), and runs
+  beyond the plant held (a draught team, a plough) are worked by hand at the recipe's by-hand hours factor (1.0 where the
+  recipe states none). `households_own.own_production` and `hours_for_own_plan` take `held_goods`; `Economy._grow_own` and
+  `_fixed_home_hours` read each cohort's stock; lease sizing (`land_tenancy.hectares_workable`) uses the same function.
+  Tests: `sim/tests/test_economy_plot_means.py`.
+- Stepped fixture: `fixture_setups.plot_tool_setup` (own-plot recipe needing a hoe, nobody holds one) with every title given to a
+  landlord; `sim/tests/test_economy_own_plot_leasing_smoke.py` (SMOKE, slow tier) asserts each landless cohort leases, works
+  hectares and grows its floor.
 
-- The quick-tier economy fixture has no own-plot recipes (its cohorts grow nothing for themselves), so leasing is tested on
-  built inputs and not in a stepped game; a stepped game with landless cohorts and a crop that needs a tool is not run.
-- Tools are checked when the lease is sized. The own-plot growing itself (`households_own.own_production`) does not charge
-  the by-hand hours of a short tool; a cohort that leases for the hands it has and then loses its tool works the same hours.
-- Team (draught animals) and plant are not checked.
-- Cohorts still differ in endowment only through titles and leases (landlessness is an outcome of the title seed,
-  foreclosure and leasing, with no typed share); urban cohorts hold title through their ownership share like the rest.
+## By design
+
+- Cohorts differ in endowment only through titles and leases. Landlessness is an outcome of the title seed, foreclosure and
+  leasing, with no typed share of landless households: a typed share would be a hardcoded outcome (CLAUDE.md 4.1). Urban
+  cohorts hold title through their ownership share like the rest.
+- Not wired: the opening's own-plot growing (`opening_own.py`) and the plot-hours schedule (`household_hours_year.usable_plot_hours`)
+  still take the means as held; they size a stationary opening, not a year's work.

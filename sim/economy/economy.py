@@ -26,6 +26,7 @@ from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
 from . import capital_year, household_offers_year, land_bid_year, land_lease_year, lend_requests
+from . import plot_means
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step, households_cohort, trade_wages
 from .labour_inputs import labour_context
@@ -247,7 +248,7 @@ class Economy:
         bondage_hours.deliver(ledger.hours_hired, held_placed)
         record.labour.set_hours_paid_by_employer(dict(sorted(ledger.hours_hired.as_plain().items())))   # what seats' staff books read; one pass over the ledger table
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
-        self._grow_own(offers, ledger, inputs.harvest_factor, kept)
+        self._grow_own(offers, ledger, view, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
         order_book = new_order_book(setup, record)
         funds = cohort_orders(setup, record, view, ledger, order_book, self.own_plot_options())
@@ -339,12 +340,14 @@ class Economy:
         usual fertility (it plants before it knows the harvest), and the household work it does itself
         (household_work_year.py)."""
         plan, held, options = {}, self.hectares_held(), self.own_plot_options()
+        means = plot_means.plot_goods(options, self.setup.recipes)
         store = table_of(self.record.cohorts)
         for cohort in store.figures(store.order(), with_plan=True):
             cohort_id = cohort.agent_id
             tile = self.setup.tiles.get(cohort.tile)
             plan[cohort_id] = hours_for_own_plan(cohort, options, tile.fertility if tile else 0.0,
-                                                 self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
+                                                 self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0),
+                                                 plot_means.held_of(view, cohort_id, cohort.tile, means))
         self._work_hours = household_offers_year.decide(self.setup, self.record, view, everyone)
         return plan, self._work_hours
 
@@ -359,11 +362,12 @@ class Economy:
     def hectares_held(self) -> Dict[str, float]:
         return titles_plots.hectares_held(self.setup, self.record)
 
-    def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,
+    def _grow_own(self, offers, ledger: YearLedger, view, harvest_factor: float = 1.0,
                   kept: Optional[Dict[str, float]] = None) -> None:
         """Hours kept back and hours nobody hired go into the household's own plot (households_own.py)."""
         setup, record = self.setup, self.record
         options = self.own_plot_options()
+        means = plot_means.plot_goods(options, setup.recipes)
         kept = kept or {}
         self._own_hectares = {}
         held = self.hectares_held()
@@ -380,7 +384,8 @@ class Economy:
             moves, grown, units = own_production(cohort, idle, options, setup.recipes,
                                                  (tile.fertility if tile else 0.0) * harvest_factor,
                                                  setup.basket_for(cohort.tile), setup.land_per_run,
-                                                 held.get(cohort.agent_id, 0.0), hours_used)
+                                                 held.get(cohort.agent_id, 0.0), hours_used,
+                                                 plot_means.held_of(view, cohort_id, cohort.tile, means))
             if hours_used:
                 ledger.own_plot_hours[cohort_id] = hours_used
             spare_ids.append(cohort_id)

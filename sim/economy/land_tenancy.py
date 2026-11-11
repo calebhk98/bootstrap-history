@@ -12,7 +12,7 @@ import math
 from dataclasses import dataclass
 from typing import Dict, List, Mapping, Sequence
 
-from . import tool_fallback
+from . import plot_means
 from .types import AgentId, GoodId, Recipe, TileId
 
 
@@ -67,26 +67,11 @@ def wanted_hectares(workable: float, worked: float) -> float:
 
 def hectares_workable(recipe: Recipe, land_per_run: float, held_tools: Mapping[GoodId, float], hours: float) -> float:
     """The hectares `hours` can work with the tools held (its own or rented): a run on a hectare takes the recipe's
-    hours, plus the extra hours a short tool asks (tool_fallback.draws: the next tool, then by hand). A tool shortage
-    slows the work and never stops it; no tool at all is the by-hand hours."""
-    base = math.fsum(recipe.labour_hours.values())
-    if land_per_run <= 0.0 or hours <= 0.0:
+    hours, plus the extra hours a short tool asks (plot_means: the next tool, then by hand; runs beyond the team or
+    plant held by hand). A shortage slows the work and never stops it; no tool at all is the by-hand hours."""
+    if land_per_run <= 0.0:
         return 0.0
-    if base <= 0.0:
-        return math.inf                                 # a recipe that takes no hours is limited by no hands
-
-    def hours_for(runs: float) -> float:
-        _used, extra = tool_fallback.draws(recipe, held_tools, runs)
-        return runs * base + math.fsum(extra.values())
-
-    low, high = 0.0, hours / base                     # the tools can only add hours, so `high` runs may be too many
-    for _ in range(60):
-        middle = (low + high) / 2.0
-        if hours_for(middle) <= hours:
-            low = middle
-        else:
-            high = middle
-    return low * land_per_run
+    return plot_means.runs_within(recipe, held_tools, hours) * land_per_run
 
 
 def match(offers: Sequence[TenancyRequest], lots: Sequence[Lot], posted_rent_by_tile: Mapping[TileId, float],

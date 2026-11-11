@@ -14,6 +14,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 from sim.constants import declare
 
 from sim.world.need_basket import Basket
+from . import plot_means
 from .households_cohort import Cohort
 from .types import EDGE_PRODUCTION, GoodId, GoodsMove, Recipe
 
@@ -80,11 +81,14 @@ def growing_needs(basket: Basket, options: Mapping[str, List[Option]]) -> tuple:
 def own_production(cohort: Cohort, idle_hours: float, options: Mapping[str, List[Option]],
                    recipes: Mapping[str, Recipe], fertility: float, basket: Basket,
                    land_per_run: Optional[Mapping[str, float]] = None, hectares_held: float = 0.0,
-                   hours_used: Optional[Dict[str, float]] = None
+                   hours_used: Optional[Dict[str, float]] = None,
+                   held_goods: Optional[Mapping[GoodId, float]] = None
                    ) -> Tuple[List[GoodsMove], Dict[GoodId, float], Dict[str, float]]:
     """(moves booking what it grew, goods grown, need units grown) for one cohort's idle hours. It grows
     only on land it holds (owned or leased): `hectares_held` is shared among the needs in turn, and a
-    cohort with none grows nothing. `hours_used`, if given, is filled with the hours worked by recipe."""
+    cohort with none grows nothing. `hours_used`, if given, is filled with the hours worked by recipe. With
+    `held_goods` (the cohort's stock of tools, their fallbacks and plant) a short tool, team or plant asks more hours
+    for the same crop (plot_means); without it the means are taken as held."""
     land_per_run = land_per_run or {}
     hectares_left = max(0.0, hectares_held)
     moves: List[GoodsMove] = []
@@ -98,15 +102,22 @@ def own_production(cohort: Cohort, idle_hours: float, options: Mapping[str, List
         hours_per_unit, recipe_id, good, effect = rows[0]
         floor_units = need.subsistence_per_person * cohort.people
         hours_per_unit = hours_per_unit / fertility
-        wanted_hours = floor_units * hours_per_unit
-        used = min(hours_left, wanted_hours, hours_on_land(hectares_left, recipes[recipe_id], land_per_run.get(recipe_id, 0.0)))
+        recipe = recipes[recipe_id]
+        runs_hours = math.fsum(recipe.labour_hours.values())
+        wanted_hours = min(floor_units * hours_per_unit,
+                           hours_on_land(hectares_left, recipe, land_per_run.get(recipe_id, 0.0)))
+        if held_goods is None:
+            used = base_hours = min(hours_left, wanted_hours)
+        else:
+            used = min(hours_left, plot_means.hours_for_runs(recipe, held_goods, wanted_hours / runs_hours))
+            base_hours = plot_means.runs_within(recipe, held_goods, used) * runs_hours
         if used <= 0.0:
             continue
         hours_left -= used
         if hours_used is not None:
             hours_used[recipe_id] = hours_used.get(recipe_id, 0.0) + used
-        hectares_left -= used / math.fsum(recipes[recipe_id].labour_hours.values()) * land_per_run[recipe_id]
-        made_units = used / hours_per_unit
+        hectares_left -= base_hours / runs_hours * land_per_run[recipe_id]
+        made_units = base_hours / hours_per_unit
         quantity = made_units / effect
         grown[good] = grown.get(good, 0.0) + quantity
         units[need.need_id] = units.get(need.need_id, 0.0) + made_units
@@ -117,9 +128,11 @@ def own_production(cohort: Cohort, idle_hours: float, options: Mapping[str, List
 def hours_for_own_plan(cohort: Cohort, options: Mapping[str, List[Option]], fertility: float,
                        recipes: Optional[Mapping[str, Recipe]] = None,
                        land_per_run: Optional[Mapping[str, float]] = None,
-                       hectares_held: Optional[float] = None) -> float:
+                       hectares_held: Optional[float] = None,
+                       held_goods: Optional[Mapping[GoodId, float]] = None) -> float:
     """Hours that grow the cohort's own-plot plan (need units by need) at this fertility. When
-    `hectares_held` is given, no more than the land it holds can take (none if it holds none)."""
+    `hectares_held` is given, no more than the land it holds can take (none if it holds none). With `held_goods`
+    the hours include what a short tool, team or plant adds (plot_means)."""
     if fertility <= 0.0:
         return 0.0
     hours = 0.0
@@ -132,6 +145,9 @@ def hours_for_own_plan(cohort: Cohort, options: Mapping[str, List[Option]], fert
                 recipe_id = rows[0][1]
                 wanted = min(wanted, hours_on_land(hectares_left, recipes[recipe_id], (land_per_run or {}).get(recipe_id, 0.0)))
                 hectares_left -= wanted / math.fsum(recipes[recipe_id].labour_hours.values()) * land_per_run[recipe_id] if wanted > 0.0 else 0.0
+            if held_goods is not None and wanted > 0.0:
+                recipe = recipes[rows[0][1]]
+                wanted = plot_means.hours_for_runs(recipe, held_goods, wanted / math.fsum(recipe.labour_hours.values()))
             hours += wanted
     return hours
 
