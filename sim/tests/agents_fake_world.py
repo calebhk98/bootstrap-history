@@ -72,6 +72,7 @@ class FakeGovernment:
 
 	def __init__(self) -> None:
 		self.asked: List[float] = []
+		self.record = SimpleNamespace(ruler_competence=None)
 
 	def collect(self, actor: Any, takings: float, world: Any) -> float:
 		self.asked.append(takings)

@@ -9,9 +9,19 @@ dated accession; a ruler's death is a draw from his age.
     dispute_probability = 1 - (backing of strongest faction - backing of second) / total backing    (0 with fewer than two)
 """
 import math
+from statistics import NormalDist
 from typing import Mapping, Optional, Tuple
 
+from sim.constants import declare
 from sim.world import demography
+
+COMPETENCE_LOG_SPREAD = declare(
+	"COMPETENCE_LOG_SPREAD", 0.4, kind="temporary_heuristic",
+	unit="standard deviation of the log of competence", source=None, confidence="D",
+	retire="Complaints/486: rulers and councils as actors with advisers, training and a record in office",
+	why="How widely rulers differ in how well they run a state; competence is lognormal with a median of one. "
+		"No source opened gives a spread; stands in for upbringing, advisers and experience.")
+COMPETENCE_FLOOR = 0.05   # a ruler never has less than this, so the officials' take stays finite
 
 
 def mortality_rate(age: float) -> float:
@@ -58,3 +68,21 @@ def dispute_probability(backing: Mapping[str, float]) -> float:
 		return 0.0
 	total = sum(value for value in backing.values() if value > 0.0)
 	return 1.0 - (backing[leader] - backing[challenger]) / total
+
+
+def draw_competence(draw: float, averaged: bool = False) -> float:
+	"""A ruler's competence from a uniform `draw`: lognormal, median one. An averaged council is one whatever the draw."""
+	if averaged:
+		return 1.0
+	z_score = NormalDist().inv_cdf(min(max(draw, 1e-6), 1.0 - 1e-6))
+	return max(COMPETENCE_FLOOR, math.exp(COMPETENCE_LOG_SPREAD * z_score))
+
+
+def reach_factor(competence: float) -> float:
+	"""Share of its administrative reach a state keeps under a ruler of this competence (a strong ruler cannot reach beyond all)."""
+	return max(0.0, min(1.0, competence))
+
+
+def keep_factor(competence: float) -> float:
+	"""What officials' take is multiplied by: a weak ruler is cheated more, a strong one less."""
+	return 1.0 / max(COMPETENCE_FLOOR, competence)

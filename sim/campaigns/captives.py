@@ -1,21 +1,26 @@
 """Captives of war join the winner's bonded people (Complaint 648). The hooks are called from the campaign phase when a
 battle is decided and when a tile is taken; the rules are the agents' (`captives_from_losses`, `captives_from_conquest`)."""
-from sim.agents.api import captives_from_conquest, captives_from_losses
+from sim.agents.api import army_faction, captives_from_conquest, captives_from_losses
 from sim.assembly.api import Part
 from sim.demography.api import AddCaptives
 from sim.geography.api import settlement
 from sim.hazards.api import RecordWorldEvent
+from sim.polity.api import AddArmyPlunder
 
 
 class Captives(Part):
-	"""Reads: tiles_owned_by, has_state, country_world. Sends AddCaptives, RecordWorldEvent."""
+	"""Reads: tiles_owned_by, has_state, country_world. Sends AddCaptives, AddArmyPlunder, RecordWorldEvent."""
 
 	def _add_captives(self, winner: str, loser: str, people: float, tile: str, cause: str) -> float:
-		"""The winner's bonded stratum takes `people` of the loser's; the log keeps what was taken."""
+		"""The winner's bonded stratum takes `people` of the loser's, the winner's soldiers count them as plunder; the log keeps what was taken."""
 		taken = self.needs.send(AddCaptives(winner, people)) if people > 0.0 else 0.0
 		if taken > 0.0:
 			self.needs.send(RecordWorldEvent("captives", actors=(winner, loser), tiles=(tile,), cause=cause,
 			                                 facts={"people": taken}))
+		if taken > 0.0 and self.needs.has_state[winner]:
+			labour = self.needs.country_world[winner].labour
+			pay = float(labour.pay_per_person_year(labour.trade_of_role("unskilled")))
+			self.needs.send(AddArmyPlunder(winner, army_faction.plunder_of_captives(taken, pay)))
 		return taken
 
 	def take_captives_from_battle(self, winner: str, loser: str, loser_lost: float, tile: str) -> float:

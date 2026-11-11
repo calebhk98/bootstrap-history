@@ -94,6 +94,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("has_state", "has_state", kind=KEYED, **_LIVE),
 		ViewSpec("countries", "countries", **_LIVE),
 		ViewSpec("organised_factions", "organised_factions", kind=KEYED, **_LIVE),
+		ViewSpec("stratum_grievances", "stratum_grievances", kind=KEYED, **_LIVE),
 		ViewSpec("home_country", "home_country", **_LIVE),
 		ViewSpec("state_knowledge", "state_knowledge", **_LIVE),
 		ViewSpec("holder_treasury", "holder_treasury", kind=KEYED, **_LIVE),

@@ -75,8 +75,8 @@
       "name": "Third century crisis",
       "causes_not_modelled": [
         "Sasanian and Germanic pressure on the frontiers: no neighbouring polity with an army is simulated for this civilisation.",
-        "Army-made emperors and an undefined succession: ruler legitimacy is not simulated.",
-        "The Decian edict is a loyalty test with no simulated ruler; its values shift rides on this event's fiscal cause."
+        "Army-made emperors: a defecting army backs a claimant and rises (Complaint 486), but no legion's loyalty to a named general or a ruler's standing with the people is simulated.",
+        "The Decian edict is a loyalty test with no ruler's religious policy simulated; its values shift rides on this event's fiscal cause."
       ],
       "causes": [
         {

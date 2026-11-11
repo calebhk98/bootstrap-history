@@ -120,7 +120,11 @@ class Appliers(Part):
 		record = self._government_record(command.owner)
 		record.ruler_age = command.age
 		record.ruler_backer = command.backer
+		record.ruler_competence = command.competence
 		record.accession_due = True
+
+	def add_army_plunder(self, command):
+		self._government_record(command.owner).army_plunder += command.amount
 
 	def close_succession_dispute(self, command):
 		self._government_record(command.owner).succession_challenger = ""

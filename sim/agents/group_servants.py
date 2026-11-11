@@ -10,14 +10,14 @@ that has always paid part of its army is not mutinied against for it; the fall i
 from sim.refusal import LogLine
 from typing import Any, Dict, List, Optional
 
-from . import budget, ledger
+from . import army_faction, budget, ledger
 from .edges import EDGE_STATE_SPENDING
 from .group_tuning import STRATUM_GRIEVANCE_THRESHOLD, STRATUM_WELFARE_MEMORY_RATE
 from .group_tuning_stakes import (DESERTION_RATE, LOYALTY_ADJUSTMENT_RATE, MUTINY_LOYALTY, OFFICE_FEE_SHARE_OF_REVENUE)
 from .sector import Sector
 
 OFFICE_HOLDERS = "office_holders"
-SOLDIERS = "soldiers"
+SOLDIERS = army_faction.ARMY_FACTION
 SALARIES = "salaries"
 FEES = "fees"
 # the budget lines that pay people in office
@@ -122,8 +122,9 @@ def run_army_year(government: Any, world: Any) -> Dict[str, float]:
 	paid = army_paid_share(record)
 	if paid is not None and record.income_reference.get(ARMY_PAY_SHARE, 0.0) <= 0.0:
 		record.income_reference[ARMY_PAY_SHARE] = paid   # the first year's pay is what it expects
-	fall = army_fall(record)
 	arrears = record.arrears.get(ARMY_LINE, 0.0)
+	fall = army_faction.fall_after_plunder(army_fall(record), arrears, record.army_plunder)
+	record.army_plunder = 0.0   # the soldiers have had it
 	record.loyalty = step_loyalty(record.loyalty, fall)
 	acted = mutiny(record.loyalty, record.army, arrears, government.money)
 	if acted["severity"] > 0.0:

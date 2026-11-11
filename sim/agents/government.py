@@ -26,7 +26,7 @@ from .government_surplus import Surplus
 from .purses import Purses
 from .edges import EDGE_PATRONAGE, EDGE_STATE_SPENDING
 from .no_country_economy import NoCountryEconomy
-from . import ruler
+from . import army_faction, ruler
 from .tuning import GOVERNMENT_WORTH_SHARE_PER_GAIN
 from .tuning_spending import PUBLIC_BUILDING_LIFE_YEARS
 from .values import invention_gains, weighted_gain
@@ -240,13 +240,18 @@ class Government(RecordedActor):
 	def accede(self, world: Any) -> None:
 		"""The ruler ages a year and may die at his age band's mortality; his heir accedes, backed by the strongest faction
 		and owing the army a donative until it is paid. Where the two strongest factions are evenly matched the runner-up
-		may dispute the accession by arms (settled at the seat in the revolt phase)."""
+		may dispute the accession by arms (settled at the seat in the revolt phase). A new ruler's competence is drawn (once for the
+		ruler found at the opening); an army that has defected counts as a faction behind a claimant."""
 		record = self.record
 		record.ruler_age = ruler.opening_age() if record.ruler_age is None else record.ruler_age + 1.0
 		rng = world.setting.rng_for("accession", self.actor_id, world.setting.year)
+		competence_rng = world.setting.rng_for("competence", self.actor_id, world.setting.year)
+		if record.ruler_competence is None:
+			record.ruler_competence = ruler.draw_competence(competence_rng.random(), record.council_averaged)
 		if not ruler.dies(record.ruler_age, 1.0, rng.random()):
 			return
-		backing = world.groups.faction_backing()
+		record.ruler_competence = ruler.draw_competence(competence_rng.random(), record.council_averaged)
+		backing = army_faction.with_army(world.groups.faction_backing(), army_faction.defecting_share(record.loyalty))
 		leader, challenger = ruler.contenders(backing)
 		record.ruler_age = ruler.heir_age(record.ruler_age)
 		record.ruler_backer = leader or ""

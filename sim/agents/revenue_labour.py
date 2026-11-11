@@ -49,7 +49,7 @@ def levy_of(declared: Any, world: Any) -> Levy:
 		raise ValueError("form %r: labour is owed per %r|%r to %r|%r and commuted by a share of 0..1"
 						 % (declared["form"], PERSON, HOUSEHOLD, WORKS_DUE, ARMY_DUE))
 	people = world.labour.national_people(world.labour.trade_of_role("unskilled")) if per == PERSON else world.people.population_total() / PERSONS_PER_HOUSEHOLD
-	return Levy(float(declared["rate"]) * max(0.0, people) * authority.levy_reach(world), max(0.0, people), destination, commute)
+	return Levy(float(declared["rate"]) * max(0.0, people) * authority.levy_reach(world, authority.competence_of(world)), max(0.0, people), destination, commute)
 
 
 def person_years(hours: float, world: Any) -> float:

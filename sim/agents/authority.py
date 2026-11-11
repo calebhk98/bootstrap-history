@@ -14,6 +14,8 @@ from typing import Any, Iterable, Mapping, Optional
 from sim.constants import declare
 from sim.world import battle
 
+from . import ruler
+
 OFFICIAL_KEEP_CEILING = declare(
 	"OFFICIAL_KEEP_CEILING", 0.4, kind="temporary_heuristic",
 	unit="share of what is collected", source=None, confidence="D",
@@ -71,11 +73,18 @@ def after_leakage(amount: float, kept: float) -> float:
 	return amount * (1.0 - max(0.0, min(1.0, kept)))
 
 
-def levy_reach(world: Any) -> float:
-	"""The share of a levy the state can compel across what it holds: its collection reach, held by its garrisons."""
-	return float(world.collection.collectible_share(None))
+def levy_reach(world: Any, competence: float = 1.0) -> float:
+	"""The share of a levy the state can compel across what it holds: its collection reach, held by its garrisons, as far as the ruler's
+	competence lets it be used."""
+	return float(world.collection.collectible_share(None)) * ruler.reach_factor(competence)
 
 
-def kept_on(world: Any, tiles: Optional[Iterable[str]]) -> float:
-	"""The share officials keep over `tiles`, as the world reads it."""
-	return float(world.collection.corruption_share(tiles))
+def kept_on(world: Any, tiles: Optional[Iterable[str]], competence: float = 1.0) -> float:
+	"""The share officials keep over `tiles`, as the world reads it, more under a weak ruler."""
+	return min(1.0, float(world.collection.corruption_share(tiles)) * ruler.keep_factor(competence))
+
+
+def competence_of(world: Any) -> float:
+	"""The competence of the ruler of the world's state (one before any ruler has been drawn)."""
+	record = world.setting.government().record
+	return 1.0 if record.ruler_competence is None else float(record.ruler_competence)

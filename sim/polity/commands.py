@@ -79,6 +79,14 @@ class ReplaceRuler(Command):
 	owner: str
 	age: int
 	backer: str
+	competence: float = 1.0
+
+
+@dataclass(frozen=True)
+class AddArmyPlunder(Command):
+	"""The army of the state of `owner` took `amount` (money's worth) in campaign this year; its pay owed is set against it."""
+	owner: str
+	amount: float
 
 
 @dataclass(frozen=True)
