@@ -31,7 +31,7 @@ from typing import Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
-from . import carriage_fleet, inventory, merchant_table, merchant_year, merchants_news, merchants_plan, route_dues, merchants_legs, merchants_route_memo, merchants_search, merchants_transit
+from . import carriage_fleet, inventory, merchant_table, merchant_year, merchants_news, merchants_plan, route_dues, merchants_legs, merchants_route_memo, merchants_search, merchants_stretch, merchants_transit
 from sim.book import DeliveredMove
 from .households_orders import BUDGET_SAFETY_SHARE
 from .market_areas import AreaMap
@@ -91,6 +91,7 @@ class Merchant:
     carrier_fleet_wanted: Dict[str, float] = field(default_factory=dict)   # wear a year its routes' stock called for last year, less what it hired, by carrier good (carriage_fleet): the fleet it bids to hold
     in_transit: List[merchants_transit.Shipment] = field(default_factory=list)   # hauls still on the road (their goods wait in the transit account)
     price_history: Dict[Tuple[GoodId, AreaId], List[float]] = field(default_factory=dict)   # prices of distant markets that news has not yet reached it, newest last
+    traded_tiles: Dict[TileId, int] = field(default_factory=dict)   # tiles it has run routes from or to -> years since; with its home they centre the stretch whose prices it knows (`merchants_stretch`)
 
     def _table(self):
         """(the merchant table holding this merchant's row, the row): a table of its own until `put_merchant` moves it into its record's."""
@@ -120,6 +121,9 @@ class Merchant:
         elif name == "price_history":
             store, row = self._table()
             store.set_history(row, value)
+        elif name == "traded_tiles":
+            store, row = self._table()
+            store.traded[row] = dict(value)
         else:
             object.__setattr__(self, name, value)
 
@@ -133,6 +137,9 @@ class Merchant:
         if name == "price_history":
             store, row = self._table()
             return store.history_of(row)
+        if name == "traded_tiles":
+            store, row = self._table()
+            return store.traded[row]
         raise AttributeError(name)
 
     def add_shipment(self, shipment) -> None:
@@ -145,7 +152,8 @@ class Merchant:
         store, row = self._table()
         return {"capital_base": float(store.capital_base[row]), "expected_prices": self.expected_prices.named(),
                 "expected_volumes": self.expected_volumes.named(),
-                "in_transit": store.shipments_of(row), "price_history": store.history_of(row)}
+                "in_transit": store.shipments_of(row), "price_history": store.history_of(row),
+                "traded_tiles": store.traded[row]}
 
 
 def bind_markets(merchant: Merchant, tables: MarketTables) -> None:
@@ -279,9 +287,10 @@ def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, inte
         # an expectation stands in for last year's price where the merchant has one; without one it sees
         # last year's price only where the news has had time to reach it, and nothing of a farther market
         current = merchants_search.news_current_flags(good, areas, carriage, merchant.home_tile)
-        seen = [expected[area.area_id] if area.area_id in expected
-                else (price if reached else None)
-                for area, price, reached in zip(areas, seen, current)]
+        known = merchants_stretch.known_flags(good, areas, carriage,
+                                              merchants_stretch.stretch_of(merchant.home_tile, merchant.traded_tiles))
+        seen = [(expected[area.area_id] if area.area_id in expected else (price if reached else None)) if in_stretch else None
+                for area, price, reached, in_stretch in zip(areas, seen, current, known)]
         if only_held is not None:
             parts.append(_good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
                                       carriage, interest_rate, _areas_holding(area_map, good, only_held[good])))
@@ -471,6 +480,14 @@ def learn_year(tables: MarketTables, news: merchants_news.YearNews, carriage: Ca
     """Move every merchant of the record whose market numbering is `tables` toward the year's prices and volumes, in one kernel step
     over the merchant table (the settlement, `close_all`, follows)."""
     merchant_year.learn_year(merchant_table.MerchantTable.of(tables), news, carriage, MERCHANT_EXPECTATION_SPEED)
+
+
+def remember_stretches(merchants_by_id: Mapping[AgentId, Merchant]) -> None:
+    """Each merchant's stretch after the year: the tiles of this year's routes are fresh, the others a year older
+    (`merchants_stretch.after_year`)."""
+    for merchant in merchants_by_id.values():
+        merchant.traded_tiles = merchants_stretch.after_year(
+            merchant.traded_tiles, merchants_stretch.routes_tiles(merchant.routes), merchants_stretch.MERCHANT_STRETCH_MEMORY_YEARS)
 
 
 def close_all(tables: MarketTables, book, area_map: AreaMap, currency: CurrencyId, interest_rate: float) -> Sequence[Transfer]:

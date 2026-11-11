@@ -15,7 +15,7 @@ import numpy as np
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import merchants_book_kernel, merchants_kernel, merchants_search
+from . import merchants_book_kernel, merchants_kernel, merchants_search, merchants_stretch
 from .merchant_figures import MarketFigures, market_name
 
 _books: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
@@ -121,6 +121,14 @@ class RouteBook:
             parts = [np.array(merchants_search.news_current_flags(good, areas, carriage, home_tile), np.bool_)
                      for good, areas in zip(self.goods, self.areas)]
             flags = self._news[home_tile] = np.concatenate(parts) if parts else np.zeros(0, np.bool_)
+        return flags
+
+
+    def known(self, carriage, stretch) -> np.ndarray:
+        """For each slot, whether a merchant with this stretch (`merchants_stretch.stretch_of`) knows its price."""
+        flags = np.zeros(self.slots, np.bool_)
+        for tile in stretch:
+            flags |= self.news_current(carriage, tile)
         return flags
 
 
@@ -235,14 +243,17 @@ def merchant_array(book: RouteBook, table: Mapping[Tuple[str, str], Optional[flo
 
 
 def search(route: RoutePass, expected: np.ndarray, home_tile, interest_rate: float, margin_share: float,
-           good_allowed: Optional[np.ndarray] = None, source_allowed: Optional[np.ndarray] = None) -> MerchantRows:
+           good_allowed: Optional[np.ndarray] = None, source_allowed: Optional[np.ndarray] = None,
+           traded_tiles=()) -> MerchantRows:
     """The rows `merchants.candidate_routes` gives for a merchant with these expected prices (NaN: none), sorted by
     rank, then good, source area id and destination area id. An expectation stands in for last year's price where
     there is one; otherwise the view's price counts where the news has reached the merchant. A full search leaves out sources with no
-    expectation and nothing on offer (`buyable_sources`)."""
+    expectation and nothing on offer (`buyable_sources`). Only areas in the merchant's stretch (its home tile and
+    `traded_tiles`, `merchants_stretch`) are seen at all."""
     book = route.book
     carriage = route.carriage
     seen = np.where(np.isnan(expected), np.where(book.news_current(carriage, home_tile), route.view_prices, 0.0), expected)
+    seen = np.where(book.known(carriage, merchants_stretch.stretch_of(home_tile, traded_tiles)), seen, 0.0)
     if good_allowed is None:
         good_allowed = np.ones(len(book.goods), np.bool_)
     held_search = source_allowed is not None       # selling what it holds: the sources are where the stock lies, bought or not

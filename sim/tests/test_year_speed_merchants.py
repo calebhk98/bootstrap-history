@@ -89,6 +89,7 @@ def random_world(seed):
             if rng.random() < 0.7:
                 expected_volumes[key] = rng.uniform(1.0, 200.0)
     who = Merchant("m1", rng.choice(TILES), "owner", 1000.0, expected_prices, expected_volumes)
+    who.traded_tiles = {tile: 0 for tile in TILES}      # it knows the whole map; stretches are tried in test_merchant_stretch_kernels
     for _shipment in range(rng.randrange(3)):
         who.add_shipment(merchants_transit.Shipment(rng.choice(sorted(PARTS)), rng.uniform(1.0, 30.0), rng.choice(TILES), 1))
     held = {(rng.choice(sorted(PARTS)), rng.choice(TILES)): rng.uniform(0.0, 50.0) for _stock in range(rng.randrange(6))}

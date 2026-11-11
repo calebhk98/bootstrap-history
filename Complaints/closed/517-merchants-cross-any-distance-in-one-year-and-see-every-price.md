@@ -1,6 +1,6 @@
 # Merchants cross any distance in one year and see every market's price
 
-**Status:** partly fixed. Travel time and news lag are in (below); chains of merchants working a stretch they know, and the before/after measure of traded tonnes by route length, stay open.
+**Status:** closed - travel time, news lag, the known-stretch rule (chains of merchants) and the tonnes-by-route-length measure are all built.
 
 `sim/economy/merchants.py` lets a merchant buy in any market area and carry to any other in one step. Carriage is
 charged per tonne by mode and distance (`tile_costs.carriage_table`), which is right, but the rest of the trip is
@@ -35,6 +35,27 @@ length, by value per kilogram.
 - Tests: `sim/tests/test_merchant_travel_time.py`.
 - Still open: volumes are not lagged; whole-year steps (a 300-day and a 10-day haul both count one year);
   the haul's mode is the cheapest path's, not chosen for speed; no measurement yet of tonnes by route length.
+
+## Done: chains of merchants working a stretch they know
+
+- `sim/economy/merchants_stretch.py`: a merchant's stretch is its home tile and every tile it ran a route from or to within
+  `MERCHANT_STRETCH_MEMORY_YEARS` (`Merchant.traded_tiles`, years since, a column of the merchant table, saved); it knows the
+  prices of the areas a year's haul reaches from any tile of the stretch and acts on no others. Trading outward grows it; a tile
+  unvisited for the memory span drops out (`merchants.remember_stretches`, at the year's close).
+- The gate is applied to the prices a merchant sees, in the reference search (`merchants.candidate_routes`) and the packed ones
+  (`merchants_book.search`, `merchants_batch`, the credit batch), so the kernels did not change: a price of zero is already
+  unseen. `merchants_batch.rows_for` reuses prepared rows only for the same stretch.
+- Tests: `sim/tests/test_merchant_stretch.py` (an area outside the stretch is not seen; a good crosses a line through three merchants'
+  stretches; the stretch grows and fades), `sim/tests/test_merchant_stretch_kernels.py` (packed and batched search equal the
+  reference on random worlds and stretches).
+
+## Done: the measure
+
+- `sim/economy/carried_by_length.py` tabulates the year's merchant tonnes by route length (days of the cheapest haul) and value per
+  kilogram at the origin, from the record's `carried_goods`; `YearOutcome.merchant_routes` holds it. Print it with
+  `python3 sim/simulator.py economy-check --accounts --routes --years N` (Rome by default; `--civs`, `--session`). Test:
+  `sim/tests/test_carried_by_length.py`.
+- Not run: the before/after on a game. Compare the share of tonnes in the longer bands on this branch and on its parent.
 
 ## Attempt not merged (branch `merchant-reach-chains` (deleted unmerged; its code is lost), commit `3c44bcf9`)
 

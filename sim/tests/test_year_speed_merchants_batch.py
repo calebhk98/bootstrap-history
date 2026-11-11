@@ -50,11 +50,11 @@ class SearchManyTest(unittest.TestCase):
         route = merchants_book.route_pass(view, carriage, area_map, SPECS)
         merchants_plan.prepare_rows(route, [who], 0.04)
         expected = merchants_book.merchant_array(route.book, who.expected_prices)
-        self.assertIsNotNone(merchants_batch.rows_for(route, who.agent_id, 0.04, who.home_tile, expected))
-        self.assertIsNone(merchants_batch.rows_for(route, who.agent_id, 0.05, who.home_tile, expected))
+        self.assertIsNotNone(merchants_batch.rows_for(route, who.agent_id, 0.04, who.home_tile, expected, who.traded_tiles))
+        self.assertIsNone(merchants_batch.rows_for(route, who.agent_id, 0.05, who.home_tile, expected, who.traded_tiles))
         moved = expected.copy()
         moved[~np.isnan(moved)] *= 1.5
-        self.assertIsNone(merchants_batch.rows_for(route, who.agent_id, 0.04, who.home_tile, moved))
+        self.assertIsNone(merchants_batch.rows_for(route, who.agent_id, 0.04, who.home_tile, moved, who.traded_tiles))
 
 
 if __name__ == "__main__":

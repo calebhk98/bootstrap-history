@@ -119,6 +119,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
     news = merchants_news.YearNews(prices, volumes, anchors)
     interest_rate = own_rate(view, money)
     merchants.learn_year(record.memory.tables, news, carriage)
+    merchants.remember_stretches(record.merchants)
     for transfer in merchants.close_all(record.memory.tables, record.book, area_map, money, interest_rate):
         paid = ownership.spread(record, (transfer,), cohorts_by_tile)
         record.book.transfer_many(paid)

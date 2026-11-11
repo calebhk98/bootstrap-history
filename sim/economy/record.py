@@ -149,7 +149,8 @@ def _merchant_record(merchant: Merchant) -> Dict[str, Any]:
             "carrier_wear": merchant.carrier_wear,
             "carrier_fleet_wanted": merchant.carrier_fleet_wanted,
             "in_transit": [plain(each) for each in merchant.in_transit],
-            "price_history": _pair_keys(merchant.price_history)}
+            "price_history": _pair_keys(merchant.price_history),
+            "traded_tiles": merchant.traded_tiles}
 
 
 def _merchant_from(record: Dict[str, Any]) -> Merchant:
@@ -168,4 +169,5 @@ def _merchant_without_figures(record: Dict[str, Any]) -> Merchant:
                     carrier_wear=record["carrier_wear"],
                     carrier_fleet_wanted=record["carrier_fleet_wanted"],
                     in_transit=[Shipment(**each) for each in record["in_transit"]],
-                    price_history=_split_keys(record["price_history"]))
+                    price_history=_split_keys(record["price_history"]),
+                    traded_tiles=record["traded_tiles"])

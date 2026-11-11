@@ -53,6 +53,7 @@ from .labour_supply import HourSupply
 from .labour_results_table import hours_totals
 from .labour_state import people_in_pairs
 from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
+from . import carried_by_length
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import standing_block
 from .year_ledger import YearLedger
@@ -77,6 +78,7 @@ class YearOutcome:
     bonded_lots: list = field(default_factory=list)   # the lots bought: origin and destination tile, trade, people, the owners' ask and the carriage paid
     accounts: Optional[YearAccounts] = None        # production, use, consumption, investment, stocks; food eaten; real wage
     migrated_by_tile: Dict[str, float] = field(default_factory=dict)   # net working people the labour market moved to (+) or from (-) each tile: a request to demography, which moves the people
+    merchant_routes: list = field(default_factory=list)   # the year's merchant tonnes by route length and value per kilogram (`carried_by_length.LengthBand`)
 
 
 def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> float:
@@ -561,4 +563,5 @@ class Economy:
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            money_audit=year_report(record),
                            migrated_by_tile=dict(ledger.migrated_by_tile), bonded_lots=list(ledger.bonded_lots),
-                           accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))
+                           accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages),
+                           merchant_routes=carried_by_length.tabulate(record.carriage.carried_goods, self.carriage.days_between))

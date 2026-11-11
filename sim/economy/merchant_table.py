@@ -14,6 +14,7 @@ Columns (row = a merchant, in the order the merchants were put in the record; `r
 - price history (ragged, sorted by key): `history_key` = merchant row * HISTORY_STRIDE + goods-market row, `history_starts`
                       (offsets into `history_price`), `history_price` (prices of a distant market that news has not yet reached,
                       oldest first).
+- `traded`           per merchant, the tiles it has run routes from or to -> years since (the centres of the stretch it knows, `merchants_stretch`).
 `goods` and `tiles` number the names the shipments hold; numbers mean nothing outside this table."""
 from typing import Dict, Iterable, List, Optional, Tuple
 
@@ -74,6 +75,7 @@ class MerchantTable:
         self.row_of: Dict[str, int] = {}
         self.homes: List[str] = []         # the tile each merchant keeps its purse on
         self.owners: List[str] = []        # who receives each merchant's profit
+        self.traded: List[Dict[str, int]] = []      # the tiles each merchant has run routes from or to, with the years since (`merchants_stretch`)
         self.capital_base = numpy.zeros(FIRST_ROWS)
         self.prices = numpy.full((FIRST_ROWS, FIRST_COLUMNS), numpy.nan)
         self.volumes = numpy.full((FIRST_ROWS, FIRST_COLUMNS), numpy.nan)
@@ -118,6 +120,7 @@ class MerchantTable:
         self.agents.append(agent_id)
         self.homes.append("")
         self.owners.append("")
+        self.traded.append({})
         self.row_of[agent_id] = row
         self.capital_base[row] = 0.0
         self.prices[row] = numpy.nan
@@ -300,3 +303,4 @@ def adopt(merchant, tables) -> None:
         figures.replace_all(zip(map(MarketFigures.key_of_name, names_figures[0]), names_figures[1]))
     store.set_shipments(row, state["in_transit"])
     store.set_history(row, state["price_history"])
+    store.traded[row] = dict(state["traded_tiles"])
