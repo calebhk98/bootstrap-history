@@ -235,6 +235,7 @@ def reset_caches_for_tests() -> None:
     _SOLVE_CACHE.clear()
     _TREE_NODES.clear()
     solve_prices_core.forget_numeraires()
+    rent_standin.forget_land_rents()
 
 
 def all_gate_nodes(production_entries: Optional[ProductionEntries] = None) -> FrozenSet[str]:

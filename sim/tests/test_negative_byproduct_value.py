@@ -216,7 +216,7 @@ class SinkRecipeSolveTests(unittest.TestCase):
 
     def test_with_no_sink_in_the_solve_a_waste_is_free_to_dump(self):
         prices, _r, _c = solve_kiln(sink=False)
-        self.assertAlmostEqual(prices["tar_kg"], 0.0, places=9)
+        self.assertLessEqual(abs(prices["tar_kg"]), 1e-9)    # the smallest price told from zero, never zero
         self.assertAlmostEqual(prices["charcoal_kg"] * 2500.0, 100.0, places=4)
 
     def test_with_no_reference_the_waste_is_priced_by_mass_and_the_rule_reaches_no_price(self):

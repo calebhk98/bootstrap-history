@@ -132,6 +132,16 @@ def rent_hours_per_kg_by_ore_material(production_entries, wage_by_trade):
     return rent_by_ore_material
 
 
+# the land rent asked for again with the same civilisation record, wages and area (a year asks for it in every solve);
+# {key: (the staple's entry it was worked out from, the rent)}
+_LAND_RENT_MEMO = {}
+LAND_RENT_MEMO_LIMIT = 64
+
+
+def forget_land_rents() -> None:
+    _LAND_RENT_MEMO.clear()
+
+
 def land_rent_hours_per_hectare(production_entries, wage_by_trade, civilization, farmed_hectares=None):
     """{"hectare_land": hours of rent per hectare} of the civilisation record `civilization` (the mod-applied one:
     a record that cannot be read is an error, not free land), or {} if there is no
@@ -184,6 +194,18 @@ def land_rent_hours_per_hectare(production_entries, wage_by_trade, civilization,
         # The staple is gated out of this era: no reference crop price to convert the physical rent into hours
         # with, so land keeps the RENT_IS_ZERO answer.
         return {}
+    memo_key = (json.dumps(civilization, sort_keys=True, default=str), farmed_hectares, tuple(sorted(wage_by_trade.items())))
+    remembered = _LAND_RENT_MEMO.get(memo_key)
+    if remembered is not None and remembered[0] is wheat_entry:
+        return dict(remembered[1])
+    rent = _land_rent_from_staple(staple, wheat_entry, wage_by_trade, civilization, farmed_hectares)
+    if len(_LAND_RENT_MEMO) >= LAND_RENT_MEMO_LIMIT:
+        _LAND_RENT_MEMO.clear()
+    _LAND_RENT_MEMO[memo_key] = (wheat_entry, dict(rent))
+    return rent
+
+
+def _land_rent_from_staple(staple, wheat_entry, wage_by_trade, civilization, farmed_hectares):
     # the reference is wheat's labour alone: the plough team's capital is priced by the main solve, and
     # needs the land rent this function is still to fix
     labour_only = {key: value for key, value in wheat_entry.items() if key != "capital"}

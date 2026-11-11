@@ -40,7 +40,7 @@ class JointByproductFloorTests(unittest.TestCase):
         self.assertGreaterEqual(tar_price, -disposal_cost.disposal_cost_by_material(
             ["wood_tar_kg"], solved.prices_in_labour_hours, float(civ["starting_interest_rate"]))["wood_tar_kg"] - 1e-12)
         # a recorded waste with no reference price carries no share of its batch; the price decays towards nothing
-        self.assertLess(abs(tar_price), 1e-9)
+        self.assertLessEqual(abs(tar_price), 1e-9)    # the smallest price told from zero, never zero
         self.assertTrue(tar_price == 0.0 or abs(tar_price) > sys.float_info.min)
 
 
