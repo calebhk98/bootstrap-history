@@ -36,8 +36,8 @@ def sale_account(seat_id, index):
 # ---- the posted orders (the port's stored record) ----
 
 def add_order(stored, seat_id, order):
-    """The seat's order, {"side": "buy"|"sell", "material", "good", "stock_key", "tonnes", "limit_per_tonne", "carriage_per_tonne",
-    "cost_factor", "project"}, waits for the year's clearing. A buy's limit is the market price per tonne at most; carriage and
+    """The seat's order, {"side": "buy"|"sell", "material", "good", "stock_key" (the pool), "form_key" (the ledger key the tonnes move
+    in), "tonnes", "limit_per_tonne", "carriage_per_tonne", "cost_factor", "project"}, waits for the year's clearing. A buy's limit is the market price per tonne at most; carriage and
     the cost factor are charged on the tonnes that arrive. The order gets a unique "order_id", carried into its result so the
     one who placed it finds it again; that id is returned."""
     order["order_id"] = stored["next_order_id"] = stored.get("next_order_id", 0) + 1
@@ -152,7 +152,7 @@ def post(sim, economy, orders_by_seat, tile_of):
                     if tonnes <= 0.0:
                         entries.append({"refused": refused(order, "not_held", "no %s is held to sell." % order["material"])})
                         continue
-                    moved = sim.send(ChangeStock(order["stock_key"], -tonnes))
+                    moved = sim.send(ChangeStock(order["form_key"], -tonnes))
                     if isinstance(moved, Refusal):
                         entries.append({"refused": refused(order, "not_held", moved)})
                         continue
@@ -226,7 +226,7 @@ def settle(sim, economy, posted):
                 trade["sold"][key] = trade["sold"].get(key, 0.0) + sold
                 result.update(sold_tonnes=sold, proceeds=money)
             if stocked > 0.0:
-                refusals.append(sim.send(ChangeStock(key, stocked)))
+                refusals.append(sim.send(ChangeStock(order["form_key"], stocked)))
             refused_posting = next((reply for reply in refusals if isinstance(reply, Refusal)), None)
             if refused_posting is not None:
                 result["refused"] = {"cause": "settlement_refused", "text": str(refused_posting)}

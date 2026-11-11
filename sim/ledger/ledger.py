@@ -198,7 +198,9 @@ class Ledger(Module):
 	def change_stock(self, command: Any) -> None:
 		stock = self.stock_ledger()
 		opening = self.opening_stock()      # first: the year's snapshot is taken before the change
-		rules.add_tonnes(stock, opening, command.commodity, command.tonnes)
+		pool = self.needs.material_commodity_map().get(command.commodity, command.commodity)
+		others = [key for key in pool_rules.pool_keys(pool, {pool: self.needs.commodity_record[pool]}) if key != command.commodity]
+		pool_rules.change_tonnes(stock, opening, command.commodity, command.tonnes, others)
 		stock.writes += 1
 		self.bump_seat(STOCK)
 
@@ -206,7 +208,7 @@ class Ledger(Module):
 		self.opening_stock()      # first: the year's snapshot is taken before the change
 		stock = self.stock_ledger()
 		for commodity, tonnes in command.tonnes:
-			stock[commodity] = tonnes
+			pool_rules.bank_pool_total(stock, commodity, {commodity: self.needs.commodity_record[commodity]}, tonnes)
 		stock.writes += 1
 		self.bump_seat(STOCK)
 

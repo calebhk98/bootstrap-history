@@ -2,6 +2,7 @@
 
 `PortWorld.scenario`, `.materials`, `.finance`, `.production` and `.farm` hold them, as `.state`, `.labour`, `.map` and `.foreign` hold theirs."""
 from sim.diffusion.api import NoteFirstRuns
+from sim.ledger.api import pool_rules as ledger_pool_rules
 from sim.prices.api import rules as price_rules
 
 
@@ -76,6 +77,12 @@ class MaterialReads:
 	def sold_material(self, tag):
 		"""The material a held tonne of `tag`'s pool sells as (the form its mines raise)."""
 		return price_rules.sold_material(tag, self._needs.commodity_record[self._needs.material_pool[tag][0]])
+
+	def stock_form(self, material):
+		"""The key a held tonne of `material` is kept under in the ledger: the material itself where its pool names it as a
+		form, else the pool's id."""
+		commodity = self._needs.material_pool[material][0]
+		return ledger_pool_rules.form_key(material, commodity, {commodity: self._needs.commodity_record[commodity]})
 
 	def spoilage_rates(self):
 		"""{good: continuous decay rate a year} of the goods that spoil, with the installed mods applied."""

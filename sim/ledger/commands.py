@@ -32,17 +32,17 @@ class PayWages(Command):
 
 @dataclass(frozen=True)
 class ChangeStock(Command):
-	"""Tonnes of a commodity (by its commodity key) added to (positive) or taken from (negative) the acting seat's
-	stock, counted in this year's opening stock as well, so the year's accounting sees it as held from the start."""
+	"""Tonnes held under a key (a material's form, or a pool's id) added to (positive) or taken from (negative) the acting
+	seat's stock; a taking beyond what the key holds comes off the rest of its pool. Counted in this year's opening stock as well, so the year's accounting sees it as held from the start."""
 	commodity: str
 	tonnes: float
 
 
 @dataclass(frozen=True)
 class BankStock(Command):
-	"""The acting seat's tonnes of each commodity are set to these figures, in order (a later figure for a commodity
-	wins). The year's opening snapshot is taken first and not changed: this is what the year's material reading leaves
-	of the stock it started from, not a trade."""
+	"""The acting seat's tonnes of each commodity (all its forms together) are set to these figures, in order (a later
+	figure for a commodity wins); a rise is held in the form the commodity's mines raise. The year's opening snapshot is
+	taken first and not changed: this is what the year's material reading leaves of the stock it started from, not a trade."""
 	tonnes: Tuple[Tuple[str, float], ...]
 
 

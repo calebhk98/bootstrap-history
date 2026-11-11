@@ -1,6 +1,6 @@
 # A commodity pool keeps one stock for every form, so bar and ore held by a seat are one number
 
-**Status:** open - mapped, not contained; staged plan below (stage 1 not started)
+**Status:** open - stages 1 and 2 done (the ledger holds a pool's stock by material key, any-form readers read the pool total); stages 3 to 5 remain
 
 **What is wrong now.** A seat's material ledger keeps one counter per commodity (`data/world/commodities.json`: the `iron`
 pool's `material_keys` are bar, ore, bloom, sheet and cast iron). Since 576 a sale from the pool is priced and cleared as the
@@ -65,3 +65,18 @@ materials screens. Many test files read `goods_stock[commodity]` or send `Change
 4. Make `sold_material` return the form held (revisit the 576 rule), so bar sells as bar and ore as ore; delete `raised_material`
    as the sale form (it stays the form the mine banks).
 5. Close with the regression tests named in "Test" above, then a whole-game re-measure by the orchestrator.
+
+## Progress
+
+- Stage 1 and 2 done. `sim/ledger/pool_rules.py` holds the pure rules (`pool_total`, `held_by_form`, `form_key`, `change_tonnes`,
+  `bank_pool_total`); the ledger publishes `goods_pool_stock[commodity]` (any form) and `held_by_form[commodity]`; `goods_stock[key]`
+  is the exact key. Any-form readers (throttle opening stock, availability, `material_supply_route`, `materials_report`, project bill
+  stock, researcher, sharing, the saltpetre remedy, the port's sale limit) read the pool total. This-form readers: living stock
+  (herd keys), theft and cash remedies (they walk the keys held).
+- Writers: an order carries `form_key` (the ledger key; `stock_key` stays the pool for the order tallies): a buy holds the material
+  bought, a sale takes the form it is priced as (`sold_material`) and puts an unsold remainder back there; a sale or draw beyond
+  the key comes off the rest of the pool in key order, so no draw changes yet. `BankStock` still carries a pool figure; the
+  ledger holds a rise in `raised_material` and takes a fall from it first.
+- Found: a pool is only split where its material is in the commodity's `material_keys`. Tracked pairs in `MATERIAL_CHECKS` that name
+  no such key (`charcoal_kg` and `firewood_kg` in `charcoal`, `copper_wire_kg` and `wire_drawn_kg` in `copper`, lead, tin, silver,
+  nitre) are still held under the pool id; stage 3 must align `MATERIAL_CHECKS` pools with `commodities.json` before it can split them.

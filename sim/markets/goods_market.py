@@ -214,7 +214,8 @@ class GoodsMarket:
         if limit <= 0:
             return Refusal("no_limit", "an order needs a price limit above zero%s." % (" once carriage is counted" if buying else ""),
                            material=material, limit_per_tonne=limit)
-        order = {"side": side, "material": quote["material"], "good": good, "stock_key": key, "tonnes": tonnes,
+        form_key = self._sim.materials.stock_form(quote["material"] if buying else self.pricing.sold_as(quote["material"]))
+        order = {"side": side, "material": quote["material"], "good": good, "stock_key": key, "form_key": form_key, "tonnes": tonnes,
                  "limit_per_tonne": limit, "carriage_per_tonne": carriage, "cost_factor": float(cost_factor), "project": project}
         committed = None
         if buying:
