@@ -44,6 +44,9 @@ class YearView(View):
     def loss_rate(self, agent, currency):
         return 0.01
 
+    def land_yield(self, currency):
+        return None
+
     def public_yield(self, currency):
         return None
 

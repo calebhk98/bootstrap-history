@@ -43,6 +43,7 @@ class CreditRecord(OwnedRecord):
     rate_times_lent: float = 0.0                                         # sum over the year's clearings of base rate times principal lent
     lent_in_clearings: float = 0.0                                       # principal the year's clearings lent
     last_clearing_cause: Optional[str] = None                            # why the last clearing lent nothing or held the rate (Clearing.cause); None when it priced loans
+    land_yield: Optional[float] = None                                   # what a hectare of land earns over the price titles last sold at (title_sales_year.py); None before a sale
     public_yield: Optional[float] = None                                 # yield the state's bonds offer households this year; None when out of reach (lender_ask.reachable_public_yield)
 
     AGENT_KEYED = ("remembered_defaults", "credit_losses", "loss_rates", "losses_seen", "expansion_runs", "worn_runs",
@@ -186,6 +187,10 @@ class CreditRecord(OwnedRecord):
     def set_public_yield(self, yield_rate: Optional[float]) -> None:
         """The yield the state's bonds offer households this year; None when out of their reach."""
         self.public_yield = yield_rate
+
+    def set_land_yield(self, yield_rate: Optional[float]) -> None:
+        """What a hectare earns over the price titles last changed hands at; None before any sale."""
+        self.land_yield = yield_rate
 
     def average_rate(self) -> Optional[float]:
         """The loan-weighted average base rate of the clearings of the latest year that lent; None before any did."""

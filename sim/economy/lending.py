@@ -100,7 +100,7 @@ def lend_working_capital(setup, record, view) -> None:
     offers = [FundsOffer(cohort_id, money, amount, lender_ask.lowest_ask(
                   HOUSEHOLD_TIME_PREFERENCE, expected_inflation[cohort_id],
                   expected_loss_rate=lender_ask.loss_rate(record.credit.loss_rates.get(cohort_id, 0.0)),
-                  public_yield=record.credit.public_yield))
+                  land_yield=record.credit.land_yield, public_yield=record.credit.public_yield))
               for cohort_id, amount in spare.items()]
     clearing = credit.clear_with_cause(
         asked, offers, money, record.memory.rates.get(money), credit_claims.principal_by_borrower(record.credit.loans),

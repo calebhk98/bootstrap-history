@@ -25,7 +25,7 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import capital_year, household_offers_year, land_bid_year, land_lease_year, lend_requests
+from . import capital_year, household_offers_year, land_bid_year, land_lease_year, lend_requests, title_sales_year
 from . import plot_means
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step, households_cohort, trade_wages
@@ -152,7 +152,8 @@ class Economy:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, self.setup,
                           labour_area, loans=lambda: self.record.credit.loans, equity=self._equity_read,
                           loss_rates=lambda: self.record.credit.loss_rates,
-                          pooled=self.record.credit.contracts.deposit_value, public_yield=lambda: self.record.credit.public_yield)
+                          pooled=self.record.credit.contracts.deposit_value, public_yield=lambda: self.record.credit.public_yield,
+                          land_yield=lambda: self.record.credit.land_yield)
 
     def _equity_read(self, view) -> Dict[str, float]:
         arrays = self._year_arrays
@@ -207,6 +208,7 @@ class Economy:
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
+        title_sales_year.run(setup, record, record.credit.public_yield, record.memory.rates.get(money))
         lending.lend_working_capital(setup, record, view)
         plans = plan_year.plans_of(setup, record, view, arrays, money)
         labour_bids = LabourBidTable()
