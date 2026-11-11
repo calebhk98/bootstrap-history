@@ -29,9 +29,9 @@ Option = Tuple[float, str, GoodId, float]      # (hours per need unit, recipe id
 
 
 def is_own_plot_recipe(recipe_id: str, recipe: Recipe, land_per_run: Mapping[str, float]) -> bool:
-    """Whether a household can run the recipe on its own plot: it works land and buys nothing on the market but the tools
-    its workers wear."""
-    return land_per_run.get(recipe_id, 0.0) > 0.0 and all(good in recipe.tool_wear for good in recipe.inputs)
+    """Whether a household can run the recipe on its own plot: it works land (not a seam or pit, which only a declared
+    site offers) and buys nothing on the market but the tools its workers wear."""
+    return land_per_run.get(recipe_id, 0.0) > 0.0 and not recipe.deposit_bound and all(good in recipe.tool_wear for good in recipe.inputs)
 
 
 def own_production_options(recipes: Mapping[str, Recipe], land_per_run: Mapping[str, float],

@@ -233,6 +233,15 @@ def check_requires_node(where, entry, known_nodes):
     return problems
 
 
+def check_animal_gate(where, entry):
+    """A draught or pack animal is made only by a society that can keep it: the entry names the node that holds it."""
+    serves = (entry.get("carrier_use") or {}).get("serves") or {}
+    if "animal" in serves and not entry.get("requires_node"):
+        return ["%s: serves %s as a carrier animal but states no requires_node, so a society without the animal would "
+                "breed and hold it" % (where, serves["animal"])]
+    return []
+
+
 def check_operated_by(where, entry, known_nodes):
     """`operated_by` lists the tree nodes whose concern runs this technique."""
     if "operated_by" not in entry:
@@ -520,6 +529,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_labour_hours(where, entry, known_trades))
         problems.extend(check_energy_carrier_fields(where, entry))
         problems.extend(check_requires_node(where, entry, known_nodes))
+        problems.extend(check_animal_gate(where, entry))
         problems.extend(check_operated_by(where, entry, known_nodes))
         problems.extend(check_capital(where, entry, known_materials, known_trades))
         problems.extend(check_yield_basis(where, entry))
