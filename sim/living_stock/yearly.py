@@ -8,6 +8,7 @@ from sim.assembly.api import Part
 from sim.workforce.api import ONCE_STOCK, PostHoursOnce
 
 from . import rules
+from sim.world.demand import production_data
 from .data import stock_entry, stock_rates
 from .holding import HERDS
 
@@ -22,7 +23,7 @@ class Yearly(Part):
     def nursery_room_units(self, material, place):
         """Units of the material the place's arable land can raise in a year at its production entry's output per
         hectare; None where nothing limits it (no place, or an entry that works no land)."""
-        entry = stock_entry(material)
+        entry = stock_entry(material, production_data(self.needs.mods_directory()))
         if entry is None:
             return None
         return self.needs.nursery_room_units(
@@ -31,7 +32,7 @@ class Yearly(Part):
     def hire_growth_labour(self, material, units, hired, wanted):
         """The share of raising `units` more of stock that the hours hired at the last clearing cover (1 when all of
         it). The labour it takes is added to `wanted`, which the year's step posts to the labour core."""
-        hours_by_trade = rules.growth_labour(stock_entry(material), material, units)
+        hours_by_trade = rules.growth_labour(stock_entry(material, production_data(self.needs.mods_directory())), material, units)
         for trade, hours in hours_by_trade.items():
             wanted[trade] = wanted.get(trade, 0.0) + hours
         return rules.hired_share(hours_by_trade, hired)

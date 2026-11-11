@@ -16,11 +16,10 @@ def stock_rates():
         return json.load(handle)["materials"]
 
 
-@functools.lru_cache(maxsize=None)
-def stock_entry(material):
-    """The production entry that makes a stock material, which states the labour and land of raising more
-    of it, or None when the data has no such entry."""
-    for _key, entry in sorted(production_data().items()):
+def stock_entry(material, production=None):
+    """The production entry (of `production`, else the repository's) that makes a stock material, which states the labour
+    and land of raising more of it, or None when the data has no such entry."""
+    for _key, entry in sorted((production_data() if production is None else production).items()):
         if (entry.get("outputs") or {}).get(material, 0.0) > 0.0:
             return entry
     return None

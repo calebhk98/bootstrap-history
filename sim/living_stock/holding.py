@@ -69,7 +69,7 @@ class Holding(Part):
 
     def opening_herd_units(self):
         """{stock material: units} the herd producers keep, before the pasture holds it down."""
-        return rules.herd_units_kept(self.needs.producer_capacities(), production_data())
+        return rules.herd_units_kept(self.needs.producer_capacities(), production_data(self.needs.mods_directory()))
 
     def endemic_keeping(self, material):
         rates = stock_rates().get(material) or {}

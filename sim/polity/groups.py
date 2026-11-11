@@ -73,11 +73,16 @@ class Groups(Part):
 				bans[record.technique] = (record.name, record.strength)
 		return bans
 
+	def _production(self):
+		"""The production entries of the mods directory this game is over."""
+		from sim.world.demand import production_data
+		return production_data(self.needs.mods_directory())
+
 	def _banned_materials(self, technique):
 		"""The materials a forbidden technique makes and their substitutes (goods that serve the same needs): a technique that
 		makes any of them does the forbidden technique's work another way."""
 		if technique not in self._banned_materials_cache:
-			made = set(supply.materials_made_by(technique))
+			made = set(supply.materials_made_by(technique, self._production()))
 			self._banned_materials_cache[technique] = made.union(*(self.needs.material_substitutes[material] for material in made))
 		return self._banned_materials_cache[technique]
 
@@ -95,14 +100,14 @@ class Groups(Part):
 		nodes = self.needs.tree_nodes()
 		if (not banned and not by_technique) or self.parts.notice.state_interest(nodes[node_id]) > 0.0:
 			return None
-		reached = Sector.reached_by(node_id, nodes, supply.materials_made_by, lambda material: self.needs.material_pool[material][0],
+		reached = Sector.reached_by(node_id, nodes, lambda gate: supply.materials_made_by(gate, self._production()), lambda material: self.needs.material_pool[material][0],
 		                            lambda material: self.needs.material_substitutes[material])
 		for subject in sorted(reached & set(banned)):
 			strength = max((group.record.strength for group in registry.countries.home_actors("interest_group")
 			                if group.record.subject == subject and group.record.demands and not group.record.technique),
 			               default=0.0)
 			return banned[subject], subject, strength
-		made = set(supply.materials_made_by(node_id))
+		made = set(supply.materials_made_by(node_id, self._production()))
 		for technique, (name, strength) in sorted(by_technique.items()):
 			if node_id == technique or made & self._banned_materials(technique):
 				return name, nodes[technique].get("name", technique), strength

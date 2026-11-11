@@ -38,4 +38,4 @@ class Market:
 	def sells_on_book(self, node_id: str) -> bool:
 		"""Whether what a concern makes is sold in the agent economy's book, so its takings are the market's and not the
 		engine's estimate."""
-		return any(self.needs.agent_trades_good[material] for material in supply.materials_made_by(node_id))
+		return any(self.needs.agent_trades_good[material] for material in supply.materials_made_by(node_id, self.world.site.production_catalog()))

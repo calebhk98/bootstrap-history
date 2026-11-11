@@ -242,6 +242,12 @@ class TradeReads:
         return self._needs.household_need_data()
 
     @property
+    def production_catalog(self):
+        """The production entries of the mods directory this game is over."""
+        from sim.world.demand import production_data
+        return production_data(self._needs.mods_directory())
+
+    @property
     def trade_notes(self):
         return self._needs.trade_notes()
 

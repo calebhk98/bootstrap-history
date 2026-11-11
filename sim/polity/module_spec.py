@@ -28,6 +28,7 @@ READS_BY_OWNER = {
 	"materials": ("material_pool", "material_substitutes"),
 	"reporting": ("real_output_per_head",),
 	"hazards": ("output_factor",),
+	"content": ("mods_directory",),
 }
 
 # Everything here reads the seat's own state and state written outside any command of polity (the techniques held, the cast,

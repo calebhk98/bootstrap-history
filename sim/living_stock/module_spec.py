@@ -29,7 +29,7 @@ MODULE_SPECS = (ModuleSpec(
     reads=("goods_stock", "unit_mass_kg", "acting_balance", "material_commodity", "tree", "civilisation", "year", "stock_land",
            "endemic_stock_loss", "nursery_room_units", "producer_capacities", "hours_hired_once", "can_pay", "partners",
            "partner", "partner_refusal", "partner_gate", "partner_landed_price", "partner_carry",
-           "partner_catch_chance"),
+           "partner_catch_chance", "mods_directory"),
     sends=(ChangeStock, PayEdge, PostHoursOnce, SettleFlow, RecordStockTaken, CloseMarketsTo, RaiseScandal),
     phases=(PhaseHook("living_stock", "step_living_stock"),),
 ),)

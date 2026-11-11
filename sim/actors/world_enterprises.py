@@ -18,11 +18,11 @@ class Enterprises:
 
 	def concerns_making(self, material: str) -> Any:
 		"""The nodes whose concerns put `material` on the market."""
-		return supply.nodes_making(material)
+		return supply.nodes_making(material, self.world.site.production_catalog())
 
 	def materials_made_by(self, node_id: str) -> Any:
 		"""The materials a concern puts on the market."""
-		return supply.materials_made_by(node_id)
+		return supply.materials_made_by(node_id, self.world.site.production_catalog())
 
 	def concern_inputs(self, node_id: str) -> Dict[str, float]:
 		"""Tonnes of each material a concern of the node uses up in a year at its founding size, from its production

@@ -4,7 +4,6 @@ Farm work is hours the economy's farm producers hire in the labour core plus hou
 hours; nothing here allocates workers to the farm or moves people between trades (sim/labour/market/DESIGN.md)."""
 import sim.geography.api as geography
 from sim.world import farming_technique
-from sim.world.demand import production_data
 from sim.labour import trade_data
 from sim.labour import workforce_carriage
 from sim.labour import workforce_spinup
@@ -28,7 +27,7 @@ class Allocation:
         cached = self._need_shares_cache
         if cached is None or cached[0] != key:
             shares = workforce_spinup.need_shares_by_trade(
-                production_data(), reached, self._world.trades.techniques_available_to,
+                self._world.trades.production_catalog, reached, self._world.trades.techniques_available_to,
                 workforce_carriage.carriage_for(reached, list(held)), civ, needs=self._world.trades.household_need_data)
             cached = self._need_shares_cache = (key, shares)
         if cached[1]:
