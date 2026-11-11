@@ -157,3 +157,10 @@ among the `borders` of `cuba_03`, and `routes_graph._land_and_river_edges` makes
 test that the two tiles share ground; the foot mode takes any `land` edge. The chain found by a breadth-first walk of `borders` is Cuba,
 `united_states_of_america_02` (across the Florida Strait), the US tiles, `mexico_13`, `mexico_12`. Dominican tiles reach it through `cuba_02`.
 Not fixed here (geography data and graph rule, another owner).
+
+## Measured after the funding rule (commit 3776bb5c, cold full spin-up)
+
+`python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500`: porters are now hired in every year, from about a
+sixth of the funded demand in year 1 to about a half by years 4 and 5, with no household fallback fee in any year (it was paid in year 2
+before). Hired hours rose from about a hundred a year to tens of millions. Still open: why about half of the funded demand finds no
+porter (supply by area against the bid areas; the foot hauls from the islands of Complaint 978 are part of the demand).
