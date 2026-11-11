@@ -44,7 +44,8 @@ def reach_block(supply, trades):
         hours_offered = numpy.where(known, numpy.array([hours if hours is not None else 0.0 for hours in offered]), fallback * hours_per_person)
         staff = numpy.fromiter((world.actors.actor_staff_fte(trade) for trade in ordinary), dtype=numpy.float64, count=len(ordinary))
         hours = numpy.maximum(0.0, hours_offered - staff * hours_per_person)
-        reachable[plain] = numpy.minimum(hours, existing[plain] * hours_per_person) / hours_per_person
+        alive = max(0.0, world.people.population.working_age)
+        reachable[plain] = numpy.minimum(hours, numpy.minimum(existing[plain], alive) * hours_per_person) / hours_per_person
     for place in numpy.flatnonzero(~plain).tolist():
         reachable[place] = supply.reachable_trade_population(names[place])
         existing[place] = supply.people_who_exist(names[place])

@@ -108,7 +108,8 @@ class Supply:
         else:
             offered_hours = self._hours_offered_in_reach(trade)
         hours = max(0.0, offered_hours - staff_hours)
-        return trade_supply_rules.supply_hours(hours, self.people_who_exist(trade), hours_per_person)
+        return trade_supply_rules.supply_hours(
+            hours, self.people_who_exist(trade), hours_per_person, self._world.people.population.working_age)
 
     def market_hours_offered(self):
         """Hours a year the labour core offers across every trade the seat can hire (market_supply summed): what projects'

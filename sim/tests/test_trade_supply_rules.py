@@ -22,12 +22,17 @@ class SupplyHoursTest(unittest.TestCase):
     def test_the_market_never_offers_more_hours_than_the_existing_people_work(self):
         for nation in NATION_SIZES:
             existing = people_who_exist(nation * 0.01, 0.0)
-            offered = supply_hours(1e12, existing, HOURS_PER_PERSON_YEAR)
+            offered = supply_hours(1e12, existing, HOURS_PER_PERSON_YEAR, people_alive=nation)
             self.assertEqual(offered / HOURS_PER_PERSON_YEAR, existing, nation)
             self.assertLessEqual(offered / HOURS_PER_PERSON_YEAR, nation, nation)
 
     def test_a_smaller_offer_is_not_raised_to_the_people_who_exist(self):
-        self.assertEqual(supply_hours(3000.0, 10.0, HOURS_PER_PERSON_YEAR), 3000.0)
+        self.assertEqual(supply_hours(3000.0, 10.0, HOURS_PER_PERSON_YEAR, people_alive=500.0), 3000.0)
+
+    def test_a_trade_figure_kept_from_the_clearing_is_bounded_by_the_working_people_alive_now(self):
+        # the clearing's figures predate later deaths in the year: 3 people of the trade existed then, 0.5 working people live now
+        self.assertEqual(supply_hours(6000.0, 3.0, HOURS_PER_PERSON_YEAR, people_alive=0.5), 0.5 * HOURS_PER_PERSON_YEAR)
+        self.assertEqual(supply_hours(6000.0, 3.0, HOURS_PER_PERSON_YEAR, people_alive=0.0), 0.0)
 
 
 class HireLeavesNobodyTest(unittest.TestCase):
