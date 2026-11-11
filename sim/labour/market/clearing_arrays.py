@@ -128,6 +128,10 @@ def pack_heads(state: MarketState, inputs: YearInputs, share_closed_per_year: fl
                                trade_count, everyone, with_people)
     cells[kernel.EVERYONE] = everyone.reshape(area_count, trade_count)
     cells[kernel.WAGE] = np.where(in_play[None, :], state.market_table.wage.reshape(area_count, trade_count), np.nan)
+    fallback = ids.trades.number(fallback_trade(inputs.trades))
+    start_wage = cells[kernel.WAGE, :, fallback]
+    at_option = placed & (bid_trade == fallback) & (bids.maximum_wage >= start_wage[bid_area])     # bids for unskilled hours at the area's start wage or more
+    cells[kernel.JOBS, :, fallback] = np.bincount(bid_area[at_option], np.maximum(bids.hours[at_option], 0.0), minlength=area_count)
     wanted, most = np.zeros(area_count * trade_count), np.zeros(area_count * trade_count)
     clearing_pack.bid_totals(market_row[placed], bids.hours[placed], bids.maximum_wage[placed], wanted, most)
     cells[kernel.WANTED], cells[kernel.MOST] = wanted.reshape(area_count, trade_count), most.reshape(area_count, trade_count)
@@ -162,7 +166,6 @@ def pack_heads(state: MarketState, inputs: YearInputs, share_closed_per_year: fl
     caps, bid_hours, bid_employer = grouped_wage[order], grouped_hours[order], grouped_employer[order]
     with_bids = np.unique(market_area[np.diff(starts) > 0])
     reach_other, reach_cost, reach_count = _reaches(inputs, with_bids, state)
-    fallback = ids.trades.number(fallback_trade(inputs.trades))
     heads = np.zeros((len(market_row_grid), kernel.HEAD_FIELDS))
     arguments = (cells, offers, exponent, constant, subsistence, ask_floor, scale, risk, training_years, premium, fallback,
                  inputs.value_of_life_years_of_income, hours, career_hours, reach_other, reach_cost, reach_count, market_area,

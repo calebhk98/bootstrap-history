@@ -13,6 +13,7 @@ from .reservation import reservation_wage
 from .trades import fallback_trade
 from .records import EmployerHoursBid, LabourClearing, MarketState, YearInputs
 from .scarcity import short_run_ceiling
+from .unskilled_reach import reservation_with_unskilled_option
 
 WAGE_SHARE_CLOSED_PER_YEAR = declare(
     "WAGE_SHARE_CLOSED_PER_YEAR", 0.3, kind="temporary_heuristic", unit="share of the gap per year",
@@ -276,7 +277,9 @@ def _plain_head(state: MarketState, inputs: YearInputs, trade: str, area: str, b
         return None
     lowest = ask_floor(inputs, area, base_reservation)
     option = unskilled_option(import_costs.wages, inputs, area, trade)
-    reservation = max(base_reservation * asks.scale_of(state, area, trade), lowest, 0.0 if option is None else option)
+    own = max(base_reservation * asks.scale_of(state, area, trade), lowest)
+    jobs = 0.0 if option is None else import_costs.jobs_at(area, fallback_trade(inputs.trades), option)
+    reservation = reservation_with_unskilled_option(own, option, jobs, import_costs.everyone(area, trade))
     last = state.wages.get(area, {}).get(trade)
     substitute = trained_substitute_wage(import_costs.wages, inputs, area, trade)
     long_run = reservation if substitute is None else max(substitute, reservation)
