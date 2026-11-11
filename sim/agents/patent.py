@@ -52,7 +52,7 @@ def apply(actor: Any, node_id: str, world: Any) -> str:
 	if holder is not None:
 		raise CommandRejected("%s already holds the patent on %s" % (holder, node_id))
 	entry = {"granted": world.setting.year, "expires": world.setting.year + int(PATENT_TERM_YEARS), "licensees": []}
-	actor.record.patents[node_id] = entry
+	actor.record.receive_patent(node_id, entry)
 	return "patented %s until year %d" % (node_id, entry["expires"])
 
 
@@ -69,13 +69,9 @@ def holds_problem(holder: Any, side: Dict[str, Any], world: Any) -> str:
 def hand_over(source: Any, target: Any, side: Dict[str, Any]) -> None:
 	"""Move each patent of `side` to `target` with its term; add `target` to the licensees of each licence."""
 	for node_id in side.get("patent", ()):
-		entry = source.record.patents.pop(node_id)
-		entry["licensees"] = [each for each in entry["licensees"] if each != target.actor_id]
-		target.record.patents[node_id] = entry
+		target.record.receive_patent(node_id, source.record.release_patent(node_id, target.actor_id))
 	for node_id in side.get("licence", ()):
-		licensees = source.record.patents[node_id]["licensees"]
-		if target.actor_id not in licensees:
-			licensees.append(target.actor_id)
+		source.record.add_licensee(node_id, target.actor_id)
 		rate = side.get("royalty", {}).get(node_id)
 		if rate:
 			target.record.royalty_owed[node_id] = {"holder": source.actor_id, "rate": rate}
@@ -85,7 +81,7 @@ def note_licence(licensor: Any, licensee: Any, node_id: str) -> None:
 	"""A licence from the holder lets the licensee practise the patented invention."""
 	entry = licensor.record.patents.get(node_id)
 	if entry is not None and licensee.actor_id not in entry["licensees"]:
-		entry["licensees"].append(licensee.actor_id)
+		licensor.record.add_licensee(node_id, licensee.actor_id)
 
 
 def patent_command(player: Any, order: Dict[str, Any], world: Any) -> str:

@@ -17,7 +17,8 @@ from .policy import CallbackPolicy, Decision, ExportPolicy, IdlePolicy, Option, 
 from . import evasion, flight, flight_inputs, liability, policy_land, tax_burden
 from . import edges, patronage, payroll, taxpayer_income
 from .collection_world import FAR_DAYS, CollectionView
-from .tracked import plain
+from .plain_copy import plain
+from . import dealing_figures  # noqa: F401
 from .records import ActorRecord, ActorsState, CastEntry, CountryProfile
 from .registry import ActorRegistry
 from .extensions import ActorExtensions, combine as combine_extensions
@@ -55,7 +56,7 @@ __all__ = ["Hands", "PURSE_CURRENCY", "EDGE_EXCHANGE", "EDGE_OUTSIDE", "Purses",
            "policy_land", "Policy", "ValuePolicy", "ExportPolicy", "exports_allowed", "GOVERNMENT_PREFIX", "CallbackPolicy", "IdlePolicy", "Option",
            "Decision", "ActorRegistry", "ActorExtensions", "combine_extensions", "shipped_extensions", "ActorRecord", "ActorsState",
            "CastEntry", "CountryProfile",
-           "edges", "payroll", "patronage", "taxpayer_income", "ledger", "licence", "patent", "supply", "imitation", "joint_stock", "revenue", "government_levers", "army_raising", "authority", "collection", "government_levers_land", "government_levers_tax", "land_moves", "revolt", "ruler", "unrest",
+           "edges", "payroll", "patronage", "taxpayer_income", "ledger", "licence", "patent", "supply", "imitation", "joint_stock", "dealing_figures", "revenue", "government_levers", "army_raising", "authority", "collection", "government_levers_land", "government_levers_tax", "land_moves", "revolt", "ruler", "unrest",
            "CONCESSION_PREFIX", "Sector", "sector_key",
            "MANAGEMENT_SPAN_EXPONENT", "TRADE_TONNES_FOR_UNIT_CONTACT", "CONQUEST_CONTACT_VOLUME", "MIGRANT_CONTACT_VOLUME_PER_PERSON", "adoption", "awareness", "stock_keeping", "OBSERVATION_RANGE_KM", "PLAYER_VISIBLE_EXPOSURE", "PROOF_YEARS", "SECRET_EXPOSURE",
            "THREAT_ARMY_RESPONSE", "army_goal", "sack_pressure", "FOOD_NEED", "cast_from_civilisations", "profile_from_civilisation", "seed_cast",

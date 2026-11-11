@@ -8,20 +8,20 @@ from .channels import INSTITUTION_UNITS_CHANGES, OPERATING_CHANGES
 class Plants(Part):
 
 	def mothballed(self):
-		"""The works the acting seat has shut and may reopen (the live set)."""
-		return self.seat.business.mothballed()
+		"""The works the acting seat has shut and may reopen (a copy)."""
+		return frozenset(self.seat.business.mothballed())
 
 	def closure_records(self):
 		"""{work id: {"reason", "year"}} of the shut works that record why (a live mapping, read only)."""
 		return self.seat.business.closures()
 
 	def operating(self):
-		"""The acting seat's concerns and capabilities that are open (the live set: the plants opened and closed change it in place)."""
-		return self.seat.business.operating()
+		"""The acting seat's concerns and capabilities that are open (a copy; the plants opened and closed change the business's own set)."""
+		return frozenset(self.seat.business.operating())
 
 	def operating_by_seat(self):
-		"""What every seat has open, by seat id in joining order (the live sets)."""
-		return {seat_id: self.seat_of(seat_id).business.operating() for seat_id in self.needs.seat_list()["joined"]}
+		"""What every seat has open, by seat id in joining order (copies)."""
+		return {seat_id: frozenset(self.seat_of(seat_id).business.operating()) for seat_id in self.needs.seat_list()["joined"]}
 
 	def operating_version(self):
 		"""The change counter of what the acting seat has open, for memos over it: moves with every plant opened or closed."""

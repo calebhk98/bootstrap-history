@@ -34,7 +34,7 @@ class Target:
 
 
 target = Target()
-party.record.patents["lathe"] = {"granted": 10, "expires": 30, "licensees": []}
+party.record.receive_patent("lathe", {"granted": 10, "expires": 30, "licensees": []})
 patent.hand_over(party, target, {"licence": ["lathe"]})
 check("a licence granted by the seat is written on the seat's holdings",
       slot.patents["lathe"]["licensees"] == ["firm:1"], slot.patents)
@@ -46,7 +46,7 @@ check("selling the patent moves it off the seat", "lathe" not in slot.patents an
 target.record.shares_held["firm:2"] = 0.4
 joint_stock.hand_over(target, party, {"firm:2": 0.25})
 check("shares bought by the seat are held on the seat", abs(slot.shares_held["firm:2"] - 0.25) < 1e-9, slot.shares_held)
-party.record.issued = 0.2
+party.record.give_shares(FIRST_SEAT_ID, 0.2, True)
 check("issued equity writes through to the seat", slot.shares_issued == 0.2, slot.shares_issued)
 
 

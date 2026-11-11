@@ -103,9 +103,69 @@ class SetPolicy(Command):
 
 
 @dataclass(frozen=True)
-class SetDealing(Command):
-    """The seat `seat_id`'s stored `field` of its dealings (patents, shares_held, shares_issued, offers, offer_serial) becomes `value`: the
-    seat's party in an exchange sends the figure the deal left."""
+class ReleasePatent(Command):
+    """The seat `seat_id` gives up its right on `node_id` to `taker_id`, who is struck from its licensees. Answers the right."""
     seat_id: str
-    field: str
-    value: Any
+    node_id: str
+    taker_id: str
+
+
+@dataclass(frozen=True)
+class ReceivePatent(Command):
+    """The seat `seat_id` holds the right `entry` ({granted, expires, licensees}) on `node_id`."""
+    seat_id: str
+    node_id: str
+    entry: Dict[str, Any]
+
+
+@dataclass(frozen=True)
+class AddLicensee(Command):
+    """`licensee_id` may practise the invention the seat `seat_id` has patented on `node_id`."""
+    seat_id: str
+    node_id: str
+    licensee_id: str
+
+
+@dataclass(frozen=True)
+class GiveShares(Command):
+    """The seat `seat_id` gives `share` of `issuer_id`'s equity (`own_issue`: its own equity, issued to the taker)."""
+    seat_id: str
+    issuer_id: str
+    share: float
+    own_issue: bool
+
+
+@dataclass(frozen=True)
+class TakeShares(Command):
+    """The seat `seat_id` takes `share` of `issuer_id`'s equity (`own_issue`: its own equity, bought back)."""
+    seat_id: str
+    issuer_id: str
+    share: float
+    own_issue: bool
+
+
+@dataclass(frozen=True)
+class KeepOffer(Command):
+    """The seat `seat_id` has been made `offer` and keeps it until it answers or it lapses."""
+    seat_id: str
+    offer: Dict[str, Any]
+
+
+@dataclass(frozen=True)
+class DropOffer(Command):
+    """The seat `seat_id` no longer holds the offer named `offer_id` (accepted or declined)."""
+    seat_id: str
+    offer_id: str
+
+
+@dataclass(frozen=True)
+class DropLapsedOffers(Command):
+    """The seat `seat_id` drops the offers whose last year is before `year`. Answers their ids."""
+    seat_id: str
+    year: int
+
+
+@dataclass(frozen=True)
+class NextOfferSerial(Command):
+    """The seat `seat_id` has made one more offer. Answers the count, which numbers the offer."""
+    seat_id: str

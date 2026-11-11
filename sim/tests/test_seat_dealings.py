@@ -7,9 +7,11 @@ from sim.actors.module import Actors
 from sim.agents.api import ActorRecord, ActorRegistry
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, RestorePurse
-from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat, SetDealing
+from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SeatsSeat
+from sim.seats.module_spec import MODULE_SPECS as SEATS_SPECS
 from sim.knowledge.api import KnowledgeSeat
 from sim.seats.module import Seats
+from sim.seats.dealings import Dealings
 from . import held_fixture, module_harness
 from sim.tests.money_host import MoneyHost
 from sim.engine.state_seat import FIRST_SEAT_ID
@@ -69,7 +71,7 @@ class Game:
         self.seats.slots = lambda: {FIRST_SEAT_ID: self.slot}
         answers = {command: host.send for command in (CreditSeat, DebitSeat, NoteSeatCash, RestorePurse)}
         answers[ReceiveTechniques] = lambda command: self.receive(command.node_ids, command.granted)
-        answers[SetDealing] = lambda command: self.seats.set_dealing(command)
+        answers.update({command_type: getattr(self.seats, method) for command_type, method in SEATS_SPECS[0].applies if hasattr(Dealings, method)})
         self.module = module_harness.build(Actors, world=host.world, module_id="actors", answers=answers, views={
             "operating": set(), "techniques_granted": lambda: frozenset(self.knowledge.granted),
             "techniques_held": lambda: frozenset(self.knowledge.done), "acting_seat": FIRST_SEAT_ID,

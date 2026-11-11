@@ -132,11 +132,11 @@ def make_offer(giver: Any, receiver: Any, give: Dict[str, Any], take: Dict[str, 
 	reason = holds_problem(giver, give, world)
 	if reason:
 		raise CommandRejected(reason)
-	giver.record.offer_serial += 1
-	offer = {"id": "%s#%d" % (giver.actor_id, giver.record.offer_serial), "from": giver.actor_id,
+	serial = giver.record.next_offer_serial()
+	offer = {"id": "%s#%d" % (giver.actor_id, serial), "from": giver.actor_id,
 			 "to": receiver.actor_id, "give": give, "take": take, "year": world.setting.year,
 			 "expires": world.setting.year + int(OFFER_LIFETIME_YEARS)}
-	receiver.record.offers.append(offer)
+	receiver.record.keep_offer(offer)
 	return offer
 
 
@@ -183,17 +183,15 @@ def accept(receiver: Any, offer_id: Any, find_actor: Callable[[str], Any], world
 			target.learn([node_id], world)
 	hand_over(giver, receiver, offer["give"], world)
 	hand_over(receiver, giver, offer["take"], world)
-	receiver.record.offers.remove(offer)
+	receiver.record.drop_offer(offer["id"])
 	return "accepted %s" % offer["id"]
 
 
 def decline(receiver: Any, offer_id: Any) -> str:
-	receiver.record.offers.remove(find_offer(receiver, offer_id))
+	receiver.record.drop_offer(find_offer(receiver, offer_id)["id"])
 	return "declined %s" % offer_id
 
 
 def expire_offers(actor: Any, year: int) -> List[str]:
 	"""Drop offers past their last year; returns their ids."""
-	lapsed = [offer["id"] for offer in actor.record.offers if year > offer["expires"]]
-	actor.record.offers[:] = [offer for offer in actor.record.offers if year <= offer["expires"]]
-	return lapsed
+	return actor.record.drop_lapsed_offers(year)

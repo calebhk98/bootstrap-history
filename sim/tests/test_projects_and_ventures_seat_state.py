@@ -84,6 +84,13 @@ class VenturesViews(unittest.TestCase):
     def test_the_mothballed_works_are_those_with_a_shut_plant(self):
         self.assertEqual(set(self.module().mothballed()), {"forge"})
 
+    def test_the_operating_and_mothballed_sets_are_copies_the_business_does_not_share(self):
+        module = self.module()
+        handed_out = module.operating()
+        module.apply_stop_operating(StopOperating(("mill",)))
+        self.assertEqual((set(handed_out), set(module.operating()), type(handed_out), type(module.mothballed())),
+                         ({"mill"}, set(), frozenset, frozenset))
+
     def test_a_shut_work_that_records_why_has_its_reason_and_year(self):
         self.assertEqual(dict(self.module().closure_records()), {"forge": {"reason": "staff", "year": 95}})
 

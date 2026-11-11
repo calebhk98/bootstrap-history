@@ -7,7 +7,7 @@ purse to move without building a game:
     party = host.party("founder", dealings=SeatsSeat(), business=Business())   # the seat as an exchange party, over the real ports
 
 The seats' stored dealings and businesses are plain records a test passes to `party`; the party reads them through the owners' views and
-changes them through the owners' commands (`SetDealing`, `ReleasePlant`, `AdoptPlant`, applied by the modules' own methods).
+changes them through the owners' commands (`ReleasePatent`, `GiveShares`, `KeepOffer`, ..., `ReleasePlant`, `AdoptPlant`, applied by the modules' own methods).
 
 The host holds a `SimulationState` (`host.state`), the actors' book (`host.purses`) and one ledger seat per seat in
 `host.state.seats`. It is also the `module` the actors' party ports read (`host.needs`, `host.world`): its staff, its know-how and
@@ -18,7 +18,7 @@ from typing import Any, Dict, Iterator
 
 from sim.actors.seat_parties import Ports
 from sim.agents.api import ActorsState, HouseholdParty
-from sim.agents.tracked import plain
+from sim.agents.plain_copy import plain
 from sim.engine.state import EconomyState, FounderState, HouseholdState, SimulationState
 from sim.engine.state_seat import SeatState, bind_seat
 from sim.knowledge.api import ReceiveTechniques
@@ -26,10 +26,13 @@ from sim.ledger.api import LedgerSeat, OpenCashBook, OpenPurse, RestorePurse
 from sim.ledger.ledger import Ledger
 from sim.ledger.module_spec import MODULE_SPECS
 from sim.seats.dealings import DEALING_FIELDS, Dealings
-from sim.seats.api import SetDealing
+from sim.seats.module_spec import MODULE_SPECS as SEATS_SPECS
 from sim.ventures.api import AdoptPlant, ReleasePlant
 from sim.ventures.plants import Plants
 from sim.tests import module_harness
+
+
+DEALING_COMMANDS = {command_type: method for command_type, method in SEATS_SPECS[0].applies if hasattr(Dealings, method)}
 
 
 class _Keyed:
@@ -118,8 +121,9 @@ class MoneyHost:
             else:
                 self.on_receive(command.node_ids, command.granted)
             return None
-        if isinstance(command, SetDealing):
-            return Dealings.set_dealing(SimpleNamespace(parts=SimpleNamespace(run=SimpleNamespace(slots=lambda: self.dealings))), command)
+        if type(command) in DEALING_COMMANDS:
+            owner = SimpleNamespace(parts=SimpleNamespace(run=SimpleNamespace(slots=lambda: self.dealings)))
+            return getattr(Dealings, DEALING_COMMANDS[type(command)])(owner, command)
         if isinstance(command, (ReleasePlant, AdoptPlant)):
             owner = SimpleNamespace(seat_of=lambda seat_id: SimpleNamespace(business=self.businesses[seat_id]))
             return (Plants.apply_release_plant if isinstance(command, ReleasePlant) else Plants.apply_adopt_plant)(owner, command)

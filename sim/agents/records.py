@@ -5,10 +5,11 @@ from typing import Any, Dict, List, Optional, Set
 from .business import Business
 from .edges import Edge
 from .purses import Purses
+from .record_dealings import RecordDealings
 
 
 @dataclass
-class ActorRecord:
+class ActorRecord(RecordDealings):
 	"""Persistent state shared by every non-founder actor (a firm, a government)."""
 	kind: str = "firm"
 	name: str = ""

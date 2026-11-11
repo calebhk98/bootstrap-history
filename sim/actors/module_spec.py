@@ -17,7 +17,8 @@ from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
 from sim.polity.api import AddScandal
 from sim.production.api import AccrueExperience
 from sim.reporting.api import RecordEvent
-from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SetDealing
+from sim.seats.api import (AddLicensee, AnswerOffer, ApplyForPatent, DropLapsedOffers, DropOffer, GiveShares, KeepOffer, MakeOffer, NextOfferSerial,
+                           ReceivePatent, ReleasePatent, TakeShares)
 from sim.ventures.api import AdoptPlant, ReleasePlant
 from sim.workforce.api import ReleaseStaff
 
@@ -133,5 +134,6 @@ MODULE_SPECS = (ModuleSpec(
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, AccrueExperience, ForgetActorOrders, NoteActorSale,
 	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, AddScandal, RecordEvent, PayActor,
-	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques, SetDealing, ReleasePlant, AdoptPlant),
+	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques, ReleasePatent, ReceivePatent, AddLicensee, GiveShares, TakeShares, KeepOffer,
+	       DropOffer, DropLapsedOffers, NextOfferSerial, ReleasePlant, AdoptPlant),
 ),)
