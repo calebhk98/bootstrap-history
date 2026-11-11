@@ -10,6 +10,8 @@ command sent is kept in `sent` and answered with `answers.get(type(command))`.
 the views the screens now read answer from them, so a rule is tested on plain values."""
 from types import SimpleNamespace
 
+from sim.engine.data import MODDIR
+
 from .seat_views_stand_in import seat_views
 
 
@@ -197,6 +199,8 @@ class FactViews:
     """`view` and `send` over an object that holds the facts as attributes."""
 
     def view(self, name):
+        if name == "mods_directory" and not hasattr(self, name):
+            return _Answer(lambda: MODDIR)
         if name == "project_order" and hasattr(self, "order"):
             return _Answer(lambda: tuple(self.order))
         if name == "year" and not hasattr(self, "year") and hasattr(self, "state"):

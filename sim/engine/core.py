@@ -42,7 +42,8 @@ class Sim:
     # provided by the mechanics module (sim/mechanics); food techs in _TECH_EFFECTS.json do not declare it.
 
     def __init__(self, nodes, order, rng, events=True, cfg=None, verbose=False,
-                 bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False):
+                 bounty_set=None, civ=None, manual=False, debug=None, defer_economy=False,
+                 mods_dir=None):
         self._agriculture = agriculture
         self._demography = demography
         self.step_context = StepContext(
@@ -51,17 +52,17 @@ class Sim:
         self.verbose = verbose
         from . import game_assembly
         from .bridge_land import MODS_DIR
-        self.mods_dir = MODS_DIR   # this game's mods: its assembly, its policy switches and its seats' defaults read this
+        self.mods_dir = MODS_DIR if mods_dir is None else mods_dir   # this game's mods: its assembly, its policy switches and its seats' defaults read this
         self.assembly = game_assembly.build(self.mods_dir, self.debug)
         self._scenario = self.assembly.modules["scenario"]
         # the setup the game is played in: the civilisation, the configuration, the modes (the scenario module owns them)
         self.send(OpenScenario(
-            civilisation=copy.deepcopy(civ or load_civ()), configuration=dict(DEFAULTS, **(cfg or {})), manual=bool(manual),
+            civilisation=copy.deepcopy(civ or load_civ(mods_dir=self.mods_dir)), configuration=dict(DEFAULTS, **(cfg or {})), manual=bool(manual),
             events=events, bounty_set=set(bounty_set or ()),
-            sources=ScenarioSources(load_civilisation=load_civ, kit_capital=lambda kit_id, civ: kit_capital(kit_id, civ, self.mods_dir),
+            sources=ScenarioSources(load_civilisation=lambda civilisation_id: load_civ(civilisation_id, mods_dir=self.mods_dir), kit_capital=lambda kit_id, civ: kit_capital(kit_id, civ, self.mods_dir),
                                     display_units=lambda: (units.registry(), units.chosen_units(), lambda: units.unit_context(self))),
             dice=rng))
-        self.nodes = nodes_in_civ_money(nodes, self.civ)
+        self.nodes = nodes_in_civ_money(nodes, self.civ, self.mods_dir)
         node_rederive.remember_derived_gates(self, self.civ["starting_techs"])
         # Authoritative live SimulationState hierarchy
         from sim.engine.state import (

@@ -179,7 +179,7 @@ def goal_condition(sim):
     """(win_condition, description) of the current goal, or (None, None) for a research goal."""
     node = sim.view("tree_nodes")().get(sim.view("goal")()["node"]) or {}
     condition = node.get("win_condition")
-    return (condition, ui_port.win_condition_describe(node)) if condition else (None, None)
+    return (condition, ui_port.win_condition_describe(node, sim.view("mods_directory")())) if condition else (None, None)
 
 
 def conditions_for_metric(sim, metric):
@@ -193,7 +193,7 @@ def conditions_for_metric(sim, metric):
             continue
         found.append((node_id in sim.view("techniques_held")(), condition.get("value") or 0.0, node_id, condition))
     found.sort(key=lambda item: item[:3])
-    return [(condition, ui_port.win_condition_describe(sim.view("tree_nodes")()[node_id]))
+    return [(condition, ui_port.win_condition_describe(sim.view("tree_nodes")()[node_id], sim.view("mods_directory")()))
             for _, _, node_id, condition in found]
 
 

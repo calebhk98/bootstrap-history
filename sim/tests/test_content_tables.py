@@ -11,6 +11,7 @@ import unittest
 
 from sim.content import foreign_economies, tech_effects, trades
 from sim.content.api import OpenContent, Trade
+from sim.content.directory_stamp import DirectoryMemo
 from sim.content.module import Content
 
 MOD = "test_tables_a1b2"
@@ -98,6 +99,28 @@ class TwoDirectoriesTwoTables(unittest.TestCase):
         without_mod = tech_effects.load_tech_effects(self.without_mod)
         self.assertEqual(set(with_mod) - set(without_mod), {MOD + ":spark"})
         self.assertEqual(set(without_mod) - set(with_mod), set())
+
+    def test_a_directory_is_built_once_until_a_file_under_it_changes(self):
+        builds = []
+        memo = DirectoryMemo()
+        self.assertEqual(memo.get(self.with_mod, lambda: builds.append(1) or "first"), "first")
+        self.assertEqual(memo.get(self.with_mod, lambda: builds.append(1) or "again"), "first")
+        self.assertEqual(len(builds), 1)
+        write_json(os.path.join(self.with_mod, MOD, "extra.json"), {"changed": True})
+        self.assertEqual(memo.get(self.with_mod, lambda: builds.append(1) or "second"), "second")
+        self.assertEqual(memo.get(self.without_mod, lambda: builds.append(1) or "other"), "other")
+
+    def test_a_changed_trade_file_gives_a_new_registry(self):
+        self.assertEqual(trades.trade_notes(trades.trade_registry(self.with_mod))[MOD + ":scribe"], "writes")
+        write_json(os.path.join(self.with_mod, MOD, "data", "world", "trades.json"),
+                   {"trades": {MOD + ":scribe": {"family": "scholar", "note": "copies books"}}})
+        self.assertEqual(trades.trade_notes(trades.trade_registry(self.with_mod))[MOD + ":scribe"], "copies books")
+
+    def test_a_caller_changing_its_table_does_not_change_the_next_ones(self):
+        trades.trade_registry(self.with_mod).clear()
+        self.assertIn(MOD + ":scribe", trades.trade_registry(self.with_mod))
+        tech_effects.load_tech_effects(self.with_mod)[MOD + ":spark"]["w_magic_fear"] = 9.0
+        self.assertEqual(tech_effects.load_tech_effects(self.with_mod)[MOD + ":spark"]["w_magic_fear"], 0.2)
 
 
 class ForeignEconomyTests(unittest.TestCase):

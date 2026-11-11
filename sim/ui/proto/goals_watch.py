@@ -19,7 +19,7 @@ def _watched_ids(sim):
 
 def _catalog(sim):
     if sim not in _TREES:
-        _TREES[sim] = ui_port.load()[0]
+        _TREES[sim] = ui_port.load(mods_dir=sim.view("mods_directory")())[0]
     return [goal for goal in ui_port.selectable_goals(_TREES[sim], sim.view("tree_nodes")()) if goal["node"] in sim.view("tree_nodes")()]
 
 

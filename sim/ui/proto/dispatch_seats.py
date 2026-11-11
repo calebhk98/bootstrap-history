@@ -1,7 +1,7 @@
 """The seats commands: who is playing, and adding a player to a game under way."""
 
 from sim.engine.state_seat import FOUNDER_SECTION
-from sim.engine.ui_port import STARTING_KITS
+from sim.engine.ui_port import starting_kits
 
 from sim.refusal import Refusal
 from sim.seats.api import COUNTRY_SEAT, HOUSEHOLD_SEAT
@@ -70,8 +70,9 @@ def _cmd_join(sim, nodes, cmd, ended):
     if seat_kind == COUNTRY_SEAT:
         return _join_country_seat(sim, seat_id, cmd)
     kit = cmd.get("kit") or sim.view("game_config")()["start_kit"]
-    if kit not in STARTING_KITS:
-        return {"ok": False, "error": "unknown kit %r. Kits: %s. Nothing was changed." % (kit, ", ".join(STARTING_KITS))}
+    kits = starting_kits(sim.view("mods_directory")())
+    if kit not in kits:
+        return {"ok": False, "error": "unknown kit %r. Kits: %s. Nothing was changed." % (kit, ", ".join(kits))}
     template = {"kit": kit, "starting_techs": sorted(set(sim.view("society_techs")()) & set(sim.view("tree_nodes")())),
                 "country": cmd.get("country")}
     _join(sim, seat_id, template)

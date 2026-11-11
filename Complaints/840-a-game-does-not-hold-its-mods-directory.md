@@ -1,6 +1,6 @@
 # A game does not hold its mods directory
 
-**Status:** partly - a game holds its mods directory (`Sim.mods_dir`); its assembly, policy defaults, opening repricing, trade and technology tables and trade screens read it; `data.load`/`load_civ` (tree, civilisations, production, kits) and `copy_visibility_defaults` still read the repository's mods
+**Status:** partly - a game holds its mods directory (`Sim.mods_dir`) and the data loaders, trade and technology tables take it; the price solver, the world data loaders (production, needs, units, tags) and the typed-input name index still read the repository's mods
 
 Mod code operations are per game (`mod_code.operations_of(mods_dir)` is applied by `game_assembly.build`), but which mods directory a
 game is over is the process global `sim/engine/bridge_land.MODS_DIR`. `Sim.__init__` reads it once (`core.py`, the `game_assembly.build`
@@ -29,12 +29,25 @@ save check (`saveload._check_save_trade_name_sets` takes the game's trade ids). 
 `StepContext.trade_family` is removed. Tests that hold no game read the repository's own tables from `sim/tests/repository_tables.py`.
 Test: `sim/tests/test_content_tables.py` (`TwoDirectoriesTwoTables`: two directories give two trade registries and two tech-effect tables).
 
-Left: `data.py` builds the tree, civilisations, production catalog, starting kits and win-condition labels from `MODDIR` at import or in
-`load`/`load_civ`, which are called before a `Sim` exists, so the tree and civilisation a game is given are the repository's mods'; the
-registry-dependent steps inside `load` (node revenue over `unskilled_numeraire()`, the wage schedule) therefore still use `MODDIR` by
-default. `copy_visibility_defaults.MODS_DIRECTORY`, which `data.load` applies to the tree it loads, is the same. `Sim.__init__` still reads
-`bridge_land.MODS_DIR` once. What it would take: `load(mods_dir)`, `load_civ(name, mods_dir)` and the callers that build a `Sim`
-(`ui/cli*`, `simulator.py`, `path_search`, the tests' harness) pass the directory down; then the global goes.
+Also fixed: `data.load`, `load_civ`, `civilization_ids`, `node_names`, `nodes_in_civ_money`, `goods_provenance`, `calculated_goods_prices`,
+`starting_schedule`, `kit_capital`, `starting_kits` and `win_condition_describe` take a `mods_dir` (the repository's when none is named);
+`copy_visibility_defaults.table(mods_directory)` replaced the module constant `MODS_DIRECTORY`; `Sim(..., mods_dir=)` takes the directory
+(`bridge_land.MODS_DIR` is only the default when none is given) and builds its civilisation, kit capital, node money and tree views over it;
+the goal screens and the seat kit check read the game's `mods_directory` view. The trade registry, the tech-effects table and the
+copy-visibility table are remembered per directory and rebuilt when a file under it changes (`sim/content/directory_stamp.py`; tests in
+`test_content_tables.py`).
 
-Check: `grep -rn "MODS_DIR" sim --include=*.py`. What it would take: the `Sim` constructor takes the directory (today it reads `bridge_land.MODS_DIR`) and the data loaders take the directory as an argument from the game that asks.
-Until those move two games with different data mods in one process are not supported, only different code mods.
+Left (a game over another directory still reads the repository's mods in these):
+- The price solver and the economy's data: `sim/engine/validate_production.load_production` (the solver's door, `sim/prices/engine_seam.py`),
+  `sim/world/demand.py`, `sim/world/need_demand.py`, `sim/workforce/wage_schedule.py` (`load_needs(REPOSITORY_ROOT)`),
+  `sim/engine/units.py` (`load_units()` default registry), `sim/engine/topic_tags.py` and `sim/prices/solve_cache.py` (keyed on the repository's
+  `mods`) load production, needs, units or tags from the repository root's `mods`. `load(mods_dir)` still prices goods through the solver, so a
+  data mod to production in another directory is not seen by prices.
+- The typed-input name index `sim/ui/proto/nodes.py` (`NODE_IDS`, `NODE_NAME_NORM`, built once from `node_names()` because `parse_typed` has
+  no `Sim`), and the command line's `STARTING_KITS` and `WIN_CONDITION_LABELS` constants.
+- The command line (`ui/cli*`, `path_search`, `planner`, `baseline_game`, the tools) builds games over the repository's mods by calling
+  `load()` and `load_civ()` without a directory; that is the repository's own directory by design, until the command line takes a mods option.
+What it would take: the price solver and the world data loaders take the directory from the game that asks (a handful of packages), and
+`parse_typed` takes the game so the name index is per game.
+
+Check: `grep -rn "MODS_DIR\|MODDIR" sim --include=*.py`. Until the items above move, two games with different data mods in one process are not supported for production, needs and units data, only for the trade, technology and tree tables and different code mods.

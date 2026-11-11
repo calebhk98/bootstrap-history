@@ -147,46 +147,53 @@ def money_unit_note(civ: Optional[JSONDict]) -> str:
             "market, so they will not match surviving price records." % money_word(civ))
 
 
-def schedule_of_civilisation(civ: JSONDict, mods_dir: str = MODDIR) -> wage_provider.wages.WageSchedule:
+def _mods(mods_dir: Optional[str]) -> str:
+    """The mods directory a caller names, or the repository's own when it names none."""
+    return MODDIR if mods_dir is None else mods_dir
+
+
+def schedule_of_civilisation(civ: JSONDict, mods_dir: Optional[str] = None) -> wage_provider.wages.WageSchedule:
     """The opening wage schedule of a civilisation record the caller holds (it may exist only in memory), over the
     trade registry of `mods_dir`; remembered by the record's whole content so a variant is never served another's schedule."""
-    return opening_schedule(trade_registry(mods_dir), civ)
+    return opening_schedule(trade_registry(_mods(mods_dir)), civ)
 
 
-def unskilled_numeraire(mods_dir: str = MODDIR) -> str:
+def unskilled_numeraire(mods_dir: Optional[str] = None) -> str:
     """The trade whose hour every wage is stated against: the unskilled one of the trade registry of `mods_dir`."""
-    return trade_of_role(trade_registry(mods_dir), "unskilled")
+    return trade_of_role(trade_registry(_mods(mods_dir)), "unskilled")
 
 
-def starting_schedule(civilization_id: Optional[str] = None, mods_dir: str = MODDIR) -> wage_provider.wages.WageSchedule:
+def starting_schedule(civilization_id: Optional[str] = None, mods_dir: Optional[str] = None) -> wage_provider.wages.WageSchedule:
     """The opening wage schedule of a civilisation (the reference one if none), over the trades of `mods_dir`."""
-    civ = wage_provider.reference_civilisation() if civilization_id is None else load_civ(civilization_id)
+    civ = wage_provider.reference_civilisation() if civilization_id is None else load_civ(civilization_id, mods_dir=mods_dir)
     return schedule_of_civilisation(civ, mods_dir)
 
 
-def kit_capital(kit_id: str, civ: JSONDict, mods_dir: str = MODDIR) -> float:
+def kit_capital(kit_id: str, civ: JSONDict, mods_dir: Optional[str] = None) -> float:
     """Opening money of a kit for a civilisation: its unskilled-worker-years times the
     civilisation's opening annual unskilled wage, over the trades of `mods_dir`."""
     schedule = schedule_of_civilisation(civ, mods_dir)
-    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage(unskilled_numeraire(mods_dir)))
+    return scenario_rules.kit_capital(starting_kits(mods_dir)[kit_id], schedule.annual_wage(unskilled_numeraire(mods_dir)))
 
 
-def _variant_base(base_id: str, chain: tuple) -> JSONDict:
-    """The civilisation a `variant_of` names, loaded with its own mods applied; one that does not exist is an error."""
+def _variant_base(base_id: str, chain: tuple, mods_dir: Optional[str] = None) -> JSONDict:
+    """The civilisation a `variant_of` names, loaded with the mods of `mods_dir` applied; one that does not exist is an error."""
     try:
-        return load_civ(base_id, _chain=chain)
+        return load_civ(base_id, _chain=chain, mods_dir=mods_dir)
     except SystemExit:
         raise MissingVariantBase("civilisation %s is a variant of %r, which does not exist" % (chain[-1], base_id))
 
 
-def load_civ(name: Optional[str] = None, _chain: tuple = ()) -> JSONDict:
+def load_civ(name: Optional[str] = None, _chain: tuple = (), mods_dir: Optional[str] = None) -> JSONDict:
     """A civilization is DATA, not code. Swapping Rome for Han China, Viking
     Norway, Mexica Tenochtitlan or somewhere invented is a different file, not a
     different simulator. See data/civilizations/_SCHEMA.md."""
+    mods_dir = _mods(mods_dir)
     name = name or default_civilisation_id()
     path = os.path.join(CIVDIR, name + ".json")
     base_civ = json.load(open(path)) if os.path.exists(path) else None
-    civ = apply_mod_civilization(name, base_civ, get_ordered_mods(MODDIR), _variant_base, _chain)
+    civ = apply_mod_civilization(name, base_civ, get_ordered_mods(mods_dir),
+                                 lambda base_id, chain: _variant_base(base_id, chain, mods_dir), _chain)
     if civ is None:
         # "_"-prefixed files are schema and reference data, not playable
         # civilizations, so the listing below excludes them - the same
@@ -195,7 +202,7 @@ def load_civ(name: Optional[str] = None, _chain: tuple = ()) -> JSONDict:
         # _TECH_EFFECTS, ...", naming a file nobody can play.
         have = sorted(filename[:-5] for filename in os.listdir(CIVDIR)
                       if filename.endswith(".json") and not filename.startswith("_"))
-        for manifest in get_ordered_mods(MODDIR):
+        for manifest in get_ordered_mods(mods_dir):
             have.extend(mod_civ_ids(manifest))
         raise SystemExit("unknown civilization %r. available: %s" % (name, ", ".join(have)))
     # Opening ownership is scenario data, not an optional convenience with an
@@ -213,7 +220,7 @@ def load_civ(name: Optional[str] = None, _chain: tuple = ()) -> JSONDict:
     if duplicates:
         raise ValueError("civilization %r repeats starting technologies: %s"
                          % (civ.get("id", name), ", ".join(duplicates)))
-    check_starting_techs(civ, get_ordered_mods(MODDIR))
+    check_starting_techs(civ, get_ordered_mods(mods_dir))
     wage_provider.validate_coin_standard(civ)
     for field in ("starting_interest_rate", "starting_tax_share", "wage_index", "price_index"):
         if not isinstance(civ.get(field), (int, float)) or isinstance(civ.get(field), bool):
@@ -233,14 +240,14 @@ def load_civ(name: Optional[str] = None, _chain: tuple = ()) -> JSONDict:
     return civ
 
 
-def civilization_ids() -> List[str]:
+def civilization_ids(mods_dir: Optional[str] = None) -> List[str]:
     """Playable (not hidden) base and mod civilization ids in deterministic order."""
     identifiers = {filename[:-5] for filename in os.listdir(CIVDIR)
                    if filename.endswith(".json") and not filename.startswith("_")}
-    for manifest in get_ordered_mods(MODDIR):
+    for manifest in get_ordered_mods(_mods(mods_dir)):
         identifiers.update(mod_civ_ids(manifest))
     return sorted(identifier for identifier in identifiers
-                  if not is_hidden(load_civ(identifier)))
+                  if not is_hidden(load_civ(identifier, mods_dir=mods_dir)))
 
 
 def _in_coin(money: float, document: JSONDict, money_per_labour_hour: float) -> float:
@@ -253,15 +260,16 @@ def has_luck_component(node: JSONDict) -> bool:
     return node.get("kind") != "SCIENCE" or bool(node.get("mat")) or bool(node.get("lab"))
 
 
-def node_names() -> Dict[str, JSONDict]:
+def node_names(mods_dir: Optional[str] = None) -> Dict[str, JSONDict]:
     """{node id: {"name": name}} of the tree with the mods applied: what typed input needs to resolve a
     technology, without pricing every node."""
-    tree = load_mod_tree(load_base_tree(), get_ordered_mods(MODDIR), copy_base=False)
+    tree = load_mod_tree(load_base_tree(), get_ordered_mods(_mods(mods_dir)), copy_base=False)
     return {node["id"]: {"name": node["name"]} for node in tree["nodes"]}
 
 
 def load(held_technology_ids: Optional[Iterable[str]] = None,
-         civilization_id: Optional[str] = None
+         civilization_id: Optional[str] = None,
+         mods_dir: Optional[str] = None
          ) -> Tuple[JSONDict, JSONDict, Nodes, Dict[str, float], Dict[str, float]]:
     """Load the tree and derive each node's cost from calculated prices.
 
@@ -280,22 +288,23 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
     stated against (see `sim/prices/prices.py`'s RENT NEEDS A CIVILIZATION);
     the default is the reference civilisation.
     """
-    manifests = get_ordered_mods(MODDIR)
+    mods_dir = _mods(mods_dir)
+    manifests = get_ordered_mods(mods_dir)
     check_all_civilizations(CIVDIR, manifests)
     tree = load_mod_tree(load_base_tree(), manifests, copy_base=False)
     nodes = {node["id"]: node for node in tree["nodes"]}
-    copy_visibility_defaults.apply_defaults(nodes.values(), copy_visibility_defaults.table())
-    schedule = starting_schedule(civilization_id)
+    copy_visibility_defaults.apply_defaults(nodes.values(), copy_visibility_defaults.table(mods_dir))
+    schedule = starting_schedule(civilization_id, mods_dir)
     wages = schedule.wages_per_hour()
     rate = schedule.money_per_labour_hour
     document = schedule.document()
     if held_technology_ids is None:
-        held_technology_ids = load_civ(civilization_id)["starting_techs"]
+        held_technology_ids = load_civ(civilization_id, mods_dir=mods_dir)["starting_techs"]
     from sim.prices.api import prices as price_solver
     goods, _provenance = price_solver.priced_goods_table(
-        held_technology_ids, document, civilization_id=civilization_id, unskilled_trade=unskilled_numeraire())
-    production = load_production_catalog(ROOT, MODDIR)
-    load_trade_registry(ROOT, production, MODDIR, nodes=nodes.values())
+        held_technology_ids, document, civilization_id=civilization_id, unskilled_trade=unskilled_numeraire(mods_dir))
+    production = load_production_catalog(ROOT, mods_dir)
+    load_trade_registry(ROOT, production, mods_dir, nodes=nodes.values())
     validate_mod_material_paths(nodes.values(), production, manifests)
     # A material with a production path but no seller in reach is unavailable until one appears, which is a
     # state of the game (the start gate says so), not a fault in the content.
@@ -307,7 +316,7 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
                                       for material, quantity in node["mat"].items()) / rate
         node["_hired_hours"] = sum(node["lab"].values())
     energy = energy_prices.graded(held_technology_ids, document, goods, civilization_id,
-                                  unskilled_trade=unskilled_numeraire())
+                                  unskilled_trade=unskilled_numeraire(mods_dir))
     node_revenue.apply_revenue(nodes.values(), goods, wages, rate, energy)
     for node in nodes.values():
         node["_derived_for"] = civilization_id or default_civilisation_id()
@@ -317,7 +326,8 @@ def load(held_technology_ids: Optional[Iterable[str]] = None,
 
 def goods_provenance(held_technology_ids: Iterable[str] = (),
                       civilization_id: Optional[str] = None,
-                      civilization: Optional[JSONDict] = None) -> Dict[str, str]:
+                      civilization: Optional[JSONDict] = None,
+                      mods_dir: Optional[str] = None) -> Dict[str, str]:
     """{material: "solved" | "gated"} for every material the solver prices:
     "gated" ones are priced at a technique not held but within reach; a material
     nothing in reach makes is absent (see `sim.prices.prices.priced_goods_table`).
@@ -327,40 +337,41 @@ def goods_provenance(held_technology_ids: Iterable[str] = (),
     it is the reference civilisation's.
     """
     from sim.prices.api import prices as price_solver
-    schedule = (schedule_of_civilisation(civilization) if civilization is not None
-                else starting_schedule(civilization_id))
+    schedule = (schedule_of_civilisation(civilization, mods_dir) if civilization is not None
+                else starting_schedule(civilization_id, mods_dir))
     _goods, provenance = price_solver.priced_goods_table(
         held_technology_ids, schedule.document(),
-        civilization_id=civilization_id, civilization=civilization, unskilled_trade=unskilled_numeraire())
+        civilization_id=civilization_id, civilization=civilization, unskilled_trade=unskilled_numeraire(mods_dir))
     return provenance
 
 
 def calculated_goods_prices(held_technology_ids: Iterable[str] = (),
                             civilization_id: Optional[str] = None,
                             money_per_labour_hour: Optional[float] = None,
-                            civilization: Optional[JSONDict] = None
+                            civilization: Optional[JSONDict] = None,
+                            mods_dir: Optional[str] = None
                             ) -> Dict[str, float]:
     """The calculated material-price table for an era, in the civilisation's
     coin or, when `money_per_labour_hour` is given, in that coin."""
     from sim.prices.api import prices as price_solver
-    schedule = (schedule_of_civilisation(civilization) if civilization is not None
-                else starting_schedule(civilization_id))
+    schedule = (schedule_of_civilisation(civilization, mods_dir) if civilization is not None
+                else starting_schedule(civilization_id, mods_dir))
     document = schedule.document()
     goods, _provenance = price_solver.priced_goods_table(
         held_technology_ids, document, civilization_id=civilization_id, civilization=civilization,
-        unskilled_trade=unskilled_numeraire())
+        unskilled_trade=unskilled_numeraire(mods_dir))
     if money_per_labour_hour is not None:
         goods = {material: _in_coin(price, document, money_per_labour_hour)
                  for material, price in goods.items()}
     return goods
 
 
-def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict) -> Dict[str, JSONDict]:
-    """The tree with every money field in the civilisation's coin."""
-    schedule = schedule_of_civilisation(civ)
+def nodes_in_civ_money(nodes: Dict[str, JSONDict], civ: JSONDict, mods_dir: Optional[str] = None) -> Dict[str, JSONDict]:
+    """The tree with every money field in the civilisation's coin, over the trades of `mods_dir`."""
+    schedule = schedule_of_civilisation(civ, mods_dir)
     first = next(iter(nodes.values()), None)
     if first is not None and civ.get("id") and first.get("_derived_for") != civ["id"]:
-        nodes = node_revenue.for_civilisation(nodes, civ, schedule, unskilled_trade=unskilled_numeraire())
+        nodes = node_revenue.for_civilisation(nodes, civ, schedule, unskilled_trade=unskilled_numeraire(mods_dir))
         money_units.price_nodes(nodes.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
         return nodes
     return money_units.rebased_nodes(
@@ -538,9 +549,10 @@ def resolve_goal(tree: JSONDict, nodes: Nodes, name: Optional[str]) -> str:
 WIN_CONDITION_LABELS: Dict[str, str] = load_win_condition_labels(ROOT, MODDIR)
 
 
-def win_condition_describe(node_record: JSONDict) -> str:
-    """The player-facing sentence for a node's win_condition (the seats module's rule over the labels loaded at import)."""
-    return describe_win_condition(node_record, WIN_CONDITION_LABELS)
+def win_condition_describe(node_record: JSONDict, mods_dir: Optional[str] = None) -> str:
+    """The player-facing sentence for a node's win_condition (the seats module's rule over the labels of `mods_dir`)."""
+    labels = WIN_CONDITION_LABELS if mods_dir is None else load_win_condition_labels(ROOT, mods_dir)
+    return describe_win_condition(node_record, labels)
 
 
 # ----------------------------------------------------------------------------
@@ -552,7 +564,12 @@ def win_condition_describe(node_record: JSONDict) -> str:
 # coin's physical content. The figures keep the earlier kit sizes relative to
 # the earlier labourer wage; none is tuned to history. `kit_capital` converts
 # them to money.
-STARTING_KITS: Dict[str, StartingKit] = load_starting_kits(ROOT, MODDIR)  # type: ignore[assignment]
+STARTING_KITS: Dict[str, StartingKit] = load_starting_kits(ROOT, MODDIR)  # type: ignore[assignment]   # the command line's, over the repository's mods
+
+
+def starting_kits(mods_dir: Optional[str] = None) -> Dict[str, StartingKit]:
+    """The starting kits of the mods directory a game is over (the command line's table when none is named)."""
+    return STARTING_KITS if mods_dir is None else load_starting_kits(ROOT, mods_dir)  # type: ignore[return-value]
 
 DEFAULTS: SimulationDefaults = dict(
     # IMMORTALITY IS THE DEFAULT. The point of this simulator is to test the TREE,

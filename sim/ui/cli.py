@@ -348,7 +348,7 @@ def cmd_validate(args):
     print("\n".join(_dead_end_lines(nodes, production)))
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     from sim.engine import copy_visibility_defaults
-    errs += validate_copy_visibility.check_category_table(copy_visibility_defaults.table())
+    errs += validate_copy_visibility.check_category_table(copy_visibility_defaults.table(MODDIR))
     warns += ["%s: no copy_visibility of its own and no entry for its category, so it keeps the count of trades and materials" % node_id
               for node_id in copy_visibility_defaults.undeclared(nodes)]
     errs += _data_source_errors(nodes)

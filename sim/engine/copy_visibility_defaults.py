@@ -11,13 +11,13 @@ from typing import Any, Dict, Iterable, List, Mapping
 
 from sim.content.api import get_ordered_mods
 from sim.content.api import deep_merge
+from sim.content.directory_stamp import DirectoryMemo
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE_FILE = os.path.join(ROOT, "data", "world", "copy_visibility.json")
-MODS_DIRECTORY = os.path.join(ROOT, "mods")
 BASIS_KEY = "copy_visibility_basis"
 
-_cache: Dict[str, Dict[str, Any]] = {}
+_remembered = DirectoryMemo()
 
 
 def _read(path: str) -> Dict[str, Any]:
@@ -35,12 +35,9 @@ def load(mods_directory: str) -> Dict[str, Any]:
     return categories
 
 
-def table() -> Dict[str, Any]:
-    """The merged table for the current mods directory, built once."""
-    if MODS_DIRECTORY not in _cache:
-        _cache.clear()
-        _cache[MODS_DIRECTORY] = load(MODS_DIRECTORY)
-    return _cache[MODS_DIRECTORY]
+def table(mods_directory: str) -> Dict[str, Any]:
+    """The merged table for `mods_directory`, remembered until a file under it changes."""
+    return _remembered.get(mods_directory, lambda: load(mods_directory))
 
 
 def apply_defaults(nodes: Iterable[Dict[str, Any]], categories: Mapping[str, Any]) -> int:
