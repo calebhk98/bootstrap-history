@@ -15,16 +15,16 @@ UNIT_WORDS = {good_dimension.MASS: "tonnes", good_dimension.AREA: "hectares",
               good_dimension.LENGTH: "metres", good_dimension.COUNT: "pieces"}
 
 
-def material_dimension(material):
+def material_dimension(material, mods_dir=None):
     """The dimension of one unit of a material: its production entry's `unit_dimension`, else what its id spells, else mass."""
-    entry = demand.production_data().get(material)
+    entry = demand.production_data(mods_dir).get(material)
     stated = entry.get("unit_dimension") if isinstance(entry, dict) else None
     return stated or good_dimension.dimension_from_id(material) or good_dimension.MASS
 
 
-def own_unit_quantities(material, needed_tonnes, held_tonnes, missing_tonnes):
+def own_unit_quantities(material, needed_tonnes, held_tonnes, missing_tonnes, mods_dir=None):
     """The quantities of a non-mass material in its own unit (the bill counts a thousand units to the tonne), or None for a mass."""
-    dimension = material_dimension(material)
+    dimension = material_dimension(material, mods_dir)
     if dimension == good_dimension.MASS:
         return None
     return {"dimension": dimension, "unit": UNIT_WORDS.get(dimension, "units"),

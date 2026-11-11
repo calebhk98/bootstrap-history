@@ -204,7 +204,7 @@ def build_setup(sim, opening=None, production=None):
     for need in basket.needs:
         goods.update(good for good, _effect in need.goods)
     specs = goods_specs({good: "" for good in goods},
-                        sim.materials.spoilage_rates(), life_years)
+                        sim.materials.spoilage_rates(), life_years, production=production)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = port_closure.makeable_prices(prices, production, recipes)
     recipes = port_closure.runnable_recipes(recipes, prices)

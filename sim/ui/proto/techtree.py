@@ -870,7 +870,7 @@ def _material_row(row, sim):
                if (row["years_of_supply_it_takes"] or 0.0) >= NEVER_PRODUCED_YEARS else {}),
             **({"own_unit": own_unit}
                if (own_unit := own_unit_quantities(row["material"], row["needed_tonnes"], row["held_tonnes"],
-                                                   row["missing_tonnes"])) else {}),
+                                                   row["missing_tonnes"], sim.view("mods_directory")())) else {}),
             "own_supply_tonnes_per_year": round(row["own_supply_tonnes_per_year"], 3),
             **({"scarcity_note": "your own output of %s of %s counts as supply against the demand "
                                  "on it, which lowers the premium on anything you still buy"

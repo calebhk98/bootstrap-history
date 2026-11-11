@@ -42,7 +42,7 @@ class Volume(Part):
 		def work_out():
 			granted = frozenset(needs.techniques_granted())
 			prices = needs.done_memo("concern_opening_prices", granted, lambda: self.concern_prices_in_hours(granted))
-			return volume_rules.ratios(node, price_solver.default_production_entries(), (granted, prices), (held, prices))
+			return volume_rules.ratios(node, price_solver.default_production_entries(needs.mods_directory()), (granted, prices), (held, prices))
 		return needs.done_memo("concern_ratios", (node_id, held), work_out)
 
 	def concern_volume_ratio(self, node_id):
