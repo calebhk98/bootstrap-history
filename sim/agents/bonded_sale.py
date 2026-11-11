@@ -14,16 +14,22 @@ CAPTIVE_SHARE_OF_DEFEATED_LOSSES = declare(
 	"CAPTIVE_SHARE_OF_DEFEATED_LOSSES", 0.2, kind="temporary_heuristic", unit="share of the people a beaten force loses",
 	source=None, confidence="D",
 	why="Of the people a force loses in a defeat, this share is taken alive and, where the winner's society keeps bonded "
-		"people, added to them. Scheidel 2005 (JRS 95, the section on the sex ratio of the slave supply, read in the Gwern copy; page not read) writes that the enslavement of "
-		"non-combatants was a natural outcome of war and that women and children more often survive military defeat than "
-		"adult men; he gives no share, and no source read gives one.",
+		"people, added to them. Scheidel 2005 (JRS 95, sex-ratio section) writes that the enslavement of non-combatants was a "
+		"natural outcome of war and that women and children more often survive defeat than adult men, and gives no share. "
+		"Sources opened for 648 bracket it without fixing it: Josephus, Jewish War 6.9.3 (Whiston, Gutenberg 2850) counts 97,000 "
+		"carried captive against 1,100,000 who perished in the whole war (captives 0.08 of captives plus dead), and Caesar, Gallic "
+		"War 2.33 (Gutenberg 10657) has about 4,000 Aduatuci slain in the sally and 53,000 persons sold (0.93). Both are sieges, "
+		"not field battles, and both counts are the authors' own, so the value stays a guess inside that range.",
 	retire="648 captives by campaign record (Roman and other sources of prisoners taken per battle)")
 
 CAPTIVE_SHARE_OF_CONQUERED_PEOPLE = declare(
 	"CAPTIVE_SHARE_OF_CONQUERED_PEOPLE", 0.02, kind="temporary_heuristic", unit="share of a taken tile's people",
 	source=None, confidence="D",
 	why="When a tile is taken by force, this share of its people is carried off as bonded where the taker's society keeps "
-		"bonded people (Scheidel 2005 on the enslavement of non-combatants after a defeat; no share is given).",
+		"bonded people. Scheidel 2005 gives no share. Whole-population cases opened for 648: Strabo 4.6.7 (Loeb, Penelope copy) "
+		"has all 44,000 Salassi (36,000 others and 8,000 fighting men) sold in 25 BC, and Scheidel's 2007 working paper 'The Roman slave "
+		"supply' (Princeton/Stanford, p. 8) gives 'the entire surviving population of 44,000 was sold'; a tile that surrenders is "
+		"not enslaved in any source opened, so this share is the average over taken tiles and no source gives it.",
 	retire="648 captives by campaign record (Roman and other sources of prisoners taken per battle)")
 
 

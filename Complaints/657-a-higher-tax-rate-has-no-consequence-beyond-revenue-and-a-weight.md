@@ -106,6 +106,19 @@ popular essays); Zhang Juzheng's 1581 Ming land survey (opened *Fir and Empire*,
 "added nearly a quarter more farmland", read there as reregistering forest converted to farmland, and registration figures are
 "at best indexes of fiscal acreage"; it does not give a hideable share or a cost of hiding). No source found.
 
+**Searched again (second pass), one partial datum:** Habib, *The Agrarian System of Mughal India* (archive.org
+`the-agrarian-system-of-mughal-india-1556-to-1707`, OCR text, read for concealment, collusion and measurement): it describes
+qanungos colluding with 'amils to make fictitious accounts and reduce assessments (Aurangzeb's order, ch. on revenue
+assignments) and a patwari/qanungo commission of two per cent of the revenue (*Ain*, I, p. 300, "sad-dot"), but gives no share of
+land found off the rolls by measurement. Ray Huang's *Taxation and Governmental Finance* and Ho Ping-ti's *Studies on the
+Population of China* (archive.org borrowable only, HTTP 401) and the Cambridge chapter page (host not reachable) could not be
+opened. The one figure opened: Arslan 2022, "Tahrir Defteri Verilerinin Nufus Hesaplamalari icin Guvenilirligine Dair Mukayeseli
+bir Inceleme", Medeniyet Belleten 2/3, p. 21 (https://dergipark.org.tr/en/download/article-file/2568111): 95 adult men found
+in the 1559-1561 Uskudar court records are absent from the 1560 tahrir, "approximately 14%" of the 676 registered adult men, a
+lower bound; about 20 were exempt. That is persons off the rolls in one town, not an income share and not a response to
+officials looking harder, so neither constant changes (0.5 and 0.5); the datum is recorded in `HIDEABLE_SHARE_OF_INCOME`'s
+`why`. Still unsourced: the ceiling and the cost of the last unit hidden. Status stays partly.
+
 **What it would take.** Open a work that gives, for a pre-modern agrarian state, either the share of land or income found
 off the rolls when officials looked harder (cadastral resurveys: Ming 1581, Roman Egypt census cycle, Domesday, Mughal
 `zabt`), or what concealment cost payers (fees to scribes and surveyors). Cite author, work, page. Set the two constants
