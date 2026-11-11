@@ -1,6 +1,6 @@
 # A commodity pool keeps one stock for every form, so bar and ore held by a seat are one number
 
-**Status:** open - stages 1 and 2 done (the ledger holds a pool's stock by material key, any-form readers read the pool total); stages 3 to 5 remain
+**Status:** closed - the ledger holds a pool's stock by material key; bills, throttle draws and takings name a form; a sale sells the form held (stages 1 to 5). The whole-game re-measure is the orchestrator's.
 
 **What is wrong now.** A seat's material ledger keeps one counter per commodity (`data/world/commodities.json`: the `iron`
 pool's `material_keys` are bar, ore, bloom, sheet and cast iron). Since 576 a sale from the pool is priced and cleared as the
@@ -80,3 +80,16 @@ materials screens. Many test files read `goods_stock[commodity]` or send `Change
 - Found: a pool is only split where its material is in the commodity's `material_keys`. Tracked pairs in `MATERIAL_CHECKS` that name
   no such key (`charcoal_kg` and `firewood_kg` in `charcoal`, `copper_wire_kg` and `wire_drawn_kg` in `copper`, lead, tin, silver,
   nitre) are still held under the pool id; stage 3 must align `MATERIAL_CHECKS` pools with `commodities.json` before it can split them.
+- Stage 3 done. `rules.material_bill` and `rules.throttle_reading` work per ledger key (`stock_form`, `flow_form` in `sim/materials/supply.py`): a
+  need for a form is met from the stock held under that key, then the pool's own flow only where that flow yields the form (the form its mines
+  raise), then the market (the forms of one pool and tag share its market offer). Ore never meets a need for bar. `ChangeStock` takes from the
+  named key only and refuses (`not_held`) a taking beyond it; the shortfall is the bill's market leg. `BankStock` sets exact keys, and the unused
+  mine flow banks as the raised form. The stage-2 spill across forms is gone. Any-form readers (availability, `material_supply_route`,
+  `materials_report`, researcher, sharing, the saltpetre remedy) still read the pool total. A material the pool does not name (for example
+  `copper_wire_kg`, a form of the `copper_wire` commodity while `MATERIAL_CHECKS` draws it on the `copper` mine pool) is held under the pool id:
+  `commodities.json` gives wire its own commodity, so the two tables were left as they are; such a material is met from its own key and the
+  market, not from the mine's ore flow.
+- Stage 4 and 5 done. `prices.rules.sale_forms` / `sold_material`: a form the pool names sells as itself; the pool's own name sells the forms the
+  seat holds (raised form first), one order per form (`GoodsMarket._post_pool_sale`); sale tallies are per form. Tests:
+  `test_pool_sells_as_raised_form` (bar and ore each at their own good's price), `test_materials_by_form` (a bill or draw for bar is not met by
+  ore), `test_ledger_pool_forms`, `test_ledger_commands`. A whole-game re-measure remains the orchestrator's.
