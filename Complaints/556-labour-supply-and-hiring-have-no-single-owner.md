@@ -17,9 +17,9 @@ one employer cannot also be given to another (551 is one case: own-plot hours an
 
 ## What is left
 
-- `seat.employees` is still written directly by `sim/workforce/` (`staff_year.py`, `applying_hours.py`, `commands_applied.py`); the
-  reads go through `sim/labour/staff_book.py` (`Labour.employed`, `employed_by_trade`, `set_employed`, `add_employed`).
-  `sim/tests/test_labour_single_owner.py` walls the labour modules' writes.
+- Done: `seat.employees` is written only through `sim/labour/staff_book.py` (`set_employed`, `add_employed`, and `record_hired` for
+  the clearing's `StaffArrived`); `sim/workforce/` only reads it (apart from `staff_watch.py` wrapping the dict to report changes).
+  `sim/tests/test_labour_single_owner.py` covers the book's writes.
 - The hire check reads `hands_available` (`sim/labour/labour_supply.py`; `hands_available` in `sim/labour/hands.py` is a different rule: staff, the founder and contracted hours): the core's people of the trade in the
   tiles reached, or last year's idle hours of it nationwide where those are more; `NO_DEMAND_TRADE_SHARE` stands in for a
   trade the core holds nobody of (`retire` names Complaint 964; `python3 sim/constants.py --burndown` lists it). The idle
@@ -28,5 +28,5 @@ one employer cannot also be given to another (551 is one case: own-plot hours an
   not bounded by the carriage crews it will hire (`trade_seed.seed_hours`).
 - Run a real Rome game and read the headcounts the seeding gave (carter, porter, sailor, merchant); the merchant count in the core
   and the population report's `estimated_in_the_country` were measured to disagree (tens against tens of thousands) and have not
-  been compared since. Not re-measured on this branch.
+  been compared since. Not re-measured on this branch. Command: `python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad`.
 - The labour year is described in `sim/labour/market/DESIGN.md`.

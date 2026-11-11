@@ -62,6 +62,15 @@ class StaffBook:
         else:
             employees.pop(trade, None)
 
+    def record_hired(self, trade, people):
+        """The labour core's clearing hired `people` of a trade for the founder's places: they are the staff now. The standing
+        bid is left as posted (only a change made outside the clearing moves it); a count of nothing leaves the trade off the book."""
+        employees = self._world.workforce.employees
+        if people > 0.0:
+            employees[trade] = people
+        else:
+            employees.pop(trade, None)
+
     def add_employed(self, trade, people):
         """Take `people` more (or fewer, when negative) of a trade onto the founder's books."""
         self.set_employed(trade, self.employed(trade) + people)

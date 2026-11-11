@@ -14,11 +14,7 @@ class Applying(Part):
 
 	def staff_arrived(self, command):
 		"""The labour core's clearing filled the seat's places: its staff in the trade are the people hired."""
-		employees = self.seat.employees
-		if command.people > 0.0:
-			employees[command.trade] = command.people
-		else:
-			employees.pop(command.trade, None)
+		self.parts.core.labour.book.record_hired(command.trade, command.people)
 		self.parts.core.labour.pools.resync_pools()
 
 	def clearing_settled(self, command):

@@ -33,6 +33,14 @@ copy = book.employed_by_trade()
 copy["labourer"] = 99.0
 check("the staff the owner reports is a copy", household.employees["labourer"] == 3.0)
 
+# ---- a hire through the clearing shows in the staff, and leaves the standing bid as posted ----
+household.staff_wanted["labourer"] = 8.0
+book.record_hired("labourer", 5.0)
+check("a clearing's hire is the founder's head count", book.employed("labourer") == 5.0 and household.employees["labourer"] == 5.0)
+check("a clearing's hire leaves the standing bid as posted", household.staff_wanted["labourer"] == 8.0)
+book.record_hired("labourer", 0.0)
+check("a clearing that hired nobody leaves the trade off the book", "labourer" not in household.employees)
+
 # ---- a reservation is the founder's staff plus the other employers' ----
 book.set_employed("artisan", 2.0)
 check("reserved people are the book plus the firms' and states' staff", book.reserved_people("artisan") == 6.0, book.reserved_people("artisan"))
