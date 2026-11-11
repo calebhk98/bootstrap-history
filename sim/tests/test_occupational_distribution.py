@@ -21,6 +21,12 @@ class GroupData(unittest.TestCase):
         self.assertEqual(set(counted), registry)
         self.assertEqual([trade for trade, times in counted.items() if times > 1], [])
 
+    def test_unattributed_holds_exactly_the_fallback_trades(self):
+        with open(os.path.join(ROOT, "data", "world", "trades.json"), encoding="utf-8") as handle:
+            registry = json.load(handle)["trades"]
+        fallback = {trade for trade, row in registry.items() if row.get("fallback")}
+        self.assertEqual(set(occupation_groups()["groups"]["unattributed"]["trades"]), fallback)
+
     def test_every_band_cites_a_source_or_is_the_unattributed_cap(self):
         data = occupation_groups()
         for group_id, group in data["groups"].items():
