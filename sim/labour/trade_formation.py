@@ -10,7 +10,7 @@ A trade's task description is derived from the hours recipes book to it: each re
 spread over the recipe's input materials (a recipe with no inputs books them to the thing it extracts). Distance
 between trades is the angle between their task shares (Gathmann and Schonberg).
 """
-from typing import AbstractSet, Any, Callable, Dict, FrozenSet, List, Mapping, Sequence, Tuple
+from typing import AbstractSet, Any, Callable, Dict, FrozenSet, List, Mapping, Optional, Sequence, Tuple
 
 from sim.constants import declare
 
@@ -32,27 +32,57 @@ TEACHER_ATTENTION_SHARE = declare(
         "educate mechanics as fast as it needed them, which argues it is not small.")
 
 
-def task_shares_by_trade(recipes: Mapping[str, Mapping[str, Any]]) -> Dict[str, TaskShares]:
-    """{trade: {task: share of the trade's booked hours}} from recipes with `labour_hours` and `inputs`. A
-    recipe's hours for a trade are split equally over its input materials; with no inputs they go to
-    "extract:<first output>". Shares of a trade sum to one."""
-    hours: Dict[str, Dict[str, float]] = {}
+def _hours_by_task(recipes: Mapping[str, Mapping[str, Any]]) -> Tuple[Dict[str, Dict[str, float]], Dict[str, Dict[str, float]]]:
+    """(goods hours, service hours), each {trade: {task: hours}}. A recipe's hours for a trade are split equally over its
+    input materials; with no inputs they go to "extract:<first output>". A service recipe with no inputs (`service` set)
+    has no material to name its tasks by, so its hours are kept apart."""
+    goods: Dict[str, Dict[str, float]] = {}
+    services: Dict[str, Dict[str, float]] = {}
     for recipe_id, recipe in recipes.items():
-        inputs = sorted(material for material, quantity in (recipe.get("inputs") or {}).items() if quantity)
-        if not inputs:
+        tasks = sorted(material for material, quantity in (recipe.get("inputs") or {}).items() if quantity)
+        is_service = bool(recipe.get("service")) and not tasks
+        if not tasks:
             outputs = sorted(recipe.get("outputs") or {})
-            inputs = ["extract:" + (outputs[0] if outputs else recipe_id)]
+            tasks = ["extract:" + (outputs[0] if outputs else recipe_id)]
+        held = services if is_service else goods
         for trade, booked in (recipe.get("labour_hours") or {}).items():
             if booked <= 0:
                 continue
-            by_task = hours.setdefault(trade, {})
-            for task in inputs:
-                by_task[task] = by_task.get(task, 0.0) + booked / len(inputs)
+            by_task = held.setdefault(trade, {})
+            for task in tasks:
+                by_task[task] = by_task.get(task, 0.0) + booked / len(tasks)
+    return goods, services
+
+
+def _normalised(by_task: Mapping[str, float]) -> TaskShares:
+    total = sum(by_task.values())
+    return {task: value / total for task, value in by_task.items()}
+
+
+def task_shares_by_trade(recipes: Mapping[str, Mapping[str, Any]], taught_from: Optional[Mapping[str, str]] = None) -> Dict[str, TaskShares]:
+    """{trade: {task: share of the trade's booked hours}} from recipes with `labour_hours` and `inputs`. A recipe's hours
+    for a trade are split equally over its input materials; with no inputs they go to "extract:<first output>". The hours
+    of a service with no inputs (an attended hour, a carried load) name no material, so they are done with the goods tasks
+    of the trade it is taught from (`taught_from`: {trade: parent trade}); a trade with no such parent, or a parent with
+    no goods work, keeps the service as a task of its own. Shares of a trade sum to one."""
+    taught_from = taught_from or {}
+    goods, services = _hours_by_task(recipes)
+    parents = {trade: _normalised(by_task) for trade, by_task in goods.items()}
     shares = {}
-    for trade, by_task in hours.items():
-        total = sum(by_task.values())
-        shares[trade] = {task: value / total for task, value in by_task.items()}
+    for trade in sorted(set(goods) | set(services)):
+        tasks = dict(goods.get(trade, {}))
+        parent_tasks = parents.get(taught_from.get(trade, ""), {})
+        for task, hours in services.get(trade, {}).items():
+            if parent_tasks:
+                for parent_task, share in parent_tasks.items():
+                    tasks[parent_task] = tasks.get(parent_task, 0.0) + hours * share
+            else:
+                tasks[task] = tasks.get(task, 0.0) + hours
+        shares[trade] = _normalised(tasks)
     return shares
+
+
+_shares_kept: List[Any] = []     # [production, links, shares] of the last call
 
 
 _derived: Dict[Callable, Tuple[Mapping[str, Any], Any]] = {}
@@ -69,9 +99,15 @@ def _derived_from(builder: Callable, production: Mapping[str, Any]) -> Any:
     return result
 
 
-def task_shares_for(production: Mapping[str, Any]) -> Dict[str, TaskShares]:
-    """Task shares of every trade in `production`, the production graph the game loads."""
-    return _derived_from(task_shares_by_trade, production)
+def task_shares_for(production: Mapping[str, Any], taught_from: Optional[Mapping[str, str]] = None) -> Dict[str, TaskShares]:
+    """Task shares of every trade in `production`, the production graph the game loads, with the registry's `taught_from`
+    links. Kept for the last graph and links, so a different mod set or registry is rebuilt, never served stale."""
+    links = tuple(sorted((taught_from or {}).items()))
+    if _shares_kept and _shares_kept[0] is production and _shares_kept[1] == links:
+        return _shares_kept[2]
+    shares = task_shares_by_trade(production, dict(links))
+    _shares_kept[:] = [production, links, shares]
+    return shares
 
 
 SOCIETY = "society"          # the teacher of a trade whose techniques the society already knows

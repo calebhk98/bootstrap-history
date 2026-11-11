@@ -1,5 +1,5 @@
 """Buying bonded people for the vacancies of a trade (Complaints 644 and 648), over the tables (the kernels behind
-`formation_bonded.buy`): by the owners' ask and the buyers' bid, within the room the employers' plans leave (bonded_room.py).
+`buy_bonded`): by the owners' ask and the buyers' bid, within the room the employers' plans leave (bonded_room.py).
 
 What a purchase did is appended to the step's outputs (`Outputs`): an event for the report, the lots bought, who paid and in what
 share. A kernel that finds an output array full returns `False` and the caller runs the step again with more room."""
@@ -112,7 +112,7 @@ def _buy_lots(rates, world, results, pool, area, trade, trade_count, wanted, bid
 
 @njit
 def _within(lot_people, lot_ask, lot_carriage, lots, ceiling):
-    """`formation_bonded._within`: the lots, cheapest first, cut where their cost reaches `ceiling`. Returns how many are kept."""
+    """`_within`: the lots, cheapest first, cut where their cost reaches `ceiling`. Returns how many are kept."""
     spent = 0.0
     for lot in range(lots):
         price = lot_ask[lot] + lot_carriage[lot]
@@ -126,7 +126,7 @@ def _within(lot_people, lot_ask, lot_carriage, lots, ceiling):
 
 @njit
 def buy_bonded(rates, world, results, workers, areas, hired, pool, unassigned, counter, out, area, trade, trade_count, wanted):
-    """`formation_bonded.buy`: buy up to `wanted` bonded people of the trade for the area out of `pool` (area x trade: people left,
+    """`buy_bonded`: buy up to `wanted` bonded people of the trade for the area out of `pool` (area x trade: people left,
     drawn down); they join the area's workers and the purchase is recorded in `out`. Returns whether the outputs had room."""
     if wanted <= 0.0 or not world.bondage_allowed[area]:
         return True

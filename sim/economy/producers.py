@@ -293,12 +293,19 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
     return cost / revenue, unit_cost.input_cost_per_run(recipe, inputs) / cost
 
 
+def with_practised_yield(producer: Producer, recipe: Recipe) -> Producer:
+    """The producer with its yield factor lowered by the spoilage of a crew still learning (`practice.yield_after_practice`)."""
+    practised = practice.yield_after_practice(producer.yield_factor, recipe, producer.crew_runs)
+    return producer if practised == producer.yield_factor else replaced(producer, yield_factor=practised)
+
+
 def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> Plan:
     """Runs this year and the orders that carry them out. Idle (zero runs, no orders) when a run's
     expected revenue, after the yield, does not cover its variable cost at expected input prices and
     live wages."""
     if producer.idle_years > 0:
         return Plan(0.0)
+    producer = with_practised_yield(producer, recipe)
     recipe = practice.recipe_for(recipe, producer.crew_runs)
     outputs = kept_output_prices(producer, recipe, view)
     market_inputs = paid_input_prices(producer, recipe, view, live_input_prices(producer, recipe, view))
@@ -537,6 +544,7 @@ def production_lines(producer: Producer, recipe: Recipe, inputs_held: Mapping[Go
     not what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
     tool (`tool_fallbacks`), then works by hand, and the extra hours that takes can lower the runs the hours
     hired allow."""
+    producer = with_practised_yield(producer, recipe)
     recipe = practice.recipe_for(recipe, producer.crew_runs)
     limit = producer.capacity_runs if runs_planned is None else min(runs_planned, producer.capacity_runs)
     for good, per_run in recipe.hard_inputs.items():

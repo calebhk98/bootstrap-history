@@ -44,7 +44,7 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
     cash = record.book.balances_at(producer_numbers.of_columns(columns, record.book)[0][rows], money)
     stock = stocks_by_slot(record, columns, matrices, tools, rows)
     (runs, wanted, line, hours, ceilings, bid_good, quantity, bid_price, budget, worth) = plan_rows(
-        columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.yield_factor, columns.land_rent_per_run, columns.land_run_cap,
+        columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.practised_yield(), columns.land_rent_per_run, columns.land_run_cap,
         columns.expected_sales, columns.last_runs, columns.staffed_runs, columns.idle_years, columns.expected_prices, cash, stock,
         columns.hours_scale, tools, matrices.slot_goods, matrices.slot_trades, matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.labour_hours,
         memory.price, memory.offered, memory.cleared, memory.wage, arrays.area_index.of_good_tile, producers.COST_SPREAD_WITHIN_PRODUCER,

@@ -106,7 +106,7 @@ class TurnWorld:
         agent, tile = self.agents.array()[positions], self.tiles.array()[columns.tile_row[positions]]
         made = produce_turn(
             self.runs[positions], agent, tile, columns.recipe_row[positions], columns.capacity_runs[positions],
-            columns.yield_factor[positions], positions, columns.hours_scale, spec.hard_ptr, spec.hard_good, spec.hard_per_run,
+            columns.practised_yield()[positions], positions, columns.hours_scale, spec.hard_ptr, spec.hard_good, spec.hard_per_run,
             spec.wear_ptr, spec.wear_draw, spec.wear_per_run, spec.step_ptr, spec.step_draw, spec.step_units, spec.step_factor,
             spec.step_trade_ptr, spec.step_trade_slot, spec.draw_ptr, spec.draw_good, spec.draw_listed, spec.labour_ptr,
             spec.labour_trade, spec.labour_hours, spec.output_ptr, spec.output_good, spec.output_per_run, spec.lines_most,

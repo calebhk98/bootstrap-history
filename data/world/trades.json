@@ -46,6 +46,7 @@
     },
     "carter": {
       "family": "labour",
+      "taught_from": "porter",
       "note": "Drives a cart or leads a pack train: carter, teamster, muleteer, drover. Land carriage by animal is this trade's work; porters on foot are the porter trade.",
       "training_years": 1,
       "fatality_risk_per_year": 0.0,
@@ -77,6 +78,7 @@
     },
     "electrician": {
       "family": "craft",
+      "taught_from": "machinist",
       "initially_absent": true,
       "note": "Does not exist. Cannot exist until Module 50 does.",
       "training_years": 6,
@@ -105,6 +107,7 @@
     },
     "engraver": {
       "family": "craft",
+      "taught_from": "smith",
       "note": "Die and seal cutter. Skilled ones already exist wherever there is a minting or sealing tradition; they become your punchcutters.",
       "training_years": 6,
       "tool_basket": [
@@ -131,6 +134,7 @@
     },
     "fuller": {
       "family": "craft",
+      "taught_from": "weaver",
       "note": "Finishes cloth: scours, fulls, felts, washes, stretches and presses it. Dyeing is done by the same finishing trade but has no recipe of its own yet.",
       "training_years": 3,
       "training_source": "Author's estimate, conf D: fulling was heavy trampling and washing in a fullonica worked largely by slaves and apprentices (Pliny, Natural History 35.57, Perseus, opened: its heading reads \"Cretaceous earths used for scouring cloth\", the passage was not read; no source found for the training), so a few years is a guess.",
@@ -151,6 +155,7 @@
     },
     "glassblower": {
       "family": "craft",
+      "taught_from": "potter",
       "training_years": 6,
       "tool_basket": [
         "glass",
@@ -162,6 +167,7 @@
     },
     "vine_and_olive_tender": {
       "family": "labour",
+      "taught_from": "farmer",
       "note": "Tends vineyards and olive groves (pruning, training, picking) and works the press and cellar of the same estate (Complaint 616). Hands move between it and the farmer within a season or two, so it sits in the labour family.",
       "training_years": 2,
       "training_source": "LABELLED HEURISTIC, conf D, no source found for the years it takes to learn vine and olive husbandry. Retire: Complaint 656.",
@@ -407,6 +413,7 @@
     },
     "weaver": {
       "family": "craft",
+      "taught_from": "spinner",
       "note": "Warps and weaves thread into cloth on a loom (horizontal, warp-weighted, vertical or backstrap), plain or fine, silk included.",
       "training_years": 4,
       "training_source": "Author's estimate, conf D, set at the generic craftsman's four years it replaces for cloth: guild terms for weaving ran longer (Wikipedia, Statute of Artificers 1563, opened: it provided \"a compulsory seven years' apprenticeship\"), which is a ceiling, not a Roman or Mexica figure.",
@@ -427,6 +434,7 @@
     },
     "leatherworker": {
       "family": "craft",
+      "taught_from": "tanner",
       "note": "Cuts and stitches finished leather into shoes, harness and scabbards.",
       "training_years": 4,
       "training_source": "Author's estimate, conf D: shoemakers and saddlers were bound as apprentices for several years in medieval guild practice (no source found); four years is a guess.",

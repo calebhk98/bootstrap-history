@@ -68,7 +68,48 @@ class PracticeTests(unittest.TestCase):
 
     def test_a_novice_crew_makes_fewer_runs_from_the_same_hours(self):
         achieved, _moves = producers.produce(farmer(crew_runs={"hand": 1.0}), FARM, {}, {"hand": 100.0}, 10.0)
-        self.assertAlmostEqual(achieved, 100.0 / (10.0 / FLOOR))
+        runs_the_hours_allow = 100.0 / (10.0 / FLOOR)
+        self.assertAlmostEqual(achieved, runs_the_hours_allow * practice.usable_output_share(10.0, 10.0 / FLOOR))
+
+    def test_an_established_crew_loses_nothing_to_spoilage(self):
+        self.assertEqual(practice.usable_output_share(10.0, 10.0), 1.0)
+
+    def test_a_novice_crew_spoils_a_share_of_the_extra_effort(self):
+        scrapped = practice.SCRAPPED_SHARE_OF_EXTRA_EFFORT
+        self.assertAlmostEqual(practice.usable_output_share(10.0, 20.0), 1.0 - scrapped * 0.5)
+
+    def test_more_extra_effort_spoils_more(self):
+        self.assertLess(practice.usable_output_share(10.0, 50.0), practice.usable_output_share(10.0, 20.0))
+
+    def test_spoilage_never_takes_all_of_a_run(self):
+        self.assertGreater(practice.usable_output_share(10.0, 1.0e9), 0.0)
+
+    def test_a_recipe_with_no_booked_hours_spoils_nothing(self):
+        self.assertEqual(practice.usable_output_share(0.0, 0.0), 1.0)
+
+    def test_a_novice_crews_yield_factor_is_lowered(self):
+        expected = 0.8 * practice.usable_output_share(10.0, 10.0 / FLOOR)
+        self.assertAlmostEqual(practice.yield_after_practice(0.8, FARM, {"hand": 1.0}), expected)
+
+    def test_an_established_crews_yield_factor_is_kept(self):
+        self.assertEqual(practice.yield_after_practice(0.8, FARM, {"hand": 1.0e9}), 0.8)
+
+    def test_a_crew_with_no_record_keeps_the_yield_factor(self):
+        self.assertEqual(practice.yield_after_practice(0.8, FARM, {}), 0.8)
+
+    def test_a_novice_producer_plans_with_the_lowered_yield(self):
+        lowered = producers.with_practised_yield(farmer(yield_factor=0.8, crew_runs={"hand": 1.0}), FARM)
+        self.assertAlmostEqual(lowered.yield_factor, practice.yield_after_practice(0.8, FARM, {"hand": 1.0}))
+
+    def test_an_established_producer_is_returned_as_it_is(self):
+        established = farmer(yield_factor=0.8)
+        self.assertIs(producers.with_practised_yield(established, FARM), established)
+
+    def test_a_novice_crew_gets_less_output_from_the_runs_it_makes(self):
+        _achieved, lines = producers.production_lines(farmer(crew_runs={"hand": 1.0}), FARM, {}, {"hand": 100.0}, 10.0)
+        grain = sum(line[4] for line in lines if line[2] == "grain")
+        runs_the_hours_allow = 100.0 / (10.0 / FLOOR)
+        self.assertAlmostEqual(grain, runs_the_hours_allow * practice.usable_output_share(10.0, 10.0 / FLOOR))
 
     def test_an_established_crew_makes_the_booked_runs(self):
         achieved, _moves = producers.produce(farmer(), FARM, {}, {"hand": 100.0}, 10.0)

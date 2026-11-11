@@ -1,8 +1,8 @@
 # A trade that has never existed has no way to form
 
-**Status:** partly - first hands, migration, an owners' ask and a buyers' bid for bonded people, held bonded, carried between areas by merchants and a learning-curve rule and its wiring into a producer's hours and into the entry decision are built; a trade whose work is a service, the curve's wiring into spoilage, and more `taught_from` links are open (see What is wrong now)
+**Status:** closed - service trades form from their taught_from trade, the learning curve spoils a novice crew's output, and more taught_from links are data; the novice spoilage share is a labelled heuristic (Complaint 972)
 
-**What is wrong now.**
+**What was wrong (the service, spoilage and taught_from bullets are answered by Built 10 to 12; the first bullet (trades no recipe books hours to) and the last (the keep of a bonded household) stay as research notes: see 648).**
 
 - A trade no recipe books hours to (optician, scholar, soldier, sailor, dockworker, master) has no task description, so no source trade covers it and it trains at the full apprenticeship with no early hands. The service it sells has no demand side the formation reads: its first hands should come from the people who demand the service (an unmet need for it pulling hands in), and no data or economy reading names that demand yet.
 - The learning curve now sets a producer's hours (item 9) but not its spoilage: no spoilage function exists in `sim/labour/learning_curve.py` any more (`error_share` was deleted), so spoilage is not wired to the curve. `train_check` does not pass the teacher's proficiency to `trade_first_hands.cohort_rows`. `SOURCE_TASK_FLOOR_FRACTION` therefore stays a labelled heuristic.
@@ -32,7 +32,7 @@ sale records. See also 648.
 2. `sim/labour/market/formation.py` runs after migration each year for every (area, trade) with vacancies and no one of the
    trade: migrants from areas with a route in, then bonded people. A trade with some hands and vacancies left buys bonded people
    too. Tests: `test_trade_formation_routes.py`.
-3. Owners' sale rule and the bonded price (`sim/labour/market/bonded_worth.py`; the purchase is `buy_bonded` in `formation_buy.py`, and the module `formation_bonded.py` is gone though its name survives in docstrings of `formation.py`, `formation_buy.py` and `formation_kernel.py`): a person is worth the
+3. Owners' sale rule and the bonded price (`sim/labour/market/bonded_worth.py`; the purchase is `buy_bonded` in `formation_buy.py`): a person is worth the
    present value of their hours over a working life at the household discount rate (`worth_of_hours`); a trained person's hour
    fetches the trade's wage where it is practised, never less than the floor wage times the trade's training premium
    (`trained_wage_per_hour`), so a trained person is dearer than an untrained one. The owner's ask is that worth where the owner is
@@ -73,6 +73,20 @@ sale records. See also 648.
    entry decision (`sim/economy/entry_practice.py`, used by `entry.entry_plans`, `entry_trial.recipes_by_cost`, `entry_backed`,
    the entry siting's committed and staffable hours, the entrant's working capital) costs a newcomer at the mean of its hours over
    `LOSS_YEARS_BEFORE_EXIT` years, starting at its peers' practice and learning on the runs it is built for, so a first year that
-   loses and later years that pay enter when the years together pay. Tests: `test_economy_entry_practice.py`. Open: spoilage
-   (no function for it exists), a quit rate that removes practice apart from layoffs, entrants who join an existing producer's workshops, the
+   loses and later years that pay enter when the years together pay. Tests: `test_economy_entry_practice.py`. Spoilage is item 11. Open: a quit rate that removes practice apart from layoffs, entrants who join an existing producer's workshops, the
    horizon's years weighed equally (no discounting) and the runs used in it being the planned share of the gap, and the speed is the Eurace mix of skill levels, not a measured one (`retire`d to this complaint).
+10. Service trades (`trade_formation.task_shares_by_trade(recipes, taught_from)`, called through `task_shares_for` by `labour_training._task_shares`):
+   the hours of a service recipe with no inputs (`service` set: an attended hour, a carried load) name no material, so they are
+   done with the goods tasks of the trade the registry says it is `taught_from`; a service trade with no parent, or one whose
+   parent has no goods work, keeps the service as a task of its own. A service trade therefore starts from its parent's
+   people with the early hands the covered share gives. Tests: `test_trade_formation_services.py`. The stale `formation_bonded`
+   names in the formation docstrings and `sim/labour/market/DESIGN.md` now name `formation_buy.py` and `formation_year.py`.
+11. Spoilage (`sim/economy/practice.py` `usable_output_share`, `yield_after_practice`): the extra effort of a crew still on the curve
+   (one minus booked over practised hours) spoils `SCRAPPED_SHARE_OF_EXTRA_EFFORT` of a run's output, as a lower yield factor in
+   `producers.plan` and `production_lines` (`with_practised_yield`) and in the plan and goods-turn kernels
+   (`ProducerColumns.practised_yield`, `year_arrays_producers.practised_yields`). The share is a labelled heuristic (Complaint 972).
+   Tests: `test_economy_practice.py`, `test_goods_turn_kernel.py`.
+12. `taught_from` links added to `data/world/trades.json`, each a mapping by the work in the trade definitions, no figure: weaver from
+   spinner (spun yarn is the weaver's material), fuller from weaver (fulling finishes woven cloth), carter from porter (the same
+   haulage by cart instead of on foot), glassblower from potter (kiln work on silica), leatherworker from tanner (works the tanner's leather), engraver
+   from smith (cuts metal), electrician from machinist (wire and iron work), vine_and_olive_tender from farmer (a tended crop).
