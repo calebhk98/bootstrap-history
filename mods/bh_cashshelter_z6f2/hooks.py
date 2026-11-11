@@ -79,7 +79,7 @@ def register(api):
         return sum(entry["amount"] for entry in memory(access).get(name, {}).values())
 
     def holder_actor(access, name):
-        return access.view("actor_sheet")(holder_id(name))
+        return access.view("actor_sheet")[holder_id(name)]
 
     def ensure_holder(access, name):
         actor = holder_actor(access, name)
