@@ -6,6 +6,7 @@ from typing import Callable, Dict, Iterable
 import numpy
 
 from sim.book_commit import create_slot, record_edge_goods
+from sim.book_goods_plain import goods_nested, money_nested
 from sim.book_index import EMPTY, index_add, pack_key
 from sim.book_tables import FREE
 from sim.book_types import AgentId, CurrencyId
@@ -149,28 +150,20 @@ class BookRecord:
 
     def _money_record(self, keep: Callable[[str], bool]) -> dict:
         agents, wanted = int(self.agent_table.row_count[0]), len(self.currency_ids)
-        money: dict = {}
-        if agents and wanted:
-            seen = self.balance_table.seen[:agents * self.stride].reshape(agents, self.stride)[:, :wanted]
-            numbers, currencies = numpy.nonzero(seen)
-            amounts = self.balance_table.amount[:agents * self.stride].reshape(agents, self.stride)
-            for number, currency_number in zip(numbers.tolist(), currencies.tolist()):
-                currency = self.currency_ids.name(currency_number)
-                if keep(currency):
-                    money.setdefault(self.agent_ids.name(number), {})[currency] = amounts.item(number, currency_number)
-        return {agent: dict(sorted(by_currency.items())) for agent, by_currency in sorted(money.items())}
+        if not (agents and wanted):
+            return {}
+        seen = self.balance_table.seen[:agents * self.stride].reshape(agents, self.stride)[:, :wanted]
+        numbers, currencies = numpy.nonzero(seen)
+        kept = numpy.array([keep(name) for name in self.currency_ids.name_list[:wanted]], dtype=numpy.bool_)[currencies]
+        numbers, currencies = numbers[kept], currencies[kept]
+        amounts = self.balance_table.amount[:agents * self.stride].reshape(agents, self.stride)
+        return money_nested(numbers, currencies, amounts[numbers, currencies], self.agent_ids, self.currency_ids)
 
     def _goods_record(self) -> dict:
         table = self.stock_rows.table
         live = numpy.flatnonzero(table.live[:int(table.row_count[0])])
-        agent, good, tile = self.agent_ids.name, self.good_ids.name, self.tile_ids.name
-        entries = sorted(zip([agent(number) for number in table.agent[live].tolist()],
-                             [good(number) for number in table.good[live].tolist()],
-                             [tile(number) for number in table.tile[live].tolist()], table.quantity[live].tolist()))
-        goods: dict = {}
-        for holder, kind, place, quantity in entries:
-            goods.setdefault(holder, {}).setdefault(kind, {})[place] = quantity
-        return goods
+        return goods_nested(table.agent[live], table.good[live], table.tile[live], table.quantity[live],
+                            self.agent_ids, self.good_ids, self.tile_ids)
 
     def _purpose_record(self) -> dict:
         table = self.flow_rows.table

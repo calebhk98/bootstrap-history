@@ -19,6 +19,7 @@ import numpy
 
 from .market_table_specs import KEY_SEPARATOR
 from .market_tables import MarketTables
+from .saved_name_order import in_saved_order
 
 Key = Tuple[str, str]       # (good, area id)
 
@@ -157,8 +158,10 @@ class MarketFigures(MutableMapping):
 
     def sorted_named(self) -> dict:
         """{market name: figure} in the order of the (good, area id) keys, as a save writes it."""
-        names, figures = self.named()
-        return dict(sorted(zip(names, figures), key=lambda pair: pair[0].replace(KEY_SEPARATOR, "\x00")))
+        self._chosen()
+        names = self._numbering.name_list
+        rows = in_saved_order(self._present_rows(), names)
+        return dict(zip([names[row] for row in rows.tolist()], self._current()[rows].tolist()))
 
     def replace_all(self, items: Iterable) -> None:
         """Hold exactly these figures."""

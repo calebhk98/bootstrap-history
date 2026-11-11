@@ -7,6 +7,7 @@ import os
 import time
 
 from sim.engine import opening_checks_gate, shipped_openings_build
+from . import openings_manifest
 from sim.engine.ui_port import civilization_ids
 
 
@@ -54,6 +55,7 @@ def cmd_openings(args):
             print(refusal, flush=True)
             continue
         kept.extend(entries)
+        openings_manifest.record([civ_id], openings_manifest.current_digest())
         print("%s: shipped %d cache entries (%.0fs)" % (civ_id, len(entries), seconds), flush=True)
         print("  %s" % spin_up_line(spin_up), flush=True)
     if refused:

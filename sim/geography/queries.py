@@ -6,13 +6,13 @@ describes each answer's shape. Every call takes an optional `world_map` from `op
 one it uses the base map.
 """
 import math
-from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Tuple
+from typing import Any, Callable, Dict, FrozenSet, Iterable, List, Mapping, Optional, Tuple
 
 from sim.geography.food_crops import CropSite, CropTechnique
 from sim.geography.json_copy import copied
 from sim.geography import (droving, endemic, food_capacity, food_crops, forest_timber, food_land, food_pasture, food_wild_harvest, map_source, mechanisms, parameters, resource_links, resources_biotic, rail_freight,
                            resources_catalogue, resources_endowment, resources_mined, resources_prospecting, resources_sites,
-                           reach_bands, resources_summary, routes_carriage, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
+                           reach_bands, resources_summary, routes_carriage, routes_compile, routes_graph, routes_modes, routes_search, tile_holdings, tile_layers,
                            ways_build, ways_isthmus, ways_works)
 
 WorldMap = map_source.WorldMap
@@ -228,6 +228,11 @@ def route_costs(origin_tiles: Iterable[str], modes: Iterable[str],
     bound kernel `least_cost_tree` (routes_cost_tree.py); None: the reference."""
     return routes_search.costs_from(_map(world_map), origin_tiles, modes, improvements,
                                     mode_costs, handling_costs, held_nodes, within, cost_tree)
+
+
+def relevant_route_nodes(world_map: Optional[WorldMap] = None) -> FrozenSet[str]:
+    """The tech nodes a route search can read; holding any other node leaves every search unchanged."""
+    return routes_compile.relevant_nodes(_map(world_map))
 
 
 def map_of_tiles(tile_records: Mapping[str, Mapping[str, Any]], world_map: Optional[WorldMap] = None) -> WorldMap:

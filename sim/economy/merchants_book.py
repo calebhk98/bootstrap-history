@@ -146,6 +146,20 @@ class RoutePass:
     view_prices: np.ndarray
     carriage: object
     prepared: dict = field(default_factory=dict)       # rows searched ahead for some merchants (`merchants_batch`), by agent id
+    stock_slots: dict = field(default_factory=dict)    # (good, tile) -> the slot of the market a stock there sells in, None for none
+
+    def slot_of_stock(self, area_map, good, tile) -> Optional[int]:
+        """The slot of the area of `tile` for `good` (None for a good outside the book, a tile outside every area, or no slot)."""
+        key = (good, tile)
+        if key not in self.stock_slots:
+            slot = None
+            if good in self.book.index_of:
+                try:
+                    slot = self.book.slot_of.get((good, area_map.area_of(good, tile)))
+                except KeyError:                       # a tile outside every area
+                    pass
+            self.stock_slots[key] = slot
+        return self.stock_slots[key]
 
 
 def route_pass(view, carriage, area_map, specs) -> RoutePass:

@@ -84,8 +84,9 @@ def _find_sources(workers, destinations, area, trade_count, sources):
 
 @njit
 def _fill_group_inputs(rates, rules, results, caps, hours, workers, book, destinations, area, sources, count, scratch_caps, scratch_hours,
-                       income, idle, vacancies, source_position, source_is_fallback, training_share):
-    """The area's incomes, idle shares, vacancies and retraining shares by source and destination; returns the unskilled option."""
+                       income, idle, vacancies, source_position, source_is_fallback, training_share, retrained):
+    """The area's incomes, idle shares, vacancies and retraining shares by source and destination (`retrained`: the source's family
+    teaches the destination); returns the unskilled option."""
     trade_count = destinations.in_play.shape[0]
     for source in range(count):
         trade = sources[source]
@@ -96,6 +97,7 @@ def _fill_group_inputs(rates, rules, results, caps, hours, workers, book, destin
         for destination in range(destinations.trade.shape[0]):
             same = destinations.family[trade] == destinations.family[destinations.trade[destination]]
             training_share[source, destination] = rules.retraining_share if same else 1.0
+            retrained[source, destination] = same
     for destination in range(destinations.trade.shape[0]):
         row = area * trade_count + destinations.trade[destination]
         vacancies[destination] = results.cleared[row] and vacant_hours(results, row) > 0.0
@@ -183,8 +185,12 @@ def _record_net(switched, area, trade_count, destinations, moves_source, moves_d
 def _school_and_cohort_inputs(book, destinations, area, trade_count, group_destination, seats, school_bonus, enrolled, last_years, last_bonus,
                               last_exists):
     """For the destinations the groups go to: school seats and bonus, people enrolled, and the newest cohort's years and bonus."""
+    seen = np.zeros(seats.shape[0], np.bool_)
     for group in range(group_destination.shape[0]):
         destination = group_destination[group]
+        if seen[destination]:       # a destination's other training length reads the same
+            continue
+        seen[destination] = True
         row = area * trade_count + destinations.trade[destination]
         seats[destination] = destinations.seats[row]
         school_bonus[destination] = destinations.school_bonus[row]

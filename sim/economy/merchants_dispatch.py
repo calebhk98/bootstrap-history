@@ -85,11 +85,12 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
     ledger.note_postings(fees, "wages")
     ledger.note_postings(dues_paid)
     ledger.note_postings(rents)
+    price_at = _kept(lambda good, tile: _price_on(record, area_map, good, tile))     # a market's price, read once
     for move in moves:
         tonnes = move.quantity * setup.specs[move.good].unit_mass_kg / KILOGRAMS_PER_TONNE
         flow_ledger.record_flow(carried, move.tile, move.receiver_tile, tonnes)
-        price_at_origin = _price_on(record, area_map, move.good, move.tile)
-        price_at_destination = _price_on(record, area_map, move.good, move.receiver_tile)
+        price_at_origin = price_at(move.good, move.tile)
+        price_at_destination = price_at(move.good, move.receiver_tile)
         carried_book.note_carried(carried_goods, move.good, move.tile, move.receiver_tile, move.quantity, tonnes,
                                   price_at_origin, price_at_destination)
         source = setup.country_of(move.tile)
@@ -105,9 +106,7 @@ def _entries(setup, record, ledger, area_map, crew, ordered):
     money = setup.currency_id
     index = ledger.hours_hired_by_market if crew is not None else {}
     populated = populated_tiles(record.cohorts)
-    bought_by = {}
-    for (employer, trade, area), (bought, _paid) in index.items():
-        bought_by.setdefault(employer, {})[(trade, area)] = bought
+    wage_kept: dict = {}     # the wage of each (trade, area), read once for all merchants
     cash = record.book.balances_of([merchant.agent_id for merchant in ordered], money).tolist()
     entries = []
     for merchant, purse in zip(ordered, cash):
@@ -118,11 +117,11 @@ def _entries(setup, record, ledger, area_map, crew, ordered):
         hire = None
         if crew is not None:
             if carriage_hours.planned(merchant):
-                ledger.crew_hours_bought[merchant.agent_id] = bought_by.get(merchant.agent_id, {})
-            hours_hired, wages = ((carriage_hours.engaged(record, merchant, index)) if carriage_hours.planned(merchant)
+                ledger.crew_hours_bought[merchant.agent_id] = carriage_hours.bought_in_plan_markets(record, merchant, index, populated)
+            hours_hired, wages = ((carriage_hours.engaged(record, merchant, index, populated)) if carriage_hours.planned(merchant)
                                   else (None, {}))
             hire = merchants.CrewHire(crew.hours_per_tonne, hours_hired, wages,
-                                      _kept_by_key(lambda key, each=merchant: carriage_hours.crew_wage(setup, record, each, key, populated)),
+                                      _kept_by_key(lambda key, each=merchant: carriage_hours.crew_wage(setup, record, each, key, populated, wage_kept)),
                                       area_map.area_of)
         entries.append(MerchantYear(merchant, purse, held, True, hire))
     return entries

@@ -47,6 +47,23 @@ class CountryScopeTests(unittest.TestCase):
         self.assertEqual(country_figures.opening_basket(built, "partner"), {"grain": 20.0})
         self.assertEqual(country_figures.opening_basket(built, None), {"grain": 50.0, "salt": 5.0})
 
+    def test_random_markets_total_as_the_intersection_test_did(self):
+        import random
+        from sim.tests.country_figures_plain import traded_volumes_by_intersection
+        for seed in range(30):
+            generator = random.Random(seed)
+            names = {"iron": 3, "iron_ore": 2, "grain": 4}
+            volumes = {"%s|a%d" % (good, number): generator.random() * 100
+                       for good, areas in names.items() for number in range(areas) if generator.random() < 0.8}
+            built = economy(volumes)
+            tiles_of = {good: {"a%d" % number: set(generator.sample(["h1", "h2", "p1"], generator.randint(1, 2))) for number in range(areas)}
+                        for good, areas in names.items()}
+            built.area_map.tile_sets = lambda good, held=tiles_of: held[good]
+            for country in ("home", "partner", None):
+                expected = traded_volumes_by_intersection(built, country)
+                actual = country_figures._traded_volumes(built, country)
+                self.assertEqual(list(actual.items()), list(expected.items()))
+
 
 if __name__ == "__main__":
     unittest.main()

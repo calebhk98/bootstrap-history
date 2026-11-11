@@ -107,6 +107,20 @@ class StoreWritesAndBlockReads(unittest.TestCase):
         del store["producer:b"]
         self.assertEqual(store.crews_by_recipe(in_id_order=False), {"miller": [{}], "baker": [{"smith": 1.0}]})
 
+    def test_both_groupings_of_one_version_agree_and_do_not_share_lists(self):
+        store = ProducerStore()
+        store.put(Producer("producer:z", "o", "baker", "t", 1.0, crew_runs={"smith": 2.0}))
+        store.put(Producer("producer:a", "o", "baker", "t", 1.0, crew_runs={"baker": 3.0}))
+        store.put(Producer("producer:m", "o", "miller", "t", 1.0))
+        entered = store.crews_by_recipe(in_id_order=False)
+        by_id = store.crews_by_recipe()
+        self.assertEqual(entered, {"baker": [{"smith": 2.0}, {"baker": 3.0}], "miller": [{}]})
+        self.assertEqual(by_id, {"baker": [{"baker": 3.0}, {"smith": 2.0}], "miller": [{}]})
+        entered["baker"].append({"newcomer": 1.0})
+        self.assertEqual(len(store.crews_by_recipe(in_id_order=False)["baker"]), 2)
+        store.write_crew(store.row_of["producer:a"], {"baker": 5.0})
+        self.assertEqual(store.crews_by_recipe()["baker"][0], {"baker": 5.0})
+
     def test_a_reseat_puts_the_rows_in_id_order_and_a_clear_keeps_the_counters_going(self):
         first, second = _producers()
         store = ProducerStore({first.agent_id: first, second.agent_id: second})

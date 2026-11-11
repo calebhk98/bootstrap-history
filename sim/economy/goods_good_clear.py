@@ -38,12 +38,13 @@ class Cleared(namedtuple("Cleared", ("area", "market", "result", "bids", "offers
 
 
 class Untraded:
-    """The quote figures of every market of a good that did not trade, worked out together (`goods_untraded_kernel`)."""
+    """The quote figures of every market of a good that did not trade, worked out together (`goods_untraded_kernel`), or taken from
+    the columns `goods_clear_kernel` worked out."""
 
-    def __init__(self, bids, offers, rows: GoodRows, last_price: numpy.ndarray):
-        (self.lowest_ask, self.lowest_clamped, self.supply, self.funded, self.best_bid, self.wanted) = untraded_columns(
-            bids, offers, rows.bid_grouped, rows.bid_group_ptr, rows.offer_grouped, rows.offer_group_ptr, last_price,
-            MINIMUM_PRICE_SHARE_OF_REFERENCE)
+    def __init__(self, bids, offers, rows: GoodRows, last_price: numpy.ndarray, columns=None):
+        (self.lowest_ask, self.lowest_clamped, self.supply, self.funded, self.best_bid, self.wanted) = columns if columns is not None else (
+            untraded_columns(bids, offers, rows.bid_grouped, rows.bid_group_ptr, rows.offer_grouped, rows.offer_group_ptr, last_price,
+                             MINIMUM_PRICE_SHARE_OF_REFERENCE))
 
 
 def _plain(context, good: str, area: str, last_price, bids: list, offers: list):
@@ -77,27 +78,34 @@ class GoodClearing:
     a market on the objects has none: its `Bid` and `Offer` lists are in `objects`). `Cleared` objects are made on demand (`cleared`,
     iteration): the year's rules read the columns."""
 
-    def __init__(self, context, good: str, rows: GoodRows, batch, pack, untraded, flags_of, last_price: numpy.ndarray, flags: numpy.ndarray):
+    def __init__(self, context, good: str, rows: GoodRows, batch, pack, untraded, flags_of, last_price: numpy.ndarray, flags: numpy.ndarray,
+                 made=None):
+        """`made` is (`clearing_columns`' twelve arrays, how many markets are on the objects, the bid counts) when `goods_clear_kernel` worked them out."""
         self.context, self.good, self.rows, self.batch, self.pack, self.untraded = context, good, rows, batch, pack, untraded
         self.market = rows.markets
         self.areas = context.orders.area_names_of_markets(rows.markets)
         self.has_offers, self.has_units, self.has_funded_bid = flags_of
         self.last_price = last_price
-        no_floats, no_ints = numpy.zeros(0), numpy.zeros(0, dtype=numpy.int64)
-        batch_figures = (batch.traded_flag, batch.mean, batch.traded, batch.requested, batch.supply, batch.left, pack.offer_ptr,
-                         pack.offer_rows) if batch is not None else (numpy.zeros(0, dtype=numpy.bool_), no_floats, no_floats, no_floats,
-                                                                      no_floats, no_floats, numpy.zeros(1, dtype=numpy.int64), no_ints)
-        quote_figures = (untraded.lowest_ask, untraded.lowest_clamped, untraded.supply, untraded.wanted, untraded.best_bid,
-                         untraded.funded) if untraded is not None else (no_floats,) * 5 + (numpy.zeros(0, dtype=numpy.bool_),)
+        if made is None:
+            no_floats, no_ints = numpy.zeros(0), numpy.zeros(0, dtype=numpy.int64)
+            batch_figures = (batch.traded_flag, batch.mean, batch.traded, batch.requested, batch.supply, batch.left, pack.offer_ptr,
+                             pack.offer_rows) if batch is not None else (numpy.zeros(0, dtype=numpy.bool_), no_floats, no_floats, no_floats,
+                                                                          no_floats, no_floats, numpy.zeros(1, dtype=numpy.int64), no_ints)
+            quote_figures = (untraded.lowest_ask, untraded.lowest_clamped, untraded.supply, untraded.wanted, untraded.best_bid,
+                             untraded.funded) if untraded is not None else (no_floats,) * 5 + (numpy.zeros(0, dtype=numpy.bool_),)
+            columns = clearing_columns(
+                flags, self.has_units, last_price, *batch_figures, *quote_figures, rows.offer_grouped, rows.offer_group_ptr,
+                context.orders.tables()[1].quantity)
+            on_objects, self.bid_count = True, numpy.diff(rows.bid_group_ptr)
+        else:
+            columns, on_objects, self.bid_count = made
         (self.slots, self.way, self.quantity, self.price, self.demand, self.offered, self.wanted, self.quote_price, self.quote_kind,
-         self.left_grouped, self.left_ptr, self.left_count) = clearing_columns(
-            flags, self.has_units, last_price, *batch_figures, *quote_figures, rows.offer_grouped, rows.offer_group_ptr,
-            context.orders.tables()[1].quantity)
+         self.left_grouped, self.left_ptr, self.left_count) = columns
         self.objects = {}                 # place -> (bid objects, offers after, offers left, result) of a market on the objects
-        self.bid_count = numpy.diff(rows.bid_group_ptr)
         self.bought = None                # (place, buyer number, units, money) of the first round's settlement, set by `goods_settle.settle_good`
-        for place in numpy.flatnonzero(self.way == ON_OBJECTS).tolist():
-            self._clear_on_objects(place)
+        if on_objects:
+            for place in numpy.flatnonzero(self.way == ON_OBJECTS).tolist():
+                self._clear_on_objects(place)
 
     def _clear_on_objects(self, place: int) -> None:
         """The old rules on the market's `Bid` and `Offer` objects; the figures of the result are written into the columns."""
@@ -175,6 +183,9 @@ class GoodClearing:
 
 def clear_good(context, good: str, good_id: int) -> GoodClearing:
     """Clear the markets of `good` that have orders, one after another in area order."""
+    from . import goods_clear_fused     # it makes `GoodClearing`s, so it imports this module
+    if goods_clear_fused.can_fuse(context, good):
+        return goods_clear_fused.fused_clear(context, good, good_id)
     orders = context.orders
     rows, flags, flags_of = rows_of_good(orders, good_id, context.book.agent_table.is_edge, context.good_is_batchable(good))
     if not len(rows.markets):

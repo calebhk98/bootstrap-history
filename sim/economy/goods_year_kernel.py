@@ -15,6 +15,7 @@ from sim.book import ROUNDING_SHARE
 from sim.jit import njit
 
 from . import goods_market_kernels as kernels
+from . import raise_search_kernel
 from .price_setting_kernel import best_prices
 
 KERNEL = {"error_model": "numpy"}
@@ -265,8 +266,9 @@ def raise_up(res, qty, is_producer, cost, share, multiple, minimum, has_minimum,
                 any_limit = True
     if not any_raisable:
         return res.copy()
-    if not kernels.covers_at(res, qty, numpy.full(count, -1.0), minimum, has_minimum, buyer_floors, flexibles, budgets,
-                             references, exponents, maximums, capped):
+    scratch = raise_search_kernel.make_scratch(count, len(buyer_floors))
+    if not raise_search_kernel.covers_lifted(res, qty, supply, is_producer, limits, -1.0, minimum, has_minimum, buyer_floors, flexibles,
+                                             budgets, references, exponents, maximums, capped, scratch):
         return res.copy()
     money = 0.0
     highest = 0.0
@@ -284,8 +286,8 @@ def raise_up(res, qty, is_producer, cost, share, multiple, minimum, has_minimum,
         ceiling = min(ceiling, top)
         if ceiling <= lowest:
             return res.copy()
-    level = kernels.raise_search(res, qty, is_producer, limits, lowest, ceiling, minimum, has_minimum, buyer_floors,
-                                 flexibles, budgets, references, exponents, maximums, capped)
+    level = raise_search_kernel.search_covers(res, qty, supply, is_producer, limits, lowest, ceiling, minimum, has_minimum,
+                                              buyer_floors, flexibles, budgets, references, exponents, maximums, capped, scratch)
     if level < 0.0:
         return res.copy()
     lifted = res.copy()

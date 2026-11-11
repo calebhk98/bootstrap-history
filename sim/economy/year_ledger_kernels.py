@@ -5,7 +5,7 @@ Every kernel adds in the order the old dict code did (one add per input row, lef
 keys first appeared are what the dicts held. A kernel never grows a table: the caller (`year_ledger_store.py`) reserves room
 for as many new rows or agents as the call can add. `add_pair` answers -1 when the table is full, which a caller that reserved
 correctly never sees."""
-from sim.book_index import EMPTY, index_add, index_find, pack_key
+from sim.book_index import EMPTY, index_add, index_find, pack_key, start_position
 from sim.compiled_tables.growth import NO_ROOM
 from sim.economy.year_ledger_tables import MEMBERS, NEXT_ENTRY
 from sim.jit import njit
@@ -156,3 +156,49 @@ def add_pairs(target, agents, subkeys, extras, amounts, second_amounts, positive
     for i in range(len(agents)):
         if amounts[i] > 0.0 or not positive_only:
             add_pair(target, agents[i], subkeys[i], extras[i], amounts[i], second_amounts[i])
+
+
+@njit
+def add_selected_pairs(target, agents, subkeys, amounts, selected, purpose_kind, kind):
+    """`add_pair(target, agents[i], subkeys[i], 0, amounts[i], 0.0)` in order for each row `i` that is `selected` and whose
+    `purpose_kind` is `kind`. The columns are held in hand once, and one probe finds the row or the free place for a new one, so
+    a row costs no table copy and no second probe. A full table skips its rows, as `add_pair` answering -1 does."""
+    rows = target.rows
+    keys, row_amounts, row_count, capacity = rows.key, rows.amount, rows.row_count, rows.capacity
+    row_agent, row_subkey, row_extra, row_second = rows.agent, rows.subkey, rows.extra, rows.second_amount
+    row_next, row_live = rows.next_in_agent, rows.live
+    index, firsts, lasts, orders, counters, figure, chained = (target.hash_index, target.firsts, target.lasts, target.orders,
+                                                              target.counters, target.figure, target.chained)
+    mask = len(index) - 1
+    for i in range(len(agents)):
+        if not selected[i] or purpose_kind[i] != kind:
+            continue
+        agent, key = agents[i], pack_key(agents[i], subkeys[i], 0)
+        position = start_position(key, len(index))
+        row = index[position]
+        while row != EMPTY and keys[row] != key:
+            position = (position + 1) & mask
+            row = index[position]
+        if row == EMPTY:
+            row = row_count[0]
+            if row >= capacity[0]:
+                continue
+            row_count[0] = row + 1
+            keys[row] = key
+            row_agent[row] = agent
+            row_subkey[row] = subkeys[i]
+            row_extra[row] = 0
+            row_amounts[row] = 0.0
+            row_second[row] = 0.0
+            row_next[row] = 0
+            row_live[row] = 1
+            index[position] = row
+            if chained:
+                touch(orders, counters, figure, agent)
+                last = lasts[agent]
+                if last == 0:
+                    firsts[agent] = row + 1
+                else:
+                    row_next[last - 1] = row + 1
+                lasts[agent] = row + 1
+        row_amounts[row] += amounts[i]

@@ -223,12 +223,13 @@ bids' columns. Test: `test_crossing_kernels.py`.
 
 | Step | Module | Does |
 |---|---|---|
+| one call per good | `goods_settle_one_call.py`, `goods_settle_kernel.py` | `settle_in_one_call` hands one kernel, `settle_good_markets`, the good's clearing columns, the batch's pair and order columns, the book's tables and the ledger's tables: it picks the markets that traded, numbers, settles, applies on the book, adds the gross totals and the good's flow, and notes the ledger's rows (the steps below, called from inside it). Nothing is written until every check has passed: a table without room for what the call may add (`NEEDS_ROOM`, with the counts) or a purpose the book has not numbered (`NEEDS_PURPOSE`) makes Python reserve (`book_settled.reserve_for_settlement`, the ledger's `PairStore.reserve`) or number it and call again, which a warm year rarely does. A market not in the batch (`NOT_TRADED`: the object path) or a refusal by the book (`REFUSED`) leaves the good to the steps below, which replay the refusal by name. The border tables are `None` while the ledger has no customs accounts (a second compiled version); a good's `note_good_rounds` (`goods_round_notes_kernel.py`) notes its first rounds and answers the markets whose fills the ledger keeps |
 | settlement | `settlement_ids.py` | `settle_by_ids` numbers the pairs of the good's traded markets (the batch's pair arrays, which are the `GoodsPairs` rows) in one kernel call, `settlement_number_kernel.number_good`: it reads agent and tile numbers from the bid and offer tables, numbers the (agent, tile) keys and the agents in the order `settlement_batch.KeyTable` did (hash tables for first use) and cuts them by market (each market's keys and agents in ascending batch number, as `settlement_numbering.local_numbering` does for the object path); then runs `settlement_batch_kernel.settle_markets` (purses and stocks carried market to market in area order) and applies the sums with `book_apply.apply_settled`; the goods moved per market are summed by `settlement_number_kernel.numpy_sum`, which adds as numpy's `ndarray.sum` does (pairwise: left to right below eight terms, eight running sums up to 128, wider ranges halved at a multiple of eight); no `KeyTable`, no names, no `Settlement` |
 | ledger | `goods_settle.py`, `settlement_note_kernel.py` | one `YearLedger.note_settlement_rows` call per good (`note_columns` makes its purpose, good, foreign-money and plant-purchase columns and the buyers the respend reads in one kernel call; the mint's takes from columns) and one `note_round_rows` call for the good's clearings; the respend rounds are noted the same way (`goods_respend_unpack.note_rounds`) |
 | memory | `goods_idle_years.py`, `goods_memory_kernels.py`, `goods_memory_notes.py` | the years without bids or offers of a good's markets are one kernel call; `_remember_markets` reads last year's quote flags and usual volumes as columns, works out every signal, then one kernel writes quote kinds, prices, usual prices and cleared prices in sorted (good, area) order, and the usual volumes are written the same way; the trade ages are `note_year_traded` over the markets that delivered |
 | production and offers | `goods_turn.py`, `goods_turn_kernel.py`, `goods_turn_offers_kernel.py`, `goods_turn_spec.py` | `TurnWorld` (built once a year from the year arrays) takes each good's turn as positions in the producer columns (`has_output` of the recipe rows); `produce_turn` is `producers.production_lines` for every planned producer at once (stocks from the book's stock rows, hours from the ledger's `hours_hired` pair rows, the tool fallbacks in recipe-row arrays, the crew's multipliers from `ProducerColumns.hours_scale`) and its moves are one `GoodsMovePostings` batch, the output added to the ledger by `add_pair_amounts`; `offer_pairs` gives each producer's held outputs and expected prices, `year_goods_offers.offer_reservations` the reservations, and the rows go to the order tables with the markets read from `markets_by_good_tile`. A producer with an output held and no expected price (`slow`), or a name the book has not numbered, takes the `producers.offers` / `Book.move_many` path at its place in the order. `goods_production.py` and `year_goods._produce_and_offer` remain for a year with no arrays (a test's) and a storage cost |
 
-**Why settlement stays one call per good.** A good's turn (`goods_turn`: production from stocks the earlier goods' settlements delivered, the
+**Why settlement stays one call per good (not one per year).** A good's turn (`goods_turn`: production from stocks the earlier goods' settlements delivered, the
 sellers' cash shortfall, the offers) runs between one good's settlement and the next good's clearing, so a settlement cannot wait for the goods
 after it: only a run of goods with no producer turn between them could share a call (`tools/measure` has no command that counts them; a one-off
 count of a Rome year found few). The state carried inside one call is the purses and stocks from market to market of the good
@@ -237,7 +238,11 @@ count of a Rome year found few). The state carried inside one call is the purses
 (`goods_market_kernels.choice_weights`, `requested_round_one`, `allocate_arrays` copy the last ask's wants and weight), and the
 respend kernel's logs (`goods_respend_kernel.respend_rounds`) are not cleared, since the unpack reads them up to the counts it returns
 (a log row written by only some branches is set to its default where the row starts); `goods_respend_year.run_rounds` starts with room for
-the logs of a whole year, so the first run is the only run. What is left in `decide_markets` is the sellers' price search
+the logs of a whole year, so the first run is the only run. A basket's shares and ceilings (`goods_respend_basket_kernel.price_basket`) depend on the asks alone, so the
+kernel prices a basket again only when some market's lowest ask has moved since it did (a version count of those moves, then a
+compare of the basket's asks) and each buyer only spends its money on them (`place_priced_bids`); a market that trades nothing
+reads each bid's quantity at the quote once (`goods_respend_market_kernel.units_at_quote`), and a settled market works out who
+each pair is between once. All of it gives the same bits as the loops it replaced. What is left in `decide_markets` is the sellers' price search
 (`price_setting_kernel.best_prices`, an exponential and a logarithm per rival per candidate price) and the raise search's repeated
 demand sums (`goods_market_kernels.raise_search`), which a candidate price changes for the lifted asks only; both keep the Python's
 summation order, so a cheaper form must give the same bits.
@@ -305,6 +310,14 @@ tested bit for bit against the numpy chain it replaced, kept as plain code in `s
   kernel; `goods_respend_settle_kernel.settlement_by_good`: the respend's settled pairs summed per good, as the arguments of
   `post_settled_by_numbers` (`write_settlement` falls back to the old by-name route when the book has not numbered a name, which then numbers it in the
   order it always did). `flatten_baskets` makes a need's flat columns once per distinct need (`_flat_spec`), not once per basket.
+
+**One call per good.** `goods_clear_kernel.clear_good_columns` runs that whole chain for a good in one call (`good_rows`, the stock slots, `pack_arrays`,
+`decide_inputs`, `decide_markets`, `final_allocations`, `write_batch`, `untraded_columns`, `clearing_columns`), and `goods_clear_fused.fused_clear` makes the
+`GoodClearing` from the arrays it returns. A lending rate or a band multiple not asked for yet, and a full table to append to, are raised as
+`NeedsInputs` before any row is written; Python answers (`note_area_rate`, `note_band_multiple`, `reserve_rows`) and calls again. `ClearingContext.reserve_cleared_rows`
+reserves room once a year so that the retry is rare. A ground good (not portable: its held value is a land rent read in Python,
+`goods_table_clear._ground_values`) and a good outside the year arrays keep the separate steps (`goods_good_clear.clear_good`). Test:
+`test_goods_clear_kernel.py` against the chain written out in `goods_clear_chain_plain.py`.
 
 `MarketRows` and the batch's `HeldViews` make their lists when first read. Other helpers that cut calls: `few_ids.in_ids` answers "is this agent
 one of the watchers / customs accounts" from a lookup table (`watched_buys`, `settlement_ids._in_accounts`) in place of `numpy.isin`, and

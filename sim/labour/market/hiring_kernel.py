@@ -12,28 +12,45 @@ from sim.jit import njit
 
 
 @njit
-def _combinations(total, choose):
-    result = 1
-    for step in range(1, choose + 1):
-        result = result * (total - choose + step) // step
-    return result
+def _binomials(largest, choose):
+    """`table[total, chosen]`: the ways to choose `chosen` of `total`, for totals up to `largest` and chosen up to `choose`."""
+    table = np.zeros((largest + 1, choose + 1), np.int64)
+    for total in range(largest + 1):
+        table[total, 0] = 1
+        for chosen in range(1, min(total, choose) + 1):
+            table[total, chosen] = table[total - 1, chosen - 1] + table[total - 1, chosen]
+    return table
 
 
 @njit
-def _shares_of_prefix(count, ranked, offered, offers, applications, shares):
+def _first_below(ranked, count, offers, ask):
+    """How many of the first `count` ranked posters (offers falling) offer at least `ask`."""
+    low, high = 0, count
+    while low < high:
+        middle = (low + high) // 2
+        if offers[ranked[middle]] >= ask:
+            low = middle + 1
+        else:
+            high = middle
+    return low
+
+
+@njit
+def _shares_of_prefix(count, ranked, offered, offers, applications, shares, ways, better):
     """For the first `count` ranked posters, the share of one hour of a group applying to `applications` of them at random
     that each takes on, given the chance each makes an offer; fills `shares[:count]`."""
     applied = applications if applications < count else count
-    better = np.zeros(applications)
+    for chosen in range(applications):
+        better[chosen] = 0.0
     better[0] = 1.0
-    denominator = _combinations(count - 1, applied - 1)
+    denominator = ways[count - 1, applied - 1]
     for position in range(count):
         employer = ranked[position]
         others = count - (position + 1)
         weight = 0.0
         for chosen in range(applied):
             if applied - 1 - chosen <= others:
-                weight += better[chosen] * _combinations(others, applied - 1 - chosen)
+                weight += better[chosen] * ways[others, applied - 1 - chosen]
         shares[position] = offered[employer] * applied / count * weight / denominator
         for chosen in range(applied - 1, 0, -1):
             better[chosen] = better[chosen] + better[chosen - 1] * (1.0 - offered[employer])
@@ -55,8 +72,9 @@ def _shares_of_prefix(count, ranked, offered, offers, applications, shares):
 
 @njit
 def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ceilings, taken_amount, taken_flag,
-                 rounds, applications, separation, cut, raise_share, threshold):
+                 rounds, applications, separation, cut, raise_share, threshold, ways):
     count_employers = hired.shape[0]
+    better = np.empty(applications)
     capacity = 2 + rounds * count_employers
     group_hours = np.empty(capacity)
     group_ask = np.empty(capacity)
@@ -64,7 +82,9 @@ def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ce
     groups = 1
     group_hours[0] = pool
     group_ask[0] = ask
-    paid_sum = np.zeros(count_employers)
+    paid_sum = np.empty(count_employers)
+    ranked_hired, ranked_taken = np.empty(count_employers), np.empty(count_employers)
+    ranked_paid, ranked_offer = np.empty(count_employers), np.empty(count_employers)
     ranked = np.empty(count_employers, np.int64)
     vacancies = np.empty(count_employers)
     applicants = np.empty(count_employers)
@@ -111,9 +131,7 @@ def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ce
             slot_of[reached] = -1
         slots = 0
         for group in range(groups):
-            reached = 0
-            while reached < poster_count and offers[ranked[reached]] >= group_ask[group]:
-                reached += 1
+            reached = _first_below(ranked, poster_count, offers, group_ask[group])
             group_reach[group] = reached
             if slot_of[reached] < 0:
                 slot_of[reached] = slots
@@ -140,24 +158,37 @@ def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ce
             reached = slot_count[slot]
             slot_total[slot] = 0.0
             if reached > 0:
-                _shares_of_prefix(reached, ranked, offered, offers, applications, slot_shares[slot])
+                _shares_of_prefix(reached, ranked, offered, offers, applications, slot_shares[slot], ways, better)
                 for position in range(reached):
                     slot_total[slot] += slot_shares[slot, position]
+        furthest = 0
+        for group in range(groups):
+            furthest = max(furthest, group_reach[group])
+        for position in range(furthest):        # the posters some group reaches, in rank order, start their tally the first time they are reached
+            employer = ranked[position]
+            if not taken_flag[employer]:
+                taken_flag[employer] = True
+                taken_amount[employer] = 0.0
+                paid_sum[employer] = 0.0
+            ranked_hired[position] = hired[employer]
+            ranked_taken[position] = taken_amount[employer]
+            ranked_paid[position] = paid_sum[employer]
+            ranked_offer[position] = offers[employer]
         for group in range(groups):
             slot = slot_of[group_reach[group]]
             hours_of_group = group_hours[group]
+            shares_of_slot = slot_shares[slot]
             for position in range(slot_count[slot]):
-                employer = ranked[position]
-                amount = hours_of_group * slot_shares[slot, position]
-                hired[employer] += amount
-                if taken_flag[employer]:
-                    taken_amount[employer] += amount
-                    paid_sum[employer] += amount * offers[employer]
-                else:
-                    taken_flag[employer] = True
-                    taken_amount[employer] = amount
-                    paid_sum[employer] = amount * offers[employer]
+                amount = hours_of_group * shares_of_slot[position]
+                ranked_hired[position] += amount
+                ranked_taken[position] += amount
+                ranked_paid[position] += amount * ranked_offer[position]
             group_hours[group] = hours_of_group - hours_of_group * slot_total[slot]
+        for position in range(furthest):
+            employer = ranked[position]
+            hired[employer] = ranked_hired[position]
+            taken_amount[employer] = ranked_taken[position]
+            paid_sum[employer] = ranked_paid[position]
         survivors = 0
         for group in range(groups):
             if group_hours[group] > 1e-9:
@@ -188,9 +219,13 @@ def hire_markets(offsets, hired, kept, wanted, offers, ceilings, pools, asks, fl
                  rounds, applications, separation, cut, raise_share, threshold):
     """Run the rounds of each market (employers `offsets[i]:offsets[i + 1]`); `hired`, `kept` and `offers` change in place,
     `taken_amount` and `taken_flag` say what each employer took on."""
+    largest = 0
+    for market in range(offsets.shape[0] - 1):
+        largest = max(largest, offsets[market + 1] - offsets[market])
+    ways = _binomials(largest, applications)
     for market in range(offsets.shape[0] - 1):
         low = offsets[market]
         high = offsets[market + 1]
         _hire_market(hired[low:high], kept[low:high], wanted[low:high], offers[low:high], pools[market], asks[market],
                      floors[market], ceilings[low:high], has_ceilings[market], taken_amount[low:high],
-                     taken_flag[low:high], rounds, applications, separation, cut, raise_share, threshold)
+                     taken_flag[low:high], rounds, applications, separation, cut, raise_share, threshold, ways)

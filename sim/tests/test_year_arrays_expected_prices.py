@@ -8,6 +8,7 @@ import numpy as np
 from sim.economy import year_arrays_producers
 from sim.economy.producer_store import ProducerStore
 from sim.economy.producers import Producer
+from sim.tests.expected_prices_plain import plain_expected_prices
 
 QUICK_TOPIC = True
 
@@ -77,6 +78,29 @@ class ExpectedPricesRandom(unittest.TestCase):
         found = year_arrays_producers._expected_prices(store, rows, recipe_row, matrices)
         self.assertTrue(np.array_equal(found, by_slot_loop(store, rows, recipe_row, matrices), equal_nan=True))
         self.assertGreater(int((~np.isnan(found)).sum()), 40)
+
+
+class ExpectedPricesKernelEqualsPlain(unittest.TestCase):
+    def test_random_stores_with_repeated_and_missing_goods_equal_the_whole_table_selection(self):
+        generator = random.Random(11)
+        goods = ["bran", "bread", "flour", "wheat", "salt", "oil", "tin"]       # salt, oil and tin have no column
+        columns = {"bran": 0, "bread": 1, "flour": 2, "wheat": 3}
+        slot_goods = np.array([[2, 1, 0, 2], [3, 2, -1, -1], [0, 0, 3, 1]], dtype=np.int64)
+        matrices = SimpleNamespace(goods=SimpleNamespace(row=columns), good_slots=4, slot_goods=slot_goods)
+        recipes = ["bake", "mill", "twice"]
+        for trial in range(12):
+            producers = {}
+            for number in range(generator.randint(1, 90)):
+                held = {good: generator.random() * 90 for good in generator.sample(goods, generator.randint(0, len(goods)))}
+                name = "p%03d" % number
+                producers[name] = Producer(name, "o", generator.choice(recipes), "t", 1.0, expected_prices=held)
+            store = ProducerStore(producers)
+            rows = store.order()
+            recipe_row = np.array([recipes.index(store.names["recipes"].name_list[store.table.recipe[row]]) for row in rows.tolist()],
+                                  dtype=np.int64)
+            found = year_arrays_producers._expected_prices(store, rows, recipe_row, matrices)
+            self.assertTrue(np.array_equal(found, plain_expected_prices(store, rows, recipe_row, matrices), equal_nan=True))
+            self.assertTrue(np.array_equal(found.view(np.int64), plain_expected_prices(store, rows, recipe_row, matrices).view(np.int64)))
 
 
 if __name__ == "__main__":

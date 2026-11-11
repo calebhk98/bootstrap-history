@@ -9,6 +9,7 @@ from typing import Iterator, List, Optional, Tuple
 import numpy
 
 from sim.book_index import EMPTY
+from sim.economy.year_ledger_block_kernels import add_agents_rows, replace_agents_rows
 from sim.economy.year_ledger_plain import plain_by_agent
 from sim.economy.year_ledger_kernels import add_pair, clear_agent_rows, kill_row, remove_from_figure, set_pair, touch
 from sim.economy.year_ledger_store import LedgerTables, PairStore
@@ -233,10 +234,15 @@ class NestedView(Show):
         return [view for _name, view in self.items()]
 
     @flushed
-    def as_plain(self) -> dict:
+    def as_plain(self, only=None) -> dict:
         """Every agent's rows as plain `sub -> amount` dicts, agents in entry order and each agent's rows in the order they were made:
-        what `{name: dict(inner.items()) for name, inner in self.items()}` gives, read from the table in one pass. Not live."""
+        what `{name: dict(inner.items()) for name, inner in self.items()}` gives, read from the table in one pass. Not live. With `only`
+        (names), just those agents, in the same order."""
         members, names = self._members()
+        if only is not None:
+            wanted = set(only)
+            kept = [place for place, name in enumerate(names) if name in wanted]
+            members, names = members[kept], [names[place] for place in kept]
         table = self._store.rows.table
         live = numpy.flatnonzero(table.live[:self._store.row_count])
         return plain_by_agent(members, names, table.agent[live], table.subkey[live], table.extra[live], table.amount[live], self._sub.names)
@@ -268,6 +274,45 @@ class NestedView(Show):
     @flushed
     def __setitem__(self, name, entries) -> None:
         self._replace(self._tables.agent_number(name), list(dict(entries).items()))
+
+    def _entry_arrays(self, entries_by_agent):
+        """(starts, subkeys, extras, amounts) of the entries (`sub -> amount` mappings), one run per agent, numbering each sub on the way."""
+        starts, subkeys, extras, amounts = [0], [], [], []
+        make = self._sub.make
+        for entries in entries_by_agent:
+            for sub, amount in entries.items():
+                subkey, extra = make(sub)
+                subkeys.append(subkey)
+                extras.append(extra)
+                amounts.append(float(amount))
+            starts.append(len(amounts))
+        return (numpy.array(starts, dtype=numpy.int64), numpy.array(subkeys, dtype=numpy.int64), numpy.array(extras, dtype=numpy.int64),
+                numpy.array(amounts, dtype=numpy.float64))
+
+    @flushed
+    def replace_many(self, names, entries_by_agent) -> None:
+        """`self[name] = entries` for each distinct name and the matching `sub -> amount` mapping, in order: one kernel call."""
+        if not len(names):
+            return
+        agents = self._tables.agent_numbers(names)
+        starts, subkeys, extras, amounts = self._entry_arrays(entries_by_agent)
+        store = self._store
+        had_rows = numpy.flatnonzero(getattr(self._tables.figures, "first_" + store.name)[agents] != 0)
+        for position in had_rows.tolist():
+            store.forget_rows(store.chain_rows(int(agents[position])))
+        store.reserve(len(amounts))
+        replace_agents_rows(store.target(), agents, starts, subkeys, extras, amounts)
+
+    @flushed
+    def add_many(self, names, entries_by_agent) -> None:
+        """For each name and its `sub -> amount` mapping, in order: the agent enters (keeping its place if it had one) and each amount is
+        added to its sub (`inner = self.setdefault(name, {}); inner[sub] = inner.get(sub, 0.0) + amount`): one kernel call."""
+        if not len(names):
+            return
+        agents = self._tables.agent_numbers(names)
+        starts, subkeys, extras, amounts = self._entry_arrays(entries_by_agent)
+        self._store.reserve(len(amounts))
+        add_agents_rows(self._store.target(), agents, starts, subkeys, extras, amounts)
 
     @flushed
     def setdefault(self, name, default=None) -> InnerView:

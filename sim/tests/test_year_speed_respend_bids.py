@@ -1,4 +1,4 @@
-"""Numba port, households' respend: the bids one rationed buyer places (`goods_respend_basket_kernel.buyer_bids`) are the bids
+"""Numba port, households' respend: the bids one rationed buyer places (`goods_respend_basket_kernel.price_basket` and `place_priced_bids`) are the bids
 `goods_respend.respend_bids` makes (the money of a need split over its goods still offered by the basket's choice rule and
 share limits, the money of a need with none offered passed to the others, a ceiling at the next cheapest good's parity), on
 random baskets, asks and rationed money. No game.
@@ -63,9 +63,13 @@ class BuyerBidsAreTheRespendBids(unittest.TestCase):
             spend, ceiling = numpy.zeros(len(GOODS)), numpy.zeros(len(GOODS))
             out_good, out_spend, out_ceiling = numpy.zeros(len(GOODS), dtype=numpy.int64), numpy.zeros(len(GOODS)), numpy.zeros(len(GOODS))
             money = numpy.array([rationed[spec.need_id] for spec in basket.needs])
-            count = goods_respend_basket_kernel.buyer_bids(
-                0, money, flat[0], flat[1], flat[3], flat[4], flat[5], flat[6], flat[7], flat[8], flat[9][0], ask_of_good,
-                *scratch, spend, ceiling, numpy.zeros(len(GOODS), dtype=numpy.bool_), out_good, out_spend, out_ceiling)
+            need_priced = numpy.zeros(len(flat[1]), dtype=numpy.int64)
+            goods_respend_basket_kernel.price_basket(
+                0, flat[0], flat[4], flat[3], flat[5], flat[6], flat[7], flat[8], flat[9][0], ask_of_good, *scratch,
+                need_priced)
+            count = goods_respend_basket_kernel.place_priced_bids(
+                0, money, flat[0], flat[1], flat[4], need_priced, flat[5], scratch[2], scratch[0], scratch[1], spend,
+                ceiling, numpy.zeros(len(GOODS), dtype=numpy.bool_), out_good, out_spend, out_ceiling)
             self.assertEqual([GOODS[good] for good in out_good[:count]], [bid.good for bid in old])
             for index, bid in enumerate(old):
                 self.assertAlmostEqual(out_spend[index], bid.budget, delta=TOLERANCE * max(1.0, bid.budget))

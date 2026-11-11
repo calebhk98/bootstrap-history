@@ -23,7 +23,7 @@ RULE_BATCH = 0
 RULE_SINGLE = 1
 
 
-@njit
+@njit(inline="always")
 def check_plan(plan, agents, amount, cause, rule):
     """(OK, 0) when the plan overdraws nothing under the rule, else (cause, the first offending cell)."""
     if rule == RULE_SINGLE:
@@ -31,7 +31,7 @@ def check_plan(plan, agents, amount, cause, rule):
     return check_batch(plan, agents, cause)
 
 
-@njit
+@njit(inline="always")
 def plan_money_batch(transfers, first, last, money, plan, local_index, rule):
     """Plan and check transfers first .. last - 1 as one batch. (OK, 0), or (cause, culprit) with nothing written."""
     clear_plan(plan, local_index)
@@ -41,7 +41,7 @@ def plan_money_batch(transfers, first, last, money, plan, local_index, rule):
     return code, culprit
 
 
-@njit
+@njit(inline="always")
 def plan_goods_batch(moves, first, last, goods, plan, local_index, rule):
     """plan_money_batch for goods moves first .. last - 1."""
     clear_plan(plan, local_index)
@@ -51,7 +51,7 @@ def plan_goods_batch(moves, first, last, goods, plan, local_index, rule):
     return code, culprit
 
 
-@njit
+@njit(inline="always")
 def apply_money(transfers, first, last, money, plan, local_index, rule):
     """Apply transfers first .. last - 1 as one batch holding no goods. Returns (OK, -1) or (cause, culprit)."""
     code, culprit = plan_money_batch(transfers, first, last, money, plan, local_index, rule)
@@ -62,7 +62,7 @@ def apply_money(transfers, first, last, money, plan, local_index, rule):
     return OK, -1
 
 
-@njit
+@njit(inline="always")
 def apply_goods(moves, first, last, goods, plan, local_index, rule):
     """Apply goods moves first .. last - 1 as one batch holding no transfers. Returns (OK, -1) or (cause, culprit)."""
     code, culprit = plan_goods_batch(moves, first, last, goods, plan, local_index, rule)
@@ -74,7 +74,7 @@ def apply_goods(moves, first, last, goods, plan, local_index, rule):
     return record_moves(moves, first, last, goods), -1
 
 
-@njit
+@njit(inline="always")
 def apply_one_batch(transfers, transfer_first, transfer_last, moves, move_first, move_last, book, scratch, rule):
     """Plan, check and write one batch of both kinds. Returns (OK, -1) when applied, else (cause, culprit) with the book
     unchanged. A batch with no goods moves (or no transfers) runs only the money (or goods) half: the other half's plan is left

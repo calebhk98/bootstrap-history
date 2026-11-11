@@ -46,6 +46,8 @@ import traceback
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 
+os.environ.setdefault("ROME_COLD_COMPILE", "0")    # game processes a topic starts compile lazily, not on every core at once
+
 # So `python3 sim/tests/__main__.py` (run as a plain script, no package
 # context) works exactly like `python3 -m sim.tests`: put the repo root on
 # sys.path and import everything below by its absolute dotted name, never

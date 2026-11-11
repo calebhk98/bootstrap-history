@@ -72,6 +72,24 @@ def items_of(waiting: List[tuple], run_type) -> List:
     return items
 
 
+def joined_runs(items: List) -> List:
+    """The items with those that wait one after another and share a `run_key` written as one item each (the rows stay in arrival order;
+    an item with no `run_key`, like a run of plain objects, stays alone). A source that writes one order at a time leaves hundreds of
+    items of a row or two, each a numbering call and a table write."""
+    joined, run, run_key = [], [], None
+    for item in items:
+        key = item.run_key() if hasattr(item, "run_key") else None
+        if run and key is not None and key == run_key:
+            run.append(item)
+            continue
+        if run:
+            joined.append(run[0] if len(run) == 1 else type(run[0]).joined(run))
+        run, run_key = [item], key
+    if run:
+        joined.append(run[0] if len(run) == 1 else type(run[0]).joined(run))
+    return joined
+
+
 def number_names(book, items: List) -> None:
     """Number the names new to this flush as one batch per kind (the numbering is by sorted name inside a batch)."""
     agents, goods, tiles, pairs = [], [], [], []

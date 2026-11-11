@@ -103,15 +103,6 @@ def _pair_table(figures, key_number: Mapping[str, int], carrier_number: Mapping[
     return table
 
 
-def _spread(entry: MerchantYear, good: str, tile: str, area: str, has_crew_rows: bool) -> float:
-    """What the haul gains a unit by the merchant's expectations: the price expected at the destination less at the source (a source
-    with no expectation is worth nothing to leave); only a haul with crew rows is valued."""
-    if entry.crew is None or not has_crew_rows:
-        return 0.0
-    prices = entry.merchant.expected_prices
-    return prices.get((good, area), 0.0) - prices.get((good, entry.crew.area_of(good, tile)), math.inf)
-
-
 def _routes_and_legs(entries, hauls, numbers, figures):
     """The routes (the merchant's stock at each (good, source tile)) and legs, in merchant order and route order, as lists of columns."""
     route_rows, leg_rows, leg_info, first_routes = [], [], [], []
@@ -121,9 +112,16 @@ def _routes_and_legs(entries, hauls, numbers, figures):
             continue
         for (good, tile), legs in sorted(entry.merchant.routes.items()):
             route_rows.append((row, hauls.specs[good].unit_mass_kg, entry.held.get((good, tile), 0.0), len(leg_rows), len(legs)))
+            prices = entry.merchant.expected_prices
+            leaving = None     # the price expected where the goods leave, read once for the route
             for destination, area, weight in legs:
                 pair = -1 if destination == tile else numbers[(tile, destination)]
-                leg_rows.append((pair, weight, _spread(entry, good, tile, area, pair >= 0 and len(figures[pair][2]) > 0)))
+                spread = 0.0     # what the haul gains a unit by the merchant's expectations; only a haul with crew rows is valued
+                if entry.crew is not None and pair >= 0 and len(figures[pair][2]) > 0:
+                    if leaving is None:     # a source with no expectation is worth nothing to leave
+                        leaving = prices.get((good, entry.crew.area_of(good, tile)), math.inf)
+                    spread = prices.get((good, area), 0.0) - leaving
+                leg_rows.append((pair, weight, spread))
                 leg_info.append((good, tile, destination))
         first_routes[-1] = (first_routes[-1][0], len(route_rows) - first_routes[-1][0])
     return route_rows, leg_rows, leg_info, first_routes

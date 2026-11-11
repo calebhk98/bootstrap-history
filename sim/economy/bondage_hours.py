@@ -85,6 +85,9 @@ def place(bonds: Mapping[AgentId, Mapping], offers: Union[LabourOfferRows, Seque
 
 def deliver(hours_hired: Dict[AgentId, Dict[str, float]], placement: Union[Placement, "HeldPlacement"]) -> None:
     """Book the hours a placement hired (worked for creditors, or by held bonded people) as hired hours of the employers."""
+    if hasattr(hours_hired, "add_many"):      # the ledger's table: every employer's rows in one write
+        hours_hired.add_many(list(placement.hired), list(placement.hired.values()))
+        return
     for employer, by_trade in placement.hired.items():
         rows = hours_hired.setdefault(employer, {})
         for trade, hours in by_trade.items():

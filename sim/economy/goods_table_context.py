@@ -4,8 +4,12 @@ import math
 
 import numpy
 
+from sim.compiled_tables.growth import reserve_rows
+
 from .ask_adjust import ASK_BAND_CEILING
 from .goods_table_group import name_ranks
+
+PAIRS_PER_ROW = 12        # room reserved for pairs, per bid and offer row: a guess that only saves growing the table again (`reserve_cleared_rows`)
 
 
 class ClearingContext:
@@ -19,6 +23,8 @@ class ClearingContext:
         self._area_rates, self._area_rates_known = numpy.zeros(0), numpy.zeros(0, dtype=numpy.bool_)
         self._producer_rows = None
         self._multiples = numpy.zeros(0)
+        self._scratch = None
+        self._room_reserved = False
 
     @property
     def book(self):
@@ -61,6 +67,35 @@ class ClearingContext:
         rate, known = self.area_rates()
         rate[area_id] = self.rate_in(self.orders.memory_tables.areas.name_list[area_id])
         known[area_id] = True
+
+    def ask_known_areas_and_tiles(self) -> None:
+        """Ask now for the lending rate of every area and the band multiple of every tile numbered so far, so the packing and decision
+        kernels do not find them missing and run again. Both are reads of the memory and the setup that do not change within the
+        year, so asking early gives the figures asking late would; an area or tile numbered later is still asked when found missing."""
+        for area_id in range(len(self.orders.memory_tables.areas.name_list)):
+            self.note_area_rate(area_id)
+        for tile in range(len(self.band_multiple_table())):
+            self.note_band_multiple(tile)
+
+    def scratch(self, areas: int, tiles: int) -> tuple:
+        """(areas, tiles, room) the fused clearing kernel marks what it needs answered in: all false and zero between calls."""
+        if self._scratch is None or len(self._scratch[0]) != areas or len(self._scratch[1]) != tiles:
+            self._scratch = (numpy.zeros(areas, dtype=numpy.bool_), numpy.zeros(tiles, dtype=numpy.bool_), numpy.zeros(4, dtype=numpy.int64))
+        return self._scratch
+
+    def reserve_cleared_rows(self) -> None:
+        """Once a year, on the first good cleared: room in the tables the clearing appends to for the rows the tables hold now (a good's
+        clearing appends at most one row per bid, per offer and per market, and pairs by the dozen), so the goods after it rarely
+        find a table full (`goods_clear_fused` reserves again when one is)."""
+        if self._room_reserved:
+            return
+        self._room_reserved = True
+        orders = self.orders
+        bids, offers = orders.tables()
+        rows = int(bids.row_count[0]) + int(offers.row_count[0])
+        for name, extra in (("bid_order", int(bids.row_count[0])), ("offer_order", int(offers.row_count[0])), ("pairs", PAIRS_PER_ROW * rows),
+                            ("results", rows)):
+            setattr(orders, name, reserve_rows(getattr(orders, name), extra))
 
     def good_is_batchable(self, good: str) -> bool:
         """The good is in the year arrays (ground has a rent to hold for, read off the land record: `goods_table_clear._ground_values`)."""

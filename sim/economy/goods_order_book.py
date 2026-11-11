@@ -18,7 +18,7 @@ from sim.compiled_tables.growth import reserve_rows
 
 from .goods_order_tables import (BID_ORDER, GOODS_BIDS, GOODS_MARKET_RESULTS, GOODS_OFFERS, GOODS_PAIRS, OFFER_ORDER, OTHER, BidOrder,
                                  GoodsBids, GoodsMarketResults, GoodsOffers, GoodsPairs, OfferOrder)
-from .goods_order_items import ObjectBids, ObjectOffers, items_of, number_names
+from .goods_order_items import ObjectBids, ObjectOffers, items_of, joined_runs, number_names
 from .goods_order_objects import make_bid, make_offer
 from .market_memory import market_key
 from .protocols import AgentOrders
@@ -112,20 +112,21 @@ class GoodsOrderBook:
         return list(map(known.__getitem__, pairs))
 
     def _numbers_of(self, kind: int, names: Sequence[str], admit) -> List[int]:
-        """The ids of the names: those new to the year are looked up (admitted by `admit`, in name order) once, not once per order."""
+        """The ids of the names: those new to the year are looked up (admitted together by `admit`, in name order) once, not once per order."""
         cache = self._numbers[kind]
-        for name in sorted(name for name in dict.fromkeys(names) if name not in cache):
-            cache[name] = admit(name)
+        new = sorted(name for name in dict.fromkeys(names) if name not in cache)
+        if new:
+            cache.update(zip(new, admit(new)))
         return list(map(cache.__getitem__, names))
 
     def agent_ids_of(self, names: Sequence[str]) -> List[int]:
-        return self._numbers_of(0, names, self.book.agent_number)
+        return self._numbers_of(0, names, self.book.agent_numbers_batch)
 
     def good_ids_of(self, names: Sequence[str]) -> List[int]:
-        return self._numbers_of(1, names, self.book.good_number)
+        return self._numbers_of(1, names, self.book.good_numbers_batch)
 
     def tile_ids_of(self, names: Sequence[str]) -> List[int]:
-        return self._numbers_of(2, names, self.book.tile_number)
+        return self._numbers_of(2, names, self.book.tile_numbers_batch)
 
     # ---- legacy doors (objects) ------------------------------------------------------------------
 
@@ -165,7 +166,7 @@ class GoodsOrderBook:
         if not waiting:
             return
         self._waiting_bids = []
-        items = items_of(waiting, ObjectBids)
+        items = joined_runs(items_of(waiting, ObjectBids))
         number_names(self, items)
         for item in items:
             self._write_bids(*item.rows(self), item.source)
@@ -175,7 +176,7 @@ class GoodsOrderBook:
         if not waiting:
             return
         self._waiting_offers = []
-        items = items_of(waiting, ObjectOffers)
+        items = joined_runs(items_of(waiting, ObjectOffers))
         number_names(self, items)
         for item in items:
             seller, good, tile, market, quantity, reservation = item.rows(self)

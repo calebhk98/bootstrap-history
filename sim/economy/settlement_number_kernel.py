@@ -9,6 +9,7 @@ import numpy
 from sim.jit import njit
 
 HASH_MULTIPLIER = 2654435761       # spreads whole-number keys over the hash table's slots
+SMALL_SORT = 24                    # a market with no more keys or agents than this is sorted by insertion
 
 
 @njit
@@ -39,12 +40,6 @@ def first_use(values):
 
 
 @njit
-def number_of(values, distinct):
-    """The first-use number of each of `values`, all of which are among `distinct` (listed in first-use order)."""
-    return first_use(numpy.concatenate((distinct, values)))[0][len(distinct):]
-
-
-@njit
 def pair_positions(pair_ptr, slots):
     """(pairs per market, the positions of all those markets' pairs one market after another) for the markets `slots`."""
     sizes = pair_ptr[slots + 1] - pair_ptr[slots]
@@ -58,49 +53,119 @@ def pair_positions(pair_ptr, slots):
 
 
 @njit
+def intern(value, held, number_at, found):
+    """(the number of `value` by order of first sight, whether it is new) in the hash table `held` / `number_at` (a power of two
+    long, never full), which already holds `found` values; a new value takes number `found`."""
+    mask = len(held) - 1
+    slot = (value * HASH_MULTIPLIER) & mask
+    while held[slot] != -1 and held[slot] != value:
+        slot = (slot + 1) & mask
+    if held[slot] == -1:
+        held[slot] = value
+        number_at[slot] = found
+        return found, True
+    return number_at[slot], False
+
+
+@njit
+def table_size(count):
+    """The length of a hash table for up to `count` values: a power of two, at least twice as long."""
+    capacity = 16
+    while capacity < 2 * count:
+        capacity *= 2
+    return capacity
+
+
+@njit
 def batch_keys(positions, pair_bid, pair_offer, bid_rows, offer_rows, bid_buyer, bid_tile, offer_seller, offer_tile, tile_stride,
                empty_tile):
     """(receipt key of each pair, selling key of each pair, holder and tile of each key, agent of each key within the batch's agents, the
     batch's agents as book numbers). A key is `holder * tile_stride + tile`; keys are numbered by the used bids' keys in bid order, the used
-    offers' keys in offer order, then the keys of buyers with no tile, who take delivery where the seller holds the goods."""
+    offers' keys in offer order, then the keys of buyers with no tile, who take delivery where the seller holds the goods. Each used
+    bid and offer is numbered once and its pairs read the number; the agents are numbered by their first key."""
     count = len(positions)
     bid_used = numpy.zeros(len(bid_rows), dtype=numpy.bool_)
     offer_used = numpy.zeros(len(offer_rows), dtype=numpy.bool_)
+    untiled = 0
     for pair in range(count):
         bid_used[pair_bid[positions[pair]]] = True
         offer_used[pair_offer[positions[pair]]] = True
-    candidates = numpy.zeros(bid_used.sum() + offer_used.sum() + count, dtype=numpy.int64)
+        if bid_tile[bid_rows[pair_bid[positions[pair]]]] == empty_tile:
+            untiled += 1
+    most = int(bid_used.sum()) + int(offer_used.sum()) + untiled
+    held = numpy.full(table_size(most), -1, dtype=numpy.int64)
+    number_at = numpy.zeros(len(held), dtype=numpy.int64)
+    keys = numpy.zeros(most, dtype=numpy.int64)
+    bid_number = numpy.zeros(len(bid_rows), dtype=numpy.int64)
+    offer_number = numpy.zeros(len(offer_rows), dtype=numpy.int64)
     found = 0
     for place in range(len(bid_rows)):
         if bid_used[place]:
-            candidates[found] = bid_buyer[bid_rows[place]] * tile_stride + bid_tile[bid_rows[place]]
-            found += 1
+            key = bid_buyer[bid_rows[place]] * tile_stride + bid_tile[bid_rows[place]]
+            bid_number[place], is_new = intern(key, held, number_at, found)
+            if is_new:
+                keys[found] = key
+                found += 1
     for place in range(len(offer_rows)):
         if offer_used[place]:
-            candidates[found] = offer_seller[offer_rows[place]] * tile_stride + offer_tile[offer_rows[place]]
-            found += 1
+            key = offer_seller[offer_rows[place]] * tile_stride + offer_tile[offer_rows[place]]
+            offer_number[place], is_new = intern(key, held, number_at, found)
+            if is_new:
+                keys[found] = key
+                found += 1
     receipt_key = numpy.zeros(count, dtype=numpy.int64)
     sold_key = numpy.zeros(count, dtype=numpy.int64)
     for pair in range(count):
-        row, offer_row = bid_rows[pair_bid[positions[pair]]], offer_rows[pair_offer[positions[pair]]]
-        sold_key[pair] = offer_seller[offer_row] * tile_stride + offer_tile[offer_row]
+        row = bid_rows[pair_bid[positions[pair]]]
+        sold_key[pair] = offer_number[pair_offer[positions[pair]]]
         if bid_tile[row] == empty_tile:
-            receipt_key[pair] = bid_buyer[row] * tile_stride + offer_tile[offer_row]
-            candidates[found] = receipt_key[pair]
-            found += 1
+            key = bid_buyer[row] * tile_stride + offer_tile[offer_rows[pair_offer[positions[pair]]]]
+            receipt_key[pair], is_new = intern(key, held, number_at, found)
+            if is_new:
+                keys[found] = key
+                found += 1
         else:
-            receipt_key[pair] = bid_buyer[row] * tile_stride + bid_tile[row]
-    keys = first_use(candidates[:found].copy())[1]
+            receipt_key[pair] = bid_number[pair_bid[positions[pair]]]
+    keys = keys[:found]
     holder, tile = keys // tile_stride, keys % tile_stride
     key_agent, agents = first_use(holder)
-    return number_of(receipt_key, keys), number_of(sold_key, keys), holder, tile, key_agent, agents
+    return receipt_key, sold_key, holder, tile, key_agent, agents
+
+
+@njit
+def list_new(values, stamp, market, listed, at):
+    """Write each of `values` that `stamp` has not yet marked for this `market` into `listed` from `at` and mark it (`stamp[value]` is
+    then `market + 1`). Returns the place after the last one written."""
+    for place in range(len(values)):
+        value = values[place]
+        if stamp[value] != market + 1:
+            stamp[value] = market + 1
+            listed[at] = value
+            at += 1
+    return at
+
+
+@njit
+def sort_listed(listed, first, last):
+    """`listed[first:last]` in ascending order (insertion for the few, numpy's sort for the many)."""
+    if last - first > SMALL_SORT:
+        listed[first:last] = numpy.sort(listed[first:last])
+        return
+    for place in range(first + 1, last):
+        value = listed[place]
+        before = place - 1
+        while before >= first and listed[before] > value:
+            listed[before + 1] = listed[before]
+            before -= 1
+        listed[before + 1] = value
 
 
 @njit
 def market_keys(sizes, receipt, seller, key_agent, agent_total):
     """(pair_offset, agent_offset, key_offset, buyer_key, seller_key, key_global, agent_global, key_agent_local): the batch's keys and
     agents cut by market, each market's in ascending batch number (offsets cut the concatenations; `buyer_key` and `seller_key` number a
-    pair's keys within its market; a batch of one market lists every key and agent of the batch)."""
+    pair's keys within its market; a batch of one market lists every key and agent of the batch). A market's keys are the ones its pairs
+    name, found by marking them, so the work grows with the pairs, not with the batch's keys times its markets."""
     markets, key_total = len(sizes), len(key_agent)
     pair_offset = numpy.zeros(markets + 1, dtype=numpy.int64)
     for market in range(markets):
@@ -109,47 +174,44 @@ def market_keys(sizes, receipt, seller, key_agent, agent_total):
         return (pair_offset, numpy.array([0, agent_total], dtype=numpy.int64), numpy.array([0, key_total], dtype=numpy.int64),
                 receipt.copy(), seller.copy(), numpy.arange(key_total, dtype=numpy.int64), numpy.arange(agent_total, dtype=numpy.int64),
                 key_agent.astype(numpy.int64))
-    key_used = numpy.zeros(markets * key_total, dtype=numpy.bool_)
+    pairs_total = pair_offset[markets]
+    most_keys = 0
     for market in range(markets):
-        for pair in range(pair_offset[market], pair_offset[market + 1]):
-            key_used[market * key_total + receipt[pair]] = True
-            key_used[market * key_total + seller[pair]] = True
+        most_keys += min(key_total, 2 * sizes[market])
+    key_stamp = numpy.zeros(key_total, dtype=numpy.int64)
+    agent_stamp = numpy.zeros(agent_total, dtype=numpy.int64)
+    key_local = numpy.zeros(key_total, dtype=numpy.int64)
+    agent_local = numpy.zeros(agent_total, dtype=numpy.int64)
+    listed_keys = numpy.zeros(most_keys, dtype=numpy.int64)
+    listed_agents = numpy.zeros(most_keys, dtype=numpy.int64)
     key_offset = numpy.zeros(markets + 1, dtype=numpy.int64)
-    for market in range(markets):
-        key_offset[market + 1] = key_offset[market] + key_used[market * key_total:(market + 1) * key_total].sum()
-    key_global = numpy.zeros(key_offset[markets], dtype=numpy.int64)
-    key_local = numpy.zeros(markets * key_total, dtype=numpy.int64)
-    agent_used = numpy.zeros(markets * agent_total, dtype=numpy.bool_)
-    for market in range(markets):
-        at = key_offset[market]
-        for key in range(key_total):
-            if key_used[market * key_total + key]:
-                key_global[at] = key
-                key_local[market * key_total + key] = at - key_offset[market]
-                agent_used[market * agent_total + key_agent[key]] = True
-                at += 1
     agent_offset = numpy.zeros(markets + 1, dtype=numpy.int64)
+    buyer_key = numpy.zeros(pairs_total, dtype=numpy.int64)
+    seller_key = numpy.zeros(pairs_total, dtype=numpy.int64)
+    key_agent_local = numpy.zeros(most_keys, dtype=numpy.int64)
     for market in range(markets):
-        agent_offset[market + 1] = agent_offset[market] + agent_used[market * agent_total:(market + 1) * agent_total].sum()
-    agent_global = numpy.zeros(agent_offset[markets], dtype=numpy.int64)
-    agent_local = numpy.zeros(markets * agent_total, dtype=numpy.int64)
-    for market in range(markets):
-        at = agent_offset[market]
-        for agent in range(agent_total):
-            if agent_used[market * agent_total + agent]:
-                agent_global[at] = agent
-                agent_local[market * agent_total + agent] = at - agent_offset[market]
-                at += 1
-    buyer_key = numpy.zeros(pair_offset[markets], dtype=numpy.int64)
-    seller_key = numpy.zeros(pair_offset[markets], dtype=numpy.int64)
-    key_agent_local = numpy.zeros(key_offset[markets], dtype=numpy.int64)
-    for market in range(markets):
-        for pair in range(pair_offset[market], pair_offset[market + 1]):
-            buyer_key[pair] = key_local[market * key_total + receipt[pair]]
-            seller_key[pair] = key_local[market * key_total + seller[pair]]
-        for place in range(key_offset[market], key_offset[market + 1]):
-            key_agent_local[place] = agent_local[market * agent_total + key_agent[key_global[place]]]
-    return pair_offset, agent_offset, key_offset, buyer_key, seller_key, key_global, agent_global, key_agent_local
+        first, last = pair_offset[market], pair_offset[market + 1]
+        first_key, first_agent = key_offset[market], agent_offset[market]
+        last_key = list_new(receipt[first:last], key_stamp, market, listed_keys, first_key)
+        last_key = list_new(seller[first:last], key_stamp, market, listed_keys, last_key)
+        sort_listed(listed_keys, first_key, last_key)
+        found = last_key - first_key
+        key_offset[market + 1] = last_key
+        for place in range(found):
+            key_local[listed_keys[first_key + place]] = place
+        last_agent = list_new(key_agent[listed_keys[first_key:last_key]], agent_stamp, market, listed_agents, first_agent)
+        sort_listed(listed_agents, first_agent, last_agent)
+        agents_found = last_agent - first_agent
+        agent_offset[market + 1] = last_agent
+        for place in range(agents_found):
+            agent_local[listed_agents[first_agent + place]] = place
+        for pair in range(first, last):
+            buyer_key[pair] = key_local[receipt[pair]]
+            seller_key[pair] = key_local[seller[pair]]
+        for place in range(found):
+            key_agent_local[first_key + place] = agent_local[key_agent[listed_keys[first_key + place]]]
+    return (pair_offset, agent_offset, key_offset, buyer_key, seller_key, listed_keys[:key_offset[markets]].copy(),
+            listed_agents[:agent_offset[markets]].copy(), key_agent_local[:key_offset[markets]].copy())
 
 
 @njit

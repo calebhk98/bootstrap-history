@@ -44,6 +44,16 @@ class CarriageHireTests(unittest.TestCase):
         self.assertAlmostEqual(wages[market_key(fixture.LABOURER, "town")], 2.5)
 
 
+    def test_the_hours_bought_are_read_in_the_markets_of_the_plan_only(self):
+        who = Merchant("m1", "town", "owner", 1.0)
+        who.carriage_hours_wanted = {market_key(fixture.LABOURER, "hills"): 30.0, market_key(fixture.LABOURER, "town"): 10.0,
+                                     market_key("smith", "town"): 4.0}
+        record = types.SimpleNamespace(cohorts={"c": types.SimpleNamespace(tile="town")})
+        index = {("m1", fixture.LABOURER, "work@town"): (20.0, 50.0), ("m2", "smith", "work@town"): (8.0, 9.0),
+                 ("m1", "mason", "work@town"): (3.0, 3.0)}
+        self.assertEqual(carriage_hours.bought_in_plan_markets(record, who, index), {(fixture.LABOURER, "work@town"): 20.0})
+
+
 class EntrantInAHeldMarketTests(unittest.TestCase):
     def test_a_merchant_at_the_same_pay_is_hired_only_from_hours_the_incumbent_dismissed(self):
         # Eurace random dismissals (applications.py): the entrant draws no one from the incumbent's held hours, only

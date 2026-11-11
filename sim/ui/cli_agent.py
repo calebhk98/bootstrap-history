@@ -16,7 +16,7 @@ from . import replay
 from .protocol import _agent_dispatch, _agent_end_reason, _agent_help, load_state, render_pretty, save_state
 from .memory import save_session
 from .save_policy import SavePolicy
-from . import process_start
+from . import cold_compile, process_start
 from sim.engine.ui_port import settings, units
 from sim.ui.proto import step_progress
 
@@ -46,6 +46,7 @@ def cmd_agent(args):
     That is different from `play --manual`, which is the same guarantee for a
     human at a keyboard; `agent` is that guarantee for a script or an LLM.
     """
+    cold_compile.compile_if_cold()
     tree, prices, nodes, wages, goods = load()
     goal = _goal_for_session(args, tree, nodes)
     label, order, bounties = load_strategy(args.strategy, nodes, goal)

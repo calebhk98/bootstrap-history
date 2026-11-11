@@ -1,6 +1,6 @@
 """Run the close kernel over the year's producers: pack, run, price the shares the kernel asked for, run those rows again.
 
-`close_producers(setup, record, view, ledger, arrays, pack, price_share_of)` -> `CloseAnswer`, one row per producer in the
+`close_producers(setup, record, view, ledger, arrays, pack, price_shares_of)` -> `CloseAnswer`, one row per producer in the
 year arrays' order. Nothing is written to the record here; `year_close_apply.py` does that."""
 from dataclasses import dataclass, fields
 
@@ -74,9 +74,9 @@ def _kernel_arguments(rows, arrays: YearArrays, pack: ClosePack, market_capacity
             answer.new_last_runs, answer.new_staffed, answer.demand_runs, answer.needs_share, answer.added)
 
 
-def close_producers(arrays: YearArrays, pack: ClosePack, price_share_of=None) -> CloseAnswer:
-    """The close of every producer not idle. `price_share_of(row, added_by_slot)` -> the share of the price that stays, per
-    slot, for the rows whose growth the kernel flagged (None: no share is priced, every share is one)."""
+def close_producers(arrays: YearArrays, pack: ClosePack, price_shares_of=None) -> CloseAnswer:
+    """The close of every producer not idle. `price_shares_of(rows, added)` -> the share of the price that stays, rows by slots,
+    for the rows whose growth the kernel flagged and the units each adds per slot (None: no share is priced, every share is one)."""
     columns = arrays.producers
     count = len(columns.ids)
     answer = CloseAnswer.empty(columns)
@@ -88,8 +88,7 @@ def close_producers(arrays: YearArrays, pack: ClosePack, price_share_of=None) ->
     rows = np.nonzero(columns.idle_years <= 0)[0].astype(np.int64)
     close_kernel.close_rows(*_kernel_arguments(rows, arrays, pack, capacity, share, answer))
     flagged = np.nonzero(answer.needs_share)[0].astype(np.int64)
-    if len(flagged) and price_share_of is not None:
-        for row in flagged:
-            share[row] = price_share_of(int(row), answer.added[row])
+    if len(flagged) and price_shares_of is not None:
+        share[flagged] = price_shares_of(flagged, answer.added[flagged])
         close_kernel.close_rows(*_kernel_arguments(flagged, arrays, pack, capacity, share, answer))
     return answer

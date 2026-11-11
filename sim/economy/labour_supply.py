@@ -142,7 +142,7 @@ class HourSupply:
         cohort kept in all."""
         if self._bare_plots:
             return labour_supply_plain.settle(self, wage_by_market)
-        table, ids, markets = self._build()
+        table, ids, _markets = self._build()
         names = self.schedules().markets
         wage = numpy.zeros(len(names))
         known = numpy.zeros(len(names), dtype=numpy.bool_)
@@ -151,7 +151,7 @@ class HourSupply:
             if found is not None:
                 wage[position], known[position] = found, True
         kept_by_cohort = labour_offers_kernels.settle_offers(table, wage, known, self._market_hours.exponent, len(ids.cohorts))
-        self.sold = SoldOffers(table, ids, self.rows(), ids.market_names(markets.trade_of_market, markets.area_of_market))
+        self.sold = SoldOffers(table, ids, self.rows(), names)
         cohorts, first_row = numpy.unique(table.cohort, return_index=True)      # kept lists cohorts in the order their first offer came
         cohort_numbers, kept_hours = cohorts.tolist(), kept_by_cohort.tolist()
         self.kept = {ids.cohorts.name(cohort_numbers[each]): kept_hours[cohort_numbers[each]] for each in numpy.argsort(first_row).tolist()}

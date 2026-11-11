@@ -28,7 +28,7 @@ from sim.world.land import LAND_MATERIAL
 from sim.world.plant_baskets import ENERGY_CARRIERS
 from sim.prices import disposal_cost  # noqa: E402
 from sim.prices.joint_allocation import allocate_joint_cost  # noqa: E402
-from sim.prices.price_change import relative_price_change  # noqa: E402
+from sim.prices.price_change import PRICE_CHANGE_SCALE_FLOOR_HOURS_PER_UNIT, relative_price_change  # noqa: E402
 from sim.world.capital_market import stand_yearly_share  # noqa: E402  (CAPITAL)
 # DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE, INITIAL_PRICE_
 # GUESS_HOURS and GROWTH_BOUND_HOURS live in sim/algorithm_parameters.py and
@@ -41,7 +41,7 @@ from sim.world.capital_market import stand_yearly_share  # noqa: E402  (CAPITAL)
 # there.
 from sim.algorithm_parameters import (           # noqa: E402  (see sys.path above)
     DAMPING_FACTOR, MAXIMUM_ITERATIONS, CONVERGENCE_TOLERANCE,
-    INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS)
+    INITIAL_PRICE_GUESS_HOURS, GROWTH_BOUND_HOURS, UNDAMPED_OPENING_ROUNDS)
 
 
 
@@ -989,6 +989,10 @@ def _solve_round_update_prices(resolvable_materials, prices, candidates_by_mater
             if best_price is None or bounded_price < best_price:
                 best_price, best_recipe = bounded_price, recipe
         chosen_recipe_by_material[material] = best_recipe
+        # A material that costs nothing to make (a waste nobody pays for) is priced at the smallest price told from
+        # zero, never at zero: a zero price reads as free, and the markets leave a good priced at zero out.
+        if 0.0 <= best_price < PRICE_CHANGE_SCALE_FLOOR_HOURS_PER_UNIT:
+            best_price = PRICE_CHANGE_SCALE_FLOOR_HOURS_PER_UNIT
         damped_price = (1.0 - damping) * prices[material] + damping * best_price
         new_prices[material] = damped_price
         max_relative_change = max(
@@ -1000,8 +1004,11 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
          damping=DAMPING_FACTOR, max_iterations=MAXIMUM_ITERATIONS,
          tolerance=CONVERGENCE_TOLERANCE, rent_hours_per_kg_by_material=None,
          reference_price_by_material=None, interest_rate=0.0, dump_minimum_distance_kilometres=0.0,
-         initial_prices=None):
+         initial_prices=None, undamped_rounds=UNDAMPED_OPENING_ROUNDS):
     """Damped Jacobi fixed-point iteration over every resolvable material.
+
+    The first `undamped_rounds` rounds take each material's cheapest price outright (damping 1), which reaches
+    a chain's exact prices in as many rounds as the chain is long; the damped rounds follow.
 
     Every material updates from the SAME round's starting prices (Jacobi,
     not Gauss-Seidel) so that the result does not depend on dict iteration
@@ -1059,6 +1066,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
     suppliers_by_carrier = solve_prices_round.band_suppliers(required_grades_by_carrier, production_entries)
     for iteration in range(1, max_iterations + 1):
         iterations_run = iteration
+        round_damping = 1.0 if iteration <= undamped_rounds else damping
 
         band_price_by_carrier = solve_prices_round.band_prices(
             required_grades_by_carrier, suppliers_by_carrier, prices, wage_by_trade,
@@ -1073,7 +1081,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
             reference_price_by_material)
 
         prices, final_residual = _solve_round_update_prices(
-            resolvable_materials, prices, candidates_by_material, damping, chosen_recipe_by_material,
+            resolvable_materials, prices, candidates_by_material, round_damping, chosen_recipe_by_material,
             {material: -cost for material, cost in disposal_costs.items()})
         if final_residual < tolerance:
             break

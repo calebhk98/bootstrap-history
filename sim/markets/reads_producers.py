@@ -60,11 +60,12 @@ class ProducerReads:
                 found.setdefault(good, []).append((tile, recipe_id))
         return found
 
-    def output_tonnes_by_tile(self):
-        """Tonnes of each good the producers made on each tile last year."""
-        return {tile: {good: units * per_unit for good, units in row.items()
-                       for per_unit in [tonnes_per_unit(good)] if per_unit is not None}
-                for tile, row in economy_api.output_by_tile(self._agent.economy()).items()}
+    def output_tonnes_of(self, material):
+        """{tile: tonnes of `material` the producers made there last year}, in tile order, for every tile that made anything; zero
+        where the material has no mass."""
+        per_unit = tonnes_per_unit(material)
+        units = economy_api.output_of(self._agent.economy(), material)
+        return {tile: 0.0 if per_unit is None else made * per_unit for tile, made in units.items()}
 
     def people_by_trade(self):
         """The labour core's people by trade, or None before the economy has been opened."""

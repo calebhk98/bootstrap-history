@@ -1163,8 +1163,10 @@ def main():
                            "numpy vector op counts by its machine instructions. The first year (kernel loading) is reported "
                            "apart from the warm years. Refuses with a cause when valgrind is missing. Wall time on a quiet "
                            "machine remains the final check for the speed goal.")
-    sub.add_parser("compile-kernels", help="compile every numba kernel the game uses into numba's cache, so a first game "
-                   "year does not spend a minute compiling (run once per environment; minutes on a cold cache)")
+    subparser = sub.add_parser("compile-kernels", help="compile every numba kernel the game uses into numba's cache, so a first "
+                               "game year does not spend minutes compiling (run once per environment)")
+    subparser.add_argument("--jobs", type=int, default=0, help="compile in this many processes (default: the cores available)")
+    subparser.add_argument("--internal", nargs="+", help=argparse.SUPPRESS)
     subparser = sub.add_parser("spin-up-trace", help="run a civilisation's hidden spin-up for many years and print the "
                                "price level, the money stock and the mint's strikes by year; slow (minutes), or with "
                                "--fixture a hand-built economy in under a second")

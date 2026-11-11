@@ -11,14 +11,16 @@ from sim.compiled_tables.growth import NO_ROOM, claim_row
 from sim.jit import njit
 
 
-@njit
+@njit(inline="always")
 def commit_money(plan, balances, agents):
     """Write every planned balance, mark it seen, and mark its agent known."""
+    keys, holders, after = plan.key, plan.holder, plan.after
+    amounts, seen, known = balances.amount, balances.seen, agents.known
     for row in range(plan.row_count[0]):
-        cell = plan.key[row]
-        balances.amount[cell] = plan.after[row]
-        balances.seen[cell] = 1
-        agents.known[plan.holder[row]] = 1
+        cell = keys[row]
+        amounts[cell] = after[row]
+        seen[cell] = 1
+        known[holders[row]] = 1
 
 
 @njit
@@ -45,20 +47,22 @@ def create_slot(stocks, stock_index, agents, key):
     return slot
 
 
-@njit
+@njit(inline="always")
 def commit_stock(plan, stocks, stock_index, agents):
     """Write every planned stock quantity, making the slots that do not exist yet in plan order, and mark the agent known.
-    Returns OK or TABLE_FULL."""
+    Returns OK or TABLE_FULL. The columns are held in hand; a table is passed on whole only to make a slot."""
+    keys, holders, slots, after = plan.key, plan.holder, plan.slot, plan.after
+    stock_keys, quantity, known = stocks.key, stocks.quantity, agents.known
     for row in range(plan.row_count[0]):
-        slot = plan.slot[row]
+        slot = slots[row]
         if slot == FREE:
-            slot = index_find(stocks.key, stock_index, plan.key[row])
+            slot = index_find(stock_keys, stock_index, keys[row])
         if slot == FREE:
-            slot = create_slot(stocks, stock_index, agents, plan.key[row])
+            slot = create_slot(stocks, stock_index, agents, keys[row])
             if slot == NO_ROOM:
                 return TABLE_FULL
-        stocks.quantity[slot] = plan.after[row]
-        agents.known[plan.holder[row]] = 1
+        quantity[slot] = after[row]
+        known[holders[row]] = 1
     return OK
 
 
@@ -123,7 +127,7 @@ def gross_so_far(total, seen):
     return total if seen != 0 else 0.0
 
 
-@njit
+@njit(inline="always")
 def record_transfers(transfers, first, last, money):
     """The records of transfer postings first .. last - 1: the currency's gross total, and the edge payer's and payee's year
     volume and net."""
@@ -139,7 +143,7 @@ def record_transfers(transfers, first, last, money):
             record_edge_money(money.balances, payee * money.stride + currency, amount, -amount)
 
 
-@njit
+@njit(inline="always")
 def record_moves(moves, first, last, goods):
     """The records of goods-move postings first .. last - 1, in order: the good's gross total, the purpose flow, the edge giver's
     and receiver's goods. OK or TABLE_FULL. The columns are held in hand and a table is passed on whole only to make a row: a kernel
@@ -178,17 +182,19 @@ def record_moves(moves, first, last, goods):
 def record_settled_money(agents_in, paid, received, currency, money):
     """The edge records of a summed settlement: each edge agent with something paid or received gets volume paid + received
     and net paid - received."""
+    is_edge, stride = money.agents.is_edge, money.stride
     for position in range(len(agents_in)):
-        if (paid[position] != 0.0 or received[position] != 0.0) and money.agents.is_edge[agents_in[position]] != 0:
-            record_edge_money(money.balances, agents_in[position] * money.stride + currency,
+        if (paid[position] != 0.0 or received[position] != 0.0) and is_edge[agents_in[position]] != 0:
+            record_edge_money(money.balances, agents_in[position] * stride + currency,
                               paid[position] + received[position], paid[position] - received[position])
 
 
 @njit
 def record_settled_stock(holders, good, given, taken, goods):
     """record_settled_money for one good's stock cells. OK or TABLE_FULL."""
+    is_edge = goods.agents.is_edge
     for position in range(len(holders)):
-        if (given[position] != 0.0 or taken[position] != 0.0) and goods.agents.is_edge[holders[position]] != 0:
+        if (given[position] != 0.0 or taken[position] != 0.0) and is_edge[holders[position]] != 0:
             code = record_edge_goods(goods.edge_goods, goods.edge_index, holders[position], good,
                                      given[position] + taken[position], given[position] - taken[position])
             if code != OK:

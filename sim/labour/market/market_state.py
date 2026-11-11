@@ -15,12 +15,10 @@ import numpy
 
 from sim.rekey import rename_text
 
-from . import aptitude, state_reads
+from . import aptitude, state_plain, state_reads
 from .state_ids import LabourIds
 from .state_tables import AREAS, Areas, HIRED, Hired, MARKETS, Markets, TRAINEES, Trainees, WORKERS, Workers
 from .state_fields import AreaMap, AsksField, HiredField, TraineesField, WagesField, WorkersField
-
-_FIELDS = (("workers", WorkersField), ("trainees", TraineesField), ("wages", WagesField), ("hired_hours", HiredField), ("asks", AsksField))
 
 
 def _spliced(table, spec, start: int, stop: int, replacement: Dict[str, numpy.ndarray], widths: Dict[str, int]):
@@ -37,14 +35,6 @@ def _spliced(table, spec, start: int, stop: int, replacement: Dict[str, numpy.nd
         columns.append(numpy.concatenate((old[:start], new, old[stop:rows])))
     total = rows - (stop - start) + new_length
     return type(table)(numpy.array([total], dtype=numpy.int64), numpy.array([total], dtype=numpy.int64), *columns)
-
-
-def _plain_value(value):
-    if isinstance(value, float):
-        return value
-    if hasattr(value, "items"):
-        return dict(value.items())
-    return [each.plain() if hasattr(each, "plain") else each for each in value]
 
 
 class MarketState:
@@ -336,8 +326,7 @@ class MarketState:
 
     def to_plain(self) -> dict:
         """Nested dicts and lists of numbers and strings: what a save holds."""
-        return {name: {area: {trade: _plain_value(value) for trade, value in by_trade.items()}
-                       for area, by_trade in AreaMap(self, field).items()} for name, field in _FIELDS}
+        return state_plain.to_plain(self)
 
     def copy(self) -> "MarketState":
         """An independent copy (tables and numbering)."""

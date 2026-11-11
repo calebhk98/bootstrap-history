@@ -8,6 +8,7 @@ from sim.labour.market import aptitude, expectations, switching_kernel, training
 from sim.labour.market.switching import (NEGLIGIBLE_MOVE_SHARE, PLAN_REUSE_TOLERANCE, REMAINING_CAREER_SHARE,
                                          RETRAINING_SHARE_WITHIN_FAMILY, SWITCHING_CONSIDERATION_SHARE_PER_YEAR,
                                          SWITCHING_TASTE_SCALE)
+from sim.labour.market.switching_discounts import discount_tables
 from sim.labour.market.records import MarketState, YearInputs, YearReport
 from sim.labour.market.trades import fallback_trade
 
@@ -75,6 +76,7 @@ class _AreaPlan:
         source_families = [inputs.trades[trade].family for trade in sources]
         same = np.array([[family == other for other in fixed.families] for family in source_families]).reshape(count_sources, count_destinations)
         self.training_share = np.where(same, RETRAINING_SHARE_WITHIN_FAMILY, 1.0)
+        self.retrained = same
         self.valid = np.zeros((count_sources, 2), np.bool_)
         self.then = np.zeros((count_sources, 2, count_destinations))
         self.targets = np.zeros((count_sources, 2, count_destinations), np.bool_)
@@ -101,16 +103,18 @@ def _planned_moves(inputs, workers, plan: _AreaPlan, later_income) -> Optional[_
     people of each ability band sent to each destination the band picks (`switching_kernel.plan_area` works out the odds)."""
     rounds = expectations.DECISION_ROUNDS_PER_YEAR
     counts = np.array([workers[source] for source in plan.sources])
+    discounts = discount_tables(inputs.discount_rate, inputs.career_years, REMAINING_CAREER_SHARE, plan.fixed.years,
+                                RETRAINING_SHARE_WITHIN_FAMILY)
     switching_kernel.plan_area(
-        counts, plan.income, plan.idle, plan.baseline, later_income, plan.vacancies, plan.fixed.chances, plan.fixed.years,
-        plan.training_share, plan.source_position, plan.source_is_fallback, plan.fixed.fallback_position, plan.subsistence,
+        counts, plan.income, plan.idle, plan.baseline, later_income, plan.vacancies, plan.fixed.chances, discounts,
+        plan.retrained, plan.source_position, plan.source_is_fallback, plan.fixed.fallback_position, plan.subsistence,
         inputs.discount_rate, inputs.career_years, SWITCHING_CONSIDERATION_SHARE_PER_YEAR, REMAINING_CAREER_SHARE,
         PLAN_REUSE_TOLERANCE, SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, plan.valid, plan.then, plan.targets, plan.shares,
         plan.moving, plan.active, plan.considering)
     possible = counts.shape[0] * 2 * len(plan.destinations)
     moves_source, moves_destination = np.empty(possible, np.int64), np.empty(possible, np.int64)
     moves_share, moves_rows = np.empty(possible), np.empty((possible, counts.shape[1]))
-    found = switching_kernel.collect_moves(counts, plan.considering, plan.active, plan.moving, plan.shares, plan.training_share, rounds,
+    found = switching_kernel.collect_moves(counts, plan.considering, plan.active, plan.moving, plan.targets, plan.shares, plan.training_share, rounds,
                                            moves_source, moves_destination, moves_share, moves_rows)
     if found == 0:
         return None

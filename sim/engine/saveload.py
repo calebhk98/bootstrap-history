@@ -1,10 +1,11 @@
 """Reading and writing a save file, and validating one before it is trusted."""
 
-import gzip, json, os, random
+import gzip, json, os, pickle, random
 
 from sim.game_version import GAME_VERSION
 from sim.refusal import Refusal, cause_of
 
+from sim.collection_paused import collection_paused
 from .data import WAGES
 from . import game_assembly, node_rederive
 from sim.knowledge.api import RevealNodes, fog_mismatch
@@ -24,9 +25,10 @@ class EconomyNotOpened(ValueError):
 	"""The game was built without opening its economy and the save cannot stand in for it; build it the long way."""
 
 
-def state_text(sim):
-	"""The whole game as JSON text, from the live sim.state."""
-	sim.view("flush_agent_record")()
+def _encoded_state(sim, encode):
+	"""`encode` applied to the serialized live sim.state, inside the scope where the economy record is passed as it is."""
+	with collection_paused():      # building the text makes many lists that live to its end; a collection walks the whole heap for none
+		sim.view("flush_agent_record")()
 	sim.state._civ = sim.civ.get("id")
 	sim.state._immortal = bool(sim.cfg.get("immortal", True))
 	sim.state._seed = sim.seed
@@ -35,8 +37,31 @@ def state_text(sim):
 	sim.send(CaptureReadings())      # the demand the last throttle saw is carried in the save
 
 	# the agent economy's record is most of the file and already plain JSON: the encoder takes it as it is
-	with verbatim(sim.view("agent_economy_store")().get("record")):
-		return state_json(serialize_state(sim.state))
+	with verbatim(sim.view("agent_economy_store")().get("record")), collection_paused():
+		return encode(serialize_state(sim.state))
+
+
+def state_text(sim):
+	"""The whole game as JSON text, from the live sim.state."""
+	return _encoded_state(sim, state_json)
+
+
+def state_snapshot(sim):
+	"""The game held for a rollback, cheaper to take than `state_text`: the serialized state pickled (a copy that later
+	play cannot change), or its text when something in it does not pickle. `snapshot_text` turns it into the text
+	`state_text` would have given."""
+	def held(serialized):
+		try:
+			return ("pickle", pickle.dumps(serialized, protocol=pickle.HIGHEST_PROTOCOL))
+		except (pickle.PicklingError, TypeError, AttributeError, RecursionError):      # anything that will not pickle is held as text
+			return ("text", state_json(serialized))
+	return _encoded_state(sim, held)
+
+
+def snapshot_text(held):
+	"""The JSON text of a game `state_snapshot` held, the same text `state_text` gave when it was taken."""
+	kind, data = held
+	return data if kind == "text" else state_json(pickle.loads(data))
 
 
 def state_json(serialized):

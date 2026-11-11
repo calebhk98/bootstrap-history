@@ -40,6 +40,23 @@ class KeptCarriageCostsTest(unittest.TestCase):
         self.assertEqual(set(fewer["x"]), {"x", "y", "z"})
         self.assertEqual(set(result["x"]), {"x", "y", "z"})
 
+    def test_a_technique_no_search_reads_leaves_the_kept_costs(self):
+        search, calls = counting_search()
+        kept = {}
+        relevant = frozenset({"lane_node"})
+        first = kept_carriage_costs(kept, ["x"], ["x", "y"], ["road"], frozenset({"a"}), {}, search, relevant)
+        again = kept_carriage_costs(kept, ["x"], ["x", "y"], ["road"], frozenset({"a", "literacy"}), {}, search, relevant)
+        self.assertEqual(first, again)
+        self.assertEqual(calls, [("x",)])
+
+    def test_a_technique_a_search_reads_searches_again(self):
+        search, calls = counting_search()
+        kept = {}
+        relevant = frozenset({"lane_node"})
+        kept_carriage_costs(kept, ["x"], ["x", "y"], ["road"], frozenset({"a"}), {}, search, relevant)
+        kept_carriage_costs(kept, ["x"], ["x", "y"], ["road"], frozenset({"a", "lane_node"}), {}, search, relevant)
+        self.assertEqual(calls, [("x",), ("x",)])
+
     def test_a_new_source_is_searched_without_repeating_the_kept_ones(self):
         search, calls = counting_search()
         kept = {}

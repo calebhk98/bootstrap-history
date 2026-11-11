@@ -244,7 +244,7 @@ class RealDataJointSmeltTests(unittest.TestCase):
     def test_a_recorded_waste_with_no_reference_is_worth_nothing_and_not_split_by_mass(self):
         for material in ("wood_tar_kg", "coal_tar_kg"):
             self.assertNotIn(material, self.solved.by_mass)
-            self.assertLess(abs(self.prices[material]), 1e-9, material)
+            self.assertLessEqual(abs(self.prices[material]), 1e-9, material)    # the smallest price told from zero
 
     def test_the_main_product_of_a_run_with_a_waste_carries_the_whole_batch(self):
         # the retort makes charcoal and tar from the wood a charcoal burner uses; tar worth nothing leaves

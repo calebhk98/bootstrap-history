@@ -55,7 +55,7 @@ from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import standing_block
 from .year_ledger import YearLedger
-from .collection_paused import collection_paused
+from sim.collection_paused import collection_paused
 
 
 @dataclass
@@ -289,7 +289,8 @@ class Economy:
         received = dict(interest)
         for payment in rent:
             received[payment.payee] = received.get(payment.payee, 0.0) + payment.amount
-        arrays = self._year_arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received)
+        arrays = self._year_arrays = close_agents(setup, record, close_view, ledger, self.area_map, self.carriage, arrays, received,
+                                                 lambda kept: setattr(self, "_year_arrays", kept))
         arrays = self._year_arrays = arrays.sync(setup, record, close_view)      # the memory is read once for entry and the restake
         open_entrants(setup, record, close_view, self.area_map, ledger.unmet_demand, self.carriage,
                       standing_block(ledger, inputs.standing_bids), arrays)
@@ -367,6 +368,7 @@ class Economy:
         offered = sold_hours_by_worker(offers)
         grown_steps = []       # a cohort's grown goods are one batch; the batches are posted together, in cohort order
         store = table_of(record.cohorts)
+        spare_ids, spare_hours, grown_ids, grown_goods = [], [], [], []      # the ledger's figures, written in blocks once all cohorts are done
         for cohort in store.figures(store.order()):
             cohort_id = cohort.agent_id
             idle = (offered.get(cohort_id, 0.0) + kept.get(cohort_id, 0.0) - ledger.hours_sold.get(cohort_id, 0.0)
@@ -379,14 +381,18 @@ class Economy:
                                                  held.get(cohort.agent_id, 0.0), hours_used)
             if hours_used:
                 ledger.own_plot_hours[cohort_id] = hours_used
-            ledger.spare_hours[cohort_id] = max(0.0, idle - sum(hours_used.values()))
+            spare_ids.append(cohort_id)
+            spare_hours.append(max(0.0, idle - sum(hours_used.values())))
             if moves:
                 grown_steps.append(((), moves))
-                ledger.grown[cohort_id] = grown
+                grown_ids.append(cohort_id)
+                grown_goods.append(grown)
                 ledger.grown_units[cohort_id] = units
                 hectares = plot_hectares(units, options, setup.recipes, setup.land_per_run,
                                          (tile.fertility if tile else 0.0) * harvest_factor)
                 self._own_hectares[cohort.tile] = self._own_hectares.get(cohort.tile, 0.0) + hectares
+        ledger.spare_hours.set_many(spare_ids, np.array(spare_hours, dtype=np.float64))
+        ledger.grown.replace_many(grown_ids, grown_goods)
         post_in_order(record.book, grown_steps)
 
     def _service_loans(self, year: int) -> Dict[str, float]:
@@ -447,6 +453,7 @@ class Economy:
 
         asked, worth = lend_requests.asked_and_worth(requests, plant_worth_of)
         plant_runs: Dict[str, float] = {}
+        plant_bids = OrderRows(order_book, LOAN)        # every borrower's plant bids, written once
         for borrower, principal in funded:
             runs = record.credit.expansion_runs.get(borrower, 0.0)
             if tile_of[borrower] is None or runs <= 0.0 or not asked.get(borrower):
@@ -455,7 +462,8 @@ class Economy:
             plant_runs[borrower] = plant_runs.get(borrower, 0.0) + funded_runs
             # no dearer than the price at which the new plant would earn just the loan's rate
             self._bid_for_plant(borrower, tile_of[borrower], recipe_of[borrower], funded_runs, principal, worth.get(borrower, 1.0), view,
-                                order_book)
+                                plant_bids)
+        plant_bids.write()
         record.credit.clear_expansion()
         return plant_runs
 
@@ -469,6 +477,7 @@ class Economy:
         worn = record.credit.take_rebuilds()
         cash_of = record.book.balance_by_agent(sorted(worn), money)
         figures = producer_blocks.figures_by_id(record.producers, sorted(worn))
+        plant_bids = OrderRows(order_book, LOAN)        # every producer's plant bids, written once
         for producer_id, runs in sorted(worn.items()):
             producer = figures.get(producer_id)
             if producer is None or runs <= 0.0:
@@ -482,13 +491,14 @@ class Economy:
             if earning is None or not earning > rate or cash <= 0.0:
                 continue
             self._bid_for_plant(producer_id, producer.tile, producer.recipe_id, runs, cash,
-                                plant_worth_ratio(earning, rate, recipe.plant_life_years), view, order_book)
+                                plant_worth_ratio(earning, rate, recipe.plant_life_years), view, plant_bids)
             rebuilt[producer_id] = runs
+        plant_bids.write()
         return rebuilt
 
-    def _bid_for_plant(self, producer_id, tile, recipe_id, runs, budget, worth_ratio, view, order_book) -> None:
+    def _bid_for_plant(self, producer_id, tile, recipe_id, runs, budget, worth_ratio, view, rows) -> None:
+        """The producer's bids for the plant goods its funded runs need, added to `rows` (the caller writes them)."""
         recipe = self.setup.recipes[recipe_id]
-        rows = OrderRows(order_book, LOAN)
         for good, per_run in sorted(recipe.plant_goods.items()):
             if good not in self.area_map.goods():
                 continue
@@ -498,7 +508,6 @@ class Economy:
                 continue
             rows.bid(producer_id, good, area, tile, per_run * runs, 0.0, price, 0.0, budget,
                      maximum_price=price * max(1.0, worth_ratio))
-        rows.write()
 
     def _build_plant(self, plant_runs: Dict[str, float]) -> None:
         """Plant goods a producer received are built in; capacity grows by the share that arrived."""

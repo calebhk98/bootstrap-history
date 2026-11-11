@@ -1,7 +1,6 @@
 """The price-solve cache and the warm start of an in-game solve, called on stand-ins. `solve_cache.cached_json` computes on a miss,
 reads on a hit, recomputes when the cache directory is gone and still answers when the directory cannot be written, cold and warm
-alike. `solved_prices_at_wages` solves a rate away from the starting one starting from the solve at the starting rate (itself
-started cold), so its answer depends on its own inputs only. The solver is replaced by a recorder, the production catalogue by a
+alike. `solved_prices_at_wages` solves every rate cold, so its answer depends on its own inputs only. The solver is replaced by a recorder, the production catalogue by a
 small one."""
 
 QUICK_TOPIC = True
@@ -62,7 +61,7 @@ try:
 finally:
     shutil.rmtree(shipped_directory, ignore_errors=True)
 
-# ---- warm start
+# ---- one cold solve for each rate
 STARTING_RATE = 0.05
 CATALOGUE = {}
 
@@ -71,9 +70,9 @@ CIVILISATION = {"id": "stand_in", "starting_interest_rate": STARTING_RATE, "home
 
 
 def solve_json(production_entries, gate_nodes_held, document_ratios, civilization, admitted, interest_rate,
-              farmed_hectares, in_game, initial_prices, rent):
-    solve_json.calls.append({"rate": interest_rate, "initial": initial_prices, "in_game": in_game})
-    return {"prices_in_labour_hours": {"iron": 10.0 * interest_rate + (1.0 if initial_prices else 0.0)},
+              farmed_hectares, in_game, rent):
+    solve_json.calls.append({"rate": interest_rate, "in_game": in_game})
+    return {"prices_in_labour_hours": {"iron": 10.0 * interest_rate},
             "resolvable_materials": ["iron"], "chosen_recipe_by_material": {}, "converged": True, "iterations_run": 3}
 
 
@@ -91,17 +90,14 @@ def price_at(rate, entries=CATALOGUE):
 
 
 at_start, calls_at_start = price_at(STARTING_RATE)
-check("a solve at the starting rate is cold: one solve, from no prices", len(calls_at_start) == 1 and calls_at_start[0]["initial"] is None,
-      calls_at_start)
+check("a solve at the starting rate is one in-game solve", len(calls_at_start) == 1 and calls_at_start[0]["in_game"], calls_at_start)
 away, calls_away = price_at(STARTING_RATE + 0.04)
-check("a solve at another rate first solves at the starting rate, cold",
-      calls_away[0]["rate"] == STARTING_RATE and calls_away[0]["initial"] is None, calls_away)
-check("...and starts the solve at its own rate from that solve's prices",
-      calls_away[1]["rate"] == STARTING_RATE + 0.04 and calls_away[1]["initial"] == at_start.prices_in_labour_hours, calls_away)
+check("a solve at another rate is one solve at its own rate, with no solve at the starting rate first",
+      len(calls_away) == 1 and calls_away[0]["rate"] == STARTING_RATE + 0.04, calls_away)
 check("the in-game solve stops at the engine's tolerance rather than exactly", all(call["in_game"] for call in calls_away))
 farther, _calls = price_at(STARTING_RATE + 0.09)
 again, _calls = price_at(STARTING_RATE + 0.04)
 check("a solve's answer does not depend on which solves ran before it", again.prices_in_labour_hours == away.prices_in_labour_hours)
 elsewhere, calls_elsewhere = price_at(STARTING_RATE + 0.04, entries={"another": {"requires_node": None}})
-check("a catalogue other than the game's is solved exactly, with no warm start",
-      len(calls_elsewhere) == 1 and calls_elsewhere[0]["initial"] is None and not calls_elsewhere[0]["in_game"], calls_elsewhere)
+check("a catalogue other than the game's is solved exactly",
+      len(calls_elsewhere) == 1 and not calls_elsewhere[0]["in_game"], calls_elsewhere)

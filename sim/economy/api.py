@@ -27,6 +27,7 @@ from .market_memory import KEY_SEPARATOR, market_key
 from .merchants_dispatch_tables import (DispatchLegs, DispatchMerchants, DispatchPairs, DispatchRoutes, LEGS as DISPATCH_LEGS,      # the dispatch tables (kernel_signatures declares the kernels only a fleet year reaches)
                                         MERCHANTS as DISPATCH_MERCHANTS, PAIRS as DISPATCH_PAIRS, ROUTES as DISPATCH_ROUTES)
 from .market_table_specs import GOODS_MARKETS, GoodsMarkets      # the goods market table's spec and type (kernel_signatures declares its kernels from them)
+from .goods_order_tables import GOODS_BIDS, GOODS_OFFERS, GoodsBids, GoodsOffers    # the order tables' specs and types (likewise)
 from .priced_need_tables import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows      # the priced-need batch's specs and types (kernel_signatures declares its kernel from them)
 from . import entry_plan_steps, entry_plan_table      # entry's plan tables (kernel_signatures declares the plan kernels from them)
 from . import household_offer_kernels      # the household offer kernels (kernel_signatures declares the ones no fixture year reaches)
@@ -73,7 +74,7 @@ __all__ = [
     "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "bank_dividends_to", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
     "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
-    "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_by_tile",
+    "land_rent_paid_by_tile", "land_rent_at_tile", "DEPOSIT_BANKING", "POOLED_FUNDS", "INSURANCE_UNDERWRITING", "RISK_POOLING", "BOND_MARKET", "SHARE_TRADING", "country_figures", "carried_book", "idle_hours_by_trade", "output_of",
     "person_equivalent_unemployment", "labour_market_rows",
     "actor_fundable_amount", "risk_premium", "lender_listing", "note_pool_posting",
     "found_bank_from_outside", "people_by_trade", "people_by_tile_and_trade", "hours_paid_by_employer", "add_workers", "hours_offered_in_area_of",
@@ -161,9 +162,11 @@ def land_rent_at_tile(economy, tile, country=None):
     return rent if rent > 0.0 else land_rent_per_hectare(economy, country)
 
 
-def output_by_tile(economy):
-    """What the producers made last year, tile -> good -> units, as a sorted copy."""
-    return {tile: dict(sorted(row.items())) for tile, row in sorted(economy.record.goods.output_by_tile.items())}
+def output_of(economy, good):
+    """{tile: units of `good` the producers made last year}, in tile order, for every tile that made anything (zero where it made
+    other goods only)."""
+    by_tile = economy.record.goods.output_by_tile
+    return {tile: by_tile[tile].get(good, 0.0) for tile in sorted(by_tile)}
 
 
 def land_rent_paid_by_tile(economy):

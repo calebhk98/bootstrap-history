@@ -45,6 +45,112 @@ So the three-second limit is met and the one-second goal is not. The kernels alo
 the year is about one second, spread so thinly that no single function has more than a few hundredths of a second of own
 time.
 
+## Second branch, `year-speed-one-second`: what a player pays, and what was ruled out
+
+Measured on this branch (Rome, a 4-core machine; commands with each). The headline: the year itself moved a little, and
+most of what a player waits for was outside the year that `year-time` measures.
+
+**The owner's accounting.** A game is played on fresh environments with limited internet, so every one-time cost is spread
+over the game's 500 years: a 250 s compile adds half a second to every year. Count first-run costs with the year.
+
+**What a played year costs** (an agent playtest with only `playtest/BRIEF.md`; its command log, then the same save driven
+through the protocol): a one-year `step` was the year plus a full copy of the game made before every year
+(`sim/ui/proto/step_atomic.py`: `state_text`, the whole save as JSON, so a year that raises can be rolled back; the owner
+keeps it per year). `state_text` was made faster with byte-identical text (the economy record's serializers read whole
+columns; time it with a loaded game and `saveload.state_text`).
+
+**Fresh-environment costs.**
+- Kernel compile: one core, minutes. `compile-kernels` now compiles on every core (`sim/ui/compile_parallel.py`: argument
+  types recorded from the small fixture with numba off, shares weighed by each kernel's source plus everything it calls),
+  and a game process on a cold kernel cache starts it itself (`sim/ui/cold_compile.py`). A fused kernel compiles its callees
+  inside itself: the goods clearing kernel alone takes about a minute, which sets a floor on the parallel compile (time one
+  kernel with `kernel.compile(signature)` on a fresh `NUMBA_CACHE_DIR`).
+- The shipped openings (`openings/`) were stale, so a fresh environment spun Rome's opening up from scratch (minutes) and
+  ran a whole second opening solve for the backing margin. `tools/check_openings_current.py` (in `tools/done_check.sh`) lists
+  the stale ones from `openings/manifest.json`; rebuild with `openings --prune` as the last commit before a pull request.
+- Check that a cache built only by `compile-kernels` leaves nothing to compile: count `numba:compile` events
+  (`numba.core.event.register`) over a Rome and an England year. A kernel a fixture reaches only inside a fused kernel
+  needs its own signature in `sim/ui/kernel_signatures.py`.
+
+**Within the year.**
+- One compiled call per phase pays when the phase made many small kernel calls: the close went from about 1250 kernel
+  calls to about 170 and lost about a quarter of its time, bit for bit (`tools/measure/close_breakdown.py`). Plain
+  arithmetic moved into a kernel while the per-item Python gathers stay saves little. `phase_ceiling.py` lists kernel
+  calls per phase: start where they are many.
+- Fusing the goods loop's clearing chain and settlement into one kernel call per good is exact but small (hundredths of a
+  second): the per-good Python is spread over many small steps, and entering a kernel with many table arguments costs tens
+  of microseconds.
+- The route caches keyed on every held technique, so any technique learned re-ran every route search; they now key on the
+  techniques a search reads.
+
+**Kernel algorithms (bit-identical, merged):** the goods price search, the respend rounds, labour switching and hiring,
+and the settlement and book kernels were each sped up with every output bit-equal on a captured year (work done once and
+reused across buyers or steps, incremental updates where few terms move, index chains resolved once, a table's columns
+taken out of their bundle before a hot loop: reading `table.column` inside a loop costs reference counting on every array
+in the table). Capture a kernel's real arguments over a warm year and run old and new side by side; keep the old kernel as
+the test's reference.
+
+**Not merged, for a follow-up:** a faster `clear_figures` / `salvage_and_search` inside `decide_markets` (shared price curves,
+kept rows, rounds over the short bids only) was bit-equal on Rome's and England's captured calls, but on books with an
+infinite or undefined ask, budget, maximum or wanted quantity it answers differently from the old rules (where the old
+rounds spread NaN over the market, the new ones give some finite quantities). Such values do occur upstream
+(`goods_decide_inputs_kernel` sets infinite costs and undefined expected prices). Redo it with the old full rounds for any
+market with a figure that is not finite (`goods_market_kernels.allocate_arrays` needs each bid's curve reference and
+exponent, so they must reach `sorted_figures`), and a test that injects inf and nan into random books against
+`allocate_arrays`. Worth about a third of those stages (about 10 ms of a Rome year).
+
+**Warm-save digests do not cover a new game.** A bug in the close's batched share pricing (a market's bids read at the wrong
+place when its clearing order was shorter than its columns) left both warm digests unchanged but changed a new Rome game's
+opening entirely; only the slow tier's `protocol_golden` caught it. Check every change on a new game too, not only on saves:
+from an empty `ROME_CACHE_DIR` (with `NUMBA_CACHE_DIR` pointed at the checkout's compiled kernels), run
+`printf '{"cmd":"state"}\n{"cmd":"quit"}\n' | PYTHONHASHSEED=1 python3 sim/simulator.py agent --civ rome_100ad --seed 7
+--deterministic --no-events --horizon 30 --session NEW.json` on the base and on the change and compare the replies; England's
+opening is a quicker first test but did not show this bug. A batched kernel's test must include inputs whose parts have
+different lengths (here an order shorter than its columns): a random test that builds every part from the same list never
+meets the case.
+
+**A correction to commit "the close's share pricing asked about recipe slots after a row's first empty slot".** Its message
+says that change fixed a `KeyError: 'meat_kg'` in one civilisation's opening. It did not: the crash is Complaint 966 (the
+mod civilisation `sample_egypt_100bc_e7k2:egypt`, which raises the same error on `main` through `expected_sales`; on this
+branch the share pricer reaches `area_of` first). The change itself stands: it makes the batched pricer read the same slots
+the row-by-row one read (tested against that loop).
+
+**A new year's price solves were hidden from every measurement.** `year-time` steps the same years from the same save, so
+the price solves a year needs (`prices/prices.py` `solved_prices_at_wages`, reached from `price_tables` and
+`material_prices`; the cache key includes the year's wages) are computed on the first run and read from `price_solves`
+after. In play every year is new: about four to six solves a Rome year, about half a second, paid every year. Measure with
+the `price_solves` cache emptied (or over years never stepped before) and count the misses of `solve_cache.cached_json`.
+
+**A write stamp on the book is cheap to place.** Balances are committed in `sim/book_commit.py` (`commit_money`,
+`commit_stock`); the other writers are `book_record.py` (a direct stock setter and the merge of duplicate rows on load).
+A stamp bumped there would let views over balances (the coin stock's value, read several times a year) be cached.
+
+**One-digit changes grow.** A hiring-kernel variant that moved floats by about 1e-14 and no discrete outcome on its own
+calls gave a Rome save differing in hundreds of thousands of leaves two stepped years later: a change that moves any bit
+cannot be checked by comparing games, only by tests of the kernel itself. Every change merged here is bit-identical.
+
+**Measured and ruled out** (numbers in the branch's pull request):
+- Cython over the plain-Python modules (built unchanged, same digest): no faster, slower to start, and a long build.
+- GPU: the kernels are a third of the year; the rest is Python.
+- `parallel=True` kernels (bit-identical when each iteration writes its own outputs): small gain on an idle machine,
+  slower under load (threads sleep between short calls), and more compile.
+- Garbage-collector policies: the collector's cost is in its young collections; freezing each year saves nothing.
+- Skipping the epidemic forecast nobody reads that year changes what later readers see (the forecast is cached by its
+  first reader).
+
+**Measuring.**
+- `year-time` and the warm-year tools freeze the loaded heap as a game process does; without it a full collection of the
+  loaded game falls into some years.
+- `tools/measure/phase_ceiling.py`: per phase and per economy call, wall, kernel and Python time and kernel calls, by
+  perf_counter (cProfile, even split, ranks files wrongly here: it charges its own overhead to code with many small calls).
+- `year-time --count-instructions` is load-independent; its pre-compile must cover every kernel a Rome year reaches, or
+  the counted child compiles under valgrind for an hour.
+
+**The owner's rules, as of this branch.** Reproducible within one build (the same save gives the same game, straight or
+saved and loaded), not bit-identical to an older build: a kernel may sum in its own order. No parallel sums (their order
+follows the thread count). The object-first interface and mod overrides stay: a phase compiled as one call keeps the
+current Python path for a rule a mod replaced.
+
 ## What this branch did (pointers, not a list of everything)
 
 - **The book, the market memory and the year ledger are tables** (`sim/compiled_tables/`: `TableSpec` namedtuples of numpy

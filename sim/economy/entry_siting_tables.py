@@ -82,12 +82,24 @@ def land_short_rows(columns, hectares_per_run_by_recipe_row: np.ndarray) -> np.n
     return np.nonzero(takes_land & ~np.isnan(columns.land_run_cap))[0]
 
 
+_factor_rows: dict = {}     # (recipe id, tiles) -> (the factors it was read from, the row), as the setup's factors do not change
+
+
+def _factor_row(recipe_id: str, tile_ids: Sequence[str], factors: Mapping[str, float]) -> np.ndarray:
+    """The setup's factor for the recipe on each tile (one where it has none), read once for a setup."""
+    key = (recipe_id, tuple(tile_ids))
+    kept = _factor_rows.get(key)
+    if kept is None or kept[0] is not factors or kept[2] != len(factors):
+        prefix = recipe_id + RECIPE_TILE_SEPARATOR
+        kept = _factor_rows[key] = (factors, np.array([factors.get(prefix + tile, 1.0) for tile in tile_ids], dtype=np.float64), len(factors))
+    return kept[1]
+
+
 def yield_row(recipe, tile_ids: Sequence[str], factors: Mapping[str, float], limits: Mapping[str, object],
               tile_row: Mapping[str, int]) -> np.ndarray:
     """`sites.yield_at` of the recipe on each tile: the yield its limit on a tile states where it is site-bound, else the
     setup's factor for the recipe on that tile (one where none)."""
-    prefix = recipe.recipe_id + RECIPE_TILE_SEPARATOR
-    row = np.array([factors.get(prefix + tile, 1.0) for tile in tile_ids], dtype=np.float64)
+    row = _factor_row(recipe.recipe_id, tile_ids, factors).copy()
     if recipe.site_bound:
         for tile, limit in limits.items():
             column = tile_row.get(tile)

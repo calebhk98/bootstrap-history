@@ -9,76 +9,54 @@ import numpy as np
 
 from sim.jit import njit
 
+from .switching_discounts import FULL, RETRAINED, YOUNG, annuity, career_gain
+
 
 @njit
-def band_shares(chances, gain, lost, unit, stay_score, young, scale, negligible, shares):
-    """Fill `shares[band, target]` (zero where a target is not picked or is dropped) and return, per band, whether the band
-    moves at all. `chances[target, band]` is the chance of finishing, `gain` and `lost` are per target, scores are in units of `unit`
-    (`stay_score` is already in them)."""
-    count_targets = chances.shape[0]
-    count_bands = chances.shape[1]
-    moves = np.zeros(count_bands, np.bool_)
-    scores = np.empty(count_targets)
-    weights = np.empty(count_targets)
-    for band in range(count_bands):
-        picked = 0
+def band_shares(scores, picked, count, stay_score, young, scale, negligible, shares, moves, weights):
+    """The choice odds of the bands over `count` targets. `scores[band, slot]` is the score of the target in `picked[slot]` (its
+    column in `shares`), in units of the area's subsistence (`stay_score` is already in them). Fills `shares[band, picked[slot]]`
+    (the caller has zeroed them: a target not picked or dropped stays zero) and `moves[band]`, whether the band moves at all
+    (the caller has cleared it). `weights` is a work array `count` long."""
+    for band in range(scores.shape[0]):
+        picked_count = 0
         top = stay_score
-        for target in range(count_targets):
-            shares[band, target] = 0.0
-            score = (chances[target, band] * gain[target] - lost[target]) / unit
-            scores[target] = score
+        for slot in range(count):
+            score = scores[band, slot]
             if score > 0.0 or young:
-                picked += 1
+                picked_count += 1
                 if score > top:
                     top = score
-        if picked == 0:
+        if picked_count == 0:
             continue
         total = 0.0
         heaviest = -1.0
         leader = -1
-        for target in range(count_targets):
-            if scores[target] > 0.0 or young:
-                weights[target] = np.exp((scores[target] - top) / scale)
-                total += weights[target]
-                if weights[target] > heaviest:
-                    heaviest = weights[target]
-                    leader = target
+        for slot in range(count):
+            score = scores[band, slot]
+            if score > 0.0 or young:
+                weights[slot] = np.exp((score - top) / scale) if scale != 1.0 else np.exp(score - top)
+                total += weights[slot]
+                if weights[slot] > heaviest:
+                    heaviest = weights[slot]
+                    leader = slot
             else:
-                weights[target] = -1.0
-        total += np.exp((stay_score - top) / scale)
+                weights[slot] = -1.0
+        total += np.exp((stay_score - top) / scale) if scale != 1.0 else np.exp(stay_score - top)
         cutoff = total * negligible
         dropped = 0.0
-        for target in range(count_targets):
-            if weights[target] >= 0.0:
-                if weights[target] >= cutoff:
-                    shares[band, target] = weights[target] / total
+        for slot in range(count):
+            if weights[slot] >= 0.0:
+                if weights[slot] >= cutoff:
+                    shares[band, picked[slot]] = weights[slot] / total
                 else:
-                    dropped += weights[target]
-        shares[band, leader] += dropped / total
-        if shares[band, leader] < negligible:
-            for target in range(count_targets):
-                shares[band, target] = 0.0
+                    dropped += weights[slot]
+        shares[band, picked[leader]] += dropped / total
+        if shares[band, picked[leader]] < negligible:
+            for slot in range(count):
+                shares[band, picked[slot]] = 0.0
             continue
         moves[band] = True
-    return moves
-
-
-@njit
-def _annuity(rate, years):
-    """`premium.annuity_factor`."""
-    if years <= 0.0:
-        return 0.0
-    if rate <= 0.0:
-        return years
-    return (1.0 - np.exp(-rate * years)) / rate
-
-
-@njit
-def _present_value(income, rate, start, until):
-    """`expectations.present_value`."""
-    if until <= start:
-        return 0.0
-    return income * np.exp(-max(0.0, rate) * start) * _annuity(rate, until - start)
 
 
 @njit
@@ -93,7 +71,14 @@ def _plan_holds(then, later, own, targets, vacancies, tolerance):
 
 
 @njit
-def plan_area(counts, income, idle, baseline, later, vacancies, chances, years, training_share, source_position,
+def _career_scores(chances, gain, lost, unit, destination, scores, slot):
+    """The bands' scores for the destination, in units of `unit`, put in column `slot` of `scores`."""
+    for band in range(scores.shape[0]):
+        scores[band, slot] = (chances[destination, band] * gain - lost) / unit
+
+
+@njit
+def plan_area(counts, income, idle, baseline, later, vacancies, chances, discounts, retrained, source_position,
               source_is_fallback, fallback_position, subsistence, rate, career_years, consideration_floor, remaining_share,
               plan_tolerance, taste, negligible, planned_valid, planned_then, planned_targets, planned_shares, planned_moves,
               active, considering):
@@ -101,13 +86,17 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, years, 
     (`switching._planned_moves`). A group keeps the odds it planned on while no destination's income after training has
     moved past the tolerance; otherwise they are worked out afresh and kept. `planned_*` carry the odds from round to round:
     `planned_shares[source, young, band, destination]` and `planned_moves[source, young, band]` are the answer to read.
-    `active[source, young]` is whether the group weighs a switch at all, `considering` the share of the source's people who do."""
+    `active[source, young]` is whether the group weighs a switch at all, `considering` the share of the source's people who do.
+    `discounts` are the year's tables (`switching_discounts.discount_tables`); `retrained[source, destination]` says a
+    source's established workers train a share of the destination's years."""
     count_sources = counts.shape[0]
     count_bands = counts.shape[1]
     count_destinations = later.shape[0]
     tolerance = plan_tolerance * subsistence
     young_share = 1.0 / career_years if career_years > 0.0 else 0.0
     picked = np.empty(count_destinations, np.int64)
+    scores_room, weights_room = np.empty((count_bands, count_destinations)), np.empty(count_destinations)
+    stay_start, stay_after = np.exp(-max(0.0, rate) * 0.0), annuity(rate, career_years - 0.0)
     for source in range(count_sources):
         weighing = max(consideration_floor, idle[source])
         young_part = min(weighing, young_share)
@@ -123,11 +112,14 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, years, 
                                                                  planned_targets[source, young_flag], vacancies, tolerance):
                 continue
             planned_valid[source, young_flag] = True
-            planned_then[source, young_flag, :] = later
-            planned_targets[source, young_flag, :] = False
-            planned_moves[source, young_flag, :] = False
-            planned_shares[source, young_flag, :, :] = 0.0
-            remaining = career_years if young else career_years * remaining_share
+            for destination in range(count_destinations):      # forget the odds planned before
+                planned_then[source, young_flag, destination] = later[destination]
+                if planned_targets[source, young_flag, destination]:
+                    planned_targets[source, young_flag, destination] = False
+                    for band in range(count_bands):
+                        planned_shares[source, young_flag, band, destination] = 0.0
+            for band in range(count_bands):
+                planned_moves[source, young_flag, band] = False
             count = 0
             leaves_for_unskilled = young and income[source] < own and not source_is_fallback[source]
             for destination in range(count_destinations):
@@ -143,53 +135,64 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, years, 
                     count += 1
             if count == 0:
                 continue
-            gain = np.empty(count)
-            lost = np.empty(count)
-            chance = np.empty((count, count_bands))
             for slot in range(count):
                 destination = picked[slot]
-                trained = years[destination] * (1.0 if young else training_share[source, destination])
-                lost[slot] = own * _annuity(rate, trained)
-                gain[slot] = _present_value(later[destination] - own, rate, trained, remaining)
-                chance[slot, :] = chances[destination, :]
                 planned_targets[source, young_flag, destination] = True
+                kind = YOUNG if young else (RETRAINED if retrained[source, destination] else FULL)
+                gain = career_gain(later[destination] - own, discounts.start[kind, destination], discounts.after[kind, destination],
+                                   discounts.pays[kind, destination])
+                _career_scores(chances, gain, own * discounts.lost[kind, destination], subsistence, destination, scores_room, slot)
             stay_score = 0.0
             if young:
-                stay_score = _present_value(income[source] - own, rate, 0.0, remaining) / subsistence
-            shares = np.empty((count_bands, count))
-            moves = band_shares(chance, gain, lost, subsistence, stay_score, young, taste, negligible, shares)
-            for band in range(count_bands):
-                planned_moves[source, young_flag, band] = moves[band]
-                for slot in range(count):
-                    planned_shares[source, young_flag, band, picked[slot]] = shares[band, slot]
+                stay_score = career_gain(income[source] - own, stay_start, stay_after, career_years > 0.0) / subsistence
+            band_shares(scores_room, picked, count, stay_score, young, taste, negligible, planned_shares[source, young_flag],
+                        planned_moves[source, young_flag], weights_room)
 
 
 @njit
-def collect_moves(counts, considering, active, moving, planned_shares, training_share, rounds, moves_source, moves_destination,
-                  moves_share, moves_rows):
+def _live_groups(counts, active, moving, live_source, live_young):
+    """The groups that can move anyone (active, with a band that moves and has people), by source then established before young."""
+    live = 0
+    for source in range(counts.shape[0]):
+        for young in range(2):
+            if not active[source, young]:
+                continue
+            for band in range(counts.shape[1]):
+                if moving[source, young, band] and counts[source, band] > 0.0:
+                    live_source[live], live_young[live] = source, young
+                    live += 1
+                    break
+    return live
+
+
+@njit
+def collect_moves(counts, considering, active, moving, planned_targets, planned_shares, training_share, rounds, moves_source,
+                  moves_destination, moves_share, moves_rows):
     """The round's moves in the order they are carried out (by destination, then source, then the established workers before
     the young; the established share of the training years is never above the young's one): a row for each (source,
     young, destination) where some band of an active source with people sends people there. Fills the move arrays (as long as
     every possible move) and returns how many moves there are."""
     count_sources, count_bands, count_destinations = counts.shape[0], counts.shape[1], training_share.shape[1]
+    live_source, live_young = np.empty(2 * count_sources, np.int64), np.empty(2 * count_sources, np.int64)
+    live = _live_groups(counts, active, moving, live_source, live_young)
     found = 0
     for destination in range(count_destinations):
-        for source in range(count_sources):
-            for young in range(2):
-                if not active[source, young]:
-                    continue
-                picked = False
-                for band in range(count_bands):
-                    if moving[source, young, band] and counts[source, band] > 0.0 and planned_shares[source, young, band, destination] > 0.0:
-                        picked = True
-                        moves_rows[found, band] = counts[source, band] * considering[source, young] / rounds * planned_shares[source, young, band, destination]
-                    else:
-                        moves_rows[found, band] = 0.0
-                if picked:
-                    moves_source[found] = source
-                    moves_destination[found] = destination
-                    moves_share[found] = 1.0 if young == 1 else training_share[source, destination]
-                    found += 1
+        for group in range(live):
+            source, young = live_source[group], live_young[group]
+            if not planned_targets[source, young, destination]:
+                continue
+            picked = False
+            for band in range(count_bands):
+                if moving[source, young, band] and counts[source, band] > 0.0 and planned_shares[source, young, band, destination] > 0.0:
+                    picked = True
+                    moves_rows[found, band] = counts[source, band] * considering[source, young] / rounds * planned_shares[source, young, band, destination]
+                else:
+                    moves_rows[found, band] = 0.0
+            if picked:
+                moves_source[found] = source
+                moves_destination[found] = destination
+                moves_share[found] = 1.0 if young == 1 else training_share[source, destination]
+                found += 1
     return found
 
 
@@ -200,16 +203,20 @@ def group_moves(destinations, shares, group_of, members, group_starts):
     `group_starts` (length groups + 1); returns the number of groups."""
     count = destinations.shape[0]
     first = np.empty(count, np.int64)
+    highest = 0
+    for move in range(count):
+        highest = max(highest, destinations[move])
+    newest = np.full(highest + 1, -1, np.int64)      # per destination: its latest group (it has few: one per training length)
+    older = np.empty(count, np.int64)                            # per group: the group of the same destination made before it
     groups = 0
     for move in range(count):
-        found = -1
-        for group in range(groups):
-            lead = first[group]
-            if destinations[lead] == destinations[move] and shares[lead] == shares[move]:
-                found = group
-                break
+        found = newest[destinations[move]]
+        while found >= 0 and shares[first[found]] != shares[move]:
+            found = older[found]
         if found < 0:
             first[groups] = move
+            older[groups] = newest[destinations[move]]
+            newest[destinations[move]] = groups
             found = groups
             groups += 1
         group_of[move] = found

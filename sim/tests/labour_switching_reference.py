@@ -16,6 +16,15 @@ from sim.labour.market.records import MarketState, YearInputs, YearReport
 from sim.labour.market.trades import fallback_trade
 
 
+def band_odds(chances, gain, lost, unit, stay_score, young, scale, negligible):
+    """`switching_kernel.band_shares` on the targets' scores: (shares[band, target], moves[band])."""
+    scores = (np.asarray(chances).T * np.asarray(gain) - np.asarray(lost)) / unit
+    targets = scores.shape[1]
+    shares, moves = np.zeros(scores.shape), np.zeros(scores.shape[0], np.bool_)
+    switching_kernel.band_shares(scores, np.arange(targets), targets, stay_score, young, scale, negligible, shares, moves, np.empty(targets))
+    return shares, moves
+
+
 def _training_share(inputs: YearInputs, source: str, target: str) -> float:
     same_family = inputs.trades[source].family == inputs.trades[target].family
     return RETRAINING_SHARE_WITHIN_FAMILY if same_family else 1.0
@@ -49,9 +58,8 @@ def _odds(inputs, state, area, source, destinations, own, later_income, vacancie
     stay_score = 0.0
     if young and stay_income is not None:
         stay_score = expectations.present_value(stay_income - own, rate, 0.0, remaining) / subsistence
-    shares = np.empty((len(state.workers[area][source]), len(targets)))
-    moves = switching_kernel.band_shares(np.array([chances[trade] for trade in targets]), np.array(gain), np.array(lost),
-                                         subsistence, stay_score, young, SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, shares)
+    shares, moves = band_odds(np.array([chances[trade] for trade in targets]), gain, lost, subsistence, stay_score, young,
+                              SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE)
     bands = [[(trade, share) for trade, share in zip(targets, row) if share > 0.0] if moving else None
              for row, moving in zip(shares.tolist(), moves.tolist())]
     return targets, bands

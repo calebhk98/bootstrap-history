@@ -102,9 +102,21 @@ def add_to_last_cohort(book, market, bands):
 
 
 @njit
+def _only_cohort_sum(book, market, bands):
+    """The people of a market's one cohort, in the state's table or pending."""
+    if book.count[market] > 0:
+        return exact_sum(book.people[book.first[market]], bands)
+    return exact_sum(book.pending.people[book.pending_first[market]], bands)
+
+
+@njit
 def enrolled(book, market):
     """`training.enrolled`: the people in the market's cohorts, `math.fsum` of each cohort's `math.fsum`."""
     total_cohorts = cohorts_in(book, market)
+    if total_cohorts == 0:
+        return 0.0
+    if total_cohorts == 1:      # the `math.fsum` of one number is that number
+        return _only_cohort_sum(book, market, book.people.shape[1])
     sums = numpy.zeros(total_cohorts)
     slot = 0
     for row in range(book.first[market], book.first[market] + book.count[market]):
@@ -119,12 +131,23 @@ def enrolled(book, market):
 
 
 @njit
+def _only_cohort_products(book, market, chances):
+    """`math.sumprod` of a market's one cohort's bands and the chances."""
+    if book.count[market] > 0:
+        return float_sumprod(book.people[book.first[market]], chances, chances.shape[0])
+    return float_sumprod(book.pending.people[book.pending_first[market]], chances, chances.shape[0])
+
+
+@njit
 def graduates_coming(book, market, chances):
     """`expectations.graduates_coming`: the people in the market's cohorts expected to finish, `math.fsum` of each cohort's
     `math.sumprod` of its bands and the chances."""
     total_cohorts = cohorts_in(book, market)
     if total_cohorts == 0:
         return 0.0
+    if total_cohorts == 1:      # the `math.fsum` of one number is that number
+        only = _only_cohort_products(book, market, chances)
+        return only if only != 0.0 else 0.0
     products = numpy.zeros(total_cohorts)
     slot = 0
     for row in range(book.first[market], book.first[market] + book.count[market]):

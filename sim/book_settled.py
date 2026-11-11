@@ -13,14 +13,27 @@ from sim.book_post import grown_settled
 from sim.compiled_tables.causes import OK
 
 
+def reserve_for_settlement(book, agents: int, keys: int) -> None:
+    """Room in the book for a settlement of that many agents and stock keys: stock and edge-goods rows, the flow row and the plans."""
+    book.stock_rows.reserve(keys)
+    book.edge_goods_rows.reserve(keys)
+    book.flow_rows.reserve(1)
+    book.settled_plans = grown_settled(book.settled_plans, agents, keys)
+
+
+def settlement_plans(book):
+    """The book's plans for summed settlements, made when it has none."""
+    if book.settled_plans is None:
+        book.settled_plans = grown_settled(None, 8, 8)
+    return book.settled_plans
+
+
 def post_settled_by_numbers(book, currency: str, purpose: str, item: str, currency_number: int, good: int, agents, paid, received, holder, tile,
                 given, taken) -> None:
     """Apply the batch's sums on the book as `Book.post_settled` does, by numbers; a refusal is replayed through `post_settled` by
     name so the error is the book's own."""
-    book.stock_rows.reserve(len(holder))
-    book.edge_goods_rows.reserve(len(holder))
-    book.flow_rows.reserve(1)
-    book.settled_plans = scratch = grown_settled(book.settled_plans, len(agents), len(holder))
+    reserve_for_settlement(book, len(agents), len(holder))
+    scratch = book.settled_plans
     code, _culprit = apply_settled(book.tables(), scratch, currency_number, agents, paid, received, holder, tile, good, given, taken)
     if code != OK:
         names, tiles = book.agent_ids.name_list, book.tile_ids.name_list

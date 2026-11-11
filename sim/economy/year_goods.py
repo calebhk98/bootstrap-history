@@ -15,12 +15,13 @@ from . import currency, mint_price, market_curves, market_curves_rows, market_qu
 from . import goods_turn, year_bids, year_remember
 from .year_bids_by_market import BidsByMarket
 from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
+from .goods_clearing_kernel import ON_OBJECTS
 from .goods_table_context import ClearingContext
 from .goods_year_markets import YearMarkets
 from .goods_left_markets import LeftMarkets
 from .year_goods_offer_rows import OfferRows
-from .home_scope import on_home_tile
-from .producer_blocks import recipes_of, tiles_of
+from . import year_tax_in_kind
+from .producer_blocks import recipes_of
 from .producer_rows_read import fields_of
 from .household_work_year import cohort_basket
 from .goods_market_rows import bids_only_quote, wanted_at_rows
@@ -98,6 +99,8 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
         offering = (arrays, costs) if year_goods_offers.usable() else None
     context = ClearingContext(setup, record, view, orders, arrays, costs)
+    if arrays is not None:
+        context.ask_known_areas_and_tiles()
     world = goods_turn.TurnWorld.of(setup, record, view, ledger, arrays, costs, plans) if arrays is not None else None
     by_output: Dict[str, List[str]] = {}
     sorted_ids = sorted(record.producers) if world is None else []
@@ -111,6 +114,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     year_markets = YearMarkets()
     left_markets = LeftMarkets(year_markets)
     in_kind = [form for form in setup.tax_forms if form.paid_in]
+    home_outputs = year_tax_in_kind.home_outputs(setup, record.producers, year_tax_in_kind.taxed_goods(in_kind)) if in_kind else None
     metal = record.currency.backing_good if currency.has_mint(record.currency) else None        # the good whose markets the mint reads
     plant_makers: Dict[str, list] = {}       # a good -> the producers whose plant is built from it
     store = record.producers
@@ -121,11 +125,11 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     memory_names = orders.memory_tables.goods_markets.name_list
     for good in order:
         if world is not None:
-            _turn_on_columns(setup, record, view, world, world.take_turn(good), in_kind, orders, ledger)
+            _turn_on_columns(setup, record, view, world, world.take_turn(good), in_kind, orders, ledger, home_outputs)
         else:
             turn = [producer_id for producer_id in by_output.get(good, ()) if producer_id not in done]
             done.update(turn)
-            _produce_and_offer(setup, record, view, turn, plans, in_kind, orders, ledger, offering)
+            _produce_and_offer(setup, record, view, turn, plans, in_kind, orders, ledger, offering, home_outputs)
         good_id = record.book.good_ids.find(good)
         cleared = goods_good_clear.clear_good(context, good, good_id) if good_id is not None else goods_good_clear.GoodClearing.empty()
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
@@ -135,9 +139,11 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         first_row = year_markets.claim(len(cleared))
         left_markets.add_good(good, cleared, answer, first_row)
         for place in [place for place, area in enumerate(cleared.areas) if area in kept]:
-            each = cleared[place]
-            record.goods.curves[memory_names[each.market]] = (market_curves.summarize(*each.objects()) if each.rows is None else
-                                                              market_curves_rows.of_rows(orders, each.rows.bid_array, each.rows.offer_array))
+            if cleared.way[place] == ON_OBJECTS:
+                curve = market_curves.summarize(*cleared[place].objects())
+            else:
+                curve = market_curves_rows.of_rows(orders, cleared.rows.bids_of_market(place), cleared.rows.offers_of_market(place))
+            record.goods.curves[memory_names[cleared.market[place]]] = curve
         delivered = answer.delivered
         if len(cleared):
             left_units = orders.tables()[1].quantity_left[cleared.left_grouped]
@@ -185,8 +191,8 @@ def _record_year_markets(record, ledger: YearLedger, keys, rows, year_markets, c
     goods.volumes.replace_rows(rows, delivered)
     goods.unsold.replace_rows(rows, year_markets.unsold(cells))
     goods.unmet.replace_rows(rows, unmet)
-    for place in numpy.flatnonzero(unmet > 0.0).tolist():
-        ledger.unmet_demand[keys[place]] = float(unmet[place])
+    short = numpy.flatnonzero(unmet > 0.0)
+    ledger.unmet_demand.set_rows(rows[short], unmet[short])
     goods_memory_notes.write_volumes(record.memory, rows, delivered.tolist())
 
 
@@ -228,12 +234,12 @@ def remembered_price(old, cleared, quantity, usual_volume):
     return old + min(1.0, quantity / usual_volume) * (cleared - old)
 
 
-def _turn_on_columns(setup, record, view, world, positions, in_kind, order_book, ledger) -> None:
+def _turn_on_columns(setup, record, view, world, positions, in_kind, order_book, ledger, home=None) -> None:
     """`_produce_and_offer` for the producers at `positions` of the year arrays, over whole columns (goods_turn.py): what they make, the
     state's tax in kind, and the offers as rows. A producer whose output has no price expected offers through `producers.offers`."""
     planned = world.produce(positions)
     if in_kind and len(planned):
-        _tax_in_kind(setup, record, world.ids_of(planned), in_kind, ledger)
+        _tax_in_kind(setup, record, world.ids_of(planned), in_kind, ledger, home)
     if not len(positions):
         return
     rate = own_rate(view, setup.currency_id)
@@ -248,12 +254,12 @@ def _turn_on_columns(setup, record, view, world, positions, in_kind, order_book,
     world.offer(positions, rate, order_book, offer_by_rule)
 
 
-def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_book, ledger, offering=None) -> None:
+def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_book, ledger, offering=None, home=None) -> None:
     """The producers whose turn it is make their output (their moves booked together), the state takes its tax in kind from
     what they made, and each offers what it holds. The producers do not touch one another's holdings, so booking in a batch
     is booking one at a time."""
     made = goods_production.produce(setup, record, producer_ids, plans, ledger)
-    _tax_in_kind(setup, record, made, in_kind, ledger)
+    _tax_in_kind(setup, record, made, in_kind, ledger, home)
     money = setup.currency_id
     rate = own_rate(view, money) if producer_ids else None
     held_outputs, cash_held, running = goods_production.turn_figures(setup, record, ledger, producer_ids)
@@ -314,21 +320,16 @@ def _quick_outputs(setup, offering, producer, recipe, stock, keep):
     return held
 
 
-def _tax_in_kind(setup, record, producer_ids, forms, ledger) -> None:
+def _tax_in_kind(setup, record, producer_ids, forms, ledger, home=None) -> None:
     """The state's share, in kind, of what the producers just made on the home tiles. A harvest form assesses only those
-    that made the good it is paid in, so the others are left out of its facts."""
+    that made the good it is paid in, so the others are left out of its facts. `home` is the year's table of the producers it can reach
+    (`year_tax_in_kind.home_outputs`); with none, each producer is asked of the store."""
     if not forms:
         return
-    taxed = {form.paid_in for form in forms} if all(form.basis == "harvest" for form in forms) else None
     output, held, tiles = {}, {}, {}
-    producer_ids = list(producer_ids)
-    for producer_id, tile, recipe_id in zip(producer_ids, tiles_of(record.producers, producer_ids),
-                                            recipes_of(record.producers, producer_ids)):
-        recipe = setup.recipes[recipe_id]
-        if (taxed is not None and taxed.isdisjoint(recipe.outputs)) or not on_home_tile(setup, tile):
-            continue
+    for producer_id, tile, outputs in year_tax_in_kind.reached_by(setup, record.producers, year_tax_in_kind.taxed_goods(forms), producer_ids, home):
         tiles[producer_id] = tile
-        for good in recipe.outputs:
+        for good in outputs:
             output[(producer_id, good)] = ledger.output.get((producer_id, good), 0.0)
             held[(producer_id, good)] = record.book.stock(producer_id, good, tile)
     if not output:

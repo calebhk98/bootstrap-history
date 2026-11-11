@@ -1,5 +1,4 @@
-"""The price solve and its caches are keyed on everything the answer depends on: a civilisation's staple and ground, the starting
-rate an off-rate solve starts from, the goods the graded energy prices are costed against. The price tables are solved on the
+"""The price solve and its caches are keyed on everything the answer depends on: a civilisation's staple and ground, the goods the graded energy prices are costed against. The price tables are solved on the
 ground the country holds now (the land module's `home_tiles_held`), not the ground its file opened with. The solver is a recorder."""
 QUICK_TOPIC = True
 
@@ -37,9 +36,9 @@ class SolveKeyedOnStartingRate(unittest.TestCase):
         finally:
             prices.reset_caches_for_tests()
 
-    def test_two_records_differing_only_in_starting_rate_are_solved_apart_at_the_same_explicit_rate(self):
+    def test_two_records_differing_only_in_starting_rate_are_solved_once_at_the_same_explicit_rate(self):
         base = {"id": "variant", "starting_interest_rate": 0.05, "home_tiles": []}
-        self.assertEqual(self.solves_over(base, dict(base, starting_interest_rate=0.08)), 2)
+        self.assertEqual(self.solves_over(base, dict(base, starting_interest_rate=0.08)), 1)
 
     def test_the_same_record_is_solved_once(self):
         base = {"id": "variant", "starting_interest_rate": 0.05, "home_tiles": []}

@@ -9,7 +9,8 @@ import numpy
 
 from sim.jit import njit
 
-from .settlement_kernel import KERNEL, settle_pairs
+from .settlement_kernel import KERNEL
+from .settlement_market_kernel import settle_market_into, widest
 
 
 @njit(**KERNEL)
@@ -45,46 +46,43 @@ def settle_markets(pair_offset, agent_offset, key_offset, buyer_key, seller_key,
     batch_received = numpy.zeros(len(cash_state))
     batch_given = numpy.zeros(len(stock_state))
     batch_taken = numpy.zeros(len(stock_state))
+    most_pairs, most_agents, most_keys = widest(pair_offset), widest(agent_offset), widest(key_offset)
+    amounts, unit = numpy.zeros(most_pairs), numpy.zeros(most_pairs)
+    buyer_agent, seller_agent, payer_here = (numpy.zeros(most_pairs, dtype=numpy.int64), numpy.zeros(most_pairs, dtype=numpy.int64),
+                                             numpy.zeros(most_pairs, dtype=numpy.int64))
+    asked, scale, stock_start, stock_left = numpy.zeros(most_keys), numpy.zeros(most_keys), numpy.zeros(most_keys), numpy.zeros(most_keys)
+    owed, purse_scale, cash_start, cash_left = (numpy.zeros(most_agents), numpy.zeros(most_agents), numpy.zeros(most_agents),
+                                                numpy.zeros(most_agents))
+    edge, mint, external, imported, exported = (numpy.zeros(most_agents, dtype=numpy.bool_), numpy.zeros(most_agents, dtype=numpy.bool_),
+                                                numpy.zeros(most_agents, dtype=numpy.bool_), numpy.zeros(most_agents, dtype=numpy.bool_),
+                                                numpy.zeros(most_agents, dtype=numpy.bool_))
     for market in range(markets):
-        first_pair, last_pair = pair_offset[market], pair_offset[market + 1]
-        first_agent, last_agent = agent_offset[market], agent_offset[market + 1]
-        first_key, last_key = key_offset[market], key_offset[market + 1]
-        if last_pair == first_pair:
+        first_pair, first_agent, first_key = pair_offset[market], agent_offset[market], key_offset[market]
+        pairs, agents, keys = pair_offset[market + 1] - first_pair, agent_offset[market + 1] - first_agent, key_offset[market + 1] - first_key
+        if pairs == 0:
             continue
-        agents_here = agent_global[first_agent:last_agent]
-        keys_here = key_global[first_key:last_key]
-        (market_goods, market_money, market_payer, market_paid, market_received, market_in, market_out, market_net,
-         market_got, market_paid_as_buyer, market_imports, market_exports, market_given, market_taken,
-         market_to_mint) = settle_pairs(
-            buyer_key[first_pair:last_pair], seller_key[first_pair:last_pair], quantity[first_pair:last_pair],
-            ask[first_pair:last_pair], delivers, sale, key_agent[first_key:last_key], stock_state[keys_here],
-            cash_state[agents_here], agent_edge[agents_here], agent_mint[agents_here], agent_external[agents_here],
-            agent_import[agents_here], agent_export[agents_here])
-        goods[first_pair:last_pair] = market_goods
-        money[first_pair:last_pair] = market_money
-        payer[first_pair:last_pair] = market_payer
-        paid[first_agent:last_agent] = market_paid
-        received[first_agent:last_agent] = market_received
-        goods_in[first_agent:last_agent] = market_in
-        goods_out[first_agent:last_agent] = market_out
-        buyer_net[first_agent:last_agent] = market_net
-        got_goods[first_agent:last_agent] = market_got
-        paid_as_buyer[first_agent:last_agent] = market_paid_as_buyer
-        imports[first_agent:last_agent] = market_imports
-        exports[first_agent:last_agent] = market_exports
-        key_given[first_key:last_key] = market_given
-        key_taken[first_key:last_key] = market_taken
-        key_to_mint[first_key:last_key] = market_to_mint
-        for local in range(last_agent - first_agent):
-            agent = agents_here[local]
-            cash_state[agent] = cash_state[agent] - market_paid[local] + market_received[local]
-            batch_paid[agent] += market_paid[local]
-            batch_received[agent] += market_received[local]
+        for local in range(agents):
+            agent = agent_global[first_agent + local]
+            cash_start[local] = cash_state[agent]
+            edge[local], mint[local], external[local] = agent_edge[agent], agent_mint[agent], agent_external[agent]
+            imported[local], exported[local] = agent_import[agent], agent_export[agent]
+        for local in range(keys):
+            stock_start[local] = stock_state[key_global[first_key + local]]
+        settle_market_into(first_pair, pairs, first_key, keys, first_agent, agents, buyer_key, seller_key, quantity, ask, delivers, sale,
+                           key_agent, stock_start, cash_start, edge, mint, external, imported, exported, amounts, buyer_agent,
+                           seller_agent, payer_here, unit, asked, scale, stock_left, owed, purse_scale, cash_left, goods, money, payer,
+                           paid, received, goods_in, goods_out, buyer_net, got_goods, paid_as_buyer, imports, exports, key_given,
+                           key_taken, key_to_mint)
+        for local in range(agents):
+            agent = agent_global[first_agent + local]
+            cash_state[agent] = cash_state[agent] - paid[first_agent + local] + received[first_agent + local]
+            batch_paid[agent] += paid[first_agent + local]
+            batch_received[agent] += received[first_agent + local]
         if delivers:
-            for local in range(last_key - first_key):
-                key = keys_here[local]
-                stock_state[key] = stock_state[key] - market_given[local] + market_taken[local]
-                batch_given[key] += market_given[local]
-                batch_taken[key] += market_taken[local]
+            for local in range(keys):
+                key = key_global[first_key + local]
+                stock_state[key] = stock_state[key] - key_given[first_key + local] + key_taken[first_key + local]
+                batch_given[key] += key_given[first_key + local]
+                batch_taken[key] += key_taken[first_key + local]
     return (goods, money, payer, paid, received, goods_in, goods_out, buyer_net, got_goods, paid_as_buyer, imports, exports,
             key_given, key_taken, key_to_mint, batch_paid, batch_received, batch_given, batch_taken)
