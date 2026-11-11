@@ -1,6 +1,6 @@
 # An iron mine sunk for a few denarii sells millions of iron
 
-**Status:** open
+**Status:** open - measured 2026-11-11: the founder sells mined ore at the bar-iron price, about 300 times the mine's cost; cause traced (commodity `iron` is priced as `iron_bar_kg`), not fixed
 
 Found by an agent playtest (`Complaints/reports/playtest-rome-seed11-agent-legitimate-log.md`, Rome, seed 11, around 109 AD). `buy mine iron 100` cost a few denarii to sink and
 tens a year to stand; the founder's iron then sold at thousands of denarii a tonne, so a few thousand tonnes raised
@@ -22,3 +22,32 @@ sells nothing (`sim/tests/test_sale_room_follows_buyers.py`). A concern the foun
 668's path. What is not fixed: the price spread across tiles (473), and `sell` still pays at once at the price the book last
 showed, not from the year's clearing. Whether a founder's iron now sells at a bounded multiple of its cost was not measured
 (no spin-up run here): measure with the commands in the 668 hand-off.
+
+## Measurement on the rebuilt openings (commit 2094a71f, Rome, default start)
+
+Commands (from the checkout root, `env -u ROME_SPIN_UP_YEARS python3 sim/simulator.py agent --civ rome_100ad`, JSON lines on stdin;
+the CLI path loads from the shipped openings in about five seconds, whereas `harness.sim(capital=1e7)` misses the shipped key and
+starts a cold spin-up): `buy mine iron 100`, four `step` years, `sell iron 99`, one `step`. Spread read after the run from the
+economy's `record.memory.prices`.
+
+- Mine cost: `quote mine iron 100` gives 24.9 coin to sink (three years to produce) and 391 a year to stand; the first standing
+  year is charged 521.8 and the next 473.0 (wage and price index move). That is about 4.7 to 5.2 coin per tonne a year; the sinking cost
+  annualised over any plausible life adds well under 0.1 coin per tonne a year.
+- Sale: `sell iron 99` is posted at the quote of 1605 coin a tonne (limit 1584) and settles at the year's clearing. The founder's capital went
+  from 1420.5 (same year, no sale) to 156692.9: 155272 coin for 99 tonnes, 1568 coin a tonne.
+- Ratio: 1568 / 4.7 to 5.2 is about 300 to 330 times the mine's cost per tonne. This is far outside the opening check's band
+  (`price_over_cost_sited_ores` reads 3.37 because it compares the ore price with the ore cost).
+- Price spread, `iron_ore_kg|<tile>` over 157 tiles: min 0.00587, median 0.01494, max 0.01812 coin per kg (5.9, 14.9, 18.1 per
+  tonne), a threefold spread, not hundredfold. At the median ore price the mine earns about 3 times its running cost.
+
+Cause: the mine yields ore (`mine_labour_hours_per_tonne`, running hours per tonne of ore at the miner's wage), but the commodity `iron`
+(`data/world/commodities.json`, `material_keys` bar, ore, bloom, sheet, cast iron; `price_material: iron_bar_kg`) is sold through
+`GoodsMarket.post_order` -> `economy_good` -> `priced_key`, which prices the whole commodity pool as `iron_bar_kg`. The `iron_ore_kg`
+good the economy trades at about 15 coin a tonne is not the one the sale is priced and cleared in. So 668's room cap (buyers took
+the bar good, which is traded in volume) does not bind, and the ore is paid as bar iron. The same shape holds for any commodity whose
+`price_material` is a worked form of what the mine raises.
+
+What it would take: a sale of a mine's output is priced and cleared in the good the mine raises (the ore material of the commodity), or the
+commodity pool is split so ore and bar are not one stock; then a test calls the pricing rule (`priced_key` or its caller) with a
+commodity record whose `price_material` differs from the mined ore and checks the ore good is chosen for mine output. This touches
+the materials commodity pool and the economy's good keys, which are wider than one contained rule, so it is left open.
