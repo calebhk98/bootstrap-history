@@ -120,3 +120,15 @@ entry below is updated as its group lands.
 
 - `plagues_from_contact_validation`: passes alone (`--only <topic> --jobs 1`); timed out only under the three-job load.
 - `farm_edges_scenario`: alone it runs past the default limit and then fails honestly on the farm share (619). Speed: 497, 557.
+
+## protocol_golden drift (re-recorded)
+
+The three transcripts failed at command 0 on the founder's coin figures. Cause: a founder's purse is a civilisation input in
+labourer-years (the kit times the price index), counted in coin at the economy's settled wage per hour once the economy opens
+(`RepriceOpeningMoney`); capital over revenue is unchanged, so the purse is the same in hours and only the coin unit moved with
+the settled wage. That wage moves with every change to the opening's solve, seeded stocks and workshop counts; stepped on Norse
+with `ROME_SPIN_UP_YEARS=3,2` at the suite's seed, the coin figure moved at the carriage table (613), the animal and linen gates
+(975), the platinum gate (976) and the workshop counts (550), and not at 576 or 977. The other changed keys (farm share of hours,
+the debt rate, seeded herds) follow those fixes and were not attributed one by one. Re-recorded with
+`python3 -m sim.tests.test_protocol_golden --record`; the topic is green. Not yet attributed: the steps between the last
+recording and the carriage commit.
