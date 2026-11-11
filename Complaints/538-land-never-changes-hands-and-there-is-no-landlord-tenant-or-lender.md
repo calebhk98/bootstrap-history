@@ -1,6 +1,6 @@
 # Land never changes hands, and there is no landlord, tenant or lender
 
-**Status:** partly - titles, collateral, foreclosure into tenancy, abandonment, partible inheritance, tenancy management cost, debt relief, tax farming, household bondage, a land buyer side (cohorts, firms and any actor), rent asks that follow the wage, leasing in the market, bonded hours worked for the creditor, and a sourced concentration check on an economy where borrowers default are built; open: confiscation and land reform (486), the fertility-by-holding channel (needs household demography), a concentration check on a full game
+**Status:** partly - titles, collateral, foreclosure into tenancy, abandonment, partible inheritance, tenancy management cost, debt relief, tax farming, household bondage, a land buyer side (cohorts, firms and any actor), rent asks that follow the wage, leasing in the market, bonded hours worked for the creditor, a title sale market (holders short of money sell to buyers who value the rent at their own rate; the price gives lenders their land yield), confiscation and land reform (486), and a sourced concentration check on an economy where borrowers default are built; open: the fertility-by-holding channel (needs household demography), a concentration check on a full game
 
 Reference (an outside design note, not code-aware): land concentration should come from harvest shocks and debt, not a typed
 share. A smallholder short after a bad year borrows against the plot; a second bad year means default, the title passes to the
@@ -10,9 +10,14 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
 
 ## What is wrong now
 
-- **Confiscation and land reform stay open, and so does elite overreach.** When a few hold most land the state's taxpayers
-  and recruits shrink; nothing lets that end in revolt or redistribution. A policy lever for confiscation and a unrest
-  side are 486's (stability); this complaint does not build them.
+- **Title sales are cohort to cohort.** `title_sales_year.run` clears each tile: a cohort short of its cash target or in arrears offers
+  the hectares that raise it at the rent over the rate cash costs it (the market loan rate); a holder with no need sells when
+  the rent over its tile's last sale price is under what its money earns elsewhere. Buyers are the cohorts on the tile with cash above
+  target, bidding the rent over their own rate (time preference plus expected inflation, the state's bonds where in reach). One price
+  per tile, between the two valuations; the seller stays as the buyer's tenant. Firms and states hold titles and `title_sales.py` takes
+  any actor's figures, but only cohorts are wired in as sellers and buyers (a firm's valuation of rent is not yet read here).
+  Tile is the market area for households (`setup.labour_area`), so one clearing per tile is one per area. Not yet measured in a game:
+  how many hectares change hands, and the prices, over a century (the orchestrator's measure: step a game and print `record.land.sale_price_by_tile`).
 - **Fertility rising with holding size is not modelled** (one of Bekar and Reed's three channels, 2009, Oxford Economic and
   Social History 79). Households here do not have children; the channel needs household division in demography
   (`titles_inheritance.py`, retire: 538 household division in demography). Distress sales after harvest shocks and partible
@@ -42,7 +47,6 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
 
 ## What it would take
 
-- A state policy lever for confiscation and redistribution of titles, with the unrest side in 486.
 - Household division in demography, so fertility can rise with holding size and estates divide by who has children.
 - A full game long enough for borrowing households to default, with the elite-share range checked under CLAUDE.md 4.2
   and moved by a land reform and a labour shock. The range is a validation, not a target.
@@ -61,6 +65,7 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
 ## Evidence for what is built
 
 - Titles, collateral, foreclosure, abandonment, tenancy: `sim/economy/titles*.py`, `sim/tests/test_economy_titles.py`.
+- Title sales: `sim/economy/title_sales.py` (valuations, clearing), `title_sales_year.py` (the year's step), `sim/tests/test_economy_title_sales.py`.
 - Rent asks, leases in the market, the tools check: `sim/economy/land_tenancy.py`, `land_lease_year.py`; tests `test_economy_land_tenancy.py`, `test_economy_land_lease_year.py`.
 - Buyers other than cohorts: `land_bid_year.actor_bids`, `firm_land_bids`, `take_up_bought` (any holder); `test_economy_land_buyers.py`.
 - Bonded hours: `sim/economy/bondage_hours.py`; `test_economy_bondage_hours.py` (its `_scenario` file is gone).

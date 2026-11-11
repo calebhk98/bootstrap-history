@@ -1,6 +1,6 @@
 # Lenders ask nothing for what their money earns elsewhere or for default, so the rate clears at zero
 
-**Status:** partly - lowest ask now takes a public-debt alternative (state bond yield above its coupon, with a bond market), loss rates spread over a claim's life, `market_rate()` is the loan-weighted average of the year's clearings bounded by expected inflation, and `RATE_FLOOR_SHARE` is labelled with a retire; open: no land-yield alternative because no title changes hands at a price (538, 551), and the opening rate is not re-measured (the orchestrator's command is below)
+**Status:** partly - lowest ask now takes the land yield (rent over the recent title sale price, `title_sales_year.py`) and a public-debt alternative, loss rates spread over a claim's life, `market_rate()` is the loan-weighted average of the year's clearings bounded by expected inflation; open: the opening rate is not re-measured (the orchestrator's command is below), `LOSS_CLAIM_LIFE_YEARS` and the public-debt gate are labelled heuristics that retire here (`loss_memory.py`, `credit_rate.py`), so the complaint stays open until they are derived
 
 **What was wrong.** Households lent at `max(0, expected_inflation)`, `credit.clear` (`sim/economy/credit.py`) floored the rate at zero
 and dropped it to the lowest ask when funds sat idle, and a bank asked its depositors' rate plus a fixed margin. So a
@@ -39,9 +39,7 @@ sides would agree to.
 
 ## What is wrong now
 
-- No land-yield alternative in use: `lender_ask.land_yield(rent, price)` and the `land_yield` input of `lowest_ask` exist, but no title is bought or
-  sold at a price (titles pass by inheritance and decree only: `titles_moves.py`, `titles.pass_title`), and `titles_value` capitalises rent at the
-  live rate, so rent over that price would be the rate itself, a circle. Nothing feeds the input until titles trade (538, 551).
+- Land yield is fed: titles sell at a price in the title sale market (`title_sales.py`, `title_sales_year.py`, 538), the year's price per tile is kept in `record.land.sale_price_by_tile`, and `rent / price` of the tiles that sold is `CreditRecord.land_yield`, read through `CreditView.land_yield` into `lowest_ask` by households' offers and working-capital lending. Buyers bid the rent over their own alternative rate (time preference plus expected inflation, the state's bonds where in reach), never the lending rate, so the yield is not the rate by construction; it is kept from the last year that sold. Tests: `test_economy_title_sales.py`.
 - The public-debt alternative is fed only the state's bond yield where it exceeds the bond's coupon (the going rate): at the coupon the yield is the market
   rate itself, which would make the rate its own floor. A state with a default record pays above it, and a lender with a bond market weighs that
   (`port_public_debt.py`, `EconomyYearInputs.state_bond_yield`, `CreditRecord.public_yield`). A bond yield that tracks the cleared rate cannot be a
@@ -52,7 +50,7 @@ sides would agree to.
   credit and finance rules landed, nor since the changes above. Measure: `from sim.tests import harness; game = harness.sim(capital=1e7)` on Rome with the
   full spin-up, then `game.economy._answering_agent().economy().record.memory.rates` and `game.actors.active_firms()`
   (probes: `Complaints/reports/641-rate-probe.md`). Rate level and the price index it reads expected inflation from
-  belong to 473.
+  belong to 473. Not run by the agent that built the land yield; the orchestrator runs it, and with the land yield now in the ask a rate that moves is expected where titles sell.
 
 ## Built since
 
@@ -66,7 +64,7 @@ sides would agree to.
 
 ## What it would take
 
-Build the two alternatives (titles at a price, a state bond reachable by households) and add them to `lowest_ask`, re-measure the opening rate, and retire
+Both alternatives are built (titles at a price, a state bond reachable by households) and in `lowest_ask`; left: re-measure the opening rate, and retire
 `RATE_FLOOR_SHARE` if the lenders' floor now does its job. Tests call the ask and clearing functions with built offers: a
 glut leaves the rate at the lenders' floor, not zero; a lender with past losses asks more.
 
