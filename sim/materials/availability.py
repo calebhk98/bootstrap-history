@@ -9,7 +9,7 @@ from sim.assembly.api import Part
 
 
 class Availability(Part):
-    """Needs: tree_nodes, can_be_bought, goods_stock."""
+    """Needs: tree_nodes, can_be_bought, goods_pool_stock."""
 
     def materials_without_a_seller(self, node_id: str, held_tonnes: Optional[Callable[[str], float]] = None) -> List[str]:
         """[material] the project would buy and no one in reach sells, sorted. Stock in hand covers a need;
@@ -19,7 +19,7 @@ class Availability(Part):
         if not node.get("req_any") and all(can_be_bought[material] for material in node["mat"]):
             return []       # the common case, answered without working out the fuel substitution
         needs = self.parts.project_bill.project_material_needs(node_id)
-        held = held_tonnes or (lambda material: self.needs.goods_stock[self.parts.supply.material_pool(material)[0]])
+        held = held_tonnes or (lambda material: self.needs.goods_pool_stock[self.parts.supply.material_pool(material)[0]])
         return research_gate.materials_short_of_stock(
             {material: needs[material] * self.parts.project_bill.tonnes_per_unit(material) for material in needs},
             lambda material: can_be_bought[material], held)

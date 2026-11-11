@@ -15,7 +15,7 @@ READS_BY_OWNER = {
 	"prices": ("material_prices", "done_memo"),
 	"materials": ("material_demand_held", "material_pool", "project_material_needs"),
 	"markets": ("others_trade_stamp",),
-	"ledger": ("goods_stock",),
+	"ledger": ("goods_pool_stock",),
 }
 
 MODULE_SPECS = (ModuleSpec(

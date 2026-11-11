@@ -17,7 +17,7 @@ def world_facts():
 	        "techniques_version": (0, 0), "operating_version": (0, 0), "techniques_held": frozenset(), "operating": {},
 	        "forest_hectares": 1.0, "nitre_beds": {"square_metres": 1.0, "tonnes_per_square_metre": 0.001},
 	        "population": types.SimpleNamespace(total=100.0), "real_output_per_head": 1.0, "mine_workings": [],
-	        "goods_stock": {"iron": 0.0}}
+	        "goods_pool_stock": {"iron": 0.0}}
 
 
 # the change to each fact that must make a shared answer stale: (fact, new value)
@@ -43,8 +43,8 @@ CHANGES_BY_INPUT_OF_A_VIEW_ONLY = {
 def build(facts=None):
 	"""The module over `facts` (a dict the test may change after the build) and a record of what `done_memo` was asked."""
 	facts = facts if facts is not None else world_facts()
-	views = {name: (lambda name=name: facts[name]) for name in facts if name != "goods_stock"}
-	views["goods_stock"] = lambda commodity: facts["goods_stock"][commodity]
+	views = {name: (lambda name=name: facts[name]) for name in facts if name != "goods_pool_stock"}
+	views["goods_pool_stock"] = lambda commodity: facts["goods_pool_stock"][commodity]
 	views["done_memo"] = lambda kind, node_id, compute: compute()
 	views["material_pool"] = lambda material: ("iron", 1.0)
 	views["project_material_needs"] = lambda node_id: ["iron_ore"]
@@ -185,7 +185,7 @@ class SharedBills(unittest.TestCase):
 		module, worked = build(), []
 		with module.shared_answers({}):
 			module.shared_bill("furnace", lambda: worked.append(1))
-			module.facts["goods_stock"]["iron"] = 1.0e6
+			module.facts["goods_pool_stock"]["iron"] = 1.0e6
 			module.shared_bill("furnace", lambda: worked.append(1))
 		self.assertEqual(len(worked), 2)
 

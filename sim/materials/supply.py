@@ -14,7 +14,7 @@ class Supply(Part):
     """Needs: civilisation, tiles_listed_by, forest_increment, commodity_record, commodity_country_output, material_commodity_map,
     material_prices, mine_works_materials, empire_output, pop_scale, mineral_scale, found_deposits, agent_producer_capacity,
     done_memo, running_stamp, effect_best, mechanic, running, forest_hectares,
-    nitre_beds, mine_capacity, mine_depletion, can_be_bought, goods_stock,
+    nitre_beds, mine_capacity, mine_depletion, can_be_bought, goods_pool_stock,
     held_goods, goods_quote, tree_nodes, visibility, material_freight_factor."""
 
     def __init__(self, module):
@@ -211,7 +211,7 @@ class Supply(Part):
         """{"route", "makers"} for a material key: held, market, imported, makeable or unavailable, and the concerns of the
         tree that would make it."""
         commodity, tag = self.material_pool(material)
-        route = rules.supply_route(self.needs.goods_stock[commodity], self.own_material_supply(tag),
+        route = rules.supply_route(self.needs.goods_pool_stock[commodity], self.own_material_supply(tag),
                                    self.market_tonnes(commodity), self.needs.can_be_bought[material])
         return {"route": route, "makers": self.makers_of(material)}
 
@@ -225,7 +225,7 @@ class Supply(Part):
     def materials_report(self) -> List[Dict[str, Any]]:
         """Stocks, annual flows, demand and current trade values of every tracked commodity."""
         demand = self.parts.demand.demand_by_commodity()
-        materials = set(self.needs.held_goods()) | {pair[0] for pair in MATERIAL_CHECKS.values()}
+        materials = {self.material_pool(key)[0] for key in self.needs.held_goods()} | {pair[0] for pair in MATERIAL_CHECKS.values()}
         materials |= {commodity for commodity in self.needs.mine_capacity()}
         rows = []
         for material in sorted(materials):
@@ -234,7 +234,7 @@ class Supply(Part):
                 continue
             annual_demand = sum(value for _tag, value in demand.get(material, ()))
             own = sum(self.own_material_supply(tag) for commodity, tag in self.own_production_tags() if commodity == material)
-            stock = self.needs.goods_stock[material]
+            stock = self.needs.goods_pool_stock[material]
             rows.append({**quote, "stock_on_hand_tonnes": stock,
                          "own_production_tonnes_per_year": own,
                          "current_demand_tonnes_per_year": annual_demand,

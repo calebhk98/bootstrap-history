@@ -82,7 +82,7 @@ class PopulationReportTests(unittest.TestCase):
 class MaterialsReportTests(unittest.TestCase):
     def stand_in(self):
         module = materials_stand_in.build(
-            held_goods=ledger_rules.StockLedger({"iron": 50.0}), goods_stock=lambda material: {"iron": 50.0}.get(material, 0.0),
+            held_goods=ledger_rules.StockLedger({"iron": 50.0}), goods_pool_stock=lambda material: {"iron": 50.0}.get(material, 0.0),
             goods_quote=lambda material: {"material": material, "buy_per_tonne": 9.0, "sell_per_tonne": 7.0} if material == "iron" else None)
         module.demand_by_commodity = lambda: {"iron": [("tag", 10.0)]}
         module.own_production_tags = lambda: [("iron", "mine:iron")]

@@ -18,7 +18,7 @@ READS_BY_OWNER = {
     "workforce": ("wage", "labour_quote", "money_per_labour_hour"),
     "materials": ("normalized_material", "material_demand", "material_checks", "charcoal_per_hectare", "material_shortfall",
                   "material_market_tonnes", "material_unsupplied_sentence", "material_binding"),
-    "ledger": ("goods_stock", "acting_balance"),
+    "ledger": ("goods_pool_stock", "acting_balance"),
     "finance": ("can_pay", "purchase_budget", "spending_power", "affordable_units", "afford_means"),
     "polity": ("inspection_reach", "forest_reach"),
     "production": ("revenue_estimate", "running", "running_stamp"),

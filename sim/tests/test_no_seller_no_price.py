@@ -127,7 +127,7 @@ class ProjectNeedsASellerTests(unittest.TestCase):
 
     def _project(self, offers, stock_tonnes=0.0):
         return materials_stand_in.build(tree_nodes={"alloy_works": self.NODE}, can_be_bought=offers.can_be_bought,
-                                        goods_stock=lambda key: stock_tonnes)
+                                        goods_pool_stock=lambda key: stock_tonnes)
 
     def _verdict(self, game, why):
         return game.start_gate_material_seller("alloy_works", self.NODE, False, None, why)

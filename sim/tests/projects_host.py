@@ -43,7 +43,7 @@ def defaults() -> Dict[str, Any]:
 		"project_cost": lambda node_id: 0.0, "funding_capacity": 0.0,
 		"own_output_claim": lambda node_id: {}, "bounty_price": lambda node_id: 0.0,
 		"material_upfront_refusal": lambda node_id: None, "material_pool": lambda material: (material, material),
-		"generation": 0.0, "goods_stock": lambda commodity: 0.0,
+		"generation": 0.0, "goods_stock": lambda commodity: 0.0, "goods_pool_stock": lambda commodity: 0.0,
 		"debt_status": {"credit_frozen_until": 0, "insolvent_years": 0}, "credit_limit": 0.0,
 		"purchase_remedies_text": lambda: "", "acting_balance": 0.0,
 		"standing": {"protection": 0.0, "scandal": 0.0, "bribes_year_to_date": 0.0},

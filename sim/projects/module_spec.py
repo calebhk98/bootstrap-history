@@ -45,7 +45,7 @@ READS_BY_OWNER = {
 	"resources": ("mine_operating_cost",),
 	"living_stock": ("stock_status", "stock_held"),
 	"defence_stores": ("venture_garrison",),
-	"ledger": ("acting_balance", "goods_stock"),
+	"ledger": ("acting_balance", "goods_pool_stock"),
 	"markets": ("seat_goods_orders", "seat_goods_traded"),
 	"scenario": ("money_text", "automation", "society_name", "year", "horizon_end_year", "project_limits", "game_config", "game_random",
 	             "fog_of_war", "plain_number"),

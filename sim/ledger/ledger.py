@@ -10,7 +10,7 @@ from sim.assembly.api import Module
 from sim.book import InsufficientFunds
 from sim.refusal import Refusal
 
-from . import cash_book, rules
+from . import cash_book, pool_rules, rules
 from .seat_account import SeatAccount
 
 BANK_CAPITAL_LABEL = "bank capital"   # the cause of the coin a seat puts into a bank it founds
@@ -220,8 +220,17 @@ class Ledger(Module):
 		read it, never write it. Nothing is recorded by asking."""
 		return rules.year_opening_record(self.seat.material_stock_opening, self.needs.year(), self.held_goods())["tonnes"]
 
-	def goods_stock(self, commodity: str) -> float:
-		return self.stock_ledger().get(commodity, 0.0)
+	def goods_stock(self, key: str) -> float:
+		"""Tonnes held under exactly this key (one material's form, or a pool's own id)."""
+		return self.stock_ledger().get(key, 0.0)
+
+	def goods_pool_stock(self, commodity: str) -> float:
+		"""Tonnes of the commodity's pool held in any form."""
+		return pool_rules.pool_total(self.stock_ledger(), commodity, {commodity: self.needs.commodity_record[commodity]})
+
+	def held_by_form(self, commodity: str) -> Any:
+		"""{key: tonnes} of the pool's keys the seat holds, in key order."""
+		return pool_rules.held_by_form(self.stock_ledger(), commodity, {commodity: self.needs.commodity_record[commodity]})
 
 	def acting_balance(self) -> float:
 		return self.account().capital

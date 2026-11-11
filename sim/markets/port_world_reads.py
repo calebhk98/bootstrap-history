@@ -96,7 +96,7 @@ class MaterialReads:
 		return self._needs.material_market_tonnes[commodity]
 
 	def stock_t(self, commodity):
-		return self._needs.goods_stock[commodity]
+		return self._needs.goods_pool_stock[commodity]
 
 	def serves_a_need(self, material):
 		return self._needs.material_serves_a_need[material]
