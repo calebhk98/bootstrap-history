@@ -7,7 +7,7 @@ Found by an outside reviewer reading the repository; checked against the code. F
 ## What is wrong now
 
 - The crew hours a merchant bids are placed in the mode's own trade (`carriage_hours.crew_trades`); `CARRIAGE_CREW_UNSKILLED_SHARE` is deleted.
-  The opening seeds the labour core with carters, porters and sailors from the society's need (556, `labour_state.seeded_hours`). Unverified in a
+  The opening seeds the labour core with carters, porters and sailors from the society's need (556, `seeded_hours` in `sim/economy/labour_state.py`). Unverified in a
   real game: whether those people stay in their trades through the first years or the bids go unanswered.
 - On a real opening only carts and pack animals are supplied in the first years: no shipwright or saddler trade exists to answer
   the bids for ships and saddles (533, 530 own the missing trades).

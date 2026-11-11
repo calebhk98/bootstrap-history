@@ -29,12 +29,13 @@ addition to the roadmap, not a duplicate.
 ## What already exists
 
 The engine-side capital market (`sim/finance/capital_market.py`, `sim/finance/bank.py`) and the agent economy's pooled credit (below) are the live capital
-mechanism: a household credit line with an interest rate and an affordability
-ceiling. There is no banking sector, no bond market, no equity instrument and
-no independent capital pool that a firm other than the founder's own
-household could draw on. `LATE-001`'s independent firms (`Complaints/closed/103`)
-would need somewhere to raise capital from other than the founder personally
-underwriting them, which is exactly what this finding would supply.
+mechanism. The finding as filed found a household credit line with an interest rate and an affordability
+ceiling only; banks, bonds, shares, funds and insurance are now built (see "Built on the agent economy"), including a
+household share portfolio and clearing house (`sim/economy/household_portfolio.py`, `portfolio_year.py`, run from
+`capital_year.py`; `test_household_portfolio.py`), a bank spread rule (`bank_spread.py`) and an equity round for a firm the
+lenders refuse (`sim/agents/equity_round.py`, `equity_need.py`, `test_equity_round.py`, called from `firm_expansion.py`).
+`LATE-001`'s independent firms (`Complaints/closed/103`) can raise capital from those sources instead of the founder
+personally underwriting them.
 
 ## How this sits against CLAUDE.md
 
@@ -75,8 +76,8 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   shareholder ranks behind its lenders; a project that does not beat that rate sells nothing. Dividends are split by share
   in `ownership.spread`, and `equity.holdings` gives holders their part of the producer's worth instead of the
   owner tile's pro-rata split. The expansion path is untouched: the money the shares raise is plant like a loan's
-  (the one hook is the list of funded amounts in `_lend`). Still open: shares trading between holders after issue,
-  a firm choosing equity over debt on cost, and the closed-producer path (`close_idle_producers`) paying its cash
+  (the one hook is the list of funded amounts in `_lend`). Shares now trade between holders after issue (step 4 and `portfolio_year.py`). Still open: a firm choosing equity over debt on cost
+  (`equity_round.py` sells equity only when lenders refuse), and the closed-producer path (`close_idle_producers`) paying its cash
   to the owner alone. Measure: `Economy` fixture tests in `sim/tests/test_economy_shares.py`; on Rome compare the
   rate, `funds_offered` and `lent_by_borrower` of the first years (`share_issuers` is `len(record.shares)`). A producer's
   year-end finances follow Eurace (`sim/economy/firm_finance.py`, `firm_year.py`): a dividend rule paid to the owner
@@ -113,8 +114,8 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   record sells the same coupon for less and owes more face for the same cash. The state's debt is the face, its
   interest the fixed coupon (the floating rate applies only to what is not bonds, `Borrower.settle_interest`),
   bonds fall due after `BOND_TERM_YEARS` and are repaid by selling new ones if the purse is short, and a default
-  costs the named depositors what they paid. Still open: bonds changing hands after issue (a holder's wealth
-  marked to the price), insurance and investment funds, the term chosen by the issuer, and non-state issuers.
+  costs the named depositors what they paid. Insurance, investment funds and non-state issuers (firm bonds) are steps 6 to 8; bonds the economy record holds change hands in
+  step 4. Still open: bonds of the agents-world pool changing hands (a holder's wealth marked to the price) and the term chosen by the issuer.
   On Rome no state borrowing occurs in the first years, so the series is unchanged.
 
 - **Secondary market (step 4).** Once a year, before lending, the holders of shares and of loans sell to savers
@@ -141,7 +142,7 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
   capital held for the worst year seen; a mutual (`risk_pooling`, node `fin_collegium`) charges nothing in advance and its
   members pay the year's claims in proportion to what each insured. A household buys when its cash would not bear the
   worst year and the premium is below that loss. A company that cannot pay fails and its policies end. Test:
-  `--only insurance`; the wiring: (the test was removed from the suite).
+  `--only insurance` (`sim/tests/test_insurance.py`).
 
 - **Funds (step 7).** `sim/economy/funds.py`: a fund is an agent with a purse that holds shares and loans; households
   put savings they offered and did not lend into the fund with the highest expected yield at or above their ask, buy at
@@ -167,7 +168,7 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
 - Ship loss is not a realised event in the economy (transit loss is a deterministic share priced into the margin), so
   only the harvest hazard is insured; marine cover needs a drawn loss on a route.
 - A producer's unsold equity (the owner tile's) is not tradable, a fund does not bid in a new share issue, and a firm does
-  not choose equity over debt on cost.
+  not choose equity over debt on cost (it sells equity only as a fallback when lenders refuse, `sim/agents/equity_round.py`).
 - Depositors choose among banks by cover only; credit creation, lender of last resort and deposit insurance are not built.
 - Temporary heuristics this adds name 106 as their retirement; they are `INSURER_FOUNDING_SHARE_OF_CASH` and the two
   earlier bank ones. The insurer's loading, the fund's choice and the bank's cost of cash are derived, not declared.

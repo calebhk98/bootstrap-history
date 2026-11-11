@@ -25,7 +25,7 @@ by head) and desertion that rises with the years of pay owed (`sim/world/campaig
 The heuristics `STARVATION_LOSS_PER_UNFED_DAY`, `DESERTION_PER_YEAR_OF_PAY_OWED`, `ASSAULT_MIN_CHANCE` and
 `RETREAT_BELOW_FED_SHARE` retire to this complaint (morale and commanders as actors).
 
-**Built (tests `sim/tests/test_stability_rules.py`, scenario `test_stability_scenario.py`):**
+**Built (tests `sim/tests/test_stability_rules.py`, also `test_stability_tile_passes.py`, `test_stability_kernels.py`, `test_stability_phase_and_save_rule.py`; the earlier scenario test `test_stability_scenario.py` is gone):**
 - Unrest (`sim/agents/unrest.py`): grievance is what the state took (taxes, levies) and owes beyond what it gave (the dole), over
   its taxpayers' income, felt only above the take people are used to (`adapted`, `adapt`), plus the interest groups' own
   grievances (people-weighted), plus land taken off holders on the tile (fading), plus hunger from the tile's own food

@@ -71,11 +71,11 @@ unit count; subsidy and mandate levers on the government (481).
 - Done: the start gate counts the actor's own stock (`research_gate.materials_short_of_stock`, `Actor.held_tonnes`
   from the record's `stores`).
 - Done: the share reaches production. `adoption.plant_weight` weights a plant of the technique by the owner's share
-  (1.0 when the owner has no record), and `business_books.operate` and `business_crew.staff` run the plant at
+  (1.0 when the owner has no record), and `business_books.operate` and `business_crew.staff` (`sim/agents/business_books.py`, `business_crew.py`) run the plant at
   size times weight, so crew, takings and wages follow the share; `adoption.observed_gap` reads the plant's margin per
   unit of share. Test: `--only adoption_reaches_production`.
-- Done: the engine records contact on a conquest (`campaign_year._take` calls `contact_events.after_conquest`) and on a
-  migration (`regional_people.step_regions_of_people` calls `contact_events.after_migration` from `migrant_pairs`).
+- Done: the engine records contact on a conquest (`Contest` in `sim/campaigns/contest.py` sends `RecordConquestContact`, applied in `sim/actors/contact.py`) and on a
+  migration (`sim/demography/regions.py` sends `RecordMigrantContact`, applied in `sim/actors/contact.py`).
 - Done: purchases a buyer that `keeps_purchases` (a firm) makes at the market are delivered to its `stores`
   (`port_actors.close` returns the delivery by good; `stock_keeping.add_delivery`).
 - Remainder: (3) no node requires samples brought back from a region (expedition `returns`, rubber and latex);

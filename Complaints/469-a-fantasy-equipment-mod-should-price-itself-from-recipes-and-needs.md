@@ -29,15 +29,15 @@ an open licence, so they must not be copied into the repository.
    engine edit? Which items fail, and why (an item with no recipe, a recipe whose input has no producer, a
    good with no need)?
 2. Is the price the cost of making it, or a scarcity price, and does that match the item's supply?
-3. Light. Today light is folded into `warmth_and_light`, measured in megajoules of fuel heat
-   (`data/world/needs.json`), so a candle is worth its heating value and nothing for the hours of light it
-   gives. There is no candle good in the base data (only wax and wick inputs in
-   `data/production/40_organics.json`). A candle's worth should come from burn time and light, without a
-   rule that names candles.
+3. Light. Light is its own need (`light` in `data/world/needs.json`, in lumen-hours), and the base data has candle goods
+   (`light_tallow_candle` and variants with a quality factor, `data/production/99_lighting.json`); a gaming house recipe
+   already consumes `light_tallow_candle` per player-hour (`data/production/99_gaming.json`). What is left of this question: a
+   candle's worth should come from burn time and light without a rule that names candles, and a fantasy mod's candle must
+   do the same.
 4. Institutional consumers. A tavern that lights candles for its customers, or a temple that burns many,
    should demand them because the service it sells or the rite it performs consumes them through its
    recipe or its upkeep, not through a rule naming taverns or temples. Churches and academies are actors with
-   endowments, tithes and stipends (`sim/agents/foundation.py`, Complaint 110), but they do not yet consume candles; this part can build on them.
+   endowments, tithes and stipends (`sim/agents/foundation.py`, Complaint 110), but they do not yet consume candles (`grep -n candle sim/agents/foundation.py` is empty); this part can build on them.
 
 ## How to close it
 

@@ -5,7 +5,7 @@
 **What is wrong now.**
 
 - A trade no recipe books hours to (optician, scholar, soldier, sailor, dockworker, master) has no task description, so no source trade covers it and it trains at the full apprenticeship with no early hands. The service it sells has no demand side the formation reads: its first hands should come from the people who demand the service (an unmet need for it pulling hands in), and no data or economy reading names that demand yet.
-- The learning curve now sets a producer's hours (item 9) but not its spoilage: `learning_curve.error_share` is still called by nothing in the economy. `train_check` does not pass the teacher's proficiency to `trade_first_hands.cohort_rows`. `SOURCE_TASK_FLOOR_FRACTION` therefore stays a labelled heuristic.
+- The learning curve now sets a producer's hours (item 9) but not its spoilage: no spoilage function exists in `sim/labour/learning_curve.py` any more (`error_share` was deleted), so spoilage is not wired to the curve. `train_check` does not pass the teacher's proficiency to `trade_first_hands.cohort_rows`. `SOURCE_TASK_FLOOR_FRACTION` therefore stays a labelled heuristic.
 - `taught_from` in `data/world/trades.json`: one link was added with an opened source (millwright from carpenter). No opened source supports electrician, engraver or the other trades without a link; Wikipedia's Electrician page says only that electricians "were originally people who demonstrated or studied the principles of electricity".
 - Bought bonded people arrive in the area's workers at a trade; the engine holds them for the buyer's works through `record.bonded_held`, but a person is a headcount (strata count all ages, the labour core working people), and the keep the holder pays is the area's wage floor, not a measured cost of keeping a bonded household.
 
@@ -32,7 +32,7 @@ sale records. See also 648.
 2. `sim/labour/market/formation.py` runs after migration each year for every (area, trade) with vacancies and no one of the
    trade: migrants from areas with a route in, then bonded people. A trade with some hands and vacancies left buys bonded people
    too. Tests: `test_trade_formation_routes.py`.
-3. Owners' sale rule and the bonded price (`sim/labour/market/bonded_worth.py`, `formation_bonded.py`): a person is worth the
+3. Owners' sale rule and the bonded price (`sim/labour/market/bonded_worth.py`; the purchase is `buy_bonded` in `formation_buy.py`, and the module `formation_bonded.py` is gone though its name survives in docstrings of `formation.py`, `formation_buy.py` and `formation_kernel.py`): a person is worth the
    present value of their hours over a working life at the household discount rate (`worth_of_hours`); a trained person's hour
    fetches the trade's wage where it is practised, never less than the floor wage times the trade's training premium
    (`trained_wage_per_hour`), so a trained person is dearer than an untrained one. The owner's ask is that worth where the owner is
@@ -44,13 +44,13 @@ sale records. See also 648.
    trade where the people were bought hold them (`record.bonded_held`); each year their hours come off the households' offers and
    work for the holder, off the market, as far as the holder bids for them; the holder pays their keep to the households whose hours
    were taken. Deaths thin the holding (no more held than the trade's workers there). Tests: `test_bonded_worth.py`.
-5. A conversion cohort is written as two training records (`sim/labour/trade_first_hands.py`), now capped at the teacher's
-   proficiency (`capped_by_teacher`). Tests: `test_trade_first_hands.py`, `test_learning_curve.py`.
+5. A conversion cohort is written as two training records (`sim/labour/trade_first_hands.py`), meant to be capped at the teacher's
+   proficiency (`capped_by_teacher` is not found in the code; `train_check` still does not pass the teacher's proficiency, see above). Tests: `test_trade_first_hands.py`, `test_learning_curve.py`.
 6. `sim/labour/learning_curve.py`: Wright's curve (`unit_time_ratio`, `proficiency`, `cumulative_for_proficiency`), an error share
    with a floor above zero, pooled spillover. `LEARNING_RATE` is sourced (Wright 1936 as stated on en.wikipedia.org/wiki/Learning_curve,
    opened; Thompson, econwpa 9712001, 12 to 24 per cent per doubling in shipbuilding). Tests: `test_learning_curve.py`.
 7. Data: `millwright` `taught_from: carpenter` with `taught_from_source` (Wikipedia 'Millwright', opened).
-8. Bonded purchase within the plan (`sim/labour/market/bonded_room.py`, `formation_bonded.py`, `sim/economy/outlay_room.py`,
+8. Bonded purchase within the plan (`sim/labour/market/bonded_room.py`, `formation_buy.py`, `sim/economy/outlay_room.py`,
    `bonded_purchase.settle`): a purchase is a capital outlay, so an employer pays only from room its year plan leaves: the cash
    its plan assigns to no line (`YearInputs.outlay_room`: a producer's cash less its wage line and input bids, `Plan.wage_line`;
    the state's cash less its wage and goods budgets and what it holds back, `StateBudget.held_back`) and the wage line of the
@@ -74,5 +74,5 @@ sale records. See also 648.
    the entry siting's committed and staffable hours, the entrant's working capital) costs a newcomer at the mean of its hours over
    `LOSS_YEARS_BEFORE_EXIT` years, starting at its peers' practice and learning on the runs it is built for, so a first year that
    loses and later years that pay enter when the years together pay. Tests: `test_economy_entry_practice.py`. Open: spoilage
-   (`error_share`), a quit rate that removes practice apart from layoffs, entrants who join an existing producer's workshops, the
+   (no function for it exists), a quit rate that removes practice apart from layoffs, entrants who join an existing producer's workshops, the
    horizon's years weighed equally (no discounting) and the runs used in it being the planned share of the gap, and the speed is the Eurace mix of skill levels, not a measured one (`retire`d to this complaint).

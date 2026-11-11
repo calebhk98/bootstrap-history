@@ -6,12 +6,12 @@ Found by an outside reviewer reading the repository, checked against the code.
 
 ## What happens
 
-- The opening (`sim/economy/opening.py`) sizes production capacity from what households buy. It has no
-  notion of households working their own plots: no reference to growing or own plots in that file.
+- The opening (`sim/economy/opening.py`) sizes production capacity from what households buy, net of what their own
+  plots grow: it runs the year's own-plot rule through `sim/economy/opening_own.py` (Updates 9 and 10).
 - In every year, `Economy._grow_own` (`sim/economy/economy.py`) lets household labour that nobody hired
-  grow necessities on the household's own land, and `_less_what_it_grew` (`sim/economy/year_goods.py`)
+  grow necessities on the household's own land, and `less_what_it_grew` (`sim/economy/year_goods.py`)
   cuts each floor bid by the share of that need's floor the household grew.
-- So the first year removes much of the demand the opening built firms for. The reviewer measured Rome's
+- Before Update 9 the first year removed much of the demand the opening built firms for. The reviewer measured Rome's
   first year with the food floor fully self-grown and household goods budgets cut by almost all of
   their opening value; recorded cash income per head falls by a similar share. That figure is the
   reviewer's and was not re-run here. Cash income excludes food grown at home, so the fall is in market
@@ -35,9 +35,9 @@ describe different economies.
 ## Tried and failed (code not kept)
 
 An attempt (commit `6bfa0b32` on a branch named `opening-sizes-producers-net-of-own-grown-food`) ran the year's own-plot rule inside the
-opening's fixed point (a module `opening_own.py`, reusing `households_own.own_production` and `year_goods._less_what_it_grew`), so
-the opening's grain demand matched what year one grows. The branch is deleted and the commit is not in this repository, so the code
-cannot be recovered; `sim/economy/opening_own.py` does not exist. It passed the quick tier but broke the slow topic
+opening's fixed point (a module `opening_own.py`, reusing `households_own.own_production` and `year_goods.less_what_it_grew`), so
+the opening's grain demand matched what year one grows. That branch is deleted and its commit is not in this repository; `sim/economy/opening_own.py` was
+later rebuilt (Updates 9 and 10), so this section records only why the first attempt failed. It passed the quick tier but broke the slow topic
 `agent_economy_wiring` on Rome: after the opening, households offered no savings at all (`record.funds_offered` zero, so
 `economy_api.credit_room` is None). That is the collapse recorded in 526: with the food floor grown at home, the saving leak drives
 the settled income toward zero. So the work lands together with 526 (607), with `agent_economy_wiring` and

@@ -2,7 +2,7 @@
 
 **Status:** open - found tracing Rome's year-one fall on branch claude/labor-market-economy-stability-ueffy1; not fixed
 
-On the branch economy-labour-single-source-cleanup, of the five parked patches only `961-hard-input-ceiling` applies (checked with the apply check of each); `961-plan-within-input-reach`, `961-merchants-learn-unfilled-demand`, `961-own-land-sells-surplus` and `961-opening-within-input-reach` do not. The diagnoses were made before that branch changed the economy and labour code and need re-measuring.
+Of the five parked patches, none applies on main now (`patch -p1 --dry-run` fails two hunks of `961-hard-input-ceiling`, at `sim/economy/producers.py`; it was the only one that applied on the cleanup branch, which is merged); `961-plan-within-input-reach`, `961-merchants-learn-unfilled-demand`, `961-own-land-sells-surplus` and `961-opening-within-input-reach` do not. The diagnoses were made before that branch changed the economy and labour code and need re-measuring.
 
 **What is wrong.**
 

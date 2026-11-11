@@ -7,6 +7,8 @@ noise. This file is the current list: one entry per failing topic, naming the co
 is an open design issue, that complaint leaves the check failing on purpose; it is never loosened to go green. Older entries
 are in `Complaints/reports/558-history.md`.
 
+The list below predates many test removals and needs a fresh `--slow` run (pinned to one commit, `python3 -m sim.tests --slow --jobs 3 --timing`) to be replaced.
+
 Measured: the full slow run on main 3cb9c9a0, 2026-10-21, `python3 -m sim.tests --slow --jobs 3 --timing` in a checkout pinned to
 that commit. Re-run the same command for the current list; this section is replaced, not appended, each time.
 

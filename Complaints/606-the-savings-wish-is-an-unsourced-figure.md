@@ -13,7 +13,7 @@ unsourced for any pre-modern society:
 
 - `CARROL_CONSUMPTION_PARAMETER` and `WEALTH_INCOME_RATIO_TARGET` (`households_buffer_stock.py`) carry the Eurace manual's
   values (section 10.1.3), one value for every household; the Eurace C code sets no default.
-- `WEALTH_DRAWDOWN_LIMIT`, `SPENDING_CUT_LIMIT` and `HOUSEHOLD_TIME_PREFERENCE` (`households_orders.py`) say "no source found".
+- `WEALTH_DRAWDOWN_LIMIT`, `SPENDING_CUT_LIMIT` (`households_orders.py`) and `HOUSEHOLD_TIME_PREFERENCE` (`household_time_preference.py`) say "no source found"; their `retire` points to 607, only the two Eurace constants above point here.
   `HOUSEHOLD_TIME_PREFERENCE` now also sets every civilisation's opening interest rate: `opening_rate.opening_market_rate`
   clears no funds against no requests at the opening (the resting opening gives households no spare cash), so it returns
   the lenders' lowest ask, which is this figure. Until the opening has lenders and borrowers to clear, the opening rate is

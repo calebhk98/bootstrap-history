@@ -34,7 +34,7 @@ points: even at a zero wage employers bid for little more, and by year ten nearl
 markets with no extra bid at any wage. The limit is demand for labour, and people staying attached for years to trades
 in their area that hire nobody (farmer, labourer, miner hold most idle hours). Side finding: in a few thin areas the
 unskilled wage reads several times the national one, and it becomes every skilled trade's reservation there
-(`unskilled_option`).
+(`unskilled_option`); that mechanism is Complaint 965's, which carries the fix options.
 
 **Idle workers reconsider their trade at the share that found no work** (merged): raised Rome's real output in the middle
 years. Two further changes are parked: idle workers leaving a dead trade for their plot (lowered output), and

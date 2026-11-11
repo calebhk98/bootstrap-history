@@ -10,25 +10,25 @@
   stands its armies down by the same share.
 - The year has a `campaigns` phase (`sim/engine/year_phases.py`, `sim/campaigns/campaign_year.py`). An army marches the
   route graph's fastest route to its target (days by mode), eats from the land it crosses
-  (`campaign_supply.tile_stock_kg`, a share of the tile's food potential, drawn down within the year), from a pack-animal
+  (`tile_stock_kg` in `sim/world/campaign_supply.py`, a share of the tile's food potential, drawn down within the year), from a pack-animal
   column bringing grain from the owner's tiles within reach (`carriage_kg_per_day`, the animal's own fodder out and
   back, `military_logistics`), then from its stock. Hunger, the tile's endemic disease (geography's
-  `endemic_people_loss`) and desertion when the army line's arrears are owed take men (`campaign_attrition.py`).
-- Battle (`battle.py`): effective strength is numbers times equipment quality (the iron and ammunition a soldier is
+  `endemic_people_loss`) and desertion when the army line's arrears are owed take men (`sim/world/campaign_attrition.py`).
+- Battle (`sim/world/battle.py`): effective strength is numbers times equipment quality (the iron and ammunition a soldier is
   supplied with, so a rifle burden counts for more by the same rule) times supply state times terrain (the tile's
   ruggedness for the defender); a draw from a seeded stream decides the winner by the strength shares; both sides lose
   men, the loser more.
-- Siege (`campaign_contest.siege_turn`): shut-in defenders eat the tile's stores and no column reaches them; the
+- Siege (`siege_turn` in `sim/world/campaign_contest.py`; the orchestration is `Contest` in `sim/campaigns/contest.py`, which also holds the tile taking, the captive hooks and the conquest contact): shut-in defenders eat the tile's stores and no column reaches them; the
   besieger storms when its chance is good enough, waits while it is not, and withdraws when its own ration fails. The
   defence is the owner's armies on the tile plus its free soldiers shared over its tiles by their people.
-- Conquest: a tile whose defenders are gone passes through `transfer_tile` at the level `data/world/control_levels.json`
+- Conquest: a tile whose defenders are gone passes through `transfer_tile` (`sim/land/ownership.py`) at the level `data/world/control_levels.json`
   names (`conquest`), rising with the years it is held with an army on it; foreign countries' profiles follow the
   transfer, and the home budget's territory reads the owner map.
 - Commands `army` (raise, march, recall, disband) and `armies` for a country seat (`sim/ui/proto/dispatch_armies.py`,
   `sim/PROTOCOL.md`). A state no seat plays raises and orders armies to threatened tiles and never attacks
   (`sim/agents/army_raising.py`).
 - Tests: `sim/tests/test_campaign_rules.py` (rules on built inputs), `sim/tests/test_campaigns_year_smoke.py` (a two-country
-  game). Sources opened: Engels, Alexander the Great and the Logistics of the Macedonian Army (ch. 1 and Appendix 1:
+  game) and `test_campaigns_module.py`. Sources opened: Engels, Alexander the Great and the Logistics of the Macedonian Army (ch. 1 and Appendix 1:
   ration, pack load, how far animals can carry food; the epub text has no page numbers); Roth, The Logistics of the Roman
   Army at War (ch. 1 p. 66, ch. 4 p. 222: grain ration, mule fodder and load). Haldon was not opened. Every other figure
   is a labelled heuristic with a `retire` (`campaign_*.py`, `battle.py`; `--compare` counts them).

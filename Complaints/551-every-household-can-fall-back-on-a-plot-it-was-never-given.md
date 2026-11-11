@@ -23,14 +23,14 @@ Found by an outside reviewer reading the repository; checked against the code.
 ## What was done
 
 - `households_own.own_production` and `hours_for_own_plan` take the hectares the cohort holds: a cohort with none grows nothing and keeps back no hours; a holder grows no more than those hectares yield (`hours_on_land`).
-- `titles_worked.py`: `worked_share` (title less what is let out, plus what is worked as a tenant) and `allocate_hectares` (claims cut by one factor when they exceed the tile arable land). `Economy._hectares_held` decides the allocation before any growing.
+- `titles_worked.py`: `worked_share` (title less what is let out, plus what is worked as a tenant) and `allocate_hectares` (claims cut by one factor when they exceed the tile arable land). `Economy.hectares_held` (`sim/economy/economy.py`, delegating to `titles_plots.py`) decides the allocation before any growing.
 - Tests: `LandHeldTests` in `sim/tests/test_economy_households_own.py`.
 
 - Leasing in the market (Complaint 538 rules): `sim/economy/land_tenancy.py` (`match`, `rent_ask`, `lettable_hectares`)
   and `land_lease_year.lease_in_market`, called each year before the own-plot allocation. A cohort wants the hectares its
   floors need beyond what it works, no more than its hands and tools work; a holder lets what it holds beyond what it works
   for its own floors (a holder with no hands, a state, a firm or a lender lets all). The lease is a tenancy
-  (`titles.lease`); `titles_worked.worked_share` and `Economy._hectares_held` read it, so the own-plot rule grows on leased
+  (`titles.lease`); `titles_worked.worked_share` and `Economy.hectares_held` read it, so the own-plot rule grows on leased
   land. Tests: `LeasingInTheMarketTests` in `sim/tests/test_economy_land_tenancy.py`, `sim/tests/test_economy_land_lease_year.py`.
 - The tools check: `land_tenancy.hectares_workable` gives the hectares the cohort's hours work with the tools it holds
   (its stock, or what it rents: pass the rented stock with the held), counting the extra hours of the next tool and of

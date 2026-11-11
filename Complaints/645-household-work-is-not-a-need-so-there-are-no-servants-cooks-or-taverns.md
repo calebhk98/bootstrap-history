@@ -24,7 +24,7 @@ it is a mod (`mods/TASKS.md`).
 - The opening settles the hired share on a cycle by bisecting over households ranked by what an hour hired gains them
   (`opening_plans._by_margin`) and posts the price at which the servants there are enough
   (`households_work.service_price_that_fits`).
-- Own hours are kept back: `labour_supply.HourSupply` adds each cohort's own household-work hours to its own-plot hours, so
+- Own hours are kept back: `HourSupply` in `sim/economy/labour_supply.py` adds each cohort's own household-work hours to its own-plot hours, so
   `withhold_hours` cuts the offers. Every other hour is offered to the market (no leisure split); household work is fixed
   against the labour offer, not chosen against leisure.
 - Hearth: a cohort has one when it holds a title or a tenancy on its tile (`household_work_year.has_hearth`). A hearth-less
@@ -35,7 +35,7 @@ it is a mod (`mods/TASKS.md`).
   grain plus the grinding hours at the worth of its hour. Hours fall only on the share it grinds by hand. The full load is a
   labelled heuristic (the source gives no kilograms), `retire` in the data.
 - Tests: `sim/tests/test_economy_household_work_year.py`, `test_economy_households_work.py`,
-  `test_economy_household_grinding.py`, `test_economy_opening_household_plans.py`.
+  `test_economy_household_grinding.py` (`test_economy_opening_household_plans.py` no longer exists).
 
 ## What is wrong now
 

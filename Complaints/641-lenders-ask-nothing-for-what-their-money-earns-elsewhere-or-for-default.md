@@ -1,6 +1,6 @@
 # Lenders ask nothing for what their money earns elsewhere or for default, so the rate clears at zero
 
-**Status:** partly - lenders' lowest ask (time preference plus expected inflation plus loss record), the bank spread and Eurace's default-probability markup with a value-at-risk cap are built; open: the land-yield and public-debt alternatives have no live input, `market_rate()` is not re-measured since the Eurace changes, the engine-facing rate still clamps nominally
+**Status:** partly - lenders' lowest ask (time preference plus expected inflation plus loss record), the bank spread and Eurace's default-probability markup with a value-at-risk cap are built; open: `lowest_ask` has no land-yield or public-debt alternative (the function takes only time preference, expected inflation and expected loss), `market_rate()` is not re-measured since the Eurace changes, the engine-facing rate still clamps nominally
 
 **What was wrong.** Households lent at `max(0, expected_inflation)`, `credit.clear` (`sim/economy/credit.py`) floored the rate at zero
 and dropped it to the lowest ask when funds sat idle, and a bank asked its depositors' rate plus a fixed margin. So a
@@ -9,9 +9,9 @@ sides would agree to.
 
 ## What is built
 
-- `sim/economy/lender_ask.py`: `lowest_ask` is the best of the lender's alternatives (time preference plus expected
-  inflation, land yield, public yield) plus its expected loss rate; `loss_rate` is the share of the lender's credit
-  exposure that went bad (`record.credit_losses`); `land_yield` is rent over title price, nothing where the land has no price.
+- `sim/economy/lender_ask.py`: `lowest_ask` is the lender's time preference plus the inflation it expects, plus its expected loss rate;
+  `loss_rate` clamps the lender's remembered yearly loss rate (`loss_memory.py`, fed by `record.credit_losses`). It takes no land-yield or
+  public-yield alternative (none exists in the sim: `grep -rn "def land_yield\|public_yield" sim`).
 - Households offer at that ask where they lend (`households_orders.py`, `lending.lend_working_capital`).
 - `sim/economy/bank_spread.py`: a bank's spread is its loss rate plus `BANK_SPREAD_AT_NO_CAPITAL` times how far its capital
   ratio falls short of `BANK_CAPITAL_SHARE_OF_LOANS` (shape after Caiani et al. 2016 and Lavoie; labelled heuristic with `retire`).
@@ -39,9 +39,9 @@ sides would agree to.
 
 ## What is wrong now
 
-- Land yield has no live input: no title is bought or sold at a price (`titles_value` capitalises rent at the live rate, so
-  rent over that price is the rate itself, a circle). It needs titles that trade at a price (538, 551).
-- Public debt: no state bond reaches the household lender's choice, so `public_yield_available` stays unfed.
+- No land-yield alternative: `lender_ask.py` has no such input, and no title is bought or sold at a price (`titles_value` capitalises
+  rent at the live rate, so rent over that price would be the rate itself, a circle). It needs titles that trade at a price (538, 551).
+- No public-debt alternative: no state bond reaches the household lender's choice, and `lender_ask.py` has no input for one.
 - Expected loss reads the loss share of exposure as a yearly rate; a lender that lost and then holds no claims asks the
   whole loss share. `RATE_FLOOR_SHARE` (capital_market) is a separate typed floor that this does not retire.
 - `capital_market.market_rate_answered` still bounds the engine-facing rate nominally (`bounded_rate` takes `expected_inflation`
@@ -58,7 +58,7 @@ sides would agree to.
 
 ## What it would take
 
-Feed the two alternatives (titles at a price, a state bond reachable by households), re-measure the opening rate, and retire
+Build the two alternatives (titles at a price, a state bond reachable by households) and add them to `lowest_ask`, re-measure the opening rate, and retire
 `RATE_FLOOR_SHARE` if the lenders' floor now does its job. Tests call the ask and clearing functions with built offers: a
 glut leaves the rate at the lenders' floor, not zero; a lender with past losses asks more.
 

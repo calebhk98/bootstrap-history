@@ -20,7 +20,7 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
 - **The concentration check on a village fixture is gone.** `test_economy_land_concentration.py` (BASELINE VALIDATION,
   `economy_land_concentration`) and `land_fixture.py` are deleted from `sim/tests/`; the rules remain. It ran households that borrow against
   their plots and default after a run of failed harvests, over an ensemble of shock histories, against the sourced band by
-  denominator (`titles_concentration.LAND_GINI_SOURCED`). Han China and the Mexica have no band (no land Gini found in
+  denominator (`LAND_GINI_SOURCED` in `sim/tests/titles_concentration.py`). Han China and the Mexica have no band (no land Gini found in
   anything opened); no source gives a land top-decile share, so it is printed, not checked. A full game over a century
   where borrowing households default is still not run; print the fixture's path with
   the topic no longer exists, so nothing prints it.
@@ -51,7 +51,7 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
 ## Research done and still needed
 
 - Done: `Complaints/reports/research-household-wealth-and-land-concentration.md` section 2 gives the land Ginis by
-  denominator that `titles_concentration.py` now holds: England 1279 about 0.59 with the landless left out and about 0.78 with
+  denominator that `sim/tests/titles_concentration.py` now holds: England 1279 about 0.59 with the landless left out and about 0.78 with
   them counted (Kumon 2021), a simulation of 120 years of land sales from 0.135 to 0.625 (Bekar and Reed 2009), Roman Egypt
   villages 0.37 to 0.52 and urban or absentee owners 0.62 to 0.76 (Scheidel 2019), enclosure parishes 0.65 to 0.82 with the
   landless counted.
@@ -64,7 +64,7 @@ Taxes, rent and banditry drive abandonment of marginal land. The full log of wha
 - Rent asks, leases in the market, the tools check: `sim/economy/land_tenancy.py`, `land_lease_year.py`; tests `test_economy_land_tenancy.py`, `test_economy_land_lease_year.py`.
 - Buyers other than cohorts: `land_bid_year.actor_bids`, `firm_land_bids`, `take_up_bought` (any holder); `test_economy_land_buyers.py`.
 - Bonded hours: `sim/economy/bondage_hours.py`; `test_economy_bondage_hours.py` (its `_scenario` file is gone).
-- Concentration: `titles_concentration.py`, `test_economy_land_concentration_rules.py` (channels); the validation test and `land_fixture.py` are deleted.
+- Concentration: `sim/tests/titles_concentration.py`, `test_economy_land_concentration_rules.py` (channels); the validation test and `land_fixture.py` are deleted.
 - Land bid, seller floor and ground handling: `sim/tests/test_economy_land_bid.py`, `test_economy_land_seller_floor.py`, `test_economy_costless_run_stock_gate.py`, `test_economy_ground_not_queued.py`.
 - Bondage: `sim/tests/test_economy_bondage.py`. Debt relief and tax farming: `sim/economy/debt_relief.py`, `tax_farming.py` (policy lever `sim/agents/policy_land.py`).
 - Measure the land market in a game that has no crop buyer: step a Norse game (the scenario file this once named, `test_staff_closure_reopening_scenario.py`, is deleted) and print the clearer's stock, the remembered price and the titles of `sweden_01` each year; there a cohort's earning is the rent only, so a buyer's worth equals the seller's floor and little trades.

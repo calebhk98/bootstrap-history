@@ -19,11 +19,10 @@ There were two models, and they did not read each other (re-check each bullet be
 
 Within the farm model:
 
-- Soils (`agriculture.py`): chernozem, desert, arctic and mountain are defined, but the engine uses
+- Soils (`sim/world/agriculture_core.py`): chernozem, desert, arctic and mountain are defined, but the engine uses
   only `DEFAULT_SOIL` (`agriculture_labour.py`), so soil never varies. There is no alluvial, podzol or
   steppe soil and no heavy clay that needs a heavy plough.
-- Rotations: `NILE_FLOOD_RECESSION` (near-zero fallow) is defined in `agriculture.py`, but outside
-  tests nothing selects it, and nothing ties it to floodplain land. The tile model gives river land no
+- Rotations: `NILE_FLOOD_RECESSION` (near-zero fallow) was deleted (`sim/tests/test_tillage_and_silt.py` asserts it is gone), so nothing selects it, and nothing ties a recession fallow to floodplain land. The tile model gives river land no
   fallow on its own. Each model handles the Nile its own way.
 - Crops: `RICE` is defined but no tree node adopts it; there is no maize and no
   irrigated wheat separate from dry wheat.
@@ -130,7 +129,7 @@ farm producers and households' plots are the one food model, and `Sim.farm_sites
 
 ## Done: tile weather, the hand hoe and tillage (this round)
 
-- Each land producer's yield takes its own tile's weather cell (`Sim.farm_weather_by_tile`, `sim/engine/core.py`; read by
+- Each land producer's yield takes its own tile's weather cell (the engine's `farm_weather_cells` view, `sim/engine/core.py`, and `farm_weather` in `sim/markets/port_world_reads.py`; `Sim.farm_weather_by_tile` no longer exists; read by
   `crop_yields` (`sim/markets/port_sites.py`)); a tile merged into a pooled cell, or with no cell, takes the pooled multiplier. The cells' own
   multipliers are `weather_pooling.cell_multipliers`; the pooled one is their weighted mean. Tests: `test_weather_cells`,
   `test_economy_crop_yields` (TileWeatherTests), `test_tile_weather_wiring`. The national path and demography still read the pooled draw.

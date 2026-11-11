@@ -15,17 +15,16 @@ is fixed too (`true_up_keep`).
 
 **What is built (648).**
 
-1. Captives by campaign. `sim/campaigns/captives.py` (called from two lines of `sim/campaigns/campaign_year.py`, 485's file: after a
+1. Captives by campaign. `sim/campaigns/captives.py` (called from `Contest` in `sim/campaigns/contest.py`, 485's orchestration: after a
    decided battle, and in `_take` before the tile changes hands) gives the winner's bonded stratum a share of the beaten side's
    losses (`captives_from_losses`, `CAPTIVE_SHARE_OF_DEFEATED_LOSSES`) and a share of a taken tile's people
    (`captives_from_conquest`, `CAPTIVE_SHARE_OF_CONQUERED_PEOPLE`), both in `sim/agents/bonded_sale.py`; a society with no bonded
    stratum takes none into bondage. Both shares are labelled heuristics (confidence D, `retire` 648): Scheidel 2005 says the
    enslavement of non-combatants after a defeat was a natural outcome of war and women and children more often survived
-   defeat than adult men, and gives no share. Tests: `test_bonded_purchase.py` (rules), `test_campaign_scenario.py` (the hooks in a
-   real two-country game).
+   defeat than adult men, and gives no share. Tests: `test_bonded_purchase.py` (rules), `test_campaigns_module.py` (the hooks; `test_campaign_scenario.py` is gone).
 2. A slave trade by merchants between areas, through the bonded purchase market, not people as goods. Every bonded stratum is on
    offer at its owners' ask (the present value of the person's hours where the owner is, 644 item 1); a short trade buys where ask
-   plus carriage (the cheapest way along the migration routes, `bonded_worth.cheapest_carriage`) is lowest and under the buyer's bid,
+   plus carriage (the cheapest way along the migration routes, `carriage_costs` in `sim/labour/market/records.py`; `bonded_worth.cheapest_carriage` is gone) is lowest and under the buyer's bid,
    so people move from where the price is low to where it is high; the owner is paid the ask, the origin country's merchant stratum
    the carriage (`buy_bonded`). Tests: `test_bonded_worth.py`, `test_trade_formation_routes.py`, `test_bonded_purchase.py`.
 3. The ensemble check. The slow game test is deleted (it read an unsettled whole economy and named no rule). What remains as
@@ -47,7 +46,7 @@ deaths vary by seed. The test that produced this is deleted; see item 3 for the 
   modelled, and the buyers' people count in the economy is working people while a stratum counts all ages.
 - People do not move: a purchase moves money (ask to the owner, carriage to the merchants) and lowers the seller's bonded
   stratum, but the held hours are taken from the trade's workers already living at the destination tile
-  (`bondage_hours.place_held`), and no tile's population changes. A bought person should leave the origin tile's people and
+  (`place_held` in `sim/economy/bondage_hours.py`), and no tile's population changes. A bought person should leave the origin tile's people and
   join the destination's.
 - Captives convert rather than move: `follow_population` rescales every home stratum to the counted people each year, so
   captives added to the winner's bonded stratum raise its share and lower the others', while the loser's population is not

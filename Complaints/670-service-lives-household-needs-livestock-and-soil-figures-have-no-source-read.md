@@ -21,7 +21,7 @@ Split from 646 (figures recalled rather than read; closed). Each entry below is 
   stock (Duncan-Jones), the tallow and oil lamp quality factors, salt satiation.
 - Soil: the temporary heuristics of `sim/geography/soil_nutrients.py` (native nitrogen pool, loss rate, legume net nitrogen,
   manure available the first year, manure retained in the pool, the share of herd excreta carried to the fields); list with
-  `python3 sim/constants.py --burndown | grep soil_nutrients`. The three-field legume share in `sim/world/agriculture.py`
+  `python3 sim/constants.py --burndown | grep soil_nutrients`. The three-field legume share in `sim/world/agriculture_core.py`
   (half of the spring field taken as legumes: "recalled, not measured").
 - Household time preference and the savings constants (`HOUSEHOLD_TIME_PREFERENCE`, `SAVINGS_YEARS_OF_SURPLUS_INCOME`,
   `SPENDING_CUT_LIMIT`, `WEALTH_DRAWDOWN_LIMIT`) retire to 607, not here.

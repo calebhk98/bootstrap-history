@@ -7,7 +7,7 @@ PR #112 plus the log-line `cause` fix stopped partway through with:
 
     AssertionError: reachable lime_burner 0.01 exceed the nation of 0.0
 
-raised by `check_labour_market_invariants` (`sim/engine/invariants.py:70`), called from `verify_step_invariants`
+raised by `check_labour_market_invariants` (`sim/engine/invariants.py:60`, the assertion at :73), called from `verify_step_invariants`
 (`sim/engine/year_steps.py:39`) at the end of a year. The traceback does not name the scenario; it is one of
 `QUICK_SCENARIOS` in `sim/tests/fingerprint.py` (Rome seeds 1 and 2, Han China seed 1, England seed 1, a hundred years
 each). It surfaced only after the log-line crash was fixed, so it may have been hidden behind that one before.

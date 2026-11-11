@@ -1,20 +1,19 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; the flight comparison, the liability rule and the amnesty, immunity and remission levers are rules, fed by the engine into the labour market's year inputs (tenants flee, fugitives are kept and return) and into the AI state's menu, which nets the base lost to flight; unrest (486) is open, so `FISCAL_BURDEN_WEIGHT` stays
+**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; the flight comparison, the liability rule and the amnesty, immunity and remission levers are rules, fed by the engine into the labour market's year inputs (tenants flee, fugitives are kept and return) and into the AI state's menu, which nets the base lost to flight; unrest is built (`sim/agents/unrest.py`, read by `sim/campaigns/stability.py`) but the AI state's menu does not foresee it, so `FISCAL_BURDEN_WEIGHT` stays
 
 Follows from 626 (tax rates as a state choice).
 
 **What is wrong now.** A state can raise the rate of a form (a player's lever, or an AI state's `raise_rate` response). The
-base now responds in three ways (below), but not in these:
+base responds in the ways listed under Built below (hiding, flight, liability), but not in these:
 
-- Flight from a taxed tile: `sim/labour/market/migration.py` (workers weigh the log of expected income over subsistence in
-  each area against their own, less moving cost) has no per-area after-tax figure. `tax_burden.harvest_share_taken` already
-  gives one for the harvest; it would pass through `YearInputs` into `_real_income`.
-- No unrest from a heavy burden (486).
+- Unrest from a heavy burden is built (`sim/agents/unrest.py`; `sim/campaigns/stability.py` reads `tax_burden.harvest_share_taken`
+  and the liability burden), but nothing in the AI state's menu (`fiscal_response.py`, `fiscal_flight.py`, `government_fiscal.py`)
+  foresees it.
 - The producers' land demand and run decisions in the economy do not net a harvest tax off expected revenue
-  (`land_market.demands_of`).
-- The AI state's `raise_rate` option does not count the base lost through flight or unrest. It weighs a raise by
-  `FISCAL_BURDEN_WEIGHT` (`sim/agents/tuning_fiscal.py`), a labelled stand-in; it retires when the menu values those too.
+  (`land_market.demands_of`), and the farm-hours choice has no tax input.
+- The AI state's `raise_rate` option does not count the base lost through unrest (it does net hiding and flight). It weighs a
+  raise by `FISCAL_BURDEN_WEIGHT` (`sim/agents/tuning_fiscal.py`), a labelled stand-in; it retires when the menu values unrest too.
 
 **Why it matters.** Without a full response of the base there is a ceiling to taxation only at the rate cap, and a state
 cannot lose by overtaxing in every way a real one does (CLAUDE.md 4.1: the outcome should come from lower-level state, not
@@ -43,8 +42,7 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
   (`sim/markets/port_setup.py`), so the economy imports nothing from the actors. Customs duties on border imports
   are not under it. `HIDEABLE_SHARE_OF_INCOME` and `HIDING_MARGINAL_COST_AT_CEILING` (`sim/agents/tuning_evasion.py`) are
   labelled heuristics with `retire` 657.
-- Tests: `test_tax_pressure_reaches_decisions.py` (rules called with built inputs; the engine wiring is covered only by
-  whole-game topics), `test_tax_evasion.py`, `test_tax_evasion_economy.py`.
+- Tests: `test_tax_evasion.py`, `test_tax_evasion_economy.py`, `test_tax_flight_and_liability.py`.
 
 - **Flight is the migration rule.** `sim/labour/market/migration.py` scores each route by the income kept after the state's take
   in that area (`YearInputs.taxed_share`) less the move's cost, which now includes the expected penalty of recapture
@@ -74,7 +72,7 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
   and `Government.pull_tax_response_levers` sets the levers the choice covered money with.
 - Tests: `test_tax_flight_wiring.py` (rules called with built inputs; the engine's year is covered only by the whole-game smoke topics).
 
-**`FISCAL_BURDEN_WEIGHT` stays.** The menu now nets flight for a rate raise, but (1) unrest (486) is the other loss it stood in for and is not modelled;
+**`FISCAL_BURDEN_WEIGHT` stays.** The menu now nets flight for a rate raise, but (1) unrest (built, `sim/agents/unrest.py`) is the other loss it stood in for and the menu does not foresee it;
 (2) the levy and the demand in kind, which also carry `income_taken`, do not net flight; (3) with the migration rule's cap on the share who consider
 moving in a year, flight alone never makes a raise yield less in any rate or reach tried, so the loss the weight stands for is not all flight.
 
@@ -82,7 +80,7 @@ moving in a year, flight alone never makes a raise yield less in any rate or rea
 fills a title below one on a tile except a clearer's new ground), so a taker's years without tax are not applied after the first comparison. All net outflow from a taxed area is
 treated as flight (no split of the part that is not about tax); a fugitive's refuge is the area that gained most that year, not tracked per person; arrears accrue as a year's take at
 the area's subsistence, not the person's income, and `Route.expected_penalty` counts this year's take only (the fugitives' arrears are not added to a new leaver's). Whole-game effect not
-measured (a slow topic and the fingerprint are needed). (b) `remission` is never offered in the cases tried (see above). (d) Unrest (486). (e) The hiding-cost curve has no source.
+measured (a slow topic and the fingerprint are needed). (b) `remission` is never offered in the cases tried (see above). (d) The AI state's menu does not foresee unrest. (e) The hiding-cost curve has no source.
 
 ## Research needed
 

@@ -54,7 +54,7 @@ books: no trade gives no price and a quote; a trade gives its price.
 
 - Buyers read what is offered, not a remembered price (follows Eurace's consumers, who see only the mall's current
   prices: `Cons_Goods/Household_Consumer_Functions.c`). `MarketMemory.offered_price` / `YearView.offered_price` /
-  `offered_price.offered_price(view, good, area)` give the traded price, an ask still posted (`lowest_unfilled_ask`) or the
+  the reader in `sim/economy/producers.py` (`view.offered_price`; the module `sim/economy/offered_price.py` is gone) give the traded price, an ask still posted (`lowest_unfilled_ask`) or the
   opening's estimate before any clearing, and None for a bid ceiling, a cost quote or a price remembered from an old trade.
   A price from an old trade that nothing replaced now has its own kind, `PRICE_REMEMBERED` (it was reported as the
   opening estimate). Moved to it: `households_basket.need_prices` (:37), `households_store` (`price_rows` and the

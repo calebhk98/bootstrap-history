@@ -1,10 +1,10 @@
 # The opening's income is a fixed point that leaks saving, and fixtures state an income to avoid it
 
-**Status:** partly - `opening_income_per_head` is deleted; the settled income still leaks saving (households' cash rises, producers' cash and runs fall) and eight test modules state a surplus through `surplus_households`
+**Status:** partly - `opening_income_per_head` is deleted; the settled income still leaks saving (households' cash rises, producers' cash and runs fall) and the unused test helper `surplus_households` (sim/tests/economy_fixture.py) still patches a surplus income
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 
-Depends on 606, 538 and 545 (545 cannot land alone; 605 is closed). The unmerged rate search is on branch `fix-526-opening-rate` (`sim/economy/opening_rate.py`) and may be revived here.
+Depends on 606, 538 and 545 (545 cannot land alone; 605 is closed). The unmerged rate search is on branch `fix-526-opening-rate`; `sim/economy/opening_rate.py` on main is a different thing, the credit-market opening rate (`opening_market_rate`).
 
 **What is wrong.** The opening sets household income as the fixed point of income and the demand it pays for. Households save part of any surplus and nothing spends it (no producer plant, working capital or lending demand), so the fixed point falls to the households' floors. Fixtures state an income through `EconomySetup.opening_income_per_head` to get a surplus.
 
@@ -71,9 +71,9 @@ opening to seed its wage and runs from `opening_stationary` (473 Update 7). The 
 
 The field was set only by `surplus_game_openings`, which no test called; it, the branch in `opening._settle_income`, the
 engine port's read of it and `EconomySetup.opening_income_per_head` are gone (`test_opening_stationary_rules`,
-`test_no_scenario_states_the_incomes_of_its_households`). What still states an income: `economy_fixture.surplus_households`
-(eight test modules) patches the settled income to the full-employment ceiling; replacing it needs the opening to hold what
-its households want (606, 538). Seeding the real opening from `opening_stationary` is done for the hours (producers' runs are
+`test_no_scenario_states_the_incomes_of_its_households`). What still states an income: the helper `economy_fixture.surplus_households` (sim/tests/economy_fixture.py) patches the
+settled income to the full-employment ceiling; no test module calls it now (`grep -rn surplus_households sim tools`), so it
+can be deleted. A real opening that holds what its households want (606, 538) is still not built. Seeding the real opening from `opening_stationary` is done for the hours (producers' runs are
 the solved runs; the households' time split makes offered equal hired) and not for the income, which stays the fixed point of
 `opening_income`.
 

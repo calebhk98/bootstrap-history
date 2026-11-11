@@ -9,7 +9,7 @@ unsettled opening (473), could not name the function that broke, and its common-
 fixed, a rule test for the silver and gold chain goes with the fix.
 
 **Closed part (producer sizing).** The mint's bid for the coin metal was its whole strike capacity
-(`MINT_YEARLY_STRIKE_SHARE` times the money stock, `mint.yearly_monetisation`). Its unmet part, at a clearing price under the
+(a strike-share constant, since removed, times the money stock, `mint.yearly_monetisation`). Its unmet part, at a clearing price under the
 strike price, entered `year_close.runs_sold` through `expected_sales.demand_seen`, so the first year's close sized the silver
 producers to the capacity, not to the wear to replace. The mint now takes in what holders want to add plus what the money loses
 (as commodity money already did) and the heuristic is gone. Measure: the probe of silver recipes' `expected_sales` after one
@@ -18,7 +18,7 @@ money stock, which makes the second year's mint bid large (check `cash_target` i
 
 **Evidence on the cause** (details in `Complaints/reports/519-history.md`):
 
-- Not the mint: cutting `MINT_YEARLY_STRIKE_SHARE` by orders of magnitude leaves Rome's silver price unchanged.
+- Not the mint: cutting the (since removed) `MINT_YEARLY_STRIKE_SHARE` by orders of magnitude leaves Rome's silver price unchanged.
 - Silver sits at the coin's mint parity at the opening; the ore sites take the margin.
 - Unverified lead: the opening's price level in coin (wage, wheat) against the coin standard; the same drift as 473 and
   526. Check through `reprice_opening_money` and `coin_revaluation.py`.

@@ -22,12 +22,12 @@ that figure, so leakage is an outcome. 483 (tile control) is closed.
 
 **What 485 now gives this:** armies are located (`state.economy.campaigns["armies"]`, `Army.tile`), so a garrison on a tile is
 a record to count: the soldiers of an owner standing on a tile, by tile. A taken tile enters at the `conquest` level of
-`data/world/control_levels.json` and rises with the years an army stays on it (`campaign_year._consolidate_conquests`):
+`data/world/control_levels.json` and rises with the years an army stays on it (`Contest.consolidate_conquests`, `sim/campaigns/contest.py`):
 that rule is the first control level read from a garrison, and its step years are a heuristic that retires to this
 complaint. Left for this one: control from garrison against unrest and route cost from the seat (`reach`), and revenue that
 takes the figure.
 
-**Built (484 and 486 together, tests `sim/tests/test_stability_rules.py`, scenario `test_stability_scenario.py`):**
+**Built (484 and 486 together, tests `sim/tests/test_stability_rules.py`, also `test_stability_tile_passes.py`, `test_stability_kernels.py`, `test_stability_phase_and_save_rule.py`; the earlier scenario test `test_stability_scenario.py` is gone):**
 - Reach of a tile is the collection share (`sim/agents/collection.py`: officials, their time, roads from the seat); it falls with
   distance and rises with officials and roads. Hold is one minus the chance a rising of the tile's discontented beats the
   garrison on it (`sim/agents/authority.py` `hold`, over `battle.attacker_win_probability`; the garrison is the located
