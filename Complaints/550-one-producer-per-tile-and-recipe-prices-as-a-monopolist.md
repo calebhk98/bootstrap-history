@@ -1,6 +1,6 @@
 # One producer per tile and recipe prices as a monopolist
 
-**Status:** partly - entrants join as a crowd of price takers and a lone owner prices by Eurace's grid; the opening's producers still count as one workshop
+**Status:** partly - entrants join as a crowd of price takers, a lone owner prices by Eurace's grid, and a producer of a recipe with a plant counts its workshops from its capacity (`workshop_count.py`, at the opening and each year's close); a producer of a recipe with no plant (farms, mines) still opens as one workshop
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -19,6 +19,19 @@ Found by an outside reviewer reading the repository; checked against the code.
   economics. Competition from other tiles and other recipes remains.
 - A per-recipe workplace size (crew or plant scale) does not exist in the recipe, `sites.py` or the setup, so the opening
   cannot split a producer into a crowd. A labour-years proxy would make one large mine or furnace look like a crowd.
+
+## Done
+
+- `sim/economy/workshop_count.py`: a recipe's plant parts each turn out `runs_per_year` runs (one kiln, press, loom), so one
+  workshop works as many runs as its smallest part; a producer's capacity over that, rounded, at least one, is its workshop
+  count. `refresh_workshops` applies it to every producer of a recipe with a plant after the opening's capacities settle and
+  after each year's close writes capacity, so a shrunk producer does not keep a count from its past size. Test:
+  `sim/tests/test_economy_workshop_count.py`.
+
+## What is left
+
+- A recipe with no plant has nothing in the data that bounds a workshop (no crew size, no site area per workshop), so its
+  opening producer still counts one and only entry adds to the count. That is the grain farm, mine and herd case below.
 
 ## What it would take
 

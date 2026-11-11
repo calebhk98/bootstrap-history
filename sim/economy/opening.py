@@ -14,7 +14,7 @@ from sim.constants import declare
 from sim.labour.api import MarketState
 from sim.refusal import Refusal
 
-from . import producer_table
+from . import producer_table, workshop_count
 from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
@@ -180,6 +180,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     opening_runs.fit_to_supply(setup, record)
     rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts),
                                land_lease_year.own_plot_returns(setup, record, view, own.options))
+    workshop_count.refresh_workshops(record.producers, workshop_count.runs_per_workshop_by_recipe(setup.recipes))
     figure = record.capital_markets.property_income
     record.capital_markets.set_property_income(opening_rent.property_income_with_rent(figure, rent))
     incomes = opening_rent.income_after_rent({agent_id: cohort.last_year_income for agent_id, cohort in record.cohorts.items()},
