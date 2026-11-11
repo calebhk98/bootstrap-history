@@ -4,6 +4,7 @@ import collections
 from typing import Any, Dict, List, Optional, Set, Tuple
 
 from sim.assembly.api import Part
+from sim.ledger.api import pool_rules
 
 from . import capacity, rules
 from .constants import (FIREWOOD_PER_CHARCOAL_MASS_RATIO, GENERIC_MARKET_SHARE_LEDGER_FALLBACK, MARKET_SHARE,
@@ -28,6 +29,16 @@ class Supply(Part):
         """(commodity, supply-pool tag) a raw material key draws on: the tracked pair, else its curated commodity, else
         itself as a one-member commodity."""
         return rules.tag_of(material, MATERIAL_CHECKS, self.needs.material_commodity_map())
+
+    def stock_form(self, material: str) -> str:
+        """The ledger key a tonne of `material` is held under: the material itself where its pool names it as a form, else the
+        pool's id."""
+        commodity = self.material_pool(material)[0]
+        return pool_rules.form_key(material, commodity, {commodity: self.needs.commodity_record[commodity]})
+
+    def flow_form(self, commodity: str) -> str:
+        """The ledger key the pool's own flow (its mines) is held under: the form they raise, else the pool's id."""
+        return pool_rules.raised_key(commodity, {commodity: self.needs.commodity_record[commodity]})
 
     def material_checks(self) -> Dict[str, Tuple[str, str]]:
         return MATERIAL_CHECKS

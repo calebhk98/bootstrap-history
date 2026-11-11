@@ -148,7 +148,7 @@ def post(sim, economy, orders_by_seat, tile_of):
                         Bid(account, good, area, tile, 0.0, units, price, 0.0, budget, maximum_price=price))
                     entries.append({"order": order, "account": account, "extra": extra, "budget": budget})
                 else:
-                    tonnes = min(order["tonnes"], sim.materials.stock_t(order["stock_key"]))
+                    tonnes = min(order["tonnes"], sim.materials.form_stock_t(order["form_key"]))
                     if tonnes <= 0.0:
                         entries.append({"refused": refused(order, "not_held", "no %s is held to sell." % order["material"])})
                         continue

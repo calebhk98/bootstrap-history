@@ -17,7 +17,7 @@ from . import rules
 
 
 class ProjectBill(Part):
-    """Needs: tree_nodes, active_projects, goods_pool_stock, purchase_quote, unit_mass_kg, shared_bill, opposition_factor,
+    """Needs: tree_nodes, active_projects, goods_stock, purchase_quote, unit_mass_kg, shared_bill, opposition_factor,
     material_cost_factor, can_pay, purchase_refusal, project_cost, project_cost_now, cost_money_factor, civ_cost_factor,
     rebuild_work_factor, failure_reset_share. Sends BuyMaterial."""
 
@@ -40,9 +40,10 @@ class ProjectBill(Part):
         needs = self.needs
         span = rules.build_span(needs.tree_nodes()[node_id])
         return rules.material_bill(self.project_material_needs(node_id), span, self.tonnes_per_unit, self.parts.supply.material_pool,
-                                   lambda commodity: needs.goods_pool_stock[commodity],
+                                   lambda key: needs.goods_stock[key],
                                    lambda tag: self.unclaimed_own_supply(tag, node_id), needs.purchase_quote,
-                                   self.parts.supply.market_tonnes, self.parts.supply.own_material_supply)
+                                   self.parts.supply.market_tonnes, self.parts.supply.own_material_supply,
+                                   self.parts.supply.stock_form, self.parts.supply.flow_form)
 
     def unclaimed_own_supply(self, tag: str, node_id: str) -> float:
         """Yearly own output of a supply pool that no other running project has claimed."""

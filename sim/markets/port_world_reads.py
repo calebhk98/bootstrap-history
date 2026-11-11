@@ -105,6 +105,10 @@ class MaterialReads:
 	def stock_t(self, commodity):
 		return self._needs.goods_pool_stock[commodity]
 
+	def form_stock_t(self, key):
+		"""Tonnes held under exactly this ledger key (one form of a pool)."""
+		return self._needs.goods_stock[key]
+
 	def serves_a_need(self, material):
 		return self._needs.material_serves_a_need[material]
 

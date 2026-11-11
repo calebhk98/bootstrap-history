@@ -16,7 +16,7 @@ READS_BY_OWNER = {
     "knowledge": ("year", "civilisation", "tree_nodes", "techniques_held", "visibility", "hard_prerequisites",
                   "techniques_version", "operating", "default_population", "pop_scale"),
     "mechanics": ("mechanic", "effect_best", "running_stamp", "running"),
-    "ledger": ("goods_pool_stock", "held_goods", "goods_stock_opening"),
+    "ledger": ("goods_stock", "goods_pool_stock", "held_goods", "goods_stock_opening"),
     "markets": ("goods_quote", "can_be_bought", "purchase_quote", "agent_producer_capacity",
                 "material_freight_factor", "unit_mass_kg"),
     "prices": ("material_prices", "material_commodity_map", "commodity_record", "commodity_country_output", "done_memo"),

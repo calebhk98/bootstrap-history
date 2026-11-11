@@ -2,6 +2,8 @@
 under the pool's own id. These are plain functions of the ledger's dict and the commodity records."""
 from typing import Any, Dict, List, Mapping, MutableMapping
 
+_TOLERANCE_TONNES = 1e-9     # float noise in a taking cut to the stock held
+
 
 def pool_keys(commodity: str, commodities: Mapping[str, Mapping[str, Any]]) -> List[str]:
 	"""The keys a pool's tonnes can sit under, sorted: its material keys, then its own id when that is not one of them."""
@@ -29,32 +31,19 @@ def raised_key(commodity: str, commodities: Mapping[str, Mapping[str, Any]]) -> 
 	return (commodities.get(commodity) or {}).get("raised_material") or commodity
 
 
-def change_tonnes(stock: MutableMapping[str, float], opening: MutableMapping[str, float], key: str, tonnes: float,
-                  other_keys: List[str]) -> None:
-	"""`tonnes` added to (or, negative, taken from) the stock under `key`. A taking beyond what `key` holds is met from
-	`other_keys` in order (the rest of the pool); only what none holds is left owing on `key`."""
-	if tonnes < 0.0:
-		owed = -tonnes
-		for each in [key] + other_keys:
-			taken = min(owed, max(0.0, stock.get(each, 0.0)))
-			if taken > 0.0:
-				_add(stock, opening, each, -taken)
-				owed -= taken
-		tonnes = -owed
-	if tonnes != 0.0:
-		_add(stock, opening, key, tonnes)
+def held_enough(stock: Mapping[str, float], key: str, tonnes: float) -> bool:
+	"""True when a taking of `tonnes` (negative) leaves the stock under `key` at or above zero; any addition is allowed."""
+	return tonnes >= 0.0 or stock.get(key, 0.0) + tonnes >= -_TOLERANCE_TONNES
 
 
-def bank_pool_total(stock: MutableMapping[str, float], commodity: str, commodities: Mapping[str, Mapping[str, Any]],
-                    total: float) -> None:
-	"""The pool's tonnes become `total`: a rise is held in the form the pool's mines raise, a fall comes off that form first and
-	then the rest of the pool. A commodity naming no forms is simply set."""
-	if not (commodities.get(commodity) or {}).get("material_keys"):
-		stock[commodity] = total
-		return
-	change = total - pool_total(stock, commodity, commodities)
-	target = raised_key(commodity, commodities)
-	change_tonnes(stock, {}, target, change, [key for key in pool_keys(commodity, commodities) if key != target])
+def change_tonnes(stock: MutableMapping[str, float], opening: MutableMapping[str, float], key: str, tonnes: float) -> None:
+	"""`tonnes` added to (or, negative, taken from) the stock under exactly `key`; no other form of the pool is touched."""
+	_add(stock, opening, key, tonnes)
+
+
+def bank_tonnes(stock: MutableMapping[str, float], key: str, tonnes: float) -> None:
+	"""The tonnes held under exactly `key` become `tonnes`."""
+	stock[key] = tonnes
 
 
 def _add(stock: MutableMapping[str, float], opening: MutableMapping[str, float], key: str, tonnes: float) -> None:

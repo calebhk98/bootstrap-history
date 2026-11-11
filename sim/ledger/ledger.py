@@ -195,20 +195,23 @@ class Ledger(Module):
 			self.seat.material_stock_opening, self.needs.year(), self.stock_ledger())
 		return self.seat.material_stock_opening["tonnes"]
 
-	def change_stock(self, command: Any) -> None:
+	def change_stock(self, command: Any) -> Any:
 		stock = self.stock_ledger()
 		opening = self.opening_stock()      # first: the year's snapshot is taken before the change
-		pool = self.needs.material_commodity_map().get(command.commodity, command.commodity)
-		others = [key for key in pool_rules.pool_keys(pool, {pool: self.needs.commodity_record[pool]}) if key != command.commodity]
-		pool_rules.change_tonnes(stock, opening, command.commodity, command.tonnes, others)
+		if not pool_rules.held_enough(stock, command.commodity, command.tonnes):
+			return Refusal("not_held", "%s holds %.4g tonnes; %.4g were asked of it, and another form of the pool is not taken in its place."
+			               % (command.commodity, stock.get(command.commodity, 0.0), -command.tonnes), key=command.commodity,
+			               held_tonnes=stock.get(command.commodity, 0.0), asked_tonnes=-command.tonnes)
+		pool_rules.change_tonnes(stock, opening, command.commodity, command.tonnes)
 		stock.writes += 1
 		self.bump_seat(STOCK)
+		return None
 
 	def bank_stock(self, command: Any) -> None:
 		self.opening_stock()      # first: the year's snapshot is taken before the change
 		stock = self.stock_ledger()
-		for commodity, tonnes in command.tonnes:
-			pool_rules.bank_pool_total(stock, commodity, {commodity: self.needs.commodity_record[commodity]}, tonnes)
+		for key, tonnes in command.tonnes:
+			pool_rules.bank_tonnes(stock, key, tonnes)
 		stock.writes += 1
 		self.bump_seat(STOCK)
 

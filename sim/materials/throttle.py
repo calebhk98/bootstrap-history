@@ -8,7 +8,7 @@ import collections
 from typing import Any, List, NamedTuple, Optional, Tuple
 
 from sim.assembly.api import Part
-from sim.ledger.api import BankStock, pool_rules
+from sim.ledger.api import BankStock
 from sim.markets.api import NoteDraw, ResetDraws
 from sim.reporting.api import RecordEvent
 
@@ -33,9 +33,10 @@ class Throttle(Part):
 
     def throttle_inputs(self, demand: Any) -> Inputs:
         needs = self.needs
-        industrial, lab = rules.throttle_demand_split(demand, self.parts.supply.material_pool)
+        industrial, lab = rules.throttle_demand_split(demand, self.parts.supply.material_pool,
+                                                         self.parts.supply.stock_form)
         stock = needs.held_goods()
-        opening = self.opening_by_pool(industrial, lab)
+        opening = needs.goods_stock_opening()
         electricity_need = self.parts.electricity.electricity_demand_kw()
         electricity_have = self.parts.electricity.generation_capacity_kw()
         signature = (needs.year(), tuple(sorted(industrial.items())), tuple(sorted(lab.items())),
@@ -44,17 +45,10 @@ class Throttle(Part):
                      stock.writes)
         return Inputs(industrial, lab, opening, electricity_need, electricity_have, signature)
 
-    def opening_by_pool(self, industrial: Any, lab: Any) -> dict:
-        """The stock as the year's accounting began, in any form, of every pool the reading looks at."""
-        held = self.needs.goods_stock_opening()
-        pools = {commodity for commodity, _tag in set(industrial) | set(lab) | set(self.parts.supply.own_production_tags())}
-        return {commodity: pool_rules.pool_total(held, commodity, {commodity: self.needs.commodity_record[commodity]})
-                for commodity in sorted(pools)}
-
     def read_throttle(self, inputs: Inputs) -> rules.ThrottleReading:
         return rules.throttle_reading(inputs.industrial, inputs.lab, self.parts.supply.own_production_tags(), inputs.electricity_need,
                                       inputs.electricity_have, inputs.opening, self.parts.supply.own_material_supply, self.parts.supply.market_tonnes,
-                                      RESOURCE_THROTTLE_FLOOR)
+                                      self.parts.supply.flow_form, RESOURCE_THROTTLE_FLOOR)
 
     def portfolio_quote(self) -> Tuple[float, Optional[str]]:
         """(the pace, the pool that binds it) as the books stand, nothing changed. A reading the last take already made

@@ -33,38 +33,32 @@ class WriterTests(unittest.TestCase):
     def test_a_bar_purchase_is_held_under_the_bar_key(self):
         self.assertEqual(pool_rules.form_key("iron_bar_kg", "iron", COMMODITIES), "iron_bar_kg")
         stock = {}
-        pool_rules.change_tonnes(stock, {}, "iron_bar_kg", 3.0, [])
+        pool_rules.change_tonnes(stock, {}, "iron_bar_kg", 3.0)
         self.assertEqual(stock, {"iron_bar_kg": 3.0})
 
     def test_a_material_the_pool_does_not_name_is_held_under_the_pool_id(self):
         self.assertEqual(pool_rules.form_key("iron_wire_kg", "iron", COMMODITIES), "iron")
 
-    def test_a_mine_bank_adds_to_the_ore_key(self):
+    def test_the_mines_flow_is_held_under_the_form_they_raise(self):
+        self.assertEqual(pool_rules.raised_key("iron", COMMODITIES), "iron_ore_kg")
+        self.assertEqual(pool_rules.raised_key("coal", COMMODITIES), "coal")
+
+    def test_banking_sets_exactly_the_key_and_leaves_the_other_forms(self):
         stock = {"iron_bar_kg": 2.0, "iron_ore_kg": 1.0}
-        pool_rules.bank_pool_total(stock, "iron", COMMODITIES, 6.0)
+        pool_rules.bank_tonnes(stock, "iron_ore_kg", 4.0)
         self.assertEqual(stock, {"iron_bar_kg": 2.0, "iron_ore_kg": 4.0})
-        self.assertEqual(pool_rules.pool_total(stock, "iron", COMMODITIES), 6.0)
 
-    def test_a_bank_below_the_total_takes_the_raised_form_first_then_the_rest_in_key_order(self):
-        stock = {"iron_bar_kg": 2.0, "iron_ore_kg": 1.0}
-        pool_rules.bank_pool_total(stock, "iron", COMMODITIES, 1.5)
-        self.assertEqual(stock, {"iron_bar_kg": 1.5, "iron_ore_kg": 0.0})
-
-    def test_a_commodity_naming_no_forms_is_set(self):
-        stock = {"saltpetre": 2.0}
-        pool_rules.bank_pool_total(stock, "saltpetre", COMMODITIES, 0.7)
-        self.assertEqual(stock, {"saltpetre": 0.7})
-
-    def test_a_sale_beyond_the_sold_form_comes_off_the_rest_of_the_pool(self):
+    def test_a_sale_beyond_the_sold_form_touches_only_that_form(self):
         stock, opening = {"iron_bar_kg": 2.0, "iron_ore_kg": 1.0}, {}
-        pool_rules.change_tonnes(stock, opening, "iron_ore_kg", -2.5, ["iron_bar_kg", "iron"])
-        self.assertEqual(stock, {"iron_bar_kg": 0.5, "iron_ore_kg": 0.0})
-        self.assertEqual(opening, {"iron_ore_kg": -1.0, "iron_bar_kg": -1.5})
+        self.assertFalse(pool_rules.held_enough(stock, "iron_ore_kg", -2.5))
+        self.assertTrue(pool_rules.held_enough(stock, "iron_ore_kg", -1.0))
+        pool_rules.change_tonnes(stock, opening, "iron_ore_kg", -1.0)
+        self.assertEqual(stock, {"iron_bar_kg": 2.0, "iron_ore_kg": 0.0})
+        self.assertEqual(opening, {"iron_ore_kg": -1.0})
 
-    def test_a_taking_nothing_holds_is_left_owing_on_the_key(self):
-        stock = {}
-        pool_rules.change_tonnes(stock, {}, "iron_ore_kg", -1.0, ["iron_bar_kg"])
-        self.assertEqual(stock, {"iron_ore_kg": -1.0})
+    def test_a_taking_from_a_form_never_held_is_not_enough(self):
+        self.assertFalse(pool_rules.held_enough({}, "iron_bar_kg", -0.5))
+        self.assertTrue(pool_rules.held_enough({}, "iron_bar_kg", 0.5))
 
 
 class SaveRoundTripTests(unittest.TestCase):
