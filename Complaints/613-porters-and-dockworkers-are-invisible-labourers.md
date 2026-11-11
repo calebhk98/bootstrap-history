@@ -1,6 +1,6 @@
 # Porters and dockworkers have no trade, so the largest labour group of a society without draught animals is hidden
 
-**Status:** partly - porter and dockworker trades exist, carriage books to them, and the economy's carriage table now offers only modes whose means are held and prices foot with porter crew; `economy-check --accounts --carriage` prints porter and dockworker hours demanded and hired; the whole-game measurement is in "What is left": porters are not hired after year 1 because the merchants' worth of an hour stays under the porter wage; open
+**Status:** partly - porter and dockworker trades exist, carriage books to them, and the economy's carriage table now offers only modes whose means are held and prices foot with porter crew; `economy-check --accounts --carriage` prints porter and dockworker hours demanded and hired; the whole-game measurement is in "What is left": porters are not hired after year 1 because the merchants' worth of an hour stays under the porter wage; the hire gap traced (unfunded merchant bids, not the ceiling; see the last section); open
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming). Depends on 609.
 
@@ -96,3 +96,43 @@ year 1 demands under 1e-7, year 2 pays a large household fallback fee, and years
 So there is no single commit to bisect: the merchants' porter plan swings between nothing and a large demand the labour market barely
 fills, depending on the opening draw (473, the spin-up does not settle). Open on the current openings: why a large porter demand finds
 almost no hire when porter wages sit near the opening wage.
+
+## Trace of the hire gap on the current openings (porter-hire-gap)
+
+Measured with temporary wrappers (not committed) around `carriage_hours.write_bids`, `merchants_dispatch.run`, `year_labour.clear_labour`
+and `carriage_hours.wage_loans`, played by `python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500`
+(the wrappers print per bid the ceiling against `trade_wages.wage_in_area`, the porter hours offered per area, the clearing's results
+and the merchants' cash). The earlier readings in this file (the ceiling under the wage; supply short) do not hold on these openings.
+
+- **The bid ceiling is not the cause.** In years 3 to 5 every porter bid (about 35, in 14 areas) has a maximum wage above its area's porter
+  wage, so `clearing.eligible_bids` drops none; eligible hours equal bid hours in every area.
+- **The demand is consistent with the physics, and is the merchants' whole held stock.** The hours are `quantity * hours per tonne` of each
+  leg (`ask_crew`), `quantity` being the route's `held` stock before any cut. The top legs are cacao held in Cuba, the Dominican tiles and
+  Nicaragua bound for a Mexican tile. The foot haul's own figures: hours per tonne equal the haul's money per tonne at a wage near 1; for
+  Cuba to `mexico_12` the freight search gives `Carriage.days_between` of about 237 days, so with the porter model (27 kg, 22 km a day,
+  10 hours a day) and a returning empty leg the crew is the tonne's loads (about 37 porters) times the days times the hours times two,
+  matching the printed hours per tonne to the digit. So the demand is the held tonnes (hundreds of tonnes of cacao) times that. Open
+  question for the geography owner: a foot haul of that many days from island tiles to the mainland.
+- **Year 1 is about zero because the opening carries almost nothing.** The year-1 bid is last year's plan, built from about 1e-11 tonnes
+  shipped by the spin-up (merchants hold no stock at the start). In year 2 the merchants hold goods but have no plan, so they ship
+  without a crew limit and pay the whole fee to a household of the source tile (the fallback). Their capital base then grows
+  severalfold, and the plan of year 3 is every tonne they hold.
+- **Year 3 has no porters to hire.** No porter hours are offered in any bid area (the workforce holds no porters in the Caribbean tiles
+  or in most Mexican ones; the vacancy of the bid is what draws people into the trade). Hired 201 hours, in a small area.
+- **Years 4 and 5: the clearing does hire (tens of millions of hours), but the merchants cannot pay, and only paid hours count.** With
+  offers present (hundreds of millions of hours), `year_labour.clear_labour` fills most bids; the book settles a wage only as far as the
+  employer's purse covers (`labour_settle_year`, `note_labour_fills` `fill_settled`), and the three merchants hold close to zero cash at
+  bid time against a wage bill of tens of millions. The ledger keeps the paid hours (`hours_hired_by_market`), so the report and the
+  merchants' `crew_hours_bought` show about a hundred hours while the labour results show about 6e7 and 1e8 hours "hired" in years 4 and 5
+  with 2e8 or more of porter hours offered and idle. The merchants' crew is then cut to the paid share (`crew_cuts`).
+- **Why the cash is not there.** `bid_figures` bids the plan whatever the purse holds (a producer's bids are bounded by its wage line;
+  a merchant's are not). The working-capital loan (`carriage_hours.wage_loans`, asked at year close) is sized on the hours bought last
+  year, which are paid hours: a merchant that could not pay asks next year for the wage of the few hours it paid, so the shortfall never
+  enters the request (a trap), and where the request is large (year 2) the lenders fill only part of it (one merchant of three got about
+  three quarters; the other two got nothing).
+
+Not fixed: the choice is design-level. A bid capped to the purse alone removes the unfunded vacancy but also the vacancy that draws
+people into the porter trade, so the Caribbean tiles would never get porters; sizing the loan on the hours the clearing hired (not the
+hours paid) feeds a request of tens of millions to a credit market that cannot fill it. Both need the owner of merchant working capital
+(and of how a merchant sizes a shipment to its purse and to the crew it can hire: `plan_merchant` caps the plan by the fleet but not by
+the purse or the crew on offer) to decide. No ceiling multiplier is warranted: the ceiling already clears the wage.
