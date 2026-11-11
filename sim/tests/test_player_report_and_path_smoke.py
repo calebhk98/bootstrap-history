@@ -4,6 +4,7 @@ import unittest
 
 from sim.knowledge.api import closure
 from sim.knowledge.api import LearnTechnique
+from sim.projects.api import MothballWork
 from sim.tests.harness import GOAL, NODES, S, unopened_sim
 from sim.ui.proto.score import final_report
 
@@ -46,7 +47,8 @@ class PathAndWhyTest(unittest.TestCase):
     def test_path_names_what_on_the_route_is_shut_rather_than_unbuilt_and_how_to_reopen_it(self):
         game = unopened_sim()
         game.send(LearnTechnique("lead_chamber"))
-        game.mothballed.add("lead_chamber")
+        ok, reply_to_shutdown = game.send(MothballWork("lead_chamber"))
+        self.assertTrue(ok, reply_to_shutdown)
         reply = _ask(game, cmd="path", id=GOAL)
         self.assertIn("lead_chamber", reply.get("on_this_route_but_shut_down") or [])
         self.assertTrue(reply.get("reopen_them_with"))

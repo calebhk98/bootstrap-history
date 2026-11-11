@@ -120,3 +120,5 @@ entry below is updated as its group lands.
 
 - `plagues_from_contact_validation`: passes alone (`--only <topic> --jobs 1`); timed out only under the three-job load.
 - `farm_edges_scenario`: alone it runs past the default limit and then fails honestly on the farm share (619). Speed: 497, 557.
+
+- Fixed on slow-reds-mods-player: the cash shelter mod reads `actor_sheet` as a keyed view; `path` smoke test shuts a work with `MothballWork` and `run_it` opens with `OpenVenture` (views return frozen copies); the religion house no longer subtracts the stipends `advance` already paid from its surplus.

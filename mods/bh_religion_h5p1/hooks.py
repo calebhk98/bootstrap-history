@@ -35,7 +35,7 @@ def register(api):
 			share = float(self.terms().get("land_share_of_surplus", 0.0))
 			rent = world.stakes.land_rent_per_hectare()
 			rate = max(world.credit.market_rate(), world.credit.starting_rate())
-			surplus = max(0.0, self.money - self.stipends_due(world))
+			surplus = max(0.0, self.money)   # advance has already paid the year's stipends out of the purse
 			if share <= 0.0 or rent <= 0.0 or rate <= 0.0 or surplus <= 0.0:
 				return
 			price = rent / rate
