@@ -57,3 +57,13 @@ use in farming turned up in search but its host redirects and could not be opene
 opened); zebu cattle dressing (Ethiopian and Malawian studies in search summaries only, not opened). Left: every service life at
 confidence D, the fleece, stocking, salt, hide, horn and fat shares, milk of goats, spoilage rows, household needs and the soil
 heuristics (soil stays with 543). Status stays open.
+
+**Pass 7 (sources-herds-and-lives).** Service lives: iron tools 4 to 2 years (FAO farm-power study Annex 3 Table 5, hoe replacement at ten
+African sites, mean of range midpoints 2.0; a modern analogue, confidence C); wooden tools 2 to 1 (half of the iron figure, still a labelled
+heuristic, D); cart 10 to 15 (TRL/DFID Uganda IMT study, Table 2, oxen cart average vehicle life 15 years, confidence C). Livestock: goat milk,
+cattle dressing and the hide shares of cattle, sheep and goats are now read (see Complaint 532's pass note); sheep fleece is bracketed by
+Wilson's Menz figure. Searched and not sourced: brick, stone, bronze, brass, iron bar, cast iron, steel plates, Noric and tool steel, gold, silver,
+platinum (no wear study found), mule working life (only lifespan figures of 30 to 40 years, not working life), pack saddle (one Practical Action
+note of up to six months in Ethiopia, search snippet only), river barge (Manning et al. supplement gives 20 to 30 years for seagoing wooden ships,
+not river craft; the Mazotos paper's supplement was opened but is not a barge figure), Cato's equipment inventories (counts, no durations).
+Spoilage, household needs and soil items were not touched. Status stays open.

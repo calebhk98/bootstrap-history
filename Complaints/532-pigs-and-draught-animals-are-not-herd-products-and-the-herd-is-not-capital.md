@@ -1,6 +1,6 @@
 # Pigs and draught animals are not herd products, and the herd is not capital
 
-**Status:** partly - horse and mule herds, bristle from the pig herd, value-based late cost split and births offsetting wear are built; open: the herd figures still at confidence D with no source read (each row's `source` says which were read)
+**Status:** partly - horse and mule herds, bristle from the pig herd, value-based late cost split and births offsetting wear are built; open: the herd rows stay at confidence D because live weights, stocking rates, salt, fat, horn, horse and mule figures and the increase assumptions still have no source read (each row's `source` says which were read)
 
 **Done.** `data/production/95_herds.json` (one batch of 100 head-years each) from the species rows in
 `data/world/living_stock.json`, gated on holding the herd (nodes `fud_sheep_flock`, `fud_goat_herd`, `fud_cattle_herd`; Rome,
@@ -19,3 +19,11 @@ galena): wool expanded without more hides or meat, or a society with no animals 
 **What it would take.** A pig recipe from the same species rows; draught animals as an output of the herd's stock; the herd
 as capital with a service life and replacement; a cost split by value (the economy's prices) in place of mass.
 Pasture and salt inputs are 535 and `sim/geography/food_pasture.py`.
+
+**Pass (sources-herds-and-lives).** Read and applied: goat milk from Wilson (FAO), Tswana goat, 284 g a day over about 180 days, so
+25.56 kg a head-year (was 50); cattle dressing 0.442 from Mummed and Webb 2019 (was 0.48); green hide share from FAO Animal Production and Health
+Paper 49 section 10.2 (cattle 6 to 8 percent, so 0.07 stands; sheep and goat dwarf class 10 to 12 percent, so 0.11, was 0.08); sheep fleece 1.0 kg
+checked as inside the 0.8 to 2.0 kg a year of Menz sheep (Wilson), value kept. Herd recipes recomputed. Still no source opened for: live weights of
+the pig, horse and mule, stocking rates, salt, rendered fat share, horn, sheep and goat kidding and lambing litters (Wilson gives a Tswana goat
+litter of 1.37, left unused because the increase feeds the herd-growth entries), mule survival, bran, dung collected share. Searches that gave
+only snippets and were not cited: Oklahoma State and Maine extension pages (blocked), village-pig dressing studies, working-equine live weights.

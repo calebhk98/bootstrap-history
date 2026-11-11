@@ -2,14 +2,14 @@
   "_doc": "Service life of a durable good: the years a stock of it serves before it is worn out or lost, so users hold it and buy only to keep it up (the economy reads a good with a service life as a durable; a good not listed is used up within the year). Keyed by the good ids of data/production. Estimates, confidence C or D; a wear model per good (use, material, maintenance) would derive them. Carts are not goods in the production data yet, so they have no entry; timber, cloth and other materials that are also consumed as inputs are left out until a held-stock model separates the two uses.",
   "years": {
     "iron_tools_kg": {
-      "years": 4,
-      "confidence": "D",
-      "source": "LABELLED HEURISTIC, no source found for the working life of an iron farm tool before wear, breakage or loss replaces it; retire: Complaints/533."
+      "years": 2,
+      "confidence": "C",
+      "source": "FAO, 'Contribution of farm power to smallholder livelihoods in sub-Saharan Africa', Annex 3 Table 5 'Replacement rates (years) of tools and equipment by field site', fao.org/4/a0229e/a0229e0i.htm, opened: hoe replacement at ten sites in Ghana, Nigeria, Tanzania, Malawi and Zambia 1, 2, 2-4, 1-2, 3, 2, 1.5, 1, 2, 3 years; taking range midpoints the mean is 2.0 years (20 divided by 10). The main text (fao.org/docrep/pdf/011/aj334e/aj334e02.pdf, 'Replacement of Tools', opened) adds that hoes were replaced every year where blacksmiths use scrap steel and that with better steel 'the life of a hoe was calculated to be anything from two to 15 years'. Modern African smallholder hoes, not Roman or medieval ones: an analogue used as the nearest measured figure (was 4, no source). Axes and sickles in the same table last longer, so a mixed tool kit outlives the hoe; the hoe is the farm tool this good stands for."
     },
     "wooden_tools_kg": {
-      "years": 2,
+      "years": 1,
       "confidence": "D",
-      "source": "LABELLED HEURISTIC, no source found for the working life of a wooden hoe, spade or rake before wear or breakage; taken as half an iron tool's, since wood wears and splits faster than iron; searched in the Complaint 650 pass and no timed wear study of wooden farm tools was found; retire: Complaint 659."
+      "source": "LABELLED HEURISTIC, no source found for the working life of a wooden hoe, spade or rake before wear or breakage; taken as half an iron tool's (2 years, FAO hoe replacement above), since wood wears and splits faster than iron; searched in the Complaint 650 pass and again in the 670 pass and no timed wear study of wooden farm tools was found; retire: Complaint 659."
     },
     "brick_1000": {
       "years": 80,
@@ -97,9 +97,9 @@
       "source": "LABELLED HEURISTIC, no source found for a mule's working life (Complaint 646 pass 5: NCAT Draft Animal Power for Farming gives 'Approximately 15 years; ages 3-18' for draft horses only and nothing for mules; Langdon via Medievalists.net gives about 7 years for the cart horse, see ox); mules are taken as longer lived in work than horses and oxen; retire: Complaints/646."
     },
     "cart": {
-      "years": 10,
-      "confidence": "D",
-      "source": "Estimate of the years before a wooden cart's frame is replaced, wheel and axle repairs folded into replacement wear until a maintenance model exists (complaint 629). Geography's CART_SERVICE_LIFE_KM is a different, unsourced heuristic."
+      "years": 15,
+      "confidence": "C",
+      "source": "Research Project on Improved Food Crop Marketing Through Appropriate Transport for Poor Farmers in Uganda, 'The Economics of Intermediate Means of Transport', Final Report (R8114), assets.publishing.service.gov.uk/media/57a08c6440f0b652dd0012d6/R8114040502.pdf, Table 2 'IMT utilisation data': 'Average vehicle life (year) 10 20 20 15' for bicycle, pack donkey, donkey cart, oxen cart; 'Source: Consultant's estimate from transport operator's surveys'. Fifteen years is the oxen cart (fourth column). A modern Ugandan operator estimate with repairs folded in, not an archaeological figure (was 10, no source). Geography's CART_SERVICE_LIFE_KM is a different, unsourced heuristic."
     },
     "pack_saddle": {
       "years": 8,
