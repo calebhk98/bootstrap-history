@@ -1405,7 +1405,7 @@
      }
     ],
     "concerns_you_run": 0,
-    "credit_limit": 1775940.5,
+    "credit_limit": 1775940.6,
     "critical_capabilities_not_operating": null,
     "debt_interest_rate": 0.041,
     "debt_still_to_work_off": 0.0,
@@ -1472,7 +1472,7 @@
      "general_ceiling_now": 0.49,
      "schools_actually_teaching": false
     },
-    "living_cost": 124561.4,
+    "living_cost": 124561.5,
     "living_stock": {
      "cattle_kg": 1715.856,
      "ramie_stock_kg": 2159.189,
@@ -1486,8 +1486,8 @@
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 734941.6,
-    "net_per_year": 659878.4,
+    "net_after_project_spend": 734941.8,
+    "net_per_year": 659878.6,
     "ok": true,
     "on_the_road_to_the_goal_so_far": 14,
     "project_spend_this_year": 0.0,
@@ -1511,7 +1511,7 @@
     "protection": 0.021,
     "reputation": 5.3,
     "resource_throttle": 0.05,
-    "revenue": 859503.0,
+    "revenue": 859503.3,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -1555,7 +1555,7 @@
      "minor_failures": 0
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 8039853.3,
+    "sustainable_debt": 8039856.6,
     "throttle_binding": "sand_quartz_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [],
@@ -1598,7 +1598,7 @@
     "goal_reached": false,
     "money": 1588878.6,
     "nearest_goal_blocker": null,
-    "net_per_year": 733338.8,
+    "net_per_year": 733339.1,
     "ok": true,
     "projects": [],
     "standing": {
@@ -1693,17 +1693,17 @@
      "in_full": "~prose~",
      "technologies_you_could_lose": 1
     },
-    "capital": 2448581.1,
+    "capital": 2448594.6,
     "chance_of_being_denounced_this_year": 0.0,
     "coin_hoard": {
      "basis": "~prose~",
-     "keeping_cost_per_year": 14556.5,
+     "keeping_cost_per_year": 14494.4,
      "metal": "bronze_kg",
      "tonnes": 7.346
     },
     "completed": [],
     "concerns_you_run": 0,
-    "credit_limit": 1019555.2,
+    "credit_limit": 1016804.5,
     "critical_capabilities_not_operating": null,
     "debt_interest_rate": 0.0408,
     "debt_still_to_work_off": 0.0,
@@ -1757,16 +1757,16 @@
     "literacy": {
      "elite": 0.914,
      "elite_ceiling": 0.99,
-     "farm_share_of_working_hours": 0.622,
+     "farm_share_of_working_hours": 0.619,
      "general": 0.074,
-     "general_ceiling_now": 0.504,
+     "general_ceiling_now": 0.506,
      "schools_actually_teaching": false
     },
-    "living_cost": 169154.6,
+    "living_cost": 169085.6,
     "living_stock": {
      "cattle_kg": 2000.73,
      "ramie_stock_kg": 2588.861,
-     "sheep_kg": 3960363632.75,
+     "sheep_kg": 3960363631.317,
      "silkworm_eggs_kg": 0.062,
      "sugar_cane_sett_kg": 256564.136,
      "tea_plant_stock_kg": 768.568
@@ -1776,8 +1776,8 @@
     "mine_capacity": {},
     "mine_operating_cost": 0,
     "mothballed": [],
-    "net_after_project_spend": 817626.6,
-    "net_per_year": 768919.7,
+    "net_after_project_spend": 817753.8,
+    "net_per_year": 769060.1,
     "ok": true,
     "on_the_road_to_the_goal_so_far": 14,
     "project_spend_this_year": 0.0,
@@ -1801,7 +1801,7 @@
     "protection": 0.02,
     "reputation": 5.2,
     "resource_throttle": 0.05,
-    "revenue": 986781.2,
+    "revenue": 986839.4,
     "scandal": 0.0,
     "scandal_danger": 25.0,
     "scandal_now": 0.0,
@@ -1842,13 +1842,13 @@
      "objective": "~prose~"
     },
     "supervision_close_to_the_edge": null,
-    "sustainable_debt": 9421113.4,
+    "sustainable_debt": 9422833.4,
     "throttle_binding": "sand_quartz_kg",
     "trades_society_now_has_on_its_own": [],
     "trades_you_created": [],
     "upkeep": 0.0,
     "wage_bill": 0,
-    "wages_you_have_already_paid_this_year": 48706.9,
+    "wages_you_have_already_paid_this_year": 48693.7,
     "what_you_can_field": "~prose~",
     "where_your_hours_come_from": {
      "deputies_who_direct_work_for_you": 0.0,
@@ -1872,8 +1872,8 @@
     "components": {
      "economy": {
       "counts": "~prose~",
-      "normalized": 0.15671190494893228,
-      "raw": 2296795.1,
+      "normalized": 0.15676312647267632,
+      "raw": 2296795.4,
       "raw_detail": {
        "worker_years_equivalent": 15.1
       },
@@ -1894,13 +1894,13 @@
      },
      "literacy": {
       "counts": "~prose~",
-      "normalized": 0.535325614001241,
+      "normalized": 0.535034244206531,
       "raw": 0.0745,
       "raw_detail": {
        "elite": 0.9137,
        "elite_ceiling": 0.99,
        "general": 0.0745,
-       "general_ceiling": 0.504
+       "general_ceiling": 0.506
       },
       "weight": 0.15,
       "weighted": 0.0803
@@ -2895,10 +2895,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 27.035821184485503,
+       "garrison_lost": 27.035821085294085,
        "outcome": "tile_lost",
-       "rising_lost": 28.04691693610042,
-       "rising_win_probability": 0.9401193535323102
+       "rising_lost": 28.046916833199408,
+       "rising_win_probability": 0.9401193514824808
       },
       "kind": "revolt",
       "tiles": [
@@ -2928,10 +2928,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 50.183970920686995,
+       "garrison_lost": 50.18438745556855,
        "outcome": "tile_lost",
-       "rising_lost": 52.01630119408537,
-       "rising_win_probability": 0.926132444592918
+       "rising_lost": 52.016732937597475,
+       "rising_win_probability": 0.9261376013017971
       },
       "kind": "revolt",
       "tiles": [
@@ -2961,10 +2961,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 69.21432127593185,
+       "garrison_lost": 69.22350949615424,
        "outcome": "tile_lost",
-       "rising_lost": 74.04881399845897,
-       "rising_win_probability": 0.8063809194305016
+       "rising_lost": 74.05864399892246,
+       "rising_win_probability": 0.8065069478245638
       },
       "kind": "revolt",
       "tiles": [
@@ -2994,10 +2994,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 85.73270822395544,
+       "garrison_lost": 85.7390865967327,
        "outcome": "tile_lost",
-       "rising_lost": 91.05404873440781,
-       "rising_win_probability": 0.9221330213441236
+       "rising_lost": 91.06082300618506,
+       "rising_win_probability": 0.922180495719871
       },
       "kind": "revolt",
       "tiles": [
@@ -3027,10 +3027,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 962.2367970468923,
+       "garrison_lost": 962.2367563738744,
        "outcome": "put_down",
-       "rising_lost": 5719.519550911507,
-       "rising_win_probability": 0.5129721003465998
+       "rising_lost": 5719.519309151765,
+       "rising_win_probability": 0.5129721420463632
       },
       "kind": "revolt",
       "tiles": [
@@ -3044,10 +3044,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2893.8729383436785,
+       "garrison_lost": 2893.872815255173,
        "outcome": "ruler_replaced",
-       "rising_lost": 2679.805625096337,
-       "rising_win_probability": 0.5167847957133176
+       "rising_lost": 2679.8055111130097,
+       "rising_win_probability": 0.5167848374980168
       },
       "kind": "revolt",
       "tiles": [
@@ -3061,10 +3061,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 857.9411291311853,
+       "garrison_lost": 857.9410923017911,
        "outcome": "put_down",
-       "rising_lost": 5077.056681883913,
-       "rising_win_probability": 0.5184681678785833
+       "rising_lost": 5077.056463937814,
+       "rising_win_probability": 0.5184682099700472
       },
       "kind": "revolt",
       "tiles": [
@@ -3078,10 +3078,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 428.49198301793126,
+       "garrison_lost": 428.49054640773886,
        "outcome": "put_down",
-       "rising_lost": 2466.3201348125126,
-       "rising_win_probability": 0.9391496409640947
+       "rising_lost": 2466.3118659515217,
+       "rising_win_probability": 0.9391477999129816
       },
       "kind": "revolt",
       "tiles": [
@@ -3095,10 +3095,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 0.470970284703624,
+       "garrison_lost": 0.47097025441395857,
        "outcome": "tile_lost",
-       "rising_lost": 0.4792731043123811,
-       "rising_win_probability": 0.9626927163384351
+       "rising_lost": 0.47927307348873366,
+       "rising_win_probability": 0.9626927218675405
       },
       "kind": "revolt",
       "tiles": [
@@ -3128,10 +3128,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 51.38682428846789,
+       "garrison_lost": 51.39072716312289,
        "outcome": "tile_lost",
-       "rising_lost": 50.80781781761193,
-       "rising_win_probability": 0.8675124072419769
+       "rising_lost": 50.81167671621447,
+       "rising_win_probability": 0.8675745952457588
       },
       "kind": "revolt",
       "tiles": [
@@ -3161,10 +3161,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 101.6674044618044,
+       "garrison_lost": 101.66905114594638,
        "outcome": "tile_lost",
-       "rising_lost": 104.57218744642736,
-       "rising_win_probability": 0.8751799795576783
+       "rising_lost": 104.5738811786877,
+       "rising_win_probability": 0.8751929660394357
       },
       "kind": "revolt",
       "tiles": [
@@ -3194,10 +3194,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2428.753426501559,
+       "garrison_lost": 2428.753288892969,
        "outcome": "tile_lost",
-       "rising_lost": 2147.52934553822,
-       "rising_win_probability": 0.5604093885359123
+       "rising_lost": 2147.5292238632564,
+       "rising_win_probability": 0.5604094411753703
       },
       "kind": "revolt",
       "tiles": [
@@ -3227,10 +3227,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 898.9113667077991,
+       "garrison_lost": 898.9113153533677,
        "outcome": "put_down",
-       "rising_lost": 4673.787627514476,
-       "rising_win_probability": 0.562612924369494
+       "rising_lost": 4673.787360502939,
+       "rising_win_probability": 0.5626129772773899
       },
       "kind": "revolt",
       "tiles": [
@@ -3244,10 +3244,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3.8085254608770036,
+       "garrison_lost": 3.808525237191202,
        "outcome": "put_down",
-       "rising_lost": 24.169488501719446,
-       "rising_win_probability": 0.5894511909941473
+       "rising_lost": 24.169487082174935,
+       "rising_win_probability": 0.5894512431444128
       },
       "kind": "revolt",
       "tiles": [
@@ -3261,10 +3261,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 63.997290380487485,
+       "garrison_lost": 63.997283811982065,
        "outcome": "tile_lost",
-       "rising_lost": 66.69191313335013,
-       "rising_win_probability": 0.7184869466316842
+       "rising_lost": 66.69190628827604,
+       "rising_win_probability": 0.7184869520042886
       },
       "kind": "revolt",
       "tiles": [
@@ -3294,10 +3294,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 236.54504179430498,
+       "garrison_lost": 236.54502902410857,
        "outcome": "tile_lost",
-       "rising_lost": 225.6872365971893,
-       "rising_win_probability": 0.5020479446778191
+       "rising_lost": 225.6872244131659,
+       "rising_win_probability": 0.5020479985529
       },
       "kind": "revolt",
       "tiles": [
@@ -3327,10 +3327,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1525.2156509282222,
+       "garrison_lost": 1525.2155662016478,
        "outcome": "tile_lost",
-       "rising_lost": 1324.6624327398706,
-       "rising_win_probability": 0.5303877224802607
+       "rising_lost": 1324.662359154138,
+       "rising_win_probability": 0.5303877761919444
       },
       "kind": "revolt",
       "tiles": [
@@ -3360,10 +3360,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 146.0004777928381,
+       "garrison_lost": 146.00046973021188,
        "outcome": "put_down",
-       "rising_lost": 815.6659346079474,
-       "rising_win_probability": 0.5201709150442103
+       "rising_lost": 815.665889564194,
+       "rising_win_probability": 0.5201709690870845
       },
       "kind": "revolt",
       "tiles": [
@@ -3377,10 +3377,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 58.01668316009649,
+       "garrison_lost": 58.01667822649117,
        "outcome": "tile_lost",
-       "rising_lost": 62.53040474200217,
-       "rising_win_probability": 0.9303523136268509
+       "rising_lost": 62.5303994245603,
+       "rising_win_probability": 0.9303523276624699
       },
       "kind": "revolt",
       "tiles": [
@@ -3410,10 +3410,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3.3794965992374992,
+       "garrison_lost": 3.3794963053442424,
        "outcome": "tile_lost",
-       "rising_lost": 3.368040678562117,
-       "rising_win_probability": 0.9431607087017574
+       "rising_lost": 3.368040385665109,
+       "rising_win_probability": 0.9431607203146849
       },
       "kind": "revolt",
       "tiles": [
@@ -3443,10 +3443,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2.590324452702264,
+       "garrison_lost": 2.590324218843241,
        "outcome": "tile_lost",
-       "rising_lost": 2.4413530034910615,
-       "rising_win_probability": 0.9616428398752358
+       "rising_lost": 2.4413527830814408,
+       "rising_win_probability": 0.9616428478656485
       },
       "kind": "revolt",
       "tiles": [
@@ -3476,10 +3476,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 70.75249880228668,
+       "garrison_lost": 70.75249040308057,
        "outcome": "tile_lost",
-       "rising_lost": 66.99097354950688,
-       "rising_win_probability": 0.7941276322824975
+       "rising_lost": 66.99096559684085,
+       "rising_win_probability": 0.7941276222034824
       },
       "kind": "revolt",
       "tiles": [
@@ -3509,10 +3509,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 947.1087007754954,
+       "garrison_lost": 947.1086494115764,
        "outcome": "tile_lost",
-       "rising_lost": 852.3978306979458,
-       "rising_win_probability": 0.5014392181415246
+       "rising_lost": 852.397784470419,
+       "rising_win_probability": 0.5014392722954734
       },
       "kind": "revolt",
       "tiles": [
@@ -3542,10 +3542,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 162.13058874790417,
+       "garrison_lost": 162.1305760838055,
        "outcome": "tile_lost",
-       "rising_lost": 159.6899132183658,
-       "rising_win_probability": 0.8678295858665561
+       "rising_lost": 159.6899007449095,
+       "rising_win_probability": 0.8678296107782274
       },
       "kind": "revolt",
       "tiles": [
@@ -3575,10 +3575,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 27.569125129532367,
+       "garrison_lost": 27.569122946616012,
        "outcome": "put_down",
-       "rising_lost": 176.62726668264537,
-       "rising_win_probability": 0.878536197753727
+       "rising_lost": 176.6272526973431,
+       "rising_win_probability": 0.8785362209357156
       },
       "kind": "revolt",
       "tiles": [
@@ -3592,10 +3592,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 134.18319358548413,
+       "garrison_lost": 134.183181913801,
        "outcome": "tile_lost",
-       "rising_lost": 126.16705474790976,
-       "rising_win_probability": 0.9449594003709854
+       "rising_lost": 126.16704377349609,
+       "rising_win_probability": 0.9449594119504614
       },
       "kind": "revolt",
       "tiles": [
@@ -3625,10 +3625,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 54.69353708903677,
+       "garrison_lost": 54.693532236182214,
        "outcome": "tile_lost",
-       "rising_lost": 49.93075060568526,
-       "rising_win_probability": 0.9481670239932186
+       "rising_lost": 49.93074617542375,
+       "rising_win_probability": 0.9481670343222487
       },
       "kind": "revolt",
       "tiles": [
@@ -3658,10 +3658,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 89.82258453591876,
+       "garrison_lost": 89.82257635686756,
        "outcome": "tile_lost",
-       "rising_lost": 78.65545240442617,
-       "rising_win_probability": 0.9517594816240958
+       "rising_lost": 78.65544524222993,
+       "rising_win_probability": 0.9517594904138507
       },
       "kind": "revolt",
       "tiles": [
@@ -3691,10 +3691,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 38.75288381338661,
+       "garrison_lost": 38.75288020924311,
        "outcome": "tile_lost",
-       "rising_lost": 42.95898949557128,
-       "rising_win_probability": 0.9350861879416209
+       "rising_lost": 42.958985500246314,
+       "rising_win_probability": 0.9350861970544456
       },
       "kind": "revolt",
       "tiles": [
@@ -3724,10 +3724,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 924.6721615778935,
+       "garrison_lost": 924.2780285328716,
        "outcome": "tile_lost",
-       "rising_lost": 856.2717551050082,
-       "rising_win_probability": 0.9495159160614769
+       "rising_lost": 855.9067771071522,
+       "rising_win_probability": 0.9492975954739278
       },
       "kind": "revolt",
       "tiles": [
@@ -3757,10 +3757,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3389.4560347243205,
+       "garrison_lost": 3387.8199192494217,
        "outcome": "tile_lost",
-       "rising_lost": 3507.106574772604,
-       "rising_win_probability": 0.9313268694688802
+       "rising_lost": 3505.4136685126236,
+       "rising_win_probability": 0.9310359545846817
       },
       "kind": "revolt",
       "tiles": [
@@ -3790,10 +3790,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2600.9432424979755,
+       "garrison_lost": 2599.7387855487686,
        "outcome": "tile_lost",
-       "rising_lost": 2491.8714291028978,
-       "rising_win_probability": 0.9353263147523868
+       "rising_lost": 2490.717481638659,
+       "rising_win_probability": 0.93504942347793
       },
       "kind": "revolt",
       "tiles": [
@@ -3823,10 +3823,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 683.7242557018012,
+       "garrison_lost": 683.4317565486094,
        "outcome": "tile_lost",
-       "rising_lost": 666.245590518447,
-       "rising_win_probability": 0.9437714262858105
+       "rising_lost": 665.9605687872169,
+       "rising_win_probability": 0.943528420207077
       },
       "kind": "revolt",
       "tiles": [
@@ -3856,10 +3856,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3224.3218360491232,
+       "garrison_lost": 3222.6640705314594,
        "outcome": "tile_lost",
-       "rising_lost": 3489.854222547288,
-       "rising_win_probability": 0.9144244375409966
+       "rising_lost": 3488.0599351634614,
+       "rising_win_probability": 0.9140652366302904
       },
       "kind": "revolt",
       "tiles": [
@@ -3889,10 +3889,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1252.5898957495785,
+       "garrison_lost": 1251.940796862238,
        "outcome": "put_down",
-       "rising_lost": 8273.371208799424,
-       "rising_win_probability": 0.9093424998550439
+       "rising_lost": 8269.08390290273,
+       "rising_win_probability": 0.9089624066413035
       },
       "kind": "revolt",
       "tiles": [
@@ -3906,10 +3906,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3358.3580688928364,
+       "garrison_lost": 3356.7224474518425,
        "outcome": "tile_lost",
-       "rising_lost": 3315.485412694204,
-       "rising_win_probability": 0.9198241338551428
+       "rising_lost": 3313.870671526926,
+       "rising_win_probability": 0.9194833475489051
       },
       "kind": "revolt",
       "tiles": [
@@ -3939,10 +3939,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3317.9200476287624,
+       "garrison_lost": 3316.052035319919,
        "outcome": "tile_lost",
-       "rising_lost": 3306.67286102663,
-       "rising_win_probability": 0.8854709831593954
+       "rising_lost": 3304.8111809629036,
+       "rising_win_probability": 0.8849995671658404
       },
       "kind": "revolt",
       "tiles": [
@@ -3972,10 +3972,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2240.166627755107,
+       "garrison_lost": 2239.0158692231926,
        "outcome": "tile_lost",
-       "rising_lost": 2243.133735871339,
-       "rising_win_probability": 0.9017587702132905
+       "rising_lost": 2241.981453155938,
+       "rising_win_probability": 0.9013448473585209
       },
       "kind": "revolt",
       "tiles": [
@@ -4005,10 +4005,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1095.1244755446633,
+       "garrison_lost": 1094.5225012554947,
        "outcome": "tile_lost",
-       "rising_lost": 1181.674635708677,
-       "rising_win_probability": 0.8834475017362946
+       "rising_lost": 1181.0250860321382,
+       "rising_win_probability": 0.8829644359735256
       },
       "kind": "revolt",
       "tiles": [
@@ -4038,10 +4038,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 4843.239170236765,
+       "garrison_lost": 4840.8645727741305,
        "outcome": "tile_lost",
-       "rising_lost": 4606.101318747994,
-       "rising_win_probability": 0.9069661880445442
+       "rising_lost": 4603.842987883114,
+       "rising_win_probability": 0.9065693259902635
       },
       "kind": "revolt",
       "tiles": [
@@ -4071,10 +4071,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1700.0935712336245,
+       "garrison_lost": 1699.1494954890577,
        "outcome": "put_down",
-       "rising_lost": 10745.874459684233,
-       "rising_win_probability": 0.8723530088083364
+       "rising_lost": 10739.90718846857,
+       "rising_win_probability": 0.8718249404318241
       },
       "kind": "revolt",
       "tiles": [
@@ -4088,10 +4088,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 6122.579518022394,
+       "garrison_lost": 6119.436521395426,
        "outcome": "ruler_replaced",
-       "rising_lost": 5669.676375593339,
-       "rising_win_probability": 0.8884607132620412
+       "rising_lost": 5666.765874607271,
+       "rising_win_probability": 0.8879891464617863
       },
       "kind": "revolt",
       "tiles": [
@@ -4105,10 +4105,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 4447.703259238002,
+       "garrison_lost": 4445.625038229041,
        "outcome": "tile_lost",
-       "rising_lost": 4211.243085962057,
-       "rising_win_probability": 0.8984669591175867
+       "rising_lost": 4209.27535265231,
+       "rising_win_probability": 0.8980271855511794
       },
       "kind": "revolt",
       "tiles": [
@@ -4138,10 +4138,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1645.0557082131625,
+       "garrison_lost": 1645.0103200208011,
        "outcome": "tile_lost",
-       "rising_lost": 1514.9815359358433,
-       "rising_win_probability": 0.9340120731412408
+       "rising_lost": 1514.9397365772954,
+       "rising_win_probability": 0.9339016161478413
       },
       "kind": "revolt",
       "tiles": [
@@ -4171,10 +4171,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 3095.524043554508,
+       "garrison_lost": 3093.7776926495785,
        "outcome": "tile_lost",
-       "rising_lost": 3198.708178339658,
-       "rising_win_probability": 0.8459579599967719
+       "rising_lost": 3196.903615737898,
+       "rising_win_probability": 0.8453236094661889
       },
       "kind": "revolt",
       "tiles": [
@@ -4204,10 +4204,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 4479.159996323129,
+       "garrison_lost": 4476.56951477117,
        "outcome": "tile_lost",
-       "rising_lost": 4586.870002099811,
-       "rising_win_probability": 0.8316700604220457
+       "rising_lost": 4584.217227443087,
+       "rising_win_probability": 0.8309830840884526
       },
       "kind": "revolt",
       "tiles": [
@@ -4237,10 +4237,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 5498.414306935016,
+       "garrison_lost": 5495.69507247454,
        "outcome": "tile_lost",
-       "rising_lost": 4574.140981720173,
-       "rising_win_probability": 0.8631229075400243
+       "rising_lost": 4571.878845567779,
+       "rising_win_probability": 0.862535790438853
       },
       "kind": "revolt",
       "tiles": [
@@ -4270,10 +4270,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 425.6383775466135,
+       "garrison_lost": 425.34778291264365,
        "outcome": "tile_lost",
-       "rising_lost": 443.73638730056393,
-       "rising_win_probability": 0.7432492324316957
+       "rising_lost": 443.43343667428354,
+       "rising_win_probability": 0.74228843080004
       },
       "kind": "revolt",
       "tiles": [
@@ -4303,10 +4303,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 27.442404464730608,
+       "garrison_lost": 27.431420470879527,
        "outcome": "tile_lost",
-       "rising_lost": 27.864595302649544,
-       "rising_win_probability": 0.891411675665249
+       "rising_lost": 27.853442324277665,
+       "rising_win_probability": 0.8909228704164349
       },
       "kind": "revolt",
       "tiles": [
@@ -4336,10 +4336,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1987.8669737429957,
+       "garrison_lost": 1986.6122694068015,
        "outcome": "tile_lost",
-       "rising_lost": 1945.3222193234044,
-       "rising_win_probability": 0.7744671715316015
+       "rising_lost": 1944.0943684379474,
+       "rising_win_probability": 0.7735858226691052
       },
       "kind": "revolt",
       "tiles": [
@@ -4369,10 +4369,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 2410.3188647842076,
+       "garrison_lost": 2408.7274082856634,
        "outcome": "tile_lost",
-       "rising_lost": 2340.401218324818,
-       "rising_win_probability": 0.7497690377238821
+       "rising_lost": 2338.855926213255,
+       "rising_win_probability": 0.748815984520771
       },
       "kind": "revolt",
       "tiles": [
@@ -4402,10 +4402,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1070.3066505396325,
+       "garrison_lost": 1069.6474705175435,
        "outcome": "tile_lost",
-       "rising_lost": 956.7230876252225,
-       "rising_win_probability": 0.7690421182091466
+       "rising_lost": 956.133861401396,
+       "rising_win_probability": 0.7681314755809752
       },
       "kind": "revolt",
       "tiles": [
@@ -4435,10 +4435,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 208.26873831697844,
+       "garrison_lost": 208.1116876805596,
        "outcome": "put_down",
-       "rising_lost": 1344.4646268791023,
-       "rising_win_probability": 0.6732307225062892
+       "rising_lost": 1343.4507972136405,
+       "rising_win_probability": 0.672100276180469
       },
       "kind": "revolt",
       "tiles": [
@@ -4452,10 +4452,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1119.5978211414651,
+       "garrison_lost": 1118.763447857531,
        "outcome": "tile_lost",
-       "rising_lost": 1144.182461724394,
-       "rising_win_probability": 0.678784269924283
+       "rising_lost": 1143.3297668906046,
+       "rising_win_probability": 0.6776625570635799
       },
       "kind": "revolt",
       "tiles": [
@@ -4485,10 +4485,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 124.8888393167754,
+       "garrison_lost": 124.80276029975578,
        "outcome": "put_down",
-       "rising_lost": 793.0058202016106,
-       "rising_win_probability": 0.712437773887669
+       "rising_lost": 792.4592448481425,
+       "rising_win_probability": 0.7113787136722372
       },
       "kind": "revolt",
       "tiles": [
@@ -4502,10 +4502,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 151.17430017397476,
+       "garrison_lost": 151.0528209182962,
        "outcome": "put_down",
-       "rising_lost": 899.5495547542304,
-       "rising_win_probability": 0.7172968382340904
+       "rising_lost": 898.826702984903,
+       "rising_win_probability": 0.7161191472450373
       },
       "kind": "revolt",
       "tiles": [
@@ -4519,10 +4519,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 1536.7635561083428,
+       "garrison_lost": 1535.7108590993573,
        "outcome": "tile_lost",
-       "rising_lost": 1467.7660086912329,
-       "rising_win_probability": 0.7143086105332997
+       "rising_lost": 1466.7605756295898,
+       "rising_win_probability": 0.7132520747377311
       },
       "kind": "revolt",
       "tiles": [
@@ -4552,10 +4552,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 152.73970869800613,
+       "garrison_lost": 152.69386072931664,
        "outcome": "tile_lost",
-       "rising_lost": 156.5693340472855,
-       "rising_win_probability": 0.7586103477717331
+       "rising_lost": 156.52233653769014,
+       "rising_win_probability": 0.7579671371290806
       },
       "kind": "revolt",
       "tiles": [
@@ -4585,10 +4585,10 @@
       ],
       "cause": "unrest",
       "facts": {
-       "garrison_lost": 260.07339265489736,
+       "garrison_lost": 259.9463564798739,
        "outcome": "tile_lost",
-       "rising_lost": 226.3495900908558,
-       "rising_win_probability": 0.750341171299415
+       "rising_lost": 226.23902673852754,
+       "rising_win_probability": 0.7494984136192023
       },
       "kind": "revolt",
       "tiles": [
@@ -4618,8 +4618,8 @@
       ],
       "cause": "food unmet",
       "facts": {
-       "food_shortfall": 0.4816992685558245,
-       "people": 57689967.55960955
+       "food_shortfall": 0.4809272268358927,
+       "people": 57689976.51995162
       },
       "kind": "famine",
       "tiles": [],
@@ -4870,7 +4870,7 @@
         "op": "~prose~",
         "quantity": "army_share_of_wanted",
         "threshold": 0.5,
-        "value": 0.49,
+        "value": 0.4902,
         "why": "~prose~"
        }
       ],
@@ -4891,7 +4891,7 @@
     },
     "ok": true,
     "population": {
-     "now": 57691124,
+     "now": 57691133,
      "start": 58000000
     },
     "price_index": {
@@ -4917,7 +4917,7 @@
      ]
     },
     "wage_per_hour": {
-     "now": 33.0271,
+     "now": 32.8861,
      "start": 94.8404
     },
     "year": 103,
@@ -4931,11 +4931,11 @@
    "reply": {
     "civilisation": "~prose~",
     "ok": true,
-    "population": 57691124,
+    "population": 57691133,
     "population_change_from_reference": -0.0053,
     "reference_population_before_simulated_changes": 58000000,
     "the_town_you_actually_operate_in": {
-     "estimated_population": 11712785,
+     "estimated_population": 11712787,
      "note": "~prose~"
     },
     "trades": [
@@ -4949,39 +4949,39 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 36800.8,
+      "estimated_in_the_country": 36779.2,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "baker",
-      "within_your_reach": 359.55,
+      "within_your_reach": 360.47,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 71569.2,
+      "estimated_in_the_country": 71569.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carpenter",
-      "within_your_reach": 83.42,
+      "within_your_reach": 83.63,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1274.5,
+      "estimated_in_the_country": 1274.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "carter",
-      "within_your_reach": 2.47,
+      "within_your_reach": 2.48,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 212485.5,
+      "estimated_in_the_country": 212502.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "charcoal_burner",
-      "within_your_reach": 25.03,
+      "within_your_reach": 25.1,
       "you_employ": 0.0
      },
      {
@@ -4994,21 +4994,21 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 213642.5,
+      "estimated_in_the_country": 207292.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "dockworker",
-      "within_your_reach": 22.61,
+      "within_your_reach": 22.68,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 852144.3,
+      "estimated_in_the_country": 843762.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "domestic_servant",
-      "within_your_reach": 1344.21,
+      "within_your_reach": 1353.47,
       "you_employ": 0.0
      },
      {
@@ -5039,39 +5039,39 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 20788929.0,
+      "estimated_in_the_country": 20704265.8,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "farmer",
-      "within_your_reach": 460922.02,
+      "within_your_reach": 462329.48,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 398982.0,
+      "estimated_in_the_country": 398917.1,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fisher",
-      "within_your_reach": 2067.66,
+      "within_your_reach": 2073.98,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 1234.0,
+      "estimated_in_the_country": 1233.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "fuller",
-      "within_your_reach": 7.67,
+      "within_your_reach": 7.69,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 127942.7,
+      "estimated_in_the_country": 127944.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "furnaceman",
-      "within_your_reach": 2846.15,
+      "within_your_reach": 2853.99,
       "you_employ": 0.0
      },
      {
@@ -5084,12 +5084,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 2533.2,
+      "estimated_in_the_country": 2531.8,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "herder",
-      "within_your_reach": 360.4,
+      "within_your_reach": 361.34,
       "you_employ": 0.0
      },
      {
@@ -5102,21 +5102,21 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 5333.5,
+      "estimated_in_the_country": 5333.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "knapper",
-      "within_your_reach": 8.76,
+      "within_your_reach": 8.79,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 8793354.8,
+      "estimated_in_the_country": 8900569.2,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "labourer",
-      "within_your_reach": 169988.22,
+      "within_your_reach": 174511.93,
       "you_employ": 0.0
      },
      {
@@ -5129,12 +5129,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 2227.1,
+      "estimated_in_the_country": 2225.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "lime_burner",
-      "within_your_reach": 8.96,
+      "within_your_reach": 8.98,
       "you_employ": 0.0
      },
      {
@@ -5147,12 +5147,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 124992.2,
+      "estimated_in_the_country": 124992.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "mason",
-      "within_your_reach": 735.31,
+      "within_your_reach": 737.55,
       "you_employ": 0.0
      },
      {
@@ -5174,12 +5174,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 17125.8,
+      "estimated_in_the_country": 17125.0,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miller",
-      "within_your_reach": 50.19,
+      "within_your_reach": 50.32,
       "you_employ": 0.0
      },
      {
@@ -5192,12 +5192,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 565564.4,
+      "estimated_in_the_country": 565027.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "miner",
-      "within_your_reach": 1246.27,
+      "within_your_reach": 1250.08,
       "you_employ": 0.0
      },
      {
@@ -5219,7 +5219,7 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 19661.6,
+      "estimated_in_the_country": 12674.2,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -5228,30 +5228,30 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 375865.6,
+      "estimated_in_the_country": 375859.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "potter",
-      "within_your_reach": 13290.05,
+      "within_your_reach": 13322.38,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 23002.7,
+      "estimated_in_the_country": 23002.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "sailor",
-      "within_your_reach": 273.24,
+      "within_your_reach": 274.08,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 13990.6,
+      "estimated_in_the_country": 13992.4,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "salt_worker",
-      "within_your_reach": 16.73,
+      "within_your_reach": 16.78,
       "you_employ": 0.0
      },
      {
@@ -5282,16 +5282,16 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 85077.4,
+      "estimated_in_the_country": 85077.3,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "smith",
-      "within_your_reach": 356.24,
+      "within_your_reach": 357.52,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 26905568.5,
+      "estimated_in_the_country": 26905569.1,
       "exists_here": true,
       "is_placeholder": true,
       "share_of_the_reachable_pool_you_employ": 0.0,
@@ -5300,12 +5300,12 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 296065.8,
+      "estimated_in_the_country": 296129.9,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "spinner",
-      "within_your_reach": 2146.27,
+      "within_your_reach": 2151.72,
       "you_employ": 0.0
      },
      {
@@ -5318,26 +5318,26 @@
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 224597.0,
+      "estimated_in_the_country": 224446.6,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "vine_and_olive_tender",
-      "within_your_reach": 1271.39,
+      "within_your_reach": 1275.27,
       "you_employ": 0.0
      },
      {
-      "estimated_in_the_country": 190136.6,
+      "estimated_in_the_country": 190163.7,
       "exists_here": true,
       "is_placeholder": false,
       "share_of_the_reachable_pool_you_employ": 0.0,
       "trade": "weaver",
-      "within_your_reach": 1630.1,
+      "within_your_reach": 1634.37,
       "you_employ": 0.0
      }
     ],
     "urban_fraction": 0.1,
-    "urban_population_estimate": 5769112,
+    "urban_population_estimate": 5769113,
     "what_this_means": "~prose~"
    }
   },
@@ -5448,7 +5448,7 @@
     ],
     "next_door_total": 21,
     "ok": true,
-    "population": 57691124,
+    "population": 57691133,
     "regions": [
      "~prose~"
     ],
@@ -5457,7 +5457,7 @@
       "deposits": [],
       "is_your_base": true,
       "name": "~prose~",
-      "people": 23425569,
+      "people": 23425573,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_21"
@@ -5466,7 +5466,7 @@
       "days_from_your_base": 16,
       "deposits": [],
       "name": "~prose~",
-      "people": 16390578,
+      "people": 16390581,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_20"
@@ -5475,7 +5475,7 @@
       "days_from_your_base": 61,
       "deposits": [],
       "name": "~prose~",
-      "people": 14688828,
+      "people": 14688830,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_08"
@@ -5502,7 +5502,7 @@
       "days_from_your_base": 156,
       "deposits": [],
       "name": "~prose~",
-      "people": 797037,
+      "people": 797038,
       "region": "~prose~",
       "terrain": "~prose~",
       "tile": "china_49"
@@ -5512,11 +5512,11 @@
     "towns_note": "~prose~",
     "you_are_based_at": {
      "name": "~prose~",
-     "people": 23425569,
+     "people": 23425573,
      "region": "~prose~",
      "terrain": "~prose~",
      "tile": "china_21",
-     "town_people": 11712785
+     "town_people": 11712787
     }
    }
   },
@@ -5529,7 +5529,7 @@
     "concerns_you_were_running": 0,
     "ended_in": 103,
     "failed_attempts": 0,
-    "money": 2448581.1,
+    "money": 2448594.6,
     "ok": true,
     "people": 0,
     "reached_it": false,
@@ -5539,8 +5539,8 @@
      "components": {
       "economy": {
        "counts": "~prose~",
-       "normalized": 0.16010400525075563,
-       "raw": 2448581.1,
+       "normalized": 0.16015570969367784,
+       "raw": 2448594.6,
        "raw_detail": {
         "worker_years_equivalent": 16.1
        },
@@ -5561,13 +5561,13 @@
       },
       "literacy": {
        "counts": "~prose~",
-       "normalized": 0.535325614001241,
+       "normalized": 0.535034244206531,
        "raw": 0.0745,
        "raw_detail": {
         "elite": 0.9137,
         "elite_ceiling": 0.99,
         "general": 0.0745,
-        "general_ceiling": 0.504
+        "general_ceiling": 0.506
        },
        "weight": 0.15,
        "weighted": 0.0803
