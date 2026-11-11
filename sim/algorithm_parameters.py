@@ -127,6 +127,13 @@ MAXIMUM_ITERATIONS = 2000
 # scale; the number itself is a definition of precision, not an estimate.
 CONVERGENCE_TOLERANCE = 1e-10
 
+# The first rounds of a solve replace each price by its cheapest technique's cost outright (no blend), which is
+# exact for a chain of materials as long as the rounds and settles a price that sinks towards zero (a waste
+# nobody pays for) at once rather than by halving; the damped rounds then steady what a cycle left moving.
+# OUTCOME-INERT for a component with one fixed point (both phases converge to it, this one in far fewer rounds);
+# a cycle that does not settle under the plain rounds is left where they stopped and the damped rounds take over.
+UNDAMPED_OPENING_ROUNDS = 12
+
 # Every price starts equal, in labour-hours, before the first iteration.
 # The seed value only matters for how many iterations convergence takes and
 # for which technique looks cheapest in round one (see the joint-production

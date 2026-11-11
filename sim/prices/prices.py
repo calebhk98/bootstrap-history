@@ -362,10 +362,10 @@ def _solve_to_json(production_entries: ProductionEntries,
                    admitted_entry_keys: FrozenSet[str] = frozenset(),
                    interest_rate: float = 0.0,
                    farmed_hectares: Optional[float] = None,
-                   in_game: bool = False, initial_prices: Optional[Dict[str, float]] = None,
+                   in_game: bool = False,
                    rent_hours_per_kg_by_material: Optional[Mapping[str, float]] = None) -> Dict[str, Any]:
-    """Run the solver for one held-gate set; the result is JSON-able. `in_game` starts from `initial_prices`
-    (when given) and stops at ENGINE_SOLVE_TOLERANCE; otherwise the solve is cold and exact. The rent charged is
+    """Run the solver for one held-gate set; the result is JSON-able. `in_game` stops at ENGINE_SOLVE_TOLERANCE;
+    otherwise the solve runs to the solver's own tolerance. The rent charged is
     `rent_hours_per_kg_by_material` when given (none at all if empty), else the opening's stand-in."""
     # `gate_nodes_held` is exactly the right thing to hand
     # `techniques_available_to` as `reached_nodes`: every `requires_node` it
@@ -394,7 +394,7 @@ def _solve_to_json(production_entries: ProductionEntries,
         rent_hours_per_kg_by_material=rent_hours_per_kg_by_material,
         interest_rate=interest_rate,
         dump_minimum_distance_kilometres=waste_dump_minimum_distance(civilization),
-        **({"initial_prices": initial_prices, "tolerance": ENGINE_SOLVE_TOLERANCE} if in_game else {}))
+        **({"tolerance": ENGINE_SOLVE_TOLERANCE} if in_game else {}))
 
     return {
         "prices_in_labour_hours": prices_in_labour_hours,
@@ -497,16 +497,14 @@ def solved_prices_at_wages(held_technology_ids: Iterable[str],
     if interest_rate is None:
         interest_rate = starting_rate
     territory = territory_fingerprint(civilization)
-    farmed_area = farmed_hectares
     farmed_hectares = band_farmed_hectares(farmed_hectares)
 
     gate_nodes_held = frozenset(all_gate_nodes(production_entries)
                                 & set(held_technology_ids))
     rent_key = None if rent_hours_per_kg_by_material is None else tuple(sorted(rent_hours_per_kg_by_material.items()))
     # Wages move with the labour market, so the cache is keyed on them too.
-    # The starting rate keys the solve too: a solve at another rate starts from the solve at the starting rate.
     cache_key = (gate_nodes_held, civilization_id, tuple(sorted(document_ratios.items())), admitted_entry_keys,
-                 starting_rate, interest_rate, territory, farmed_hectares, rent_key)
+                 interest_rate, territory, farmed_hectares, rent_key)
 
     cached = _SOLVE_CACHE.get(cache_key)
     if cached is not None and cached[0] is production_entries:
@@ -515,15 +513,8 @@ def solved_prices_at_wages(held_technology_ids: Iterable[str],
     in_game = production_entries is _DEFAULT_PRODUCTION_ENTRIES
 
     def compute() -> Dict[str, Any]:
-        # A solve at another rate starts from the same solve at the starting rate (itself started cold), so
-        # its result depends on its own inputs only, never on which solves ran before it.
-        initial = None
-        if in_game and interest_rate != starting_rate:
-            initial = solved_prices_at_wages(
-                held_technology_ids, document_ratios, production_entries, civilization_id, admitted_entry_keys,
-                starting_rate, civilization, farmed_area, rent_hours_per_kg_by_material).prices_in_labour_hours
         return _solve_to_json(production_entries, gate_nodes_held, document_ratios, civilization,
-                              admitted_entry_keys, interest_rate, farmed_hectares, in_game, initial,
+                              admitted_entry_keys, interest_rate, farmed_hectares, in_game,
                               rent_hours_per_kg_by_material)
     if production_entries is _DEFAULT_PRODUCTION_ENTRIES:
         # Only the committed catalogue is persisted; synthetic catalogues are not.
@@ -531,7 +522,7 @@ def solved_prices_at_wages(held_technology_ids: Iterable[str],
             key = solve_cache.solve_key({
                 "production": production_entries, "gates": sorted(gate_nodes_held),
                 "civilization": civilization_id, "wage_ratios": document_ratios,
-                "admitted_entries": sorted(admitted_entry_keys), "starting_rate": starting_rate, "interest_rate": interest_rate,
+                "admitted_entries": sorted(admitted_entry_keys), "interest_rate": interest_rate,
                 "territory": territory, "farmed_hectares": farmed_hectares, "rent": rent_key},
                 source_modules=_SOLVER_SOURCE)
         except OSError:
