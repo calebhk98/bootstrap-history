@@ -1,6 +1,6 @@
 # An iron mine sunk for a few denarii sells millions of iron
 
-**Status:** open - measured 2026-11-11: the founder sells mined ore at the bar-iron price, about 300 times the mine's cost; cause traced (commodity `iron` is priced as `iron_bar_kg`), not fixed
+**Status:** closed - sales of a pool are priced and cleared as the form its mines raise (`raised_material`), so mined ore can no longer be sold at the bar price; the whole-game re-measure is pending
 
 Found by an agent playtest (`Complaints/reports/playtest-rome-seed11-agent-legitimate-log.md`, Rome, seed 11, around 109 AD). `buy mine iron 100` cost a few denarii to sink and
 tens a year to stand; the founder's iron then sold at thousands of denarii a tonne, so a few thousand tonnes raised
@@ -47,7 +47,20 @@ good the economy trades at about 15 coin a tonne is not the one the sale is pric
 the bar good, which is traded in volume) does not bind, and the ore is paid as bar iron. The same shape holds for any commodity whose
 `price_material` is a worked form of what the mine raises.
 
-What it would take: a sale of a mine's output is priced and cleared in the good the mine raises (the ore material of the commodity), or the
-commodity pool is split so ore and bar are not one stock; then a test calls the pricing rule (`priced_key` or its caller) with a
-commodity record whose `price_material` differs from the mined ore and checks the ore good is chosen for mine output. This touches
-the materials commodity pool and the economy's good keys, which are wider than one contained rule, so it is left open.
+## Fix
+
+A held tonne of a commodity pool sells as the form its mines raise. `data/world/commodities.json` gives a commodity an optional
+`raised_material` (iron: `iron_ore_kg`; copper: `copper_ore_kg`; documented in `data/world/COMMODITIES.md`). `prices.rules.sold_material`
+returns it (else the material itself), and `GoodsMarket` prices, limits and clears every sale (`quote`, `quote_sell`, `post_order` on
+the sell side, through `GoodsPricing.sold_as`) in that good, so `sell iron` and `sell iron_bar_kg` are both paid the ore good's price and
+capped by what buyers of ore took (668). A buy is unchanged (a bought tonne is priced as the pool's `price_material`). A founder who wants
+bar iron's price has to make bar from the ore, with the smelting concern, whose output is sold through the concern path (668), not the
+mine's tonnes.
+
+Regression test: `sim/tests/test_pool_sells_as_raised_form.py` (`sold_material`).
+
+Known limit: the stock ledger holds one counter per commodity, so a tonne of bar the seat bought sells as ore too (a loss, not a gain).
+Splitting the pool's stock by form is a wider change and is not made here; no engine code names iron.
+
+Whole-game re-measure is pending (orchestrator): `buy mine iron 100`, four `step`, `sell iron 99`, `step` on `rome_100ad`; the
+sale should now settle near the ore price (about 15 coin a tonne), a small multiple of the mine's cost per tonne.

@@ -34,6 +34,13 @@ def priced_key(tag: str, prices: Mapping[str, Any], commodity: Mapping[str, Any]
     return None
 
 
+def sold_material(material: str, commodity: Mapping[str, Any]) -> str:
+    """The material key a held tonne of the commodity sells as: the form its mines raise (`raised_material`) where the commodity
+    names one, else the material itself. The commodity's tonnes are one pool, so a tonne a mine raised is never priced as a
+    worked form of the pool."""
+    return commodity.get("raised_material") or material
+
+
 def basis_with_imports(basis: Optional[str], seller: Optional[str]) -> Optional[str]:
     """"imported" where a trading partner sells what no home producer in reach makes (or sells it though one is), else the
     solver's basis."""

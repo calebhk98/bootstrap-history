@@ -65,6 +65,7 @@ class _Market(GoodsMarket):
             materials=SimpleNamespace(
                 prices=lambda: dict(cost_table if cost_table is not None else paid),
                 priced_key=lambda material, prices: material if material in prices else None,
+                sold_material=lambda tag: tag,
                 tag=lambda material: (material, None),
                 price_per_unit=lambda material: (cost_table if cost_table is not None else paid).get(material)),
             foreign=SimpleNamespace(material_carriage_per_tonne=lambda key, price: CARRIAGE))

@@ -57,6 +57,7 @@ explained:
   "category": "ore_metal",                 // ore_metal | agricultural | manufactured | luxury_import
   "material_keys": ["copper_kg", "copper_ore_kg"],   // material keys this commodity subsumes
   "price_material": "copper_kg",           // base price = this material's solved price, labour hours per kg
+  "raised_material": "copper_ore_kg",      // optional: the material key a mine raises; a held tonne of the pool sells as this, never as the worked price_material
   "national_output_t_per_yr": 15000,
   "output_conf": "C",
   "output_source": "data/world/resources.json:empire_output_100ad.copper",

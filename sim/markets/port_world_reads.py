@@ -73,6 +73,10 @@ class MaterialReads:
 	def priced_key(self, tag, prices):
 		return price_rules.priced_key(tag, prices, self._needs.commodity_record[tag])
 
+	def sold_material(self, tag):
+		"""The material a held tonne of `tag`'s pool sells as (the form its mines raise)."""
+		return price_rules.sold_material(tag, self._needs.commodity_record[self._needs.material_pool[tag][0]])
+
 	def spoilage_rates(self):
 		"""{good: continuous decay rate a year} of the goods that spoil, with the installed mods applied."""
 		return self._needs.spoilage_rates()

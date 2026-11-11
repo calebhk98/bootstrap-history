@@ -64,6 +64,11 @@ class GoodsPricing:
         or None when no one sells it."""
         return self._sim.materials.priced_key(material, self.market.offers.home_prices())
 
+    def sold_as(self, material):
+        """The material a sale of `material` is priced and cleared as: the pool's tonnes are what the seat's mines raised, so a
+        worked form of the pool (bar from ore) is not what is sold."""
+        return self._sim.materials.sold_material(material)
+
     def _climb(self, material, taken_before, tonnes, selling=False):
         """Mean factor on the price while buying (or selling) `tonnes` more of a material after `taken_before`
         tonnes bought (or sold) this year or in the same bill, read from the economy's book at points along the

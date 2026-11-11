@@ -28,6 +28,7 @@ class CallerTests(unittest.TestCase):
                              economy=Game(agent_offered_tonnes=lambda material: None)),
             pricing=Game(price_at_tile_per_tonne=lambda material: 10.0, sale_proceeds=lambda *args: None,
                          economy_good=lambda material: material,
+                         sold_as=lambda material: material,
                          carriage_per_tonne=lambda material, price: 1.0),
             posted_tonnes=lambda side, key: 0.0, acting_party_id="founder",
             import_tonnes_available=lambda material: None)
@@ -38,7 +39,7 @@ class CallerTests(unittest.TestCase):
         stand_in = Game(
             quote=lambda material: {"stock_key": "iron"}, posted_tonnes=lambda side, key: 0.0,
             sale_limits=lambda material: (10.0, 100.0),
-            pricing=Game(sale_proceeds=lambda *args: recorded.append(args)))
+            pricing=Game(sale_proceeds=lambda *args: recorded.append(args), sold_as=lambda material: material))
         self.assertEqual(GoodsMarket.quote_sell(stand_in, "iron", 5.0), (None, 0.0, 0.0))
         self.assertEqual(len(recorded), 1)
 

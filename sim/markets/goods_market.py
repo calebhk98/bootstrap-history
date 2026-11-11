@@ -107,7 +107,7 @@ class GoodsMarket:
         emp_key = sim.materials.tag(material)[0]
         good = self.pricing.economy_good(material)
         offered = None if good is None else sim.economy.agent_offered_tonnes(good)
-        proceeds = self.pricing.sale_proceeds(material, 0.0, self.posted_tonnes("sell", emp_key))
+        proceeds = self.pricing.sale_proceeds(self.pricing.sold_as(material), 0.0, self.posted_tonnes("sell", emp_key))
         if proceeds is None:
             return None
         carriage = self.pricing.carriage_per_tonne(material, price)
@@ -123,7 +123,7 @@ class GoodsMarket:
     def _with_buyers(self, material, quote):
         """The quote with the tonnes the economy's buyers took and still wanted last year of the good the material is
         traded as, None where the economy does not trade it."""
-        good = self.pricing.economy_good(material)
+        good = self.pricing.economy_good(self.pricing.sold_as(material))
         record = None if good is None else self._sim.economy.agent_good_market_record(good)
         return {**quote, "buyers_take_tonnes_per_year": None if record is None else record["sold"] + record["unmet"]}
 
@@ -157,7 +157,7 @@ class GoodsMarket:
         sold = tonnes_sold(tonnes, held, room)
         if sold <= 0:
             return key, 0.0, 0.0
-        proceeds = self.pricing.sale_proceeds(material, sold, self.posted_tonnes("sell", key))
+        proceeds = self.pricing.sale_proceeds(self.pricing.sold_as(material), sold, self.posted_tonnes("sell", key))
         if proceeds is None:
             return None, 0.0, 0.0
         return key, sold, proceeds[0]
@@ -190,7 +190,7 @@ class GoodsMarket:
             return Refusal("no_price", "%s has no price here, so it cannot be ordered." % material, material=material)
         if tonnes <= 0:
             return Refusal("no_quantity", "an order needs a quantity above zero.", material=material)
-        good = self.pricing.economy_good(material)
+        good = self.pricing.economy_good(material if side == "buy" else self.pricing.sold_as(material))
         if good is None:
             return Refusal("not_traded", "%s is not traded in the economy, so it cannot be ordered." % material, material=material)
         key = quote["stock_key"]
@@ -207,7 +207,7 @@ class GoodsMarket:
                 return Refusal("not_enough_held", "no %s is held that is not already ordered sold." % material, material=material)
         carriage = quote["carriage_per_tonne"] if buying else 0.0
         mean = (self.pricing.purchase_cost(quote["material"], tonnes)[1] - carriage if buying
-                else self.pricing.sale_proceeds(quote["material"], tonnes, self.posted_tonnes("sell", key))[1])
+                else self.pricing.sale_proceeds(self.pricing.sold_as(quote["material"]), tonnes, self.posted_tonnes("sell", key))[1])
         limit = float(limit_per_tonne) if limit_per_tonne is not None else mean
         if buying and limit_per_tonne is not None and limit_includes_carriage:
             limit -= carriage
