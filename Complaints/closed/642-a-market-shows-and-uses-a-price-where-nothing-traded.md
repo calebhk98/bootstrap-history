@@ -1,6 +1,6 @@
 # A market shows and uses a price where nothing traded
 
-**Status:** partly fixed (clearing, memory, the price index, the cap, the opening estimate's kind, the player's screen, what buyers and merchants read at a source; two planning-memory items under Left wait on an owner decision about what producers plan from)
+**Status:** closed - every item done: buyers and merchants read what is offered, a market with nothing to quote plans from making cost (or has no price), the thin-trade blend is a declared heuristic retired by 473
 
 `goods_market` (`sim/economy/goods_market.py`, the clearing that returns `held_price`) returns the last price when a
 market has no offers, when what is offered is residue, or when no buyer wants anything; `market_memory.py` keeps a
@@ -66,17 +66,17 @@ books: no trade gives no price and a quote; a trade gives its price.
   (`producers_close.inventory_value`, `capital_year.py` :126, `land_bid_year.py`, `entry_trial.py`, `entry_margin.py`,
   `economy.py` :462) are estimates of worth, not purchases.
 
-## Left
+## Decided 2026-11-11 (orchestrator's decision; owner may overrule)
 
-Owner design decisions (what a producer plans from when a market did not trade; not guessed here):
-
-- A no-trade market with nothing to quote keeps its old remembered price in the planning memory (buyers no longer read
-  it; its kind is `remembered_price`). Dropping it leaves producers' output expectations and input cost estimates with no
-  price, which would stop every maker that uses the good; the substitute (the cost band, the last trade aged, or a
-  refusal that makes the maker idle) is not chosen.
-- The thin-trade relaxation (`price_after_thin_trade`) moves a traded price toward cost in the planning memory; the
-  display labels the blended figure `thin_trade_blend`. Whether producers plan from the traded price alone (as
-  `cleared_price`) or from the blend is not chosen.
+- A market that traded nothing and has nothing to quote plans from the calculated cost of making the good, taken whole, with
+  kind `cost_covering` (`goods_remember_kernel.signals`; Python rules `year_remember.plan_from_cost`). Where no cost can be
+  calculated either the planning price is forgotten (`year_remember.forgotten_places`): `MarketView.price` is None, and a
+  maker that sells the good or needs it as an input has a run that cannot be priced and plans no run
+  (`unit_cost.input_cost_per_run` is infinite for an unpriced input; `producers.expected_output_prices_at` leaves an
+  unpriced output out). Tests: `test_economy_no_trade_plans_from_cost.py`.
+- The thin-trade blend (`price_after_thin_trade`) stays. Its weight is its own declared constant,
+  `THIN_TRADE_COST_SHARE` (kind temporary_heuristic, `retire` Complaint 473, the spin-up settling), no longer shared with the
+  no-offer rate.
 
 ## Also done (merchants, and the stale line items)
 
@@ -85,9 +85,13 @@ Owner design decisions (what a producer plans from when a market did not trade; 
   `merchants_book.buyable_sources` / `only_sources` for the book and batch searches). The area is still sold into
   (destinations read the planning price). A search for goods the merchant holds is not gated. Test:
   `test_merchant_buys_only_what_is_offered.py`.
-- Checked and already done, nothing left: `opening.py` and `carriage_fleet_book.py` have no `or 0.0` on a price (the
-  fleet bid reads `offered_price` and skips None); `land_bid_year.best_margin` skips a recipe with an unpriced output and
+- Checked and already done: `opening.py` and `carriage_fleet_book.py` have no `or 0.0` on a price (the fleet bid reads
+  `offered_price` and skips None); `land_bid_year.best_margin` skips a recipe with an unpriced output and
   `land_bid.hectare_bid` returns no bid for a missing price; `entry_margin` drops a market with no price;
   `economy._bid_for_plant` skips a plant good with no price.
-- Still in-band by design: the route search arrays (`RoutePass.view_prices`, `merchants_search.good_routes`) hold 0.0 for
-  "no price" inside the compiled kernel, which treats 0 as none; no caller outside it reads that array as a price.
+- The route search arrays (`RoutePass.view_prices`, `merchants_search.good_routes`) hold 0.0 for "no price" only inside the
+  compiled kernel, which treats 0 as none; no caller outside it reads that array as a price.
+
+## Left
+
+Nothing.

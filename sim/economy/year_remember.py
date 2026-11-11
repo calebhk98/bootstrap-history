@@ -5,17 +5,19 @@ A market on the tables whose good is not the coin metal's takes the kernels: the
 buyers would have taken at the old price from the order tables' bid rows and the added bids, and the quote it rests on from the first round's
 columns. A market of the coin metal (whose mint tops up the price) and every market when a
 kernel meets a figure it does not reproduce take the Python rules (`remember_one`)."""
+from typing import Optional
+
 import numpy
 
 from . import goods_memory_notes, goods_remember_kernel as kernel
 from .goods_good_clear import QUOTE_KINDS
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE, memory_reference_volume
 from .market_memory_asks import RESUMED_TRADE_MEMORY_SHARE
-from .market_memory_offers import NO_OFFER_MEMORY_SHARE, price_after_thin_trade, price_toward_quote
+from .market_memory_offers import NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE, price_after_thin_trade, price_toward_quote
 from .notional import making_costs
 from .setup import opening_price_today
 from .market_memory import market_key
-from .types import EDGE_EXTERNAL
+from .types import EDGE_EXTERNAL, QUOTE_COST_COVERING
 from .year_ledger_tables import ROUNDS
 
 
@@ -51,7 +53,16 @@ def remember_one(setup, record, good, area, market, old, total, usual, was_quote
     signal = price_toward_quote(old, quote.price) if quote is not None else None
     if signal is not None:
         quote_kind = quote.kind
-    return signal, quote_kind, False
+        return signal, quote_kind, False
+    return plan_from_cost(costs.get(good))
+
+
+def plan_from_cost(cost: Optional[float]):
+    """(signal, quote kind, from trade) of a market that traded nothing and has nothing to quote: it plans from what the good costs to make,
+    taken whole, and from no price (signal None) where no cost can be worked out."""
+    if cost is None or not cost > 0.0:
+        return None, None, False
+    return cost, QUOTE_COST_COVERING, False
 
 
 def _bid_columns(year_markets, cells, orders):
@@ -108,28 +119,38 @@ def remember_markets(setup, record, keys, left_markets, rows, year_markets, cell
     funded, best = kernel.bid_figures(pointers, budget, maximum)
     has_bids, offers_left = table.bid_count[cells] > 0, table.left_count[cells]
     traded = (total > 0.0) & ~numpy.isnan(received)
-    needs_cost = (traded & (total < REPRESENTATIVE_TRADE_SHARE * usual)) | (~traded & has_bids & (offers_left == 0))
+    needs_cost = (traded & (total < REPRESENTATIVE_TRADE_SHARE * usual)) | ~traded
     cost = numpy.array([numpy.nan if each is None else each for each in (costs.get(good) for good in goods)]) if needs_cost.any() \
         else numpy.full(len(rows), numpy.nan)
     signal, kind, from_trade = kernel.signals(old, was_quote, usual, idle, total, received, wanted_old, table.quote_price[cells],
                                               table.quote_kind[cells], has_bids, offers_left, cost, funded, best, REPRESENTATIVE_TRADE_SHARE,
-                                              RESUMED_TRADE_MEMORY_SHARE, NO_OFFER_MEMORY_SHARE)
+                                              RESUMED_TRADE_MEMORY_SHARE, NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE)
     if flags[0] != kernel.FALLBACK and not plain.any():
-        return _write(setup, memory, rows, goods, signal, kind, from_trade, cleared, table.delivered[cells])
+        return _write(setup, memory, rows, keys, signal, kind, from_trade, cleared, table.delivered[cells])
     every = numpy.ones(len(rows), dtype=numpy.bool_) if flags[0] == kernel.FALLBACK else plain
     for place in numpy.flatnonzero(every).tolist():
         good, area = keys[place]
         found, name, trade = remember_one(setup, record, good, area, left_markets[keys[place]], None if old[place] != old[place] else float(old[place]),
                                           float(total[place]), float(usual[place]), bool(was_quote[place]), int(idle[place]), ledger, orders, costs)
         signal[place], kind[place], from_trade[place] = numpy.nan if found is None else found, QUOTE_KINDS.index(name), trade
-    return _write(setup, memory, rows, goods, signal, kind, from_trade, cleared, table.delivered[cells])
+    return _write(setup, memory, rows, keys, signal, kind, from_trade, cleared, table.delivered[cells])
 
 
-def _write(setup, memory, rows, goods, signal, kind, from_trade, cleared, delivered) -> None:
+def _write(setup, memory, rows, keys, signal, kind, from_trade, cleared, delivered) -> None:
     """The year's notes into the memory: the signals, the quote kinds numbered, the cleared prices, the deliveries and each good's opening price."""
+    goods = [good for good, _area in keys]
     opening_of_good = {}
     for good in goods:
         if good not in opening_of_good:
             opening_of_good[good] = opening_price_today(setup, memory, good)
     openings = numpy.array([numpy.nan if opening_of_good[good] is None else opening_of_good[good] for good in goods], dtype=numpy.float64)
     goods_memory_notes.write_markets(memory, rows, signal, _kind_numbers(memory, kind), from_trade, cleared, delivered, openings)
+    for place in forgotten_places(signal, kind, from_trade):
+        good, area = keys[place]
+        memory.prices.pop(market_key(good, area), None)       # nothing traded, nothing to quote, no cost: no planning price
+        memory.quote_kinds.pop(market_key(good, area), None)
+
+
+def forgotten_places(signal, kind, from_trade) -> list:
+    """The places of the markets that traded nothing and have neither a quote nor a cost to plan from (a NaN signal, no quote kind)."""
+    return numpy.flatnonzero(numpy.isnan(signal) & (kind == 0) & ~from_trade).tolist()

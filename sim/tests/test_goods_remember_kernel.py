@@ -16,7 +16,7 @@ from sim.economy.goods_added_bids import AddedBids
 from sim.economy.goods_market_rows import bids_only_quote
 from sim.economy.goods_market import quantity_at
 from sim.economy.market_memory_asks import REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE, memory_reference_volume
-from sim.economy.market_memory_offers import NO_OFFER_MEMORY_SHARE, price_after_thin_trade, price_toward_quote
+from sim.economy.market_memory_offers import NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE, price_after_thin_trade, price_toward_quote
 from sim.economy.types import EDGE_EXTERNAL, QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, Bid
 from sim.economy.year_goods import price_after_trade
 
@@ -121,7 +121,7 @@ class SignalTests(unittest.TestCase):
         best = np.array([rng.choice((none, rng.uniform(0.2, 30.0))) for _each in range(count)])
         signal, kind, from_trade = kernel.signals(old, was_quote, usual, quiet, total, received, wanted, quote_price, quote_kind, has_bids,
                                                   offers_left, cost, funded, best, REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE,
-                                                  NO_OFFER_MEMORY_SHARE)
+                                                  NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE)
         for place in range(count):
             previous = None if math.isnan(old[place]) else float(old[place])
             if total[place] > 0.0 and not math.isnan(received[place]):
@@ -142,6 +142,9 @@ class SignalTests(unittest.TestCase):
                 else:
                     price = None if math.isnan(best[place]) else float(best[place])
             expected = None if price is None else price_toward_quote(previous, price)
+            if price is None and not math.isnan(cost[place]) and cost[place] > 0.0:     # nothing to quote: the making cost, whole
+                self.assertEqual((signal[place], kind[place]), (cost[place], 3), place)
+                continue
             self.assertEqual(None if math.isnan(signal[place]) else signal[place], expected, place)
             self.assertEqual(kind[place] != 0, expected is not None)
 
