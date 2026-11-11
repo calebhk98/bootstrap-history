@@ -32,5 +32,27 @@ class JointRecipeInReachTests(unittest.TestCase):
         self.assertEqual(sorted(reach), ["a_herd"])
 
 
+class AdmittedRecipeDoesNotUndercutHeldOutputs(unittest.TestCase):
+    """An admitted joint recipe prices only its new outputs: where a held technique already makes an output, the
+    admitted recipe is not a producer of it (a fowling recipe's cheap mass-split fat must not reprice fat)."""
+
+    def test_an_admitted_recipe_stops_producing_what_a_held_recipe_makes(self):
+        held = {"milk": entry({"fat_kg": 1.0})}
+        admitted = {"fowl": entry({"down_kg": 1.0, "fat_kg": 1.0})}
+        producers = price_engine.producers_with_admitted({**held, **admitted}, frozenset(admitted))
+        self.assertEqual(producers, {"fat_kg": ["milk"], "down_kg": ["fowl"]})
+
+    def test_an_admitted_recipe_remains_a_producer_of_every_output_nothing_held_makes(self):
+        held = {"milk": entry({"fat_kg": 1.0})}
+        admitted = {"fowl": entry({"down_kg": 1.0, "feather_kg": 1.0})}
+        producers = price_engine.producers_with_admitted({**held, **admitted}, frozenset(admitted))
+        self.assertEqual(producers["down_kg"], ["fowl"])
+        self.assertEqual(producers["feather_kg"], ["fowl"])
+
+    def test_with_nothing_admitted_every_recipe_produces_all_its_outputs(self):
+        entries = {"a": entry({"x_kg": 1.0, "y_kg": 1.0}), "b": entry({"y_kg": 1.0})}
+        self.assertEqual(price_engine.producers_with_admitted(entries, frozenset()), {"x_kg": ["a"], "y_kg": ["a", "b"]})
+
+
 if __name__ == "__main__":
     unittest.main()

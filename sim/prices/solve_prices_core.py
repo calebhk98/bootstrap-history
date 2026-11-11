@@ -1093,7 +1093,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
         candidates_by_material = solve_prices_round.round_candidates(
             plans, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs,
-            reference_price_by_material)
+            reference_price_by_material, producers_of)
 
         prices, final_residual = _solve_round_update_prices(
             resolvable_materials, prices, candidates_by_material, round_damping, chosen_recipe_by_material,
