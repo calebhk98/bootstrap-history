@@ -6,7 +6,7 @@ up the first time a haul needs them and kept with it. The pack never reaches a s
 """
 import math
 import weakref
-from typing import Dict, List
+from typing import Dict, List, Mapping
 
 import numpy as np
 
@@ -129,3 +129,10 @@ def news_current_flags(good, areas, carriage, home_tile) -> List[bool]:
         flags = pack.news_current[home_tile] = [
             merchants_transit.news_lag(carriage, home_tile, anchor) == 0 for anchor in pack.anchors]
     return flags
+
+
+def unoffered_areas(view, good, areas, expected: Mapping) -> set:
+    """Ids of the good's areas a merchant cannot buy in: it has no expectation of the area and the market has nothing on offer
+    (`offered_price` is None: a bid ceiling, a cost quote or a price remembered from an old trade). Such an area can still be
+    sold into; it is left out as a source of the haul."""
+    return {area.area_id for area in areas if area.area_id not in expected and view.offered_price(good, area.area_id) is None}

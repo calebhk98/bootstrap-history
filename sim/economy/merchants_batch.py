@@ -12,7 +12,7 @@ import numpy as np
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 from . import merchants_batch_kernel
-from .merchants_book import MerchantRows, RoutePass, merchant_array
+from .merchants_book import MerchantRows, RoutePass, buyable_sources, merchant_array, only_sources
 
 
 def search_arrays(route: RoutePass, expected: np.ndarray, home_tiles: Sequence[str], interest_rate: float, margin_share: float):
@@ -55,9 +55,9 @@ def search_many(route: RoutePass, expected: np.ndarray, home_tiles: Sequence[str
     found = []
     for position in range(len(home_tiles)):
         low, high = int(ends[position] - counts[position]), int(ends[position])
-        found.append(MerchantRows(good[low:high], source[low:high], destination[low:high], source_slot[low:high],
-                                  destination_slot[low:high], rank[low:high], price_here[low:high], outlay[low:high],
-                                  ceiling[low:high]))
+        rows = MerchantRows(good[low:high], source[low:high], destination[low:high], source_slot[low:high],
+                            destination_slot[low:high], rank[low:high], price_here[low:high], outlay[low:high], ceiling[low:high])
+        found.append(only_sources(rows, buyable_sources(route.offered, expected[position])))
     return found
 
 

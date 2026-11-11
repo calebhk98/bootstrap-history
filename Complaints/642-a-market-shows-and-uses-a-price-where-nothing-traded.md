@@ -1,6 +1,6 @@
 # A market shows and uses a price where nothing traded
 
-**Status:** partly fixed (clearing, memory, the price index, the cap, the opening estimate's kind, the player's screen and what buyers read; the items under Left remain)
+**Status:** partly fixed (clearing, memory, the price index, the cap, the opening estimate's kind, the player's screen, what buyers and merchants read at a source; two planning-memory items under Left wait on an owner decision about what producers plan from)
 
 `goods_market` (`sim/economy/goods_market.py`, the clearing that returns `held_price`) returns the last price when a
 market has no offers, when what is offered is residue, or when no buyer wants anything; `market_memory.py` keeps a
@@ -68,10 +68,26 @@ books: no trade gives no price and a quote; a trade gives its price.
 
 ## Left
 
+Owner design decisions (what a producer plans from when a market did not trade; not guessed here):
+
 - A no-trade market with nothing to quote keeps its old remembered price in the planning memory (buyers no longer read
-  it; its kind is now `remembered_price`).
-- The thin-trade relaxation (`price_after_thin_trade`) still moves a traded price toward cost in the planning memory; the
-  display labels the blended figure `thin_trade_blend`. Producers still plan from the memory.
-- Not moved, owned by the parallel work: `merchants.py` (:128, :224, `prices_across`; a merchant buying at a source
-  should read the offered price), `opening.py` (:143, :215 `view.price(...) or 0.0`), `carriage_fleet_book.py` :163.
-- In-band zeros that remain: `land_bid_year.py` :23, `entry_margin.py` :79, `economy.py` :462 read a missing price as 0.0.
+  it; its kind is `remembered_price`). Dropping it leaves producers' output expectations and input cost estimates with no
+  price, which would stop every maker that uses the good; the substitute (the cost band, the last trade aged, or a
+  refusal that makes the maker idle) is not chosen.
+- The thin-trade relaxation (`price_after_thin_trade`) moves a traded price toward cost in the planning memory; the
+  display labels the blended figure `thin_trade_blend`. Whether producers plan from the traded price alone (as
+  `cleared_price`) or from the blend is not chosen.
+
+## Also done (merchants, and the stale line items)
+
+- A merchant buying at a source reads what is on offer: a full route search leaves out a source where the merchant has no
+  expectation and `offered_price` is None (`merchants_search.unoffered_areas` for `merchants.candidate_routes`;
+  `merchants_book.buyable_sources` / `only_sources` for the book and batch searches). The area is still sold into
+  (destinations read the planning price). A search for goods the merchant holds is not gated. Test:
+  `test_merchant_buys_only_what_is_offered.py`.
+- Checked and already done, nothing left: `opening.py` and `carriage_fleet_book.py` have no `or 0.0` on a price (the
+  fleet bid reads `offered_price` and skips None); `land_bid_year.best_margin` skips a recipe with an unpriced output and
+  `land_bid.hectare_bid` returns no bid for a missing price; `entry_margin` drops a market with no price;
+  `economy._bid_for_plant` skips a plant good with no price.
+- Still in-band by design: the route search arrays (`RoutePass.view_prices`, `merchants_search.good_routes`) hold 0.0 for
+  "no price" inside the compiled kernel, which treats 0 as none; no caller outside it reads that array as a price.

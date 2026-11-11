@@ -286,10 +286,12 @@ def candidate_routes(merchant, view, carriage, area_map, held_stock, specs, inte
             parts.append(_good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
                                       carriage, interest_rate, _areas_holding(area_map, good, only_held[good])))
             continue
-        parts.append(merchants_route_memo.routes_for_good(
+        rows = merchants_route_memo.routes_for_good(
             carriage, good, areas, spec, tuple(seen), interest_rate,
             lambda: _good_routes(good, spec, areas, {area.area_id: price for area, price in zip(areas, seen)},
-                                 carriage, interest_rate)))
+                                 carriage, interest_rate))
+        closed = merchants_search.unoffered_areas(view, good, areas, expected)     # a buyer at a source reads what is on offer there
+        parts.append([row for row in rows if row[2].area_id not in closed] if closed else rows)
     def by_rank(rows):
         return sorted(rows, key=lambda row: (row[0], row[1], row[2].area_id, row[3].area_id))
 
