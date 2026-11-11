@@ -34,3 +34,5 @@ year's clearing and the core's people of the trade; both are written in the `mar
 the year then read a nation of nearly nobody against the earlier reach. `trade_supply_rules.supply_hours` now also takes
 `people_alive` (the nation's working age). Regression: `sim/tests/test_trade_supply_rules.py`.
 Not reproduced in a game; a fingerprint quick record would confirm.
+
+Re-measure attempt on f958591d (after the fix): `python3 -m sim.tests.fingerprint record --quick --jobs 2 OUT.json` in a checkout pinned to that commit ran two hours on a four-core machine without the assertion and without finishing (stopped at the session's background limit), so the scenario that failed was not reached to completion. The fix rests on the code reading above and its regression test.
