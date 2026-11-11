@@ -17,7 +17,7 @@ from .explain_once import already_explained
 import os
 import tempfile
 
-from sim.engine.ui_port import TRADE_FAMILY, downstream_count
+from sim.engine.ui_port import downstream_count
 from sim.engine.ui_port import purchase_budget
 from .available_economics import specialist_foreman
 from .nodes import _did_you_mean
@@ -36,16 +36,16 @@ from .ventures import _VENTURE_SUPERVISION_NOTE
 from sim.reporting.api import RecordEvent
 
 
-def _scholar_family_names():
+def _scholar_family_names(sim):
     """The scholar-family trades from the trade table, as a plural list."""
-    names = sorted(trade + "s" for trade, family in TRADE_FAMILY.items() if family == "scholar")
+    names = sorted(trade + "s" for trade, trade_record in sim.view("trade_records")().items() if trade_record.family == "scholar")
     return ", ".join(names[:-1]) + " and " + names[-1]
 
 
 def _non_craft_labour_names(sim):
     """Trades that are neither craft nor scholar family, as a plural list, from the supervision check's own data."""
     names = [trade + "s" for trade in sim.view("craft_trades_report")()["not_craft"]
-             if TRADE_FAMILY.get(trade) != "scholar"]
+             if sim.view("trade_family")[trade] != "scholar"]
     return ", ".join(names)
 
 
@@ -719,7 +719,7 @@ def _cmd_ventures(sim, nodes, cmd, ended):
                "On the prompt, sch counts you and the scholars you employ "
                "(not the other scholar-family trades) and art counts you "
                "and every craft trade you employ."
-               % (_scholar_family_names(), _non_craft_labour_names(sim))),
+               % (_scholar_family_names(sim), _non_craft_labour_names(sim))),
            "these_are_not_interchangeable_trades": sim.view("craft_trades_report")(),
            # "needs", "held_in_all" and "people_free_to_run_something_new"
            # above are venture_hands()/venture_staff_free()'s own numbers

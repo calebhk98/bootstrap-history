@@ -10,6 +10,7 @@ import unittest
 
 
 from sim.engine import data
+from sim.tests.repository_tables import TRADE_REGISTRY
 from sim.content.api import ModError
 from sim.content.tree_source import load_base_tree
 from sim.tests.test_mod_removal_and_civs import ModTestBase
@@ -23,7 +24,7 @@ def _labour_only_trade():
         for capital in entry.get("capital") or ():
             used.update(capital.get("build_labour_hours") or {})
     wanted = {trade for node in load_base_tree()["nodes"] for trade in node.get("lab") or {}}
-    return sorted((wanted - used) & set(data._TRADE_REGISTRY))[0]
+    return sorted((wanted - used) & set(TRADE_REGISTRY))[0]
 
 
 def _tech_only_in_one_non_rome_civ():

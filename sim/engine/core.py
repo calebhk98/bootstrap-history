@@ -26,7 +26,6 @@ from sim.refusal import Refusal
 from .seat_defaults import default_policy
 from .root_facts import horizon_end_year, scenario_fact, view_fact
 from .year_steps import StepContext
-from .data import trade_family
 from .invariants import check_simulation_invariants
 from sim.ledger.api import OpenCashBook, RestorePurse
 from sim.materials.api import RestoreReadings
@@ -47,7 +46,6 @@ class Sim:
         self._agriculture = agriculture
         self._demography = demography
         self.step_context = StepContext(
-            trade_family=trade_family,
             invariant_checker=check_simulation_invariants)
         self.debug = __debug__ if debug is None else bool(debug)
         self.verbose = verbose
@@ -60,7 +58,7 @@ class Sim:
         self.send(OpenScenario(
             civilisation=copy.deepcopy(civ or load_civ()), configuration=dict(DEFAULTS, **(cfg or {})), manual=bool(manual),
             events=events, bounty_set=set(bounty_set or ()),
-            sources=ScenarioSources(load_civilisation=load_civ, kit_capital=kit_capital,
+            sources=ScenarioSources(load_civilisation=load_civ, kit_capital=lambda kit_id, civ: kit_capital(kit_id, civ, self.mods_dir),
                                     display_units=lambda: (units.registry(), units.chosen_units(), lambda: units.unit_context(self))),
             dice=rng))
         self.nodes = nodes_in_civ_money(nodes, self.civ)
@@ -124,7 +122,7 @@ class Sim:
         # through `price_index`, so a purse left flat would buy a third more months of bread in Luoyang than in Scandinavia.
         start_money = config["start_capital"]
         if start_money is None:
-            start_money = kit_capital(config["start_kit"], self.civ)
+            start_money = kit_capital(config["start_kit"], self.civ, self.mods_dir)
         opening_cash = float(start_money) * self.price_index
         self.send(RestorePurse(opening_cash))   # the seat's opening purse, and the cash its book measures from
         self.send(OpenCashBook(opening_cash))

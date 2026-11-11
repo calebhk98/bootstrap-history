@@ -86,7 +86,7 @@ class Supply:
         unit="dimensionless multiplier on your own employees' hours",
         source=None, confidence="D",
         why="For a trade this society had no word for until you taught it "
-            "(TRADES_ABSENT), the market this household reaches is only "
+            "(the trades_absent view), the market this household reaches is only "
             "the people you trained plus the ones they have since trained "
             "themselves - approximated as half again your own headcount's "
             "hours, standing in for that second generation, rather than "

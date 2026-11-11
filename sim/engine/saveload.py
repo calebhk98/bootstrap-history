@@ -6,7 +6,6 @@ from sim.game_version import GAME_VERSION
 from sim.refusal import Refusal, cause_of
 
 from sim.collection_paused import collection_paused
-from .data import WAGES
 from . import game_assembly, node_rederive
 from sim.knowledge.api import RevealNodes, fog_mismatch
 from sim.scenario.api import SetFuzzyEstimates, scenario_slot_of
@@ -282,8 +281,8 @@ def _check_save_node_id_references(blob, sim):
     return None, unknown
 
 
-def _check_save_trade_name_sets(blob):
-    """None if trade name sets contain only known trades; otherwise the refusal message."""
+def _check_save_trade_name_sets(blob, known_trades):
+    """None if trade name sets contain only `known_trades` (the game's trade ids); otherwise the refusal message."""
     for field_name in _SET_FIELDS_OF_TRADE_NAMES:
         value = _get_field(blob, field_name)
         if value is None:
@@ -291,7 +290,7 @@ def _check_save_trade_name_sets(blob):
         ids = value.get("__set__") if isinstance(value, dict) else None
         if ids is None or not all(isinstance(trade_name, str) for trade_name in ids):
             return "this save is corrupt: '%s' should be a set of trade names" % field_name
-        strange = [trade_name for trade_name in ids if trade_name not in WAGES]
+        strange = [trade_name for trade_name in ids if trade_name not in known_trades]
         if strange:
             return ("this save refers to trade(s) this game does not have: %s"
                     % ", ".join(sorted(strange)[:6]))
@@ -315,7 +314,7 @@ def _validate_save(blob, sim):
 	message, unknown = _check_save_node_id_references(blob, sim)
 	if message:
 		return message
-	message = _check_save_trade_name_sets(blob)
+	message = _check_save_trade_name_sets(blob, sim.view("trade_records")())
 	if message:
 		return message
 	if unknown:

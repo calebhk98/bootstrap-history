@@ -73,6 +73,33 @@ class TechEffectsTests(unittest.TestCase):
         self.assertEqual(set(loaded), {MOD + ":spark", "press"})
 
 
+class TwoDirectoriesTwoTables(unittest.TestCase):
+    """Complaint 840: the trade registry and the technology effects are functions of the mods directory a game holds, so two
+    directories in one process give two tables (no import-time table stands for both)."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.root)
+        self.with_mod = os.path.join(self.root, "with_mod")
+        self.without_mod = os.path.join(self.root, "without_mod")
+        os.makedirs(self.without_mod)
+        write_mod(self.with_mod, {os.path.join("data", "world", "trades.json"): {"trades": {MOD + ":scribe": {"family": "scholar", "note": "writes"}}},
+                                  os.path.join("data", "civilizations", "_TECH_EFFECTS.json"): {MOD + ":spark": {"w_magic_fear": 0.2}}})
+
+    def test_the_trade_registries_of_two_directories_differ_by_the_mods_trade(self):
+        with_mod = trades.trade_registry(self.with_mod)
+        without_mod = trades.trade_registry(self.without_mod)
+        self.assertEqual(set(with_mod) - set(without_mod), {MOD + ":scribe"})
+        self.assertEqual(trades.trade_family(with_mod, MOD + ":scribe"), "scholar")
+        self.assertEqual(trades.trade_notes(with_mod)[MOD + ":scribe"], "writes")
+
+    def test_the_tech_effects_of_two_directories_differ_by_the_mods_node(self):
+        with_mod = tech_effects.load_tech_effects(self.with_mod)
+        without_mod = tech_effects.load_tech_effects(self.without_mod)
+        self.assertEqual(set(with_mod) - set(without_mod), {MOD + ":spark"})
+        self.assertEqual(set(without_mod) - set(with_mod), set())
+
+
 class ForeignEconomyTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.mkdtemp()

@@ -10,7 +10,7 @@ from .harness import check
 from sim.agents import business_crew
 from sim.agents.business import Business
 from sim.actors.world import ActorWorld
-from sim.engine.data import TRADES_ABSENT
+from sim.tests.repository_tables import TRADES_ABSENT
 from sim.tests.world_stand_in import fake_needs
 
 TAUGHT = sorted(TRADES_ABSENT)[0]

@@ -5,6 +5,7 @@ import copy
 from types import SimpleNamespace
 
 from sim.engine import data, money_units
+from sim.tests.repository_tables import TRADE_REGISTRY
 from sim.production import node_revenue
 from sim.workforce.wage_schedule import build_schedule
 
@@ -18,7 +19,7 @@ COIN_SCALE = 2.5
 rome = data.load_civ("rome_100ad")
 heavier_rome = copy.deepcopy(rome)
 heavier_rome["coin_standard"]["kg_per_unit"] *= COIN_SCALE
-light, heavy = build_schedule(data.TRADE_REGISTRY, rome), build_schedule(data.TRADE_REGISTRY, heavier_rome)
+light, heavy = build_schedule(TRADE_REGISTRY, rome), build_schedule(TRADE_REGISTRY, heavier_rome)
 check("a coin heavier by a factor makes the money one labour hour is worth smaller by that factor",
       abs(heavy.money_per_labour_hour * COIN_SCALE / light.money_per_labour_hour - 1.0) < 1e-9, (light.money_per_labour_hour, heavy.money_per_labour_hour))
 check("...and a labourer's annual wage with it",

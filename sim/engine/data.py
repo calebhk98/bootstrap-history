@@ -49,8 +49,7 @@ from sim.labour.api import trade_of_role, wage_provider
 from .default_civilisation import default_civilisation_id
 from sim.workforce.api import opening_schedule
 from sim.content.api import (
-    family_of_trade, load_base_tree, load_production_catalog, load_tech_effects, load_trade_registry, trade_notes,
-    trade_registry, trades_absent, validate_mod_material_paths,
+    load_base_tree, load_production_catalog, load_trade_registry, trade_registry, validate_mod_material_paths,
 )
 
 # TYPE ALIASES FOR THE JSON THIS MODULE LOADS. Every one of these is a
@@ -136,40 +135,6 @@ RESFILE = os.path.join(ROOT, "data", "world", "resources.json")
 def load_resources() -> JSONDict:
     return json.load(open(RESFILE))
 
-TECH_EFFECTS: JSONDict = load_tech_effects(MODDIR)
-
-TRADE_REGISTRY = trade_registry(MODDIR)
-_TRADE_REGISTRY = TRADE_REGISTRY
-TRADE_NOTES: Dict[str, str] = trade_notes(TRADE_REGISTRY)
-TRADES_ABSENT: FrozenSet[str] = trades_absent(TRADE_REGISTRY)
-TRADE_FAMILY: Dict[str, str] = {trade_id: trade.family for trade_id, trade in TRADE_REGISTRY.items()}
-
-
-def schedule_of_civilisation(civ: JSONDict) -> wage_provider.wages.WageSchedule:
-    """The opening wage schedule of a civilisation record the caller holds (it may exist only in
-    memory), over this module's trade registry; the one builder of tools' schedules, remembered by the record's
-    whole content so a variant is never served another's schedule."""
-    return opening_schedule(_TRADE_REGISTRY, civ)
-
-
-def unskilled_numeraire() -> str:
-    """The trade whose hour every wage here is stated against: this module's trade registry's unskilled one."""
-    return trade_of_role(_TRADE_REGISTRY, "unskilled")
-
-
-# Starting wages: the labour-market schedule before any year has passed.
-# Sim carries the live schedule; these serve tools and validation.
-_STARTING_SCHEDULE = schedule_of_civilisation(wage_provider.reference_civilisation())
-WAGES: Dict[str, float] = _STARTING_SCHEDULE.wages_per_hour()
-ANNUAL_WAGE: Dict[str, float] = {
-    trade: _STARTING_SCHEDULE.annual_wage(trade) for trade in WAGES}
-MONEY_PER_LABOUR_HOUR: float = _STARTING_SCHEDULE.money_per_labour_hour
-
-
-def trade_family(trade: str) -> str:
-    return family_of_trade(TRADE_REGISTRY, trade)
-
-
 # What money is called where you are comes from the civilisation file's
 # `currency_words` ({"long": "...", "short": "..."}); a file without it falls
 # back to its `currency` field. Long form reads in "you have 400 ___", short
@@ -182,18 +147,28 @@ def money_unit_note(civ: Optional[JSONDict]) -> str:
             "market, so they will not match surviving price records." % money_word(civ))
 
 
-def starting_schedule(civilization_id: Optional[str] = None) -> wage_provider.wages.WageSchedule:
-    """The opening wage schedule of a civilisation (the default one if none)."""
-    if civilization_id is None:
-        return _STARTING_SCHEDULE
-    return schedule_of_civilisation(load_civ(civilization_id))
+def schedule_of_civilisation(civ: JSONDict, mods_dir: str = MODDIR) -> wage_provider.wages.WageSchedule:
+    """The opening wage schedule of a civilisation record the caller holds (it may exist only in memory), over the
+    trade registry of `mods_dir`; remembered by the record's whole content so a variant is never served another's schedule."""
+    return opening_schedule(trade_registry(mods_dir), civ)
 
 
-def kit_capital(kit_id: str, civ: JSONDict) -> float:
+def unskilled_numeraire(mods_dir: str = MODDIR) -> str:
+    """The trade whose hour every wage is stated against: the unskilled one of the trade registry of `mods_dir`."""
+    return trade_of_role(trade_registry(mods_dir), "unskilled")
+
+
+def starting_schedule(civilization_id: Optional[str] = None, mods_dir: str = MODDIR) -> wage_provider.wages.WageSchedule:
+    """The opening wage schedule of a civilisation (the reference one if none), over the trades of `mods_dir`."""
+    civ = wage_provider.reference_civilisation() if civilization_id is None else load_civ(civilization_id)
+    return schedule_of_civilisation(civ, mods_dir)
+
+
+def kit_capital(kit_id: str, civ: JSONDict, mods_dir: str = MODDIR) -> float:
     """Opening money of a kit for a civilisation: its unskilled-worker-years times the
-    civilisation's opening annual unskilled wage."""
-    schedule = schedule_of_civilisation(civ)
-    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage(unskilled_numeraire()))
+    civilisation's opening annual unskilled wage, over the trades of `mods_dir`."""
+    schedule = schedule_of_civilisation(civ, mods_dir)
+    return scenario_rules.kit_capital(STARTING_KITS[kit_id], schedule.annual_wage(unskilled_numeraire(mods_dir)))
 
 
 def _variant_base(base_id: str, chain: tuple) -> JSONDict:

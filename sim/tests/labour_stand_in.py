@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from sim.prices import solve_prices_core
 
 from sim.engine import data
+from sim.tests import repository_tables
 from sim.geography import api as geography
 from sim.workforce.state import WorkforceSeat
 from sim.world import demography
@@ -28,10 +29,10 @@ def stand_in_world(civ_id="rome_100ad", total=None):
         knowledge=SimpleNamespace(held_and_running=lambda: frozenset(civ.get("starting_techs", ())), literacy=lambda field: 0.05,
                                   STAFF_CAPACITY_SOURCES=[],      # no institution trains staff outright
                                   effect_sum=lambda channel, start=0.0: start, effect_terms=lambda channel: []),   # no technology effects
-        trades=SimpleNamespace(trades_absent=set(), wages=data.WAGES, build_wage_schedule=data.schedule_of_civilisation, wage_index=1.0, trade_family=data.trade_family, HOURS_PER_PERSON_YEAR=2000.0,
+        trades=SimpleNamespace(trades_absent=set(), wages=repository_tables.WAGES, build_wage_schedule=data.schedule_of_civilisation, wage_index=1.0, trade_family=repository_tables.trade_family, HOURS_PER_PERSON_YEAR=2000.0,
                                techniques_available_to=solve_prices_core.techniques_available_to,
                                trade_registry={trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
-                                               for trade_id, trade in data.TRADE_REGISTRY.items()}),
+                                               for trade_id, trade in repository_tables.TRADE_REGISTRY.items()}),
         actors=SimpleNamespace(actor_staff_fte=lambda trade: 0.0), commands=SimpleNamespace(),
         economy=SimpleNamespace(agent_trades=lambda: None, agent_people_by_trade=lambda: None, agent_people_by_tile_and_trade=lambda: None, agent_hours_offered_at=lambda trade, tile: None, agent_working_hours=lambda: None, agent_wage_at=lambda trade, tile: None))
 

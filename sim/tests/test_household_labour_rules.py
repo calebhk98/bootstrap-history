@@ -7,7 +7,7 @@ QUICK_TOPIC = True
 import unittest
 from sim.tests import workforce_stand_in
 
-from sim.engine import data
+from sim.tests.repository_tables import trade_family
 from sim.workforce.constants import PROJECT_IN_HAND_SCORE
 from sim.workforce.reteach_rules import past_cooldown, teaching_budget, trade_is_gone
 from sim.labour.labour_hands import Hands
@@ -38,8 +38,8 @@ class HeldTradeRule(unittest.TestCase):
         self.assertIsNone(HeldTrade({}).held_trade())
 
     def test_an_engineer_is_a_scholar_and_a_smith_a_craftsman(self):
-        self.assertEqual(data.trade_family("engineer"), "scholar")
-        self.assertEqual(data.trade_family("smith"), "craft")
+        self.assertEqual(trade_family("engineer"), "scholar")
+        self.assertEqual(trade_family("smith"), "craft")
 
 
 class Job:

@@ -47,7 +47,7 @@ def _sim_quoting(prices):
         material_trade_quote=lambda material: _quote(prices[material]) if material in prices else None,
         material_price_basis=lambda material: "solved", MATERIAL_CHECKS={},
         staff={"employees": {"smith": 2.0}}, labour_market=Game(quote_annual=lambda trade: 500.4),
-        trade_available=lambda trade: trade == "smith")
+        trade_available=lambda trade: trade == "smith", trade_records={"smith": None, "mason": None})
 
 
 class MarketRowTests(unittest.TestCase):
@@ -88,7 +88,7 @@ class MarketRowTests(unittest.TestCase):
 class WageRowTests(unittest.TestCase):
     def test_a_row_per_trade_with_a_rounded_year_wage_availability_and_staff(self):
         rows = {row["trade"]: row for row in market_report.wage_rows(_sim_quoting({}))}
-        self.assertEqual(set(rows), set(market_report.WAGES))
+        self.assertEqual(set(rows), {"smith", "mason"})
         self.assertEqual((rows["smith"]["a_year_of_one"], rows["smith"]["available_here"], rows["smith"]["you_employ"]),
                          (500.0, True, 2.0))
 

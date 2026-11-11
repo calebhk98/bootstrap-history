@@ -14,7 +14,6 @@ from sim.refusal import Refusal
 from .allocation_cap import capped_to_useful
 from .command_registry import command
 from .hire_reply import hire_reply
-from sim.engine.ui_port import TRADES_ABSENT, TRADE_NOTES, WAGES, trade_family
 from .state_waiting import _staff_fraction_note
 from .wage_figures import wage_origin
 from .util import _num, _qty
@@ -112,8 +111,8 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                     "error": "say which trade to sell hours as, e.g. "
                              "{\"cmd\":\"allocate\",\"id\":\"work\","
                              "\"trade\":\"labourer\",\"hours\":100}"}
-        if trade not in WAGES:
-            here = sorted(trade for trade in WAGES if sim.view("trade_available")[trade])
+        if trade not in sim.view("trade_records")():
+            here = sorted(trade for trade in sim.view("trade_records")() if sim.view("trade_available")[trade])
             return {"ok": False, "error": "no such trade. you could work "
                                           "as: " + ", ".join(here)}
         if not sim.view("trade_available")[trade]:
@@ -164,13 +163,14 @@ def _cmd_allocate(sim, nodes, cmd, ended):
                      "labour topic for how trades differ.")
 def _cmd_labour(sim, nodes, cmd, ended):
     one = (cmd.get("trade") or "").strip().lower()
+    trade_ids = sim.view("trade_records")()
     # US and UK spellings of a trade name are the same trade
     for variant in (one.replace("or", "our"), one.replace("our", "or")):
-        if one not in WAGES and variant in WAGES:
+        if one not in trade_ids and variant in trade_ids:
             one = variant
-    if one and one not in WAGES:
+    if one and one not in trade_ids:
         return {"ok": False, "error": "no such trade: %s. They are: %s"
-                % (one, ", ".join(sorted(WAGES)))}
+                % (one, ", ".join(sorted(trade_ids)))}
     def row(trade, long=False):
         # THE PRICE YOU ACTUALLY PAY, not the table price: leaning on a
         # trade's local supply bids it up, and the premium has to appear
@@ -205,7 +205,7 @@ def _cmd_labour(sim, nodes, cmd, ended):
                                    "they raise how many people here can "
                                    "read, and this ceiling rises with it")
         if long:
-            entry.update({"kind": trade_family(trade),
+            entry.update({"kind": sim.view("trade_family")[trade],
                       "wage_per_hour": round(sim.view("wage")[trade], 3),
                       "hours_the_labour_market_offers": round(sim.view("market_supply")[trade], 0),
                       "places_posted_for_you": round(sim.view("staff_wanted")().get(trade, 0.0), 2),
@@ -219,8 +219,8 @@ def _cmd_labour(sim, nodes, cmd, ended):
                           max(0.0, sim.view("market_supply")[trade] - sim.view("hours_reserved")[trade]), 0),
                       "hours_available_to_you_in_all": round(
                           sim.view("hours_you_can_call_on")[trade], 0),
-                      # THE NOTE IS STATIC AND THE WORLD IS NOT: TRADE_NOTES
-                      # is a fixed string about the society as it started,
+                      # THE NOTE IS STATIC AND THE WORLD IS NOT: the trade notes
+                      # are a fixed string about the society as it started,
                       # so if the trade has since been taught into
                       # existence, the reply must say that instead - or it
                       # contradicts itself, claiming the trade both exists
@@ -231,13 +231,13 @@ def _cmd_labour(sim, nodes, cmd, ended):
                                 "the only %ss in this society are yours and "
                                 "the ones they have taught since" % trade)
                                if trade in sim.view("trade_spread")()["created"]
-                               else TRADE_NOTES.get(trade, ""))})
+                               else sim.view("trade_notes")().get(trade, ""))})
         return entry
     if one:
         entry = row(one, long=True)
         entry["exists_here"] = sim.view("trade_available")[one]
         return {"ok": True, "trade": entry}
-    have = sorted(trade for trade in WAGES if sim.view("staff")()["employees"].get(trade, 0.0) > 0.005)
+    have = sorted(trade for trade in trade_ids if sim.view("staff")()["employees"].get(trade, 0.0) > 0.005)
     # NOT "TRADES YOU DO NOT YET EMPLOY", and not "trades that exist"
     # either: excluding the ones you have would read as "no more smiths
     # available" the moment you hire your first smith, which `hire smith 1`
@@ -245,11 +245,11 @@ def _cmd_labour(sim, nodes, cmd, ended):
     # machinist on the list while `labour machinist` says "the town can
     # supply: 0 hours" - a direct contradiction between the two screens.
     # It is every trade there is actually somebody here to hire.
-    hirable = sorted(trade for trade in WAGES
+    hirable = sorted(trade for trade in trade_ids
                      if sim.view("trade_available")[trade] and sim.view("market_supply")[trade] > 0)
-    taught_only = sorted(trade for trade in WAGES
+    taught_only = sorted(trade for trade in trade_ids
                          if sim.view("trade_available")[trade] and trade not in hirable)
-    absent = sorted(trade for trade in WAGES if not sim.view("trade_available")[trade])
+    absent = sorted(trade for trade in trade_ids if not sim.view("trade_available")[trade])
     return {"ok": True,
             "on_your_staff": [row(trade) for trade in have] or "nobody",
             "you_could_hire_here": hirable,
@@ -421,7 +421,7 @@ def _cmd_train(sim, nodes, cmd, ended):
     # at all. That gap has to be named here, or the first anyone learns of
     # it is `start` refusing a project outright.
     _trade = str(cmd.get("trade") or "").strip().lower()
-    if _trade in TRADES_ABSENT:
+    if _trade in sim.view("trades_absent")():
         out["means"] = (
             "%s now exists here. A project needing it draws only on people "
             "trained or hired into this exact trade, never a general market. "

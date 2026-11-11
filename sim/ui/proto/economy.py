@@ -2,7 +2,6 @@
 
 import sim.engine.ui_port as ui_port
 from sim.refusal import Refusal, cause_of
-from sim.engine.ui_port import WAGES, trade_family
 from sim.ui import figures_headline  # noqa: F401  (registers the headline figures)
 from sim.engine.ui_port import CloseCashPeriod, CloseCausePeriod, plain_number
 from sim.ui.figures import figure_snapshot
@@ -538,10 +537,10 @@ def _spare_capacity(sim, state_out):
     already compute for their own screens.
     """
     families = {}
-    for trade in WAGES:
+    for trade in sim.view("trade_records")():
         if not sim.view("trade_available")[trade]:
             continue
-        fam = trade_family(trade)
+        fam = sim.view("trade_family")[trade]
         pair = families.setdefault(fam, [0.0, 0.0])
         supply = sim.view("hours_you_can_call_on")[trade]
         used = min(supply, sim.view("hour_commitments")()["trade_hours_used"].get(trade, 0.0))
@@ -592,7 +591,7 @@ def _trade_demand_rows(sim):
     rows = []
     for trade, detail in sim.view("trade_demand_vs_supply")().items():
         rows.append({
-            "trade": trade, "trade_family": trade_family(trade),
+            "trade": trade, "trade_family": sim.view("trade_family")[trade],
             "demand_hours_this_year": detail["demand_hours_this_year"],
             "supply_hours_this_year": detail["supply_hours_this_year"],
             "oversubscribed": detail["oversubscribed"],
@@ -776,7 +775,7 @@ def _agent_economy(sim, cmd=None):
         out["wages_by_trade"] = [
             {"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
              **wage_origin(sim, trade)}
-            for trade in sorted(WAGES) if sim.view("trade_available")[trade]]
+            for trade in sorted(sim.view("trade_records")()) if sim.view("trade_available")[trade]]
     return out
 
 
