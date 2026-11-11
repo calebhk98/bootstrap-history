@@ -22,7 +22,7 @@
   besieger storms when its chance is good enough, waits while it is not, and withdraws when its own ration fails. The
   defence is the owner's armies on the tile plus its free soldiers shared over its tiles by their people.
 - Conquest: a tile whose defenders are gone passes through `transfer_tile` (`sim/land/ownership.py`) at the level `data/world/control_levels.json`
-  names (`conquest`), rising with the years it is held with an army on it; foreign countries' profiles follow the
+  names (`conquest`), rising with the owner's authority on it (484); foreign countries' profiles follow the
   transfer, and the home budget's territory reads the owner map.
 - Commands `army` (raise, march, recall, disband) and `armies` for a country seat (`sim/ui/proto/dispatch_armies.py`,
   `sim/PROTOCOL.md`). A state no seat plays raises and orders armies to threatened tiles and never attacks
@@ -39,10 +39,11 @@
   of holding it, so nothing makes expansion stop at barriers or low-value land.
 - No declaration of war, alliance or peace: an army ending on another actor's tile is an attack on it, whoever owns it.
 - No fleets, blockade or naval action (the navy is still a wage line, see 492), so no sea battle and no landing.
-- No unit types, training or morale: quality is equipment only, so no quality decay in a long peace.
+- No unit types: quality is equipment and readiness (`sim/world/army_readiness.py`: an army that does not fight loses drill and morale toward a
+  floor, a year of battle restores it; the free soldiers that garrison tiles carry no readiness). Training as labour and unit kinds are not modelled.
 - Fortification is read as nothing (`tile_fortification`); works that defend (walls, forts) should add to it.
-- Taking food from a tile does not yet lower the food its people eat or the next harvest; a retreating army does not
-  march home, it is placed on the tile it was raised at; armies owned by a seat's colonies (a tile owner that is a seat
+- Taking food from a tile does not yet lower the food its people eat or the next harvest; a retreating attacker is ordered home and marches there from the next
+  campaign (a routed defender still falls back at once); armies owned by a seat's colonies (a tile owner that is a seat
   id, not a country) have no state to raise soldiers.
 - Rome's third-century crisis hazard still lists the neighbouring army under `causes_not_modelled`
   (`data/civilizations/rome_100ad.json`) until a state plays that neighbour.

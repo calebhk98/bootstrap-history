@@ -237,10 +237,10 @@ class MarchAndCampTests(unittest.TestCase):
 
 class ConquestAndDefenceTests(unittest.TestCase):
 
-    def test_a_tile_is_held_at_the_conquest_level_and_rises_with_the_years_held(self):
+    def test_a_tile_is_held_at_the_conquest_level_and_rises_with_the_authority_on_it(self):
         levels = tile_owners.control_levels()
         taken = tile_owners.conquest_level(0.0)
-        later = tile_owners.conquest_level(1000.0)
+        later = tile_owners.conquest_level(1.0)
         self.assertIn(taken, levels)
         self.assertGreater(levels[later]["rank"], levels[taken]["rank"])
         self.assertEqual(tile_owners.conquest_level(None), taken)

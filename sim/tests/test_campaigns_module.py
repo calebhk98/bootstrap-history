@@ -262,22 +262,24 @@ class TakeAndHoldTests(unittest.TestCase):
         kinds = [type(command) for command in module_harness.sent(module)]
         self.assertEqual(kinds, [AddCaptives, RecordWorldEvent, AddArmyPlunder, TransferTile, RecordConquestContact])
 
-    def consolidate(self, held_since, year, owners, armies, controls=None):
-        module, _ = build(owners=owners, extra={"year": year, "store": lambda name: {"default": None, "values": controls or {}}})
+    def consolidate(self, held_since, owners, shares, controls=None):
+        collection = SimpleNamespace(collection_shares=lambda: shares)
+        module, _ = build(owners=owners, extra={"store": lambda name: {"default": None, "values": controls or {}},
+                                                "country_world": lambda owner: SimpleNamespace(collection=collection)})
         module.world.held_since = held_since
-        module.world.armies = armies
         module.consolidate_conquests()
         return module
 
-    def test_a_tile_held_with_an_army_on_it_rises_in_control_and_one_left_empty_does_not(self):
+    def test_a_tile_rises_in_control_as_the_owners_authority_on_it_grows(self):
         entry = campaign_year_rules.conquest_entry(100, OWNER, RIVAL)
-        module = self.consolidate({"t_held": dict(entry), "t_empty": dict(entry)}, 1100, {"t_held": OWNER, "t_empty": OWNER},
-                                  {"a1": army(tile="t_held").to_dict()})
-        self.assertEqual(module_harness.sent(module), [WriteStore("control", "t_held", tile_owners.conquest_level(1000.0))])
-        self.assertEqual(sorted(module.world.held_since), ["t_empty", "t_held"])
+        module = self.consolidate({"t_held": dict(entry), "t_weak": dict(entry)}, {"t_held": OWNER, "t_weak": OWNER},
+                                  {"t_held": 1.0, "t_weak": 0.1},
+                                  controls={"t_held": tile_owners.conquest_level(0.0), "t_weak": tile_owners.conquest_level(0.0)})
+        self.assertEqual(module_harness.sent(module), [WriteStore("control", "t_held", tile_owners.conquest_level(1.0))])
+        self.assertEqual(sorted(module.world.held_since), ["t_held", "t_weak"])
 
     def test_a_tile_lost_again_leaves_the_held_record(self):
-        module = self.consolidate({"t_held": campaign_year_rules.conquest_entry(100, OWNER, RIVAL)}, 120, {"t_held": RIVAL}, {})
+        module = self.consolidate({"t_held": campaign_year_rules.conquest_entry(100, OWNER, RIVAL)}, {"t_held": RIVAL}, {})
         self.assertEqual((module.world.held_since, module_harness.sent(module)), ({}, []))
 
 

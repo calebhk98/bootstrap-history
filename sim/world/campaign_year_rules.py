@@ -58,11 +58,12 @@ def garrison_strength(free_soldiers: float, population_share_of_tile: float) -> 
 
 
 def withdraw(army: Army, why: str, home_is_owners: bool, note: str = "withdrew") -> None:
-    """The army gives up its order and, if the tile it was raised at is still its owner's, falls back to it."""
+    """The army gives up its order and, if the tile it was raised at is still its owner's, is ordered back to it: it marches
+    there from the next campaign, over the route's days, and stays where it is until then."""
     army.log.append({"kind": note, "tile": army.tile, "why": why})
     army.target, army.progress_days = None, 0.0
-    if home_is_owners:
-        army.tile = army.home_tile
+    if home_is_owners and army.home_tile != army.tile:
+        army.target = army.home_tile
 
 
 def rout(army: Army, home_is_owners: bool) -> bool:
@@ -79,15 +80,13 @@ def conquest_entry(year: int, owner: str, previous_owner: Optional[str]) -> Dict
     return {"year": year, "by": owner, "from": previous_owner}
 
 
-def consolidation(entry: Mapping[str, Any], current_owner: Optional[str], garrisoned: bool, year: int,
-                  current_level: Optional[str], levels: Mapping[str, Mapping[str, Any]], level_after_years) -> Tuple[bool, Optional[str]]:
+def consolidation(entry: Mapping[str, Any], current_owner: Optional[str], authority: float,
+                  current_level: Optional[str], levels: Mapping[str, Mapping[str, Any]], level_at_authority) -> Tuple[bool, Optional[str]]:
     """(keep the record, control level to set or None) for a tile taken: a tile that changed hands is forgotten; one
-    its taker still holds with an army on it rises to the level its years held earn, never down."""
+    its taker still holds rises to the level the taker's authority on it earns, never down."""
     if current_owner != entry["by"]:
         return False, None
-    if not garrisoned:
-        return True, None
-    level = level_after_years(year - entry["year"])
+    level = level_at_authority(authority)
     if levels[level]["rank"] > levels.get(current_level, {"rank": 0})["rank"]:
         return True, level
     return True, None

@@ -59,7 +59,7 @@ def camp(army: Army, days: float, site: Site, carried_kg_per_day: float, pay_owe
 
 
 def strength_of(army: Army, reference_kg: float, terrain: float = 1.0) -> float:
-    return battle.effective_strength(army.soldiers, army.equipment_kg, reference_kg, army.supply_state, terrain)
+    return battle.effective_strength(army.soldiers, army.equipment_kg, reference_kg, army.supply_state, terrain, army.readiness)
 
 
 def engage(attacker: Army, defender: Army, site: Site, reference_kg: float, draw: float) -> battle.Outcome:
@@ -98,7 +98,7 @@ def combine(armies: Sequence[Army]) -> Army:
     first = armies[0]
     return Army("combined", first.owner, first.tile, total, weight(lambda army: army.equipment_kg),
                 sum(army.food_kg for army in armies), sum(army.animals for army in armies),
-                weight(lambda army: army.supply_state), 0.0)
+                weight(lambda army: army.supply_state), 0.0, readiness=weight(lambda army: army.readiness))
 
 
 def share_out(armies: Sequence[Army], before: float, combined: Army) -> None:

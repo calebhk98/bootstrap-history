@@ -86,11 +86,11 @@ class ContestActionTests(unittest.TestCase):
 
 class WithdrawAndRoutTests(unittest.TestCase):
 
-    def test_a_withdrawn_army_drops_its_order_and_falls_back_home_if_home_is_still_its_owners(self):
+    def test_a_withdrawn_army_drops_its_order_and_is_ordered_home_if_home_is_still_its_owners(self):
         host = army(tile="t_far", target="t_further", home="t_home")
         host.progress_days = 7.0
         rules.withdraw(host, "attacker_lost", True)
-        self.assertEqual((host.tile, host.target, host.progress_days), ("t_home", None, 0.0))
+        self.assertEqual((host.tile, host.target, host.progress_days), ("t_far", "t_home", 0.0))
         self.assertEqual(host.log, [{"kind": "withdrew", "tile": "t_far", "why": "attacker_lost"}])
 
     def test_a_withdrawn_army_whose_home_is_lost_stays_where_it_stands(self):
@@ -114,9 +114,8 @@ class ConsolidationTests(unittest.TestCase):
     def entry(self, year=100):
         return rules.conquest_entry(year, "rome", "han")
 
-    def settle(self, current_owner="rome", garrisoned=True, year=100, current_level=None):
-        return rules.consolidation(self.entry(), current_owner, garrisoned, year, current_level, LEVELS,
-                                   tile_owners.conquest_level)
+    def settle(self, current_owner="rome", authority=1.0, current_level=None):
+        return rules.consolidation(self.entry(), current_owner, authority, current_level, LEVELS, tile_owners.conquest_level)
 
     def test_the_record_of_a_taking_names_the_year_the_taker_and_the_loser(self):
         self.assertEqual(self.entry(), {"year": 100, "by": "rome", "from": "han"})
@@ -125,17 +124,18 @@ class ConsolidationTests(unittest.TestCase):
         self.assertEqual(self.settle(current_owner="han"), (False, None))
         self.assertEqual(self.settle(current_owner=None), (False, None))
 
-    def test_a_tile_held_with_an_army_on_it_is_set_to_the_level_its_years_earn(self):
-        keep, level = self.settle(year=100 + 1000, current_level=None)
+    def test_a_tile_the_taker_commands_is_set_to_the_level_its_authority_earns(self):
+        keep, level = self.settle(authority=1.0, current_level=None)
         self.assertTrue(keep)
-        self.assertEqual(level, tile_owners.conquest_level(1000.0))
+        self.assertEqual(level, tile_owners.conquest_level(1.0))
+        self.assertGreater(LEVELS[level]["rank"], LEVELS[tile_owners.conquest_level(0.0)]["rank"])
 
-    def test_a_tile_nobody_garrisons_is_kept_on_record_but_does_not_rise(self):
-        self.assertEqual(self.settle(garrisoned=False, year=100 + 1000), (True, None))
+    def test_a_tile_the_taker_cannot_collect_from_is_kept_on_record_but_does_not_rise(self):
+        self.assertEqual(self.settle(authority=0.0, current_level=tile_owners.conquest_level(0.0)), (True, None))
 
     def test_a_tile_already_at_a_higher_level_is_never_lowered(self):
         top = max(LEVELS, key=lambda name: LEVELS[name]["rank"])
-        self.assertEqual(self.settle(year=100, current_level=top), (True, None))
+        self.assertEqual(self.settle(authority=1.0, current_level=top), (True, None))
 
 
 if __name__ == "__main__":

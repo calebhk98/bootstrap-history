@@ -8,7 +8,7 @@ from typing import Dict, List
 
 from sim.agents.api import army_raising
 from sim.assembly.api import Part
-from sim.world import campaign_contest, campaign_supply, campaign_year_rules, military_logistics
+from sim.world import army_readiness, campaign_contest, campaign_supply, campaign_year_rules, military_logistics
 from sim.world.army_record import Army
 
 from . import rules
@@ -83,6 +83,8 @@ class CampaignYear(Part):
 			if army_id in armies:
 				self._campaign_army(armies[army_id], armies, lost, references)
 		survivors = {army_id: army for army_id, army in armies.items() if army.soldiers >= 1.0}
+		for army in survivors.values():
+			army.readiness = army_readiness.readiness_after_year(army.readiness, any(entry["kind"] == "battle" for entry in army.log))
 		self.world.armies = {army_id: army.to_dict() for army_id, army in sorted(survivors.items())}
 		self.bump(ARMIES)
 		for owner, killed in sorted(lost.items()):
