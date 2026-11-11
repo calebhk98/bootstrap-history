@@ -7,7 +7,7 @@ from typing import Any, List
 
 from sim.world import capital_market
 
-from . import exchange, firm_entry, household_wealth
+from . import capital_structure, exchange, firm_entry, household_wealth
 from .equity_need import NEED_KEY
 from .tuning_patent import DIVIDEND_PAYOUT_SHARE
 
@@ -18,6 +18,11 @@ def whole_equity_worth(firm: Any, world: Any) -> float:
 	pays out of its last margin."""
 	return capital_market.perpetuity_value(DIVIDEND_PAYOUT_SHARE * firm.record.last_margin, world.credit.market_rate(),
 										   capital_market.RATE_FLOOR_SHARE * world.credit.starting_rate())
+
+
+def cost_of_equity(firm: Any, world: Any) -> Any:
+	"""The yield the firm gives up on the shares it would sell (capital_structure.cost_of_equity)."""
+	return capital_structure.cost_of_equity(DIVIDEND_PAYOUT_SHARE * firm.record.last_margin, whole_equity_worth(firm, world))
 
 
 def raise_equity(registry: Any, world: Any, firm: Any) -> float:
@@ -36,7 +41,9 @@ def raise_equity(registry: Any, world: Any, firm: Any) -> float:
 		offered = exchange.make_offer(firm, investor, {"shares": {firm.actor_id: share}}, {"money": price}, world)
 		exchange.accept(investor, offered["id"], registry.get, world)
 		household_wealth.commit(investor, price)
+		firm.record.plan.pop(capital_structure.EQUITY_REFUSED_KEY, None)
 		return price
+	firm.record.plan[capital_structure.EQUITY_REFUSED_KEY] = world.setting.year   # no investor took the shares: the firm borrows
 	return 0.0
 
 

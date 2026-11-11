@@ -10,6 +10,7 @@ import unittest
 from unittest import mock
 
 from sim.economy import bank_service, banks, credit_claims
+from sim.economy.capital_markets_record import CapitalMarketsRecord
 from sim.economy.credit_record import CreditRecord
 from sim.book import Book
 from sim.economy.types import EDGE_MINT, FundsOffer, Loan, Transfer
@@ -29,7 +30,7 @@ def record_with(cash):
     book = Book()
     for agent, amount in sorted(cash.items()):
         book.transfer(Transfer(EDGE_MINT, agent, MONEY, amount, "opening"))
-    return types.SimpleNamespace(book=book, cohorts={agent: types.SimpleNamespace(tile="town") for agent in cash if agent != BORROWER}, credit=CreditRecord(), capital_markets=types.SimpleNamespace(banks={}))
+    return types.SimpleNamespace(book=book, cohorts={agent: types.SimpleNamespace(tile="town") for agent in cash if agent != BORROWER}, credit=CreditRecord(), capital_markets=CapitalMarketsRecord())
 
 
 def household_cash():

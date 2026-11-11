@@ -12,10 +12,14 @@ worth to it, so its capital falls by the discount. Where the society has no mark
 pay for enough, the bank pays what it holds to the withdrawing depositors in proportion and fails (banks.fail): the
 rest of its deposits fall due, the depositors bear what the bank cannot pay through the one default rule, and its
 founder loses the capital the bank no longer holds.
+
+An actor may insure deposits (deposit_insurance.py): depositors believe its promise as far as its reserve covers the
+payout expected, so they run less, and each bank pays it a premium at the start of the run. An actor may lend as a
+last resort (last_resort.py): a solvent bank short of cash borrows from it before selling loans.
 """
 from typing import List, Sequence
 
-from . import banks, secondary_trade
+from . import banks, deposit_insurance, last_resort, secondary_trade
 from .secondary_trade import BOND_MARKET, CashShortfall
 from .types import AgentId, FundsOffer, Loan, Transfer
 
@@ -34,9 +38,20 @@ def expected_loss_share(record, bank: banks.Bank, money: str) -> float:
     return min(1.0, uncovered / owed)
 
 
+def insured_cover(record, money: str) -> float:
+    """The share of the deposit insurer's promise depositors believe: nothing when no one insures deposits, else the
+    insurer's reserve over the payout the standing banks' records put on it."""
+    insurer = deposit_insurance.insurer_of(record)
+    if insurer is None:
+        return 0.0
+    expected = sum(expected_loss_share(record, bank, money) * banks.owed_to_depositors(record, bank.agent_id)
+                   for bank in banks.standing(record))
+    return deposit_insurance.cover(record.book.balance(insurer, money), expected)
+
+
 def withdrawing(record, bank: banks.Bank, money: str) -> List[Loan]:
     """The deposits whose holders ask for them back: those whose interest does not cover the loss they expect."""
-    share = expected_loss_share(record, bank, money)
+    share = expected_loss_share(record, bank, money) * (1.0 - insured_cover(record, money))
     if share <= EPSILON:
         return []
     return [deposit for deposit in banks.deposits_of(record, bank.agent_id) if deposit.rate < share and deposit.principal > EPSILON]
@@ -70,11 +85,18 @@ def run(setup, record, offers: Sequence[FundsOffer], year: int, institutions: Se
     money = setup.currency_id
     offers = list(offers)
     for bank in banks.standing(record):
+        deposit_insurance.collect(record, bank.agent_id, deposit_insurance.premium(
+            expected_loss_share(record, bank, money), banks.owed_to_depositors(record, bank.agent_id)), money)
+    for bank in banks.standing(record):
         leaving = withdrawing(record, bank, money)
         asked = sum(deposit.principal for deposit in leaving)
         if asked <= EPSILON:
             continue
         cash = record.book.balance(bank.agent_id, money)
+        if cash < asked and record.capital_markets.last_resort is not None:
+            last_resort.lend(record, record.capital_markets.last_resort, record.capital_markets.last_resort_issues,
+                             bank.agent_id, asked - cash, market_rate, expected_loss_share(record, bank, money), year, money)
+            cash = record.book.balance(bank.agent_id, money)
         if cash < asked:
             offers = sell_for_cash(setup, record, bank, asked - cash, offers, market_rate, institutions, money)
             cash = record.book.balance(bank.agent_id, money)

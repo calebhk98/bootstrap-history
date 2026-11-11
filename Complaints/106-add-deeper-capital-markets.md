@@ -1,6 +1,6 @@
 # Add deeper capital markets
 
-**Status:** partly - pooled credit, shares, banks, state bonds, secondary trading, bank runs, insurance, funds, firm bonds and a found-bank command are built; what remains is listed under Remainder (design note: Complaints/reports/agent-economy-capital-markets.md)
+**Status:** partly - pooled credit, shares, banks, state bonds, secondary trading, bank runs, insurance, funds, firm bonds and a found-bank command, deposit insurance, a lender of last resort, bond-holder marks and a firm's cost-based choice of equity or debt are built; what remains is listed under Remainder (design note: Complaints/reports/agent-economy-capital-markets.md)
 
 **Source:** playtest findings document, LATE-004. **Type:** Major
 roadmap-sized feature recommendation. Genuinely new; not currently named in
@@ -162,13 +162,20 @@ Priority: lower than the work that makes the opening settle (473); it is picked 
 - A bank's default probability and its limit are Eurace's formulas (leverage-driven probability, value at risk against a
   multiple of equity), not an estimate from the losses its own loan record shows; the four constants above retire here.
 
-- Bonds the agents-world pool buys (`sim/agents/bonds.py`, state and firm) have no individual holder, so they have no
-  secondary price and no mark in a holder's wealth; the economy-record loans do.
+- Bonds the agents-world pool buys are marked to the market in each holder's claim (`BondBook.marked_worth`,
+  `CreditRecord.creditor_marks`, `--only capital_structure`), but the holders do not yet trade them: there is no
+  secondary price among the pool's holders, and no consumer yet adds the marks to a holder's wealth.
 - No town or other sub-national agent exists, so none issues bonds; `prepare_bonds` serves any actor that does.
 - Ship loss is not a realised event in the economy (transit loss is a deterministic share priced into the margin), so
   only the harvest hazard is insured; marine cover needs a drawn loss on a route.
-- A producer's unsold equity (the owner tile's) is not tradable, a fund does not bid in a new share issue, and a firm does
-  not choose equity over debt on cost (it sells equity only as a fallback when lenders refuse, `sim/agents/equity_round.py`).
-- Depositors choose among banks by cover only; credit creation, lender of last resort and deposit insurance are not built.
+- A producer's unsold equity (the owner tile's) is not tradable and a fund does not bid in a new share issue.
+- Depositors choose among banks by cover only; credit creation is not built.
+- The deposit insurer and lender of last resort are actors with a purse designated on `record.capital_markets`
+  (`designate_backstops`); no state agent or command designates one yet (`sim/economy/deposit_insurance.py`,
+  `last_resort.py`, `--only bank_backstops`). The insurer's premium is the payout its banks' loss records expect
+  and the penalty rate is the market rate plus the bank's default risk, so neither is declared.
+- A firm chooses equity when its yield (the dividend over its equity's worth, `sim/agents/capital_structure.py`) is below
+  its borrowing rate and an investor served it within a year (`--only firm_picks_equity`); it is priced at the market
+  rate, so it prefers equity only when its lenders charge it a premium over that.
 - Temporary heuristics this adds name 106 as their retirement; they are `INSURER_FOUNDING_SHARE_OF_CASH` and the two
   earlier bank ones. The insurer's loading, the fund's choice and the bank's cost of cash are derived, not declared.

@@ -21,6 +21,12 @@ class CreditRecord:
 		"""Who is owed what by this state: the lenders whose deposits fund its debt, and their claims."""
 		return self.government.purses.named_lenders.claims(self.government.account_id)
 
+	def creditor_marks(self, world: Any) -> Dict[str, float]:
+		"""What each lender's holding of this state's bonds is worth at the yield the market asks of it today: its place in
+		the one holder ledger beside household lenders, marked to price rather than to what it paid."""
+		purses = self.government.purses
+		return purses.bonds.marked_worth(self.government.account_id, self.creditors(), self.government.borrowing_rate(world))
+
 	def lenders_lost(self) -> Dict[str, float]:
 		"""What each lender has had written down on this state's defaults."""
 		return self.government.purses.named_lenders.lost(self.government.account_id)

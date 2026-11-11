@@ -1,7 +1,7 @@
 """A firm grows the concerns it runs while the market's return on the added capacity beats its cost of capital."""
 from typing import Any
 
-from . import equity_need, firm_entry, ledger
+from . import capital_structure, equity_need, equity_round, firm_entry, ledger
 from .edges import EDGE_BUILDERS
 from .tuning import EXPANSION_RATE
 
@@ -19,6 +19,13 @@ class Expansion:
 		before = firm_entry.carrying_cost(world, node_id, capacity, tile)
 		after = firm_entry.carrying_cost(world, node_id, capacity + step, tile)
 		return 0.0 if before is None or after is None else after - before
+
+	def _equity_costs_less(self, debt_rate: float, world: Any) -> bool:
+		"""Whether the shares it could sell cost the firm less each year than the debt at `debt_rate`."""
+		firm = self.firm
+		refused = firm.record.plan.get(capital_structure.EQUITY_REFUSED_KEY)
+		equity_open = refused is None or world.setting.year - refused > 1
+		return capital_structure.prefers_equity(debt_rate, equity_round.cost_of_equity(firm, world), equity_open)
 
 	def expand(self, world: Any) -> None:
 		"""Add capacity to each concern whose staff was found in full and whose added margin pays
@@ -47,6 +54,10 @@ class Expansion:
 						equity_need.note_need(firm, shortfall)  # lenders will not fund it, so it raises equity
 					continue
 				rate = max(rate, firm.borrowing_rate(world))
+				if self._equity_costs_less(rate, world):
+					if gain > cost * rate:
+						equity_need.note_need(firm, shortfall)  # the shares cost it less than the debt would
+					continue
 			if gain <= cost * rate:
 				continue
 			if not ledger.pay_in_full(firm, world.setting.edge(EDGE_BUILDERS), cost, "expansion"):   # the lenders turned it down after all

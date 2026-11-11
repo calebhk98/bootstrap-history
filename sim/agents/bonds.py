@@ -104,6 +104,17 @@ class BondBook:
 		self.held.pop(issuer, None)
 		return lost
 
+	def marked_worth(self, issuer: str, holders: Mapping[str, float], yield_now: float) -> Dict[str, float]:
+		"""What each holder's bonds of `issuer` are worth at the yield the market asks now. `holders` is what each paid in
+		all (the named lenders' claims); a holder owns the same share of every bond outstanding, so its mark is its
+		payment times the bonds' value at today's yield over what the market paid for them."""
+		bonds = self.held.get(issuer, ())
+		paid = sum(bond.paid for bond in bonds)
+		if paid <= EPSILON:
+			return {holder: 0.0 for holder in holders}
+		worth = sum(bond_price(bond.face, bond.coupon, bond.years_left, yield_now) for bond in bonds)
+		return {holder: claim * worth / paid for holder, claim in sorted(holders.items())}
+
 	def to_canon_dict(self) -> Dict[str, Any]:
 		return {"terms": {issuer: list(terms) for issuer, terms in sorted(self.terms.items())},
 				"held": {issuer: [asdict(bond) for bond in bonds] for issuer, bonds in sorted(self.held.items())}}
