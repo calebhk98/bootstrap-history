@@ -1,6 +1,6 @@
 # Porters and dockworkers have no trade, so the largest labour group of a society without draught animals is hidden
 
-**Status:** partly - porter and dockworker trades exist, carriage books to them, and the economy's carriage table now offers only modes whose means are held and prices foot with porter crew; `economy-check --accounts --carriage` prints porter and dockworker hours demanded and hired; the whole-game measurement is in "What is left": porters are not hired after year 1 because the merchants' worth of an hour stays under the porter wage; the hire gap traced (unfunded merchant bids, not the ceiling; see the last section); open
+**Status:** closed - porters and dockworkers are trades, carriage books to them, merchants' carrier bids are funded from their purse and a working-capital loan sized on the planned wage bill (`sim/economy/carriage_funding.py`), and porters are hired near the funded demand by years 4 and 5 (below); the unsourced port handling rate and the handling money's wage are Complaint 979
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming). Depends on 609.
 
@@ -164,3 +164,9 @@ Not fixed here (geography data and graph rule, another owner).
 sixth of the funded demand in year 1 to about a half by years 4 and 5, with no household fallback fee in any year (it was paid in year 2
 before). Hired hours rose from about a hundred a year to tens of millions. Still open: why about half of the funded demand finds no
 porter (supply by area against the bid areas; the foot hauls from the islands of Complaint 978 are part of the demand).
+
+## Measured on the rebuilt openings (commit e927bb6c, after Complaint 978's border fix)
+
+`python3 sim/simulator.py economy-check --accounts --carriage --years 5 --civs mexica_1500`: porters hired over porter hours demanded
+is about seven tenths in years 1 and 3, about a quarter in year 2 and over nine tenths in years 4 and 5, with no household fallback fee
+in any year. Closed on that: the trades are seen, bid and hired. The handling figures left in "What is left" moved to Complaint 979.
