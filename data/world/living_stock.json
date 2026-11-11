@@ -278,9 +278,69 @@
       "straw_dry_matter_share": 0.9,
       "bran_kg_per_head_year": 60.0,
       "dung_and_fodder_source": "Dung and fodder per head, as the sheep row (sheep_kg 'dung_and_fodder_source' in this file); no swine row was opened in the NRCS handbook, so the sheep excreta share is borrowed (TEMPORARY HEURISTIC, retire: Complaints/670). Bran: pigs are fed grain offal as well as forage; 60 kg a head-year is an assumed ration (no source found).",
-      "source": "Varro, De re rustica 2.4 (LacusCurtius, opened through a page fetch, first 100000 characters): the sow 'bears twice a year' (2.4.14), a sow 'can feed eight little pigs at first' (2.4.19), young stay with the dam about two months (2.4.13), a barrow is cut at six months to a year (2.4.21), 'ten boars are enough for 100 sows' (2.4.22). Oyieng, Marshall and Gauly, 'Production parameters estimates of smallholder pig production systems in Uganda' (Tropentag 2023 abstract, https://www.tropentag.de/2023/abstracts/links/Oyieng_Vhqfvk7g.php, opened): litter size 7.2, piglets weaned per sow per year 7.1, farrowing interval 261 days (a modern Ugandan smallholder survey, not a Roman figure). Live weight, dressing, lard share, hide share, stocking rate, salt lick, breeding-sow share, mortality, grain ration and dung: no source found; labelled heuristics (retire: Complaints/670).",
+      "source": "Varro, De re rustica 2.4 (LacusCurtius, opened through a page fetch, first 100000 characters): the sow 'bears twice a year' (2.4.14), a sow 'can feed eight little pigs at first' (2.4.19), young stay with the dam about two months (2.4.13), a barrow is cut at six months to a year (2.4.21), 'ten boars are enough for 100 sows' (2.4.22). Oyieng, Marshall and Gauly, 'Production parameters estimates of smallholder pig production systems in Uganda' (Tropentag 2023 abstract, https://www.tropentag.de/2023/abstracts/links/Oyieng_Vhqfvk7g.php, opened): litter size 7.2, piglets weaned per sow per year 7.1, farrowing interval 261 days (a modern Ugandan smallholder survey, not a Roman figure). Live weight, dressing, lard share, hide share, stocking rate, salt lick, breeding-sow share, mortality, grain ration and dung: no source found; labelled heuristics (retire: Complaints/670). Bristle: yield per slaughtered pig has no source found (a search turned up only an Indian study of pig hair fibre per clipping of live animals, 1.65 to 33.2 g, seen in a search summary and not opened); 0.2 kg is a labelled heuristic (retire: Complaints/670). The sorting labour, 0.5 hour a kilogram, is the figure of the former stand-alone bristles_kg entry (conf C, no source recorded there).",
       "confidence": "D",
-      "basis": "Live weight of unimproved pigs, in kilograms. Increase = 0.15 of the herd breeding sows (assumed; Varro's ten boars to 100 sows only fixes the boars) x 7.1 weaned piglets a sow-year (Uganda smallholder survey above) = 1.065 head a head-year. Loss 0.1 (assumed). Offtake 0.8 is below natural increase less loss (0.965): pigs are fattened and slaughtered within the year. A breeding group is a boar and three sows, 300 kg of about 75 kg (TEMPORARY HEURISTIC). Herd parameters beside it feed the herd recipe lard_kg in data/production/95_herds.json: 2 head per hectare of woodland and fallow grazing, 60 kg live weight at slaughter, dressing 0.75 of live weight, 0.3 of the carcass rendered as lard, a raw skin 4 percent of live weight, 6 kg of salt a head-year. Bristle is not a product here: no recipe consumes it (Complaints/532)."
+      "basis": "Live weight of unimproved pigs, in kilograms. Increase = 0.15 of the herd breeding sows (assumed; Varro's ten boars to 100 sows only fixes the boars) x 7.1 weaned piglets a sow-year (Uganda smallholder survey above) = 1.065 head a head-year. Loss 0.1 (assumed). Offtake 0.8 is below natural increase less loss (0.965): pigs are fattened and slaughtered within the year. A breeding group is a boar and three sows, 300 kg of about 75 kg (TEMPORARY HEURISTIC). Herd parameters beside it feed the herd recipe lard_kg in data/production/95_herds.json: 2 head per hectare of woodland and fallow grazing, 60 kg live weight at slaughter, dressing 0.75 of live weight, 0.3 of the carcass rendered as lard, a raw skin 4 percent of live weight, 6 kg of salt a head-year. Bristle is a joint product of the slaughter (bristles_kg): the household brush node takes it as a research material (data/branches/12_household.json).",
+      "bristle_kg_per_slaughtered_pig": 0.2,
+      "bristle_sorting_hours_per_kg": 0.5
+    },
+    "horse_kg": {
+      "walks": true,
+      "natural_increase": 0.14,
+      "annual_loss": 0.07,
+      "breeding_minimum_units": 4400,
+      "grows_on": "pasture",
+      "species": [
+        "horse"
+      ],
+      "head_per_hectare": 0.5,
+      "live_weight_kg_per_head": 400.0,
+      "offtake_per_head_year": 0.06,
+      "hide_share_of_live_weight": 0.07,
+      "salt_kg_per_head_year": 11.0,
+      "bran_kg_per_head_year": 40.0,
+      "head_per_herder": 100.0,
+      "breaking_hours_per_animal": 60.0,
+      "manure_share_of_live_weight_per_day": 0.063,
+      "manure_collected_share": 0.33,
+      "winter_fodder_days": 90,
+      "fodder_dry_matter_share_of_live_weight_per_day": 0.02,
+      "straw_share_of_winter_ration": 0.5,
+      "straw_dry_matter_share": 0.9,
+      "dung_and_fodder_source": "Dung and fodder per head as the cattle row (cattle_kg 'dung_and_fodder_source' in this file); no equine row was opened in the NRCS handbook, so the cattle excreta share is borrowed (TEMPORARY HEURISTIC, retire: Complaints/670). Bran is an assumed grain ration for working animals (no source found).",
+      "source": "Varro, De re rustica 2.7 and 2.8 (LacusCurtius, opened through a page fetch, first 100000 characters): horse breeding stock not under three nor over ten years old and 'one [stallion] to every ten mares' (2.7.1); mating from the vernal equinox to the solstice (2.7.7); 'those who mate their mares every other year claim that they breed for a longer time', annual breeding wears mares out sooner (2.7.11); foals kept with the dam two years (2.7.12); breaking at three years old (2.7.13); 'the mule is the offspring of a mare and an ass', 'neither brings any return from young' (2.8.2); a jack is used for breeding after three years (2.8.2). Foaling rate and mortality of a working-horse population were looked for: the one survey opened (Sowe, Gai, Sumberg and Gilbert, 'Foaling and mortality of equines in The Gambia: a national survey', FAO, fao.org/4/x5455b/x5455b1d.htm, survey of December 1987) reports foaling 24 percent for horses and mortality 27 percent for both equines in a tsetse-affected country; it is not used, since the trypanosomiasis loss of a place is taken from data/disease/endemic and not from the row. Live weight, stocking rate, hide share, salt, bran, the herder's charge and the breaking hours: no source found; labelled heuristics (retire: Complaints/670).",
+      "confidence": "D",
+      "basis": "Live weight of breeding and working horses, in kilograms. Increase 0.14 = breeding mares 0.35 of the head (a stallion to ten mares, Varro 2.7.1, plus foals kept two years and young not yet bred; the share is assumed) x 0.5 foals a mare-year (mares mated every other year, Varro 2.7.11) x 0.8 foals surviving to a year (assumed). Loss 0.07 (assumed). Offtake 0.06 is the head reared to work (Varro 2.7.13: broken at three) and leaving the herd for harness, below increase less loss (0.07). A breeding group is a stallion and ten mares at 400 kg (Varro 2.7.1 for the ratio, the weight assumed). Dead animals are skinned; their flesh is not eaten here (a labelled choice: no equine meat in the food goods). Parameters beside it feed the herd recipe draught_animal_kg in data/production/95_herds.json."
+    },
+    "mule_kg": {
+      "walks": true,
+      "natural_increase": 0.1,
+      "annual_loss": 0.07,
+      "breeding_minimum_units": 4400,
+      "grows_on": "pasture",
+      "species": [
+        "horse"
+      ],
+      "head_per_hectare": 0.5,
+      "live_weight_kg_per_head": 400.0,
+      "offtake_per_head_year": 0.36,
+      "mule_live_weight_kg_per_head": 350.0,
+      "hide_share_of_live_weight": 0.07,
+      "salt_kg_per_head_year": 11.0,
+      "bran_kg_per_head_year": 40.0,
+      "head_per_herder": 100.0,
+      "breaking_hours_per_animal": 60.0,
+      "manure_share_of_live_weight_per_day": 0.063,
+      "manure_collected_share": 0.33,
+      "winter_fodder_days": 90,
+      "fodder_dry_matter_share_of_live_weight_per_day": 0.02,
+      "straw_share_of_winter_ration": 0.5,
+      "straw_dry_matter_share": 0.9,
+      "dung_and_fodder_source": "Dung and fodder per head as the cattle row (cattle_kg 'dung_and_fodder_source' in this file); no equine row was opened in the NRCS handbook, so the cattle excreta share is borrowed (TEMPORARY HEURISTIC, retire: Complaints/670). Bran is an assumed grain ration for working animals (no source found).",
+      "source": "Varro, De re rustica 2.7 and 2.8 (LacusCurtius, opened through a page fetch, first 100000 characters): horse breeding stock not under three nor over ten years old and 'one [stallion] to every ten mares' (2.7.1); mating from the vernal equinox to the solstice (2.7.7); 'those who mate their mares every other year claim that they breed for a longer time', annual breeding wears mares out sooner (2.7.11); foals kept with the dam two years (2.7.12); breaking at three years old (2.7.13); 'the mule is the offspring of a mare and an ass', 'neither brings any return from young' (2.8.2); a jack is used for breeding after three years (2.8.2). Foaling in jennies: Deng, Shi, Li, Tang, Liao and Xie, 'A Cross-Sectional Survey of Foaling-Related Parameters of Jennies (Equus asinus) Under Smallholder Farm Conditions in Northeast China', Journal of Equine Veterinary Science 87 (2020) 102928 (abstract opened): overall foaling rate 75 percent and foaling interval 500.5 days in jennies, 2014 to 2017; it is a donkey dam, not a mare, so it brackets the alternate-year mating of Varro and is not used as the mare figure. A study of mule pregnancies in mares (foaling rate 71.9 percent, pregnancy loss 36.8 percent) came up in a search summary only and was not opened. Mule live weight, rearing survival, stud replacement, stocking rate and the rest: no source found; labelled heuristics (retire: Complaints/670).",
+      "confidence": "D",
+      "basis": "Live weight of the mule-breeding stud, in kilograms: mares and the jack asses that cover them (a mule is a mare by an ass, Varro 2.8.2; a mule does not breed). Offtake 0.36 is mules reared to work per stud head a year = mares 0.9 of the stud (a jack to ten mares, Varro 2.7.1 applied to jacks, assumed) x 0.5 foals a mare-year (alternate-year mating, Varro 2.7.11) x 0.8 surviving to work age (assumed); each weighs mule_live_weight_kg_per_head (assumed). The stud itself is kept up by raising or buying replacement mares and jacks: increase 0.10 is that replacement (TEMPORARY HEURISTIC), loss 0.07 (assumed). A breeding group is a jack and ten mares, 4400 kg. Parameters beside it feed the herd recipe draught_mule_kg in data/production/95_herds.json.",
+      "offtake_is_not_stock": true
     }
   }
 }

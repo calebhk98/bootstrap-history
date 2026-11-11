@@ -820,8 +820,22 @@ def capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, in
 
         yearly_share = stand_yearly_share(
                 interest_rate, service_life_years, capital_good.get("establishment_years") or 0.0)
-        capital_cost_hours += build_cost_hours * yearly_share / capital_good["annual_output_at_basis"]
+        yearly_charge = build_cost_hours * yearly_share - own_births_credit_hours(
+            capital_good, build_materials, service_life_years, current_prices)
+        capital_cost_hours += max(0.0, yearly_charge) / capital_good["annual_output_at_basis"]
     return capital_cost_hours
+
+
+def own_births_credit_hours(capital_good, build_materials, service_life_years, current_prices):
+    """Hours a year of the wear that a stock's own young replace: of each build material the good names in
+    `replaced_by_own_births_per_year` (units a year), the births, up to the units that wear out in a year (the
+    build quantity over the life), are priced at the material's price and taken off the wear. Interest on the
+    stock is left in the charge."""
+    credit = 0.0
+    for material, births in (capital_good.get("replaced_by_own_births_per_year") or {}).items():
+        wears_out = build_materials.get(material, 0.0) / service_life_years
+        credit += min(births, wears_out) * current_prices[material]
+    return credit
 
 
 def batch_energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):

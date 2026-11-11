@@ -417,21 +417,6 @@
    "conf": "D",
    "requires_node": "prn_carbon_ink"
   },
-  "bristles_kg": {
-   "outputs": {
-    "bristles_kg": 1.0
-   },
-   "inputs": {},
-   "labour_hours": {
-    "labourer": 0.5
-   },
-   "extracted_from": "livestock (hog bristle, a slaughter byproduct)",
-   "unit_dimension": "mass",
-   "basis": "per kg of sorted hog bristle",
-   "yield_basis": "A slaughter byproduct like hide_kg and bone_kg, priced the same way: the cost of raising the pig belongs to whatever entry eventually prices pork (not yet in this file), and this entry only charges the marginal labour of plucking and sorting bristle by length and stiffness once the animal is already being butchered for meat. LABELLED HEURISTIC (rule 3.4), same caveat as hide_kg: a complete accounting would apportion a share of the animal's feed cost by joint-product value once a meat entry exists.",
-   "conf": "C",
-   "requires_node": null
-  },
   "horsehair_kg": {
    "outputs": {
     "horsehair_kg": 1.0
