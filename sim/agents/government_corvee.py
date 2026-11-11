@@ -3,9 +3,8 @@ wages its roads, buildings and walls would cost, then raises the works it lacks.
 time its people lose (the engine hands them to the economy, which withdraws them from the hours households offer)."""
 from typing import Any, List
 
-from . import revenue_labour, state_works
+from . import revenue_labour, state_masonry, state_works
 from .budget_line import Line
-from .tuning_spending import MASONRY_PERSON_YEARS_PER_M2
 
 
 class Corvee:
@@ -39,12 +38,13 @@ class Corvee:
 		"""Raise the works the state lacks with the labour left over, unpaid; the masonry raised."""
 		years = self.government.record.corvee_spare_years
 		raised = 0.0
+		years_per_m2 = state_masonry.person_years_total(world)
 		for work, gap in state_works.gaps(world):
 			if years <= 0.0:
 				break
-			used = min(years, gap * MASONRY_PERSON_YEARS_PER_M2)
-			state_works.held(world)[work.name] += used / MASONRY_PERSON_YEARS_PER_M2
+			used = min(years, gap * years_per_m2)
+			state_works.held(world)[work.name] += used / years_per_m2
 			years -= used
-			raised += used / MASONRY_PERSON_YEARS_PER_M2
+			raised += used / years_per_m2
 		self.government.record.corvee_spare_years = years
 		return raised

@@ -7,9 +7,10 @@ market's price, so it is demand like any other.
 """
 from typing import Any, Dict, List, Tuple
 
+from . import state_masonry
 from .budget_line import Line, goods
 from .tuning_spending import (COAST_KM_PER_SHIP, COURT_RETAINERS_PER_OFFICIAL,
-							  DOLE_SHARE_OF_URBAN_PEOPLE, MASONRY_PERSON_YEARS_PER_M2,
+							  DOLE_SHARE_OF_URBAN_PEOPLE,
 							  PUBLIC_BUILDING_LIFE_YEARS, PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2,
 							  MAX_STATE_SHARE_OF_TRADE, ROAD_UPKEEP_PERSON_YEARS_PER_KM)
 
@@ -29,8 +30,8 @@ def roads_line(world: Any) -> List[Line]:
 
 def public_buildings_line(world: Any) -> List[Line]:
 	stock_m2 = world.people.urban_population() * PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2
-	masons = stock_m2 * MASONRY_PERSON_YEARS_PER_M2 / PUBLIC_BUILDING_LIFE_YEARS
-	return [paid(world, "public_buildings", "requisition", {world.labour.trade_of_role("builder"): masons})] if masons > 0.0 else []
+	crew = {trade: stock_m2 * years / PUBLIC_BUILDING_LIFE_YEARS for trade, years in state_masonry.person_years_by_trade(world).items()}
+	return [paid(world, "public_buildings", "requisition", crew)] if sum(crew.values()) > 0.0 else []
 
 
 def court_line(world: Any, officials: float) -> List[Line]:
@@ -45,6 +46,11 @@ def dole_line(world: Any) -> List[Line]:
 	if tonnes <= 0.0:
 		return []
 	return [Line("dole", "requisition", {}, 0.0, **goods(world, world.quotes.staple_material(), tonnes))]
+
+
+def crewed_hulls(wanted: float, held: float) -> float:
+	"""Hulls the navy pays a crew for: those it holds, up to the fleet it wants; sailors are not paid for ships not yet built."""
+	return max(0.0, min(wanted, held))
 
 
 def navy_line(world: Any) -> List[Line]:
@@ -62,7 +68,8 @@ def navy_line(world: Any) -> List[Line]:
 		return price is None, (0.0 if price is None else price) / option["life"] + crew, option["material"]
 
 	good = min(options, key=upkeep_of)
-	line = paid(world, "navy", "requisition", {trade: ships * count for trade, count in good["crew"].items()})
+	crewed = crewed_hulls(ships, good["held"])
+	line = paid(world, "navy", "requisition", {trade: crewed * count for trade, count in good["crew"].items()})
 	missing = max(0.0, ships - good["held"] * max(0.0, 1.0 - 1.0 / good["life"]))
 	if missing > 0.0:
 		# The market port counts non-gram material units in thousands, including counted goods.

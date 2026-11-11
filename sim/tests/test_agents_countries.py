@@ -24,7 +24,7 @@ class CountryAnswers:
 	"""What the economy answers for a foreign country: its own pay, output and need floors."""
 
 	def pay_per_person_year(self, trade):
-		return {"labourer": 50.0, "soldier": 60.0, "scribe": 75.0}[trade]
+		return {"labourer": 50.0, "soldier": 60.0, "scribe": 75.0, "mason": 80.0}[trade]
 
 	def society_output(self):
 		return 1.0e6

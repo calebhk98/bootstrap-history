@@ -20,11 +20,13 @@ PUBLIC_FLOOR_AREA_PER_URBAN_PERSON_M2 = declare(
 	why="Floor area of walls, baths, aqueduct works, granaries, barracks and "
 		"temples the state holds per town dweller. Stands in for a stock of "
 		"buildings that grows as towns are built.")
-MASONRY_PERSON_YEARS_PER_M2 = declare(
-	"MASONRY_PERSON_YEARS_PER_M2", 0.15, kind="temporary_heuristic",
-	unit="person-years per m2 of public building", source=None, confidence="D",
-	why="Mason's labour to raise a square metre of public stone building; "
-		"maintenance replaces the stock once per life.")
+MASONRY_WALL_M3_PER_M2 = declare(
+	"MASONRY_WALL_M3_PER_M2", 1.5, kind="temporary_heuristic",
+	unit="m3 of laid wall per m2 of public building", source=None, confidence="D",
+	retire="Complaint 492",
+	why="Volume of laid wall (walls, vaults and footings) in a square metre of public building; the labour of a "
+		"square metre is this volume at the hours of the laid-wall recipe (data/world/state_masonry.json). "
+		"Maintenance replaces the stock once per life.")
 PUBLIC_BUILDING_LIFE_YEARS = declare(
 	"PUBLIC_BUILDING_LIFE_YEARS", 100.0, kind="temporary_heuristic",
 	unit="years", source=None, confidence="D",

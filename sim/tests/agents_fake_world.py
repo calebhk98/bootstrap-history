@@ -140,6 +140,14 @@ class FakeWorld:
 	def trade_of_role(self, role: str) -> str:
 		return self.ROLE_TRADES[role]
 
+	MASONRY_HOURS = {"mason": 20.0, "labourer": 40.0}   # hours per cubic metre of the laid-wall service
+
+	def recipe_labour_hours(self, material: str) -> Dict[str, float]:
+		return dict(self.MASONRY_HOURS)
+
+	def trade_exists(self, trade: str) -> bool:
+		return trade in self.ROLE_TRADES.values()
+
 	def equipment_material(self) -> str:
 		return "iron_bar_kg"
 

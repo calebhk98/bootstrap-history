@@ -10,11 +10,11 @@ import numpy
 
 from sim.disease import api as disease
 
-from . import assessment_kernels, assessment_table, budget_lines, state_works
+from . import assessment_kernels, assessment_table, budget_lines, state_masonry, state_works
 from .budget_line import Line, goods
 from .tuning_spending import (CAMPAIGN_SHARE_OF_ARMY_PER_UNIT_THREAT, CUSTOMS_BASE_PER_COLLECTOR_WAGE_YEAR,
 							  DONATIVE_SHARE_OF_ANNUAL_PAY, FARM_TAX_BASE_PER_COLLECTOR_WAGE_YEAR, MARCH_KM_PER_DAY,
-							  MASONRY_PERSON_YEARS_PER_M2, POLL_TAX_BASE_PER_COLLECTOR_WAGE_YEAR,
+							  POLL_TAX_BASE_PER_COLLECTOR_WAGE_YEAR,
 							  PROPERTY_TAX_BASE_PER_COLLECTOR_WAGE_YEAR, PUBLIC_BUILDING_LIFE_YEARS, SOLDIER_GRAIN_KG_PER_DAY)
 
 
@@ -31,11 +31,12 @@ BASE_PER_COLLECTOR_WAGE_YEAR = {
 def works_upkeep_lines(world: Any) -> List[Line]:
 	"""One line per work held: the labour that replaces its stock once in a building's life."""
 	stock = state_works.held(world)
+	crew = state_masonry.person_years_by_trade(world)
 	lines = []
 	for work in state_works.WORKS:
-		person_years = stock[work.name] * MASONRY_PERSON_YEARS_PER_M2 / PUBLIC_BUILDING_LIFE_YEARS
-		if person_years > 0.0:
-			lines.append(budget_lines.paid(world, work.name, "requisition", {world.labour.trade_of_role(work.role): person_years}))
+		if stock[work.name] > 0.0:
+			lines.append(budget_lines.paid(world, work.name, "requisition",
+										   {trade: stock[work.name] * years / PUBLIC_BUILDING_LIFE_YEARS for trade, years in crew.items()}))
 	return [line for line in lines if line.money > 0.0]
 
 

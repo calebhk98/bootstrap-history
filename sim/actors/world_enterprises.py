@@ -24,6 +24,12 @@ class Enterprises:
 		"""The materials a concern puts on the market."""
 		return supply.materials_made_by(node_id, self.world.site.production_catalog())
 
+	def recipe_labour_hours(self, material: str) -> Dict[str, float]:
+		"""Hours of each trade one unit of `material` takes to make, from its production entry; empty when no entry names
+		it or it states no hours."""
+		entry = self.world.site.production_catalog().get(material) or {}
+		return {trade: float(hours) for trade, hours in (entry.get("labour_hours") or {}).items()}
+
 	def concern_inputs(self, node_id: str) -> Dict[str, float]:
 		"""Tonnes of each material a concern of the node uses up in a year at its founding size, from its production
 		entries; empty for a node whose figures are not derived from output."""

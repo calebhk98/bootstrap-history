@@ -46,7 +46,7 @@ class ShipPurchases(unittest.TestCase):
         self.assertEqual(port.materials_in("warship"), ["warship"])
         self.assertEqual(port.materials_in("iron"), ["iron_bar_kg"])
 
-    def test_navy_buys_missing_hulls_and_keeps_only_the_crew_on_payroll(self):
+    def test_navy_buys_missing_hulls_and_pays_a_crew_only_for_hulls_held(self):
         world = flat_namespace(
             government=lambda: SimpleNamespace(record=SimpleNamespace(levers={})),
             territory=lambda: SimpleNamespace(coast_km=100.0),
@@ -57,13 +57,14 @@ class ShipPurchases(unittest.TestCase):
             commodity_of=lambda material: material,
             material_cost=lambda material, tonnes: tonnes * 1000000.0)
         line, = budget_lines.navy_line(world)
-        self.assertEqual(line.labour, {"sailor": 60.0})
+        self.assertEqual(line.labour, {})
         self.assertAlmostEqual(line.materials.get("test_hull", 0.0), 0.001)
         self.assertGreater(line.material_cost, 0.0)
         world.fleet_goods = lambda: [{"material": "test_hull", "life": 20.0,
                                      "held": 1.0, "crew": {"sailor": 60.0}}]
         replacement, = budget_lines.navy_line(world)
         self.assertAlmostEqual(replacement.materials["test_hull"], 0.001 / 20.0)
+        self.assertEqual(replacement.labour, {"sailor": 60.0})
         world.territory = lambda: SimpleNamespace(coast_km=0.0)
         self.assertEqual(budget_lines.navy_line(world), [])
 

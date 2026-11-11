@@ -95,7 +95,7 @@ class LeverWorld(FakeWorld):
         return True
 
     def fleet_goods(self, holder_id=None):
-        return [{"material": "ship", "life": 10.0, "crew": {"sailor": 10.0}, "held": 0.0}]
+        return [{"material": "ship", "life": 10.0, "crew": {"sailor": 10.0}, "held": 100.0}]
 
 
 def context(population=1.0e5):

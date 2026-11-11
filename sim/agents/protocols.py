@@ -614,6 +614,10 @@ class EnterprisesPart(Protocol):
 		"""Tonnes of each material a concern uses up in a year at its founding size."""
 		...
 
+	def recipe_labour_hours(self, material: str) -> Dict[str, float]:
+		"""Hours of each trade one unit of a material takes to make, from its production entry; empty when it states none."""
+		...
+
 	def book_takings(self, node_id: str, opened_year: int) -> float:
 		"""Yearly takings of one founding size of a concern at its ramp in the tree's book coin (no cost scale, no hazard factor)."""
 		...
