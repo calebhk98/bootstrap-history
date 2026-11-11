@@ -53,3 +53,10 @@ No price was invented. The check now records the cause per left-out good in `det
 (`opening_checks.unmeasured_cause`: no_good, market_did_not_clear, no_price, no_making_cost), so the next
 `opening-checks --civs han_china_100ad` run names it. If it reads `market_did_not_clear` or `no_making_cost` for `bronze_kg`,
 the open question is whether Han's tin and copper reach the bronze recipe at the opening, not the check.
+
+## Re-read on the rebuilt openings (commit d846ed11)
+
+`python3 sim/simulator.py opening-checks --civs <civ>` for each base civilisation. Failing: every civilisation's `spin_up_settled` (473);
+`rome_100ad` `money_against_wear` (just under its bound); `norse_900ad` `price_over_cost_staple` (millet far below its making cost);
+`mexica_1500` `price_over_cost_sited_ores` (no value) and `wage_over_floor` (under one); `han_china_100ad` `price_over_cost_coin_metal`,
+whose `detail["unmeasured"]` (`--json`) gives `bronze_kg: market_did_not_clear`: Han's coin metal does not trade at the opening, so it has no price.

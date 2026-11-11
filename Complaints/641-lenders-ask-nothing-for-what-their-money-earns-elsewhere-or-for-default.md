@@ -74,3 +74,12 @@ glut leaves the rate at the lenders' floor, not zero; a lender with past losses 
   `Clearing.limited` (`collateral_bound`) and the rest stays unmet. A working-capital request pledges the producer's cash, the
   goods it holds and its plant, not the loan itself (`producers_working_capital.pledgeable_assets`, `request`).
   Not re-measured on a civilisation; fixtures: `python3 sim/simulator.py spin-up-trace --fixture small --years 50` (the `rate` column).
+
+## Opening rate re-measured (commit d846ed11, rebuilt openings)
+
+`python3 sim/simulator.py opening-checks` reports `rate_against_history` passing for all five base civilisations, but the solved opening
+rate is the same in each: the households' time preference plus the expected inflation they open with
+(`sim/economy/opening_rate.py` `opening_market_rate`), since the resting opening has no borrower and no lender with spare cash, so
+nothing clears and the rate is the cheapest lender's lowest ask. The land yield and the bond premium cannot enter at the opening
+(no title has sold yet, no bond has been priced); whether they move the rate is a reading of later years, not of the opening.
+Still open: that later-year reading on a civilisation, and retiring `RATE_FLOOR_SHARE` (`sim/world/capital_market.py`, `retire` 106).
