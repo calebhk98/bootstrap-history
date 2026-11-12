@@ -13,7 +13,7 @@ so a higher rate hides more and a state whose officials reach more of the payers
 The penalty is proportional to the tax unpaid, so on the risk-neutral result (Yitzhaki 1974, as summarised in Pickhardt and
 Seibold, arXiv 1112.0233 s.2.1) the rate alone would not change the share hidden: the gain per unit hidden is the rate times a
 factor (the chance found and the penalty) that does not contain it. Here the rate moves hiding only through the cost curve,
-which is in units of income and not of tax (`HIDING_MARGINAL_COST_AT_CEILING`, labelled, no source), so the size of the
+which is in units of income and not of tax (`HIDING_MARGINAL_COST_AT_CEILING`, a ballpark from bribe surveys), so the size of the
 response to a rate is a property of that curve and must not be read as evidence about pre-modern payers. With a cost that
 scales with the rate (`hidden_share_at_cost`) the share hidden is the same at every rate.
 Nothing here names a civilisation, a form or a stratum.

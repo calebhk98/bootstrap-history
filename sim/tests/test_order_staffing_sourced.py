@@ -33,12 +33,13 @@ class OrderStaffing(unittest.TestCase):
 		people = ROME_PEOPLE
 		self.assertLess(order.guards_kept(people, working_days), VIGILES + URBAN_COHORT_MEN)
 
-	def test_inspectors_and_foresters_have_no_source_and_name_their_retirement(self):
-		for name, value in (("INSPECTION_DAYS_PER_PERSON", INSPECTION_DAYS_PER_PERSON),
+	def test_the_three_staff_figures_are_sourced_estimates(self):
+		for name, value in (("PATROL_DAYS_PER_PERSON", PATROL_DAYS_PER_PERSON),
+							("INSPECTION_DAYS_PER_PERSON", INSPECTION_DAYS_PER_PERSON),
 							("FORESTER_DAYS_PER_PERSON", FORESTER_DAYS_PER_PERSON)):
 			entry = REGISTRY[name]
-			self.assertEqual((entry["kind"], entry["value"], entry["source"]), ("temporary_heuristic", value, None))
-			self.assertIn("Complaint 660", entry["retire"])
+			self.assertEqual((entry["kind"], entry["value"]), ("engineering_estimate", value))
+			self.assertTrue(entry["source"])
 
 
 if __name__ == "__main__":

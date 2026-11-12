@@ -1,6 +1,6 @@
 # Rome's bonded share has no ensemble check against its sourced range, and captives and imports are not a modelled supply
 
-**Status:** partly - births drift fixed; captives of battles and conquests and a merchants' trade built; the bonded share is now in `baseline-ensemble`; residence-driven mortality is built as a rule (`sim/agents/bonded_residence.py`) but no civilisation declares residence shares; the share of the defeated taken and the age and sex of captives are still labelled heuristics (no opened source gives a figure)
+**Status:** partly - `CAPTIVE_SHARE_OF_DEFEATED_LOSSES` is now a sourced ballpark (confidence C); open: `CAPTIVE_SHARE_OF_CONQUERED_PEOPLE` (labelled, sack frequency unsourced), the age and sex of captives (no constant exists: `AddCaptives` takes a headcount, so it is a mechanism to build), residence shares, a thick market, and people not moving
 
 Found rewriting `rome_slave_stratum` (640). Rome seeds its bonded stratum at its declared share of the people; after two
 simulated years the share fell below the low end of the range its source note gives (Scheidel 2005, cited in
@@ -57,3 +57,9 @@ campaigns, how many taken, what share sold), and a price-driven trade (prices of
 rearing one, sources for Roman Egypt sale contracts, Scheidel's and Harris's estimates, and how piracy and the frontier
 trade supplied the market). The model aims at realism: captives come from the war mechanism (484) and trade from merchants,
 not from a typed inflow. See also 644 (the owners' sale rule).
+
+## Sourced (2026-11, ballpark standard)
+
+- `CAPTIVE_SHARE_OF_DEFEATED_LOSSES` 0.2 kept, confidence C, `engineering_estimate`. Wikipedia 'Battle of Cannae' (https://en.wikipedia.org/wiki/Battle_of_Cannae): Livy 19,300 captured of 67,500 lost = 0.29; Polybius 10,000 of 80,000 = 0.125; Plutarch 14,000 of 64,000 = 0.22. Mean 0.21. Besieged people for contrast: Wikipedia 'Atuatuci' (https://en.wikipedia.org/wiki/Atuatuci) 4,000 killed and 53,000 sold = 0.93.
+- `CAPTIVE_SHARE_OF_CONQUERED_PEOPLE` 0.02 kept as a labelled heuristic (confidence D). Sacked places: Carthage 50,000 sold of 90,000 to 800,000 (0.06 to 0.56; Wikipedia 'Third Punic War'), Aduatuci 0.93. A surrendering tile loses none. The average needs the share of taken tiles that were sacked; no count of that was found, so 0.02 rests on an assumed one in ten to fifteen.
+- Age and sex of captives: no constant in the code; `AddCaptives` adds a headcount to the bonded stratum, so this is a mechanism (typed captives) rather than a number to source. Qualitative anchor already recorded: women and children over-represented (Scheidel).
