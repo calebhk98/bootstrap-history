@@ -34,10 +34,12 @@ class WoodenToolFactor(unittest.TestCase):
         high = IRON_POINTED_DIBBLE_RATES[1] / OAK_DIBBLE_RATE
         self.assertTrue(low <= _farmer()["tool_hours_factor"]["wooden_tools_kg"] <= high)
 
-    def test_the_unsourced_wooden_figures_still_name_their_retirement(self):
+    def test_the_wooden_recipe_is_sourced_and_only_the_by_hand_factor_names_its_retirement(self):
         with open(os.path.join(_ROOT, "data", "production", "96_wooden_tools.json"), encoding="utf-8") as handle:
             entry = json.load(handle)["materials"]["wooden_tools_kg"]
-        self.assertEqual((entry["conf"], entry["retire"]), ("D", "Complaint 650"))
+        self.assertNotIn("retire", entry)
+        self.assertEqual(entry["conf"], "C")
+        self.assertIn("http", entry["yield_basis"])
         self.assertIn("retire: Complaints/650", _farmer()["tool_fallback_source"])
 
 

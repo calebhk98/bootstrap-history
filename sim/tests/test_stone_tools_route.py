@@ -61,7 +61,9 @@ class StoneRouteTests(unittest.TestCase):
         priced = need_basket.priced_need(_IMPLEMENTS, 1.0 - _BASKET.substitution,
                                          {"obsidian_blade_kg": 10.0, "flint_tool_kg": 10.0}.get)
         shares = {good: share for good, _price, _effect, share in priced.goods}
-        self.assertGreater(shares["obsidian_blade_kg"], shares["flint_tool_kg"])
+        effects = {good: effect for good, _price, effect, _share in priced.goods}
+        more_effective, less_effective = sorted(effects, key=effects.get, reverse=True)
+        self.assertGreater(shares[more_effective], shares[less_effective])
 
     def test_the_blade_recipe_follows_the_measured_mass_balance(self):
         recipe = _PRODUCTION["obsidian_blade_kg"]
