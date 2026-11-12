@@ -9,12 +9,12 @@
     "leather_kg": 0.8
    },
    "labour_hours": {
-    "leatherworker": 8.0
+    "leatherworker": 12.0
    },
    "unit_dimension": "count",
    "unit_mass_kg": 0.9,
    "basis": "per pair of stitched leather shoes",
-   "yield_basis": "A pair of hand-stitched leather shoes or boots uses a bit under a kilogram of finished leather for sole, upper and thongs (no source found; conf D), cut and sewn by a leatherworker in about a working day (author's estimate, conf D). Thread and nails are a few grams and are left out. CLOTHING: the pair satisfies the clothing need at the factor leather_kg already carries per kilogram of leather it holds (data/world/needs.json), so a worked pair is worth its leather and no more until a source gives cover and warmth of footwear separately; a labelled placeholder, retire with a need for footwear.",
+   "yield_basis": "A pair of hand-stitched leather shoes or boots uses a bit under a kilogram of finished leather for sole, upper and thongs (no source found; conf D), cut and sewn by a leatherworker in about twelve hours (Bespoky Shoes atelier, https://bespokyshoes.com/pages/atelier, opened: 'each pair takes 10-14 hours of handwork' from one shoemaker, a modern welted shoe; was 8 hours; conf D because that is one modern workshop's claim). Thread and nails are a few grams and are left out. CLOTHING: the pair satisfies the clothing need at the factor leather_kg already carries per kilogram of leather it holds (data/world/needs.json), so a worked pair is worth its leather and no more until a source gives cover and warmth of footwear separately; a labelled placeholder, retire with a need for footwear.",
    "requires_node": "tex_vegetable_tanning",
    "conf": "D",
    "satisfies": {
