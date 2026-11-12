@@ -113,16 +113,20 @@ class PressAndJars(unittest.TestCase):
         self.assertLessEqual(jar["unit_mass_kg"], 26.0)
         self.assertAlmostEqual(jar["inputs"]["ceramic_kg"], jar["outputs"]["amphora_count"] * jar["unit_mass_kg"])
 
-    def test_every_wine_and_oil_entry_names_its_retirement(self):
+    def test_every_wine_and_oil_figure_is_sourced_so_none_is_a_heuristic_awaiting_retirement(self):
         for material in ("grapes_kg", "olives_kg", "amphora_count", "wine_common_kg", "olive_oil_kg"):
-            self.assertEqual(_PRODUCTION[material].get("retire"), "Complaint 656", material)
+            entry = _PRODUCTION[material]
+            self.assertNotIn("retire", entry, material)
+            for stand in entry.get("capital", []):
+                self.assertNotIn("retire", stand, material)
+                self.assertIn(stand["conf"], ("A", "B", "C"), material)
 
     def test_a_press_holds_the_land_one_press_served_in_cato(self):
         # 3 presses to 100 iugera of vines, 5 to 240 of olives, at 2,523 square metres to the iugerum
         wine = _PRODUCTION["wine_common_kg"]["capital"][0]["annual_output_at_basis"]
         oil = _PRODUCTION["olive_oil_kg"]["capital"][0]["annual_output_at_basis"]
         self.assertAlmostEqual(wine, 100.0 / 3.0 * 0.2523 * 2700.0, delta=1.0)
-        self.assertAlmostEqual(oil, 48.0 * 0.2523 * 300.0, delta=1.0)
+        self.assertAlmostEqual(oil, 48.0 * 0.2523 * 370.0, delta=1.0)
 
 
 class CropLabourFromTheAgronomists(unittest.TestCase):
