@@ -7,6 +7,7 @@ from .harness import check
 
 from sim.agents import adoption, awareness, government_levers, research_gate
 from sim.agents.api import ActorRecord, Firm
+from sim.agents.tuning_adoption import CONTACT_FADE_PER_YEAR
 from sim.agents.government import Government
 from sim.agents.research import diffuse
 
@@ -83,7 +84,7 @@ holder.record.location = "far"
 awareness.record_contact(learner, "far", 50.0)
 awareness.spread([holder, learner], world)
 check("a contact event (route, conquest, migration) raises awareness on the receiving side", "tech" in learner.aware)
-check("a contact counted once fades by half", abs(learner.contacts["far"] - 25.0) < 1e-9)
+check("a contact counted once keeps the declared share a year later", abs(learner.contacts["far"] - 50.0 * CONTACT_FADE_PER_YEAR) < 1e-9)
 
 # ---- staged adoption -----------------------------------------------------------------------
 check("the gap is relative, signed and bounded",
