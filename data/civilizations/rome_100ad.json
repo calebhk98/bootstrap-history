@@ -846,8 +846,8 @@
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Wikipedia, Religion in ancient Rome (opened): six Vestals and three major and twelve lesser flamines; no count of the other colleges or of temple staff is on the page, so the 15000 temple staff and 2000 scholars remain placeholders. Only starting sizes are set here.",
-      "confidence": "D"
+      "source": "Wikipedia, Religion in ancient Rome (opened): six Vestals and three major and twelve lesser flamines; the colleges were small and aristocratic, temple staff were slaves and freedmen, and no overall count is on the page. Ratio check: 15000 in 65 million is 0.02 per cent, a fiftieth of England's church (1.0 per cent), as expected for a state cult with few full-time priests. A ballpark, with no direct count; the 2000 scholars have no source.",
+      "confidence": "C"
     },
     "cast": {
       "source": "Slaves as a share of the empire's people: about a tenth (Scheidel 2005, 'Human Mobility in Roman Italy, II: The Slave Population', JRS 95: 64-79, which counts one to one and a half million in Italy at most; the empire-wide tenth is a secondary summary of Scheidel, a plausible range being 8 to 15 per cent). Italy and the cities ran higher, the provinces lower; one stratum holds the empire-wide share. The other strata keep the default split's proportions (sim/agents/strata_seed.py) scaled to fill the rest of the people. Owners are the rich stratum. The older third-to-two-fifths figure for Italy is unsupported (Scheidel 2005: 65).",
