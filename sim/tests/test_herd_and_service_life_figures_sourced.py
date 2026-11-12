@@ -73,5 +73,37 @@ class ServiceLives(unittest.TestCase):
         self.assertEqual(years["cart"]["years"], 15)
 
 
+class Complaint670Pass8(unittest.TestCase):
+
+    def test_sheep_and_goat_salt_follow_the_read_daily_salt_of_range_ewes(self):
+        rows = _load("data", "world", "living_stock.json")["materials"]
+        sheep_kg = midpoint(8.0, 11.0) / 1000.0 * 365.0
+        self.assertAlmostEqual(rows["sheep_kg"]["salt_kg_per_head_year"], sheep_kg, delta=0.05)
+        self.assertAlmostEqual(rows["goat_kg"]["salt_kg_per_head_year"], sheep_kg * 25.0 / 30.0, delta=0.05)
+        self.assertAlmostEqual(rows["cattle_kg"]["salt_kg_per_head_year"], 30.0 / 1000.0 * 365.0, delta=0.1)
+
+    def test_pack_saddle_life_is_the_geometric_mean_of_the_two_read_lives(self):
+        years = _load("data", "world", "service_lives.json")["years"]
+        self.assertAlmostEqual(years["pack_saddle"]["years"], (0.5 * 20.0) ** 0.5, delta=0.3)
+
+    def test_mule_and_barge_lives_are_the_read_ranges(self):
+        years = _load("data", "world", "service_lives.json")["years"]
+        self.assertEqual(years["mule"]["years"], midpoint(10.0, 15.0))
+        self.assertEqual(years["river_barge"]["years"], 15)
+
+    def test_steel_edge_tool_life_is_the_mid_range_forged_axe_midpoint(self):
+        years = _load("data", "world", "service_lives.json")["years"]
+        for good in ("tool_steel_kg", "steel_noric_kg"):
+            self.assertEqual(years[good]["years"], midpoint(20.0, 40.0))
+        self.assertEqual(years["iron_bar_kg"]["years"], midpoint(5.0, 15.0))
+
+    def test_perishable_rates_are_one_over_the_read_keeping_time(self):
+        rates = _load("data", "world", "spoilage.json")["rates_per_year"]
+        self.assertAlmostEqual(rates["bread_kg"]["rate"], 365.0 / midpoint(3.0, 7.0))
+        self.assertAlmostEqual(rates["silk_cocoon_kg"]["rate"], 365.0 / midpoint(2.0, 3.0), delta=1.0)
+        self.assertAlmostEqual(rates["hide_kg"]["rate"], 365.0 / midpoint(1.0, 2.0), delta=1.0)
+        self.assertAlmostEqual(rates["garum_kg"]["rate"], 1.0 / midpoint(2.0, 3.0))
+
+
 if __name__ == "__main__":
     unittest.main()
