@@ -230,7 +230,7 @@
     {
      "good": "mash tuns and fermenting vats",
      "build_materials": {
-      "timber_m3": 60.0,
+      "timber_m3": 2.0,
       "iron_bar_kg": 200.0
      },
      "build_labour_hours": {
@@ -239,8 +239,8 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 40000.0,
-     "capital_basis": "Wooden vats hold the mash and wash through several days of fermentation, so several are needed per still; staves and hoops last some years to a couple of decades. Volume is sized to keep the still above supplied. Vat volume follows the still's charge (3333 litres of wash a run from Wikipedia Pot still, en.wikipedia.org/wiki/Pot_still); the timber and hoop masses and the life are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
-     "conf": "D"
+     "capital_basis": "Wooden vats hold the mash and wash through several days of fermentation, so several are needed per still; staves and hoops last some years to a couple of decades. Volume is sized to keep the still above supplied. Vat volume follows the still's charge (3333 litres of wash a run from Wikipedia Pot still, en.wikipedia.org/wiki/Pot_still); timber rescaled from 60 m3: Wikipedia Whisky (en.wikipedia.org/wiki/Whisky) gives fermentation of two days or longer; the still takes 152 washes of 3333 litres a year (see the still row), so at three vat-days a wash (two days plus filling and emptying) 456 vat-days over 300 working days need two vats, plus a mash tun: three vessels of about 4.2 m3 (25 percent headroom), each about 12.6 square metres of side and bottom; at 40 mm staves (my assumption) that is 0.5 m3 a vessel, 1.5 m3, 2.0 m3 with lids and spares. Iron hoops, carpenter hours and life are the author's estimate (grade D for those figures).",
+     "conf": "C"
     }
    ],
    "operated_by": ["distillation_alcohol"]
