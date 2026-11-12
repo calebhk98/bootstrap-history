@@ -15,7 +15,7 @@ CAREGIVER_BANDS = ("working_age",)
 DISEASE_TRAVELLER_ANNUAL_CHANCE = declare(
     "DISEASE_TRAVELLER_ANNUAL_CHANCE", 0.6, kind="temporary_heuristic",
     unit="dimensionless (chance per year, per pathogen, that an infected party sets out from a source where it is always present)",
-    source=None, confidence="D", retire="Complaints/677: the outside world is simulated actors whose own people carry infection along the routes",
+    source="Wikipedia, Second plague pandemic (en.wikipedia.org/wiki/Second_plague_pandemic, opened): Italy 'struck with an outbreak of plague in 68% of the years between 1348 and 1600'; Constantinople 'recurred ten times before 1400' (about 0.2 a year from 1347); Russia 'once every five or six years from 1350 to 1490' (about 0.18); England at 'intervals of five to 12 years' (Black Death in England, opened). A trade hub sits at the top of that range, 0.6 is within it.", confidence="C", retire="Complaints/677: the outside world is simulated actors whose own people carry infection along the routes",
     why="Stands in for the outside world exporting infected travellers: while the pathogen is absent from the nation, "
         "one party with it reaches the nation with this chance each year, times the share of the source's contact "
         "that the routes let through (`DISEASE_TRAVEL_DECAY_DAYS`). Drawn from the disease package's own hash of the "
@@ -23,7 +23,7 @@ DISEASE_TRAVELLER_ANNUAL_CHANCE = declare(
 DISEASE_EMERGENCE_ANNUAL_CHANCE = declare(
     "DISEASE_EMERGENCE_ANNUAL_CHANCE", 0.0015, kind="temporary_heuristic",
     unit="dimensionless (chance per year, per pathogen, that it starts to spread at a source where it is not always present)",
-    source=None, confidence="D", retire="Complaints/677: the outside world is simulated actors whose own people carry infection along the routes",
+    source="Derived from Wikipedia, Plague of Justinian (opened, arrival 541), Second plague pandemic (opened, 1347) and Third plague pandemic (opened, 'began in Yunnan, China, in 1855'): three pandemic emergences of one pathogen in the 1,485 years 541 to 2026 is 3 / 1485 = 0.002 a year; 0.0015 is the same order.", confidence="C", retire="Complaints/677: the outside world is simulated actors whose own people carry infection along the routes",
     why="The outside world is not simulated, so a pathogen that is not always present at a source starts there at "
         "random: a spill-over from animals, a mutation, a long-dormant focus. Its arrival at the nation then follows "
         "the same contact rule as a pathogen that is always there. No dated outbreak is stated anywhere; the value "
@@ -32,14 +32,14 @@ DISEASE_EMERGENCE_ANNUAL_CHANCE = declare(
 DISEASE_TRAVEL_DECAY_DAYS = declare(
     "DISEASE_TRAVEL_DECAY_DAYS", 150.0, kind="temporary_heuristic",
     unit="days of travel (the distance at which a source's contact falls to a third)",
-    source=None, confidence="D", retire="Complaints/677: the outside world is simulated actors, so contact comes from their traffic and not from distance",
+    source="Wikipedia, Black Death in England (en.wikipedia.org/wiki/Black_Death_in_England, opened): plague landed at Melcombe in mid-1348, reached London by autumn 1348 (3-4 months, my arithmetic from its dates), York in May 1349 (about 11 months) and 'took the disease around 500 days to traverse the entire country'. A contact that is a third at 150 days of travel is a ballpark for a disease that crossed a country in a year or two; the e-folding distance itself was not found in a source.", confidence="C", retire="Complaints/677: the outside world is simulated actors, so contact comes from their traffic and not from distance",
     why="Contact between a source and the nation falls off with the fewest days of travel between them over the "
         "routes the nation's technologies and the outsiders' carriers open (geography's reach), as exp(-days / this). "
         "Inside the nation the contact between tiles is read from the traffic on each edge; the outside world has no "
         "actors yet, so its contact is only this distance rule.")
 DISEASE_CONTACT_INFECTED_PEOPLE = declare(
     "DISEASE_CONTACT_INFECTED_PEOPLE", 10, kind="temporary_heuristic", unit="people",
-    source=None, confidence="D", retire="Complaints/677: the outside world's own travellers set how many arrive",
+    source="Derived from Wikipedia, Cog (ship) (en.wikipedia.org/wiki/Cog_(ship), opened): one sailor for every 10 tons burthen, so about 20 for a 200-ton cog, 'crews of up to 45 for civilian cogs are recorded'. A ship that brought plague had some of a crew of 20 to 45 infected; 10 is about a half to a quarter of that.", confidence="C", retire="Complaints/677: the outside world's own travellers set how many arrive",
     why="Infected working-age people an introduction brings to the tile it enters at. Stands in for the outside "
         "world's traveller flux; an arrival of a few people dies out by chance in a small share of draws, which the chain-binomial "
         "step produces by itself.")

@@ -556,8 +556,8 @@
       "confidence": "D"
     },
     "standing_army": {
-      "source": "The retinues (hirdmen) of the kings and great chieftains; the leidang fleet was mustered for a season, not kept (Sawyer, Kings and Vikings). An approximate opening headcount of men kept in a ruler's pay.",
-      "confidence": "D"
+      "source": "The retinues (hirdmen) of the kings and great chieftains; the leidang fleet was mustered for a season, not kept (Sawyer, Kings and Vikings). Wikipedia, Huskarl (en.wikipedia.org/wiki/Huskarl, opened): Cnut 'is said to have kept about 3,000 to 4,000 men in England as his bodyguard' (sources a century later), paid in coin; Wikipedia, Leidang (opened): a levy ship carried 24 crewmen and a steersman and served two or three summer months. 2000 kept in a ruler's pay is a ballpark below the great king's bodyguard.",
+      "confidence": "C"
     }
   },
   "needs_first": {

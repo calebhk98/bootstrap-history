@@ -32,20 +32,20 @@
  "density_exponent": 0.5,
  "sources": {
   "reproduction_number_range": {
-   "confidence": "disputed",
-   "source": "Mills et al. 2004 (PMC7095078): 1918 median 2, interquartile 1.7 to 2.3, 2.7 over fastest growth; Biggerstaff et al. 2014: 1918 median 1.80, interquartile 1.47 to 2.27"
+   "confidence": "read",
+   "source": "Mills et al. 2004 (PMC7095078): 1918 median 2, interquartile 1.7 to 2.3, 2.7 over fastest growth; Biggerstaff et al. 2014: 1918 median 1.80, interquartile 1.47 to 2.27. The two studies differ by a few tenths; the file's 1.5 to 2.7 spans both."
   },
   "transmissibility_per_day": {
    "confidence": "derived",
    "source": "Reproduction number 2.0 divided by the infectious days; not itself observed"
   },
   "case_fatality": {
-   "confidence": "unsourced",
-   "source": "Placeholder: the research report gives no case fatality figure for pandemic influenza; replace with a read source before this file is used in a scenario"
+   "confidence": "read",
+   "source": "Wikipedia, Spanish flu (en.wikipedia.org/wiki/Spanish_flu, opened, table of major influenza pandemics): case fatality rate '2-3%' for 1918, other estimates about 4% or 10%; 0.02 is the low end of that table. Copenhagen's combined mortality was 0.29% of the population, on about a third infected."
   },
   "immunity": {
-   "confidence": "unsourced",
-   "source": "Placeholder: the report says only that antigenic drift is handled by waning to susceptible; the duration is not sourced"
+   "confidence": "derived",
+   "source": "Wikipedia, Spanish flu (opened): older adults 'may have had partial protection caused by exposure to the 1889-1890 flu pandemic', 28 years before 1918, and survivors of the first wave 'had become immune' to the second within months. Protection therefore lasts from years to decades but is partial and strain-specific; the 10-year waning here is a ballpark inside that, not a measured duration."
   },
   "stage.latent": {
    "confidence": "read",
