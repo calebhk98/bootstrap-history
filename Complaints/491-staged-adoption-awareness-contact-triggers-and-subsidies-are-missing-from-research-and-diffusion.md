@@ -105,3 +105,11 @@ unit count; subsidy and mandate levers on the government (481).
 - Remainder: (6) The effect of the share, the
   awareness gate and firm purchases on a whole game is unmeasured: needs `python3 -m sim.tests --slow` and a baseline run compared before and
   after; the orchestrator runs it.
+
+## Whole-game measurement attempted (2026-11-12)
+
+`python3 sim/simulator.py baseline-ensemble --civ rome_100ad --seeds 2 --years 40 --jobs 2` on 86ceb664 and on c5bfc37d: the ensemble's
+`technologies` (first year each node is held) shows no node gained in forty years in any run, before or after the adoption constants were
+sourced. The ensemble records the civilisation's held nodes, not actors' adoption shares, so it cannot show staged adoption spreading;
+and both runs lose most of their population (Complaint 962), so the economy the mechanism acts in collapses. Not closed: the measurement
+needs a report of adoption shares by actor and year (`awareness.spread` and the adoption records) on a game whose baseline does not collapse.

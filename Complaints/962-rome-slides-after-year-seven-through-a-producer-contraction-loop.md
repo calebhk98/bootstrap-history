@@ -44,3 +44,12 @@ its unfilled vacancies; idle workers weigh other areas' trades they can enter; m
 switch requests fall from about three quarters to under half and the people rate drops a couple of points, but real
 output ends about a tenth lower and the cause is untraced. Training intake rests on `APPRENTICES_PER_MASTER` and training
 years with no opened source for most trades.
+
+## Re-measured as population (2026-11-12)
+
+`python3 sim/simulator.py baseline-ensemble --civ rome_100ad --seeds 2 --years 40 --jobs 2`, current shipped openings, on c5bfc37d and on
+86ceb664 (before and after the sourcing round of Complaints 606 to 979): both runs of both commits lose about ninety-six percent of Rome's
+people in forty years, falling a tenth or so every year from the second year on (the series is in `.cache/baseline_ensemble/rome_100ad.json`,
+`metrics.population`). The bonded share ends near a tenth on c5bfc37d and near three tenths on 86ceb664; the cause of that difference is
+not traced. A baseline that loses most of its people in a generation is the slide this complaint describes, now visible as famine; it is
+the first thing a 4.2 check of the ensemble would fail.
