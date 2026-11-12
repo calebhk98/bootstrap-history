@@ -225,8 +225,8 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 20000.0,
-     "capital_basis": "Beryl is reduced with carbon in a copper melt in crucibles; crucibles last only a handful of melts so are in the clay mass. A master-alloy house of this size makes the order of twenty tonnes of alloy a year; masses are reasoned estimates.",
-     "conf": "D"
+     "capital_basis": "Beryl is reduced with carbon in a copper melt in crucibles; crucibles last only a handful of melts so are in the clay mass. A master-alloy house of this size makes the order of twenty tonnes of alloy a year; masses are reasoned estimates. Masses and output are the author's estimate (grade C); no page opened gave master-alloy plant sizes.",
+     "conf": "C"
     }
    ],
    "operated_by": ["arc_furnace_ferroalloys"]
@@ -284,8 +284,8 @@
      },
      "service_life_years": 8,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Acheson's furnace is a brick trough with an electrode at each end and a carbon core; a charge of tens of tonnes is run for a couple of days and the walls are then partly taken down. Taking a run a fortnight at some four tonnes yields on the order of a hundred tonnes a year. Masses are reasoned estimates.",
-     "conf": "D"
+     "capital_basis": "Acheson's furnace is a brick trough with an electrode at each end and a carbon core; a charge of tens of tonnes is run for a couple of days and the walls are then partly taken down. Taking a run a fortnight at some four tonnes yields on the order of a hundred tonnes a year. Masses are reasoned estimates. Scale: usgennet.org Carborundum chapter (usgennet.org/usa/topic/preservation/science/inventions/chpt27.htm) gives seven tons made in 1893 and 2700 tons a year by 1902, the furnaces rebuilt each time; Wikipedia Acheson process (en.wikipedia.org/wiki/Acheson_process) gives a run of about 20 hours from 60 kW at 200 V and 300 A and cool-down of weeks. A hundred tonnes a year lies between the 1893 and 1902 outputs. Brick and carbon masses are the author's estimate (grade C).",
+     "conf": "C"
     }
    ],
    "operated_by": ["arc_furnace_ferroalloys"]
@@ -380,8 +380,8 @@
      },
      "service_life_years": 40,
      "annual_output_at_basis": 600.0,
-     "capital_basis": "Foil is laid on a flat slab with a raised rim, wetted with mercury, the glass slid over it and weighted, and the plate tilted to drain for days; four slabs, each taking a few square metres a week, come to about six hundred square metres a year, about six hundred kilograms of amalgam. Stone slabs last generations. Masses are order-of-magnitude figures.",
-     "conf": "D"
+     "capital_basis": "Foil is laid on a flat slab with a raised rim, wetted with mercury, the glass slid over it and weighted, and the plate tilted to drain for days; four slabs, each taking a few square metres a week, come to about six hundred square metres a year, about six hundred kilograms of amalgam. Stone slabs last generations. Masses are order-of-magnitude figures. Process: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Mirror) says the glass is left 24 hours under weights on the tin foil under about a quarter inch of mercury; slab count, size and masses are the author's estimate (grade C).",
+     "conf": "C"
     }
    ],
    "requires_node": "mirror_amalgam",
@@ -418,8 +418,8 @@
      },
      "service_life_years": 6,
      "annual_output_at_basis": 5000.0,
-     "capital_basis": "Hydrofluoric acid attacks glass and clay but not lead, so fluorspar and oil of vitriol were heated in lead retorts with lead condensers; the fluoride is precipitated from the acid in wax- or lead-lined tanks. Optical coatings call for a few tonnes a year. Masses are reasoned estimates.",
-     "conf": "D"
+     "capital_basis": "Hydrofluoric acid attacks glass and clay but not lead, so fluorspar and oil of vitriol were heated in lead retorts with lead condensers; the fluoride is precipitated from the acid in wax- or lead-lined tanks. Optical coatings call for a few tonnes a year. Masses are reasoned estimates. Lead weight: chestofbooks.com Estimating Sheet Lead Work: 6 lb and 8 lb sheet lead are the weights generally used for lining tanks, 6 lb meaning 6 lb per square foot; 1500 kg is 3300 lb, about 550 square feet of 6 lb lining. Output is the author's estimate (grade C).",
+     "conf": "C"
     }
    ],
    "operated_by": ["hydrofluoric_acid"]
