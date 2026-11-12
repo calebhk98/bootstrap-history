@@ -76,3 +76,5 @@ Changed figures (old -> new), then rows whose figures stayed (the basis now cite
 
 Searched and not found: Oldbury phosphorus output, edge-runner mill charge and runner mass, galley-furnace vitriol output, wood-distillation retort size,
 carbolic oil share of coal tar. Status stays open.
+
+**Pass 8 correction.** A C row needs an opened figure that bounds its mass or capacity. Only five of the 32 capital rows meet that and stay C (copper pot still, bleach absorption chambers, polyethylene autoclave, black-ash furnace, Acheson furnace; beside the bounded figure some stone, iron or brick masses are still estimates, written in the row). The other 27 are back at D: each cites the process page it was read from and says no opened figure bounds the scale. The paragraph above that lists rows kept with a process source as sourced is superseded by this one. D rows left in the four files: 27 (50_chemicals 15, 93_chemistry_nuclear_gaps 4, 91_branch_material_gaps 5, 92_metals_components_gaps 3).

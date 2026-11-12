@@ -126,8 +126,8 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 40000.0,
-     "capital_basis": "Phenol is recovered from the carbolic oil fraction of coal tar by fractional distillation and caustic washing; at the entry's hundred and twenty-five tonnes of tar to a tonne of phenol, a still taking five thousand tonnes of tar a year gives about forty tonnes. Iron still mass is an order-of-magnitude figure. Still and wash masses and the tar throughput are the author's estimate (grade C); Wikipedia Coal tar (en.wikipedia.org/wiki/Coal_tar) lists phenol among the products of coal tar but gives no proportion, so no opened page fixed the carbolic oil yield.",
-     "conf": "C"
+     "capital_basis": "Phenol is recovered from the carbolic oil fraction of coal tar by fractional distillation and caustic washing; at the entry's hundred and twenty-five tonnes of tar to a tonne of phenol, a still taking five thousand tonnes of tar a year gives about forty tonnes. Iron still mass is an order-of-magnitude figure. Still and wash masses and the tar throughput are the author's estimate (grade D, no opened figure bounds the mass or capacity); Wikipedia Coal tar (en.wikipedia.org/wiki/Coal_tar) lists phenol among the products of coal tar but gives no proportion, so no opened page fixed the carbolic oil yield.",
+     "conf": "D"
     }
    ],
    "operated_by": ["chm_phenol"]
@@ -238,8 +238,8 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Dry borax and boric acid are ground, sieved and mixed on a floor with a trough; there is nothing hot or corrosive, so wood and a little iron serve for decades. Output is bounded by the floor and sieves, taken at the order of a hundred tonnes a year. Process check: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Borax) describes borax made by dissolving or fusing soda with boric acid; the dry blend floor and its output are the author's estimate (grade C).",
-     "conf": "C"
+     "capital_basis": "Dry borax and boric acid are ground, sieved and mixed on a floor with a trough; there is nothing hot or corrosive, so wood and a little iron serve for decades. Output is bounded by the floor and sieves, taken at the order of a hundred tonnes a year. Process check: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Borax) describes borax made by dissolving or fusing soda with boric acid; the dry blend floor and its output are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
+     "conf": "D"
     }
    ],
    "operated_by": ["soda_leblanc"]
@@ -291,8 +291,8 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 50000.0,
-     "capital_basis": "A soap house boils ten-tonne charges in iron kettles, the spent lye is evaporated in pans and the crude glycerine redistilled under vacuum in a copper still; fifty tonnes of glycerol a year corresponds to some five hundred tonnes of fat, a middling soap works. Masses are order-of-magnitude figures. Process: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Glycerin) says commercial glycerin comes from the soap maker's spent lyes, evaporated under a vacuum of 27 to 28 in. of mercury to specific gravity 1.295 (about 80 percent glycerin) and distilled at 28 to 29 in.; the equipment masses and the 500 tonnes of fat a year are the author's estimate (grade C).",
-     "conf": "C"
+     "capital_basis": "A soap house boils ten-tonne charges in iron kettles, the spent lye is evaporated in pans and the crude glycerine redistilled under vacuum in a copper still; fifty tonnes of glycerol a year corresponds to some five hundred tonnes of fat, a middling soap works. Masses are order-of-magnitude figures. Process: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Glycerin) says commercial glycerin comes from the soap maker's spent lyes, evaporated under a vacuum of 27 to 28 in. of mercury to specific gravity 1.295 (about 80 percent glycerin) and distilled at 28 to 29 in.; the equipment masses and the 500 tonnes of fat a year are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
+     "conf": "D"
     }
    ],
    "requires_node": "chm_glycerol",
@@ -331,8 +331,8 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 3000.0,
-     "capital_basis": "Mercury is dissolved in nitric acid and run into alcohol in small flasks over a water bath, in batches of hundreds of grams because the product is dangerous; the percussion-cap trade used a few tonnes a year. Masses are reasoned estimates. Masses and output are the author's estimate (grade C); no page opened gave fulminate batch sizes.",
-     "conf": "C"
+     "capital_basis": "Mercury is dissolved in nitric acid and run into alcohol in small flasks over a water bath, in batches of hundreds of grams because the product is dangerous; the percussion-cap trade used a few tonnes a year. Masses are reasoned estimates. Masses and output are the author's estimate (grade D, no opened figure bounds the mass or capacity); no page opened gave fulminate batch sizes.",
+     "conf": "D"
     }
    ],
    "operated_by": ["chm_fulminate"]
