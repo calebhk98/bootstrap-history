@@ -147,3 +147,8 @@ half-saturation soil constants (not named by this complaint; they retire to a ni
 - Fallow nitrate retention and half-saturation supply are not in this complaint's list; left.
 
 Closed: every figure the complaint names now carries an opened citation or bracket except the two lamp quality valuations, which keep their label and retire to the indoor air model.
+
+**Pass 11 (lamp quality factors).** Sourced as prices per unit of light relative to wax (opened): V&A, Candles (collections.vam.ac.uk/item/O235777), 'Bees-wax candles were three times as expensive as tallow',
+so tallow 1/3 = 0.33 of wax (a candle of either gives about one candela, Wikipedia Candle); Nordhaus's lighting-price table (geeknative.com/60838/the-cost-of-light): tallow candle 40.3 and 18.3 cents per 1,000
+lumen-hours (1800, 1830, mean 29.3), whale-oil lamp 29.9 and other lamp oils 59.4 (mean 44.7), so oil light costs 1.5 times tallow and 1.5 / 3 = 0.5 of wax. Old values 0.7 and 0.85 (placeholder
+valuations) -> 0.33 and 0.5, confidence C, heuristic label and retire dropped from the seven goods. Every figure in this complaint now carries an opened citation.
