@@ -11,17 +11,19 @@ from sim.constants import declare
 
 NATIVE_POOL_KG_PER_HECTARE = declare(
     "NATIVE_POOL_KG_PER_HECTARE", 3000.0,
-    kind="temporary_heuristic", unit="kg nitrogen per hectare in the rooting zone",
-    source="Topsoil carries about 0.1 percent nitrogen (0.05 to 0.3), over about 3000 tonnes of soil to 25 cm "
-           "(no source found; Brady and Weil was not opened)",
-    confidence="D", retire="Complaints/670: a source read for the figure", why="Size of the organic nitrogen pool a harvest draws on; the stock is kept as a share of it.")
+    kind="biological_parameter", unit="kg nitrogen per hectare in the rooting zone",
+    source="Eurofins Agro, Total N stock (eurofins.com/en-nl/agro-testing/wiki/total-n-stock/; opened): total soil "
+           "nitrogen is 'typically ranging from 1,000 kg to over 20,000 kg N per hectare', over 95 percent in organic "
+           "matter. 3000 is inside that range, at the thin end that suits a worn Mediterranean or ancient field",
+    confidence="C", why="Size of the organic nitrogen pool a harvest draws on; the stock is kept as a share of it.")
 
 LOSS_RATE_PER_YEAR = declare(
     "LOSS_RATE_PER_YEAR", 0.01,
-    kind="temporary_heuristic", unit="share of the pool per year",
-    source="Leaching and denitrification take about a percent of soil organic nitrogen a year (order of magnitude "
-           "no source found; Brady and Weil was not opened)",
-    confidence="D", retire="Complaints/670: a source read for the figure", why="Sets both the natural input that keeps native soil level and how fast a worn pool recovers.")
+    kind="biological_parameter", unit="share of the pool per year",
+    source="Oregon State University Extension EM 9281 (opened): 'Annually, about 1% to 3% of the N present in SOM is "
+           "mineralized to nitrate'; what no crop takes up leaches or is lost as gas, so the loss from a native soil is "
+           "the low end of that release, 1 percent",
+    confidence="C", why="Sets both the natural input that keeps native soil level and how fast a worn pool recovers.")
 
 MINERALISATION_RATE_PER_YEAR = declare(
     "MINERALISATION_RATE_PER_YEAR", 0.02,
@@ -41,25 +43,32 @@ GRAIN_NITROGEN_FRACTION = declare(
     confidence="C", why="What each harvest removes from the pool.")
 
 LEGUME_NET_NITROGEN_KG_PER_HECTARE = declare(
-    "LEGUME_NET_NITROGEN_KG_PER_HECTARE", 25.0,
-    kind="temporary_heuristic", unit="kg nitrogen per hectare of a grain legume crop, fixation less grain removal",
-    source="Net nitrogen balance of harvested grain legumes runs from about -20 to +40 kg a hectare (Peoples and "
-           "others 2009, Symbiosis 48; no source found, not opened)",
-    confidence="D", retire="Complaints/670: a source read for the figure", why="Why a legume in the rotation holds the pool up.")
+    "LEGUME_NET_NITROGEN_KG_PER_HECTARE", 19.0,
+    kind="biological_parameter", unit="kg nitrogen per hectare of a grain legume crop, fixation less grain removal",
+    source="Hart Field-Site Group, Economic benefits of N fixation from legumes in subsequent crops, 2022 trial results "
+           "(hartfieldsite.org.au; opened as a PDF): grain legume treatments gave no increase in soil nitrogen "
+           "(fixation about 24 to 27 kg N per tonne of biomass, offset by grain removal), while vetch brown manure "
+           "raised it by 37.9 kg N a hectare; 19 is the midpoint of 0 and 37.9. A modern Australian trial; a medieval "
+           "pea or bean crop is a poor-yielding grain legume, so the lower half applies",
+    confidence="C", why="Why a legume in the rotation holds the pool up.")
 
 MANURE_AVAILABLE_FIRST_YEAR = declare(
     "MANURE_AVAILABLE_FIRST_YEAR", 0.3,
-    kind="temporary_heuristic", unit="share of applied manure nitrogen a crop can take that year",
-    source="Farmyard manure gives a crop 10 to 30 percent of its nitrogen in the year of application (UK "
-           "RB209 fertiliser manual; no source found, not opened)",
-    confidence="D", retire="Complaints/670: a source read for the figure", why="Immediate yield effect of manure.")
+    kind="biological_parameter", unit="share of applied manure nitrogen a crop can take that year",
+    source="University of Kentucky Extension AGR-146, Using Animal Manures as Nutrient Sources (opened as a PDF): "
+           "worked example availability coefficient 0.45 for spring-applied manure other than poultry or liquid, and "
+           "'only 15 to 20 percent of the nitrogen remains available' for manure applied in the fall; midpoint of 0.175 "
+           "and 0.45 is 0.31, taken as 0.3 for a traditional farm that spreads when it can",
+    confidence="C", why="Immediate yield effect of manure.")
 
 MANURE_RETAINED_IN_POOL = declare(
     "MANURE_RETAINED_IN_POOL", 0.4,
-    kind="temporary_heuristic", unit="share of applied manure nitrogen that settles into the pool",
-    source="Long-term manured plots (Rothamsted Broadbalk, Hoosfield) gain soil nitrogen from the organic fraction "
-           "of manure; the share has no source found, conf D",
-    confidence="D", retire="Complaints/670: a source read for the figure", why="Why repeated manuring builds a lasting stock rather than one good year.")
+    kind="biological_parameter", unit="share of applied manure nitrogen that settles into the pool",
+    source="Remainder after the first-year share and the loss, from University of Kentucky Extension AGR-146 (opened as "
+           "a PDF): first-year coefficient 0.45 (worked example) and a loss of 15 points when manure is not worked "
+           "into the soil within seven days, so 1 - 0.45 - 0.15 = 0.40 is left to carry over and settle into humus; "
+           "the same bulletin's residual-nitrogen table credits about 7 percent in the next year (worked example)",
+    confidence="C", why="Why repeated manuring builds a lasting stock rather than one good year.")
 
 FALLOW_NITRATE_RETENTION = declare(
     "FALLOW_NITRATE_RETENTION", 0.5,

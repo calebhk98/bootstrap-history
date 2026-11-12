@@ -63,11 +63,6 @@ class ServiceLives(unittest.TestCase):
         self.assertAlmostEqual(years["iron_tools_kg"]["years"], sum(HOE_REPLACEMENT_YEARS) / len(HOE_REPLACEMENT_YEARS))
         self.assertEqual(years["iron_tools_kg"]["confidence"], "C")
 
-    def test_wooden_tool_life_is_half_the_iron_tool_and_stays_a_heuristic(self):
-        years = _load("data", "world", "service_lives.json")["years"]
-        self.assertAlmostEqual(years["wooden_tools_kg"]["years"], years["iron_tools_kg"]["years"] / 2.0)
-        self.assertEqual(years["wooden_tools_kg"]["confidence"], "D")
-
     def test_cart_life_is_the_oxen_cart_of_the_uganda_table(self):
         years = _load("data", "world", "service_lives.json")["years"]
         self.assertEqual(years["cart"]["years"], 15)
@@ -103,6 +98,40 @@ class Complaint670Pass8(unittest.TestCase):
         self.assertAlmostEqual(rates["silk_cocoon_kg"]["rate"], 365.0 / midpoint(2.0, 3.0), delta=1.0)
         self.assertAlmostEqual(rates["hide_kg"]["rate"], 365.0 / midpoint(1.0, 2.0), delta=1.0)
         self.assertAlmostEqual(rates["garum_kg"]["rate"], 1.0 / midpoint(2.0, 3.0))
+
+
+class Complaint670Pass9(unittest.TestCase):
+
+    def test_ornament_metal_life_is_one_over_the_read_annual_loss(self):
+        years = _load("data", "world", "service_lives.json")["years"]
+        for good in ("gold_kg", "silver_kg", "platinum_g"):
+            self.assertAlmostEqual(years[good]["years"], 1.0 / 0.01)
+
+    def test_ornament_satiation_is_the_held_stock_times_the_loss_rate(self):
+        needs = _load("data", "world", "needs.json")["needs"]
+        grams_per_head = 201296.0e6 / 7.84e9
+        self.assertAlmostEqual(needs["ornament"]["satiation_per_capita_per_year"], 25.0 / 1000.0 * 0.01, places=6)
+        self.assertAlmostEqual(grams_per_head, 25.7, delta=0.1)
+
+    def test_wooden_tool_life_is_the_handle_life_scaled_by_farm_to_garden_wear(self):
+        years = _load("data", "world", "service_lives.json")["years"]
+        iron_farm = years["iron_tools_kg"]["years"]
+        self.assertAlmostEqual(years["wooden_tools_kg"]["years"], 20.0 * iron_farm / 10.0)
+
+    def test_fat_share_of_carcass_is_the_read_tallow_yield_over_the_dressing_fraction(self):
+        rows = _load("data", "world", "living_stock.json")["materials"]
+        for species in ("cattle_kg", "sheep_kg", "goat_kg"):
+            self.assertAlmostEqual(rows[species]["fat_share_of_carcass"], 0.0368 / rows[species]["dressing_fraction"], places=3)
+
+    def test_manure_nitrogen_shares_follow_the_kentucky_coefficients(self):
+        from sim.geography import soil_nutrients
+        self.assertAlmostEqual(soil_nutrients.MANURE_AVAILABLE_FIRST_YEAR, midpoint(0.175, 0.45), delta=0.02)
+        self.assertAlmostEqual(soil_nutrients.MANURE_RETAINED_IN_POOL, 1.0 - 0.45 - 0.15, places=6)
+        self.assertAlmostEqual(soil_nutrients.LEGUME_NET_NITROGEN_KG_PER_HECTARE, midpoint(0.0, 37.9), delta=0.1)
+
+    def test_three_field_legume_share_is_half_the_top_manor_share_of_the_cropped_area(self):
+        from sim.world import agriculture_core
+        self.assertAlmostEqual(agriculture_core.THREE_FIELD_LEGUME_SHARE_OF_HOLDING, 0.24 / 2.0 * 2.0 / 3.0, places=2)
 
 
 if __name__ == "__main__":
