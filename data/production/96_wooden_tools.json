@@ -1,16 +1,21 @@
 {
- "_note": "Wooden farm tools: hoes, spades, rakes and forks cut and shaped from seasoned timber. The tool a farm worker draws when iron tools are short (data/world/trades.json tool_basket order). The hours factor against iron is sourced in data/world/trades.json (Semyonov 1974 via Shukurov et al.). Wood per tonne and carpenter hours are labelled heuristics with a retire field naming Complaint 659; searches (Complaint 650 pass) found no timed replication of making a wooden spade or hoe.",
+ "_note": "Wooden farm tools: hoes, spades, rakes and forks cut and shaped from seasoned timber. The tool a farm worker draws when iron tools are short (data/world/trades.json tool_basket order). The hours factor against iron is sourced in data/world/trades.json (Semyonov 1974 via Shukurov et al.); wood per tonne and carpenter hours are derived below from a timed, dimensioned hand-carved paddle (Complaint 650).",
  "materials": {
   "wooden_tools_kg": {
-   "outputs": {"wooden_tools_kg": 1000.0},
-   "inputs": {"wood_kg": 3000.0},
-   "labour_hours": {"carpenter": 2000.0},
+   "outputs": {
+    "wooden_tools_kg": 1000.0
+   },
+   "inputs": {
+    "wood_kg": 5200.0
+   },
+   "labour_hours": {
+    "carpenter": 6000.0
+   },
    "unit_dimension": "mass",
    "unit_mass_kg": 1.0,
    "basis": "per tonne of finished wooden farm tools (hoes, spades, rakes, forks, sickle handles), counted by the mass of the tools",
-   "yield_basis": "LABELLED HEURISTIC (conf D), no source found for the timber a tonne of wooden tools takes nor for the carpenter hours. Hewing a blade or tine from a log wastes most of it and green wood is part water, so a tonne of tools is taken to start as three tonnes of green roundwood (wood_kg); shaping each tool by axe, adze and knife is taken as about two hours a kilogram (author's estimate; searched for a timed replication of wooden spades and hoes and found none; the Danish T-shaped wooden spade replication at https://tidsskrift.dk/dja/article/view/138710 reports that the spades 'are relatively easy to produce' but its abstract gives no hours or timber mass; retire: Complaint 659). Needs no technology.",
-   "retire": "Complaint 650",
-   "conf": "D",
+   "yield_basis": "DERIVED from a comparable carved object (conf C: ballpark; a paddle stands in for a spade). Duckworks Magazine, making a Greenland paddle (https://duckworksmagazine.com/15/howto/greenland/, opened): \"spend 10 to 14 hours making each paddle\"; a 2x6 board; paddle 91 inches long, blade 3 to 3.25 inches wide, loom 19 inches long and 1.25 by 1.5 inch oval. VOLUME: loom 19 x (pi/4 x 1.25 x 1.5 = 1.47) = 28 cubic inches; two blades about 36 x 3.25 x 0.5 = 58 each, so about 145 cubic inches finished; the blank is a 2x6 of 1.5 x 5.5 x 91 = 751 cubic inches (nominal sizes; blank thickness and blade thickness are my approximations). Finished share 145 / 751 = 0.19, so 1000 kg of tools needs about 1000 / 0.19 = 5200 kg of seasoned timber (hewn waste 81 percent). MASS: ash is the traditional wood for tool handles, density 710 kg/m3 (https://en.wikipedia.org/wiki/Fraxinus_excelsior, opened); 145 cubic inches = 2.4 litres = 1.7 kg. HOURS: 10 hours (the low end, since a farm tool needs no sanding or gluing) / 1.7 kg = 5.9 hours a kilogram, taken as 6000 hours a tonne. Ceilings: the paddle's hours include laminating and sanding to a fine grit, and power planing; a farm tool is cruder. Needs no technology.",
+   "conf": "C",
    "requires_node": null
   }
  }
