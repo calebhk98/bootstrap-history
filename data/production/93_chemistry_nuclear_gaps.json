@@ -33,7 +33,7 @@
     {
      "good": "high-pressure autoclave reactor with intensifier compressor and separator",
      "build_materials": {
-      "tool_steel_kg": 3000.0,
+      "tool_steel_kg": 5000.0,
       "iron_bar_kg": 10000.0
      },
      "build_labour_hours": {
@@ -42,9 +42,9 @@
       "electrician": 400.0
      },
      "service_life_years": 15,
-     "annual_output_at_basis": 200000.0,
-     "capital_basis": "The free-radical process runs at about a thousand atmospheres in a forged alloy-steel autoclave fed by an intensifier compressor; the first commercial plant at Northwich in 1939 made on the order of a hundred tonnes a year, and two hundred tonnes is taken for a plant of that generation. Vessel and compressor masses are reasoned order-of-magnitude figures.",
-     "conf": "D"
+     "annual_output_at_basis": 100000.0,
+     "capital_basis": "The free-radical process runs at about a thousand atmospheres in a forged alloy-steel autoclave fed by an intensifier compressor; the first commercial plant at Northwich in 1939 made on the order of a hundred tonnes a year, and two hundred tonnes is taken for a plant of that generation. Vessel and compressor masses are reasoned order-of-magnitude figures. Rescaled to the first plant: thechemicalengineer.com (Dermot Manning and colleagues at ICI, Plastic Fantastic) gives a 100 t/y plant in full production from 1 September 1939 with 50 litre reaction vessels, and the Science Museum record of the first full-scale ethylene compressor (collection.sciencemuseumgroup.org.uk/objects/co9978) gives compression from 250 to 1500 kg/cm2. Wall check: a 50 litre bore at length to diameter 10 is 0.185 m by 1.85 m; an outside diameter of 0.5 m for 1500 bar gives 0.314 m3 of steel, at 7.9 g/cm3 (Wikipedia Steel gives 7.75 to 8.05) about 2500 kg a vessel, 5000 kg for two (length to diameter and outside diameter are the author's assumptions). Iron frame and compressor masses are the author's estimate (grade C). Capacity was 200 tonnes before.",
+     "conf": "C"
     }
    ],
    "requires_node": "chm_polyethylene",
@@ -126,7 +126,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 40000.0,
-     "capital_basis": "Phenol is recovered from the carbolic oil fraction of coal tar by fractional distillation and caustic washing; at the entry's hundred and twenty-five tonnes of tar to a tonne of phenol, a still taking five thousand tonnes of tar a year gives about forty tonnes. Iron still mass is an order-of-magnitude figure.",
+     "capital_basis": "Phenol is recovered from the carbolic oil fraction of coal tar by fractional distillation and caustic washing; at the entry's hundred and twenty-five tonnes of tar to a tonne of phenol, a still taking five thousand tonnes of tar a year gives about forty tonnes. Iron still mass is an order-of-magnitude figure. Still and wash masses and the tar throughput are the author's estimate (grade D, no opened figure bounds the mass or capacity); Wikipedia Coal tar (en.wikipedia.org/wiki/Coal_tar) lists phenol among the products of coal tar but gives no proportion, so no opened page fixed the carbolic oil yield.",
      "conf": "D"
     }
    ],
@@ -238,7 +238,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Dry borax and boric acid are ground, sieved and mixed on a floor with a trough; there is nothing hot or corrosive, so wood and a little iron serve for decades. Output is bounded by the floor and sieves, taken at the order of a hundred tonnes a year.",
+     "capital_basis": "Dry borax and boric acid are ground, sieved and mixed on a floor with a trough; there is nothing hot or corrosive, so wood and a little iron serve for decades. Output is bounded by the floor and sieves, taken at the order of a hundred tonnes a year. Process check: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Borax) describes borax made by dissolving or fusing soda with boric acid; the dry blend floor and its output are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -291,7 +291,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 50000.0,
-     "capital_basis": "A soap house boils ten-tonne charges in iron kettles, the spent lye is evaporated in pans and the crude glycerine redistilled under vacuum in a copper still; fifty tonnes of glycerol a year corresponds to some five hundred tonnes of fat, a middling soap works. Masses are order-of-magnitude figures.",
+     "capital_basis": "A soap house boils ten-tonne charges in iron kettles, the spent lye is evaporated in pans and the crude glycerine redistilled under vacuum in a copper still; fifty tonnes of glycerol a year corresponds to some five hundred tonnes of fat, a middling soap works. Masses are order-of-magnitude figures. Process: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Glycerin) says commercial glycerin comes from the soap maker's spent lyes, evaporated under a vacuum of 27 to 28 in. of mercury to specific gravity 1.295 (about 80 percent glycerin) and distilled at 28 to 29 in.; the equipment masses and the 500 tonnes of fat a year are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -331,7 +331,7 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 3000.0,
-     "capital_basis": "Mercury is dissolved in nitric acid and run into alcohol in small flasks over a water bath, in batches of hundreds of grams because the product is dangerous; the percussion-cap trade used a few tonnes a year. Masses are reasoned estimates.",
+     "capital_basis": "Mercury is dissolved in nitric acid and run into alcohol in small flasks over a water bath, in batches of hundreds of grams because the product is dangerous; the percussion-cap trade used a few tonnes a year. Masses are reasoned estimates. Masses and output are the author's estimate (grade D, no opened figure bounds the mass or capacity); no page opened gave fulminate batch sizes.",
      "conf": "D"
     }
    ],

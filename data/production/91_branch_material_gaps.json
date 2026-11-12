@@ -205,7 +205,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 2000.0,
-     "capital_basis": "Silver is dissolved in nitric acid in glazed vessels and crystallised out of the light for photography and mirror-silvering; the trade ran to a few tonnes a year at most. Masses are reasoned estimates.",
+     "capital_basis": "Silver is dissolved in nitric acid in glazed vessels and crystallised out of the light for photography and mirror-silvering; the trade ran to a few tonnes a year at most. Masses are reasoned estimates. Masses and output are the author's estimate (grade D, no opened figure bounds the mass or capacity); no page opened gave silver nitrate plant sizes.",
      "conf": "D"
     }
    ],
@@ -237,7 +237,7 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Bone ash is digested in dilute sulphuric acid in wooden vats lined with lead, which resists the acid; the liquor is run off the gypsum and boiled down in lead pans. A works of this size makes about a hundred tonnes of acid a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "Bone ash is digested in dilute sulphuric acid in wooden vats lined with lead, which resists the acid; the liquor is run off the gypsum and boiled down in lead pans. A works of this size makes about a hundred tonnes of acid a year. Masses are order-of-magnitude figures. Lead lining weight: chestofbooks.com Estimating Sheet Lead Work: 6 lb and 8 lb sheet lead are the weights generally used for lining tanks, 6 lb meaning 6 lb per square foot; 2500 kg is 5500 lb, about 920 square feet of 6 lb lining. Output is the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -273,7 +273,7 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Soda ash is boiled with slaked lime in iron or timber tanks, the lye settled and drawn off, and boiled down in cast-iron pans, which corrode within years; a works of this size makes about a hundred tonnes of caustic a year, a reasoned figure for an early soap-maker's supplier. Masses are order-of-magnitude figures.",
+     "capital_basis": "Soda ash is boiled with slaked lime in iron or timber tanks, the lye settled and drawn off, and boiled down in cast-iron pans, which corrode within years; a works of this size makes about a hundred tonnes of caustic a year, a reasoned figure for an early soap-maker's supplier. Masses are order-of-magnitude figures. Tank type as for lixiviation in lenntech.com Soda industries (www.lenntech.com/chemistry/soda-industries.htm); masses and output are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -309,7 +309,7 @@
      },
      "service_life_years": 25,
      "annual_output_at_basis": 60000.0,
-     "capital_basis": "One mill house with a pair of edge-runners incorporates about two hundred kilograms of powder a day, so on the order of sixty tonnes in a working year; the mill is built light of timber so an explosion does little harm and is rebuilt or repaired through the decades. Masses are order-of-magnitude figures.",
+     "capital_basis": "One mill house with a pair of edge-runners incorporates about two hundred kilograms of powder a day, so on the order of sixty tonnes in a working year; the mill is built light of timber so an explosion does little harm and is rebuilt or repaired through the decades. Masses are order-of-magnitude figures. Throughput check: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Gunpowder) says incorporation takes about four hours under two heavy iron wheels, so a mill running two charges a day at about 100 kg a charge gives the 200 kg a day, about 60 tonnes a working year at 300 days; the charge size and building masses are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -343,7 +343,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Boric acid is dissolved with soda ash in a hot lead-lined pan and the borax crystallised out in tanks; lead resists the alkaline liquor. A refinery of this size turns out about a hundred tonnes a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "Boric acid is dissolved with soda ash in a hot lead-lined pan and the borax crystallised out in tanks; lead resists the alkaline liquor. A refinery of this size turns out about a hundred tonnes a year. Masses are order-of-magnitude figures. Process: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Borax) says borax is made by dissolving soda in lead-lined steam-heated pans and adding boric acid; chestofbooks.com Estimating Sheet Lead Work: 6 lb and 8 lb sheet lead are the weights generally used for lining tanks, 6 lb meaning 6 lb per square foot; 1000 kg is 2200 lb, about 370 square feet of 6 lb lining. Output is the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],

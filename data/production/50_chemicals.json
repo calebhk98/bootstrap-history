@@ -87,7 +87,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 8000.0,
-     "capital_basis": "Oil of vitriol was driven off green vitriol (calcined ferrous sulphate) in rows of clay retorts in a galley furnace; a galley of sixty retorts charged twice a week works on the order of sixty tonnes of vitriol a year, i.e. about eight tonnes of strong acid at the entry's yield. Masses are order-of-magnitude figures.",
+     "capital_basis": "Oil of vitriol was driven off green vitriol (calcined ferrous sulphate) in rows of clay retorts in a galley furnace; a galley of sixty retorts charged twice a week works on the order of sixty tonnes of vitriol a year, i.e. about eight tonnes of strong acid at the entry's yield. Masses are order-of-magnitude figures. Source: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Phosphorus) describes distillation from Stourbridge clay retorts arranged in a galley furnace, heated to red then white heat, confirming the plant type and its brick-and-clay construction. The capacity and equipment masses are the author's estimate (grade D, no opened figure bounds the mass or capacity); no page opened gave a plant output for this kind of vessel.",
      "conf": "D"
     },
     {
@@ -101,7 +101,7 @@
      },
      "service_life_years": 0.5,
      "annual_output_at_basis": 8000.0,
-     "capital_basis": "Retorts crack in the heat and under the acid and were replaced after a few dozen firings, hence a life well inside the furnace's. About a hundred retorts and receivers at some sixty kilograms of clay each.",
+     "capital_basis": "Retorts crack in the heat and under the acid and were replaced after a few dozen firings, hence a life well inside the furnace's. About a hundred retorts and receivers at some sixty kilograms of clay each. Source: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Phosphorus) names Stourbridge clay retorts in a galley furnace as the standard vessel; the retort life is the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -224,8 +224,8 @@
      },
      "service_life_years": 25,
      "annual_output_at_basis": 40000.0,
-     "capital_basis": "A distillery's copper pot still of some five thousand litres charges a ten per cent wash and draws a few hundred kilograms of spirit a run; run on most working days and redistilled, that is the order of forty tonnes of pure ethanol a year. Sheet copper of a few millimetres over the surface of such a still is the order of six hundred kilograms.",
-     "conf": "D"
+     "capital_basis": "A distillery's copper pot still of some five thousand litres charges a ten per cent wash and draws a few hundred kilograms of spirit a run; run on most working days and redistilled, that is the order of forty tonnes of pure ethanol a year. Sheet copper of a few millimetres over the surface of such a still is the order of six hundred kilograms. Derivation from opened figures: Wikipedia Pot still (en.wikipedia.org/wiki/Pot_still) gives a still filled to two thirds with wash at 7 to 12 percent alcohol; a 5000 litre still holds 3333 litres of wash, at 10 percent that is 333 litres of ethanol, times 0.78945 kg/litre (Wikipedia Ethanol) = 263 kg of ethanol a charge. Forty tonnes a year is 152 charges, about 300 still runs counting the redistillation, about the working days of a year. Copper: a 5 cubic metre sphere has a surface of 14 square metres; at 3 mm and 8.935 g/cm3 (Wikipedia Copper) that is 380 kg, plus head and worm about 570 kg, in line with the 600 kg stated.",
+     "conf": "C"
     },
     {
      "good": "mash tuns and fermenting vats",
@@ -239,7 +239,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 40000.0,
-     "capital_basis": "Wooden vats hold the mash and wash through several days of fermentation, so several are needed per still; staves and hoops last some years to a couple of decades. Volume is sized to keep the still above supplied.",
+     "capital_basis": "Wooden vats hold the mash and wash through several days of fermentation, so several are needed per still; staves and hoops last some years to a couple of decades. Volume is sized to keep the still above supplied. Vat volume follows the still's charge (3333 litres of wash a run from Wikipedia Pot still, en.wikipedia.org/wiki/Pot_still); the timber and hoop masses and the life are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -302,7 +302,7 @@
      "good": "absorption chambers: stone slab with lead lining",
      "build_materials": {
       "stone_kg": 40000.0,
-      "lead_kg": 3000.0
+      "lead_kg": 9144.0
      },
      "build_labour_hours": {
       "mason": 500.0,
@@ -310,9 +310,9 @@
       "labourer": 200.0
      },
      "service_life_years": 15,
-     "annual_output_at_basis": 300000.0,
-     "capital_basis": "Chlorine was passed over slaked lime spread in trays in a chamber of stone slabs, lead-lined where the gas touched it; Tennant's St Rollox works grew to hundreds of tonnes a year within the first decades, which is the order the node itself declares. Masses are order-of-magnitude figures for chambers of that capacity.",
-     "conf": "D"
+     "annual_output_at_basis": 68500.0,
+     "capital_basis": "Chlorine was passed over slaked lime spread in trays in a chamber of stone slabs, lead-lined where the gas touched it; Tennant's St Rollox works grew to hundreds of tonnes a year within the first decades, which is the order the node itself declares. Masses are order-of-magnitude figures for chambers of that capacity. Rescaled to St Rollox: Wikipedia St Rollox Chemical Works (en.wikipedia.org/wiki/St_Rollox_Chemical_Works) gives 151117 lb (68546 kg) of bleaching powder sold a year in 1802 and six lead vessels of 10 x 12 x 10 ft installed in 1803. Floor 12 x 10 plus two walls 12 x 10 plus two walls 10 x 10 is 560 square feet of one such chamber; at 6 lb a square foot (chestofbooks.com Estimating Sheet Lead Work: 6 lb and 8 lb sheet lead are the weights generally used for lining tanks, 6 lb meaning 6 lb per square foot) that is 1524 kg of lead a chamber, 9144 kg for six; capacity 68.5 tonnes a year. The old figures were 3000 kg of lead for 300 tonnes. Stone mass is the author's estimate (grade C).",
+     "conf": "C"
     },
     {
      "good": "chlorine stills (lead-lined) and gas mains",
@@ -325,8 +325,8 @@
       "mason": 150.0
      },
      "service_life_years": 8,
-     "annual_output_at_basis": 300000.0,
-     "capital_basis": "Chlorine was generated by heating manganese dioxide with hydrochloric acid in lead-lined stills; the acid and the gas eat the lining within years.",
+     "annual_output_at_basis": 68500.0,
+     "capital_basis": "Chlorine was generated by heating manganese dioxide with hydrochloric acid in lead-lined stills; the acid and the gas eat the lining within years. Capacity set to the St Rollox 1802 figure of 68.5 tonnes of bleaching powder a year (Wikipedia St Rollox Chemical Works, en.wikipedia.org/wiki/St_Rollox_Chemical_Works), matching the chambers. 1500 kg of lead is 3300 lb, about 550 square feet of 6 lb lining (chestofbooks.com Estimating Sheet Lead Work); still and main masses are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -383,7 +383,7 @@
      },
      "service_life_years": 8,
      "annual_output_at_basis": 145000.0,
-     "capital_basis": "Salt was heated with sulphuric acid in a covered cast-iron pan and muffle (the first stage of the Leblanc works); a charge of about a tonne of salt twice a day over a working year gives the order of a thousand tonnes of acid, of which half is taken as the stated capacity. The pan and muffle are attacked by acid and fire and are renewed every few years. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "capital_basis": "Salt was heated with sulphuric acid in a covered cast-iron pan and muffle (the first stage of the Leblanc works); a charge of about a tonne of salt twice a day over a working year gives the order of a thousand tonnes of acid, of which half is taken as the stated capacity. The pan and muffle are attacked by acid and fire and are renewed every few years. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works. Scale check: Wikipedia Leblanc process (en.wikipedia.org/wiki/Leblanc_process) gives 5.5 tons of hydrogen chloride for 8 tons of soda ash, so 145 tonnes of acid a year goes with 211 tonnes of soda ash, a small works beside the 320 tons a year of the first Saint-Denis plant. Pan and muffle masses are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     },
     {
@@ -399,7 +399,7 @@
      },
      "service_life_years": 30,
      "annual_output_at_basis": 145000.0,
-     "capital_basis": "Hydrogen chloride gas was absorbed in water in a coke-packed stone tower (Gossage, 1836) or earlier in rows of stoneware bottles; the stone shell outlasts the furnace. Masses are order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "capital_basis": "Hydrogen chloride gas was absorbed in water in a coke-packed stone tower (Gossage, 1836) or earlier in rows of stoneware bottles; the stone shell outlasts the furnace. Masses are order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works. Capacity is tied to the salt-cake pan beside it (same 145 tonnes of acid, with the 5.5 to 8 acid to soda ash ratio of Wikipedia Leblanc process, en.wikipedia.org/wiki/Leblanc_process); masses are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -475,7 +475,7 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Copper is dissolved in hot sulphuric acid in a lead pan and the liquor crystallised in lead- or wood-lined tanks; lead resists the acid, and a works of this size turns out about a hundred tonnes of crystals a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "Copper is dissolved in hot sulphuric acid in a lead pan and the liquor crystallised in lead- or wood-lined tanks; lead resists the acid, and a works of this size turns out about a hundred tonnes of crystals a year. Masses are order-of-magnitude figures. Lead lining weight: chestofbooks.com Estimating Sheet Lead Work: 6 lb and 8 lb sheet lead are the weights generally used for lining tanks, 6 lb meaning 6 lb per square foot; 2000 kg is 4400 lb, about 730 square feet of 6 lb lining. Output of 100 tonnes a year is the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -552,7 +552,7 @@
      },
      "service_life_years": 12,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Wood was carbonised in horizontal iron retorts of a couple of tonnes' charge, one charge a day, collecting pyroligneous liquor; four retorts over three hundred days at twenty tonnes of wood to a tonne of acid (the entry's yield) is the order of a hundred tonnes a year. Retort iron is attacked by acid vapour and heat.",
+     "capital_basis": "Wood was carbonised in horizontal iron retorts of a couple of tonnes' charge, one charge a day, collecting pyroligneous liquor; four retorts over three hundred days at twenty tonnes of wood to a tonne of acid (the entry's yield) is the order of a hundred tonnes a year. Retort iron is attacked by acid vapour and heat. Source: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Acetic_Acid) confirms acetic acid is made on a large scale by destructive distillation of wood; it gives no retort size, so retort and brick masses are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     },
     {
@@ -566,7 +566,7 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Tube condensers and the pans in which the liquor is neutralised with lime and the acid later driven from the acetate.",
+     "capital_basis": "Tube condensers and the pans in which the liquor is neutralised with lime and the acid later driven from the acetate. Mass and life are the author's estimate (grade D, no opened figure bounds the mass or capacity); no page opened gave condenser sizes.",
      "conf": "D"
     }
    ],
@@ -606,7 +606,7 @@
      },
      "service_life_years": 12,
      "annual_output_at_basis": 500000.0,
-     "capital_basis": "Willson's furnace for carbide is a steel shell with a carbon lining and a pair of carbon electrodes; carbide takes some four kilowatt-hours a kilogram, so a furnace of a few hundred kilowatts running most of the year makes about five hundred tonnes. Shell and lining masses are order-of-magnitude figures.",
+     "capital_basis": "Willson's furnace for carbide is a steel shell with a carbon lining and a pair of carbon electrodes; carbide takes some four kilowatt-hours a kilogram, so a furnace of a few hundred kilowatts running most of the year makes about five hundred tonnes. Shell and lining masses are order-of-magnitude figures. Energy check: Wikipedia Calcium carbide (en.wikipedia.org/wiki/Calcium_carbide) gives 460 kJ a mole, 64.1 g/mol, about 2000 kWh a tonne of pure carbide as the theoretical minimum, and an 8 MW station for the Jajce factory (1899). At 4 kWh a kg, 500 tonnes a year is 2 GWh, a mean load of about 230 kW, a small furnace on that scale. Shell and lining masses are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -698,8 +698,8 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 42000.0,
-     "capital_basis": "The Leblanc works roasted salt cake with limestone and coal in a reverberatory furnace to black ash; a Leblanc works of the 1820s to 1840s made on the order of hundreds of tonnes of soda a year. Furnace brickwork is rebuilt every decade; masses are order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
-     "conf": "D"
+     "capital_basis": "The Leblanc works roasted salt cake with limestone and coal in a reverberatory furnace to black ash; a Leblanc works of the 1820s to 1840s made on the order of hundreds of tonnes of soda a year. Furnace brickwork is rebuilt every decade; masses are order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works. Scale check: lenntech.com Soda industries (www.lenntech.com/chemistry/soda-industries.htm) says a hand-worked black-ash furnace takes no more than 800 lb (363 kg) a charge, a revolver about two tons of salt cake. At 42 tonnes of soda ash a year and roughly 1.34 kg of salt cake a kg of soda (Na2SO4 142 to Na2CO3 106) that is 56 tonnes of salt cake, about 155 hand charges a year, under one charge every two days, so one hand-worked furnace carries it. Brickwork masses are the author's estimate (grade C).",
+     "conf": "C"
     },
     {
      "good": "lixiviation tanks and iron evaporating pans",
@@ -714,7 +714,7 @@
      },
      "service_life_years": 8,
      "annual_output_at_basis": 42000.0,
-     "capital_basis": "Black ash was leached in a series of tanks and the liquor boiled down in cast-iron pans, which corrode within years. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "capital_basis": "Black ash was leached in a series of tanks and the liquor boiled down in cast-iron pans, which corrode within years. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works. Tank and pan type from lenntech.com Soda industries (www.lenntech.com/chemistry/soda-industries.htm): a series of lixiviation tanks and large shallow iron evaporating tanks; masses and life are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -773,7 +773,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 20000.0,
-     "capital_basis": "Citric acid is neutralised with soda ash in a copper pan and the salt crystallised; a small chemical works runs a pan like this for a few tonnes a batch-month, i.e. tens of tonnes a year. Masses are reasoned estimates.",
+     "capital_basis": "Citric acid is neutralised with soda ash in a copper pan and the salt crystallised; a small chemical works runs a pan like this for a few tonnes a batch-month, i.e. tens of tonnes a year. Masses are reasoned estimates. Copper mass check: 3 mm sheet at 8.935 g/cm3 (Wikipedia Copper, en.wikipedia.org/wiki/Copper) is 27 kg a square metre, so 150 kg is about 5.6 square metres of pan, a vessel about 0.9 m across and deep, a few hundred litres. Output is the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -916,7 +916,7 @@
      },
      "service_life_years": 8,
      "annual_output_at_basis": 6000.0,
-     "capital_basis": "Camphor was driven off chipped laurel wood by steam in an iron pot with a wooden tub over it and condensed on straw or in a cooled chamber; a still charged with a hundred kilograms of chips takes a charge a day, ten stills over three hundred days at about two per cent camphor by weight is the order of six tonnes a year. Pots and tubs are short-lived.",
+     "capital_basis": "Camphor was driven off chipped laurel wood by steam in an iron pot with a wooden tub over it and condensed on straw or in a cooled chamber; a still charged with a hundred kilograms of chips takes a charge a day, ten stills over three hundred days at about two per cent camphor by weight is the order of six tonnes a year. Pots and tubs are short-lived. Method from Wikipedia Camphor (en.wikipedia.org/wiki/Camphor): steam passed through the pulverised wood and the vapours condensed; the page gives no still size or yield. Still count and masses are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
@@ -954,7 +954,7 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 20000.0,
-     "capital_basis": "Albright and Wilson's Oldbury works, the sole maker from 1851, reached the order of twenty tonnes of phosphorus a year by the later nineteenth century; bone ash, sand and charcoal are reduced in a fired retort bank and the vapour condensed under water, then heated in sealed iron pots to the red allotrope. Masses are order-of-magnitude figures.",
+     "capital_basis": "Albright and Wilson's Oldbury works, the sole maker from 1851, reached the order of twenty tonnes of phosphorus a year by the later nineteenth century; bone ash, sand and charcoal are reduced in a fired retort bank and the vapour condensed under water, then heated in sealed iron pots to the red allotrope. Masses are order-of-magnitude figures. Source: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Phosphorus) describes distillation from clay retorts in a galley furnace and conversion to red phosphorus in iron pots with air-tight lids (about 230 C for 24 hours, or 300 C in closed vessels in minutes); no output was given, so the 20 tonne a year capacity and masses are the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     },
     {
@@ -967,7 +967,7 @@
      },
      "service_life_years": 0.25,
      "annual_output_at_basis": 20000.0,
-     "capital_basis": "At the reduction heat retorts attack and crack within weeks to a few months.",
+     "capital_basis": "At the reduction heat retorts attack and crack within weeks to a few months. Retort type from Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Phosphorus) (Stourbridge clay retorts at red to white heat); the life of a quarter year is the author's estimate (grade D, no opened figure bounds the mass or capacity).",
      "conf": "D"
     }
    ],
