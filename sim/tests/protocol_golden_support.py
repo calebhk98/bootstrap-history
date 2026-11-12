@@ -10,6 +10,9 @@ import json
 import os
 import re
 import tempfile
+from unittest import mock
+
+from sim.engine import baseline_ensemble
 
 from . import cli_in_process
 
@@ -43,7 +46,9 @@ def prose_free(reply):
 def replay(script):
     """The normalised transcript of a script: a list of {"cmd", "reply"} in order."""
     transcript = []
-    with tempfile.TemporaryDirectory() as directory:
+    # the machine's own baseline-ensemble cache would change the divergence replies, so the replay reads an empty one
+    with tempfile.TemporaryDirectory() as directory, \
+            mock.patch.object(baseline_ensemble, "cache_directory", lambda: os.path.join(directory, "baseline_ensemble")):
         for step in script["steps"]:
             arguments = ["agent"] + list(step.get("arguments", script["arguments"]))
             if step.get("session"):
