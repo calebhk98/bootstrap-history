@@ -136,7 +136,7 @@ half-saturation soil constants (not named by this complaint; they retire to a ni
 - Pottery stock 5 -> 10 kg a head, now C: 2 to 10 vessels a head from the Valencian inventories and Nelson (57 per household), geometric mean 4.5, times the midpoint 2.25 kg of villagedecor.in's
   1.6 and 2.89 kg lidded clay pots; use-life 4 years inside Nelson's 0.4 to 13. Housing satiation multiple: C as a bracket (the occupancy of the sample, Roman insula and Naroll's figure), set at the
   space people lived in.
-- Spoilage: olive oil 0.15 -> 0.6 (oliveoil.bertolli.com/olive-oil-shelf-life/, 16 months, up to 24 claimed), common wine 0.2 -> 0.67 (craftabrew.com, grape wine one to two years).
+- Spoilage: olive oil 0.15 -> 0.625 (oliveoil.bertolli.com/olive-oil-shelf-life/, 16 months, up to 24 claimed), common wine 0.2 -> 0.67 (craftabrew.com, grape wine one to two years).
 - Straw share of the ration 0.5: saskatchewan.ca straw roughage page, 50 percent of a wintering cow's diet with low-quality straw (75 with good). Draught share 0.3: cgspace.cgiar.org item
   98d68dea-662c-4b13-a0fe-51913e85bc2e, 9 to 10 million of 31 million Ethiopian cattle used for draught (29 to 32 percent; a herd share used as the offtake share, caveat in the row). Goat excreta share: the
   Mgeta goat leaves 61 kg dry droppings a year (library.au.int record) and fresh goat manure is 38 to 48 percent dry matter (Tropentag 2020 abstract 417), so 1.6 percent of live weight a day as faeces;
