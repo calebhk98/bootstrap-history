@@ -121,7 +121,7 @@
      },
      "service_life_years": 30,
      "annual_output_at_basis": 300000.0,
-     "capital_basis": "An eighteenth-century jobbing foundry was a stone shed with a reverberatory (air) furnace lined with firebrick, a sand-moulding floor and a timber roof; the masonry shell stands for decades. A few hundred tonnes of castings a year is the order of one such foundry running most weeks; stone, brick and timber masses are order-of-magnitude figures for a building of that size, not a survey of a particular works.",
+     "capital_basis": "An eighteenth-century jobbing foundry was a stone shed with a reverberatory (air) furnace lined with firebrick, a sand-moulding floor and a timber roof; the masonry shell stands for decades. A few hundred tonnes of castings a year is the order of one such foundry running most weeks; stone, brick and timber masses are order-of-magnitude figures for a building of that size, not a survey of a particular works. PASS 9 (Complaint 671): opened en.wikipedia.org/wiki/Cupola_furnace, which gives cupola diameters of 0.5 to 4.0 m and no melt rate, lining thickness or weight; no opened page gives the output of an eighteenth-century air-furnace foundry or the mass of its shell, so 300 t a year and the stone, brick and timber masses are still the author estimate. Stays D.",
      "conf": "D"
     }
    ],
@@ -140,7 +140,7 @@
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished hand-forged iron farm tools (sickle, hoe, spade shoe, ploughshare), counted by the mass of the tools",
-   "yield_basis": "Finished edge and digging tools are drawn and forged from iron bar. LABELLED HEURISTIC, conf D, no source found for the bar consumed per kilogram of tool (1.15 allows scale loss and offcuts in drawing, punching and welding on a steel edge) nor for the smith hours per kilogram (4.0); retire: Complaints/533 when an archaeometallurgical or smithy-account source is read. Only the size of one tool was read: the Science Museum Group record of an early iron sickle (https://collection.sciencemuseumgroup.org.uk/objects/co38922/early-iron-sickle) gives 'overall (laid flat): 55 mm x 500 mm x 250 mm, 0.24 kg', the weight with any handle. It fixes the unit as a quarter-kilogram-class tool, not the forging loss or the hours.",
+   "yield_basis": "Finished edge and digging tools are drawn and forged from iron bar. LABELLED HEURISTIC, conf D, no source found for the bar consumed per kilogram of tool (1.15 allows scale loss and offcuts in drawing, punching and welding on a steel edge) nor for the smith hours per kilogram (4.0); retire: Complaints/533 when an archaeometallurgical or smithy-account source is read. Only the size of one tool was read: the Science Museum Group record of an early iron sickle (https://collection.sciencemuseumgroup.org.uk/objects/co38922/early-iron-sickle) gives 'overall (laid flat): 55 mm x 500 mm x 250 mm, 0.24 kg', the weight with any handle. It fixes the unit as a quarter-kilogram-class tool, not the forging loss or the hours. PASS 9 (Complaint 671): blacksmith forum timings (a hawk or trade-axe head roughed out in about 4 to 5 hours) were seen in search summaries only, the bladeforums page itself returned 403, so they are not cited as read; with the sickle at 0.24 kg (Science Museum record, opened) the smith hours per kilogram cannot be derived from an opened page. Failing inputs: bar consumed per kilogram of tool and smith hours per kilogram. Stays D.",
    "requires_node": null,
    "conf": "D"
   },

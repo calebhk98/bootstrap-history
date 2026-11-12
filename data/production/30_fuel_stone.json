@@ -77,7 +77,7 @@
        "retire": "Complaint 671"
       }
      ],
-     "capital_basis": "An earth-clamp burn is built afresh on a levelled hearth, so the lasting plant is only a pole-and-turf hut of some two cubic metres of poles, rakes, shovels and the cleared platform. A collier's team burns a clamp over about a week and keeps several going, which is the order of thirty tonnes of charcoal a year at the four-to-one wood the entry states; the figures are reasoned estimates.",
+     "capital_basis": "An earth-clamp burn is built afresh on a levelled hearth, so the lasting plant is only a pole-and-turf hut of some two cubic metres of poles, rakes, shovels and the cleared platform. A collier's team burns a clamp over about a week and keeps several going, which is the order of thirty tonnes of charcoal a year at the four-to-one wood the entry states; the figures are reasoned estimates. PASS 9 (Complaint 671): en.wikipedia.org/wiki/Charcoal (opened): under average conditions wood yields about 25 percent charcoal by weight (the four-to-one wood stated here), a traditional British clamp burns over about 5 days, colliers lived alone in small huts (conical Koten in the Harz). Opened pages give no clamp size, hut size or tool mass, so 30000 kg a year, 2 m3 of timber and 40 kg of iron are not bounded. Stays D (the wooden-tools alternative is a further heuristic with the same missing inputs).",
      "conf": "D"
     }
    ],
@@ -116,7 +116,7 @@
         "labourer": 200.0
        },
        "service_life_years": 6,
-       "alternative_basis": "LABELLED HEURISTIC, conf D, no source found for the build bill or life of this fitted-out plant without iron; the iron fittings of the headgear and windlass become wooden pegs, trenails and lashed joints of the same mass in worked timber, a fifth more timber, half as many carpenter hours again, and a shorter life. Retire: Complaint 666.",
+       "alternative_basis": "LABELLED HEURISTIC, conf D, no source found for the build bill or life of this fitted-out plant without iron; the iron fittings of the headgear and windlass become wooden pegs, trenails and lashed joints of the same mass in worked timber, a fifth more timber, half as many carpenter hours again, and a shorter life. Retire: Complaint 666. PASS 9: no opened page gives timber headgear or windlass masses; stays D.",
        "conf": "D",
        "retire": "Complaint 671"
       }

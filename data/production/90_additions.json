@@ -204,7 +204,7 @@
      },
      "service_life_years": 12,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Ammonia is neutralised with nitric acid in a pan and the solution evaporated and crystallised or prilled; a pan of this size runs a charge a day and turns out about a hundred tonnes a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "Ammonia is neutralised with nitric acid in a pan and the solution evaporated and crystallised or prilled; a pan of this size runs a charge a day and turns out about a hundred tonnes a year. Masses are order-of-magnitude figures. PASS 9 (Complaint 671): no opened page gives a pan size or ammonium nitrate output per pan; the tonnage and masses stay estimates. Stays D.",
      "conf": "D"
     }
    ],
