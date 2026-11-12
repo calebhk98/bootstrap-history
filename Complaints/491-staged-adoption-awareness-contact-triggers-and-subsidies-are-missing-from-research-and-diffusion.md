@@ -1,6 +1,6 @@
 # Staged adoption, awareness, contact triggers and subsidy levers are missing from research and diffusion
 
-**Status:** partly (every mechanism is built and tested, including samples and firm material purchases; open: sources for the labelled constants, and the whole-game measurement)
+**Status:** partly (every mechanism is built and tested, including samples and firm material purchases; open: the whole-game measurement; the adoption constants are sourced)
 
 What is wrong now:
 
@@ -89,8 +89,19 @@ unit count; subsidy and mandate levers on the government (481).
   market for the rest, so the goods reach its stores and the money is not paid a second time (`sim/agents/research_materials.py`, called from
   `imitation.work_year`). The bid is taken as filled (labelled, retire: Complaint 492). Test: `--only research_materials_covered`. A plant's
   inputs in a firm's books are still costed, not bought as goods.
-- Remainder: (4) the contact and speed constants are labelled heuristics (`sim/agents/tuning_adoption.py`); retiring them needs a source
-  opened for how fast news travels with a carrier and for Griliches-style adoption slopes, and none has been opened. Decided 2026-11-11 by the
-  orchestrator, owner may overrule: they stay labelled until a source is read; no new constant is added. (6) The effect of the share, the
+- Done (4): the contact and speed constants in `sim/agents/tuning_adoption.py` are sourced rough ballparks (confidence C, no longer
+  temporary heuristics); each `source` field carries the arithmetic. Old, new, URL:
+  - `AWARENESS_RATE_PER_CONTACT` 0.5 to 0.38: Bass imitation coefficient average (Mahajan, Muller, Bass 1995) https://en.wikipedia.org/wiki/Bass_diffusion_model ; floor check from printing, 1 place in 1450 to 110 in 1480, 0.16 a year, https://en.wikipedia.org/wiki/Printing_press
+  - `CONTACT_FADE_PER_YEAR` 0.5 to 0.25: Dunbar, a relationship decays within at most six months, taken as a half-life, https://spectrum.ieee.org/telecom/internet/how-many-friends-can-you-really-have
+  - `DEMONSTRATION_VOLUME` 1.0 to 0.5: J-PAL Bangladesh demonstration plots, awareness +7.2 points on a base near 60 per cent, 18 per cent of the unaware a year, https://www.povertyactionlab.org/evaluation/impact-demonstration-plots-adoption-new-rice-varieties-bangladesh
+  - `TRADE_TONNES_FOR_UNIT_CONTACT` 1000 kept: a tonne is about a trader's visit (pack loads 0.1 to 0.3 t), https://en.wikipedia.org/wiki/Pack_animal
+  - `MIGRANT_CONTACT_VOLUME_PER_PERSON` 0.001 kept: one person is one visit, the same unit as a tonne.
+  - `CONQUEST_CONTACT_VOLUME` 1.0 to 5.0: a legion of about 5200 men at 0.001 each, https://en.wikipedia.org/wiki/Roman_legion
+  - `PILOT_SHARE` 0.02 kept: Kenyan trial plots, 3 x 30 square metres against 0.93 acre of maize, 2.4 per cent, https://economics.mit.edu/sites/default/files/2022-08/fertilizerjan7_2008_501pm.pdf and https://www.povertyactionlab.org/print/pdf/node/1465
+  - `TRIAL_YEARS` 2 kept: one crop cycle is the floor, two span a drought year (Iowa 1934 and 1936) given a 7 to 9 per cent gain, https://www.nber.org/system/files/chapters/c11987/c11987.pdf ; Ryan and Gross average of nine years from first knowledge to adoption, https://www.encyclopedia.com/social-sciences/encyclopedias-almanacs-transcripts-and-maps/agricultural-innovation
+  - `ADOPTION_SPEED_PER_MARGIN_GAP` 1.0 to 8.0: hybrid corn logit rose 0.78 a year (0.1 per cent in 1933 to 70 per cent about 1943, Sutch above) over a yield gain of about 0.10 (https://www.nber.org/papers/w14141), 0.78 / 0.10 = 7.8. National, so a floor for one district.
+  `RESEARCH_PROGRAMMES_AT_ONCE` and `RESEARCH_REVIEW_YEARS` (`sim/agents/tuning.py`) stay labelled: they retire to a mechanism (scholars and purse; reviews on change), and no opened source gives a count.
+  The test that pinned "fades by half" now asserts the declared share (`test_staged_adoption.py`).
+- Remainder: (6) The effect of the share, the
   awareness gate and firm purchases on a whole game is unmeasured: needs `python3 -m sim.tests --slow` and a baseline run compared before and
   after; the orchestrator runs it.
