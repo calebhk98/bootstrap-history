@@ -134,5 +134,18 @@ class Complaint670Pass9(unittest.TestCase):
         self.assertAlmostEqual(agriculture_core.THREE_FIELD_LEGUME_SHARE_OF_HOLDING, 0.24 / 2.0 * 2.0 / 3.0, places=2)
 
 
+class Complaint670Pass10(unittest.TestCase):
+
+    def test_vessel_stock_is_the_geometric_mean_vessel_count_times_the_midpoint_pot_mass(self):
+        needs = _load("data", "world", "needs.json")["needs"]
+        stock = (2.0 * 10.0) ** 0.5 * midpoint(1.6, 2.89)
+        self.assertAlmostEqual(needs["vessels"]["held_stock_per_capita"], stock, delta=0.3)
+
+    def test_oil_and_wine_rates_are_one_over_the_read_keeping_time(self):
+        rates = _load("data", "world", "spoilage.json")["rates_per_year"]
+        self.assertAlmostEqual(rates["olive_oil_kg"]["rate"], midpoint(1.0 / (16.0 / 12.0), 0.5), delta=0.02)
+        self.assertAlmostEqual(rates["wine_common_kg"]["rate"], 1.0 / midpoint(1.0, 2.0), delta=0.01)
+
+
 if __name__ == "__main__":
     unittest.main()

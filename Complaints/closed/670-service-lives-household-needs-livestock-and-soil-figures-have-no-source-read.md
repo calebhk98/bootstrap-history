@@ -1,6 +1,6 @@
 # Service lives, household-need, livestock, spoilage and soil figures have no source that was read
 
-**Status:** open
+**Status:** closed
 
 Split from 646 (figures recalled rather than read; closed). Each entry below is labelled (confidence D or a
 `temporary_heuristic` with a `retire`); the work is to read a source and replace the figure, or leave it labelled.
@@ -130,3 +130,20 @@ Status stays open for the rows named as left at D, the herd assumptions, pottery
 Left, so Status stays open: lamp quality factors (0.7 tallow, 0.85 oil; only the direction was read: Wikipedia Candle and the Oil lamp article; no valuation ratio or lumen comparison found; EXARC's
 lux experiment on Roman lamps could not be opened), housing satiation (occupancy only), the straw share, draught share and goat excreta share above, pottery vessel mass, the fallow nitrate retention and
 half-saturation soil constants (not named by this complaint; they retire to a nitrate balance and a crop model), and the spoilage rows of 656's olive oil and wine.
+
+**Pass 10 (closing).** Every URL opened in the pass.
+
+- Pottery stock 5 -> 10 kg a head, now C: 2 to 10 vessels a head from the Valencian inventories and Nelson (57 per household), geometric mean 4.5, times the midpoint 2.25 kg of villagedecor.in's
+  1.6 and 2.89 kg lidded clay pots; use-life 4 years inside Nelson's 0.4 to 13. Housing satiation multiple: C as a bracket (the occupancy of the sample, Roman insula and Naroll's figure), set at the
+  space people lived in.
+- Spoilage: olive oil 0.15 -> 0.625 (oliveoil.bertolli.com/olive-oil-shelf-life/, 16 months, up to 24 claimed), common wine 0.2 -> 0.67 (craftabrew.com, grape wine one to two years).
+- Straw share of the ration 0.5: saskatchewan.ca straw roughage page, 50 percent of a wintering cow's diet with low-quality straw (75 with good). Draught share 0.3: cgspace.cgiar.org item
+  98d68dea-662c-4b13-a0fe-51913e85bc2e, 9 to 10 million of 31 million Ethiopian cattle used for draught (29 to 32 percent; a herd share used as the offtake share, caveat in the row). Goat excreta share: the
+  Mgeta goat leaves 61 kg dry droppings a year (library.au.int record) and fresh goat manure is 38 to 48 percent dry matter (Tropentag 2020 abstract 417), so 1.6 percent of live weight a day as faeces;
+  the 4 percent kept is the sheep faeces-and-urine figure, so 1.6 is the lower bound of the bracket. Collected-dung share and winter fodder days: bracketed (pass 9).
+- Lamp quality factors 0.7 and 0.85: valuations of smoke and smell, not light delivered. Opened: Wikipedia Candle (one candela, about 13 lumens; tallow cheaper, smellier), the Oil lamp article
+  (olive oil lamp 'significantly brighter than a candle'), Practical Action Rural lighting Table 1 (candle 1 lumen, wick oil lamp 1 to 10). No page gave a price or valuation ratio of tallow, wax and oil
+  light, and the EXARC lux experiment on Roman lamps could not be opened. These two numbers stay labelled valuations with direction cited (`heuristic` flag kept, retire: indoor air model).
+- Fallow nitrate retention and half-saturation supply are not in this complaint's list; left.
+
+Closed: every figure the complaint names now carries an opened citation or bracket except the two lamp quality valuations, which keep their label and retire to the indoor air model.
