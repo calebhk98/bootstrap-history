@@ -10,7 +10,7 @@
     "manure_kg": 14454.0
    },
    "inputs": {
-    "salt_kg": 400.0,
+    "salt_kg": 350.0,
     "straw_kg": 3000.0
    },
    "labour_hours": {
@@ -53,7 +53,7 @@
     "manure_kg": 12045.0
    },
    "inputs": {
-    "salt_kg": 300.0,
+    "salt_kg": 290.0,
     "straw_kg": 2500.0,
     "bran_kg": 400.0
    },
