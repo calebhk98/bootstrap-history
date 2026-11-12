@@ -7,9 +7,9 @@
       "source": "FAO, 'Contribution of farm power to smallholder livelihoods in sub-Saharan Africa', Annex 3 Table 5 'Replacement rates (years) of tools and equipment by field site', fao.org/4/a0229e/a0229e0i.htm, opened: hoe replacement at ten sites in Ghana, Nigeria, Tanzania, Malawi and Zambia 1, 2, 2-4, 1-2, 3, 2, 1.5, 1, 2, 3 years; taking range midpoints the mean is 2.0 years (20 divided by 10). The main text (fao.org/docrep/pdf/011/aj334e/aj334e02.pdf, 'Replacement of Tools', opened) adds that hoes were replaced every year where blacksmiths use scrap steel and that with better steel 'the life of a hoe was calculated to be anything from two to 15 years'. Modern African smallholder hoes, not Roman or medieval ones: an analogue used as the nearest measured figure (was 4, no source). Axes and sickles in the same table last longer, so a mixed tool kit outlives the hoe; the hoe is the farm tool this good stands for."
     },
     "wooden_tools_kg": {
-      "years": 1,
-      "confidence": "D",
-      "source": "LABELLED HEURISTIC, no source found for the working life of a wooden hoe, spade or rake before wear or breakage; taken as half an iron tool's (2 years, FAO hoe replacement above), since wood wears and splits faster than iron; searched in the Complaint 650 pass and again in the 670 pass and no timed wear study of wooden farm tools was found; retire: Complaint 659."
+      "years": 4.0,
+      "confidence": "C",
+      "source": "Garden-use analogue scaled to farm use. Wooden handle: a permaculture forum poster (https://permies.com/t/159519/Care-wooden-handles-metal-business, opened): 'Have had a couple of handles break on hoes and rakes but they were 20 plus years old'; iron hoe in the same garden use: a reviewer 'I have had them for 10+ years' (https://www.easydigging.com/gardening/garden-hoes/reviews/, opened). Farm use wears iron hoes out in 2 years (FAO farm-power study, the iron_tools_kg row), so farm use is 2 / 10 = 0.2 of garden use, and a wooden tool's life is 20 x 0.2 = 4 years. Another opened page (https://www2.ljworld.com/living/2018/aug/11/garden-variety-repair-broken-garden-tools-avoid-costly-replacement/) says old tools 'can last a lifetime or more if cared for and kept out of the weather'. A broken handle is usually replaced, not the whole tool, so this is a ballpark for the part that fails first (was 1, half the iron life, no source)."
     },
     "brick_1000": {
       "years": 90,
@@ -62,19 +62,19 @@
       "source": "Axeman (axeman.ca), 'How long should an axe last: forged axe lifespan guide' (https://axeman.ca/blogs/news/how-long-should-an-axe-last-forged-axe-lifespan-guide, opened): budget hardware-store axe '5-15 years', mid-range forged axe '20-40 years', premium Swedish forged axe '50-100+ years'; a retailer's page, so a modern analogue for a well-kept hand edge tool. Steel edge tools are the mid-range forged class, midpoint of 20-40 is 30 years. No separate figure was found for Noric or crucible tool steel."
     },
     "gold_kg": {
-      "years": 50,
-      "confidence": "D",
-      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life. Bracketing figures opened but not decisive: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened; ring mass not stated), and a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC', wear about a tenth of that (https://forums.collectors.com/discussion/comment/8843720, opened). Both point to a life of 100 years or more for wear alone; 50 years stays as a labelled heuristic that includes loss and recasting (retire: Complaint 670)."
+      "years": 100,
+      "confidence": "C",
+      "source": "Wear alone: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened), a rate of 0.1 percent or less of a few-gram ring a year. Loss and wear together: a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC' (https://forums.collectors.com/discussion/comment/8843720, opened). Taking the 1 percent, the life is 1 / 0.01 = 100 years (was 50, from an unsourced 2 percent). A forum estimate for coin; ornaments are lost less often than coin, so it is a ballpark (confidence C)."
     },
     "silver_kg": {
-      "years": 50,
-      "confidence": "D",
-      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life. Bracketing figures opened but not decisive: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened; ring mass not stated), and a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC', wear about a tenth of that (https://forums.collectors.com/discussion/comment/8843720, opened). Both point to a life of 100 years or more for wear alone; 50 years stays as a labelled heuristic that includes loss and recasting (retire: Complaint 670)."
+      "years": 100,
+      "confidence": "C",
+      "source": "Wear alone: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened), a rate of 0.1 percent or less of a few-gram ring a year. Loss and wear together: a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC' (https://forums.collectors.com/discussion/comment/8843720, opened). Taking the 1 percent, the life is 1 / 0.01 = 100 years (was 50, from an unsourced 2 percent). A forum estimate for coin; ornaments are lost less often than coin, so it is a ballpark (confidence C)."
     },
     "platinum_g": {
-      "years": 50,
-      "confidence": "D",
-      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life. Bracketing figures opened but not decisive: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened; ring mass not stated), and a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC', wear about a tenth of that (https://forums.collectors.com/discussion/comment/8843720, opened). Both point to a life of 100 years or more for wear alone; 50 years stays as a labelled heuristic that includes loss and recasting (retire: Complaint 670)."
+      "years": 100,
+      "confidence": "C",
+      "source": "Wear alone: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened), a rate of 0.1 percent or less of a few-gram ring a year. Loss and wear together: a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC' (https://forums.collectors.com/discussion/comment/8843720, opened). Taking the 1 percent, the life is 1 / 0.01 = 100 years (was 50, from an unsourced 2 percent). A forum estimate for coin; ornaments are lost less often than coin, so it is a ballpark (confidence C)."
     },
     "merchant_ship": {
       "years": 30,

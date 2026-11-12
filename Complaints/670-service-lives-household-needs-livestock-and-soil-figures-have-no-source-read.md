@@ -104,3 +104,29 @@ Straight paywalled, the Cambridge chapter pages open only to abstracts), lamp qu
 (not attempted; soil stays with 543).
 
 Status stays open for the rows named as left at D, the herd assumptions, pottery stock, lamp factors and soil.
+
+**Pass 9 (source-lives-livestock-spoilage, second round).** Every URL opened in the pass.
+
+- Ornament metal life (gold, silver, platinum) 50 -> 100 years, now C: forums.collectors.com/discussion/comment/8843720 (coin loss about 1 percent a year; wear a tenth of that) and
+  xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/ (ring wear about 6 mg a year). Coupled `needs.json` ornament satiation 0.0005 -> 0.00025 kg a head a year: held stock 25 g a head
+  (en.wikipedia.org/wiki/Gold, 201,296 tonnes above ground in 2020, over en.wikipedia.org/wiki/World_population, 7.84 billion: 25.7 g) times the 1 percent loss; the TRANSITIONAL label is dropped.
+- Wooden tools 1 -> 4 years, now C: permies.com/t/159519/Care-wooden-handles-metal-business ('handles break on hoes and rakes but they were 20 plus years old'), easydigging.com garden hoe
+  reviews (an iron hoe 10+ years), scaled by the farm-to-garden wear ratio from the FAO 2-year iron hoe (2 / 10); the old test that pinned wooden = half of iron is replaced by one that asserts this
+  arithmetic.
+- Fat share of the carcass: cattle 0.06 -> 0.083, sheep 0.08 -> 0.074, goats 0.05 -> 0.082, from the USDA AMS By-Product Drop Value Report - Cow (ams.usda.gov/mnreports/ams_2834.pdf: renderable
+  tallow 3.68 lb per 100 lb live weight) over each dressing fraction (the cow's yield applied to the small ruminants by analogy). The three herd recipes in `data/production/95_herds.json` were recomputed.
+- Soil (`sim/geography/soil_nutrients.py`, heuristic labels dropped, now C): native pool 3000 kept, inside 1,000 to over 20,000 kg N a hectare (eurofins.com/en-nl/agro-testing/wiki/total-n-stock/);
+  loss rate 1 percent kept, the low end of the 1 to 3 percent of SOM nitrogen mineralised a year (Oregon State EM 9281); legume net nitrogen 25 -> 19 kg N a hectare, midpoint of 0 (grain legumes) and
+  37.9 (vetch brown manure) in the Hart Field-Site 2022 trial (hartfieldsite.org.au PDF); manure first-year share 0.3 kept, midpoint of Kentucky AGR-146's 0.175 (fall, no cover) and 0.45 (spring);
+  manure retained 0.4 kept, 1 - 0.45 - 0.15 (Kentucky's loss when not incorporated). Three-field legume share 1/6 -> 0.08 of the holding: Pelham, Fourteenth-Century Agriculture in Sussex
+  (archaeologydataservice.ac.uk SAC078_Pelham.pdf), legumes at most 24 percent of the cropped area at the one manor that grew them on a large scale, half of that over the two thirds cropped.
+  Kentucky's own table gave only a ballpark for a modern farm; no medieval measurement of these shares was found.
+- Pottery stock: bracketed, not changed. Valencian inventories (Cambridge, Why did medieval villagers buy earthenware pottery, opened): ten bowls (1438), six little bowls (1450), 46 pieces (1418), and
+  57 vessels in San Mateo Ixtatan, so two to ten vessels a head; 5 kg a head is inside. Stays D (vessel mass: only modern bought pots, 1.6 to 2.9 kg).
+- Herd assumptions: collected-dung share of a third is the 8 hours in a night fold of 24; the opened Oregon State dairy worksheet (kpu.ca Keeping Track of Manure Nutrients) deposits dung in proportion to time
+  spent, its example a 25 percent confinement share. A Romanian dairy study (pmc.ncbi.nlm.nih.gov/articles/PMC3674972) has cows pasturing 182 days a year, so 90 stall days is under it (Mediterranean ballpark).
+  Straw share of the ration, the draught share of offtake and the goat excreta share: no page found that gave them (an NDSU straw-bedding page was blocked; a goat-manure page returned 403 or 503).
+
+Left, so Status stays open: lamp quality factors (0.7 tallow, 0.85 oil; only the direction was read: Wikipedia Candle and the Oil lamp article; no valuation ratio or lumen comparison found; EXARC's
+lux experiment on Roman lamps could not be opened), housing satiation (occupancy only), the straw share, draught share and goat excreta share above, pottery vessel mass, the fallow nitrate retention and
+half-saturation soil constants (not named by this complaint; they retire to a nitrate balance and a crop model), and the spoilage rows of 656's olive oil and wine.

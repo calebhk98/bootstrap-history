@@ -1159,12 +1159,15 @@ THREE_FIELD_FALLOW_SHARE_OF_HOLDING = declare(
         "altogether - the middle point on the fallow axis.")
 
 THREE_FIELD_LEGUME_SHARE_OF_HOLDING = declare(
-    "THREE_FIELD_LEGUME_SHARE_OF_HOLDING", 1.0 / 6.0,
+    "THREE_FIELD_LEGUME_SHARE_OF_HOLDING", 0.08,
     kind="engineering_estimate",
     unit="fraction of holding in grain legumes in any one year (dimensionless)",
-    source="The spring field of the three-field system (a third of the holding) carried oats, barley, peas, beans "
-           "and vetch; taking half of it as legumes is recalled, not measured",
-    confidence="D",
+    source="Pelham, Fourteenth-Century Agriculture in Sussex (Sussex Archaeological Collections 78, 1937; opened as a "
+           "PDF): beans, pulse and peas 'were grown on a large scale only at Ivinghoe, but even there they occupied only "
+           "24 per cent. of the area cropped', small quantities on most manors. Taking half of that top figure as the "
+           "typical share, 12 percent of the cropped two thirds of the holding, is 0.08 of the holding (was 1/6, the "
+           "top of the range, recalled)",
+    confidence="C",
     why="Feeds the soil nitrogen stock's legume gain (soil_nutrients.py).")
 
 TWO_FIELD = DEFAULT_ROTATION
