@@ -83,11 +83,12 @@ def opening_values(sim):
     for opened in partners.values():
         partner_prices.update(opened.pop("prices"))
     everyone_runs = sorted(set(allowed).union(*(opened["recipes"] for opened in partners.values())))
-    labour_trades = sorted({trade for entry_id in everyone_runs + ([mint_recipe] if mint_recipe else [])
-                            for trade in (production[entry_id].get("labour_hours") or {})}
-                           | {unskilled})
     modes = sim.foreign.freight_mode_costs(cargo="goods")
     rates = sim.map.mode_crews(sorted(modes))
+    handling_trades = {str(rate["handling_trade"]) for rate in rates.values() if rate.get("handling_trade")}
+    labour_trades = sorted({trade for entry_id in everyone_runs + ([mint_recipe] if mint_recipe else [])
+                            for trade in (production[entry_id].get("labour_hours") or {})}
+                           | {unskilled} | handling_trades)   # the handling trade's wage is quoted to price port handling
     people_by_tile = {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids}
     fertility = {tile: spec.fertility for tile, spec in opening_tiles(sim, tile_ids).items()}
     prices = dict(partner_prices)
@@ -121,6 +122,12 @@ def opening_values(sim):
         "stores": opening_store_values(sim, tile_ids, int(sim.scenario.cfg["start_year"])),
         "literacy": {field: sim.production.literacy(field) for field in LITERACY_FIELDS},
     }
+
+
+def handling_wage(wages, handling_trade, unskilled_trade):
+    """The hourly wage that prices a port's handling hours: the handling trade's (dockworker) quote, or the unskilled
+    trade's where the mode names no handling trade or the opening holds no quote for it."""
+    return wages.get(handling_trade) or wages[unskilled_trade]
 
 
 def society_at_opening(civ, opening):
@@ -218,7 +225,8 @@ def build_setup(sim, opening=None, production=None):
     by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))   # the home country's tiles
     coastal = [tile for tile in by_people if tiles[tile].coastal]
     unskilled_wage = wages[opening["unskilled_trade"]]   # the carriers' hour is the opening's quote of the unskilled trade, as every other wage
-    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * unskilled_wage
+    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * handling_wage(
+        wages, opening["carriage_handling_trade"].get(SEA_MODE), opening["unskilled_trade"])
     dues = {mode: hours * unskilled_wage for mode, hours in dues_hours_per_tonne(world_map).items()
             if hours > 0.0}      # tolls and port dues: unskilled hours at the opening wage, paid to the tile's holder (economy/route_dues.py)
     return EconomySetup(

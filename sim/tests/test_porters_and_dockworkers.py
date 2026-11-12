@@ -98,6 +98,16 @@ class LandCarriageMeansTests(unittest.TestCase):
         rates = geography.carriage_rates(["foot", "cart"])
         self.assertLess(rates["cart"]["crew_hours_per_tonne_km"], rates["foot"]["crew_hours_per_tonne_km"])
 
+    def test_port_handling_hours_are_priced_at_the_dockworker_wage(self):
+        from sim.markets import port_setup
+        wages = {"labourer": 1.0, DOCKWORKER: 1.5}
+        self.assertEqual(port_setup.handling_wage(wages, DOCKWORKER, "labourer"), 1.5)
+
+    def test_port_handling_falls_back_to_the_unskilled_wage_without_a_quote(self):
+        from sim.markets import port_setup
+        self.assertEqual(port_setup.handling_wage({"labourer": 1.0}, DOCKWORKER, "labourer"), 1.0)
+        self.assertEqual(port_setup.handling_wage({"labourer": 1.0}, None, "labourer"), 1.0)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -10,7 +10,7 @@ HOUSEHOLD_TIME_PREFERENCE = declare(
         'every half-century from 1451 to 1800 (France 4.2 to 9.2); the same chapter cites anthropologists for a '
         'Malthusian-era time preference of 2.3 to 2.8 percent, below what was observed. The value is the safe '
         'rate observed in England after 1450, a lender\'s lowest ask, not a measured household time preference '
-        'and not Roman or any other civilisation\'s.'), confidence="D",
+        'and not Roman or any other civilisation\'s.'), confidence="C",
     why="A household lends its savings only for at least what it gives up by waiting, on top of what "
         "inflation it expects takes from them. The figure is a common assumption in growth models, "
         "not measured for any society here; default risk is priced separately by the credit market.",

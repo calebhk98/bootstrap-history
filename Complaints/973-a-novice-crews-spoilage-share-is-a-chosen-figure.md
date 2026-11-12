@@ -24,4 +24,9 @@ shipbuilding, or a defect-rate study of a new line), opened and cited; then the 
   Science 44(11)). Nothing is cited from them.
 Still needed: a study giving both the fall in hours and the fall in scrap or rework over one learning period, whose full text is opened.
 
+Also tried and nothing usable (opened): the AWS Inspection Trends article on pipe welding quality (aws.org, no rates by welder
+experience), Wikipedia Learning curve (hours only), a Wharton summary of turnover and smartphone failures (0.74 to 0.79 percent more
+product failure per point of weekly turnover: field failures, no scrap split). Searches for pottery, welding and new-line scrap by
+tenure returned only vendor blogs with no measured rates. Still open; confidence stays D.
+
 Split from Complaint 644, which wired the curve into spoilage.

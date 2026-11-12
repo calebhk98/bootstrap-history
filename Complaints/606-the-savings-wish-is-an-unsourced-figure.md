@@ -48,3 +48,14 @@ Opened for this complaint:
 - `WEALTH_DRAWDOWN_LIMIT`, `SPENDING_CUT_LIMIT`: nothing found in any source opened.
 - Blocked (HTTP 403): the Exeter and Cambridge pages on probate wealth and indebtedness (`core.ac.uk/download/161940745.pdf`,
   `campop.geog.cam.ac.uk/.../paper29.pdf`); Overton et al. 1600-1750 was not reachable beyond catalogue pages.
+
+**Update (sourcing pass).**
+- `SPENDING_CUT_LIMIT` (0.3): sourced, confidence C, no longer a heuristic. Frankenberg, Smith and Thomas, "Economic shocks, wealth and
+  welfare" (ccpr.ucla.edu/wp-content/uploads/2024/04/Economic-shocks_-wealth-and-welfare.pdf, opened): Indonesia 1998, "on average,
+  household per capita consumption declined by around 20% in one year" (text elsewhere: "almost 25%"); deferrable items "declined by over
+  one-third".
+- `HOUSEHOLD_TIME_PREFERENCE` (0.05): already inside the opened Clark range (4 to 6 percent English safe returns); confidence raised
+  to C. It stays a heuristic because it sets the opening rate, which should be an output.
+- Still unsourced: `WEALTH_DRAWDOWN_LIMIT`, `CARROL_CONSUMPTION_PARAMETER`, `WEALTH_INCOME_RATIO_TARGET`. Tried and nothing usable: Wikipedia
+  Consumption smoothing and Time preference (no pace or ratio figures); the Quisumbing and Skoufias consumption-insurance synthesis
+  (opened; regression coefficients only, no drawdown pace); Kazianga and Udry, Hoddinott, and World Bank pages (HTTP 403 or 503).

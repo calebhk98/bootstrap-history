@@ -47,14 +47,18 @@ WEALTH_DRAWDOWN_LIMIT = declare(
     retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
 
 SPENDING_CUT_LIMIT = declare(
-    "SPENDING_CUT_LIMIT", 0.3, kind="temporary_heuristic",
+    "SPENDING_CUT_LIMIT", 0.3, kind="engineering_estimate",
     unit="largest share of its expected spending a household cuts in a year", source=(
-        'No source found: the share of expected spending a household cuts in a year was not found in '
-        'a source that could be opened. The share is an assumption.'), confidence="D",
+        'Frankenberg, Smith and Thomas, "Economic shocks, wealth and welfare" (CCPR-009-03, 2003; '
+        'ccpr.ucla.edu/wp-content/uploads/2024/04/Economic-shocks_-wealth-and-welfare.pdf, opened): Indonesia 1998, '
+        'a crisis with real GDP down around 15% and formal real wages down some 40%: "on average, household per capita '
+        'consumption declined by around 20% in one year" ("almost 25%" in the later table text); "deferrable" items '
+        '(clothing, furniture, ceremonies) fell "by over one-third". So the mean household cut about a fifth in one '
+        'of the worst recorded years; the cap sits above that mean. A ballpark, from one modern crisis.'),
+    confidence="C",
     why="Households smooth consumption: a rise in the wealth they want to hold is saved over several years, "
-        "not in the one year it appears. The share is an assumption; no society's spending is measured "
-        "against its expected spending here.",
-    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
+        "not in the one year it appears. The cap is about the mean cut of a severe crisis year (see source), so "
+        "a household cuts less than that in an ordinary year and not more in any.")
 
 
 def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId, GoodSpec],
