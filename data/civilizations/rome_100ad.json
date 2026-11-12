@@ -846,7 +846,7 @@
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
+      "source": "Wikipedia, Religion in ancient Rome (opened): six Vestals and three major and twelve lesser flamines; no count of the other colleges or of temple staff is on the page, so the 15000 temple staff and 2000 scholars remain placeholders. Only starting sizes are set here.",
       "confidence": "D"
     },
     "cast": {

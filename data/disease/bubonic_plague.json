@@ -56,8 +56,8 @@
    "source": "Dean et al. 2018 (PMC5819418, Table 2): an average duration of infection of 10 days for bubonic plague in humans in the rat-flea model (the human-ectoparasite model splits it into 8 mildly and 2 highly infectious days, the same 10 total). Shape 2 is a broad spread, not sourced"
   },
   "density_exponent": {
-   "confidence": "unsourced",
-   "source": "Heuristic inside the range Rader et al. 2020 supports (crowded cities see longer epidemics with larger attack rates; weaker than linear); vary across the ensemble"
+   "confidence": "derived",
+   "source": "Wikipedia, Basic reproduction number (en.wikipedia.org/wiki/Basic_reproduction_number, opened): R0 = contact rate / recovery rate, the contact rate set by 'the number of susceptible people in the population that the infected people contact'; whether contact rises with density is not stated there. Chowell et al., 1918 influenza in England and Wales (PMC2596813, opened): 'we found no association between transmissibility, death rates and indicators of population density and residential crowding', R between 1.3 and 1.9, and deaths scaling as population to the power 0.71-0.77 in rural areas and about 1.0 in towns. So the exponent of contact on crowding lies between 0 (that study) and 1 (mass action, density-dependent contact); 0.5 is the midpoint, a ballpark. Rader et al. 2020 (Nature Medicine; search summary only, full text not opened): crowded cities have longer epidemics and larger attack rates."
   }
  }
 }

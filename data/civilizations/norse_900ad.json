@@ -544,12 +544,12 @@
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
+      "source": "Wikipedia, Goði (en.wikipedia.org/wiki/Go%C3%B0i, opened): 36 goðorð (chieftaincies, each with a priestly office) originally, 39 from 964, in Iceland alone; Iceland's population is not given there, so a per-person count cannot be derived and the 1500 priesthood stays a placeholder. Only the starting sizes are set here.",
       "confidence": "D"
     },
     "starting_interest_rate": {
-      "source": "No Norse lending record survives for this date. Set from the neighbouring Carolingian and Anglo-Saxon world, where credit was informal and short-term rates high. Weak evidence.",
-      "confidence": "D"
+      "source": "No Norse lending record survives for this date. Wikipedia, Usury (en.wikipedia.org/wiki/Usury, opened): in the Roman Empire 'The annual rates of interest on loans varied in the range of 4-12 percent' and higher rates were typically 24 or 48 percent; short-term rates before the 16th century fall were 'around 20-30% p.a.'. 0.2 sits in that high-rate range, a ballpark borrowed from other times and places.",
+      "confidence": "C"
     },
     "starting_tax_share": {
       "source": "Levies were tribute, thing dues, and ship-levy service to a chieftain or king, not a steady share of revenue. A low share reflects weak state reach; an estimate.",
