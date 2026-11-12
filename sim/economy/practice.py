@@ -42,13 +42,20 @@ SKILL_GAP_CLOSED_PER_YEAR = declare(
         "skill level mix of this simulation's workers is not modelled, so the state's mix stands in.")
 
 SCRAPPED_SHARE_OF_EXTRA_EFFORT = declare(
-    "SCRAPPED_SHARE_OF_EXTRA_EFFORT", 0.5, kind="temporary_heuristic",
-    unit="share of the extra effort of a novice run that is spoiled output", source=None, confidence="D",
-    retire="Complaints/973: a measured split of a novice's extra effort into slower work and spoiled work",
+    "SCRAPPED_SHARE_OF_EXTRA_EFFORT", 0.2, kind="engineering_estimate",
+    unit="share of the extra effort of a novice run that is spoiled output",
+    source=(
+        "Derived from two opened pages, a ballpark across unlike industries. Hours: fabrico.io/blog/operator-onboarding-"
+        "checklist/ (opened): new-operator productivity targets of 50-60% of standard in days 1-30; midpoint 55%, so "
+        "1 / 0.55 = 1.82 hours per unit against 1.00, extra effort 0.82. Scrap: ifactoryapp.com/industries/automotive-"
+        "manufacturing/gigafactory-cell-yield-improvement-ai (opened): 'New gigafactories routinely open with scrap rates "
+        "between 15 and 30 percent' and 'still sit near 10 percent five years into operation'; midpoint 22.5% against "
+        "10%. Effort per good unit is 1 / (1 - scrap): 1 / 0.775 - 1 / 0.90 = 1.290 - 1.111 = 0.179 extra. Share "
+        "0.179 / 0.82 = 0.22, rounded to 0.2."),
+    confidence="C",
     why="A novice run takes more hours than a competent one (the learning curve); part of the extra effort is slower "
-        "work and part is work redone or thrown away, which lowers what a run yields. Thornton and Thompson find "
-        "quality (errors) learning alongside time, but give no split of the two for a new crew. Chosen as an even "
-        "split; the curve itself sets how the extra effort falls with runs made.")
+        "work and part is work redone or thrown away, which lowers what a run yields. The share is the extra effort "
+        "per good unit that scrap explains, from the start-up scrap and productivity figures in the source.")
 
 _MULTIPLIER_STEP = 100.0       # multipliers are kept to a hundredth so a recipe has few practised copies
 _practised: Dict[Tuple[int, Tuple[Tuple[str, float], ...]], tuple] = {}

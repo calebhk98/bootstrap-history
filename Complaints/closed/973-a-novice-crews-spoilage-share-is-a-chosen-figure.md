@@ -1,6 +1,6 @@
 # A novice crew's spoilage share is a chosen figure
 
-**Status:** open - `SCRAPPED_SHARE_OF_EXTRA_EFFORT` is a labelled heuristic with no measured source
+**Status:** closed - sourced as a ballpark derivation (0.2)
 
 **What is wrong now.** A crew still learning a recipe needs more hours per run (`sim/economy/practice.py` `hours_multiplier`, the learning curve) and
 loses part of its output: `practice.usable_output_share` takes the extra effort of the practised hours over the booked ones and spoils
@@ -30,3 +30,10 @@ product failure per point of weekly turnover: field failures, no scrap split). S
 tenure returned only vendor blogs with no measured rates. Still open; confidence stays D.
 
 Split from Complaint 644, which wired the curve into spoilage.
+
+**Resolved (ballpark).** `SCRAPPED_SHARE_OF_EXTRA_EFFORT` 0.5 to 0.2, confidence C. Hours: fabrico.io/blog/operator-onboarding-checklist/
+(opened) gives new-operator productivity targets of 50-60% of standard in days 1-30, so 1 / 0.55 = 1.82 hours per unit, extra 0.82.
+Scrap: ifactoryapp.com/industries/automotive-manufacturing/gigafactory-cell-yield-improvement-ai (opened): "New gigafactories
+routinely open with scrap rates between 15 and 30 percent", "still sit near 10 percent five years into operation". Effort per good unit
+1 / (1 - scrap): 1 / 0.775 - 1 / 0.90 = 0.179 extra; 0.179 / 0.82 = 0.22. Unlike industries (battery cells, a productivity target), so
+a ballpark only; a craft-specific split would replace it.

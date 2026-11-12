@@ -59,3 +59,15 @@ Opened for this complaint:
 - Still unsourced: `WEALTH_DRAWDOWN_LIMIT`, `CARROL_CONSUMPTION_PARAMETER`, `WEALTH_INCOME_RATIO_TARGET`. Tried and nothing usable: Wikipedia
   Consumption smoothing and Time preference (no pace or ratio figures); the Quisumbing and Skoufias consumption-insurance synthesis
   (opened; regression coefficients only, no drawdown pace); Kazianga and Udry, Hoddinott, and World Bank pages (HTTP 403 or 503).
+
+**Update 2.**
+- `WEALTH_INCOME_RATIO_TARGET` (16.67 months of income): order of magnitude sourced, confidence C. Piketty and Zucman, Handbook of Income
+  Distribution ch. 15 (gabriel-zucman.eu/files/PikettyZucman2015.pdf, opened): European aggregate wealth "as large as 600-700%" of national
+  income in the 18th-19th centuries, "Agricultural land ... made the majority of national capital", durable goods 30-50% of national
+  income. 1.4 years of income held as share wealth sits well below that. Household-level multiple still unmeasured.
+- `CARROL_CONSUMPTION_PARAMETER`, `WEALTH_DRAWDOWN_LIMIT`: still no figure. Opened: Carroll's tractable buffer-stock notes and age-profile
+  handout (econ2.jhu.edu/people/ccarroll/public/LectureNotes/Consumption/; no calibrated parameter values in the text); Laibson and Maxted,
+  MPC to MPX note (quarterly MPX on nondurables 15-25%, a windfall response, not a monthly share of cash above target); LEGS drought
+  briefing (qualitative: pastoralists "try to protect a core herd"). The Indonesia paper gives share of households that sold all gold
+  (over half rural, a third urban) but not a share of wealth drawn down per year.
+Status stays partly.
