@@ -4,18 +4,21 @@ A sentence names a mass, an area, a sum of money or a temperature with `mass_tex
 `temperature_text`, never with a hand-written unit word. The text is written by the scenario module's functions
 (sim/scenario/quantity_text.py); these take the game, or none, and hand over what the words are read from: the
 civilisation's coin, the unit registry and the unit the player chose."""
-from typing import Any
+from typing import TYPE_CHECKING, Any, Optional
 
 from sim.scenario.api import Display, quantity_text
 
 from . import units
+
+if TYPE_CHECKING:
+    from .core import Sim
 
 _NATIVE = quantity_text.NATIVE
 per_year = quantity_text.per_year
 plain_number = quantity_text.plain_number
 
 
-def _display(sim: Any) -> Display:
+def _display(sim: Optional["Sim"]) -> Display:
     return Display(units.civ_of(sim), units.registry(getattr(sim, "mods_dir", None)), units.chosen_units(), lambda: units.unit_context(sim))
 
 

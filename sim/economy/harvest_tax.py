@@ -8,6 +8,7 @@ from typing import Dict, Mapping, Sequence
 import numpy as np
 
 from . import unit_cost
+from .protocols import MarketView
 from .types import GoodId
 
 
@@ -45,6 +46,6 @@ def revenue_outputs(outputs: np.ndarray, good_ids: Sequence[GoodId], share_by_go
     return outputs * kept[None, :]
 
 
-def share_of_view(view) -> Mapping[GoodId, float]:
+def share_of_view(view: MarketView) -> Mapping[GoodId, float]:
     """The harvest share the setup behind a market view holds this year; none for a view with no setup."""
     return getattr(getattr(view, "setup", None), "harvest_share_by_good", None) or {}

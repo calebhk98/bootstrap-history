@@ -187,7 +187,7 @@ class AskAlternatives:
         found = self._ceilings.get(key)
         if found is None:
             household = alternative_ceiling(good, self.setup.basket_for(tile).needs, self._price, self._cost)
-            limit = getattr(self.record.goods, "buyer_limits", {}).get(good)
+            limit = self.record.goods.buyer_limits.get(good)
             from .recipes import recipes_making
             bounds = []
             for recipe in self._users_of(good):

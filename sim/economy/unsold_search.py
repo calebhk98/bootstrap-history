@@ -134,10 +134,10 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
         if floors:
             offers, result = search_asks(bids, offers, floors, buyers, good, area, currency, last_price)
     return raise_sold_out(record, buyers, bids, offers, result, good, area, currency, last_price,
-                          (setup, view, costs if costs is not None else {}))
+                          (setup, view, costs if costs is not None else seller_offers.UnitCosts()))
 
 
-def ask_limits(setup, record, view, offers: Sequence[Offer], indices: Sequence[int], costs: dict) -> dict:
+def ask_limits(setup, record, view, offers: Sequence[Offer], indices: Sequence[int], costs: seller_offers.UnitCosts) -> dict:
     """index -> the most that producer may ask: the top of the band above its unit cost (ask_adjust.band_edge), the same
     limit its re-pricing and its carried ask keep to. A seller whose cost cannot be priced has no limit."""
     limits = {}
@@ -148,7 +148,7 @@ def ask_limits(setup, record, view, offers: Sequence[Offer], indices: Sequence[i
         if cost is not None and math.isfinite(cost):
             shares = getattr(costs, "shares", {})
             share = shares[key] if key in shares else seller_offers.input_share_of_cost(setup, record, view, offer)
-            limits[index] = band_edge(cost, share, seller_offers.ask_band_multiple(setup, offer, getattr(costs, "alternatives", None)))
+            limits[index] = band_edge(cost, share, seller_offers.ask_band_multiple(setup, offer, costs.alternatives))
     return limits
 
 
