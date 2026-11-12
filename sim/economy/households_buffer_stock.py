@@ -19,12 +19,18 @@ CARROL_CONSUMPTION_PARAMETER = declare(
     source=(
         "Eurace@Unibi user manual (documents/EuraceUnibi-UserManual.pdf, section 10.1.3, 'carrol consumption "
         "parameter', opened): 0.01. The C (Cons_Goods/Household_Consumer_Functions.c) has no default; it declares "
-        "the variable only. Not measured for any pre-modern society."), confidence="D",
+        "the variable only. Not measured for any pre-modern society. Laibson and Maxted, 'A Simple Mapping from MPCs "
+        "to MPXs' (afajof.org/management/viewp.php?n=16744, opened) give 'the quarterly MPX for nondurable "
+        "expenditure range from 15-25%', a windfall spending rate: monthly 1 - 0.8 ** (1 / 3) = 0.072. Not adopted: at "
+        "0.07 the yearly share is near 0.6, so the cash cap or the drawdown limit always binds before wealth does and "
+        "money lent no longer moves spending (tests economy_credit_claims, household_buffer_stock, "
+        "money_reaches_prices, saving_finds_a_use_rule, household_savings_smooth)."), confidence="D",
     why="The monthly share of cash a household spends beyond its income; the yearly share compounds it "
         "(`yearly_cash_share`). A method driven by income risk, age and the return on saving would replace it.",
     retire="Complaints/606: a method driven by income risk, age and the return on saving replaces the stored share")
+
 WEALTH_INCOME_RATIO_TARGET = declare(
-    "WEALTH_INCOME_RATIO_TARGET", 16.67, kind="temporary_heuristic",
+    "WEALTH_INCOME_RATIO_TARGET", 16.67, kind="engineering_estimate",
     unit="monthly mean net incomes held as share wealth, above which share wealth is spent",
     source=(
         "Eurace@Unibi user manual (section 10.1.3, 'wealth income ratio target', opened): 16.67. The C has no "
@@ -35,8 +41,7 @@ WEALTH_INCOME_RATIO_TARGET = declare(
         "income. This target, 16.67 months (1.4 years) of income held as share wealth, is a fraction of that and below the "
         "non-land remainder."), confidence="C",
     why="Share wealth above this many months of income adds to spending, below it cuts spending, at the "
-        "carrol share. One value for every household.",
-    retire="Complaints/606: a method driven by income risk, age and the return on saving replaces the stored ratio")
+        "carrol share. One value for every household.")
 
 
 def yearly_cash_share(monthly_share: float = None) -> float:

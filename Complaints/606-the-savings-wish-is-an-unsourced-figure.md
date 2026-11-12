@@ -71,3 +71,9 @@ Opened for this complaint:
   briefing (qualitative: pastoralists "try to protect a core herd"). The Indonesia paper gives share of households that sold all gold
   (over half rural, a third urban) but not a share of wealth drawn down per year.
 Status stays partly.
+
+**Update 3.**
+- `WEALTH_DRAWDOWN_LIMIT` 1.0 to 0.7, confidence C: Indonesia 1998 (Frankenberg, Smith and Thomas, opened): over half of rural and close to one-third of urban gold-owning households sold all their gold in one crisis year. Take half of the store as the most drawn in a year; the store is the wealth target, 1.39 years of income: 0.5 * 1.39 = 0.69.
+- `WEALTH_INCOME_RATIO_TARGET`: order of magnitude sourced (Piketty and Zucman), confidence C, no longer a heuristic.
+- `CARROL_CONSUMPTION_PARAMETER` stays 0.01 (Eurace). Laibson and Maxted's quarterly nondurable MPX of 15-25% converts to a monthly 0.072, but at that value the yearly cash share is near 0.6 and the cash cap or the drawdown limit always binds before wealth, so money lent stops moving spending; five test topics fail on it (economy_credit_claims, household_buffer_stock, money_reaches_prices, saving_finds_a_use_rule, household_savings_smooth). A windfall MPC is not a rate of spending out of the stock; this needs the rule redesigned (the method the `retire` names), not a number.
+Status stays partly: only `CARROL_CONSUMPTION_PARAMETER` is left.

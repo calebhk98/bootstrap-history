@@ -35,16 +35,19 @@ FLOOR_BUDGET_PRICE_MARGIN = declare(
 BUDGET_SAFETY_SHARE = 1e-9
 
 WEALTH_DRAWDOWN_LIMIT = declare(
-    "WEALTH_DRAWDOWN_LIMIT", 1.0, kind="temporary_heuristic",
+    "WEALTH_DRAWDOWN_LIMIT", 0.7, kind="engineering_estimate",
     unit="share of a year's income that wealth above target may add to spending in a year", source=(
-        'No source found: the pace at which a household spends wealth above target was not found in '
-        'a source that could be opened. The pace is an assumption.'),
-    confidence="D",
+        'Frankenberg, Smith and Thomas, "Economic shocks, wealth and welfare" (CCPR-009-03, 2003; '
+        'ccpr.ucla.edu/wp-content/uploads/2024/04/Economic-shocks_-wealth-and-welfare.pdf, opened): Indonesia 1998, '
+        '"over half the households in the rural sector and close to one-third of urban households who owned jewelry '
+        'in 1997 had sold all their holdings by 1998". Gold is the liquid store, so about a third to a half of '
+        'holders ran it to nothing in one crisis year; take half of the store as the most drawn in a year. The store '
+        'is the wealth target of 16.67 months, about 1.39 years of income (WEALTH_INCOME_RATIO_TARGET): '
+        '0.5 * 1.39 = 0.69, rounded to 0.7. A ballpark from one modern crisis.'),
+    confidence="C",
     why="Households smooth consumption: wealth above what they want to keep is spent down over several "
         "years, not in the one year their target falls. Without a limit a fall in the target sends the "
-        "whole stock of cash to the shops at once and nothing is left to lend. The pace is an assumption; "
-        "no society's spending is measured against its wealth here.",
-    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
+        "whole stock of cash to the shops at once and nothing is left to lend.")
 
 SPENDING_CUT_LIMIT = declare(
     "SPENDING_CUT_LIMIT", 0.3, kind="engineering_estimate",
