@@ -28,7 +28,12 @@ WEALTH_INCOME_RATIO_TARGET = declare(
     unit="monthly mean net incomes held as share wealth, above which share wealth is spent",
     source=(
         "Eurace@Unibi user manual (section 10.1.3, 'wealth income ratio target', opened): 16.67. The C has no "
-        "default. Not measured for any pre-modern society."), confidence="D",
+        "default. Not measured for any pre-modern society. Order of magnitude only: Piketty and Zucman, 'Wealth and "
+        "Inheritance in the Long Run', Handbook of Income Distribution ch. 15 (gabriel-zucman.eu/files/PikettyZucman2015.pdf, "
+        "opened): European aggregate wealth was 'as large as 600-700%' of national income in the eighteenth and nineteenth "
+        "centuries, 'Agricultural land ... made the majority of national capital', and durable goods 30-50% of national "
+        "income. This target, 16.67 months (1.4 years) of income held as share wealth, is a fraction of that and below the "
+        "non-land remainder."), confidence="C",
     why="Share wealth above this many months of income adds to spending, below it cuts spending, at the "
         "carrol share. One value for every household.",
     retire="Complaints/606: a method driven by income risk, age and the return on saving replaces the stored ratio")
