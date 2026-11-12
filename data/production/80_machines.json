@@ -142,7 +142,7 @@
      },
      "service_life_years": 30,
      "annual_output_at_basis": 3.0,
-     "capital_basis": "A high-pressure turbine set needs a heavy machine shop with large lathes, a balancing pit and a test bay; such a works completes a few sets a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "A high-pressure turbine set needs a heavy machine shop with large lathes, a balancing pit and a test bay; such a works completes a few sets a year. Masses are order-of-magnitude figures. Opened: Wikipedia 'C. A. Parsons and Company' says the company was producing up to 50 turbines a year at Heaton at the start of the twentieth century, an upper bound beside the three sets a year taken here for this works; and the Newcastle Sitelines record (https://sitelines.newcastle.gov.uk/SMR/4334) says the original 1889 Heaton works was about two acres, one workshop with a small pattern shop, smithy, test house and office, 48 staff. Neither gives masses or build hours; the row stays D.",
      "conf": "D"
     }
    ],

@@ -44,3 +44,32 @@ Searched and not sourced: bread hydration and baking loss (forum and bakery-blog
 table of Ure's burn experiments (opened but the table is garbled in the transcription, so no burn rate was taken), the Monticello
 nailery loss records (403), candle photometry. Left: all other D rows in the list above; the carriage inputs are untouched.
 Status stays open.
+
+**Pass 8 (source-recipes-machines-metals).** Rows touched in `10_*`, `20_*`, `30_*`, `60_*`, `80_*`, `90_*`, `95_mesoamerican_*`, `96_*`.
+
+Changed:
+
+- `ceramic_kg` (`30_fuel_stone.json`): potter hours 700 a tonne to 370, conf C to D (the pot mass is assumed). Opened:
+  ruralindiaonline.org/en/articles/kummaras-of-kodavatipudi/ (a potter shapes 20 to 30 ten-litre pots a day, about 10 hours a day, a month's
+  whole cycle is 200 to 300 pots, so about 1 hour a pot all in); a 10-litre pot taken at 2.7 kg from an assumed 6 mm wall; cross-check
+  fishandpeaches.blogspot.com/2012/03 (7 Dressel 20 amphorae a day each). 1 h / 2.7 kg = 370 h a tonne.
+- `maguey_fibre_kg` (`96_*`): farmer hours 4800 to 1800 a hectare; yield 500 kg/ha kept, bounded by prosea.prota4u.org/view.aspx?id=6522
+  (sisal 0.5 to 2.8 t/ha); scraping 8 h/kg to 2 h/kg from the Mexican government lechuguilla sheet
+  (gob.mx/cms/uploads/attachment/file/912100/Lechuguilla.pdf, 4 to 9 kg of fibre a worker-day). The 800 planting and weeding hours are
+  unsourced: stays D.
+
+Basis text extended, numbers unchanged, left D (the masses and build hours are unbounded by any opened figure):
+
+- `zinc_kg` capital furnace and retorts: Britannica 1911 "Zinc" (46 retorts a furnace, 1100 lb charge, eleven hours; retorts 3.25 to 4.75 ft
+  long, 6 to 10 in bore) bounds capacity and retort clay mass to the order used; retort life and wall thickness not read.
+- `heat_engine_modern_steam_unit` capital: Wikipedia C. A. Parsons (up to 50 turbines a year at Heaton) and Newcastle Sitelines SMR 4334
+  (1889 works two acres, 48 staff); no masses.
+
+Left D, tried: `iron_tools_kg` (searched smithing times; only axe-line and hobbyist times, no per-kilogram figure); `tin_kg` washing
+recovery 0.65 (911metallurgist tin sluicing page opened: no recovery percentage); `silver_jarosite_kg`, `jarosite_ore_kg`,
+`silver_smelted_native_kg` (no collector or Mexica furnace figure found); `cast_iron_kg`, charcoal and coal wooden-tool alternatives,
+`gold_kg`/`gold_g` Las Medulas works (Wikipedia: seven long aqueducts, no build hours), `caesium_g`, `nitre_kg`, `nitric_acid_kg` capital
+(searches gave no shed or furnace dimensions), `ammonium_nitrate_kg`; `80_machines.json` engine and electrical works (Newcomen, compound,
+dynamo, motor, photovoltaic line, low-voltage mains: no annual outputs or masses in a page that could be opened); backstrap cotton and
+maguey spinning and weaving hours and `cloth_backstrap_kg` (no spinning rate in any opened page); turkey, dog, deer and fowling rows
+(their figures come from `data/world/living_stock.json`, owned by another pass). Status stays open.
