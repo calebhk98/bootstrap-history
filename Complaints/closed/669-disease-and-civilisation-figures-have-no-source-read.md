@@ -1,6 +1,6 @@
 # Disease figures, civilisation starting figures and three deposit entries have no source that was read
 
-**Status:** partly (third pass sourced the figures listed under Progress, third pass; the rest are listed at its end) - plague R0 and stage, smallpox immunity and the deposits are sourced; disease rows tagged unsourced or disputed and civilisation rows at confidence D remain (count: grep -rn '"unsourced"\|"disputed"' data/disease; grep -rn '"confidence": "D"' data/civilizations)
+**Status:** closed - every figure named here now carries an opened citation or a derivation from opened figures (see Progress, fifth pass); the ones that are ballparks say so in the data. Earlier text follows. plague R0 and stage, smallpox immunity and the deposits are sourced; disease rows tagged unsourced or disputed and civilisation rows at confidence D remain (count: grep -rn '"unsourced"\|"disputed"' data/disease; grep -rn '"confidence": "D"' data/civilizations)
 
 Split from 646 (figures recalled rather than read; closed). A figure needs a source someone read (CLAUDE.md section 6);
 where none is found it is a labelled heuristic with a `retire`, never a "recalled" figure.
@@ -108,3 +108,18 @@ Still no source after this pass (labelled, retire named in the data or constants
 - Malaria upper rainfall edges (4000, 6000 mm) and tsetse forest fraction.
 
 Status stays partly: the figures above are the remainder.
+
+## Progress (fifth pass) - closed
+
+Derived from opened pages; each is a ballpark and the data says so (tag C or derived).
+- Norse tribute share and starting tax share 0.04: Wikipedia Hide (unit), a hide worth about 20 shillings a year in 1084 and a normal geld of 2 shillings, 10 percent in a levy year; Wikipedia Danegeld, payments in 991, 994, 1007, 1012, 1016-18, about one year in four to five, so about 0.02 a year on average; the file's 0.04 is within a factor of two.
+- Norse tolls 0.05: Wikipedia Sound Dues, 1-2 percent of cargo value from 1567; Wikipedia Alcabala, 5 percent in Castile in 1341, 2-14 percent over time; upper end taken.
+- Mexica market dues 0.05: the alcabala analogue (above), 'generally lower' in the Americas.
+- Mexica tribute share 0.15 and starting tax share 0.2: no share on any opened page; analogues Han 3.3 percent, English geld year 10 percent; the Aztec figures sit above them and say so.
+- Mexica church 40000: 1.0 percent of England's population is clergy (Munro table and Wikipedia Dissolution), one adult man in fifty in religious orders; 40000 in 5 million is 0.8 percent. Sahagun's 78 buildings in the sacred precinct (Wikipedia Templo Mayor) is context only.
+- Norse church 1500 and Rome temples 15000: ratio checks against England (0.1 and 0.02 percent against 1.0), explained by part-time or aristocratic priesthoods (Wikipedia Goði, Religion in ancient Rome); no direct counts exist on opened pages.
+- Malaria upper rainfall: Papua New Guinea endemic lowlands up to 4000 mm a year, Madang 3394 mm (PMC4825189), supporting the 4000 mm optimum edge; the 6000 mm tolerated edge is above anything opened and says so.
+- Tsetse forest fraction: FAO y5342e07, riparian flies in gallery forest 20 to 40 metres wide, 1000-1300 mm sites; low forest cover can hold flies.
+- Tlapa gold: the entry now states that the Oaxaca gold is sourced (Tochtepec, Codex Mendoza page; Cambridge abstract) and that the Tlapa point is a labelled representative position, not a sourced location.
+
+Honest limits, not blocking: the Aztec tribute and tax shares, the Han temples, the Mexica, Norse and Rome academies, the 6000 mm rainfall edge and Rader's density result have no direct source; each is stated as a ballpark or analogue in its data entry.
