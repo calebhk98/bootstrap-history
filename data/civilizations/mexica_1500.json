@@ -798,7 +798,7 @@
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
+      "source": "Wikipedia, Aztec religion (opened): 'many tiers of priests, priestesses, novices, nuns, and monks (some part-time)', trained at the calmecac and telpochcalli, with a temple in each calpulli; no headcount is given on any opened page, so the 40000 priesthood and 2000 scholars remain placeholders. Only the starting sizes are set here.",
       "confidence": "D"
     },
     "starting_interest_rate": {
@@ -810,8 +810,8 @@
       "confidence": "D"
     },
     "standing_army": {
-      "source": "The warrior orders and the palace guard, the men who fought as a profession; the rest of an army was levied from the calpulli for the campaign (Hassig, Aztec Warfare). An approximate opening headcount.",
-      "confidence": "D"
+      "source": "The warrior orders and the palace guard, the men who fought as a profession; the rest of an army was levied from the calpulli for the campaign (Hassig, Aztec Warfare). Wikipedia, Aztec warfare (opened): 'Aztec society had no standing army', only elite warrior societies and the soldiers of a few fortifications were full-time; brewminate.com/yaoyotl-aztec-warfare (opened): each town supplied about 400 men and 'as many as 25 such divisions, or 200,000 men, could be mobilized'. 20000 is the orders plus the levy kept on call, about a tenth of that campaign figure, a ballpark; no count of the orders was found.",
+      "confidence": "C"
     }
   }
 }

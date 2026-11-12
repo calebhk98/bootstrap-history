@@ -89,3 +89,22 @@ Still no source after searching (left at D with the labelled heuristic):
 - Cast actors of Han (temples 6000, scholars 5000), Mexica, Norse and Rome: Wikipedia Taixue says 30,000 students in the 2nd century (citation needed), which is six times the Han academy figure; not changed.
 - Density exponents (all pathogens): Rader et al. 2020 is only read through search summaries (crowded cities, longer epidemics, larger attack rates), no exponent; the full text could not be fetched.
 - Malaria host losses (hosts.people): WHO malaria fact sheet (who.int/news-room/fact-sheets/detail/malaria) gives 2.2 deaths per 1,000 cases in the African Region in 2024 and 75 percent of deaths under five; no pre-control rate per population, so the tag stays disputed.
+
+## Progress (fourth pass)
+
+Sourced, all pages opened this pass; "citation needed" lines are used as ballparks and say so in the data.
+- Han academy (`han_china_100ad.json`): Wikipedia Taixue, 30,000 students and academicians in the 2nd century (marked citation needed there). Members raised from 5000 to 30000, tag C. The temples (6000) have no source.
+- Mexica standing army 20000 (tag C): Wikipedia Aztec warfare, no standing army; brewminate.com/yaoyotl-aztec-warfare, towns of about 400 men, up to 200,000 mobilised; 20000 is about a tenth of that, a ballpark with no count of the warrior orders.
+- Norse interest 0.2 (tag C): Wikipedia Usury, Roman rates 4-12 percent, higher ones typically 24 or 48, 16th-century rates before the fall 20-30 percent.
+- Density exponent 0.5, all five pathogens (tag derived): Wikipedia Basic reproduction number (R0 is contact rate over recovery rate), Chowell et al. PMC2596813 (no association of transmissibility with density for 1918 influenza; deaths scale as population to 0.71-0.77 in rural areas, about 1.0 in towns). The exponent lies between 0 and 1; 0.5 is the midpoint. Rader et al. 2020 is known only from search summaries.
+- Malaria `hosts.people` (tag derived): Wikipedia History of malaria, Faragher's tentative 4-5 percent of deaths; with an assumed crude death rate of 30-40 per 1,000 that is 1.2-2 per 1,000 averaged over a country, against about 7 per 1,000 at full challenge in the file, which matches if a fifth to a third of a country is at full challenge.
+- Tsetse rainfall: tsetse found at 700-800 mm (PMC3368204) and in a 1000-1500 mm area (PMC4398481); the edges stay a ballpark around those, the 500 mm lower edge and 4500 upper are below and above anything opened.
+- Tlapa and Oaxaca gold (`ancient.json`, conf C): the Codex Mendoza page (uknowledge.uky.edu/world_mexico_codices/11) names Tochtepec in northern Oaxaca paying gold items, and the Cambridge abstract (S095653611500022X) puts the gold tribute at enough for 22,000-27,000 ornaments a year. Tlapa itself is named in no opened page.
+
+Still no source after this pass (labelled, retire named in the data or constants):
+- Mexica tribute share 0.15, market dues 0.05, starting tax share 0.2: Wikipedia Codex Mendoza, Aztec Triple Alliance, Aztecs and Tlatelolco give goods, a 60,000-a-day market (Cortes), and no share or dues rate.
+- Norse tribute share 0.04, tolls 0.05, tax share 0.04: Wikipedia Danegeld (2 shillings a hide in 1130; geld about a tenth of Exchequer receipts in 1129-30; four denarii a mansus in 864) and Hedeby (royal tolls, no rate) give no toll rate or share of output.
+- Church sizes of Mexica (40000), Norse (1500), Rome (15000) and Han temples (6000), and the Mexica, Norse and Rome academies: no headcount on Wikipedia Aztec religion, Goði (36-39 chieftaincies, no population), Religion in ancient Rome (six Vestals, fifteen flamines).
+- Malaria upper rainfall edges (4000, 6000 mm) and tsetse forest fraction.
+
+Status stays partly: the figures above are the remainder.

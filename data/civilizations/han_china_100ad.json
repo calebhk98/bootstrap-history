@@ -5,7 +5,7 @@
   "cast": {
     "actors": [
       {"actor_id": "church:home", "kind": "church", "name": "the temples", "members": 6000, "stipend_trade": "scribe", "endowment_hectares": 20000, "tithe_rate": 0.0, "tithe_need": "food"},
-      {"actor_id": "academy:home", "kind": "academy", "name": "the scholars", "members": 5000, "stipend_trade": "scholar", "endowment_hectares": 0, "patronage_rate": 0.8}
+      {"actor_id": "academy:home", "kind": "academy", "name": "the scholars", "members": 30000, "stipend_trade": "scholar", "endowment_hectares": 0, "patronage_rate": 0.8}
     ]
   },
   "bondage_years": 12,
@@ -766,8 +766,8 @@
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
-      "confidence": "D"
+      "source": "Academy: Wikipedia, Taixue (en.wikipedia.org/wiki/Taixue, opened): 'The university held 30,000 students and academicians during the 2nd century', a line marked citation needed there; members raised from 5000 to that figure. Temples (6000): no source found, a placeholder. Only starting sizes are set here; what each collects follows from the land market's rent, the goods tithed and the spread of schooling.",
+      "confidence": "C"
     },
     "starting_interest_rate": {
       "source": "Shiji ch.129 puts a lending return near a fifth a year; Han memorials (Chao Cuo) describe peasant debt doubling within a year, so the spread is wide. Eastern Han specifics are thin.",
