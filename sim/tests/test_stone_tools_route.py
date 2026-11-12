@@ -67,8 +67,8 @@ class StoneRouteTests(unittest.TestCase):
         recipe = _PRODUCTION["obsidian_blade_kg"]
         self.assertEqual(recipe["requires_node"], "mat_obsidian_blade")
         self.assertIn("mat_obsidian_blade", _civilisation("mexica_1500")["starting_techs"])
-        # 91 percent of a preformed core's weight leaves as blades (Sheets and Muto 1972)
-        self.assertAlmostEqual(recipe["outputs"]["obsidian_blade_kg"] / recipe["inputs"]["obsidian_kg"], 0.91, places=2)
+        # 91 percent of a preformed core's weight leaves as blades (Sheets and Muto 1972), and a core is 70 percent of its nodule (Castaneda 2016)
+        self.assertAlmostEqual(recipe["outputs"]["obsidian_blade_kg"] / recipe["inputs"]["obsidian_kg"], 0.91 * 0.70, places=2)
         self.assertEqual(set(recipe["labour_hours"]), {"knapper"})
 
     def test_raw_stone_is_extracted_without_inputs_and_flint_tools_need_no_node(self):
