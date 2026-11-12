@@ -1,6 +1,6 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - the base answers a raise by hiding, flight and unrest, and producers, households and the AI state net the tax; open: `HIDEABLE_SHARE_OF_INCOME` and `HIDING_MARGINAL_COST_AT_CEILING` (`sim/agents/tuning_evasion.py`) have no source (see Sourcing the hiding curve)
+**Status:** partly - the base answers a raise by hiding, flight and unrest; both hiding constants are now sourced ballparks (confidence C); what remains is non-sourcing work (the immunity and flight items under Still open) and a pre-modern check of the curve
 
 Follows from 626 (tax rates as a state choice).
 
@@ -124,3 +124,9 @@ off the rolls when officials looked harder (cadastral resurveys: Ming 1581, Roma
 `zabt`), or what concealment cost payers (fees to scribes and surveyors). Cite author, work, page. Set the two constants
 from it, or replace them by the holdings model the `retire` text names. Candidates: Monson and Scheidel (eds.) 2015; Kiser and
 Kane on tax farming; papyrological studies of Roman Egypt land declarations.
+
+## Sourced (2026-11, ballpark standard)
+
+- `HIDEABLE_SHARE_OF_INCOME` 0.5 -> 0.55, confidence C, now `engineering_estimate`. Congressional Research Service IF11887 (https://www.everycrsreport.com/reports/IF11887.html): IRS net misreporting 1 per cent of wages and salaries, 15 per cent of partnership and S-corporation income, 55 per cent of sole-proprietor income (2014-2016). The income class with no third-party reporting is the analogue for a state with none. Arslan 2022 (Uskudar tahrir, 14 per cent of men off the rolls) is a lower bound for persons.
+- `HIDING_MARGINAL_COST_AT_CEILING` 0.5 kept, confidence C, derived: Anderson 2014 (https://dergipark.org.tr/en/download/article-file/1730550, average tax bribe 2.1 to 8.1 per cent of revenues across transition countries) over Alm, Martinez-Vazquez and McClellan 2016 (https://econpapers.repec.org/RePEc:eee:jeborg:v:124:y:2016:i:c:p:146-163, bribe-soliciting inspectors go with 4 to 10 points less of sales reported) gives 0.21 to 2.0 bribe per unit hidden; geometric middle 0.65. The range is wide; 0.5 sits inside it.
+- Both are modern analogues, not pre-modern measurements. A pre-modern response curve (Roman and medieval) is still a validation target, not an input.
