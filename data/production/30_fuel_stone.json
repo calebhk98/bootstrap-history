@@ -704,12 +704,12 @@
     "firewood_kg": 1500.0
    },
    "labour_hours": {
-    "potter": 700.0
+    "potter": 370.0
    },
    "unit_dimension": "mass",
    "basis": "per tonne of fired earthenware ceramic ware (pottery, tile and the like), low-fired around 900-1000 C",
-   "yield_basis": "The same wet-clay-to-fired-mass logic as brick_1000 applies (roughly 1.3 kg of pit clay per kg of fired ware after drying and firing losses), fired to a similar temperature so given the same fuel intensity per kg. Shaping is where ceramic ware differs from brick: wheel-throwing, trimming and glazing a kilogram of ware is skilled work, taken here at roughly half an hour of potter's time per kg, with a labourer handling clay preparation (wedging, levigating out stones and grit) and kiln loading. TRADE (Complaint 619): the hours are booked to potter, not the generic labourer pool, because the labourer share (wedging and levigating the clay, loading the kiln) is potters' work in the same workshop (the whole figure moves; its size is unchanged and not re-sourced here).",
-   "conf": "C",
+   "yield_basis": "Clay 1.3 kg per kg of fired ware and firewood 1.5 kg are brick_1000's wet-clay-to-fired logic (unchanged). Potter hours re-derived from Rural India Online, 'Kummaras of Kodavatipudi' (https://ruralindiaonline.org/en/articles/kummaras-of-kodavatipudi/, opened): a master potter shapes 20 to 30 ten-litre pots a day (about 15 minutes for a large pot) over about 10 hours, and his whole cycle (clay, shaping, drying, firing) comes to a monthly tally of 200 to 300 pots, i.e. about 10 pots a working day, about 1 potter hour a pot all in. Mass of a ten-litre pot taken as 2.7 kg: a 0.25 square metre shell at 6 mm wall and 1800 kg per cubic metre (wall and density are assumed, not read; a vendor listing of a 10-litre tap matka at 2.76 kg appeared in a search result but its page was not opened). 1 h / 2.7 kg = 0.37 potter hours a kg, so 370 a tonne, replacing 700. Cross-check: the Dressel 20 blog at https://fishandpeaches.blogspot.com/2012/03 (opened) has 7 amphorae a day each for the big 68-litre jar, which at the order of 30 kg a jar is a few hundred kg a day and hence under 100 hours a tonne for shaping alone; so 370 all-in for small thin pots is an upper-side value. The hours stay booked to potter (Complaint 619). Conf D because the pot mass is assumed; retire: Complaint 671 when a weighed pot is read.",
+ "conf": "D", "retire": "Complaint 671",
    "requires_node": "cap_heat_0700"
   },
   "porcelain_kg": {
