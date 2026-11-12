@@ -147,5 +147,18 @@ class Complaint670Pass10(unittest.TestCase):
         self.assertAlmostEqual(rates["wine_common_kg"]["rate"], 1.0 / midpoint(1.0, 2.0), delta=0.01)
 
 
+class Complaint670LampQuality(unittest.TestCase):
+
+    def test_light_quality_factors_are_the_read_price_ratios_to_wax(self):
+        goods = _load("data", "world", "needs.json")["goods"]
+        tallow = goods["light_tallow_candle"]["quality"]["light"]
+        oil = goods["light_oil_lamp"]["quality"]["light"]
+        self.assertAlmostEqual(tallow["factor"], 1.0 / 3.0, delta=0.01)
+        oil_over_tallow = midpoint(29.886, 59.441) / midpoint(40.293, 18.315)
+        self.assertAlmostEqual(oil["factor"], oil_over_tallow / 3.0, delta=0.02)
+        self.assertEqual((tallow["conf"], oil["conf"]), ("C", "C"))
+        self.assertNotIn("heuristic", tallow)
+
+
 if __name__ == "__main__":
     unittest.main()
