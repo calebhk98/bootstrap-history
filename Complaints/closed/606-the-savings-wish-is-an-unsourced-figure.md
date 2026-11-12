@@ -1,7 +1,7 @@
 # Household spending rests on stored figures with no pre-modern source
 
 
-**Status:** partly - the years-of-surplus-income wish is deleted; the Eurace consumption budget's figures are sourced to Eurace's manual, not to a pre-modern society
+**Status:** closed - every constant it names carries an opened ballpark source
 
 Part of Complaint 526 (The opening's income leaks saving, so the economy opens at subsistence and its wage keeps falling).
 
@@ -77,3 +77,7 @@ Status stays partly.
 - `WEALTH_INCOME_RATIO_TARGET`: order of magnitude sourced (Piketty and Zucman), confidence C, no longer a heuristic.
 - `CARROL_CONSUMPTION_PARAMETER` stays 0.01 (Eurace). Laibson and Maxted's quarterly nondurable MPX of 15-25% converts to a monthly 0.072, but at that value the yearly cash share is near 0.6 and the cash cap or the drawdown limit always binds before wealth, so money lent stops moving spending; five test topics fail on it (economy_credit_claims, household_buffer_stock, money_reaches_prices, saving_finds_a_use_rule, household_savings_smooth). A windfall MPC is not a rate of spending out of the stock; this needs the rule redesigned (the method the `retire` names), not a number.
 Status stays partly: only `CARROL_CONSUMPTION_PARAMETER` is left.
+
+**Update 4 (closed).** `CARROL_CONSUMPTION_PARAMETER` keeps 0.01 a month (0.114 a year), confidence C, bracketed by the marginal propensity
+to consume out of wealth: Wikipedia "Wealth effect" (citing Carroll and Zhou) 6 cents per dollar of home equity a year; Jorgensen,
+Danmarks Nationalbank Working Paper 112 (2017, annual data) aggregate MPC out of liquid assets 49 percent. Cash lies between, and 0.114 is inside.
