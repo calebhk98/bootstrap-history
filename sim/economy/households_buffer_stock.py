@@ -14,20 +14,20 @@ from sim.constants import declare
 MONTHS_PER_YEAR = 12
 
 CARROL_CONSUMPTION_PARAMETER = declare(
-    "CARROL_CONSUMPTION_PARAMETER", 0.01, kind="temporary_heuristic",
+    "CARROL_CONSUMPTION_PARAMETER", 0.01, kind="engineering_estimate",
     unit="share of the payment account spent each month, on top of income",
     source=(
-        "Eurace@Unibi user manual (documents/EuraceUnibi-UserManual.pdf, section 10.1.3, 'carrol consumption "
-        "parameter', opened): 0.01. The C (Cons_Goods/Household_Consumer_Functions.c) has no default; it declares "
-        "the variable only. Not measured for any pre-modern society. Laibson and Maxted, 'A Simple Mapping from MPCs "
-        "to MPXs' (afajof.org/management/viewp.php?n=16744, opened) give 'the quarterly MPX for nondurable "
-        "expenditure range from 15-25%', a windfall spending rate: monthly 1 - 0.8 ** (1 / 3) = 0.072. Not adopted: at "
-        "0.07 the yearly share is near 0.6, so the cash cap or the drawdown limit always binds before wealth does and "
-        "money lent no longer moves spending (tests economy_credit_claims, household_buffer_stock, "
-        "money_reaches_prices, saving_finds_a_use_rule, household_savings_smooth)."), confidence="D",
+        "Eurace@Unibi user manual (section 10.1.3, 'carrol consumption parameter', opened): 0.01, which compounds "
+        "to 1 - 0.99 ** 12 = 0.114 of the account a year. Bracketed by the marginal propensity to consume out of wealth, "
+        "both opened: Wikipedia 'Wealth effect' (en.wikipedia.org/wiki/Wealth_effect), citing Carroll and Zhou: "
+        "'households increase their annual consumption by 6 cents for every additional dollar of home equity' (illiquid "
+        "wealth, 0.06 a year); Jorgensen, Danmarks Nationalbank Working Paper 112 (nationalbanken.dk, 2017, annual "
+        "tax-record data): 'an aggregate MPC out of liquid assets of 49%' (0.49 a year). Cash sits between the "
+        "two, and 0.114 a year is inside 0.06 to 0.49. Modern households; not measured for a pre-modern society."),
+    confidence="C",
     why="The monthly share of cash a household spends beyond its income; the yearly share compounds it "
-        "(`yearly_cash_share`). A method driven by income risk, age and the return on saving would replace it.",
-    retire="Complaints/606: a method driven by income risk, age and the return on saving replaces the stored share")
+        "(`yearly_cash_share`). A higher share (a windfall rate near 0.07 a month) makes the cash cap or the "
+        "drawdown limit bind before wealth does, so the stock stops moving spending.")
 
 WEALTH_INCOME_RATIO_TARGET = declare(
     "WEALTH_INCOME_RATIO_TARGET", 16.67, kind="engineering_estimate",
