@@ -122,4 +122,11 @@ Derived from opened pages; each is a ballpark and the data says so (tag C or der
 - Tsetse forest fraction: FAO y5342e07, riparian flies in gallery forest 20 to 40 metres wide, 1000-1300 mm sites; low forest cover can hold flies.
 - Tlapa gold: the entry now states that the Oaxaca gold is sourced (Tochtepec, Codex Mendoza page; Cambridge abstract) and that the Tlapa point is a labelled representative position, not a sourced location.
 
-Honest limits, not blocking: the Aztec tribute and tax shares, the Han temples, the Mexica, Norse and Rome academies, the 6000 mm rainfall edge and Rader's density result have no direct source; each is stated as a ballpark or analogue in its data entry.
+Sixth pass (the last uncited ones):
+- Malaria 6000 mm tolerated edge: Wikipedia Chocó Department (close to 10,000 mm a year, Lloró 13,300 mm) and the Chocó malaria study (56,000 cases in 2016, falciparum commonest; endemic with high rainfall).
+- Han temples 6000: ancientwarhistory.com/?p=8439 (opened, popular-history site): 160+ shrines abolished in 40 BCE and 475 closed in 32 BCE; one per 10,000 people.
+- Mexica scholars 2000: Wikipedia Tenochtitlan (80 calpulli, 200,000+ people), Calmecac, Calpulli; 0.04 percent of population against the Han academy's 0.05 percent (Wikipedia Taixue).
+- Rome scholars 2000: Wikipedia Education in ancient Rome (grammatici paid per pupil, no count); 0.003 percent of population, a floor.
+- The Norse civilisation has no academy actor (its cast is the church only), so there is nothing to source there.
+
+Residual weaknesses, stated in the data entries: the Aztec tribute and tax shares are analogues (Han 3.3 percent, English geld 10 percent), the church counts of the Norse and Rome are ratio checks, and Rader et al. 2020 is known from search summaries only.
