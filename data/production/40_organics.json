@@ -74,24 +74,24 @@
    },
    "unit_dimension": "mass",
    "basis": "per tonne of pressed, salted hard cheese from goat and sheep milk",
-   "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017, not opened; no source found, a labelled heuristic), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure of a quarter hour a kilogram, conf D: no published time study of hand-made hard farmhouse cheese was found (a search for labour per kilogram of sheep or goat cheese gave only per-cow farm labour totals and milking studies, none of the cheese-room work), so the figure is a bottom-up estimate of the steps and stays D until one is read.",
+   "yield_basis": "Curdling with rennet, draining the whey, pressing and salting. Hard sheep and goat cheese takes about 6 to 10 kg of milk per kg (milk solids concentrate roughly tenfold as whey is drained; Fox et al., Fundamentals of Cheese Science, 2nd ed., 2017, not opened; no source found, a labelled heuristic), taken as 8. Salt is about 2 per cent of the finished cheese by mass (same source), 20 kg a tonne; it draws out moisture and stops spoilage organisms, which is why cheese keeps where milk sours in a day (data/world/spoilage.json). The whey, about 85 per cent of the milk by mass, is not priced. Labour is the dairy work of heating, curdling, draining, pressing and turning; a rough figure of a quarter hour a kilogram, conf D: no published time study of hand-made hard farmhouse cheese was found (a search for labour per kilogram of sheep or goat cheese gave only per-cow farm labour totals and milking studies, none of the cheese-room work), so the figure is a bottom-up estimate of the steps and stays D until one is read. SOURCE READ (Pass 8): Cornell small-ruminant dairy, 'Milk composition and cheese yield' (https://bpb-us-e1.wpmucdn.com/blogs.cornell.edu/dist/f/7746/files/2017/09/MILK-COMPOSITION-AND-CHEESE-YIELD-13twv28.pdf, opened): Table 1 gives dairy-sheep milk at 5.3 to 9.1 percent fat and 4.8 to 6.5 percent protein (Karagouniko 6.43 and 5.97), and the revised Van Slyke formula yield = [0.85 * fat% + (casein% - 0.1) * 1.13] / (1 - moisture/100). With fat 6.4, casein taken as 4.7 (80 percent of the protein, an assumption) and a hard cheese at 35 to 40 percent moisture: (5.47 + 5.28) / 0.60 to 0.65 = 16.5 to 18 percent, so 5.6 to 6.0 kg of sheep milk a kilogram. That bounds the sheep case below the 8 taken here; goat milk composition was not opened, so the sheep-and-goat figure of 8 is not bounded. Labour and salt stay unsourced. Conf D.",
    "conf": "D",
    "requires_node": null
   },
   "salted_meat_kg": {
    "outputs": {
-    "salted_meat_kg": 750.0
+    "salted_meat_kg": 710.0
    },
    "inputs": {
     "meat_kg": 1000.0,
-    "salt_kg": 150.0
+    "salt_kg": 70.0
    },
    "labour_hours": {
     "labourer": 40.0
    },
    "unit_dimension": "mass",
    "basis": "per tonne of dry-salted, drained meat (bone-in joints)",
-   "yield_basis": "Dry salting: joints are rubbed and packed in salt, drained and turned for weeks. Salt applied is taken as 15 per cent of the meat by mass (no source found for the mass share; Cato, De agricultura 162, LacusCurtius, opened: \"Allow a half-modius of ground Roman salt to each ham\", which gives no ham mass to turn into a share), of which the meat takes up a share and the rest drains off with brine. Salt and water leave the joints so that the cured weight is taken as three quarters of the fresh meat (cured hams lose roughly a quarter of their weight in drying; no source found, a labelled heuristic). The salt cuts water activity so spoilage organisms stop, which is why it keeps for a year where fresh meat turns in days (data/world/spoilage.json). Labour is rubbing, packing and turning, 40 hours a tonne, a rough figure. Conf D throughout.",
+   "yield_basis": "Dry salting: joints are rubbed and packed in salt, drained and turned for weeks. Salt applied is taken as 15 per cent of the meat by mass (no source found for the mass share; Cato, De agricultura 162, LacusCurtius, opened: \"Allow a half-modius of ground Roman salt to each ham\", which gives no ham mass to turn into a share), of which the meat takes up a share and the rest drains off with brine. Salt and water leave the joints so that the cured weight is taken as three quarters of the fresh meat (cured hams lose roughly a quarter of their weight in drying; no source found, a labelled heuristic). The salt cuts water activity so spoilage organisms stop, which is why it keeps for a year where fresh meat turns in days (data/world/spoilage.json). Labour is rubbing, packing and turning, 40 hours a tonne, a rough figure. Conf D throughout. SOURCE READ (Pass 8): Science Insights, 'How to salt cure a ham' (https://scienceinsights.org/how-to-salt-cure-a-ham/, opened): 'For every 10 pounds of fresh ham, mix roughly 8 ounces of fine-grain non-iodized salt' (5 percent), the full cure with sugar and curing salt 11 ounces (6.9 percent), and 'A properly cured ham loses about 28% to 30% of its original weight'. So the salt is taken as 70 kg a tonne (6.9 percent, was 15 percent) and the cured weight as 710 kg (29 percent loss, was 25 percent). A hobby page for a ham, applied to bone-in joints generally; labour (40 hours a tonne) still unsourced. Conf D.",
    "conf": "D",
    "requires_node": null
   },
@@ -384,10 +384,10 @@
     "ink_kg": 1.0
    },
    "inputs": {
-    "oak_gall_kg": 0.12,
-    "green_vitriol_kg": 0.06,
-    "gum_kg": 0.04,
-    "water_kg": 0.8
+    "oak_gall_kg": 0.083,
+    "green_vitriol_kg": 0.056,
+    "gum_kg": 0.028,
+    "water_kg": 0.84
    },
    "labour_hours": {
     "labourer": 1.0,
@@ -395,7 +395,7 @@
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished iron-gall ink (oak galls and copperas steeped in water with gum)",
-   "yield_basis": "Iron-gall ink is tannin from crushed galls steeped in water, iron sulphate (green vitriol, copperas) added so that iron tannate forms, and gum added to hold it in suspension. Medieval recipes (Theophilus, De diversis artibus; Cennino Cennini) give roughly one part galls to one half part vitriol and one third part gum by weight, steeped in about ten parts water, so a kilogram of ink holds about a tenth of a kilogram of galls; taken as 0.12 kg of galls, 0.06 kg of vitriol and 0.04 kg of gum, with a small allowance for filtering loss. Water is the bulk of the ink, charged as water_kg, the rest lost to the filtered dregs. Crushing, steeping for days, boiling and filtering take a labourer about an hour of attention and a scribe half an hour testing it flows, no source found, confidence D. Ratios: no source found, labelled heuristics.",
+   "yield_basis": "Iron-gall ink is tannin from crushed galls steeped in water, iron sulphate (green vitriol, copperas) added so that iron tannate forms, and gum added to hold it in suspension. Medieval recipes (Theophilus, De diversis artibus; Cennino Cennini) give roughly one part galls to one half part vitriol and one third part gum by weight, steeped in about ten parts water, so a kilogram of ink holds about a tenth of a kilogram of galls; taken as 0.12 kg of galls, 0.06 kg of vitriol and 0.04 kg of gum, with a small allowance for filtering loss. Water is the bulk of the ink, charged as water_kg, the rest lost to the filtered dregs. Crushing, steeping for days, boiling and filtering take a labourer about an hour of attention and a scribe half an hour testing it flows, no source found, confidence D. Ratios: no source found, labelled heuristics. SOURCE READ (Pass 8): Science in School issue 6, 'Monastic ink' (https://www.scienceinschool.org/wp-content/uploads/2014/11/issue6_galls.pdf, opened): galls 3 parts, water 30, ferrous sulphate 2, gum arabic 1, by weight; University of Illinois Library, 'Iron gall ink' (https://www.library.illinois.edu/rbx/2021/04/07/iron-gall-ink/, opened): 80 g galls, 50 g copperas, 25 g gum arabic, steeped in the sun for 2 days and a day more, then strained (no labour quantified). Of 36 parts, a kilogram of ink holds 3/36 = 0.083 kg of galls, 2/36 = 0.056 of vitriol, 1/36 = 0.028 of gum and 30/36 = 0.83 of water, taken as 0.84 so the inputs outweigh the kilogram of ink by the filtered dregs; inputs set to these (were 0.12, 0.06, 0.04, 0.8). Labour (1 labourer hour, half a scribe hour) still unsourced, so conf D.",
    "conf": "D",
    "requires_node": "mat_vitriols"
   },
@@ -405,7 +405,7 @@
    },
    "inputs": {
     "tallow_kg": 10.0,
-    "gum_kg": 0.1
+    "gum_kg": 0.18
    },
    "labour_hours": {
     "labourer": 5.0,
@@ -413,7 +413,7 @@
    },
    "unit_dimension": "mass",
    "basis": "per kg of finished carbon ink, tallow lampblack ground into a gum-and-water suspension",
-   "yield_basis": "The same carbon ink as the olive-oil ink_kg entry, with the soot collected from burning tallow (the fat a northern household has) in a shallow lamp under a cool plate, and bound with gum_kg, the tree gum, as the traditional binder. Soot is a small share of the fuel burnt, taken as the same ten kilograms of fuel for a kilogram of ink as the oil entry, a figure with no source found, confidence D; a tenth of a kilogram of gum binds a kilogram of ink, no source found. Labour as for the oil ink: tending smoky lamps, scraping soot and grinding it into the binder.",
+   "yield_basis": "The same carbon ink as the olive-oil ink_kg entry, with the soot collected from burning tallow (the fat a northern household has) in a shallow lamp under a cool plate, and bound with gum_kg, the tree gum, as the traditional binder. Soot is a small share of the fuel burnt, taken as the same ten kilograms of fuel for a kilogram of ink as the oil entry, a figure with no source found, confidence D; a tenth of a kilogram of gum binds a kilogram of ink, no source found. Labour as for the oil ink: tending smoky lamps, scraping soot and grinding it into the binder. SOURCE READ (Pass 8): Making and Knowing Project, 'Carbon ink info and recipes' (https://teaching640.makingandknowing.org/documents/pdf/carbon-ink-info-and-recipes.pdf, opened): a 9:1 gum arabic solution to carbon ink by weight, so soot is a tenth of the ink; Atlas of Making, 'Lampblack (Carbon) Ink' (https://atlasofmaking.kenjiliu.com/inks/lampblack, opened): gum arabic solution about 1:4. Taken as gum to water 1:4 by mass, the nine tenths of solution hold 0.9 / 5 = 0.18 kg of gum a kilogram of ink (was 0.1). The tallow burned per kilogram of soot (10 kg of fuel for 0.1 kg of soot, 1 percent collected) has no read source: the only soot-per-fuel figure found, 7 to 9 percent of kerosene burned in a wick lamp (University of Illinois news, 'The dark side of kerosene lamps', search summary only, not opened), is an emission rate, not a collected fraction, so it gives only a lower bound of about 1.3 kg of fuel. Conf D.",
    "conf": "D",
    "requires_node": "prn_carbon_ink"
   },
