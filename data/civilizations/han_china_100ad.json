@@ -750,8 +750,8 @@
       "basis": "imports_value",
       "rate": 0.05,
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): pass and market dues are attested under the Han but no rate is; a placeholder at a few per cent.",
-        "confidence": "D"
+        "source": "Wikipedia, Economy of the Han dynasty (en.wikipedia.org/wiki/Economy_of_the_Han_dynasty, opened): market officials were charged with 'collecting commercial taxes', and the property tax on merchants was raised in 119 BC 'from 120 coins per 10,000 coins of property to 120 coins per 2,000' (1.2 to 6 per cent of property a year). Wikipedia, Taxation in premodern China (opened) lists the Eastern Han commercial tax as 'None' and gives no customs entry. A few per cent of the value of trade is a ballpark between the two; no Eastern Han duty rate was found.",
+        "confidence": "C"
       }
     },
     {
@@ -759,8 +759,8 @@
       "basis": "exports_value",
       "rate": 0.05,
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): pass and market dues are attested under the Han but no rate is; a placeholder at a few per cent.",
-        "confidence": "D"
+        "source": "Wikipedia, Economy of the Han dynasty (en.wikipedia.org/wiki/Economy_of_the_Han_dynasty, opened): market officials were charged with 'collecting commercial taxes', and the property tax on merchants was raised in 119 BC 'from 120 coins per 10,000 coins of property to 120 coins per 2,000' (1.2 to 6 per cent of property a year). Wikipedia, Taxation in premodern China (opened) lists the Eastern Han commercial tax as 'None' and gives no customs entry. A few per cent of the value of trade is a ballpark between the two; no Eastern Han duty rate was found.",
+        "confidence": "C"
       }
     }
   ],
@@ -774,12 +774,12 @@
       "confidence": "C"
     },
     "starting_tax_share": {
-      "source": "Land tax at a thirtieth of harvest, plus poll tax, a merchant surcharge, and corvee commuted to cash and the salt and iron regime. Merchants were taxed above farmers; the combined share on trading revenue is an estimate.",
-      "confidence": "D"
+      "source": "Wikipedia, Han dynasty (en.wikipedia.org/wiki/Han_dynasty, opened): land tax cut 'from one-fifteenth of a farming household's crop yield to one-thirtieth' in 168 BC; 'The annual poll tax rate for adult men and women was 120 coins and 20 coins for minors'; merchants paid 240 coins; one month of conscripted labour a year for men fifteen to fifty-six, commutable to cash in the Eastern Han. The combined share on trading revenue is an estimate: the merchant property tax of 120 coins per 2,000 (Economy of the Han dynasty, opened) is 6 per cent of property, so 0.08 is a ballpark of a thirtieth of harvest plus poll and merchant surcharges.",
+      "confidence": "C"
     },
     "standing_army": {
-      "source": "The Eastern Han standing army: border garrisons and the capital troops, a few hundred thousand at most, far below the Former Han's conscript levies (Bielenstein, The Bureaucracy of Han Times). An approximate opening headcount.",
-      "confidence": "D"
+      "source": "The Eastern Han standing army: border garrisons and the capital troops, far below the Former Han's conscript levies (Bielenstein, The Bureaucracy of Han Times). Wikipedia, Military of the Han dynasty (en.wikipedia.org/wiki/Military_of_the_Han_dynasty, opened): 'The total number of soldiers protecting the capital in the Eastern Han, amounted to some 20,000'; the Northern Army was 'around 4,200 troops' after 31-39 AD; the Western Han standing army was 'some 600,000 to 700,000 men'. 200000 is a ballpark between the capital's 20,000 plus frontier garrisons and the Western total; no Eastern Han frontier count was found.",
+      "confidence": "C"
     }
   },
   "needs_first": {

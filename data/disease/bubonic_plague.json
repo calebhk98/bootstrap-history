@@ -44,8 +44,8 @@
    "source": "WHO plague fact sheet, who.int/news-room/fact-sheets/detail/plague: 'a case-fatality ratio of 30% to 60% for the bubonic type'; 0.45 is the midpoint (the page gives no untreated qualifier for that range)"
   },
   "immunity": {
-   "confidence": "unsourced",
-   "source": "No source found: the WHO plague fact sheet makes no statement on immunity, and Dean et al. 2018 (PMC5819418) say their models ignore immunity; lifelong immunity is a labelled assumption"
+   "confidence": "read",
+   "source": "Madagascar plague patients (PMC7653777, opened): anti-F1 antibody 'could persist for more than a decade in both BP and PP recovered patients', one patient seropositive at 14.8 years, which the authors say 'suggests its probable involvement in patients' protection'; the paper does not report reinfections. A Chinese cohort of 65 survivors over 16 years reported no reinfection (search summary only, not opened). Lifelong immunity is therefore a ballpark, a decade or more is read; Dean et al. 2018 (PMC5819418) say their models ignore immunity."
   },
   "stage.incubating": {
    "confidence": "read",

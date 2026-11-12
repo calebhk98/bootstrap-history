@@ -821,8 +821,8 @@
       "basis": "adult_labour_years",
       "rate": 0.04,
       "_internal": {
-        "source": "Provincial poll tax (tributum capitis), for instance the Egyptian laographia of some twenty drachmae a man against a wage of about a drachma a day. Italy and citizens were exempt, which this empire-wide share ignores.",
-        "confidence": "D"
+        "source": "Provincial poll tax (tributum capitis); citizens were exempt (Wikipedia, Tributum capitis, opened). John Gee, The Cares of This World (rsc.byu.edu/new-testament-history-culture-society/cares-world, opened), citing Wallace, Taxation in Egypt: 'The tax rate was 3-5 denarii/year for urban dwellers and 10 denarii/year for rural dwellers'; 'Wages for a day laborer in Egypt during the first century were 20-40 drachmas per month', at 4 drachmas to the denarius 60 to 120 denarii a year. So the tax is 3-5 of 60-120 (0.025 to 0.08) in towns and 10 of 60-120 (0.08 to 0.17) in the country; 0.04 is the empire-wide average once Italy and citizens, who did not pay, are counted in.",
+        "confidence": "C"
       }
     },
     {
