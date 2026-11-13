@@ -119,19 +119,21 @@ def _run_topic_module(slug, harness, own_name):
     for case in _flatten(cases):
         problem = outcomes.problems.get(case.id(), outcomes.class_problems.get(type(case).__name__))
         harness._LAST_AT = time.time() - outcomes.seconds.get(case.id(), 0.0)    # check() times the gap before it
-        harness.check(
-            "%s: %s" % (slug, case.id().rsplit(".", 1)[-1].replace("_", " ")),
-            problem is None,
-            problem.strip().splitlines()[-1] if problem else "")
+        name = "%s: %s" % (slug, case.id().rsplit(".", 1)[-1].replace("_", " "))
+        if case.id() in outcomes.skips:      # a skipped test is no pass: it is listed with its reason
+            harness.SKIPPED.append("%s (skipped: %s)" % (name, outcomes.skips[case.id()]))
+            continue
+        harness.check(name, problem is None, problem.strip().splitlines()[-1] if problem else "")
 
 
 class _CaseOutcomes(unittest.TestResult):
     """Each test's error or failure text by test id, and a class fixture's failure by class name (its tests
-    did not run)."""
+    did not run). A test marked as an expected failure that passes is a problem (its mark is stale); a skip is
+    kept with its reason by test id, so it is not read as an ordinary pass."""
 
     def __init__(self):
         super().__init__()
-        self.problems, self.class_problems, self.seconds, self._started = {}, {}, {}, 0.0
+        self.problems, self.class_problems, self.seconds, self.skips, self._started = {}, {}, {}, {}, 0.0
 
     def startTest(self, test):
         super().startTest(test)
@@ -155,6 +157,14 @@ class _CaseOutcomes(unittest.TestResult):
     def addFailure(self, test, err):
         super().addFailure(test, err)
         self._record(test, err)
+
+    def addUnexpectedSuccess(self, test):
+        super().addUnexpectedSuccess(test)
+        self.problems.setdefault(test.id(), "unexpectedly passed: the expected-failure mark is stale; remove it")
+
+    def addSkip(self, test, reason):
+        super().addSkip(test, reason)
+        self.skips[test.id()] = reason
 
     def addSubTest(self, test, subtest, err):
         super().addSubTest(test, subtest, err)
@@ -638,7 +648,7 @@ def main(argv=None):
     print("%d checks, %d failures, %.0fs%s"
           % (len(harness.CHECKS_RUN), len(harness.FAILURES),
              sum(elapsed for _, elapsed in harness.CHECKS_RUN),
-             ("   (%d slow checks skipped: run with --slow)" % len(harness.SKIPPED))
+             ("   (%d checks skipped: slow ones run with --slow)" % len(harness.SKIPPED))
              if harness.SKIPPED else ""))
     if skipped_slow_topics:
         print("quick tier only: %d of %d topics skipped - run with --slow for the full suite, "
@@ -654,6 +664,9 @@ def main(argv=None):
         _print_topic_timing(topic_costs)
     for failure in harness.FAILURES:
         print("   FAILED:", failure)
+    for skipped in harness.SKIPPED:
+        if "(skipped: " in skipped:
+            print("   SKIPPED:", skipped)
     print("subprocess spawns: %d calls, %.0fs waiting on child processes"
           % (harness._SUBPROC_CALLS[0], harness._SUBPROC_TIME[0]))
     if harness._PROFILE_OUT:
