@@ -46,7 +46,10 @@
    "status": "historic",
    "first_worked": -1500,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 465000,
+   "contained_basis": "Daily output about 1.5 t of salt (near-industrial scale from about 1200 BC) x 365 days x 850 years (assumption: working span from the German Wikipedia: Bronze Age mining from about 1500 BC to the 13th century BC debris flow, about 250 years, and Hallstatt-period mining from about 300 years later to the mid 4th century BC, about 600 years) = 465,000 t; medieval to modern working from 1311 not added, so a lower bound",
+   "contained_source": "news.at, Hallstatt: Forscher stossen auf Komplex eisenzeitlicher Abbaukammern, https://www.news.at/technik/hallstatt-forscher-stossen-auf-komplex-eisenzeitlicher-abbaukammern : \"Tagesproduktionen von etwa 1,5 Tonnen Salz\"; German Wikipedia, Salzbergwerk Hallstatt, https://de.wikipedia.org/wiki/Salzbergwerk_Hallstatt : first salt mining about 1500 BC, buried in the 13th century BC, resumed about 300 years later, stopped in the mid 4th century BC, first certain document 1311"
   },
   {
    "id": "khewra_salt",
@@ -77,7 +80,8 @@
    "status": "modern",
    "first_worked": 1852,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_basis": "No separate rock-salt tonnage: the only opened series, 'The Stassfurt Industry' (German Kali Works), gives crude salts (potash-bearing salts together) with no rock-salt split; tried: that series, German and English Wikipedia Stassfurt (dates only: systematic salt exploitation from 1856, no tonnage), a German Kalibergbau article (no Stassfurt tonnage); needs a rock-salt output table, for example Slotta, 150 Jahre Kaliproduktion in Deutschland, Kali und Steinsalz 3/2011, which did not open"
   },
   {
    "id": "great_salt_lake",
@@ -214,7 +218,10 @@
    "status": "historic",
    "first_worked": 1861,
    "source": "Coordinate from Wikipedia. First industrial potash mine; no defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 61500000,
+   "contained_basis": "Crude salts (potash-bearing salts, kainit and carnallite and the like, with associated salt; not K2O) raised by the Stassfurt industry 1861 to 1906, summed from the year-by-year table: 61.5 million t (2,293 t in 1861, 3,037,035 t in 1900, 5,311,903 t in 1906); production only, crude-salt tonnes not K2O, and the table does not split Stassfurt proper from the district's 45 mines, so the row stands for the district",
+   "contained_source": "The Stassfurt Industry, German Kali Works (New York, undated, data to 1906), https://distantreader.org/stacks/trust/uma/uma_ark+=13960=t0wq0q361.txt : table of crude salts production 1861 to 1906 in metric tons"
   },
   {
    "id": "boulby_potash",
@@ -277,7 +284,10 @@
    "status": "modern",
    "first_worked": 1968,
    "source": "Coordinate from Wikipedia. Latitude sign corrected (the earlier entry was in the northern hemisphere, in the Pacific). No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 296000,
+   "contained_basis": "Miners extract 14 t a day x 365 days x 58 years (assumption: the row's first_worked of 1968 to 2026, taken from the existing row, not from the page) = 296,000 t; production only, and the page says this is about 20 percent of the continuous daily deposit",
+   "contained_source": "Wikipedia, Kawah Ijen, https://en.wikipedia.org/wiki/Kawah_Ijen : miners \"extract 14 tons per day\""
   },
   {
    "id": "gulf_coast_sulfur",

@@ -300,7 +300,8 @@
    "status": "historic",
    "first_worked": -3000,
    "source": "Coordinate from Wikipedia. Seeps worked since the Bronze Age; no defensible endowment figure, omitted. hit_iraq_seeps and hit_seeps_bitumen merged here.",
-   "conf": "C"
+   "conf": "C",
+   "contained_basis": "No tonnage: tried: Wikipedia Hit Iraq, Bitumen and Asphalt (no flow or tonnage), Aramco World 1984 Bitumen: a History (only 'thousands of tons of bitumen' for ziggurats, undated), Herodotus summary; a British 1924 Military Report on Iraq via Qatar Digital Library (a search snippet says 150 to 300 tons a month) returned 403 and was not opened; needs that report's passage, then x years worked"
   },
   {
    "id": "trinidad_pitch_lake",
