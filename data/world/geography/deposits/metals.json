@@ -207,7 +207,10 @@
    "status": "modern",
    "first_worked": 2009,
    "source": "Coordinate from Wikipedia. Contained copper, order of magnitude from memory. Renamed from freeport_tenke.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 3712800,
+   "contained_basis": "Proven and probable reserves at December 2020 = 176.8 Mt ore x 2.1% Cu = 3.71 Mt copper; production 2009 to 2020 is not given and not added, so a lower bound",
+   "contained_source": "NS Energy, Tenke Fungurume Copper Cobalt Mine, https://www.nsenergybusiness.com/projects/tenke-fungurume-copper-cobalt-mine/ : \"176.8 million tonnes (Mt) of recoverable ore reserves grading 2.1% copper and 0.30% cobalt as of December 2020\""
   },
   {
    "id": "central_african_copperbelt",
@@ -223,7 +226,10 @@
    "status": "modern",
    "first_worked": 1911,
    "source": "Coordinate from Wikipedia. Zambian plus Congolese belts taken together, identified endowment of order a hundred million tonnes of copper from memory of USGS assessments. Renamed from copperbelt_pbzn, which mislabelled it as lead-zinc.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 101000000,
+   "contained_basis": "National copper reserves of the two Copperbelt countries, Congo (Kinshasa) 80 Mt + Zambia 21 Mt = 101 Mt (2023); assumes the reserves of both countries sit in the belt (their copper is almost wholly Copperbelt, assumption); cumulative production since 1911 is not added and resources are larger, so a lower bound",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Copper, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-copper.pdf : reserves column, Congo (Kinshasa) 80,000 and Zambia 21,000 thousand metric tons"
   },
   {
    "id": "olympic_dam_copper",
@@ -429,7 +435,10 @@
    "status": "modern",
    "first_worked": 1998,
    "source": "Coordinate (near Orange, New South Wales) and contained gold from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 420,
+   "contained_basis": "Newmont reserves 13.5 Moz gold x 31.1035 g per troy ounce = 420 t gold; production since 1998 is not added, so a lower bound (Newmont lists a further 11 Moz of resources, not added because it does not say whether they exclude reserves)",
+   "contained_source": "Newmont, Cadia operation page, https://operations.newmont.com/australia/cadia : \"Reserves 13.5 million ounces of gold; 2.9 million tonnes of copper\"; \"Resources 11 million ounces of gold\""
   },
   {
    "id": "canadian_malartic_gold",
@@ -504,7 +513,10 @@
    "first_worked": 1966,
    "source": "Coordinate from Wikipedia. Pilbara iron ore, identified ore resource of order fifty billion tonnes at mid-fifties percent iron, from memory. fortescue_iron removed: it is a company working the same province.",
    "conf": "C",
-   "share_of_reference_output": 0.02
+   "share_of_reference_output": 0.02,
+   "contained_tonnes": 2489000000,
+   "contained_basis": "Rio Tinto proven and probable reserves, first quarter 2010: Hamersley Pilbara operations 3,344 Mt saleable ore x 62% Fe (assumed grade, a typical Pilbara saleable ore grade, not stated on the page) = 2,073 Mt Fe, plus Robe River 696 Mt ore x 59.7% Fe (midpoint of the stated 57.2 to 62.2% range) = 416 Mt Fe; one operator's reserves only, no other holders, no resources and no production since 1966, so a lower bound",
+   "contained_source": "Mining Technology, RTZ Iron Ore Mine, Hamersley Basin, https://www.mining-technology.com/projects/hamersley/ : \"proven and probable reserves at Hamersley's Pilbara operations yielded 3,344Mt of saleable ore. The Robe River operations had a further 696Mt of proven and probable ore, grading between 57.2% and 62.2% iron\""
   },
   {
    "id": "carajas_iron",
@@ -558,7 +570,10 @@
    "status": "modern",
    "first_worked": 1953,
    "source": "Coordinate from Wikipedia. Production plus reserves of order a billion tonnes of ore, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1424000000,
+   "contained_basis": "Estimated reserves 2.43 Gt ore x 58.6% Fe = 1.424 Gt iron; production since 1947 (30.9 Mt ore in 2013 alone) is not added, so a lower bound",
+   "contained_source": "Wikipedia, Sishen mine, https://en.wikipedia.org/wiki/Sishen_mine : \"estimated reserves of 2.43 billion tonnes of ore grading 58.6% iron metal\""
   },
   {
    "id": "thabazimbi_iron",
@@ -588,7 +603,10 @@
    "first_worked": 1953,
    "source": "Coordinate from memory; no defensible endowment figure, omitted.",
    "conf": "C",
-   "share_of_reference_output": 0.05
+   "share_of_reference_output": 0.05,
+   "contained_tonnes": 756000000,
+   "contained_basis": "Estimated reserves 1.4 Gt ore x 54% Fe = 756 Mt iron; production since 1953 is not added, so a lower bound",
+   "contained_source": "Wikipedia, Marcona mine, https://en.wikipedia.org/wiki/Marcona_mine : \"estimated reserves of 1.4 billion tonnes of ore grading 54% iron metal\""
   },
   {
    "id": "norilsk_nickel",
@@ -696,7 +714,10 @@
    "status": "modern",
    "first_worked": 1960,
    "source": "Southeast Missouri lead district; coordinate from memory (the earlier entry was half a degree off), contained lead order of magnitude from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 19200000,
+   "contained_basis": "Derived: Missouri all-time lead production 'more than 30 million tons' minus Old Lead Belt 8.5 million tons (1864 to 1972) minus Mine La Motte 0.325 million tons (1720 to 1959) = 21.2 million short tons x 0.9072 = 19.2 Mt; assumes the other Missouri districts are negligible, so approximate; production only, no reserves",
+   "contained_source": "Missouri Department of Natural Resources, Galena, https://dnr.mo.gov/print/document-search/pub0659 : \"more than 30 million tons\" all-time Missouri lead; Wikipedia, Southeast Missouri Lead District, https://en.wikipedia.org/wiki/Southeast_Missouri_Lead_District : \"From 1864 to 1972, over 8.5 million tons of lead was produced from the Old Lead Belt Subdistrict\"; \"From 1720 to its closure in 1959, the Mine La Motte-Fredericktown Subdistrict produced over 325,000 tons of lead\""
   },
   {
    "id": "kinta_tin",
@@ -729,7 +750,10 @@
    "status": "historic",
    "first_worked": 1710,
    "source": "Coordinate from Wikipedia. Tin metal produced since the 1700s, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 720000,
+   "contained_basis": "Indonesian proven tin deposit 800,000 t (2020) x 0.9 (Bangka and Belitung produce about 90% of national tin, assumed to hold the same share of the deposit) = 0.72 Mt; cumulative production since 1710 is not added, so a lower bound",
+   "contained_source": "Wikipedia, Tin mining in Indonesia, https://en.wikipedia.org/wiki/Tin_mining_in_Indonesia : \"a proven deposit of 800,000 tonnes\" (Ministry of Energy and Mineral Resources, 2020); \"Around 90 percent of national production originated from Bangka and Belitung\""
   },
   {
    "id": "olympic_dam_uranium",
@@ -764,7 +788,10 @@
    "status": "modern",
    "first_worked": 1973,
    "source": "Boke region coordinate from Wikipedia; Guinea holds the largest reserves in the world (USGS); regional figure from memory. Grade is kilograms of aluminium per tonne of ore. The earlier entry was 3.7 degrees east of Boke.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 7400000000,
+   "contained_basis": "Guinean bauxite reserves 7.4 Gt ore (2023); the Boke region holds most of the country's mined bauxite (assumption); production since 1973 is not added, so a lower bound",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Bauxite and Alumina, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-bauxite-alumina.pdf : reserves, Guinea 7,400,000 thousand metric tons"
   },
   {
    "id": "weipa_bauxite",
@@ -780,7 +807,10 @@
    "status": "modern",
    "first_worked": 1960,
    "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory. Renamed from australia_bauxite.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 3500000000,
+   "contained_basis": "Australian bauxite reserves 3.5 Gt ore (2023); Weipa holds most of Australia's reserves (assumption); production since 1960 is not added, so a lower bound",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Bauxite and Alumina, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-bauxite-alumina.pdf : reserves, Australia 3,500,000 thousand metric tons"
   }
  ]
 }

@@ -47,7 +47,10 @@
    "status": "modern",
    "first_worked": 1957,
    "source": "Coordinate from Wikipedia. Wikipedia: about ten million carats a year in the 1960s falling to about two million; total of order a hundred million carats is an estimate from that, C.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 40,
+   "contained_basis": "Mir has produced over 200 million carats x 0.2 g per carat = 40 t; production only, a lower bound (another site gives about 360 million carats but was not opened to a source)",
+   "contained_source": "ShowCaves, Mir diamond mine, https://showcaves.com/english/ru/mines/Mir.html : \"Mir has produced over 200 million carats of diamonds\""
   },
   {
    "id": "jwaneng_diamonds",
@@ -61,7 +64,10 @@
    "status": "modern",
    "first_worked": 1982,
    "source": "Coordinate from memory; annual output times mine life, order of magnitude.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 89.7,
+   "contained_basis": "Derived: reserves 88.3 Mct at December 2012 plus production 1982 to 2012 of 30 years x 12 Mct per year (the lower end of the stated 12 to 15 Mct per year average, assumed constant) = 448 Mct x 0.2 g per carat = 89.7 t",
+   "contained_source": "Mining Technology, Jwaneng Diamond Mine, https://www.mining-technology.com/projects/jwaneng-diamond-mine/ : \"estimated reserves of 88.3 million carats or 70.1 million tonnes ... as of December 2012\"; \"The mine has an average production rate of 12 to 15 million carats per year\""
   },
   {
    "id": "murowa_diamonds",
@@ -92,7 +98,10 @@
    "status": "modern",
    "first_worked": 1967,
    "source": "Coordinate from Wikipedia. Production plus resource, order of magnitude from memory. The earlier entry was 1.4 degrees north and 2 degrees east of the mine.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 25.2,
+   "contained_basis": "Finsch has supplied over 126 million carats in its 40-plus-year life (undated, about 2011 to 2015) x 0.2 g per carat = 25.2 t; production only, a lower bound",
+   "contained_source": "Wikipedia, Petra Diamonds, https://en.wikipedia.org/wiki/Petra_Diamonds : \"Finsch is a major producer, having supplied over 126 million carats in its 40 plus year life to date\""
   },
   {
    "id": "muzo_emerald",
@@ -104,7 +113,10 @@
    "status": "historic",
    "first_worked": 1559,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 0.0304,
+   "contained_basis": "Only one recovery was found: the operator MTC recovered 152,000 carats from one area in May 2015 x 0.2 g per carat = 30 kg, a very small lower bound; five centuries of output are not quantified (World Mining Report 2005 puts Colombian output at 5 to 6 million carats a year in the 1990s with Muzo about 10% of it, which would be on the order of a tonne, not used because the shares are for 2005)",
+   "contained_source": "Earth Wonders, Beryl from Muzo mine, https://earthwonders.com/wiki/beryl_from_muzo-mine_colombia_174952 : \"a dramatic MTC recovery in May 2015, when one area yielded 152,000 carats\"; World Mining Report 2005, Central and South America, https://www.ganoksin.com/borisat/nenam/wmr-05-csamerica.htm"
   },
   {
    "id": "chivor_emerald",
@@ -116,7 +128,10 @@
    "status": "historic",
    "first_worked": 1537,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted. The earlier entry was 0.4 degrees north of Chivor.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 0.0647,
+   "contained_basis": "Recorded yields only: 137,000 carats 1925 to 1929, 5,400 in 1947, 82,370 in 1948, 91,656 in 1949 and 7,177 in 1950 = 323,603 carats x 0.2 g per carat = 64.7 kg; other years are not given, so a small lower bound",
+   "contained_source": "Schmetzer, Martayan and Blake, History of the Chivor Emerald Mine, Part II (1924-1970), Gems & Gemology, Summer 2020, https://www.gia.edu/gems-gemology/summer-2020-history-of-the-chivor-emerald-mine-part-2 : \"In the period from 1925 to 1929, the mine yielded 137,000 carats in total\"; \"5,400 carats in 1947 ... 82,370 carats in 1948 and 91,656 carats in 1949\"; \"Reported yield for 1950 amounted only to 7,177 carats\""
   },
   {
    "id": "mogok_ruby",
@@ -164,7 +179,10 @@
    "status": "historic",
    "first_worked": -400,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 5.72,
+   "contained_basis": "Madhya Pradesh reserves plus resources 28,597,036 carats as on 1 April 2020 x 0.2 g per carat = 5.72 t; assumes the state's diamond estimate stands for the Panna belt (Majhgawan is the producing mine); production not added",
+   "contained_source": "Indian Bureau of Mines, Indian Minerals Yearbook 2021, Diamond, https://ibm.gov.in/writereaddata/files/01312023164827Diamond_2021.pdf : Table 1, Madhya Pradesh total 28,597,036 carats (reserves and resources, 1.4.2020)"
   },
   {
    "id": "golconda_diamond",
@@ -260,7 +278,10 @@
    "status": "modern",
    "first_worked": 1967,
    "source": "Coordinate from memory (Mererani, Manyara Region). Replaces tanzanite_deposit, which was mislabelled sapphire and placed near Arusha. No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 22.2,
+   "contained_basis": "Reserves 109 million carats (2018 national report) + about 2 million carats mined 1967 to 1971 = 111 Mct x 0.2 g per carat = 22.2 t; production after 1971 (2.4 Mct in 2011 alone) is not added",
+   "contained_source": "Wikipedia, Tanzanite, https://en.wikipedia.org/wiki/Tanzanite : \"an estimated two million carats of tanzanite were mined\" from 1967 until 1971; \"Total reserves of tanzanite are estimated at 109,000,000 carats, according to a report published in 2018\""
   },
   {
    "id": "yogo_sapphire",
@@ -272,7 +293,10 @@
    "status": "historic",
    "first_worked": 1895,
    "source": "Coordinate from memory (Judith Basin County, Montana). Replaces sapphire_montana, whose coordinate was 2.4 degrees west. No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 8.8,
+   "contained_basis": "English Mine recovered over 16 million carats of rough sapphire 1899 to 1929 plus at least 28 million carats still in the ground = 44 Mct x 0.2 g per carat = 8.8 t",
+   "contained_source": "Wikipedia, Yogo sapphire, https://en.wikipedia.org/wiki/Yogo_sapphire : \"recovered more than 16 million carats (3.2 t) of rough sapphires\"; \"at least 28 million carats (5.6 t ...) of Yogo sapphires are still in the ground\""
   },
   {
    "id": "san_carlos_peridot",

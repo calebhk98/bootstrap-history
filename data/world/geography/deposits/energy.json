@@ -132,7 +132,10 @@
    "status": "modern",
    "first_worked": 1976,
    "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1664000000,
+   "contained_basis": "Pemex reported about 12.2 billion barrels produced to October 2009 x 0.1364 t/bbl (1/7.33 barrels per tonne of oil equivalent, Wikipedia Tonne of oil equivalent) = 1.66 Gt; original oil in place about 35 Gbbl and recoverable reserves are not given, so production only is a lower bound",
+   "contained_source": "Oil & Gas Journal, SPE: Pemex aspires for 60% oil recovery from Cantarell, https://www.ogj.com/home/article/17277366/spe-pemex-aspires-for-60-oil-recovery-from-cantarell : \"originally contained about 35 billion bbl of oil in place\"; \"To date, Pemex has produced about 12.2 billion bbl\" (7 October 2009)"
   },
   {
    "id": "bolivar_coastal_oil",
@@ -282,7 +285,10 @@
    "status": "historic",
    "first_worked": -1000,
    "source": "Coordinate from Wikipedia. Seeps worked since antiquity; cumulative output of the Absheron fields, order of magnitude from memory. Replaces baku_oil_seeps.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 1000000000,
+   "contained_basis": "SOCAR history gives over one billion tons of Azerbaijani oil produced by 1949, when almost all output came from the Absheron peninsula (the offshore Oil Rocks field started that year); production only, a lower bound. National cumulative to 2024 is 2.22 Gt but includes Caspian offshore fields",
+   "contained_source": "SOCAR, Oil history of Azerbaijan, https://socar.jobs/en/page/oil-history-of-azerbaijan : \"1949 ... Azerbaijan reached over one billion tons of oil production\"; Trend, https://www.trend.az/business/energy/3893965.html : \"Azerbaijan has produced 2.22 billion tons of oil\" in the history of field development"
   },
   {
    "id": "hit_bitumen_seeps",
@@ -412,7 +418,10 @@
    "status": "modern",
    "first_worked": 1979,
    "source": "Coordinate from Wikipedia. Recoverable gas, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 954100000,
+   "contained_basis": "Troll East total recoverable reserves 1,330.7 billion Sm3 gas x 0.717 kg/m3 = 954 Mt; Troll West gas not added, so a lower bound for the field",
+   "contained_source": "Norwegian Petroleum Museum, The Troll area, https://www.norskolje.museum.no/wp-content/uploads/2016/02/3467_321daaaf2b0644d897762f3bb73224cc.pdf : \"Troll East: Total recoverable reserves 1 330.7 bn scm gas\" (remaining 995 bn scm at 31 Dec 2008)"
   },
   {
    "id": "lacq_gas",
@@ -443,7 +452,10 @@
    "status": "modern",
    "first_worked": 1995,
    "source": "Timor Sea; coordinate and recoverable gas (about three to four trillion cubic feet) from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 77200000,
+   "contained_basis": "Gross 2P sales gas and ethane 3.8 tcf at end 2003 (before first production in 2004) x 28.317 billion m3 per tcf = 107.6 billion m3 x 0.717 kg/m3 = 77.2 Mt; the 530 million barrels of condensate and LPG are not added",
+   "contained_source": "Santos, Bayu-Undan Liquids (page of 6 October 2005, mirrored by La'o Hamutuk), https://www.laohamutuk.org/OilWeb/Company/Santos/SantosBU.htm : \"2003 Year End Reserves (Gross 2P) ... Sales gas and ethane (TCF) 3.8\""
   },
   {
    "id": "powder_river_coal",
@@ -510,7 +522,10 @@
    "first_worked": 1851,
    "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory.",
    "conf": "B",
-   "share_of_reference_output": 0.05
+   "share_of_reference_output": 0.05,
+   "contained_tonnes": 725000000000,
+   "contained_basis": "Resource estimate for the whole basin, 725 Gt; how much is reserve and how much past production is not stated, and it is far above the mineable fraction",
+   "contained_source": "Wikipedia, Kuznetsk Basin, https://en.wikipedia.org/wiki/Kuznetsk_Basin : \"Overall coal deposits are estimated at 725 billion tonnes\""
   },
   {
    "id": "ordos_coal",
@@ -525,7 +540,10 @@
    "first_worked": 1900,
    "source": "Shaanxi-Shanxi-Inner Mongolia coal; reserves plus production, order of magnitude from memory; coordinate approximate.",
    "conf": "C",
-   "share_of_reference_output": 1.2
+   "share_of_reference_output": 1.2,
+   "contained_tonnes": 210200000000,
+   "contained_basis": "Proven coal reserves of Ordos city 210.2 Gt (2021); assumes the city's proven reserves stand for the Ordos Basin coalfield (the city covers the basin's main coal area, assumption); production not added",
+   "contained_source": "China Daily, Coal industry hits development milestone in Ordos, https://regional.chinadaily.com.cn/ordosen/en/2021-12/06/c_692839.htm : \"The city has proven coal reserves of 210.2 billion metric tons\""
   },
   {
    "id": "donbas_coal",
@@ -574,7 +592,10 @@
    "first_worked": 1797,
    "source": "Wikipedia gives the basin centre at 33.95S 150.76E, but the working coalfields (Newcastle, Hunter, Illawarra) lie across the whole basin; production plus resource, order of magnitude from memory.",
    "conf": "C",
-   "share_of_reference_output": 0.02
+   "share_of_reference_output": 0.02,
+   "contained_tonnes": 26477000000,
+   "contained_basis": "Remaining black coal at end 2022 in the Sydney Basin: economic demonstrated 15,757 Mt + subeconomic demonstrated 509 Mt + inferred 10,211 Mt = 26,477 Mt; production since 1797 is not added, so a lower bound",
+   "contained_source": "Geoscience Australia, Australia's Energy Commodity Resources 2024, Coal, Table 4.1, https://www.ga.gov.au/aecr2024/coal : Sydney Basin row, EDR 15,757 Mt, SDR 509 Mt, Inferred 10,211 Mt (end 2022)"
   },
   {
    "id": "newcastle_coal",
@@ -589,7 +610,10 @@
    "first_worked": 1200,
    "source": "Cumulative production, order of magnitude from memory; coordinate approximate.",
    "conf": "C",
-   "share_of_reference_output": 0.45
+   "share_of_reference_output": 0.45,
+   "contained_tonnes": 10780741987,
+   "contained_basis": "Estimated tons of coal in the Durham and Northumberland coalfield at depths down to 4,000 feet, as tabulated in a 1920s book that cites the 1925 Royal Commission on the Coal Industry; the book's unit is tons (treated as tonnes, within 2%); past production not added",
+   "contained_source": "The Basic Industries of Great Britain, ch. 1, https://digi.econbiz.de/viewer/fulltext/1747397008/20/ : \"Durham and Northumberland . 10,780,741,987\" (estimated tons)"
   },
   {
    "id": "ruhr_coal",
@@ -638,7 +662,10 @@
    "status": "modern",
    "first_worked": 1890,
    "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 12461000000,
+   "contained_basis": "Council for Geoscience reserves for Witbank in 1982 = 12,461 Mt; 3,952 Mt was produced from 1982 to 2009 and 8,509 Mt remained in 2009; production before 1982 is not added, so a lower bound",
+   "contained_source": "McGill, The Coal Value Chain (CSIR, 2015), Table 1.1, https://researchspace.csir.co.za/bitstream/handle/10204/8153/McGill_2015.pdf : Witbank, Reserves 1982 12 461.0 Mt, ROM production 1982-2009 3 951.7 Mt, remaining 2009 8 509.3 Mt"
   },
   {
    "id": "silesia_coal",
