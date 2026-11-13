@@ -1183,6 +1183,12 @@ def main():
                            "for its full years without the early stop, the workforce trim, the trimmed stage; print "
                            "each year's settle quantities, rate, wage, money and watched prices, then the settle gaps "
                            "the opening ends with (about 4 minutes)")
+    subparser.add_argument("--ensemble", type=int, default=0, help="with --stages: replay the opening this many times, "
+                           "member k with every household cohort's cash multiplied by 1 + k * 1e-12 (a measurement "
+                           "perturbation), and print each quantity's end gap per member, the median, the spread and the "
+                           "trend of the trimmed stage; --csv then writes one row per member and quantity")
+    subparser.add_argument("--jobs", type=int, default=0, help="with --ensemble: members to run at once (default: the cores "
+                           "available)")
     subparser.add_argument("--csv", default="", help="also write the year's columns to this CSV file (macro columns and "
                            "money by holder for a civilisation; the fixture's columns with --fixture; every --stages "
                            "column, one column per watched good)")

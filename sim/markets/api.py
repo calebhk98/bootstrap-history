@@ -23,11 +23,30 @@ def spin_up_trace(game, years):
 	return trace(game, years)
 
 
-def spin_up_stages(game):
+def spin_up_stages(game, cash_factor=1.0):
 	"""(watched goods, generator of one row per year) of the full-length hidden spin-up of the opening `game` saved,
-	stage by stage as the run takes it."""
+	stage by stage as the run takes it; with a `cash_factor` other than one the households' cash is first scaled by it."""
 	from .spin_up_stages import replay_opening
-	return replay_opening(game.view("agent_opening_setup")())
+	return replay_opening(game.view("agent_opening_setup")(), cash_factor)
+
+
+def spin_up_member_figures(rows):
+	"""({quantity: end gap}, {quantity: trend}) of the rows `spin_up_stages` gave (spin_up_ensemble.trimmed_trends)."""
+	from .spin_up_ensemble import trimmed_trends
+	from .spin_up_stages import end_gaps
+	return end_gaps(rows)["gaps"], trimmed_trends(rows)
+
+
+def spin_up_cash_factor(member):
+	"""The cash factor of ensemble member `member` (spin_up_ensemble.cash_factor)."""
+	from .spin_up_ensemble import cash_factor
+	return cash_factor(member)
+
+
+def spin_up_summary(member_values):
+	"""Median and spread by quantity across members (spin_up_ensemble.summarise_members)."""
+	from .spin_up_ensemble import summarise_members
+	return summarise_members(member_values)
 
 
 def spin_up_end_gaps(rows):

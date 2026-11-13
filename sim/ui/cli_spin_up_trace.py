@@ -9,6 +9,8 @@ from sim.markets import api as markets_api
 from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
 from sim.markets.port_trace_holders import HOLDER_COLUMNS
 from sim.ui.spin_up_stages_report import format_end_gaps, header_line, row_line, write_stage_csv
+from sim.ui.spin_up_ensemble_report import format_ensemble, write_ensemble_csv
+from sim.ui.spin_up_ensemble_run import run_ensemble
 from sim.ui.spin_up_fixture_trace import FIXTURE_COLUMNS, fixture_trace, format_fixture_trace
 
 MACRO_COLUMNS = ("year", "price_level", "wage", "unsold_hours_share", "people_unemployment", "real_output",
@@ -50,6 +52,8 @@ def cmd_spin_up_trace(args):
         if args.csv:
             write_csv(rows, args.csv, FIXTURE_COLUMNS)
         return 0
+    if args.stages and args.ensemble:
+        return _print_ensemble(args)
     _tree, _prices, nodes, _wages, _goods = load()
     game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(args.civ or default_civilisation_id()))
     if args.stages:
@@ -58,6 +62,16 @@ def cmd_spin_up_trace(args):
     print(format_trace(rows))
     if args.csv:
         write_csv(rows, args.csv)
+    return 0
+
+
+def _print_ensemble(args):
+    """Replay the opening --ensemble times with rounding-level perturbations and print the distribution of the end gaps."""
+    civilisation_id = args.civ or default_civilisation_id()
+    results = run_ensemble(civilisation_id, args.ensemble, args.jobs)
+    print(format_ensemble(civilisation_id, results))
+    if args.csv:
+        write_ensemble_csv(results, args.csv)
     return 0
 
 

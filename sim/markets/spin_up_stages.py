@@ -4,6 +4,7 @@ state the settle test measures (spin_up_year.year_state) with the macro and mone
 from sim.economy import api as economy_api
 
 from .port_trace_holders import money_by_holder_columns
+from .spin_up_ensemble import perturb_household_cash
 from .spin_up import SPIN_UP_MEASURED_YEARS, spin_up_years
 from .spin_up_gap import window_gaps, worst_price_change
 from .spin_up_year import watched_goods, year_inputs, year_state
@@ -27,10 +28,14 @@ def replay(economy, inputs, watched, unskilled_trade, first_years, trimmed_years
             yield row
 
 
-def replay_opening(setup):
-    """(watched goods, the rows' generator) for the full-length spin-up of the opening `setup`, on a fresh economy."""
+def replay_opening(setup, cash_factor=1.0):
+    """(watched goods, the rows' generator) for the full-length spin-up of the opening `setup`, on a fresh economy whose
+    households' cash is first multiplied by `cash_factor` (the ensemble's perturbation, spin_up_ensemble.py; one
+    leaves it alone)."""
     economy = economy_api.blank_economy(setup)
     economy_api.begin_spin_up(economy)
+    if cash_factor != 1.0:
+        perturb_household_cash(economy, cash_factor)
     watched = watched_goods(economy)
     first_years, trimmed_years = spin_up_years()
     return watched, replay(economy, year_inputs(economy), watched, setup.unskilled_trade, first_years, trimmed_years)
