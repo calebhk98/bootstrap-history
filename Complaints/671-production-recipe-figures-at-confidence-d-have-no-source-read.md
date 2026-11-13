@@ -213,3 +213,21 @@ Row cleared: `acetic_acid_kg` oven retort. One 25 ft oven carries the entry's 11
 Rows left D, the missing input each: all lead rows (`bleach_kg`, `blue_vitriol_kg`, `phosphoric_acid_kg`, `borax_kg`, `magnesium_fluoride_kg`) lack a vessel size (batch, cycle time and so lead area) and a lining rate that includes burning; the vitriol, red phosphorus and silver nitrate rows lack retort counts, charges and firing times; salt-cake pan, soda ash and caustic pans lack pan area and plate thickness; the HCl tower lacks tower dimensions; the acetic condensers lack tube bank and still copper area; carbide lacks furnace shell and lining dimensions; camphor lacks a yield from chips and the pot size; citrate, glycerol, fulminate and copper-beryllium lack batch sizes; phenol has a still (15 to 20 t charge, 1/2 in shell) but no carbolic oil yield per ton of tar; gunpowder has only a search snippet (50 lb charge, 3 to 5 hours, 100,000 lb a year a pair of runners; the page returned 401); mirror amalgam lacks slab size; flame retardant lacks a blending floor throughput. Each row's `capital_basis` now says so.
 
 D rows left in the four files: 25 (50_chemicals 13, 93 4, 91 5, 92 3).
+
+**Pass 11 (any-source bar).** The bar was lowered: any outside page opened in the session (Wikipedia, a blog, a forum, a
+shop listing, an old manual) counts, a ballpark within about a factor of three keeps the value, and a figure that follows
+from opened figures by stated arithmetic counts as sourced. Each row's basis text now carries its Pass 11 citations and
+names the number still unsourced. Count what is left with the command at the top.
+
+- To C: the six tallow, beeswax and rush candle rows, `cheese_kg`, `dyed_cloth_kg`, `written_page_papyrus` and
+  `written_page_parchment`; `mat_sugar`, `waste_haulage_on_foot`, `domestic_service_hour` (an identity, not an outside
+  source); `fat_kg` (deer), `down_kg` (wildfowl), `ceramic_kg` and the two low-voltage main capital rows.
+- Values changed, each more than a factor of three from an opened figure: candle dipping labour (Mount Vernon dipping
+  stand); ink per written page (onepenshow.com fountain-pen measurements, a weak analogue for a quill, likely low); lampblack
+  ink oil and tallow (Wikipedia India ink); nail smith hours (Mortise and Tenon Magazine, SPACO); smith hours on five
+  chemistry vessels (Piggott's boiler-plate assembly rate, oldcopper.org Broseley journal 15, a proxy for simpler pans).
+- Chemistry plant: lead lining labour derived from Pass 10's roofing rate times a labelled factor of two for burned seams;
+  every row still lacks a vessel size or batch cycle, and brick, stone and timber hours.
+- Still stuck, with the reason in each row: engine, dynamo and foundry works (no wall or roof masses), tin and silver
+  recoveries, backstrap weaving, wells, leather goods, fish, carts, barges, the aqueduct and the warship (sources blocked
+  or giving no figure), and the stock rows whose numbers live in `data/world/living_stock.json`.
