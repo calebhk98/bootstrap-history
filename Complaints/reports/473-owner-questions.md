@@ -37,6 +37,23 @@ fishing, herding and trade? If so, the gap is that nothing carries food to them 
 locally; if not, it is a data question for the geography. The branch does not change the data; it fixes the money
 leak first (below) and re-measures.
 
+## 3. The opening's cash and savings once the own-plot floor is met first
+
+**What was found.** The yearly household orders now meet the floors a household's own plot grew before sizing its budget
+(merged on this branch). The opening (`opening_own.py`, `opening_demand_kernel.py`, `opening.py`) still applies the old
+late cut, and it also gives households a "purse" equal to the money that late cut freed. Porting the yearly rule to the
+opening (branch `opening-grown-floor-budget`, not merged) removes that purse. The households' savings then shrink, and
+with them their store-of-value bids for silver and the ores, so on Norse the ore and silver markets stop trading at the
+opening and the opening moves more in its spin-up, not less (`python3 sim/simulator.py opening-checks --civs norse_900ad`
+on each branch). Measured in two steps: the rule alone breaks them; removing the purse code changes nothing further.
+
+**Question.** What cash and saving should the opening give households? The old purse was a by-product of the leak, so
+it has no economic reason behind it; but the opening's silver and ore demand rested on it. Options: (a) households open
+with the cash balance they would hold at the stationary state of the yearly rule (their `cash_target` plus a year's
+saving), derived from the same budget rule; (b) leave the opening as it is and accept that it disagrees with year one
+(Complaints 545 and 607 stay open). The branch keeps (b) for now, since the spin-up only needs the yearly rule to be
+consistent; the opening work is parked on its branch with this explanation.
+
 ## Findings so far (for context)
 
 - The drift in every civilisation is a contraction of the money flow, not of the money stock: coin moves from
