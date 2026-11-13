@@ -78,7 +78,9 @@ class RunsAgreeTests(unittest.TestCase):
             goods = sorted(totals)
             vector = solver.national_vector(solver.mapping(goods), np.array([totals[good] for good in goods]))
             got = solver.runs_by_recipe(solver.runs(vector))
-            scale = max(expected.values(), default=1.0)
+            self.assertTrue(expected)
+            self.assertGreater(sum(expected.values()), 0.0)
+            scale = max(expected.values())
             for recipe_id, count in expected.items():
                 self.assertAlmostEqual(got[recipe_id], count, delta=TOLERANCE * max(scale, 1.0), msg=recipe_id)
             for recipe_id, count in got.items():

@@ -44,7 +44,8 @@ class WastePriceTests(unittest.TestCase):
     def test_an_output_with_no_reference_is_never_priced_below_zero(self):
         prices = joint_allocation.allocate_joint_cost(
             OUTPUTS, BATCH_COST, disposal_cost_by_material={"tar_kg": TAR_DISPOSAL_COST_PER_UNIT})
-        self.assertGreaterEqual(prices["tar_kg"], 0.0)
+        # a zero would read as free to every caller; the batch cost is shared, so the output carries a share of it
+        self.assertGreater(prices["tar_kg"], 0.0)
 
     def test_a_negative_reference_value_does_not_corrupt_the_split(self):
         shares = joint_allocation._split_by_value(OUTPUTS, {"tar_kg": -3.0, "charcoal_kg": 4.0}, BATCH_COST)
