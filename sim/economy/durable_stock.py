@@ -33,9 +33,14 @@ def expected_flow_scale(expected_spending: float, spending: float) -> float:
     return expected_spending / spending
 
 
+def wear_share(spec: GoodSpec) -> float:
+    """The share of a holding that wears out in a year: one over the service life (none for a good without one)."""
+    return min(1.0, 1.0 / spec.service_life_years) if spec.service_life_years > 0.0 else 0.0
+
+
 def after_year_end_losses(serving_stock: float, spec: GoodSpec) -> float:
     """Stock at the next planning date: wear and spoilage both read the year's serving stock."""
-    wear = min(1.0, 1.0 / spec.service_life_years) if spec.service_life_years > 0.0 else 0.0
+    wear = wear_share(spec)
     spoilage = min(1.0, max(0.0, spec.spoilage_per_year))
     return max(0.0, serving_stock * (1.0 - wear - spoilage))
 

@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy import households_store
+from sim.economy import households_store, store_spend
 from sim.tests import economy_fixture as fixture
 from sim.tests.economy_store_view import View, metal_held, orders
 
@@ -16,9 +16,10 @@ def metal_offers(result):
 
 
 def settled_target_kilograms():
-    """The kilograms at which the store is on target, found by bidding with nothing held."""
+    """The kilograms at which the store is on target, found by bidding with nothing held (a shortfall is closed over years, so the bid
+    is the closing share of the target)."""
     bid = next(bid for bid in orders().bids if bid.priority == households_store.STORE_PRIORITY)
-    return bid.budget / 95.0
+    return bid.budget / store_spend.STORE_GAP_CLOSING / 95.0
 
 
 class StoreSaleTests(unittest.TestCase):

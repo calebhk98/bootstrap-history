@@ -12,6 +12,8 @@ import numpy as np
 
 from sim.jit import njit
 
+from .store_spend import store_spend
+
 # constants row (opening_demand.constants)
 K_FLOOR_MARGIN = 0
 K_SAFETY = 1
@@ -473,8 +475,12 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
                 count = _add(partials[0], count, max(0.0, store_floats[s, SF_HELD] - in_use) * store_floats[s, SF_PRICE])
             held_value = _total(partials[0], count)
             wanted = _store_value_target(above_buffer, inflation, real_rate, constants)
-            if held_value < wanted * (1.0 - constants[K_BAND]):
-                spend = min(pot, wanted - held_value)
+            count = 0
+            for s in range(s0, s1):
+                if store_floats[s, SF_LIFE] > 0.0:
+                    count = _add(partials[0], count, store_floats[s, SF_WEIGHT] * min(1.0, 1.0 / store_floats[s, SF_LIFE]))
+            spend = store_spend(wanted, held_value, _total(partials[0], count), pot, constants[K_BAND])
+            if spend > 0.0:
                 for s in range(s0, s1):
                     store_budget = spend * store_floats[s, SF_WEIGHT]
                     if store_budget > 0.0:

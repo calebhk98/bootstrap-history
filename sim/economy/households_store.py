@@ -6,9 +6,11 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
+from . import durable_stock
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .inventory import holding_reservation
 from .priced_need_list import priced_needs_of
+from .store_spend import store_spend
 from .priced_reads import offered_prices_for, usual_prices_for
 from .store_return import (STORE_SERVICE_UNLIMITED, carrying_return, storage_cost_per_kg_year,
                            service_values_per_year, split_by_return)
@@ -156,9 +158,10 @@ def store_bids(cohort, view, specs, basket, weights, prices, held, wealth_above_
         return [], 0.0
     held_value = math.fsum(held[good] * prices[good] for good in weights)
     target = store_value_target(wealth_above_buffer, cohort.expected_inflation, real_rate)
-    if held_value >= target * (1.0 - STORE_REBALANCE_BAND):
+    replacement_share = math.fsum(weight * durable_stock.wear_share(specs[good]) for good, weight in weights.items())
+    spend = store_spend(target, held_value, replacement_share, pot, STORE_REBALANCE_BAND)
+    if spend <= 0.0:
         return [], 0.0
-    spend = min(pot, target - held_value)
     bids = []
     for good, weight in weights.items():
         budget = spend * weight

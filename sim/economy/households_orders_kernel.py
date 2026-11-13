@@ -18,6 +18,7 @@ from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_F
                                     _resting_purse, _store_value_target, _total)
 from .opening_demand_kernel import RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
 from .satiated_demand import is_satiated
+from .store_spend import store_spend
 from .priced_need_kernel import limit_shares, price_ceilings, units_per_money
 
 # template ints (one row per basket)
@@ -353,8 +354,14 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
         cohort_out[c, CA_ABOVE_BUFFER] = above_buffer
         cohort_out[c, CA_REAL_RATE] = real_rate
         wanted = _store_value_target(above_buffer, inflation, real_rate, constants)
-        if pot > 0.0 and held_value < wanted * (1.0 - constants[K_BAND]):
-            spend = min(pot, wanted - held_value)
+        count = 0
+        for s in range(s0, s1):
+            if store_floats[s, SF_LIFE] > 0.0:
+                count = _add(partials[0], count, store_floats[s, SF_WEIGHT] * min(1.0, 1.0 / store_floats[s, SF_LIFE]))
+        spend = 0.0
+        if pot > 0.0:
+            spend = store_spend(wanted, held_value, _total(partials[0], count), pot, constants[K_BAND])
+        if spend > 0.0:
             count = 0
             for s in range(s0, s1):
                 store_budget = spend * store_floats[s, SF_WEIGHT]
