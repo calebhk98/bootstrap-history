@@ -312,7 +312,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     inputs = expected_input_prices(producer, recipe, view, market_inputs)
     wages = live_wages(producer, recipe, view)
     revenue = unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor
-    input_cost = unit_cost.input_cost_per_run(recipe, inputs)
+    input_cost = unit_cost.input_cost_per_run(recipe, inputs, wages)
     labour_cost = unit_cost.labour_cost_per_run(recipe, wages)
     rent = producer.land_rent_per_run
     variable = input_cost + labour_cost + rent
@@ -321,8 +321,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     # cash pays what the market asks now (as the cash target is struck); the lagging expectation only chooses runs
     paying_prices = {**inputs, **market_inputs}
     held_value = sum(min(view.stock(producer.agent_id, good, producer.tile), quantity * producer.capacity_runs)
-                     * paying_prices[good] for good, quantity in recipe.inputs.items())
-    paid_now = unit_cost.input_cost_per_run(recipe, paying_prices) + labour_cost     # rent falls due at the year's end, out of the sales
+                     * paying_prices[good] for good, quantity in recipe.inputs.items() if good in paying_prices)   # a tool with no price holds no value to count
+    paid_now = unit_cost.input_cost_per_run(recipe, paying_prices, wages) + labour_cost     # rent falls due at the year's end, out of the sales
     affordable = (max(cash, 0.0) + held_value) / paid_now if paid_now > 0.0 else producer.capacity_runs
     # working off stock is a choice and moves at the year's pace; cash and held inputs bind after it
     chosen = min(producer.capacity_runs * share_working(revenue, variable),
@@ -338,7 +338,7 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
     # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
     # lagging expectation the run is planned on, or a scarce input's price ratchets up on its own bid
-    live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}) + labour_cost + rent
+    live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}, wages) + labour_cost + rent
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
                        revenue / ratio - live_variable, live_variable, wages)
     return Plan(runs, tuple(labour_bids), tuple(bids), wanted, runs * labour_cost)
@@ -509,7 +509,7 @@ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_
     needs = {}
     for good, per_run in sorted(recipe.inputs.items()):
         short = runs * per_run - view.stock(producer.agent_id, good, producer.tile)
-        if short > 0.0:
+        if short > 0.0 and good in prices:          # a tool with no price is covered by its fallback, which is bid for below
             needs[good] = short
     for steps in recipe.tool_fallbacks.values():     # the tools drawn when the first is short are held against it
         for step in steps:

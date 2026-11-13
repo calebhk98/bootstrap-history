@@ -12,7 +12,7 @@ lists them (a group per wear good, its steps in order), so the kernel walks a fe
     step_units    recipe by step: units of the good a covered run draws
     step_factor   recipe by step: the factor the covered hours of the step's trades are multiplied by
     step_trade    recipe by step and trade place: the trade column, -1 padded
-    wear_good, wear_units    recipe by wear place: the wear good (column) and units a run wears, -1 / 0.0 padded
+    wear_good, wear_units    recipe by wear place, in good order: the wear good (column) and units a run wears, -1 / 0.0 padded
     listed_hours  recipe by trade: whether the recipe lists the trade among its hours (a listed trade bids even for zero hours)
     input_order   recipe by n: the good slot of the recipe's nth input in the order its `inputs` dict lists them, -1 padded
     hours_order   recipe by n: the trade slot of the recipe's nth hours entry in the order its `labour_hours` dict lists them, -1 padded
@@ -72,7 +72,7 @@ def tool_tables(recipes: Mapping[str, object], matrices: RecipeMatrices) -> Tool
                     step_bid[row, step] = slot_of[column] if matrices.inputs[row, column] > 0.0 else slots + place_of[column]
                 step_trade[row, step, :len(each.trades)] = [trades[trade] for trade in each.trades]
                 step += 1
-        for place, (good, units) in enumerate(recipe.tool_wear.items()):
+        for place, (good, units) in enumerate(recipe.tool_wear_sorted):
             wear_good[row, place], wear_units[row, place] = goods[good], units
         trade_slot_of = {int(column): slot for slot, column in enumerate(matrices.slot_trades[row]) if column != NO_SLOT}
         for place, trade in enumerate(recipe.labour_hours):
