@@ -54,6 +54,24 @@ saving), derived from the same budget rule; (b) leave the opening as it is and a
 (Complaints 545 and 607 stay open). The branch keeps (b) for now, since the spin-up only needs the yearly rule to be
 consistent; the opening work is parked on its branch with this explanation.
 
+## 4. Silver at parity, far above its making cost
+
+**What was found.** Norse's money is weighed silver. Its design (`currency.has_mint` and `mint.py` docstrings) says the
+metal is exchanged at parity, but the code paid sellers their ask, which fell with the price level; smelters then planned
+on a thin margin and made far less than the coin wore away. The branch now pays parity (`mint_price.paid_in_metal`), and
+Norse's money stock holds (`money_against_wear` passes). But silver now trades at parity, well above the bound of
+`price_over_cost_coin_metal` over its making cost (`python3 sim/simulator.py opening-checks --civs norse_900ad`).
+
+**Why it needs a decision.** For a money metal at a fixed price, a price far above making cost is what should draw more
+mining until the best seams are taken and cost rises toward parity: that is the anchor of a commodity-money price
+level, and it works over decades, not in the opening year. So the check may be asking the wrong thing of the coin
+metal: the economically meaningful bound may be that silver's cost does not exceed parity (otherwise the mint gets
+nothing) and that the gap is shrinking, not that the price sits near cost. Complaint 519 asks the same about silver and
+gold.
+
+**Question.** Should `price_over_cost_coin_metal` keep its band for a metal paid at parity, or test that parity covers
+cost? The branch does not change the check.
+
 ## Findings so far (for context)
 
 - The drift in every civilisation is a contraction of the money flow, not of the money stock: coin moves from

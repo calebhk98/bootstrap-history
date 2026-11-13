@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the shipped openings fail `spin_up_settled` for every civilisation (Complaint 970); one-year closure test and stationary quantities exist (Update 6); the mint is served first and money is sustained (Updates 4, 8); producers, rent, credit, goods and labour rules reworked (Update 22); the fixtures still drift in price level, wage and money and Rome is not re-measured
+**Status:** partly - the money flow no longer leaks through households' own-plot floors and the mint replaces wear (Update 24); `spin_up_settled` still fails on Norse at the branch head (the other civilisations are being re-measured): watched prices and inventories cycle and the wage drifts where the floor binds; Update 24 lists what was tried and not merged
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -812,3 +812,52 @@ choice gave that offer a share of the ornament buyers, and the mint's sales wash
 Now `mint_price.pay_top_ups` adds, after the markets, the gap between the mint price and the settled price on what the mint bought, shared among the
 metal's sellers by what they sold (seigniorage is then the mint's charge only), and the mint offers its metal only while bullion's remembered price is at least parity
 (`mint_price.melting_pays`). Measure: `simulator.py spin-up-trace --fixture stationary --years 60` with the money columns `wear`, `struck`.
+
+## Update 24: the money flow, not the money stock, contracts; the own-plot leak and the mint (branch spin-up-settles)
+
+Measured with a scratch probe that replays `spin_up_run.spin_up` without its early stop and writes each year's settle
+quantities, money by holder and watched prices (no committed command prints them by spin-up year; the shipped
+`openings/opening_traces/` hold the first stage's money by holder for each civilisation).
+
+What drove the drift, in every base civilisation: the money stock stays roughly constant while coin moves from producers to
+households year after year; producers plan runs from their cash, so they shrink, hire less and price lower, and households'
+spending follows their falling income. Two ablations on Norse changed nothing: households spending far more of their cash
+(`CARROL_CONSUMPTION_PARAMETER`), and producers keeping their excess cash (`firm_finance.payout`). The budget was not what
+bound: money reached households and did not come back as bids.
+
+Fixed here:
+- **Floors the own plot grew are met before the budget is sized** (`households_orders_kernel._met`, `households_orders.goods_orders(grown_units=)`,
+  `household_grown_floors.met_shares`; test `test_household_grown_floor_budget`). The budget was sized as if the household bought its whole
+  food floor, and only afterwards were the floors its plot grew cut from its bids; the money that cut freed was neither bid nor offered to
+  lenders. On Norse this took the run from collapsing output to output that holds.
+- **A change in unmet need is read against the economy's food need** (`spin_up_state.food_floor_units`, `spin_up_gap.state_gaps`;
+  `SPIN_UP_UNMET_FLOOR` retired). A shortfall appearing on one tile read as a swing of many thousand times against a floor of one food unit.
+- **The mint bids where its metal trades, and weighed metal is paid at parity** (`mint_bid_split.split_bid`, `mint_price.paid_in_metal`,
+  `paid_price`; test `test_mint_bid_split`). The bid was split by tile count, so part of it sat in an area with no metal; and a weighed-metal
+  economy paid sellers their ask while its own design (`currency.has_mint`, `mint.py` docstrings) says the metal is exchanged at parity. Norse
+  now strikes about what wears away (`opening-checks --civs norse_900ad`: `money_against_wear` passes).
+
+Tried and not merged (branches pushed for reference):
+- `smooth-base-rate`: the rate's declared partial adjustment (`RATE_ADJUSTMENT_SHARE_PER_YEAR`) is overridden in nearly every year by three
+  snaps in `clearing_kernel.settled_rate`, and the target is one marginal lender's ask (`MATERIAL_LENDER_SHARE`). Removing the snaps and
+  taking the supply and demand crossing smooths the rate but, in a deflating economy, walks it toward a near-zero lowest ask and lends
+  nothing while it sits below every ask. Re-try once the economy no longer deflates.
+- `opening-grown-floor-budget`: the same own-plot rule in the opening. The opening's silver and ore demand rested on a purse equal to the
+  money the old late cut freed; without it households' store-of-value bids collapse and the ore and silver markets stop trading at the
+  opening. Needs a derived opening cash and saving (Complaints 545, 607); see `Complaints/reports/473-owner-questions.md`.
+- `no-dust-offers`: holdings decayed by a share never reach zero, and a market whose only offer is a residue of about 1e-17 kg quotes a
+  phantom low ask, households bid on it, the unfilled bid hides the quote, and the cycle repeats every second year (Norse cheese, canvas,
+  cooked meal; it drives a period-2 swing in the wage floor, `labour_ask_floor.ask_floor_by_tile`). Removing the residue and not counting it
+  as an offer shrank the sawtooth but the run drifted faster and went hungrier; the cause of that is not traced.
+
+What still fails, and the evidence:
+- The run is path-sensitive: a small rule change moves the whole trajectory (the dust branch's trimmed-stage wage starts at about twice the
+  base's). One run per change is weak evidence; compare several civilisations before merging a rule.
+- The remaining movers on Norse are watched goods' prices and inventories with a period-2 or a four-year cycle (fish and steel follow the
+  wage floor's swing; mules and oxen follow lumpy merchant fleet buying, `carriage_fleet_book.to_buy`), and a slow fall of the wage while
+  idle hours stay above hired hours where the floor binds (`sim/labour/market/asks.py`, `clearing_kernel.py` reservation at the floor).
+- Silver now trades at parity far above its making cost (`price_over_cost_coin_metal`), Complaint 519's question in another form.
+- Hunger sits on fertility-0 tiles whose people have no plot and whose markets sell out (`household_hours_year.usable_plot_hours`).
+
+Measure: `python3 sim/simulator.py opening-checks --civs <civ>` on the branch head, and the settle gaps by quantity in each opening's saved
+`spin_up_result["gaps"]`.
