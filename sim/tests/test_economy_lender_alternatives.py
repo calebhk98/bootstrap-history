@@ -41,7 +41,7 @@ class PublicPremiumTests(unittest.TestCase):
         ask = lender_ask.lowest_ask(0.05, 0.0, public_premium=0.04)
         offers = [FundsOffer("saver:%d" % index, "coin", 1000.0, ask) for index in range(3)]
         request = LoanRequest("borrower", "coin", 10.0, 0.5, 1.0, 1e9, "working capital")
-        _loans, rate, _unmet = credit.clear([request], offers, "coin", 0.0, {})
+        _loans, rate, _unmet = credit.clear([request], offers, "coin", ask, {})
         self.assertAlmostEqual(rate, 0.09)
 
 

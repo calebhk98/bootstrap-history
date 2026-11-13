@@ -32,109 +32,79 @@ def sorted_pairs(limits, quantities, count, descending):
 
 
 @njit
-def clearing_point(floors, floor_funds, floor_count, caps, cap_amounts, cap_count):
-    """(found, price): where the quantity asked at or above a floor meets the quantity bid at or below a cap; `found` is false when
-    no entry has a positive quantity (order_book.clearing_point)."""
-    live_floors = numpy.empty(floor_count)
-    live_floor_funds = numpy.empty(floor_count)
-    floors_live = 0
-    for index in range(floor_count):
-        if floor_funds[index] > 0:
-            live_floors[floors_live] = floors[index]
-            live_floor_funds[floors_live] = floor_funds[index]
-            floors_live += 1
-    live_caps = numpy.empty(cap_count)
-    live_cap_amounts = numpy.empty(cap_count)
-    caps_live = 0
-    for index in range(cap_count):
-        if cap_amounts[index] > 0:
-            live_caps[caps_live] = caps[index]
-            live_cap_amounts[caps_live] = cap_amounts[index]
-            caps_live += 1
-    if floors_live == 0 and caps_live == 0:
-        return False, 0.0
-    floor_order = sorted_pairs(live_floors, live_floor_funds, floors_live, False)
-    cap_order = sorted_pairs(live_caps, live_cap_amounts, caps_live, True)
-    if floors_live == 0:
-        return True, live_caps[cap_order[0]]
-    if caps_live == 0:
-        return True, live_floors[floor_order[0]]
-    return True, meeting_price(live_floors[floor_order], live_floor_funds[floor_order], live_caps[cap_order], live_cap_amounts[cap_order])
-
-
-@njit
-def meeting_price(floors, floor_funds, caps, cap_amounts):
-    """The price at which sorted sellers (cheapest first) and sorted buyers (keenest first) meet: midway across the range no one left
-    out would break; midway between the cheapest seller and the keenest buyer when none can trade."""
-    seller, buyer = 0, 0
-    seller_left, buyer_left = floor_funds[0], cap_amounts[0]
-    last_floor = last_cap = 0.0
-    matched_any = False
-    while seller < len(floors) and buyer < len(caps):
-        if floors[seller] > caps[buyer]:
-            break
-        last_floor, last_cap = floors[seller], caps[buyer]
-        matched_any = True
-        matched = min(seller_left, buyer_left)
-        seller_left -= matched
-        buyer_left -= matched
-        if seller_left <= 0:
-            seller += 1
-            seller_left = floor_funds[seller] if seller < len(floors) else 0.0
-        if buyer_left <= 0:
-            buyer += 1
-            buyer_left = cap_amounts[buyer] if buyer < len(caps) else 0.0
-    if not matched_any:
-        return (floors[0] + caps[0]) / 2.0
-    next_floor = floors[seller] if seller < len(floors) else numpy.inf
-    next_cap = caps[buyer] if buyer < len(caps) else -numpy.inf
-    low, high = max(last_floor, next_cap), min(last_cap, next_floor)
-    if low > high:
-        return (last_floor + last_cap) / 2.0
-    return (low + high) / 2.0
-
-
-@njit
-def positive_total(values, count):
-    """`sum(value for value in values if value > 0.0)` as Python adds it."""
-    kept = numpy.empty(count)
-    used = 0
+def cumulative_curve(limits, quantities, count, descending):
+    """(prices, totals, points): the distinct limit prices of the entries with a positive quantity, ascending, and at each the
+    quantity of entries whose limit is at most that price (at least it, when `descending`), summed in the order Python sums them
+    (order_book.cumulative_curve)."""
+    live_limits = numpy.empty(count)
+    live_quantities = numpy.empty(count)
+    live = 0
     for index in range(count):
-        if values[index] > 0.0:
-            kept[used] = values[index]
-            used += 1
-    return python_sum(kept, used)
+        if quantities[index] > 0:
+            live_limits[live] = limits[index]
+            live_quantities[live] = quantities[index]
+            live += 1
+    order = sorted_pairs(live_limits, live_quantities, live, descending)
+    prices = numpy.empty(live)
+    totals = numpy.empty(live)
+    points = 0
+    running = 0.0
+    for place in range(live):
+        running += live_quantities[order[place]]
+        price = live_limits[order[place]]
+        if points > 0 and prices[points - 1] == price:
+            totals[points - 1] = running
+        else:
+            prices[points] = price
+            totals[points] = running
+            points += 1
+    if descending:
+        prices[:points] = prices[:points][::-1].copy()
+        totals[:points] = totals[:points][::-1].copy()
+    return prices, totals, points
 
 
 @njit
-def base_rate_target(floors, floor_funds, floor_count, caps, cap_amounts, cap_count, material_share):
-    """(found, rate): the plain clearing point, lowered to the dearest ask of the lenders with a worthwhile sum when borrowers who
-    would pay it ask for more than those lenders hold (credit_rate.base_rate_target)."""
-    found, rate = clearing_point(floors, floor_funds, floor_count, caps, cap_amounts, cap_count)
-    if not found or floor_count == 0 or cap_count == 0:
-        return found, rate
-    total_funds = positive_total(floor_funds, floor_count)
-    lending_funds = numpy.empty(floor_count)
-    lending_asks = numpy.empty(floor_count)
-    lending = 0
-    for index in range(floor_count):
-        if floors[index] <= rate + 1e-12 and floor_funds[index] > 0.0:
-            lending_funds[lending] = floor_funds[index]
-            lending_asks[lending] = floors[index]
-            lending += 1
-    demanded = numpy.empty(cap_count)
-    asking = 0
-    for index in range(cap_count):
-        if caps[index] >= rate - 1e-12 and cap_amounts[index] > 0.0:
-            demanded[asking] = cap_amounts[index]
-            asking += 1
-    if python_sum(demanded, asking) <= python_sum(lending_funds, lending) * (1.0 + 1e-9):
-        return True, rate
-    dearest = -numpy.inf
-    for index in range(lending):
-        if lending_funds[index] >= material_share * total_funds and lending_asks[index] > dearest:
-            dearest = lending_asks[index]
-    return True, (dearest if dearest != -numpy.inf else rate)
+def interpolated(prices, totals, points, price):
+    """The curve through (price, total) points at `price`: straight between points, flat beyond the ends."""
+    if price <= prices[0]:
+        return totals[0]
+    for index in range(points - 1):
+        if price < prices[index + 1]:
+            return totals[index] + (totals[index + 1] - totals[index]) * (price - prices[index]) / (prices[index + 1] - prices[index])
+    return totals[points - 1]
+
+
+@njit
+def base_rate_target(floors, floor_funds, floor_count, caps, cap_amounts, cap_count):
+    """(found, rate): where the funds offered meet the funds requested, each a curve through its cumulative points
+    (order_book.supply_demand_crossing); `found` is false when no entry has a positive quantity."""
+    supply_prices, supply_totals, supplies = cumulative_curve(floors, floor_funds, floor_count, False)
+    demand_prices, demand_totals, demands = cumulative_curve(caps, cap_amounts, cap_count, True)
+    if supplies == 0 and demands == 0:
+        return False, 0.0
+    if supplies == 0:
+        return True, demand_prices[demands - 1]
+    if demands == 0:
+        return True, supply_prices[0]
+    candidates = numpy.sort(numpy.concatenate((supply_prices[:supplies], demand_prices[:demands])))
+    previous_price = supply_prices[0]
+    previous_gap = 0.0
+    first = True
+    last_price = supply_prices[0]
+    for index in range(len(candidates)):
+        price = candidates[index]
+        if price < supply_prices[0] or price > supply_prices[supplies - 1] or (not first and price == previous_price):
+            continue
+        gap = interpolated(supply_prices, supply_totals, supplies, price) - interpolated(demand_prices, demand_totals, demands, price)
+        if gap >= 0.0:
+            if first:
+                return True, price
+            return True, previous_price + (price - previous_price) * (0.0 - previous_gap) / (gap - previous_gap)
+        previous_price, previous_gap = price, gap
+        last_price = price
+        first = False
+    return True, last_price
 
 
 @njit

@@ -30,31 +30,6 @@ def earnable_rate(gain: float, outlay: float = 1.0) -> float:
     return gain / outlay
 
 
-def _funds_idle_above_clearing_rate(offers: Sequence[FundsOffer], requests: Sequence[LoanRequest],
-                                    ceilings: Sequence[float], able: Sequence[bool], held_rate: float,
-                                    clearing_rate: float) -> bool:
-    """True when some borrower would pay the clearing rate and, at the held rate above it, lenders still
-    have funds left over: the held rate is not a market-clearing price."""
-    demand_at_clearing = sum(request.amount for request, ceiling, can in zip(requests, ceilings, able)
-                             if can and ceiling >= clearing_rate)
-    if demand_at_clearing <= 0.0:
-        return False
-    demand_at_held = sum(request.amount for request, ceiling in zip(requests, ceilings) if ceiling >= held_rate)
-    supply_at_held = sum(offer.amount for offer in offers if offer.minimum_rate <= held_rate)
-    return supply_at_held > demand_at_held
-
-
-def _borrowers_rationed_below_clearing_rate(offers: Sequence[FundsOffer], ceilings: Sequence[float],
-                                            able: Sequence[bool], requests: Sequence[LoanRequest],
-                                            held_rate: float) -> bool:
-    """True when, at the held rate, borrowers who would pay it ask for more than the lenders asking no more
-    than it hold: the held rate is below the price at which supply meets demand."""
-    demand_at_held = sum(request.amount for request, ceiling, can in zip(requests, ceilings, able)
-                         if can and ceiling >= held_rate)
-    supply_at_held = sum(offer.amount for offer in offers if offer.minimum_rate <= held_rate)
-    return demand_at_held > supply_at_held
-
-
 NO_OFFER_AT_RATE = "no_offer_at_rate"      # every offer asks more than the bound lets the rate reach
 NO_OFFERS = "no_offers"
 NO_BORROWER_AT_ASK = "no_borrower_at_ask"      # no request can pay what the cheapest lender asks
@@ -135,19 +110,9 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
     target = credit_rate.base_rate_target([(offer.minimum_rate, offer.amount) for offer in offers],
                                           [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
                                            if can])
-    if not any(able):       # lenders alone are not a price either
-        return LoanClearing([], last_rate, list(requests), NO_BORROWER_AT_ASK)
     base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
-    if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
-        # a sticky rate below every lender's ask would lend nothing while a borrower would pay it
-        base_rate = lowest_ask
-    elif base_rate > target and _funds_idle_above_clearing_rate(offers, requests, ceilings, able, base_rate, target):
-        # repricing may be slow, but not so slow that funds sit unlent while a borrower pays the clearing rate
-        base_rate = target
-    elif base_rate < target and _borrowers_rationed_below_clearing_rate(offers, ceilings, able, requests, base_rate):
-        # nor so slow that borrowers who would pay the clearing rate are turned away by a rate below the
-        # ask of the lenders who would fund them
-        base_rate = target
+    if not any(able):       # lenders alone are not a price: the rate still drifts toward the lowest ask
+        return LoanClearing([], max(0.0, base_rate), list(requests), NO_BORROWER_AT_ASK)
     nominal_ceiling = None if rate_ceiling is None else rate_ceiling + max(0.0, expected_inflation)
     rationed_by_risk = nominal_ceiling is not None and base_rate > nominal_ceiling
     if rationed_by_risk:

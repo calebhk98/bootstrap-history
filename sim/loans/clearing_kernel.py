@@ -12,7 +12,7 @@ from sim.jit import njit
 
 from .clearing_tables import CLEARED, NO_BORROWER_AT_ASK, NO_OFFER_AT_RATE
 from .order_kernel import allocate_in_order, base_rate_target, sorted_pairs
-from .risk_kernel import ADJUSTMENT_SHARE, MATERIAL_SHARE, default_probability, fundable_amount, risk_premium
+from .risk_kernel import ADJUSTMENT_SHARE, default_probability, fundable_amount, risk_premium
 
 TABLE_FULL = -1
 TINY = 1e-12            # a piece, or a remainder, this small is rounding
@@ -65,63 +65,16 @@ def target_rate(requests, offers, able, constants):
             caps[used] = requests.ceiling[row]
             cap_amounts[used] = requests.funded_amount[row]
             used += 1
-    return base_rate_target(offers.minimum_rate, offers.amount, offer_count, caps, cap_amounts, used, constants[MATERIAL_SHARE])
+    return base_rate_target(offers.minimum_rate, offers.amount, offer_count, caps, cap_amounts, used)
 
 
 @njit
-def requested_at(requests, able, rate, only_able):
-    """The funded amounts of the requests whose ceiling reaches `rate` (only those that are able, when `only_able`), summed as
-    Python's `sum` does."""
-    amounts = numpy.empty(requests.row_count[0])
-    used = 0
-    for row in range(requests.row_count[0]):
-        if (able[row] or not only_able) and requests.ceiling[row] >= rate:
-            amounts[used] = requests.funded_amount[row]
-            used += 1
-    return python_sum(amounts, used)
-
-
-@njit
-def offered_at(offers, rate):
-    """The funds of the lenders who take `rate` or less."""
-    amounts = numpy.empty(offers.row_count[0])
-    used = 0
-    for row in range(offers.row_count[0]):
-        if offers.minimum_rate[row] <= rate:
-            amounts[used] = offers.amount[row]
-            used += 1
-    return python_sum(amounts, used)
-
-
-@njit
-def settled_rate(requests, offers, able, last_rate, has_last_rate, target, lowest_ask, constants):
-    """The base rate after the sticky move from the last one toward `target`, pulled to the lowest ask, or to the target, where
-    holding the old rate would leave funds idle or borrowers turned away."""
-    rate = target if not has_last_rate else last_rate + max(0.0, min(1.0, constants[ADJUSTMENT_SHARE])) * (target - last_rate)
-    highest_ceiling = -numpy.inf
-    for row in range(requests.row_count[0]):
-        highest_ceiling = max(highest_ceiling, requests.ceiling[row])
-    if rate < lowest_ask <= highest_ceiling:
-        return lowest_ask
-    if rate > target and funds_idle_above(requests, offers, able, rate, target):
+def settled_rate(last_rate, has_last_rate, target, constants):
+    """The base rate after the sticky move from the last one toward `target`: a declared share of the gap closed in a year.
+    Borrowers turned away, or funds idle, at the settled rate are what slow repricing costs."""
+    if not has_last_rate:
         return target
-    if rate < target and borrowers_rationed_below(requests, offers, able, rate):
-        return target
-    return rate
-
-
-@njit
-def funds_idle_above(requests, offers, able, held_rate, clearing_rate):
-    """Some borrower would pay the clearing rate and, at the held rate above it, lenders still have funds left over."""
-    if requested_at(requests, able, clearing_rate, True) <= 0.0:
-        return False
-    return offered_at(offers, held_rate) > requested_at(requests, able, held_rate, False)
-
-
-@njit
-def borrowers_rationed_below(requests, offers, able, held_rate):
-    """At the held rate, borrowers who would pay it ask for more than the lenders asking no more than it hold."""
-    return requested_at(requests, able, held_rate, True) > offered_at(offers, held_rate)
+    return last_rate + max(0.0, min(1.0, constants[ADJUSTMENT_SHARE])) * (target - last_rate)
 
 
 @njit
@@ -276,13 +229,6 @@ def leave_unmet(requests):
 
 
 @njit
-def hold_rate(scalars, last_rate, has_last_rate):
-    """Nothing cleared: the rate stays at the last one, if there was one."""
-    scalars[0] = last_rate
-    scalars[1] = 1.0 if has_last_rate else 0.0
-
-
-@njit
 def clear_loans(requests, offers, constants, last_rate, has_last_rate, rate_ceiling, has_ceiling, expected_inflation, new_loans,
                 scalars):
     """Clear the market. Fills the requests' output columns and the new loans; returns CLEARED, NO_BORROWER_AT_ASK, NO_OFFER_AT_RATE
@@ -292,10 +238,10 @@ def clear_loans(requests, offers, constants, last_rate, has_last_rate, rate_ceil
     price_requests(requests, offers, lowest_ask, constants)
     able = able_to_borrow(requests, max(0.0, lowest_ask))
     _found, target = target_rate(requests, offers, able, constants)
-    if not able.any():
-        hold_rate(scalars, last_rate, has_last_rate)
+    base_rate = settled_rate(last_rate, has_last_rate, target, constants)
+    if not able.any():       # lenders alone are not a price: the rate still drifts toward the lowest ask
+        scalars[0], scalars[1] = max(0.0, base_rate), 1.0
         return NO_BORROWER_AT_ASK
-    base_rate = settled_rate(requests, offers, able, last_rate, has_last_rate, target, lowest_ask, constants)
     nominal_ceiling = rate_ceiling + max(0.0, expected_inflation)
     rationed_by_risk = has_ceiling and base_rate > nominal_ceiling
     if rationed_by_risk:

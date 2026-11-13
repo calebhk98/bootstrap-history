@@ -55,24 +55,32 @@ class RateAtCeilingCandidateTests(unittest.TestCase):
     def test_every_ask_above_a_nominal_ceiling_lends_nothing_and_says_why_without_a_fake_rate(self):
         # nothing can clear at the bound: the rate is held (never the ceiling nobody accepts) and the cause is named
         offers = [funds("lender", 1000.0, 0.60)]
-        result = credit.clear_with_cause([request("plant_a", 100.0, 1.5)], offers, "coin", 0.12, {},
+        result = credit.clear_with_cause([request("plant_a", 100.0, 1.5)], offers, "coin", 0.55, {},
                                          rate_ceiling=CEILING)
         self.assertEqual(result.cause, credit.NO_OFFER_AT_RATE)
-        self.assertEqual(result.rate, 0.12)
+        self.assertEqual(result.rate, 0.55)
+        self.assertEqual(result.loans, [])
+        self.assertAlmostEqual(sum(left.amount for left in result.unmet), 100.0)
+
+    def test_a_sticky_rate_still_under_the_ask_lends_nothing_while_it_moves_the_declared_share_toward_it(self):
+        offers = [funds("lender", 1000.0, 0.60)]
+        result = credit.clear_with_cause([request("plant_a", 100.0, 1.5)], offers, "coin", 0.12, {},
+                                         rate_ceiling=1.0)
+        self.assertAlmostEqual(result.rate, 0.12 + credit.RATE_ADJUSTMENT_SHARE_PER_YEAR * (0.60 - 0.12))
         self.assertEqual(result.loans, [])
         self.assertAlmostEqual(sum(left.amount for left in result.unmet), 100.0)
 
     def test_the_bound_is_on_the_real_rate_so_expected_inflation_lets_the_ask_clear(self):
         # asks of 0.60 are time preference plus 0.55 expected inflation: real 0.05, under a real bound of 0.48
         offers = [funds("lender", 1000.0, 0.60)]
-        loans, rate, unmet = credit.clear([request("plant_a", 100.0, 1.5)], offers, "coin", 0.12, {},
+        loans, rate, unmet = credit.clear([request("plant_a", 100.0, 1.5)], offers, "coin", 0.60, {},
                                           rate_ceiling=CEILING, expected_inflation=0.55)
         self.assertAlmostEqual(rate, 0.60)
         self.assertAlmostEqual(sum(loan.principal for loan in loans), 100.0)
         self.assertEqual(unmet, [])
 
     def test_rationed_at_the_bound_the_least_risky_borrower_is_served_first(self):
-        offers = [funds("lender", 100.0, 0.10)]
+        offers = [funds("lender", 100.0, 0.10), funds("dear", 100.0, 0.90)]      # the crossing is 0.9, past the bound
         safe = request("plant_a", 100.0, 3.0, collateral=1e9)
         risky = request("plant_b", 100.0, 5.0, collateral=0.0)      # the keener cap, but no collateral
         result = credit.clear_with_cause([risky, safe], offers, "coin", None, {}, rate_ceiling=CEILING)

@@ -13,7 +13,7 @@ from sim.loans.clearing_kernel import TABLE_FULL, clear_loans
 from sim.loans.clearing_tables import (CLEARED, NEW_LOANS, NO_BORROWER_AT_ASK, NO_OFFER_AT_RATE, OFFERS, REQUESTS, NewLoans, Offers,
                                        Requests)
 
-from . import bank_credit_risk, credit, credit_cap, credit_rate
+from . import bank_credit_risk, credit, credit_cap
 from .replaced import replaced
 from .types import AgentId, CurrencyId, FundsOffer, LoanRequest
 
@@ -25,7 +25,7 @@ def constants() -> numpy.ndarray:
     """The declared numbers the kernel uses, in the order of `clearing_tables.CONSTANT_NAMES`."""
     return numpy.array([bank_credit_risk.DEFAULT_PROBABILITY_SENSITIVITY, bank_credit_risk.BANK_LAMBDA,
                         bank_credit_risk.MARKUP_REFERENCE_RATE, credit.ARREARS_PREMIUM, credit.RATE_ADJUSTMENT_SHARE_PER_YEAR,
-                        credit_rate.MATERIAL_LENDER_SHARE, credit_cap.BISECTION_STEPS], dtype=numpy.float64)
+                        credit_cap.BISECTION_STEPS], dtype=numpy.float64)
 
 
 def ranks_of(names: Sequence[str]) -> List[int]:
