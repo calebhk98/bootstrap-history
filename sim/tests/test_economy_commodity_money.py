@@ -41,7 +41,7 @@ def setup_and_record(regime, cash_target=40.0):
     spec = CurrencySpec("coin", regime, METAL, 0.01, issuer, 0.05 if regime == "struck_coin" else 0.0)
     setup = types.SimpleNamespace(specs={METAL: GoodSpec(METAL, 1.0, SPOILAGE, 0.0, "metal")}, tiles={"town": None}, currency_id="coin", mint_recipe=None)
     record = types.SimpleNamespace(
-        currency=spec, book=StandInBook(),
+        currency=spec, book=StandInBook(), memory=types.SimpleNamespace(volume_weights={}),
         cohorts=CohortStore({name: Cohort(name, "town", 0, 1.0, 1.0, 1.0, cash_target=cash_target) for name in ("a", "b")}),
         producers=ProducerStore({"p": Producer("p", "owner", "recipe", "tile", 1.0, cash_target=cash_target)}),
         merchants={"m": types.SimpleNamespace(capital_base=cash_target)})

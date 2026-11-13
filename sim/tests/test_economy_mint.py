@@ -50,7 +50,7 @@ def economy_of(spec, coin_by_tile=None):
     book.transfer(Transfer(EDGE_ISSUE, "b", "coin", 400.0, "opening"))
     setup = pytypes.SimpleNamespace(opening_population_by_tile={"t1": 3.0, "t2": 1.0}, tiles={"t1": 0, "t2": 0},
                                     specs={}, mint_recipe=None)
-    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()),
+    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity(), volume_weights={}),
                                      cohorts={}, producers=ProducerStore(), merchants={})
     mint.seed_opening_metal(setup, record)
     return setup, record

@@ -9,7 +9,7 @@ money are exchanged at parity both ways with no issuer. Fiat has no metal and no
 import math
 from typing import Dict
 
-from . import currency, mint_labour, mint_price, mint_staffing
+from . import currency, mint_bid_split, mint_labour, mint_price, mint_staffing
 from .cohort_store import table_of
 from .goods_order_tables import MINT
 from .market_memory import market_key
@@ -144,8 +144,14 @@ def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[s
     strike_price = currency.mint_price(spec)
     coin_metal = min(yearly_monetisation(setup, record) * spec.backing_per_unit,
                      mint_labour.strike_limit_fine_kilograms(setup, spec, hours_hired or {}))
-    for area in area_map.areas(metal):
-        capacity = coin_metal * len(area.tiles) / max(1, len(setup.tiles))
+    areas = area_map.areas(metal)
+    volumes = record.memory.volume_weights
+    bids = mint_bid_split.split_bid(coin_metal, {area.area_id: volumes.get(market_key(metal, area.area_id), 0.0) for area in areas},
+                                    {area.area_id: len(area.tiles) / max(1, len(setup.tiles)) for area in areas})
+    for area in areas:
+        capacity = bids[area.area_id]
+        if capacity <= 0.0 < coin_metal:      # an area with no metal on record gets no share of a bid
+            continue
         rows.bid(EDGE_MINT, metal, area.area_id, area.anchor_tile, 0.0, capacity, strike_price, 0.0, math.inf, MINT_PRIORITY,
                  maximum_price=strike_price)
     rows.write()
@@ -158,8 +164,8 @@ def settle_mint(record, held_before: Dict[str, float], ledger=None) -> None:
     spec = record.currency
     if not spec.backing_good or spec.backing_per_unit <= 0.0:
         return
-    if ledger is not None and currency.has_mint(spec):
-        mint_price.pay_top_ups(record.book, ledger, spec.currency_id, spec.backing_good, currency.mint_price(spec))
+    if ledger is not None and mint_price.paid_in_metal(spec):
+        mint_price.pay_top_ups(record.book, ledger, spec.currency_id, spec.backing_good, mint_price.paid_price(spec))
     if currency.has_mint(spec) and spec.issuer is not None:
         taken_in = (math.fsum(stock_by_tile(record.book, spec.backing_good).values())
                     - math.fsum(held_before.values()))
