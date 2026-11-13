@@ -90,7 +90,7 @@ _VIEWS = (
 	("materials_serving", KEYED), ("material_substitutes", KEYED), ("material_serves_a_need", KEYED),
 	("agent_rate", None), ("open_agent_economy", None), ("flush_agent_record", None), ("agent_spin_up_result", None),
 	("agent_health", QUOTE), ("agent_last_outcome", None), ("agent_trades", None), ("agent_opening_figures", None), ("agent_stale_goods", None),
-	("agent_traded_staple", None), ("agent_opening_setup", None), ("agent_credit_room", QUOTE), ("agent_fundable_amount", QUOTE), ("agent_risk_premium", QUOTE), ("agent_lender_listing", None), ("agent_economy_opened", None),
+	("agent_staple", None), ("agent_price_kinds", None), ("agent_opening_setup", None), ("agent_credit_room", QUOTE), ("agent_fundable_amount", QUOTE), ("agent_risk_premium", QUOTE), ("agent_lender_listing", None), ("agent_economy_opened", None),
 	("household_bill_per_person", None),
 )
 

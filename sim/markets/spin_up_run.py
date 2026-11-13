@@ -14,7 +14,7 @@ from .spin_up_trace_cache import keep_trace
 from .spin_up import (SPIN_UP_CACHE_DIRECTORY, SPIN_UP_MAXIMUM_YEARS, SPIN_UP_MEASURED_YEARS, SPIN_UP_TOLERANCE,
                       SPIN_UP_TRIMMED_YEARS, spin_up_years)
 from .spin_up_year import SPIN_UP_WATCHED_GOODS, watched_goods, year_inputs, year_state   # the first is read from here by the tools
-from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, window_gaps
+from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, unsettled_cause, window_gaps
 
 def spin_up_cache_key(setup):
     years = spin_up_years()
@@ -89,19 +89,23 @@ def settle_trimmed(economy, inputs, watched):
     for _year in range(spin_up_years()[1]):
         outcome = economy.step(inputs)
         states.append(year_state(economy_api.spin_up_state(economy, outcome), outcome.basket_price_level,
-                                 economy_api.interest_rate(economy), outcome.prices, watched))
+                                 economy_api.interest_rate(economy), outcome.prices, watched,
+                                 economy_api.traded_price_goods(economy)))
     return list(states)
 
 
 def final_result(first_stage, final_states, years):
     """What the saved opening reports, apart from the stop rule: whether the state it opens in (after
     trimming) moved less than the tolerance a year, in every quantity spin_up_gap measures, over the last
-    consecutive years. {"settled", "years" (all hidden years), "gap" (largest change; one when fewer than two
-    years were measured), "gaps" (by quantity), "measured_years", "final" (the last year's state),
+    consecutive years and `spin_up_gap.unsettled_cause` finds none. {"settled", "years" (all hidden years), "gap" (largest
+    change; one when fewer than two years were measured), "cause" (why not settled whatever the gap, or None),
+    "unmeasured" (the last year's watched goods left out as no trade, with causes), "gaps" (by quantity), "measured_years", "final" (the last year's state),
     "first_stage" (the stop rule's own result)}."""
     gaps = window_gaps(final_states)
     gap = 1.0 if gaps is None else max(gaps.values())
-    return plain({"settled": gaps is not None and gap < SPIN_UP_TOLERANCE, "years": years, "gap": gap,
+    cause = unsettled_cause(final_states)
+    return plain({"settled": cause is None and gap < SPIN_UP_TOLERANCE, "years": years, "gap": gap, "cause": cause,
+                  "unmeasured": dict(final_states[-1].get("unmeasured", {})) if final_states else {},
                   "gaps": gaps or {}, "measured_years": len(final_states),
                   "final": dict(final_states[-1]) if final_states else {}, "first_stage": dict(first_stage)})
 

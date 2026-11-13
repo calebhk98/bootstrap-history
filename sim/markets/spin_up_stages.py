@@ -22,7 +22,8 @@ def replay(economy, inputs, watched, unskilled_trade, first_years, trimmed_years
             row = {"stage": stage, "year": year, "money_supply": outcome.money_supply,
                    "wage": outcome.wages.get(unskilled_trade)}
             row.update(year_state(economy_api.spin_up_state(economy, outcome), outcome.basket_price_level,
-                                  economy_api.interest_rate(economy), outcome.prices, watched))
+                                  economy_api.interest_rate(economy), outcome.prices, watched,
+                                  economy_api.traded_price_goods(economy)))
             row.update(money_by_holder_columns(economy_api.economy_book(economy), economy_api.currency_id(economy)))
             row.update(economy_api.money_year_figures(economy, outcome))
             yield row

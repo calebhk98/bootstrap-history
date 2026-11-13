@@ -107,6 +107,41 @@ class FinalResultTests(unittest.TestCase):
         self.assertEqual(result["measured_years"], 1)
 
 
+class UnsettledCauseTests(unittest.TestCase):
+    def test_a_window_with_nothing_to_compare_names_why(self):
+        self.assertEqual(spin_up_gap.unsettled_cause([_state()]), "too_few_years")
+
+    def test_no_watched_good_priced_in_both_of_two_years_is_a_cause(self):
+        states = [_state(prices={"wheat_kg": 1.0}), _state(prices={"salt": 1.0})]
+        self.assertEqual(spin_up_gap.unsettled_cause(states), "no_price_in_two_years")
+        self.assertEqual(spin_up_gap.unsettled_cause([_state(prices={}), _state(prices={})]), "no_price_in_two_years")
+
+    def test_no_output_or_no_hired_hours_in_the_last_year_is_a_cause(self):
+        self.assertEqual(spin_up_gap.unsettled_cause([_state(real_output=0.0), _state(real_output=0.0)]), "zero_real_output")
+        self.assertEqual(spin_up_gap.unsettled_cause([_state(), _state(hired_hours=0.0)]), "zero_hired_hours")
+        self.assertEqual(spin_up_gap.unsettled_cause([_state(), {**_state(), "real_output": None}]), "real_output_not_measured")
+
+    def test_a_window_with_prices_output_and_hours_has_no_cause(self):
+        self.assertIsNone(spin_up_gap.unsettled_cause([_state(), _state()]))
+
+
+class FinalResultCauseTests(unittest.TestCase):
+    first = {"settled": True, "years": 7, "gap": 0.01}
+
+    def test_an_economy_with_no_output_does_not_settle_though_nothing_moves(self):
+        dead = [_state(real_output=0.0, hired_hours=0.0) for _year in range(4)]
+        result = spin_up_run.final_result(self.first, dead, 22)
+        self.assertFalse(result["settled"])
+        self.assertEqual(result["gap"], 0.0)
+        self.assertEqual(result["cause"], "zero_real_output")
+
+    def test_a_settled_result_has_no_cause_and_carries_the_unmeasured_prices(self):
+        result = spin_up_run.final_result(self.first, [{**_state(), "unmeasured": {"salt": "price_not_a_trade"}} for _year in range(4)], 22)
+        self.assertTrue(result["settled"])
+        self.assertIsNone(result["cause"])
+        self.assertEqual(result["unmeasured"], {"salt": "price_not_a_trade"})
+
+
 class StopRuleTests(unittest.TestCase):
     def test_the_first_stage_stops_when_a_rate_shrinking_toward_zero_has_constant_prices(self):
         economy = types.SimpleNamespace(setup=types.SimpleNamespace(currency_id="coin"),
