@@ -13,6 +13,7 @@ column and tile row:
     tile_scalar   (tiles, 2)            the land market's rent per hectare, the mean value a hectare earns
     start_units   (recipes, trades)     the practice an entrant's crew starts at (entry_practice.entrant_crew)
     curve         (3,)                  the learning curve's exponent, its floor, the years an entrant is judged over
+    fallbacks     tuple of 8 arrays     the recipes' tool fallbacks (entry_wear_kernel.py)
 A missing price is NaN and makes a bill infinite, as in unit_cost.py. Each function is the rule of the same name there, in
 entry.py, entry_trial.py, entry_practice.py, entrant_rent.py and location.py; sums run over a recipe's slots in sorted order
 where the Python sums in dictionary order or with math.fsum, so the last digits differ (test_year_speed_entry_arrays)."""
@@ -21,6 +22,7 @@ import numpy as np
 from sim.jit import njit
 
 from .close_kernel_cost import capital_charge
+from .entry_wear_kernel import wear_bill
 from .year_arrays_costs import KERNEL, bill_goods, bill_hours, price_in, recovery_factor
 
 NO_SLOT = -1
@@ -46,21 +48,32 @@ def planned_hours(booked, start, runs, years, exponent, floor):
 
 
 @njit
-def input_bill(r, t, quantity, slot_goods, price):
-    """unit_cost.input_cost_per_run at the prices of tile `t`."""
+def input_bill(r, t, quantity, slot_goods, price, hours, wage, fallbacks):
+    """unit_cost.input_cost_per_run (with wages) at the prices of tile `t`: the inputs less the tools' wear, then the wear
+    covered the cheapest way (entry_wear_kernel.wear_bill)."""
     total = 0.0
     for slot in range(slot_goods.shape[1]):
         good = slot_goods[r, slot]
         if good == NO_SLOT:
             break
         amount = quantity[0, r, good]
+        for place in range(fallbacks[6].shape[1]):
+            if fallbacks[6][r, place] == good:
+                amount = hard_amount(amount, fallbacks[7][r, place])
         if amount <= 0.0:
             continue
         found = price[0, t, good]
         if np.isnan(found):
             return np.inf
         total += amount * found
-    return total
+    return total + wear_bill(r, t, hours, price, wage, fallbacks)
+
+
+@njit
+def hard_amount(amount, worn):
+    """Recipe.hard_inputs: the quantity of an input less the tools' wear, none if what is left is rounding."""
+    rest = amount - worn
+    return rest if rest > 1e-12 * max(1.0, amount) else 0.0
 
 
 @njit
@@ -139,13 +152,13 @@ def full_cost_one(r, t, good, runs, rate, tables):
     """unit_cost.full_cost_per_unit of `good` made by recipe row `r` on tile `t` at yield one, the rent the site asks, the
     hours booked (`runs` NaN) or an entrant's over the years it is judged on `runs` runs a year. NaN or infinite when it cannot be
     costed."""
-    quantity, hours, slot_goods, slot_trades, price, wage, recipe_scalar, tile_scalar, start_units, curve = tables
+    quantity, hours, slot_goods, slot_trades, price, wage, recipe_scalar, tile_scalar, start_units, curve, fallbacks = tables
     planned = not np.isnan(runs)
     made = quantity[1, r, good]
     if made <= 0.0:
         return np.inf
     rent = rent_of(r, t, 1.0, quantity, slot_goods, price, recipe_scalar, tile_scalar)
-    variable = (input_bill(r, t, quantity, slot_goods, price)
+    variable = (input_bill(r, t, quantity, slot_goods, price, hours, wage, fallbacks)
                 + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, runs, planned, curve) + rent)
     plant = plant_goods_bill(r, t, quantity, slot_goods, price) + labour_bill(
         r, t, 1, hours, slot_trades, wage, start_units, runs, planned, curve)
@@ -179,7 +192,7 @@ def returns_many(recipe_rows, tile_rows, runs, rates, tables):
     """entry._returns_at for each request: (the yearly return on capital, the same after the plant's wear at `rates[i]`) of the
     recipe on the tile at the price on offer there and the rent the site asks, NaN where nothing is employed or it cannot be priced.
     `runs` NaN: the booked hours."""
-    quantity, hours, slot_goods, slot_trades, price, wage, recipe_scalar, tile_scalar, start_units, curve = tables
+    quantity, hours, slot_goods, slot_trades, price, wage, recipe_scalar, tile_scalar, start_units, curve, fallbacks = tables
     count = recipe_rows.shape[0]
     gross = np.full(count, np.nan)
     after = np.full(count, np.nan)
@@ -187,7 +200,7 @@ def returns_many(recipe_rows, tile_rows, runs, rates, tables):
         r, t = recipe_rows[i], tile_rows[i]
         planned = not np.isnan(runs[i])
         rent = rent_of(r, t, 1.0, quantity, slot_goods, price, recipe_scalar, tile_scalar)
-        variable = (input_bill(r, t, quantity, slot_goods, price)
+        variable = (input_bill(r, t, quantity, slot_goods, price, hours, wage, fallbacks)
                     + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, runs[i], planned, curve) + rent)
         plant = plant_goods_bill(r, t, quantity, slot_goods, price) + labour_bill(
             r, t, 1, hours, slot_trades, wage, start_units, runs[i], planned, curve)
@@ -277,7 +290,7 @@ def site_choice(r, anchor, candidates, runs, tonnes_out, tables, tonnes, supply_
     its prices, its rent, the carriage of the output to `anchor` and of the inputs in, over its yield), the runs its idle hands
     can staff and its site still allows, and `location.choose` among them. Returns (tile row or -1, runs); the runs are booked
     in `capacity` and `committed` (location.claim_site). `hauls` keeps each (recipe, tile) input haul once read (NaN: not yet)."""
-    quantity, hours, slot_goods, slot_trades, price, wage, recipe_scalar, tile_scalar, start_units, curve = tables
+    quantity, hours, slot_goods, slot_trades, price, wage, recipe_scalar, tile_scalar, start_units, curve, fallbacks = tables
     count = candidates.shape[0]
     cost = np.empty(count)
     staffable = np.empty(count)
@@ -294,7 +307,7 @@ def site_choice(r, anchor, candidates, runs, tonnes_out, tables, tonnes, supply_
             continue
         if np.isnan(hauls[r, t]):
             hauls[r, t] = input_haul(r, t, tonnes, supply_weight, supply_present, carriage)
-        variable = (input_bill(r, t, quantity, slot_goods, price)
+        variable = (input_bill(r, t, quantity, slot_goods, price, hours, wage, fallbacks)
                     + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, 0.0, False, curve)
                     + rent_of(r, t, factor, quantity, slot_goods, price, recipe_scalar, tile_scalar))
         carried = carriage[t, anchor] * tonnes_out if tonnes_out > 0.0 else 0.0

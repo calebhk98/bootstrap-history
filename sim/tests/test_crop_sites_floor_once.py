@@ -10,9 +10,10 @@ from sim.economy import crop_sites
 
 
 def recipe(rng):
+    inputs = {"seed": rng.uniform(0.1, 2.0)}
     return types.SimpleNamespace(
-        recipe_id="r", inputs={"seed": rng.uniform(0.1, 2.0)}, outputs={"grain": rng.uniform(1.0, 5.0)}, labour_hours={"farmer": rng.uniform(1.0, 20.0)},
-        plant_goods={}, plant_life_years=0.0, tool_wear={}, site_bound=False, climate_classes=(), joint_cost_basis="value")
+        recipe_id="r", inputs=inputs, outputs={"grain": rng.uniform(1.0, 5.0)}, labour_hours={"farmer": rng.uniform(1.0, 20.0)},
+        plant_goods={}, plant_life_years=0.0, tool_wear={}, tool_wear_sorted=(), hard_inputs=inputs, site_bound=False, climate_classes=(), joint_cost_basis="value")
 
 
 class CropSitesTest(unittest.TestCase):

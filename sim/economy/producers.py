@@ -290,7 +290,7 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
         recipe, inputs, wages, rate)
     if not (revenue > 0.0 and math.isfinite(cost) and cost > 0.0):
         return None, 0.0
-    return cost / revenue, unit_cost.input_cost_per_run(recipe, inputs) / cost
+    return cost / revenue, unit_cost.input_cost_per_run(recipe, inputs, wages) / cost
 
 
 def with_practised_yield(producer: Producer, recipe: Recipe) -> Producer:
