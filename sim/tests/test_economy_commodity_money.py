@@ -80,6 +80,20 @@ class MonetisationTests(unittest.TestCase):
         self.assertAlmostEqual(mint.yearly_monetisation(setup, record), METAL_GOODS_LOSS_PER_YEAR * SUPPLY / (1.0 - METAL_GOODS_LOSS_PER_YEAR))
 
 
+class MeltableMetalTests(unittest.TestCase):
+    def test_metal_for_the_money_above_what_holders_want_may_be_melted(self):
+        setup, record = setup_and_record("commodity", cash_target=100.0)
+        self.assertAlmostEqual(mint.meltable_metal(record), (SUPPLY - 4 * 100.0) * record.currency.backing_per_unit)
+
+    def test_no_metal_may_be_melted_when_holders_want_exactly_the_supply(self):
+        setup, record = setup_and_record("commodity", cash_target=SUPPLY / 4)
+        self.assertEqual(mint.meltable_metal(record), 0.0)
+
+    def test_no_metal_may_be_melted_when_holders_want_more_than_the_supply(self):
+        setup, record = setup_and_record("commodity", cash_target=400.0)
+        self.assertEqual(mint.meltable_metal(record), 0.0)
+
+
 class MintOrderTests(unittest.TestCase):
     def test_the_mint_bids_no_more_than_holders_want_when_their_cash_is_full(self):
         setup, record = setup_and_record("commodity", cash_target=0.0)
