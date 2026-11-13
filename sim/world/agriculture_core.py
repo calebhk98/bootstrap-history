@@ -299,12 +299,10 @@ SEED_SOWING_RATE_KG_PER_HA = declare(
 
 CLEARING_LABOUR_HOURS_PER_HECTARE = declare(
     "CLEARING_LABOUR_HOURS_PER_HECTARE", 1000.0,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="labour hours per hectare brought under the plough",
-    source="Order of magnitude for hand clearing scrub or woodland and "
-           "breaking new ground with ard-age tools; not derived from data "
-           "in this repository.",
-    confidence="D",
+    source="Modern analogue, opened: versicolor.ca, kluc energy page, https://versicolor.ca/onlinelearning/reports/kluc/energy.html, \"In Mexican Slash and burn agriculture, 1144 hours of labor were needed to clear one ha of forest and grow 1944 Kg of corn\" (clearing plus one crop, so clearing alone is below 1144; the value is the same order). Cambridge Journal of Economic History, \"Land Clearing under Nineteenth-Century Techniques\" (extract, https://www.cambridge.org/core/journals/journal-of-economic-history/article/land-clearing-under-nineteenthcentury-techniques-some-preliminary-calculations/B4206F7511C1FACD578653E74A11C095): about five acres of forest clearing a year was \"about the limit for a farm family\". Assumption: scrub or woodland, hand tools",
+    confidence="C",
     why="The labour cost of extending the farmed area: hands beyond what "
         "the cleared ground can crop are the ones that clear more. To be "
         "replaced by a recipe in data/production/ once clearing is a "
@@ -499,10 +497,10 @@ WEATHER_YIELD_STDEV_FRACTION = declare(
 
 WEATHER_FLOOR_MULTIPLIER = declare(
     "WEATHER_FLOOR_MULTIPLIER", 0.15,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="fraction of mean yield (dimensionless)",
-    source=None,
-    confidence="D",
+    source="Pala et al., ICARDA/IWMI, Assessment of wheat yield gap in the Mediterranean (Morocco, Syria, Turkey), opened PDF: Morocco farmers' rainfed wheat yield 380-2420 kg/ha at Settat 2001-2011 against a mean of 1105 (worst year 0.34 of mean), and 1999/2000 \"almost without any production\"; FAOSTAT Morocco national wheat 475 against a five-point mean of 1080 (0.44). Wikipedia Great Famine of 1315-1317 (opened): seed ratio \"as low as 2:1\" after bad harvests against Pretty 1990 (Agricultural History Review 38, Winchester manors, opened) mean 4.0, so 0.5. A clip of 0.15 sits below the observed worst years",
+    confidence="C",
     why="A Gaussian draw has no natural floor and can go negative, which a "
         "harvest cannot. This clips the worst year to 15% of normal rather "
         "than zero, on the reasoning that total, literal crop failure "
@@ -513,10 +511,10 @@ WEATHER_FLOOR_MULTIPLIER = declare(
 
 WEATHER_CEILING_MULTIPLIER = declare(
     "WEATHER_CEILING_MULTIPLIER", 1.3,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="fraction of mean yield (dimensionless)",
-    source=None,
-    confidence="D",
+    source="Wikipedia Great Famine of 1315-1317 (opened): seed ratio \"as high as 7:1\" after favourable harvests against Pretty 1990, Agricultural History Review 38 (opened), mean wheat 4.0 seeds per seed sown, so 1.75 of mean; FAOSTAT Morocco wheat 1810 against a mean of 1080 (1.68), in the ICARDA/IWMI yield-gap report (opened). Observed good years run above the 1.3 clip; kept, being within 3x",
+    confidence="C",
     why="Symmetric-ish upside clip on the same Gaussian draw, on the "
         "reasoning that a single exceptional year cannot outrun the land's "
         "own biological ceiling by an unbounded amount. Invented, like the "
@@ -1026,10 +1024,10 @@ CHERNOZEM_QUALITY_MULTIPLIER = declare(
 
 CHERNOZEM_WEATHER_STDEV_FRACTION = declare(
     "CHERNOZEM_WEATHER_STDEV_FRACTION", 0.25,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="fraction of mean yield (dimensionless standard deviation)",
-    source=None,
-    confidence="D",
+    source="Modern analogue, opened: Zulauf, farmdoc daily, 2015, https://farmdocdaily.illinois.edu/2015/11/variability-in-corn-soybean-and-wheat-production.html: wheat production variability in Kazakhstan-Russia-Ukraine \"(27%) is higher than for any other crop-country group combination\" (standard deviation of year-to-year percent change in production, so the level spread is about 27%/sqrt(2) = 19%, and it includes harvested area)",
+    confidence="C",
     why="A continental steppe climate lacks the Mediterranean's winter-rain "
         "buffering, which plausibly widens year-to-year yield swings "
         "somewhat above WEATHER_YIELD_STDEV_FRACTION; the actual figure "
@@ -1077,10 +1075,10 @@ DESERT_QUALITY_MULTIPLIER = declare(
 
 DESERT_WEATHER_STDEV_FRACTION = declare(
     "DESERT_WEATHER_STDEV_FRACTION", 0.50,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="fraction of mean yield (dimensionless standard deviation)",
-    source=None,
-    confidence="D",
+    source="Pala et al., ICARDA/IWMI, Assessment of wheat yield gap in the Mediterranean (opened PDF), FAOSTAT Morocco wheat yield kg/ha in five periods: 1245, 1330, 555, 475, 1810; standard deviation 503 on a mean of 1080 is 0.47. Settat farmers 380-2420 kg/ha on a mean of 1105. Modern analogue, semi-arid rainfed wheat",
+    confidence="C",
     why="Erratic rainfall is the defining feature of dry farming, not a "
         "side effect of it; a placeholder pending a real hydrological "
         "model of arid precipitation.")
@@ -1198,10 +1196,10 @@ THREE_FIELD = Rotation(
 
 HORSE_COLLAR_LABOUR_HOURS_MULTIPLIER = declare(
     "HORSE_COLLAR_LABOUR_HOURS_MULTIPLIER", 0.7,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="fraction of REFERENCE_LABOUR_HOURS_PER_HECTARE (dimensionless)",
-    source=None,
-    confidence="D",
+    source="Wikipedia, Horse collar (opened): \"Horses work roughly 50 percent faster than oxen\", so ploughing time per hectare is 1/1.5 = 0.67 of the ox time. Assumption: the whole reference labour per hectare scales with ploughing speed",
+    confidence="C",
     why="A horse in a rigid collar pulling a mouldboard plough covers "
         "ground faster than an ox behind an ard on the same land; economic-"
         "history accounts of the medieval 'agricultural revolution' "

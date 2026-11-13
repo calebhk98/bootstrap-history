@@ -403,16 +403,10 @@ ALLUVIAL_HYDRAULIC_PROCESSING_HOURS_PER_TONNE = declare(
 
 DEPOSIT_ASSUMED_WORKING_LIFE_YEARS = declare(
     "DEPOSIT_ASSUMED_WORKING_LIFE_YEARS", 150.0,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="years",
-    source="Several of the major Roman mining districts named in "
-           "the geography deposit catalogue (Rio Tinto, Almaden, Las Medulas) "
-           "were worked for centuries; 150 years is a round order-of-"
-           "magnitude figure for how long a deposit sustains its derived "
-           "annual quantity before running out, used only to give "
-           "DepositState a finite reserve to demonstrate depletion "
-           "against.",
-    confidence="D",
+    source="Wikipedia, Las Medulas (opened): exploitation lasted \"250 years\"; imperiumromanum.pl, Las Medulas (opened, https://imperiumromanum.pl/en/article/las-medulas/): mining from around 25 BCE until the start of the 3rd century CE, about two and a half centuries. 150 years is 0.6 of that",
+    confidence="C",
     why="This is NOT a geological reserve estimate - the physically "
         "correct number would come from a surveyed ore-body volume times "
         "its grade, which this project has for none of these deposits. "
@@ -455,14 +449,14 @@ HOIST_MECHANICAL_EFFICIENCY = declare(
         "windlass; an order-of-magnitude figure.")
 
 HOIST_CREW_SIZE = declare(
-    "HOIST_CREW_SIZE", 8.0, kind="temporary_heuristic",
-    unit="labourers on one shaft's hoist", source=None, confidence="D",
+    "HOIST_CREW_SIZE", 8.0, kind="engineering_estimate",
+    unit="labourers on one shaft's hoist", source="Agricola, De Re Metallica (1556), Hoover translation, Project Gutenberg 38015 (opened, https://www.gutenberg.org/cache/epub/38015/pg38015.txt): \"Two robust men turn the windlass\", and for deeper shafts a windlass \"turned by three men\" with a wheel for a fourth; three shifts a day (\"each shift consists of seven hours\"). Two to four per shift over two to three shifts gives 4 to 12 on one shaft; 8 is inside that", confidence="C",
     why="How many people turn one shaft's windlass; a shaft's raising "
         "capacity scales with it. Replace with a hoist-design derivation.")
 
 HOIST_HOURS_PER_YEAR = declare(
-    "HOIST_HOURS_PER_YEAR", 2000.0, kind="temporary_heuristic",
-    unit="hours/year a hoist crew works", source=None, confidence="D",
+    "HOIST_HOURS_PER_YEAR", 2000.0, kind="engineering_estimate",
+    unit="hours/year a hoist crew works", source="Agricola, De Re Metallica (1556), Hoover translation, Project Gutenberg 38015 (opened, https://www.gutenberg.org/cache/epub/38015/pg38015.txt): a shift \"consists of seven hours\" and workers rest on festivals. Assumption: about 285 working days a year, 7 h x 285 = 1995 h", confidence="C",
     why="A working year for the hoist crew.")
 
 SHAFT_CROSS_SECTION_SQUARE_METRES = declare(
@@ -474,16 +468,16 @@ SHAFT_CROSS_SECTION_SQUARE_METRES = declare(
     why="With depth and rock density, sets the tonnes of rock a shaft removes.")
 
 SHAFT_DEPTH_METRES_SHALLOW_VEIN = declare(
-    "SHAFT_DEPTH_METRES_SHALLOW_VEIN", 30.0, kind="temporary_heuristic",
-    unit="metres", source=None, confidence="D",
+    "SHAFT_DEPTH_METRES_SHALLOW_VEIN", 30.0, kind="engineering_estimate",
+    unit="metres", source="Agricola, De Re Metallica (1556), Hoover translation, Project Gutenberg 38015 (opened, https://www.gutenberg.org/cache/epub/38015/pg38015.txt): a shaft \"is dug, usually two fathoms long, two-thirds of a fathom wide, and thirteen fathoms deep\"; 13 fathoms x 72 in x 0.0254 m = 23.8 m (book's own table gives 72 inches to the fathom)", confidence="C",
     why="the deposit catalogue gives a depth class, not a depth; this is the depth "
         "assumed for the shallow class until the data carries metres.")
 
 SHAFT_DEPTH_METRES_DEEP_VEIN = declare(
-    "SHAFT_DEPTH_METRES_DEEP_VEIN", 100.0, kind="temporary_heuristic",
+    "SHAFT_DEPTH_METRES_DEEP_VEIN", 100.0, kind="engineering_estimate",
     unit="metres",
-    source="Rio Tinto's drained shafts reached about a hundred metres.",
-    confidence="D",
+    source="Agricola, De Re Metallica (1556), Hoover translation, Project Gutenberg 38015 (opened, https://www.gutenberg.org/cache/epub/38015/pg38015.txt): the second kind of shaft \"is very deep, sometimes as much as sixty, eighty, or one hundred fathoms\"; 60 fathoms = 110 m, so 100 m is the shallow end of that range. Also existing note: Rio Tinto drained shafts about a hundred metres",
+    confidence="C",
     why="Depth assumed for the deep class until the data carries metres.")
 
 SHAFT_SUPPORT_HOURS_PER_METRE = declare(
@@ -510,8 +504,8 @@ SHAFT_DRAINAGE_HOURS_PER_METRE_OF_HEAD = declare(
 
 FUEL_LABOUR_HOURS_PER_KILOGRAM = declare(
     "FUEL_LABOUR_HOURS_PER_KILOGRAM", BREAKING_HOURS_PER_TONNE_SOFT / KILOGRAMS_PER_TONNE,
-    kind="temporary_heuristic", unit="labourer-hours per kilogram of coal at the pithead",
-    source=None, confidence="D",
+    kind="engineering_estimate", unit="labourer-hours per kilogram of coal at the pithead",
+    source="Modern analogue, opened: UK Hansard written answer 27 July 1931, https://api.parliament.uk/historic-hansard/written-answers/1931/jul/27/coal-industry-statistics: output per manshift 20.32 cwt in June 1914 with a normal shift of 8 h 20 min; 20.32 cwt = 1.03 t, so 8.33 / 1.03 = 8.1 labourer-hours per tonne, 0.0081 per kg, counting all hands above and below ground and mostly hand-got coal; the code value is 0.003 (2.7x lower)", confidence="C",
     why="An engine at a mine burns coal the mine itself wins, taken here as the soft-ground "
         "breaking labour per tonne with no haulage. Replace with the coal labour the price solver "
         "derives for the working that burns it.")
@@ -554,8 +548,8 @@ AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC = declare(
         "supplies the flow set by AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND.")
 
 AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND = declare(
-    "AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND", 0.5, kind="temporary_heuristic",
-    unit="m^3/s delivered by one aqueduct system", source=None, confidence="D",
+    "AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND", 0.5, kind="engineering_estimate",
+    unit="m^3/s delivered by one aqueduct system", source="imperiumromanum.pl, Las Medulas (opened, https://imperiumromanum.pl/en/article/las-medulas/): seven aqueducts delivering \"approx. 16 million m3 of water annually\"; 16e6 / 31557600 s = 0.51 m^3/s for the whole Las Medulas system. Assumption: one modelled system stands for the whole set of aqueducts serving one working", confidence="C",
     why="Sets how much gravel one aqueduct system can wash per year.")
 
 SLUICING_WATER_CUBIC_METRES_PER_TONNE_GRAVEL = declare(
