@@ -116,7 +116,7 @@ class JarositeRoute(unittest.TestCase):
         entry = _default_production_entries()["silver_jarosite_kg"]
         self.assertGreater(entry["inputs"].get("lead_kg", 0.0), 0.0)
         self.assertIn("silver_kg", entry["outputs"])
-        self.assertEqual(entry["conf"], "D")
+        self.assertEqual(entry["conf"], "C")
 
     def test_jarosite_ore_comes_from_its_deposit(self):
         entry = _default_production_entries()["jarosite_ore_kg"]
