@@ -18,6 +18,19 @@ economy can in principle reach a fixed point, but an agent economy with lumpy pr
 cycles in thin goods. CLAUDE.md 4.2 asks the baseline to be "a plausible draw", which reads more like a stationary
 distribution than a fixed point.
 
+**New evidence: the spin-up is chaotic.** A change that alters only the last digit of about one in seventy input bills
+(the summation order of `close_kernel.close_rows`; merge d77138668, measured by instrumenting every call in a Norse run)
+moved Norse's inventory gap by a factor of three and its price gap by a factor of three; installing numba mid-session
+also changed Norse's trajectory although `sim/jit.py` says its settings keep a game reproducible (not checked further).
+So the yearly change over the last few years of one trajectory is largely where the chaos happens to land, and a rule
+change can be judged only by its effect on many perturbed runs, not on one.
+
+**Proposal (not built).** Judge settling as stationarity of a distribution, which CLAUDE.md 4.2 already asks of the
+baseline: run the trimmed stage for a longer window, and require for each quantity (a) no trend: the change between the
+mean of the window's first half and its second half under the tolerance, and (b) bounded fluctuation: the spread of the
+year-to-year changes under a stated bound; and run a few spin-ups whose opening differs in the last digit (a seed of
+rounding) to show the result does not depend on the draw. Keep the fixed-point test as a reported figure.
+
 **Question.** Should the check stay a fixed point (every watched quantity under the tolerance), or should it test
 stationarity (no trend over the window, and fluctuation within a bound) for the thin goods? The complaint says "do
 not weaken the settling tests", so the branch keeps the check as it is and tries to meet it. If the economy ends up

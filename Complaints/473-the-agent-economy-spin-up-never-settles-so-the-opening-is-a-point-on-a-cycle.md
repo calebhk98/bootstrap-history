@@ -841,6 +841,12 @@ Fixed here:
   whose only offer was that residue quoted a phantom low ask; households bid on it, the unfilled bid hid the quote, and the next year it
   returned: a period-2 cycle through the food floor cost and the wage floor (`labour_ask_floor.ask_floor_by_tile`). Without it households see
   the real food prices, so measured hunger is higher and honest.
+- **The mint sells only the backing above the cash holders want** (`mint.cash_wanted`, `mint.meltable_metal`): striking was already
+  limited to what holders want to add; selling (melting) offered the whole stock at parity, so in Mexica, whose money is cacao,
+  households ate the money's backing.
+- **Producers plan, close and price an unpriced tool at its fallback cost** (`plan_wear.covered_input_bill`, `close_kernel`,
+  `grid_wear`, `entry_kernels.pays_after_recovery`): placement and entry alone were not enough, since placed producers then
+  planned zero runs and the close counted them at an infinite cost.
 - **An unpriced tool is costed by its fallback chain in placement and entry** (`tool_fallback.wear_cost_per_run`, `unit_cost.input_cost_per_run`,
   `entry_wear_kernel`; test `test_tool_wear_cost`). A tool with no price made every cost rule infinite, so a recipe was never placed or entered,
   though producers' own planning already covers a missing tool by the next tool or by hand (`tool_fallback.draws`). In Mexica, with no iron,
@@ -859,6 +865,10 @@ Tried and not merged (branches pushed for reference):
   removed the alternation in every good and tile checked, and it is merged above.
 
 What still fails, and the evidence:
+- The run is chaotic, not only path-sensitive: changing the summation order of the close's input bill (last-digit
+  differences in about one in seventy bills, every other bill identical; merge d77138668) moved Norse's inventory and price
+  gaps by factors of about three. A single trajectory's last-years gap is therefore mostly noise at this tolerance; see
+  `Complaints/reports/473-owner-questions.md` question 1 for a stationarity test over perturbed runs.
 - The run is path-sensitive: a small rule change moves the whole trajectory (the dust branch's trimmed-stage wage starts at about twice the
   base's). One run per change is weak evidence; compare several civilisations before merging a rule.
 - The remaining movers on Norse are watched goods' prices and inventories with a period-2 or a four-year cycle (fish and steel follow the
