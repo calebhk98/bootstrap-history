@@ -9,6 +9,7 @@ import math
 from dataclasses import dataclass
 from typing import Collection, Dict, Mapping, Optional, Sequence
 
+from sim.economy.api import PRICE_SMOOTHED_TRADE
 from sim.markets.api import coin_wear_per_year
 
 # A price within an order of magnitude of what making the good costs: above it a worker-hour in making it sells
@@ -39,9 +40,11 @@ class CheckResult:
 
 
 def unmeasured_cause(good: Optional[str], prices: Mapping[str, float], costs: Mapping[str, float],
-                     stale: Collection[str]) -> Optional[str]:
+                     stale: Collection[str], kinds: Mapping[str, str], output: Mapping[str, float]) -> Optional[str]:
     """Why `good` has no price-over-cost ratio, or None when it has one: no such good, its market did not clear
-    lately (its shown price is then its making cost, not a trade), no price, or no making cost."""
+    lately (its shown price is then its making cost, not a trade), its shown price is not a trade (`kinds` is the
+    kind of each shown price: a thin market's price is blended toward the making cost and a quote is no one's payment),
+    nobody made it last year (`output`), no price, or no making cost."""
     if not good:
         return "no_good"
     if good in stale:
@@ -50,6 +53,10 @@ def unmeasured_cause(good: Optional[str], prices: Mapping[str, float], costs: Ma
         return "no_price"
     if not costs.get(good):
         return "no_making_cost"
+    if kinds.get(good) != PRICE_SMOOTHED_TRADE:
+        return "price_not_a_trade"
+    if not output.get(good):
+        return "not_made"
     return None
 
 
@@ -60,12 +67,13 @@ def price_over_cost(name: str, ratios: Mapping[str, float], bound: float = PRICE
     (a check that measured nothing has not passed). `unmeasured` is {good: cause} of the goods left out
     (`unmeasured_cause`); it is kept in the detail."""
     usable = {good: ratio for good, ratio in ratios.items() if ratio > 0.0 and math.isfinite(ratio)}
+    unmeasured = {**(unmeasured or {}), **{good: "ratio_not_usable" for good in ratios if good not in usable}}
     if not usable:
         return CheckResult(name, None, bound, "within", False,
-                           {"ratios": {}, "outside": {}, "unmeasured": dict(unmeasured or {})})
+                           {"ratios": {}, "outside": {}, "unmeasured": unmeasured})
     worst = max(usable.values(), key=lambda ratio: abs(math.log(ratio)))
     outside = {good: ratio for good, ratio in usable.items() if ratio > bound or ratio < 1.0 / bound}
-    return CheckResult(name, worst, bound, "within", not outside, {"ratios": dict(usable), "outside": outside, "unmeasured": dict(unmeasured or {})})
+    return CheckResult(name, worst, bound, "within", not outside, {"ratios": dict(usable), "outside": outside, "unmeasured": unmeasured})
 
 
 def money_against_wear(rows: Sequence[Mapping[str, float]], wear_share: float = coin_wear_per_year(),
@@ -113,8 +121,9 @@ def rate_against_history(solved: Optional[float], historical: Optional[float],
 
 def spin_up_settled(result: Mapping[str, object], tolerance: float) -> CheckResult:
     """`result` is the opening's `spin_up_result` ({settled, years, gap}). The value is the largest yearly change
-    in the last year measured and the bound the tolerance the stage was held to."""
+    in the last year measured and the bound the tolerance the stage was held to. A result with a `cause` is not settled,
+    and the watched prices left out as no trade (`unmeasured`) are kept in the detail."""
     if not result:
         return CheckResult("spin_up_settled", None, tolerance, "at most", False, {"years": None})
     return CheckResult("spin_up_settled", float(result["gap"]), tolerance, "at most", bool(result["settled"]),
-                       {"years": result["years"]})
+                       {"years": result["years"], "cause": result.get("cause"), "unmeasured": dict(result.get("unmeasured") or {})})

@@ -22,9 +22,14 @@ class WatchedGoodsTests(unittest.TestCase):
 class YearStateTests(unittest.TestCase):
     def test_the_state_carries_the_quantities_and_only_the_watched_goods_that_were_priced(self):
         state = year_state({"real_output": 3.0, "food_need": 2.0}, 1.5, 0.04, {"wheat": 2.0, "salt": None, "iron": 9.0},
-                           ["wheat", "salt", "wool"])
+                           ["wheat", "salt", "wool"], {"wheat", "salt", "wool", "iron"})
         self.assertEqual(state, {"real_output": 3.0, "food_need": 2.0, "price_level": 1.5, "rate": 0.04,
-                                 "prices": {"wheat": 2.0}})
+                                 "prices": {"wheat": 2.0}, "unmeasured": {"salt": "no_price", "wool": "no_price"}})
+
+    def test_a_watched_price_that_is_not_a_trade_is_left_out_with_its_cause(self):
+        state = year_state({}, 1.0, None, {"wheat": 2.0, "salt": 5.0}, ["wheat", "salt"], {"wheat"})
+        self.assertEqual(state["prices"], {"wheat": 2.0})
+        self.assertEqual(state["unmeasured"], {"salt": "price_not_a_trade"})
 
 
 class PriceGapsTests(unittest.TestCase):
@@ -78,7 +83,7 @@ class ReplayTests(unittest.TestCase):
         patches = {"spin_up_state": lambda economy, outcome: {"real_output": 1.0}, "interest_rate": lambda economy: 0.05,
                    "money_year_figures": lambda economy, outcome: {"struck": 0.0, "wear": 0.0},
                    "economy_book": lambda economy: None, "currency_id": lambda economy: "coin",
-                   "trim_workforce_to_expected_hours": trim}
+                   "trim_workforce_to_expected_hours": trim, "traded_price_goods": lambda economy: {"wheat"}}
         with mock.patch.multiple(spin_up_stages.economy_api, **patches), \
                 mock.patch.object(spin_up_stages, "money_by_holder_columns", lambda book, currency: {}):
             rows = list(spin_up_stages.replay(Economy(), object(), ["wheat"], "labour", 2, 3))

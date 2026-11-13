@@ -75,3 +75,20 @@ def window_gaps(states):
             worst[name] = max(gap, worst.get(name, 0.0))
     return worst
 
+
+
+def unsettled_cause(states):
+    """Why a window of `states` cannot be called settled whatever its gaps, or None: fewer than two years, a pair of
+    consecutive years with no watched good priced (as a trade) in both, or no real output or no hired hours in the last
+    year (an economy that makes nothing does not move)."""
+    if len(states) < 2:
+        return "too_few_years"
+    if any(not set(before["prices"]) & set(after["prices"]) for before, after in zip(states, states[1:])):
+        return "no_price_in_two_years"
+    for name in ("real_output", "hired_hours"):
+        value = states[-1].get(name)
+        if value is None:
+            return name + "_not_measured"
+        if value <= 0.0:
+            return "zero_" + name
+    return None

@@ -58,6 +58,7 @@ from .titles_moves import holdings as record_title_holdings
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
+from .market_memory import PRICE_SMOOTHED_TRADE
 from .trade_wages import premium_for_training_years, trade_premium
 from sim.world import capital_market
 
@@ -82,7 +83,7 @@ __all__ = [
     "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
     "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
-    "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs", "crop_suitability_inputs",
+    "trade_wage_at", "hunger_goods", "health_figures", "PRICE_SMOOTHED_TRADE", "traded_price_goods", "crop_site_inputs", "crop_suitability_inputs",
 ]
 
 
@@ -464,6 +465,11 @@ def shown_price_kinds_of(economy, country=None):
     """What each shown price is, by good: PRICE_SMOOTHED_TRADE, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
     Same scope as `shown_prices_of`."""
     return dict(_shown(economy, country)[2])
+
+
+def traded_price_goods(economy):
+    """The goods whose price in the year just stepped is a trade (PRICE_SMOOTHED_TRADE in some market), not a quote or an estimate."""
+    return {good for good, kind in economy.record.memory.price_kinds_by_good().items() if kind == PRICE_SMOOTHED_TRADE}
 
 
 def _shown(economy, country):

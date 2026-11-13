@@ -30,8 +30,12 @@ def year_inputs(economy):
                              engine_orders={})
 
 
-def year_state(quantities, price_level, rate, prices, watched):
+def year_state(quantities, price_level, rate, prices, watched, traded):
     """The state of a year as spin_up_gap measures it: the settle `quantities` (economy_api.spin_up_state), the price
-    level, the rate (None when the economy has none) and the prices of the `watched` goods that were priced."""
+    level, the rate (None when the economy has none) and the prices of the `watched` goods that were priced as a trade
+    (those in `traded`; any other watched good is in "unmeasured" with its cause, since a price nobody traded at may be
+    only what the good would cost to make)."""
+    causes = {good: "no_price" if prices.get(good) is None else "price_not_a_trade" for good in watched
+              if prices.get(good) is None or good not in traded}
     return {**quantities, "price_level": price_level, "rate": rate,
-            "prices": {good: prices[good] for good in watched if prices.get(good) is not None}}
+            "prices": {good: prices[good] for good in watched if good not in causes}, "unmeasured": causes}
