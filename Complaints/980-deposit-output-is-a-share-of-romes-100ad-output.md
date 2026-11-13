@@ -24,3 +24,10 @@ civilisation's share of a resource on its tiles follows from contained metal, no
 
 **Research needed.** Contained metal (cumulative production plus reserves, tonnes, with the source and year) for every
 named deposit row.
+
+**Research done (2026-11).** Most deposit rows now carry `contained_tonnes`, `contained_basis` and `contained_source`
+(the basis says when a figure is a lower bound, a stand-in mine for a generic regional row, a resource rather than a
+reserve, or a country-level figure used for one row). Count the rows still without it with
+`grep -L` over the rows, or `python3 -c` on data/world/geography/deposits/*.json for rows lacking the key. The rows left
+empty are mostly generic regional rows, gems, Stassfurt and Hallstatt salt, and the three saltpetre districts, which are
+a regenerating soil flow and need a decision on what stock to enter. The fields are data only: no code reads them yet.
