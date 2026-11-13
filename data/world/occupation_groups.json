@@ -81,8 +81,8 @@
       "sources": [
         "wilson_2002"
       ],
-      "band_status": "recalled",
-      "band_source": "No source found. Searched 2026-11 for a food-trades share (Shaw-Taylor and Wrigley's Occupational Structure of Britain project pages, Economic History Society summary of it): the pages opened give only agriculture, secondary and tertiary totals, and the project's detailed tables (Keibek 2017, doi 10.17863/CAM.8960) were not opened. The low edge 0.01 stays an unsourced plausibility edge, not a literature figure."
+      "band_status": "sourced",
+      "band_source": "One point inside the band, from two opened sources. England and Wales 1851 census, persons returned as baker 62,472, miller 37,268, brewer 18,620 and maltster 11,150, 129,510 together (The Peel Web, Occupations: census returns for 1851, 1861 and 1871, https://historyhome.co.uk/peel/economic/census.htm; the page lists names and counts in two parallel columns, matched by position, checked on the first row: agricultural labourer 1,460,896). The denominator is men aged twenty or above in the labour force in 1851, 4,507 thousand (Keibek 2017, Table 19, agriculture-mining-other 1,495 + secondary 2,014 + tertiary 998 thousand; doi 10.17863/CAM.8960, https://www.repository.cam.ac.uk/handle/1810/263608). Arithmetic: 129,510 / 4,507,000 = 0.029. The numerator counts all ages and some women, so the male share is somewhat lower; salt workers are not counted; 1851 is after industrialisation, with more bread bought in towns. The edges 0.01 and 0.08 remain wide plausibility edges around that point (no Roman collegia count or pre-1800 table found); the point agrees with the band, so it is kept."
     },
     "transport": {
       "trades": [

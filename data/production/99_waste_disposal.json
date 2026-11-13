@@ -7,8 +7,8 @@
    "service": true,
    "unit_dimension": "count",
    "basis": "one tonne of waste loaded onto the carrier and tipped at the dump",
-   "yield_basis": "The handling_hours_per_tonne of the carriage modes in data/world/geography/route_modes/modes.json (load and unload each time a haul changes mode), one labourer hour per tonne, which covers both the loading at the works and the tipping at the dump.",
-   "conf": "D",
+   "yield_basis": "The handling_hours_per_tonne of the carriage modes in data/world/geography/route_modes/modes.json (load and unload each time a haul changes mode), one labourer hour per tonne, which covers both the loading at the works and the tipping at the dump. Pass 12 source: Indian Roads Congress, Special Publication 24, Guidelines on the choice and planning of appropriate technology in road construction (1984; law.resource.org, https://law.resource.org/pub/in/bis/irc/irc.gov.in.sp.024.1984.pdf, Table 5, opened as text): manual loading or unloading of broken-up earth, aggregates or loose materials into or out of a vehicle by hand tools takes 0.20 to 0.44 man-hours a tonne with piecework and good supervision and 0.52 to 1.16 on daily pay and poor supervision, for loading heights of 0.3 to 2.0 m. Loading plus tipping is therefore 0.4 to 2.3 hours a tonne; the 1.0 here lies inside that range. Waste is assumed to behave like loose earth.",
+   "conf": "C",
    "requires_node": null
   },
   "waste_haulage_on_foot": {
