@@ -16,7 +16,7 @@ from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_F
                                     RF_SHARE, RI_GOOD, RI_UNIT, SF_LIFE, SF_PRICE, SF_WEIGHT, V_FLOORS, V_PIDX, V_SFLOORS, V_STOTALS, V_TOTALS, W_AFF,
                                     W_BUDGET, W_CAP, W_CEIL, W_COUNT, W_FLEX, W_FLOOR, W_ON, W_QTY, W_SHARE, _add, _affordable, _need_units,
                                     _resting_purse, _store_value_target, _total)
-from .opening_demand_kernel import RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
+from .opening_demand_kernel import flexible_budget_left, RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
 from .satiated_demand import is_satiated
 from .priced_need_kernel import limit_shares, price_ceilings, units_per_money
 
@@ -318,7 +318,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
     floor_wanted = floor_spend * (1.0 + constants[K_FLOOR_MARGIN])
     usable = cash * (1.0 - constants[K_SAFETY])
     floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
-    left = min(usable, max(spending, floor_wanted * floor_scale)) - floor_wanted * floor_scale
+    left = flexible_budget_left(usable, spending, floor_wanted, floor_scale)
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     budget_total = 0.0
     for index in range(r0, r1):

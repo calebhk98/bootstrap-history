@@ -213,14 +213,13 @@ def _received_price(setup, record, good, market, ledger: YearLedger) -> Optional
 
 
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):
-    """The price a market remembers after a year in which it traded: `remembered_price` and the resumed-trade rule
-    against the old price, unless the old price was a quote (a bid ceiling, an ask, a cost): no one paid it, so the
-    trade replaces it whole rather than being weighed against it. A sliver cleared above a quote is the exception: thin
-    supply meets the highest bid, so a sliver can only overstate the price and moves the quote in proportion to its share."""
-    if old_was_quote and old is not None and cleared > old:
+    """The price a market remembers after a year in which it traded. Against a remembered quote (a bid ceiling, an ask, a cost:
+    no one paid it) the trade is weighed by its share of the reference volume, in either direction: a rounding-sized trade
+    moves the quote a rounding-sized step, and a representative one replaces it. Against a price that was paid, `remembered_price`
+    and the resumed-trade rule."""
+    if old_was_quote and old is not None:
         return remembered_price(old, cleared, quantity, reference_volume)
-    paid = None if old_was_quote else old
-    return price_after_resumed_trade(paid, remembered_price(paid, cleared, quantity, reference_volume), quiet_years)
+    return price_after_resumed_trade(old, remembered_price(old, cleared, quantity, reference_volume), quiet_years)
 
 
 def remembered_price(old, cleared, quantity, usual_volume):
