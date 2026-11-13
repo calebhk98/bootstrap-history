@@ -70,6 +70,26 @@ class LossMovesTests(unittest.TestCase):
         self.assertNotIn(("amy", "wheat", "t1"), {row[:3] for row in rows})
         self.assertNotIn(("bob", "apple", "t5"), {row[:3] for row in rows})
 
+    def test_a_loss_that_leaves_only_residue_takes_the_whole_holding(self):
+        book = StockBook(agents_table(0), goods=1)
+        book.stocks.reserve(8)
+        book.hold(0, 0, 0, 1e-17)
+        book.hold(0, 0, 1, 100.0)
+        rows = rows_of_one(book, [0.25])
+        self.assertEqual(sorted(row[3] for row in rows), [1e-17 * 1.0, 25.0])
+
+    def test_a_loss_that_leaves_a_real_remainder_takes_only_the_share(self):
+        book = StockBook(agents_table(0), goods=1)
+        book.stocks.reserve(8)
+        book.hold(0, 0, 0, 1e-3)
+        self.assertEqual([row[3] for row in rows_of_one(book, [0.25])], [0.25e-3])
+
+
+def rows_of_one(book, shares):
+    agents, slots, lost = loss_moves(np.array([0], dtype=np.int64), book.agents.first_slot, book.stocks.table, np.array(shares),
+                                     np.array([1], dtype=np.uint8), np.array([0]), np.array([0, 1]))
+    return [(agent, slot, 0, quantity) for agent, slot, quantity in zip(agents.tolist(), slots.tolist(), lost.tolist())]
+
 
 if __name__ == "__main__":
     unittest.main()
