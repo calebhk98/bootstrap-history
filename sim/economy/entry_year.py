@@ -54,7 +54,7 @@ def year_plans(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, s
             if area is None:
                 continue
             gap = gap_beyond_spare(quantity, spare.get((good, area_id), 0.0))
-            if gap > 0.0:
+            if gap > 0.0:      # `gap_beyond_spare` is zero below the residue
                 unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
         siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup), None)
         traded = _traded_volume(record, view, area_map)
