@@ -863,6 +863,13 @@ Tried and not merged (branches pushed for reference):
   opening. Needs a derived opening cash and saving (Complaints 545, 607); see `Complaints/reports/473-owner-questions.md`.
 - `no-dust-offers` (first version, before the mint fix): measured worse on one Norse run; re-measured on the head with the mint fix it
   removed the alternation in every good and tile checked, and it is merged above.
+- `fleet-wanted-follows-routes`: merchants' wanted carrier fleet followed last year's route wear whole; smoothed over a service
+  life. Not the mover: the buyers of mules and oxen are households, and one England run moved the worst gap to the rate.
+- `durable-replacement-steady`: mules and oxen are bought for households' stores of wealth (`households_store.store_bids`, and its
+  copies in `households_orders_kernel` and `opening_demand_kernel`), an (S,s) rule that buys nothing while the store holds most of
+  its target and the whole gap once it falls below, so the stock drifts for years and one catch-up purchase lands on the producers.
+  Buying back each year's wear and closing a shortfall over years settled England's inventories but made one Norse run hungrier;
+  not judged on single runs (see the chaos note below).
 
 What still fails, and the evidence:
 - The run is chaotic, not only path-sensitive: changing the summation order of the close's input bill (last-digit
