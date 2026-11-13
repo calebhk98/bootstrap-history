@@ -23,17 +23,21 @@ CAPTIVE_SHARE_OF_DEFEATED_LOSSES = declare(
 		"battle; Scheidel 2005 (JRS 95) adds that women and children more often survived defeat than adult men.")
 
 CAPTIVE_SHARE_OF_CONQUERED_PEOPLE = declare(
-	"CAPTIVE_SHARE_OF_CONQUERED_PEOPLE", 0.02, kind="temporary_heuristic", unit="share of a taken tile's people",
-	source="Sacked or besieged peoples carried off, from opened pages: Wikipedia 'Third Punic War' (50,000 survivors sold of a "
-		"population estimated from 90,000 to 800,000, so 0.06 to 0.56); Wikipedia 'Atuatuci' (53,000 sold of a fortress holding "
-		"at least 57,000, 0.93). A tile that surrendered under the custom of sparing those who yield before the ram touches the "
-		"wall is not carried off in any case opened; no count of how many taken tiles were sacked was found.",
-	confidence="D",
+	"CAPTIVE_SHARE_OF_CONQUERED_PEOPLE", 0.09, kind="engineering_estimate", unit="share of a taken tile's people",
+	source="Caesar, Gallic War (Gutenberg 10657, https://www.gutenberg.org/cache/epub/10657/pg10657.txt, books 2, 3, 7, opened "
+		"2026-11) and Wikipedia 'Gallic Wars' (https://en.wikipedia.org/wiki/Gallic_Wars). Places taken or yielded: spared "
+		"Noviodunum of the Suessiones, Bratuspantium, Ambiani, the Alpine forts, the Sotiates' town, Adcantuannus's stronghold, "
+		"Vellaunodunum, Noviodunum of the Bituriges, Uxellodunum (defenders' hands cut off, not enslaved); sacked Aduatuci "
+		"(4,000 killed, 53,000 sold), the Veneti towns (sold), Genabum (storm, few taken alive), Avaricum (40,000 killed, 800 "
+		"escaped, none sold). 4 sacked of 13 taken or yielded. Wikipedia 'Third Punic War' (50,000 survivors sold of a population "
+		"estimated from 90,000 to 800,000, so 0.06 to 0.56).",
+	confidence="C",
 	why="When a tile is taken by force, this share of its people is carried off as bonded where the taker's society keeps "
-		"bonded people. Where a place is sacked 0.06 to 0.93 of its people are sold (cases above); a tile taken by "
-		"capitulation loses none. 0.02 is the average if about one taken tile in ten to fifteen is sacked, an "
-		"assumption with no source, so the figure stays a labelled heuristic.",
-	retire="648 captives by campaign record (Roman and other sources of prisoners taken per battle)")
+		"bonded people. Of 13 places Caesar took or received in the Gallic War, 4 were sacked, 4 / 13 = 0.31. Of a sacked "
+		"place's people the captured share was 0.93 (Aduatuci), about 0.31 (Carthage, midpoint of 0.06 and 0.56) and about 0 "
+		"(Avaricum and Genabum, killed or fled), mean 0.31. 0.31 * 0.31 = 0.095, so 0.09. A ballpark from one campaign by one "
+		"author who wrote up his own conduct; the Veneti and Alesia (captives shared out to the soldiers) have no count and are "
+		"left out of the mean, and a siege in a war of annihilation would sit higher.")
 
 
 def _recognises(registry: Any, country_key: str, profile: Any) -> bool:

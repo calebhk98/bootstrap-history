@@ -28,24 +28,29 @@ GENERIC_MINE_HARDNESS_CLASS = declare(
         "replace with per-material deposit data.")
 
 MINE_CEILING_BASE_IMPERIAL = declare(
-    "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
-    retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
+    "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="engineering_estimate",
     unit="tonnes/year (base, before state reach and revenue scale)",
-    source=None, confidence="D",
-    why="Base standing-mine ceiling for an imperial patron before "
-        "state reach, geology and mining technology are applied. "
-        "No fiscal or organisational-capacity data backs this figure; "
-        "it is a tuned starting point for the four patronage tiers "
-        "this method distinguishes.")
+    source="Wikipedia 'Roman metallurgy' (https://en.wikipedia.org/wiki/Roman_metallurgy, opened 2026-11): lead 80,000 t a "
+    "year across the Roman Empire ('largest preindustrial producer'), copper 15,000 t, iron 82,500 t; Wikipedia 'Mining in "
+    "Roman Britain' (https://en.wikipedia.org/wiki/Mining_in_Roman_Britain): about 100,000 tons of lead and 15,000 tons of "
+    "copper in the imperial territory (citing Fleming 2012). Both pages mark these as extrapolations. Only the sum "
+    "of base and state scale is sourced; the split between them is not.",
+    confidence="C",
+    why="Base standing-mine ceiling for an imperial patron before state reach, geology and mining technology are applied. "
+        "Base plus state scale at full reach is 20,000 + 60,000 = 80,000 t a year, the whole-empire lead output "
+        "above, the mineral scale then sizing other materials; the base is a quarter of it (a state that inspects nobody). "
+        "The quarter is unsourced.")
 
 MINE_CEILING_STATE_SCALE_IMPERIAL = declare(
-    "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="temporary_heuristic",
-    retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
-    unit="tonnes/year per unit of inspection reach (share of people whose claims its inspectors check)", source=None,
-    confidence="D",
-    why="How much further a more capable state extends the imperial-"
-        "tier ceiling. Tuned, not derived from any state-capacity "
-        "output relationship.")
+    "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="engineering_estimate",
+    unit="tonnes/year per unit of inspection reach (share of people whose claims its inspectors check)",
+    source="As MINE_CEILING_BASE_IMPERIAL: Wikipedia 'Roman metallurgy' (lead 80,000 t a year empire-wide) and 'Mining in "
+    "Roman Britain' (about 100,000 tons of lead); base 20,000 + scale 60,000 at reach 1 = 80,000 t.",
+    confidence="C",
+    why="How much further a more capable state extends the imperial-tier ceiling, to the whole-empire lead output at full "
+        "reach. The reach is a share of people, so a state inspecting everyone is the empire-wide case; the split of the "
+        "80,000 between base and scale is unsourced, and no source separates what a state ran from what private "
+        "lessees ran.")
 
 MINE_CEILING_BASE_STRANGER = declare(
     "MINE_CEILING_BASE_STRANGER", 3000.0, kind="temporary_heuristic",
