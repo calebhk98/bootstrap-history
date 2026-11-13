@@ -32,7 +32,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 40000.0,
-     "capital_basis": "A bakery oven about two metres across is a vault of about a thousand bricks over a clay-and-brick hearth (author's estimate from the size, conf D). Its vault is rebuilt after a decade or two of firing and cooling. A baker drawing two batches of about seventy kilograms on a working day for some three hundred days turns out about forty tonnes of loaves a year.",
+     "capital_basis": "A bakery oven about two metres across is a vault of about a thousand bricks over a clay-and-brick hearth. Round 2 arithmetic: Forno Bravo forum poll, https://community.fornobravo.com/forum/pizza-oven-design-and-installation/pompeii-oven-construction/10272-poll-how-many-fire-bricks-did-you-use-for-your-oven, opened: builders of 42 inch (1.07 m) ovens report 260, 275 and about 280 firebricks for floor, dome and enclosure, and a 60 inch oven over 1,000 bricks of a smaller size. A dome's brick count goes with its area, so with the diameter squared: 270 x (2.0 / 1.07)^2 = about 940 bricks, which agrees with 1000 (assumption: a bakery oven built to the same one-brick-thick shape). Build hours (80 mason, 60 labourer) are still the author's estimate, no source found, conf D. Its vault is rebuilt after a decade or two of firing and cooling. A baker drawing two batches of about seventy kilograms on a working day for some three hundred days turns out about forty tonnes of loaves a year.",
      "conf": "D"
     }
    ]

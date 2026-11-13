@@ -11,11 +11,11 @@
     "maize_kg": 2500.0
    },
    "labour_hours": {
-    "herder": 1250.0
+    "herder": 167.1
    },
    "unit_dimension": "mass",
    "basis": "per flock of 100 turkeys kept for a year (turkey_kg)",
-   "yield_basis": "TURKEY FLOCK, meat, fat and feathers from the same birds. Every figure is the species row's in data/world/living_stock.json times 100 head; its source field names what was read (Wikipedia wild-turkey weights and clutch size; Speller et al. 2018 on maize-fed Postclassic turkeys) and which figures are labelled heuristics with no source found. Carcass = slaughtered birds x live weight x dressing fraction, of which rendered fat is fat_kg and the rest meat_kg; feathers are a share of live weight. Maize is the ration. Labour is a keeper tending 200 birds at 2400 hours a keeper-year (no source found, a labelled heuristic) plus plucking and dressing each bird. No land entry: a yard flock fed from the household store. Conf D throughout; the cost is split by mass (sim/prices/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 birds kept. PASS 9 (Complaint 671): opened en.wikipedia.org/wiki/Wild_turkey (adult males 7.6 kg, females 4.26 kg average from two large studies) and extension.umaine.edu/publications/2223e (commercial turkey dressing 77 to 81 percent, no feather, blood or fat shares). The species figures live in data/world/living_stock.json (owned by Complaints/532) and were not changed here; feather share, fat share, keeper ratio and ration remain without an opened source. Stays D.",
+   "yield_basis": "TURKEY FLOCK, meat, fat and feathers from the same birds. Every figure is the species row's in data/world/living_stock.json times 100 head; its source field names what was read (Wikipedia wild-turkey weights and clutch size; Speller et al. 2018 on maize-fed Postclassic turkeys) and which figures are labelled heuristics with no source found. Carcass = slaughtered birds x live weight x dressing fraction, of which rendered fat is fat_kg and the rest meat_kg; feathers are a share of live weight. Maize is the ration. Labour is a keeper tending 2050 birds at 2400 hours a keeper-year (modern housed analogue: Penn State Extension, Small-Flock Turkey Production, https://extension.psu.edu/small-flock-turkey-production, opened: 'Average of 1.6 hours per day per 500 birds', which is 1.17 hours a bird-year and 2400 / 1.17 = 2050 birds a keeper; 100 birds take 117 hours; a floor for a hand-fed yard flock) plus 0.5 hour to pluck and dress each of the 100 birds taken (the species row's slaughter figure, a heuristic): 117.1 + 50 = 167.1 hours. No land entry: a yard flock fed from the household store. Conf D throughout; the cost is split by mass (sim/prices/joint_allocation.py, retire: Complaints/507). herd_stock is the live weight of the 100 birds kept. PASS 9 (Complaint 671): opened en.wikipedia.org/wiki/Wild_turkey (adult males 7.6 kg, females 4.26 kg average from two large studies) and extension.umaine.edu/publications/2223e (commercial turkey dressing 77 to 81 percent, no feather, blood or fat shares). The species figures live in data/world/living_stock.json (owned by Complaints/532) and were not changed here; feather share, fat share, keeper ratio and ration remain without an opened source. Stays D.",
    "conf": "D",
    "requires_node": "fud_turkey_flock",
    "herd_stock": {
@@ -83,11 +83,11 @@
    },
    "inputs": {},
    "labour_hours": {
-    "herder": 1200.0
+    "herder": 117.1
    },
    "unit_dimension": "mass",
    "basis": "per 100 head kept for a year, output as kg of live weight added to the stock",
-   "yield_basis": "GROWN. 100 head at the row's live weight times its natural increase (rates and sources in data/world/living_stock.json; the products the head give meanwhile are in the recipe of this file that holds the stock). Labour is the keeper's year shared among the head a keeper tends, as in the sheep_kg entry. The ration is charged in the product recipe, not twice. No land: a household animal. Conf D. Made only where the stock is already held. PASS 9: increase and keeper hours come from the species row of data/world/living_stock.json (Complaints/532). Stays D.",
+   "yield_basis": "GROWN. 100 head at the row's live weight times its natural increase (rates and sources in data/world/living_stock.json; the products the head give meanwhile are in the recipe of this file that holds the stock). Labour is the keeper's year (2400 hours) shared among the 2050 head a keeper tends: 100 head take 117.1 hours (Penn State Extension figure of 1.6 hours a day per 500 birds, a modern housed analogue; see data/world/living_stock.json). The ration is charged in the product recipe, not twice. No land: a household animal. Conf D. Made only where the stock is already held. PASS 9: increase and keeper hours come from the species row of data/world/living_stock.json (Complaints/532). Stays D.",
    "conf": "D",
    "requires_node": "fud_turkey_flock",
    "extracted_from": "household breeding stock"
