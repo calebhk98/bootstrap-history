@@ -25,14 +25,14 @@
     "water_kg": 500.0
    },
    "labour_hours": {
-    "domestic_servant": 40.0
+    "domestic_servant": 120.0
    },
    "thermal_mj": 3000.0,
    "temperature_needed_c": 100.0,
    "unit_dimension": "mass",
    "basis": "per 1000 kg of cooked pottage or stew",
-   "yield_basis": "A pot of meal and vegetables boiled in water: 300 kg of flour and 200 kg of vegetables with 500 kg of water make about a tonne of pottage (mass balance: 300 + 200 + 500 = 1000, the water of boiling and the water in the vegetables roughly cancelling; no source found, conf D). Heat: bringing a tonne of mostly water to the boil from cool takes about 0.3 MJ a kilogram, and an open hearth delivers about a tenth of the fuel's heat to the pot, so about 3 MJ of thermal heat a kilogram (author's estimate, conf D), priced through the thermal_mj market. Labour: cutting, stirring and serving, about 40 hours to a tonne (author's estimate, conf D). Calories: the satisfaction factor in data/world/needs.json is the food of the ingredients over the mass of the meal, (300 * 1.0 + 200 * 0.1) / 1000, so cooking adds no food energy.",
-   "conf": "D",
+   "yield_basis": "A pot of meal and vegetables boiled in water: 300 kg of flour and 200 kg of vegetables with 500 kg of water make about a tonne of pottage (mass balance: 300 + 200 + 500 = 1000, the water of boiling and the water in the vegetables roughly cancelling; no source found, conf D). Heat: bringing a tonne of mostly water to the boil from cool takes about 0.3 MJ a kilogram, and an open hearth delivers about a tenth of the fuel's heat to the pot, so about 3 MJ of thermal heat a kilogram (author's estimate, conf D), priced through the thermal_mj market. Labour: cutting, stirring and serving, about 40 hours to a tonne (author's estimate, conf D). Calories: the satisfaction factor in data/world/needs.json is the food of the ingredients over the mass of the meal, (300 * 1.0 + 200 * 0.1) / 1000, so cooking adds no food energy. Round 4 (Pass 14) labour from a time-use survey: US Bureau of Labor Statistics, The Economics Daily, 'Exploring time spent on cooking, reading, and other activities for National Hobby Month' (https://www.bls.gov/opub/ted/2024/exploring-time-spent-on-cooking-reading-and-other-activities-for-national-hobby-month.htm, opened): food and drink preparation 'averaged just under an hour per day (53 minutes)', 0.88 hours, among those who did it. Labelled glue: a cook feeds a household of 2.5 and each person eats 1.5 kg of cooked food a day (assumptions), 3.75 kg a cook-day, so a modern kitchen takes 0.88 / 3.75 = 0.235 h/kg, 235 hours a tonne. A single pot over a hearth is simpler than the many dishes and cleaning the survey counts (halved, assumption), so 120 hours a tonne. Was 40 (3x lower). tried: time-use survey (used), pottage recipe times (not found).",
+   "conf": "C",
    "requires_node": null
   }
  }

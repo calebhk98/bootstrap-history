@@ -1,62 +1,62 @@
 {
-  "_note": "Counted wooden vessels. Material quantities and work rates are explicitly estimated from physical reconstruction evidence; no sale price is prescribed. Service lives are in data/world/service_lives.json. naval_crew marks a vessel the state may buy for sea control and names its operating trades.",
-  "materials": {
-    "merchant_ship": {
-      "outputs": {
-        "merchant_ship": 1.0
-      },
-      "inputs": {
-        "timber_m3": 18.0,
-        "wood_tar_kg": 200.0,
-        "cordage_kg": 200.0,
-        "sailcloth_kg": 100.0,
-        "copper_kg": 100.0
-      },
-      "labour_hours": {
-        "shipwright": 8000.0,
-        "labourer": 2000.0
-      },
-      "unit_dimension": "count",
-      "unit_mass_kg": 9000.0,
-      "basis": "per small shell-first merchant sailing vessel, without cargo or crew",
-      "yield_basis": "MASS: Rudan et al. 2024, Heritage 7, 6712-6728, doi:10.3390/heritage7120310, section 2 (https://pdfs.semanticscholar.org/f049/335ac58c23206e2cba18a0e74431f425ee8d.pdf), opened: the Kyrenia reconstruction uses a calculated 9 t lightship, not its laden displacement. This is a model estimate, not a surviving ancient bill. INPUTS: Katzev and Katzev, INA Newsletter 13(3), 1986, pp. 6-10 (https://nauticalarch.org/wp-content/uploads/2015/12/INAQ1986-13-3.pdf), opened, documents pine hull, copper spikes, pitch coating and rigged square sail. Pass 11: Tzalas, Kyrenia II article (ancientportsantiques.com, Kyrenia2-Tzalas2007.pdf, opened as text) says what 'may have taken three or four months for the ancient shipwright to build' took the replica's builders nearly three years; no crew size or hours found, so the 8000 shipwright hours stay unsourced. Estimated mass allocation: 14 m3 retained timber at the existing timber recipe density of 600 kg/m3 gives 8400 kg; tar, cordage, sailcloth and copper add 600 kg. Purchasing 18 m3 allows 4 m3 for shaping offcuts. Tar stands for the reported pitch mixture. These allocations and labour are TEMPORARY HEURISTICS, confidence D, not measured excavation quantities: four shipwrights working 250 eight-hour days give 8000 skilled hours, with one helper giving 2000. Retire these estimates when complaint 629 carrier-capital recipes have measured scantlings, offcuts and construction work logs. Pass 12 scaling check from a replica build: the Viking Ship Museum, Roskilde, page on the Sea Stallion from Glendalough (https://www.vikingeskibsmuseet.dk/en/professions/boatyard/experimental-archaeological-research/ship-reconstruction/skuldelev-2, opened): a 30 m ship built 2000 to 2004, '27,000 man hours - distributed over four years - to build the ship itself' and '150 cubic metres of wood were used'. ASSUMED scaling: wood volume with the cube of length and hours with its square (surface to plank and fasten), to the 14 m Kyrenia hull (Wikipedia, Kyrenia ship, opened: 14 m): 150 * (14 / 30)^3 = 15 cubic metres of wood against 18 purchased here, and 27,000 * (14 / 30)^2 = 5,900 hours against 10,000 here (8000 skilled plus 2000 helper), within 2x. Kept. The tar, cordage, sailcloth, copper and cargo figures remain unsourced, so conf stays D.",
-      "conf": "D",
-      "requires_node": "sea_mortise_tenon",
-      "capital_asset": true,
-      "carrier_use": {
-        "serves": {
-          "model": "sailing"
-        },
-        "days_per_year": 150.0,
-        "payload_tonnes": 25.0,
-        "payload_basis": "Kyrenia ship cargo about 25 tonnes (Katzev and Katzev, INA Newsletter 13(3), 1986; INA Newsletter not opened; Wikipedia, The Kyrenia Ship, opened, gives 381 amphoras and 29 millstones but no tonnage; no source found for the 25 tonnes), confidence D. Days: geography's SAILING_DAYS_PER_YEAR."
-      }
+ "_note": "Counted wooden vessels. Material quantities and work rates are explicitly estimated from physical reconstruction evidence; no sale price is prescribed. Service lives are in data/world/service_lives.json. naval_crew marks a vessel the state may buy for sea control and names its operating trades.",
+ "materials": {
+  "merchant_ship": {
+   "outputs": {
+    "merchant_ship": 1.0
+   },
+   "inputs": {
+    "timber_m3": 18.0,
+    "wood_tar_kg": 200.0,
+    "cordage_kg": 200.0,
+    "sailcloth_kg": 30.0,
+    "copper_kg": 100.0
+   },
+   "labour_hours": {
+    "shipwright": 8000.0,
+    "labourer": 2000.0
+   },
+   "unit_dimension": "count",
+   "unit_mass_kg": 9000.0,
+   "basis": "per small shell-first merchant sailing vessel, without cargo or crew",
+   "yield_basis": "MASS: Rudan et al. 2024, Heritage 7, 6712-6728, doi:10.3390/heritage7120310, section 2 (https://pdfs.semanticscholar.org/f049/335ac58c23206e2cba18a0e74431f425ee8d.pdf), opened: the Kyrenia reconstruction uses a calculated 9 t lightship, not its laden displacement. This is a model estimate, not a surviving ancient bill. INPUTS: Katzev and Katzev, INA Newsletter 13(3), 1986, pp. 6-10 (https://nauticalarch.org/wp-content/uploads/2015/12/INAQ1986-13-3.pdf), opened, documents pine hull, copper spikes, pitch coating and rigged square sail. Pass 11: Tzalas, Kyrenia II article (ancientportsantiques.com, Kyrenia2-Tzalas2007.pdf, opened as text) says what 'may have taken three or four months for the ancient shipwright to build' took the replica's builders nearly three years; no crew size or hours found, so the 8000 shipwright hours stay unsourced. Estimated mass allocation: 14 m3 retained timber at the existing timber recipe density of 600 kg/m3 gives 8400 kg; tar, cordage, sailcloth and copper add 600 kg. Purchasing 18 m3 allows 4 m3 for shaping offcuts. Tar stands for the reported pitch mixture. These allocations and labour are TEMPORARY HEURISTICS, confidence D, not measured excavation quantities: four shipwrights working 250 eight-hour days give 8000 skilled hours, with one helper giving 2000. Retire these estimates when complaint 629 carrier-capital recipes have measured scantlings, offcuts and construction work logs. Pass 12 scaling check from a replica build: the Viking Ship Museum, Roskilde, page on the Sea Stallion from Glendalough (https://www.vikingeskibsmuseet.dk/en/professions/boatyard/experimental-archaeological-research/ship-reconstruction/skuldelev-2, opened): a 30 m ship built 2000 to 2004, '27,000 man hours - distributed over four years - to build the ship itself' and '150 cubic metres of wood were used'. ASSUMED scaling: wood volume with the cube of length and hours with its square (surface to plank and fasten), to the 14 m Kyrenia hull (Wikipedia, Kyrenia ship, opened: 14 m): 150 * (14 / 30)^3 = 15 cubic metres of wood against 18 purchased here, and 27,000 * (14 / 30)^2 = 5,900 hours against 10,000 here (8000 skilled plus 2000 helper), within 2x. Kept. The tar, cordage, sailcloth, copper and cargo figures remain unsourced, so conf stays D. Round 4 (Pass 14) sailcloth, rate times quantity. Katzev and Katzev, INA Newsletter 13(3) (above, opened with pdftotext): Kyrenia II's second sail, of linen as in antiquity, 'measures 11 by 6 m', 66 m2. Wikipedia, Canvas (opened): heavy-weight canvas is 'about 10 oz/yd2 (340 g/m2) or 12 oz/yd2 (410 g/m2)' (an artists' canvas, a modern analogue for sailcloth); 66 x 0.41 = 27 kg, set to 30 kg (was 100, over 3x high; a spare sail would add to it). Same article: a frame took 'eight man-hours' with machinery and the build took two and a half years, no crew or hours given. tried: comparable (Sea Stallion, above), rate (the Kyrenia II newsletter has no hours for the whole hull), stand-in (Wikipedia Kyrenia ship: no rope, tar or copper masses). Still unsourced: tar 200 kg, cordage 200 kg and copper 100 kg.",
+   "conf": "D",
+   "requires_node": "sea_mortise_tenon",
+   "capital_asset": true,
+   "carrier_use": {
+    "serves": {
+     "model": "sailing"
     },
-    "warship": {
-      "outputs": {
-        "warship": 1.0
-      },
-      "inputs": {
-        "timber_m3": 50.0,
-        "wood_tar_kg": 400.0,
-        "cordage_kg": 200.0,
-        "sailcloth_kg": 200.0,
-        "bronze_kg": 200.0
-      },
-      "labour_hours": {
-        "shipwright": 24000.0,
-        "labourer": 6000.0
-      },
-      "unit_dimension": "count",
-      "unit_mass_kg": 25000.0,
-      "naval_crew": {
-        "sailor": 200.0
-      },
-      "basis": "per light wooden oared warship, rigged with oars and ram, without crew",
-      "yield_basis": "MASS: Morrison, Coates and Rankov, The Athenian Trireme (2000), empty Olympias about 25 tonnes (no source found: the book was not opened, and Wikipedia, Olympias (trireme), opened, gives a displacement of 47 tonnes with no citation). Hellenic Navy construction account (https://averof.hellenicnavy.gr/en/trireme-olympias/construction-of-the-trireme-by-the-hn/), opened, records a 200 kg cast ram. Estimated allocation: 40 m3 retained timber at the existing timber recipe density of 600 kg/m3 is 24000 kg, plus 400 kg coating, 200 kg each of rope, sail and bronze ram gives 25000 kg. Purchase 50 m3 to allow 10 m3 shaping waste. Pitch coating and rope/cloth follow the observed wooden merchant construction described in merchant_ship. Crew: 170 rowers plus other crew, rounded to 200 sailors, (Wikipedia, Olympias (trireme), opened, lists 170 eretai, uncited; no source found beyond it). The material allocations and 24000 shipwright plus 6000 helper hours are TEMPORARY HEURISTICS, confidence D: three times the small merchant construction work for a longer hull with oar fittings. Retire these estimates under complaint 629 with measured warship scantlings and construction logs. No price or historical fleet size sets the bill. Pass 12 scaling check: the Sea Stallion replica (Viking Ship Museum, https://www.vikingeskibsmuseet.dk/en/professions/boatyard/experimental-archaeological-research/ship-reconstruction/skuldelev-2, opened) took '27,000 man hours' for the hull of a 30 m, 80-man warship with '150 cubic metres of wood'; the CS Monitor (https://csmonitor.com/1987/0901/dtri.html, opened) calls Olympias 'a 120-foot ship', 37 m, built over 'two years' with '20,000 pinned mortise-and-tenon joints'. The 30,000 hours here (24000 plus 6000) are 1.1x the Sea Stallion hull hours for a hull 1.2x as long and pegged edge to edge, and the 50 cubic metres purchased are a third of the Sea Stallion's 150 (Olympias displaces 47 tonnes, Wikipedia, Olympias (trireme), opened; that its planking is thinner than the Sea Stallion's is ASSUMED, not found): within 3x on both. The crew of 200 is from Wikipedia and CS Monitor in the first part of this note. Kept; the metal, tar and cloth masses remain unsourced, so conf stays D.",
-      "conf": "D",
-      "requires_node": "sea_mortise_tenon",
-      "capital_asset": true
-    }
+    "days_per_year": 150.0,
+    "payload_tonnes": 25.0,
+    "payload_basis": "Kyrenia ship cargo about 25 tonnes (Katzev and Katzev, INA Newsletter 13(3), 1986; INA Newsletter not opened; Wikipedia, The Kyrenia Ship, opened, gives 381 amphoras and 29 millstones but no tonnage; no source found for the 25 tonnes), confidence D. Days: geography's SAILING_DAYS_PER_YEAR."
+   }
+  },
+  "warship": {
+   "outputs": {
+    "warship": 1.0
+   },
+   "inputs": {
+    "timber_m3": 50.0,
+    "wood_tar_kg": 400.0,
+    "cordage_kg": 200.0,
+    "sailcloth_kg": 200.0,
+    "bronze_kg": 200.0
+   },
+   "labour_hours": {
+    "shipwright": 24000.0,
+    "labourer": 6000.0
+   },
+   "unit_dimension": "count",
+   "unit_mass_kg": 25000.0,
+   "naval_crew": {
+    "sailor": 200.0
+   },
+   "basis": "per light wooden oared warship, rigged with oars and ram, without crew",
+   "yield_basis": "MASS: Morrison, Coates and Rankov, The Athenian Trireme (2000), empty Olympias about 25 tonnes (no source found: the book was not opened, and Wikipedia, Olympias (trireme), opened, gives a displacement of 47 tonnes with no citation). Hellenic Navy construction account (https://averof.hellenicnavy.gr/en/trireme-olympias/construction-of-the-trireme-by-the-hn/), opened, records a 200 kg cast ram. Estimated allocation: 40 m3 retained timber at the existing timber recipe density of 600 kg/m3 is 24000 kg, plus 400 kg coating, 200 kg each of rope, sail and bronze ram gives 25000 kg. Purchase 50 m3 to allow 10 m3 shaping waste. Pitch coating and rope/cloth follow the observed wooden merchant construction described in merchant_ship. Crew: 170 rowers plus other crew, rounded to 200 sailors, (Wikipedia, Olympias (trireme), opened, lists 170 eretai, uncited; no source found beyond it). The material allocations and 24000 shipwright plus 6000 helper hours are TEMPORARY HEURISTICS, confidence D: three times the small merchant construction work for a longer hull with oar fittings. Retire these estimates under complaint 629 with measured warship scantlings and construction logs. No price or historical fleet size sets the bill. Pass 12 scaling check: the Sea Stallion replica (Viking Ship Museum, https://www.vikingeskibsmuseet.dk/en/professions/boatyard/experimental-archaeological-research/ship-reconstruction/skuldelev-2, opened) took '27,000 man hours' for the hull of a 30 m, 80-man warship with '150 cubic metres of wood'; the CS Monitor (https://csmonitor.com/1987/0901/dtri.html, opened) calls Olympias 'a 120-foot ship', 37 m, built over 'two years' with '20,000 pinned mortise-and-tenon joints'. The 30,000 hours here (24000 plus 6000) are 1.1x the Sea Stallion hull hours for a hull 1.2x as long and pegged edge to edge, and the 50 cubic metres purchased are a third of the Sea Stallion's 150 (Olympias displaces 47 tonnes, Wikipedia, Olympias (trireme), opened; that its planking is thinner than the Sea Stallion's is ASSUMED, not found): within 3x on both. The crew of 200 is from Wikipedia and CS Monitor in the first part of this note. Kept; the metal, tar and cloth masses remain unsourced, so conf stays D. Round 4 (Pass 14) tried: comparable (Sea Stallion hours and wood, above; Kyrenia II sail of 66 m2 at 0.41 kg/m2 for the merchant row; no Olympias sail area opened), rate (none for tar, rope or bronze), stand-in (Hellenic Navy account: a 200 kg cast ram only). Missing: Olympias sail area and rigging mass, hull pitch and bronze fastenings.",
+   "conf": "D",
+   "requires_node": "sea_mortise_tenon",
+   "capital_asset": true
   }
+ }
 }
