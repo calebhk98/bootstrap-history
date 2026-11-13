@@ -13,7 +13,9 @@ Cons_Goods/Mall_functions.c, Mall_update_mall_stocks_sales_rationing_1 and _2:
     stops after round 2; here a buyer walks on to the next stall that has stock).
 Eurace's households have one budget and no price-sensitive quantity; here a buyer's quantity at an ask is its schedule's
 (Bid, goods_market.quantity_at), so a request is the buyer's quantity at that ask times its share, and in round 2 it is
-the quantity unmet, limited by the budget unspent and by what the schedule still wants at the new ask. A buyer does not
+the share of its choice that was not served (the quantity unserved at each ask as a share of what it wants at that ask),
+sent on among the sellers with stock by the same weights and limited by the budget unspent, so a seller with next to no stock
+changes the answer by next to nothing. A buyer does not
 choose a seller asking above its maximum price (Eurace has no such ceiling; the seller would only be sent buyers who
 cannot take it).
 """
@@ -28,7 +30,7 @@ from .types import Bid, Offer
 
 class Allocation:
     """What the logit choice gave: per bid, the quantity bought and what it cost at the asks; per offer, the quantity
-    sold; the round-1 requests in all (what buyers asked for at the asks before any seller ran out); and `flow`, the
+    sold; the quantity asked for in all (what buyers got and were still short of when the rounds ended); and `flow`, the
     quantity each offer (row) sold to each bid (column) over all rounds."""
 
     def __init__(self, quantity: List[float], cost: List[float], sold: List[float], requested: float,

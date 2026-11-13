@@ -205,7 +205,8 @@ def serve(requests, left, tier_bounds, served, short):
 @njit(**KERNEL)
 def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, exponents, maximums, capped, tier_bounds):
     """Rounds of choice among the offers (ascending asks) by the bids: (quantity bought and cost per bid, quantity sold per
-    offer, the first round's requests in all, and the quantity each offer (row) sold each bid (column) over all rounds)."""
+    offer, the quantity the bids asked for in all (taken and still unmet when the rounds ended), and the quantity each offer (row)
+    sold each bid (column) over all rounds)."""
     offers, bids = len(asks), len(floors)
     wants = numpy.zeros((offers, bids))
     for offer in range(offers):
@@ -222,11 +223,9 @@ def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, ex
     for bid in range(bids):
         sums[bid] = weight_sum(running, asks, maximums[bid])
     requests = numpy.zeros((offers, bids))
-    requested = 0.0
     for offer in range(offers):
         for bid in range(bids):
             requests[offer, bid] = wants[offer, bid] * weights[offer] / sums[bid]
-            requested += requests[offer, bid]
     served = numpy.zeros((offers, bids))
     short = numpy.zeros((offers, bids))
     serve(requests, left, tier_bounds, served, short)
@@ -239,8 +238,10 @@ def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, ex
             taken[bid] += served[offer, bid]
             cost[bid] += asks[offer] * served[offer, bid]
             unmet[bid] += short[offer, bid]
-    # each further round redirects what the last could not serve among the offers still holding stock; a round that
-    # leaves requests short has emptied an offer, so the loop ends within one round per offer
+    # each further round sends the share of its choice the last could not serve (the unserved quantity at each offer as a share of
+    # what the buyer wants at that ask) on among the offers still holding stock, by the same weights, so a seller short of stock
+    # is replaced by the others in proportion; a round that leaves requests short has emptied an offer, so the loop ends within
+    # one round per offer
     for _round in range(offers):
         stocked = left > ROUNDING_SHARE * quantities
         anyone_short = False
@@ -249,24 +250,26 @@ def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, ex
                 anyone_short = True
         if not stocked.any() or not anyone_short:
             break
+        unserved_share = numpy.zeros(bids)
+        for offer in range(offers):
+            for bid in range(bids):
+                if short[offer, bid] > 0.0 and wants[offer, bid] > 0.0:
+                    unserved_share[bid] += short[offer, bid] / wants[offer, bid]
         weights, running = choice_weights(asks, stocked)
         for bid in range(bids):
             sums[bid] = weight_sum(running, asks, maximums[bid])
         for offer in range(offers):
             for bid in range(bids):
                 again = 0.0
-                if unmet[bid] > 0.0:
+                if unserved_share[bid] > 0.0:
                     budget_left = budgets[bid] - cost[bid]
                     if budget_left < 0.0:
                         budget_left = 0.0
                     affordable = affordable_units(asks[offer], budget_left)
-                    again = unmet[bid] if unmet[bid] < affordable else affordable
-                    room = wants[offer, bid] - taken[bid]
-                    if room < 0.0:
-                        room = 0.0
-                    if room < again:
-                        again = room
-                requests[offer, bid] = again * weights[offer] / sums[bid]
+                    again = unserved_share[bid] * wants[offer, bid] * weights[offer] / sums[bid]
+                    if affordable < again:
+                        again = affordable
+                requests[offer, bid] = again
         serve(requests, left, tier_bounds, served, short)
         for bid in range(bids):
             unmet[bid] = 0.0
@@ -276,6 +279,11 @@ def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, ex
                 taken[bid] += served[offer, bid]
                 cost[bid] += asks[offer] * served[offer, bid]
                 unmet[bid] += short[offer, bid]
+    # what buyers asked for: what they got and what they were still short of when the rounds ended, so a seller with no
+    # stock to give is not counted in their choice
+    requested = 0.0
+    for bid in range(bids):
+        requested += taken[bid] + unmet[bid]
     sold = quantities - left
     return taken, cost, sold, requested, flow
 

@@ -70,11 +70,9 @@ def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, ex
     for bid in range(bids):
         sums[bid] = kernels.weight_sum(running, asks, maximums[bid])
     requests = numpy.zeros((offers, bids))
-    requested = 0.0
     for offer in range(offers):
         for bid in range(bids):
             requests[offer, bid] = wants[offer, bid] * weights[offer] / sums[bid]
-            requested += requests[offer, bid]
     served = numpy.zeros((offers, bids))
     short = numpy.zeros((offers, bids))
     kernels.serve(requests, left, tier_bounds, served, short)
@@ -91,20 +89,24 @@ def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, ex
         stocked = left > ROUNDING_SHARE * quantities
         if not stocked.any() or not (unmet > 0.0).any():
             break
+        unserved_share = numpy.zeros(bids)
+        for offer in range(offers):
+            for bid in range(bids):
+                if short[offer, bid] > 0.0 and wants[offer, bid] > 0.0:
+                    unserved_share[bid] += short[offer, bid] / wants[offer, bid]
         weights, running = choice_weights(asks, stocked)
         for bid in range(bids):
             sums[bid] = kernels.weight_sum(running, asks, maximums[bid])
         for offer in range(offers):
             for bid in range(bids):
                 again = 0.0
-                if unmet[bid] > 0.0:
+                if unserved_share[bid] > 0.0:
                     budget_left = max(budgets[bid] - cost[bid], 0.0)
                     affordable = kernels.affordable_units(asks[offer], budget_left)
-                    again = unmet[bid] if unmet[bid] < affordable else affordable
-                    room = max(wants[offer, bid] - taken[bid], 0.0)
-                    if room < again:
-                        again = room
-                requests[offer, bid] = again * weights[offer] / sums[bid]
+                    again = unserved_share[bid] * wants[offer, bid] * weights[offer] / sums[bid]
+                    if affordable < again:
+                        again = affordable
+                requests[offer, bid] = again
         kernels.serve(requests, left, tier_bounds, served, short)
         unmet[:] = 0.0
         for offer in range(offers):
@@ -113,6 +115,9 @@ def allocate_arrays(asks, quantities, floors, flexibles, budgets, references, ex
                 taken[bid] += served[offer, bid]
                 cost[bid] += asks[offer] * served[offer, bid]
                 unmet[bid] += short[offer, bid]
+    requested = 0.0
+    for bid in range(bids):
+        requested += taken[bid] + unmet[bid]
     return taken, cost, quantities - left, requested, flow
 
 
