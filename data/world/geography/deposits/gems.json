@@ -13,7 +13,10 @@
    "status": "historic",
    "first_worked": 1871,
    "source": "Coordinate from Wikipedia. Wikipedia: the Kimberley mine yielded three tons of diamonds, about fifteen million carats.",
-   "conf": "A"
+   "conf": "A",
+   "contained_tonnes": 3,
+   "contained_basis": "Big Hole yielded 3,000 kg of diamonds (14.5 million carats) by 1914; carat 0.2 g; production only",
+   "contained_source": "Wikipedia, Kimberley Mine, https://en.wikipedia.org/wiki/Kimberley_Mine : \"yielding 3,000 kilograms (14,504,566 carats) of diamonds\" (1914)"
   },
   {
    "id": "argyle_diamonds",
@@ -27,7 +30,10 @@
    "status": "modern",
    "first_worked": 1983,
    "source": "Coordinate from Wikipedia. Wikipedia: more than 865 million carats of rough produced 1983-2020; mine closed, remaining resource small.",
-   "conf": "A"
+   "conf": "A",
+   "contained_tonnes": 173,
+   "contained_basis": "More than 865 million carats of rough produced 1983 to 2020 x 0.2 g per carat = 173 t; mine closed 2020",
+   "contained_source": "Wikipedia, Argyle diamond mine, https://en.wikipedia.org/wiki/Argyle_diamond_mine : \"producing more than 865 million carats of rough diamonds\" (closed November 2020)"
   },
   {
    "id": "mir_diamond",
@@ -69,7 +75,10 @@
    "status": "modern",
    "first_worked": 2004,
    "source": "Coordinate from Wikipedia. Production plus resource, order of magnitude from memory. The earlier entry was nearly two degrees west.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 3.4,
+   "contained_basis": "Reserves 19 Mt ore x 0.9 carats per tonne = 17.1 million carats x 0.2 g = 3.4 t; production not added (page undated)",
+   "contained_source": "Wikipedia, Murowa diamond mine, https://en.wikipedia.org/wiki/Murowa_diamond_mine : \"mine reserves are 19 million tonnes of ore, with an ore grade of 0.9 carats (180 mg) per tonne\""
   },
   {
    "id": "finsch_diamonds",

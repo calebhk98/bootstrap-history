@@ -181,7 +181,10 @@
    "source": "Bracket, both opened: Birmingham Univ., Great Orme assessment (https://research.birmingham.ac.uk/portal/en/publications/an-assessment-of-copper-mineralization-from-the-great-orme-mine-llandudno-north-wales-as-ore-in-the-bronze-age(0458886e-e943-4be0-94f0-a80e67dd6d39).html): \"estimated copper grade of 10%\" for the Bronze Age veins; Wikipedia, Copper mining (opened): \"average grade of copper ores in the 21st century is below 0.6% copper\". The geometric mean of 100 and 6 kg/t is 24 kg/t. Assumption: a generic regional ore sits between a rich ancient vein and a modern bulk ore. Original note: Generic placeholder for geography.json's 0.05 British copper share.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 10
+   "order": 10,
+   "contained_tonnes": 1760,
+   "contained_basis": "Only the Great Orme (Wales) is counted: up to 1,760 t of copper mined in the Bronze Age; other British copper (Parys Mountain, Mid Wales) not counted, so a lower bound for the row",
+   "contained_source": "Wikipedia, Great Orme, https://en.wikipedia.org/wiki/Great_Orme : \"It is estimated that up to 1,760 tonnes of copper was mined during the period.\""
   },
   {
    "id": "rio_tinto_copper",
@@ -397,7 +400,10 @@
    "surveyed_lat": 37.72,
    "surveyed_lon": 24.05,
    "surveyed_source": "Laurion, Wikipedia (37.70N 24.05E for Lavrio)",
-   "order": 19
+   "order": 19,
+   "contained_tonnes": 2300000,
+   "contained_basis": "Ancient 1.4 Mt lead + 1865 to 1982 0.9 Mt lead = 2.3 Mt; production only, so a lower bound",
+   "contained_source": "Maxwell K. Boots, Silver Production in City/State of Ancient Athens (notes for SMEDG meeting, 24 April 2019), https://smedg.org.au/wp-content/uploads/2020/07/Max%20Boots%20190424%20Greece%20in%20Silver%20Notes.pdf : \"about 1.4 Mt of lead\" (ancient); \"approximately 0.9 Mt of lead\" (1865 to 1982)"
   },
   {
    "id": "italia_silver_generic",
@@ -478,7 +484,10 @@
    "surveyed_lat": 37.72,
    "surveyed_lon": 24.05,
    "surveyed_source": "Laurion, Wikipedia",
-   "order": 23
+   "order": 23,
+   "contained_tonnes": 7700,
+   "contained_basis": "Ancient Greek mining (7th to 1st century BCE) about 13 Mt ore at 20% Pb and 400 g/t Ag: 3,500 t silver; French and Greek companies 1865 to 1982: about 30 Mt ore at 3% Pb and 140 g/t Ag: 4,200 t silver; total 3,500 + 4,200 = 7,700 t. The existing 3,500 t is the ancient part only. Production only; remaining reserves not given, so a lower bound",
+   "contained_source": "Maxwell K. Boots, Silver Production in City/State of Ancient Athens (notes for SMEDG meeting, 24 April 2019), https://smedg.org.au/wp-content/uploads/2020/07/Max%20Boots%20190424%20Greece%20in%20Silver%20Notes.pdf : \"extracted metal was estimated to be about 1.4 Mt of lead and 3500 tonnes (112 M ounces) of silver\"; \"from 1865 to 1982 AD, mined about 30 Mt of ore ... approximately 0.9 Mt of lead and 4,200 tonnes (134 M ounces) of silver\" (a secondary compilation that says much of it was sourced from the internet)"
   },
   {
    "id": "rio_tinto_jarosite",
@@ -517,7 +526,10 @@
    "source": "USGS Open-File Report 95-0649, Preliminary Grade and Volume Model of Alluvial Sn-Au Placers (pdf opened, https://pubs.usgs.gov/of/1995/0649/report.pdf): \"80 percent of the deposits have Sn grades between 0.15 and 2.5 kg/m^3\". Assumption: gravel bulk density near 1.6 to 2 t/m^3 turns that into 0.08 to 1.6 kg/t, so the value sits at the rich end, within 2x. Original note: Generic placeholder for geography.json's small 0.1 share; alluvial cassiterite in Rhine-system gravels, no specific ancient working identified.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 25
+   "order": 25,
+   "contained_tonnes": 310000,
+   "contained_basis": "Erzgebirge (German-Czech border) 0.3 Mt + Brittany and Massif Central 0.01 Mt = 0.31 Mt historical tin-metal production",
+   "contained_source": "Antiquity, From Land's End to the Levant, https://www.cambridge.org/core/journals/antiquity/article/from-lands-end-to-the-levant-did-britains-tin-sources-transform-the-bronze-age-in-europe-and-the-mediterranean/2330F3B6498B210DA61B89026A1F38EA : \"Erzgebirge, German-Czech border (0.3 Mt), Iberia (0.15 Mt) and Brittany and the Massif Central, France (0.01 Mt)\""
   },
   {
    "id": "cornish_tin_streaming",
@@ -540,7 +552,10 @@
    "surveyed_lat": 50.4,
    "surveyed_lon": -4.9,
    "surveyed_source": "Cornwall tin district, approximate",
-   "order": 26
+   "order": 26,
+   "contained_tonnes": 2500000,
+   "contained_basis": "Estimated historical tin-metal production of the Cornwall and Devon province 2.5 Mt (all methods, not streaming alone)",
+   "contained_source": "Antiquity, From Land's End to the Levant: did Britain's tin sources transform the Bronze Age in Europe and the Mediterranean?, https://www.cambridge.org/core/journals/antiquity/article/from-lands-end-to-the-levant-did-britains-tin-sources-transform-the-bronze-age-in-europe-and-the-mediterranean/2330F3B6498B210DA61B89026A1F38EA : \"an estimated historical tin-metal production totalling 2.5 million tonnes (Mt)\" (citing Lehmann)"
   },
   {
    "id": "hispania_tin_generic",
@@ -557,7 +572,10 @@
    "source": "USGS Open-File Report 95-0649, Preliminary Grade and Volume Model of Alluvial Sn-Au Placers (pdf opened, https://pubs.usgs.gov/of/1995/0649/report.pdf): \"80 percent of the deposits have Sn grades between 0.15 and 2.5 kg/m^3\". Assumption: gravel bulk density near 1.6 to 2 t/m^3 turns that into 0.08 to 1.6 kg/t, so the value sits at the rich end, within 2x. Original note: Iberian alluvial cassiterite is attested (geography.json's own located_materials lists hispania among tin's regions) but without a single named ancient working; generic mid-range placer grade.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 27
+   "order": 27,
+   "contained_tonnes": 150000,
+   "contained_basis": "Iberia historical tin-metal production 0.15 Mt",
+   "contained_source": "Antiquity, From Land's End to the Levant, https://www.cambridge.org/core/journals/antiquity/article/from-lands-end-to-the-levant-did-britains-tin-sources-transform-the-bronze-age-in-europe-and-the-mediterranean/2330F3B6498B210DA61B89026A1F38EA : \"Iberia (0.15 Mt)\""
   },
   {
    "id": "las_medulas_alluvial",
@@ -581,7 +599,10 @@
    "surveyed_lat": 42.46,
    "surveyed_lon": -6.77,
    "surveyed_source": "Las Medulas, Wikipedia",
-   "order": 28
+   "order": 28,
+   "contained_tonnes": 1640,
+   "contained_basis": "Pliny's account as given by Wikipedia: 5 million Roman pounds = 1.64 million kg = 1,640 t gold over the Roman exploitation (an ancient literary figure)",
+   "contained_source": "Wikipedia, Las Medulas, https://en.wikipedia.org/wiki/Las_M%C3%A9dulas : \"The exploitation, involving 60,000 free workers, brought 5 million Roman pounds (1.64 million kg)\""
   },
   {
    "id": "dacia_vein_gold",
@@ -630,7 +651,10 @@
    "surveyed_lat": 38.77,
    "surveyed_lon": -4.84,
    "surveyed_source": "Almaden, Wikipedia",
-   "order": 30
+   "order": 30,
+   "contained_tonnes": 250000,
+   "contained_basis": "Production since historical times estimated at approximately 250,000 t of mercury (about one third of all mercury used by mankind); remaining reserves not given, so a lower bound",
+   "contained_source": "Almaden mercury mining district paper, PubMed Central PMC2078521, https://pmc.ncbi.nlm.nih.gov/articles/PMC2078521/ : \"Its production since historical times has been estimated in approximately 250 000 MT of metal\""
   },
   {
    "id": "monte_amiata_cinnabar",

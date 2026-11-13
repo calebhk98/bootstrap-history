@@ -13,7 +13,10 @@
    "conf": "C",
    "first_worked": 1770,
    "first_worked_source": "This entry's own source: worked from the late eighteenth century. Entered as the start of that late part (1770); no size is given (the geological model sizes the district).",
-   "source": "Skane (Sweden) coal measures around Hoganas and Bjuv, the Nordic region's small coalfield, worked from the late eighteenth century; location from the Geological Survey of Sweden's description of the Rhaetian-Jurassic coal-bearing beds."
+   "source": "Skane (Sweden) coal measures around Hoganas and Bjuv, the Nordic region's small coalfield, worked from the late eighteenth century; location from the Geological Survey of Sweden's description of the Rhaetian-Jurassic coal-bearing beds.",
+   "contained_tonnes": 300000000,
+   "contained_basis": "Coal supply of the Skane mining fields estimated at about 300 Mt (1914 handbook; a remaining-supply estimate, production before and after not added)",
+   "contained_source": "Sweden: historical and statistical handbook, Part 2 Industries, 1914, Project Runeberg, https://runeberg.org/sweden14/2/0269.html : \"The supply of coal in the mining fields of Skane is estimated at about 300 million tons\" (c. 1914)"
   },
   {
    "id": "bergslagen_iron",
@@ -39,7 +42,10 @@
    "conf": "C",
    "first_worked": 1400,
    "first_worked_source": "This entry's own source: worked from the fifteenth century at the latest. Entered as the start of that century; no earlier working is attested in the source, and no size is given (the geological model sizes the district).",
-   "source": "Sala silver-lead mine, Vastmanland, worked from the fifteenth century at the latest; the galena carries the silver. Position from the Swedish national heritage listing of the mine."
+   "source": "Sala silver-lead mine, Vastmanland, worked from the fifteenth century at the latest; the galena carries the silver. Position from the Swedish national heritage listing of the mine.",
+   "contained_tonnes": 35000,
+   "contained_basis": "About 35,000 tons of lead extracted over the life of the mine (tons taken as metric); no reserves, mine closed 1908, so effectively complete production",
+   "contained_source": "Wikipedia, Sala Silver Mine, https://en.wikipedia.org/wiki/Sala_Silver_Mine : \"more than 200 million ounces of silver and about 35,000 tons of lead\""
   },
   {
    "id": "sala_silver",
@@ -53,7 +59,10 @@
    "conf": "C",
    "source": "Sala silver mine, Vastmanland, Sweden's chief silver producer from the late Middle Ages; the same working as the lead entry, listed once per metal.",
    "first_worked": 1400,
-   "first_worked_source": "The same working as sala_lead, whose source dates it to the fifteenth century at the latest; entered as the start of that century. No size is given (the geological model sizes the district)."
+   "first_worked_source": "The same working as sala_lead, whose source dates it to the fifteenth century at the latest; entered as the start of that century. No size is given (the geological model sizes the district).",
+   "contained_tonnes": 6220,
+   "contained_basis": "More than 200 million troy ounces x 31.1035 g = 6,221 t silver extracted; mine closed 1908",
+   "contained_source": "Wikipedia, Sala Silver Mine, https://en.wikipedia.org/wiki/Sala_Silver_Mine : \"more than 200 million ounces of silver\""
   },
   {
    "id": "magan_copper_oman",
@@ -248,7 +257,10 @@
    "deposit_type": "skarn_cassiterite",
    "status": "historic",
    "conf": "C",
-   "source": "Gejiu (Yunnan): earliest clear working there is copper from the Han period and tin was mined on a large scale only from the early 1900s; long tin exploitation is probable but not proven (Heidelberg Sinology mining project, https://www.zo.uni-heidelberg.de/sinologie/research/epm/09_gejiu.html). Yunnan deposits are reported as China's main Han tin source (Wikipedia, Tin mining)."
+   "source": "Gejiu (Yunnan): earliest clear working there is copper from the Han period and tin was mined on a large scale only from the early 1900s; long tin exploitation is probable but not proven (Heidelberg Sinology mining project, https://www.zo.uni-heidelberg.de/sinologie/research/epm/09_gejiu.html). Yunnan deposits are reported as China's main Han tin source (Wikipedia, Tin mining).",
+   "contained_tonnes": 2220000,
+   "contained_basis": "Predicted tin ore resources of the Gejiu area 2.22 Mt (a prediction; page says 'tin ore resources', taken here as tin metal, unit basis not stated); no production added",
+   "contained_source": "SMM (Shanghai Metals Market), Dry information: global tin ore distribution, https://news.metal.com/newscontent/100918902-dry-information-throughout-the-global-tin-ore-distribution-development-supply-situation-demand-increases-resources-limit : \"the tin ore resources are predicted to be 2.22 million t\" (article dated 21 March 2019)"
   },
   {
    "id": "shuikoushan_lead",
@@ -457,7 +469,10 @@
    "deposit_type": "vein_cassiterite",
    "status": "historic",
    "conf": "D",
-   "source": "Oruro and the Bolivian tin belt, a candidate source of Andean tin bronze: tin bronze appears in northern Bolivia in the Tiwanaku period, and Lechtman and Macfarlane's lead isotope work places Tiwanaku bronze ores in the Bolivian puna and high sierra, but no source found names Oruro as the prehispanic tin source. Unverified."
+   "source": "Oruro and the Bolivian tin belt, a candidate source of Andean tin bronze: tin bronze appears in northern Bolivia in the Tiwanaku period, and Lechtman and Macfarlane's lead isotope work places Tiwanaku bronze ores in the Bolivian puna and high sierra, but no source found names Oruro as the prehispanic tin source. Unverified.",
+   "contained_tonnes": 918000,
+   "contained_basis": "Cerro Rico de Potosi tin reserves 540 Mt ore x 0.17% Sn = 0.918 Mt tin (year not stated); counts Potosi only for this Oruro-Potosi row, production not added, so a lower bound",
+   "contained_source": "Wikipedia, Cerro Rico, https://en.wikipedia.org/wiki/Cerro_Rico : \"540 million tons of ore grading 0.17% tin\""
   },
   {
    "id": "cerro_de_pasco_lead",
@@ -481,7 +496,10 @@
    "deposit_type": "native_copper",
    "status": "historic",
    "conf": "A",
-   "source": "Keweenaw Peninsula and Isle Royale, Michigan: native copper mined by the Old Copper Complex peoples; lake-sediment geochemistry dates Isle Royale mining to 6500 to 5400 years ago, Pompeani et al., The Holocene (2014), doi 10.1177/0959683614557574."
+   "source": "Keweenaw Peninsula and Isle Royale, Michigan: native copper mined by the Old Copper Complex peoples; lake-sediment geochemistry dates Isle Royale mining to 6500 to 5400 years ago, Pompeani et al., The Holocene (2014), doi 10.1177/0959683614557574.",
+   "contained_tonnes": 5000000,
+   "contained_basis": "Around five billion kilograms of copper extracted 1845 to 1968 = 5.0 Mt; production only (other sources give 11 billion lb = 5.0 Mt, and up to 15.5 billion lb through 1996 per a search snippet that was not opened)",
+   "contained_source": "US National Park Service, Keweenaw industrial landscapes, https://home.nps.gov/articles/000/keweenaw-industrial-landscapes.htm : \"Around five billion kilograms of copper were extracted from 1845 to 1968 (Cannon and Nicholson 1)\""
   },
   {
    "id": "mesabi_iron",
@@ -493,7 +511,10 @@
    "deposit_type": "banded_iron_formation",
    "status": "historic",
    "conf": "B",
-   "source": "Mesabi Range (Minnesota), the Lake Superior taconite and iron ore district that supplied the industrial United States from 1892."
+   "source": "Mesabi Range (Minnesota), the Lake Superior taconite and iron ore district that supplied the industrial United States from 1892.",
+   "contained_tonnes": 2630000000,
+   "contained_basis": "4.38 Gt of iron ore, concentrates and pellets shipped 1892 to 2008 x assumed 60% Fe average (assumption: natural ore about 50-55% Fe, pellets about 65% Fe, mix not stated) = 2.63 Gt Fe; production only, so a lower bound",
+   "contained_source": "Minnesota Department of Natural Resources, Historical Perspective, https://dnr.state.mn.us/lands_minerals/mineland_reclamation/historical.html : \"From 1892 to 2008, a total of 4.38 billion tons of iron ore, iron ore concentrates and pellets were shipped from the Mesabi Range.\" (tons taken as the short or long ton the page does not state; not converted)"
   },
   {
    "id": "upper_mississippi_lead",
@@ -517,7 +538,10 @@
    "deposit_type": "native_silver_vein",
    "status": "historic",
    "conf": "B",
-   "source": "Cobalt-Gowganda district, Ontario, rich native silver found in 1903; native silver also occurs with Keweenaw copper.", "working_unknown": "UNKNOWN (B): the source gives the discovery (1903) but no endowment was read, so neither a working date nor a size is stated here"
+   "source": "Cobalt-Gowganda district, Ontario, rich native silver found in 1903; native silver also occurs with Keweenaw copper.", "working_unknown": "UNKNOWN (B): the source gives the discovery (1903) but no endowment was read, so neither a working date nor a size is stated here",
+   "contained_tonnes": 12830,
+   "contained_basis": "Between 405 and 420 million ounces of silver produced by the 1980s; midpoint 412.5 Moz x 31.1035 g = 12,830 t (range 12,600 to 13,060 t); production only",
+   "contained_source": "Wikipedia, Cobalt, Ontario, https://en.wikipedia.org/wiki/Cobalt,_Ontario : \"By the 1980s, the area had produced between 405 and 420 million ounces of silver\""
   },
   {
    "id": "burra_copper",
@@ -529,7 +553,10 @@
    "deposit_type": "sediment_hosted_copper",
    "status": "historic",
    "conf": "B",
-   "source": "Burra (South Australia), the first big Australian copper mine, opened 1845; no pre-colonial copper working."
+   "source": "Burra (South Australia), the first big Australian copper mine, opened 1845; no pre-colonial copper working.",
+   "contained_tonnes": 50000,
+   "contained_basis": "About 50,000 t of copper produced 1845 to 1877; production only",
+   "contained_source": "Wikipedia, Burra, South Australia, https://en.wikipedia.org/wiki/Burra,_South_Australia : the mine produced \"approximately 50,000 tonnes of copper\" over 1845 to 1877 (as opened by the branch mineral-share-sources, commit 78142b80)"
   },
   {
    "id": "isua_iron",
@@ -541,7 +568,10 @@
    "deposit_type": "banded_iron_formation",
    "status": "modern",
    "conf": "C",
-   "source": "Isukasia banded iron formation, southwest Greenland (Geological Survey of Denmark and Greenland); the Norse bog-iron working was tiny, hence a small share."
+   "source": "Isukasia banded iron formation, southwest Greenland (Geological Survey of Denmark and Greenland); the Norse bog-iron working was tiny, hence a small share.",
+   "contained_tonnes": 342000000,
+   "contained_basis": "951 Mt of resource at 36% Fe (cut-off 25% Fe) = 342 Mt iron, as of March 2010; the inferred 837 Mt at 36.4% Fe overlaps and is not added",
+   "contained_source": "Mining Technology, Isua Iron Ore Project, https://www.mining-technology.com/projects/isua-project/ : \"As of March 2010, the mine contained 951Mt at 36% Fe reported at a cut off grade of 25% Fe.\""
   },
   {
    "id": "bengal_saltpetre",

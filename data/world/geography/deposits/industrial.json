@@ -113,7 +113,10 @@
    "status": "modern",
    "first_worked": 2010,
    "source": "Coordinate from Wikipedia. Bolivian lithium resource of about 21 million tonnes (USGS), most of it at Uyuni; from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 23000000,
+   "contained_basis": "USGS lists Bolivian lithium resources at 23 Mt (2024); the row stands for the Uyuni salar, which holds most of the Bolivian resource (assumption); a resource figure with no production",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Lithium, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-lithium.pdf : \"Resources are distributed as follows: Bolivia, 23 million tons\" (2024)"
   },
   {
    "id": "qarhan_salt",
@@ -212,7 +215,10 @@
    "status": "historic",
    "first_worked": 1830,
    "source": "Coordinate from memory (Maria Elena, Antofagasta region); sodium nitrate produced 1830-1930 of order seventy million tonnes, from memory. Replaces atacama_nitrate; tunupa_nitrate removed as unidentifiable.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 82106749,
+   "contained_basis": "Sum of the 100 annual nitrate export figures 1830 to 1929 (860 t in 1830 to 2,898,141 t in 1929) = 82.1 Mt sodium nitrate exported; production only, so a lower bound (NaNO3 basis, not nitrogen basis)",
+   "contained_source": "Asociacion de Productores de Salitre en Chile, El Salitre: Historical Resume (Roberto Hernandez C., Valparaiso, 1930) as tabulated by Album del Desierto, Exports of Nitrate 1830 to 1929, https://albumdesierto.cl/ingles/2estadis.htm : annual 'Tons' table, e.g. 1830 860, 1890 1.065,277, 1929 2.898,141 (summed by script over all 100 rows)"
   },
   {
    "id": "sicily_sulfur",
