@@ -9,6 +9,7 @@ from sim.book import ROUNDING_SHARE
 from sim.jit import njit
 
 from . import goods_market_kernels as kernels
+from .stock_residue import STOCK_RESIDUE_UNITS
 
 KERNEL = {"error_model": "numpy"}
 
@@ -45,14 +46,14 @@ def covers_lifted(reservations, quantities, supply, raisable, limits, level, min
         if has_minimum and ask < minimum:
             ask = minimum
         scratch_asks[offer] = ask
-        stocked = quantities[offer] > ROUNDING_SHARE * quantities[offer]
+        stocked = quantities[offer] >= STOCK_RESIDUE_UNITS
         weight = 0.0
         if stocked:
             if not found:
                 cheapest = ask
                 found = True
             previous = scratch_order[position - 1] if position > 0 else 0
-            if position > 0 and quantities[previous] > ROUNDING_SHARE * quantities[previous] and ask == scratch_asks[previous]:
+            if position > 0 and quantities[previous] >= STOCK_RESIDUE_UNITS and ask == scratch_asks[previous]:
                 weight = scratch_weights[position - 1]
             elif cheapest > 0.0:
                 weight = numpy.exp(-kernels.LOGIT_INTENSITY * numpy.log(ask / cheapest))

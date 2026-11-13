@@ -15,7 +15,7 @@ BIDS = dict(
     floors=numpy.zeros(4), flexibles=numpy.array([3.0, 1.0, 5.0, 2.0]), budgets=numpy.array([30.0, 0.0, 12.0, 7.0]),
     references=numpy.array([2.0, 2.0, 1.5, 3.0]), exponents=numpy.array([-1.0, -0.5, -2.0, 0.0]),
     maximums=numpy.array([numpy.inf, numpy.inf, 4.0, numpy.inf]))
-ADDING = numpy.array([True, False, True, False])
+ADDING = numpy.array([1.0, 0.0, 1.0, 0.0])
 
 
 class WantsAtIsTotalWanted(unittest.TestCase):
@@ -37,19 +37,39 @@ class UntradedWantedAddingIsWantedAdding(unittest.TestCase):
                      BIDS["maximums"])
         expected = market_kernel.wanted_adding(price, adding, 1.0, 0.0, False, *arguments)
         quote = market_kernel.quote_of(price, BIDS["maximums"], BIDS["budgets"])
-        units = numpy.zeros(4)
+        units, added = numpy.zeros(4), numpy.zeros(4)
         if quote == quote:
             market_kernel.units_at_quote(quote, numpy.nan, numpy.zeros(4), *arguments, units)
-        self.assertEqual(market_kernel.wanted_adding_untraded(quote, units, adding, 1.0), expected)
+            market_kernel.added_at_quote(quote, units, adding, *arguments, added)
+        self.assertEqual(market_kernel.wanted_adding_untraded(quote, units, added, adding, 1.0), expected)
 
     def test_some_adding(self):
         self.check(2.5, ADDING)
 
+    def test_half_adding(self):
+        self.check(2.5, numpy.array([0.5, 0.25, 1.0, 0.0]))
+
     def test_all_adding(self):
-        self.check(2.5, numpy.ones(4, dtype=numpy.bool_))
+        self.check(2.5, numpy.ones(4))
 
     def test_no_ask_quotes_the_best_ceiling(self):
         self.check(numpy.nan, ADDING)
+
+
+class AddingIsAFraction(unittest.TestCase):
+
+    def test_half_adding_bid_asks_for_half_in_the_traded_wanted(self):
+        one = dict(floors=numpy.zeros(1), flexibles=numpy.array([4.0]), budgets=numpy.array([1000.0]),
+                   references=numpy.array([2.0]), exponents=numpy.array([0.0]), maximums=numpy.array([numpy.inf]))
+        wanted = market_kernel.wanted_adding(2.0, numpy.array([0.5]), 1.0, 10.0, True, *one.values())
+        self.assertAlmostEqual(wanted, 5.0, delta=1e-12)
+
+
+class ADustOfferIsNotTheLowestAsk(unittest.TestCase):
+
+    def test_dust_stock_is_not_on_offer(self):
+        reservation, quantity = numpy.array([1.0, 2.0]), numpy.array([1e-12, 5.0])
+        self.assertEqual(market_kernel.lowest_ask(0, 2, reservation, quantity), 2.0)
 
 
 class UnitsAtQuoteReuseTheFirstWants(unittest.TestCase):

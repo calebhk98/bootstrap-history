@@ -10,6 +10,7 @@ from sim.economy.goods_market_fills import sold_by_seller_tile
 from sim.economy.goods_respend import (bids_adding_demand, last_round_negligible, need_of_good, offers_left, rationed_money,
                                        respend_bids)
 from sim.economy.goods_respend_year import RESPEND_APPORTIONED_WANTED_SHARE
+from sim.economy.stock_residue import STOCK_RESIDUE_UNITS
 from sim.economy.types import Bid
 
 Market = Tuple[str, str]
@@ -108,7 +109,7 @@ def respend_plain(setup, record, view, ledger, markets: Dict[Market, object], ba
         for key in sorted(new_bids):
             market = markets[key]
             bids = new_bids[key]
-            result = goods_market.clear(bids, market.offers, key[0], key[1], setup.currency_id, market.last_price)
+            result = goods_market.clear(bids, [offer for offer in market.offers if offer.quantity >= STOCK_RESIDUE_UNITS], key[0], key[1], setup.currency_id, market.last_price)
             adding = bids_adding_demand(market.all_bids, bids)
             market.wanted += _wanted_adding(adding, bids, market.offers, result)
             market.results.append(result)
@@ -133,7 +134,7 @@ def _wanted_adding(adding, bids, offers, result) -> float:
     wanted quantity in the share the adding bids hold of the bids' demand at the price `wanted_in_round` reads demand at.
     Temporary heuristic: pro rata at one price, not computed bid by bid at the asks each faced (retire: Complaint 964)."""
     wanted = wanted_in_round(bids, offers, result)
-    if len(adding) == len(bids):
+    if len(adding) == len(bids) and all(each is bid for each, bid in zip(adding, bids)):      # every bid adds in full
         return wanted
     price = market_quote.lowest_unfilled_ask(offers)
     if price is None:

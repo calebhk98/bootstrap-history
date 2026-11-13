@@ -4,6 +4,7 @@ same logit; the leftover going on to other needs is this project's extension (in
 account). The functions here are the rules; goods_respend_year.py runs them on a year's markets.
 """
 import math
+from dataclasses import replace
 from typing import Dict, List, Mapping, Optional, Sequence
 
 from sim.constants import declare
@@ -100,12 +101,31 @@ def respend_bids(buyer: str, tile: str, basket: need_basket.Basket, rationed: Ma
             for good, amount in sorted(spend.items())]
 
 
+def bid_units(bid: Bid) -> float:
+    """The units a bid counts as asking for, at its own reference price: its floor and, with a budget and a reference price, its
+    flexible part."""
+    if bid.budget > 0.0 and bid.flexible_quantity > 0.0 and bid.reference_price > 0.0:
+        return bid.floor_quantity + bid.flexible_quantity
+    return bid.floor_quantity
+
+
 def bids_adding_demand(earlier: Sequence[Bid], bids: Sequence[Bid]) -> List[Bid]:
-    """The bids of a later round that add demand to a market: a buyer that already bid there in an earlier round wants
-    the same units again, the part it was rationed on, so only a buyer new to the market counts in full. The one rule
-    for what a market's demand is over its rounds (the stored bids, the wanted quantity and so the unmet quantity)."""
-    bidding = {bid.buyer for bid in earlier}
-    return [bid for bid in bids if bid.buyer not in bidding]
+    """The bids of a later round that add demand to a market, each cut to its new share: a buyer that already bid there in an
+    earlier round wants the same units again, the part it was rationed on, so only the units beyond those the buyer has
+    counted in the market add (a buyer new to the market counts in full, a bid wholly inside what was counted not at all). The
+    one rule for what a market's demand is over its rounds (the stored bids, the wanted quantity and so the unmet quantity)."""
+    counted: Dict[str, float] = {}
+    for bid in earlier:
+        counted[bid.buyer] = counted.get(bid.buyer, 0.0) + bid_units(bid)
+    adding = []
+    for bid in bids:
+        units = bid_units(bid)
+        fraction = max(0.0, units - counted.get(bid.buyer, 0.0)) / units if units > 0.0 else 0.0
+        if fraction >= 1.0:
+            adding.append(bid)
+        elif fraction > 0.0:
+            adding.append(replace(bid, flexible_quantity=bid.flexible_quantity * fraction, budget=bid.budget * fraction))
+    return adding
 
 
 def offers_left(offers: Sequence[Offer], sold: Mapping[tuple, float]) -> List[Offer]:

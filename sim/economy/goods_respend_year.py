@@ -213,7 +213,7 @@ def respend(setup, record, view, ledger, markets: Dict[Market, LeftMarket], bask
     goods_respend_unpack.write_settlement(setup, record, ledger, packed, out)
 
 
-CHANGED_BY_KERNEL = ("has_bid", "offer_quantity", "key_stock", "agent_cash")
+CHANGED_BY_KERNEL = ("counted_units", "offer_quantity", "key_stock", "agent_cash")
 
 
 def run_rounds(packed):

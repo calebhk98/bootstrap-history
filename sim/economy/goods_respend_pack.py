@@ -163,7 +163,7 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
         buyer_key[match] = key_of_distinct[place[match]]
     market_good = good_of_market
 
-    has_bid = numpy.zeros((len(market_keys), len(buyer_ids)), dtype=numpy.bool_)
+    counted_units = numpy.zeros((len(market_keys), len(buyer_ids)))
     if columns is not None:
         first_price = columns.year_markets.table.first_price[columns.cells]
         fallback_ok = ~numpy.isnan(first_price)
@@ -180,10 +180,10 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     mine = numpy.flatnonzero(household_entry)
     entry_row = row_of_id[bids.buyer[mine]]
     entry_market = bids.market[mine]
-    has_bid[entry_market, entry_row] = True
     flexible, reference, elasticity = bids.flexible[mine], bids.reference[mine], bids.elasticity[mine]
     kept = (bids.budget[mine] > 0.0) & (flexible > 0.0) & (reference > 0.0)
     flexible, reference, elasticity = numpy.where(kept, flexible, 0.0), numpy.where(kept, reference, 1.0), numpy.where(kept, elasticity, 0.0)
+    numpy.add.at(counted_units, (entry_market, entry_row), bids.floor[mine] + flexible)
     order = numpy.lexsort((entry_row, entry_market))
     first = [entry_market[order], entry_row[order], bids.floor[mine][order], flexible[order], reference[order], -elasticity[order],
              bids.budget[mine][order], bids.maximum[mine][order], units[mine][order], money[mine][order]]
@@ -203,7 +203,7 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
     reservation = offers.reservation
     quantity = offers.quantity
     offer_order = numpy.lexsort((offers.origin, offers.market)).astype(numpy.int64)
-    names = ("buyer_agent", "buyer_basket", "buyer_area_row", "buyer_key", "has_bid", "area_market", "need_ptr", "need_weight",
+    names = ("buyer_agent", "buyer_basket", "buyer_area_row", "buyer_key", "counted_units", "area_market", "need_ptr", "need_weight",
              "need_slot", "need_has_limits", "need_good_ptr", "goods", "effects", "limits", "limited", "basket_exponent",
              "basket_substitution", "basket_need_of_good", "need_count", "max_goods", "market_good", "offer_ptr",
              "offer_reservation", "offer_quantity", "offer_key", "offer_agent", "offer_order", "market_last_price", "market_has_last",
@@ -212,7 +212,7 @@ def pack(setup, record, view, ledger, markets, basket_of, orders=None) -> "Packe
              "first_flexible", "first_reference", "first_exponent", "first_budget", "first_maximum", "first_units",
              "first_money")
     values = [agent_of_id[buyer_id], buyer_basket, buyer_area_row,
-              buyer_key, has_bid, area_market, *flat[:6], flat[6], flat[7], flat[8], flat[9], flat[10], flat[11], flat[12],
+              buyer_key, counted_units, area_market, *flat[:6], flat[6], flat[7], flat[8], flat[9], flat[10], flat[11], flat[12],
               max_goods, market_good, offer_ptr, reservation, quantity, offer_key, offer_agent, offer_order, last_price, has_last,
               fallback, fallback_ok, key_stock, key_agent, agent_cash, edge,
               external, importing, exporting, *first]

@@ -12,6 +12,7 @@ from sim.book import ROUNDING_SHARE
 from sim.jit import njit
 
 from .price_setting import LOGIT_INTENSITY
+from .stock_residue import STOCK_RESIDUE_UNITS
 
 SEARCH_PRECISION = 1e-4     # numerical tolerance of the bisection on the ask level, not a model number
 KERNEL = {"error_model": "numpy"}
@@ -154,7 +155,7 @@ def weight_sum(running, asks, ceiling):
 @njit(**KERNEL)
 def requested_round_one(asks, quantities, floors, flexibles, budgets, references, exponents, maximums, capped):
     """What the buyers ask for at the asks before any seller runs out: the first round's requests, in all."""
-    stocked = quantities > ROUNDING_SHARE * quantities
+    stocked = quantities >= STOCK_RESIDUE_UNITS      # a seller of residue size is no seller
     weights, running = choice_weights(asks, stocked)
     requested = 0.0
     for bid in range(len(floors)):

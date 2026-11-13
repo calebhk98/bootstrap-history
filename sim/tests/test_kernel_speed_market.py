@@ -51,6 +51,12 @@ class EqualAskTests(unittest.TestCase):
             self.assertTrue(same(kernels.requested_round_one(asks, quantities, *buyers, capped),
                                  plain.requested_round_one(asks, quantities, *buyers, capped)))
 
+    def test_requested_round_one_ignores_a_dust_seller(self):
+        buyer = (numpy.zeros(1), numpy.array([4.0]), numpy.array([1000.0]), numpy.array([2.0]), numpy.array([-1.0]), numpy.array([numpy.inf]), False)
+        with_dust = kernels.requested_round_one(numpy.array([1.0, 2.0]), numpy.array([1e-12, 5.0]), *buyer)
+        without = kernels.requested_round_one(numpy.array([2.0]), numpy.array([5.0]), *buyer)
+        self.assertEqual(with_dust, without)
+
     def test_allocate_arrays_matches_the_plain_version(self):
         rng = random.Random(13)
         for _ in range(150):

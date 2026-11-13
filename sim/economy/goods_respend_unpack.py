@@ -48,8 +48,9 @@ def write_markets(setup, ledger, markets, packed, out) -> None:
      market_offered, market_last_delivered, market_cleared) = out
     keys = packed.market_keys
     columns = table_columns(markets, keys)
-    _add_bids(markets, packed, keys, numpy.nonzero(bid_adding[:bid_count])[0], bid_market, bid_buyer, bid_flexible, bid_reference,
-              bid_budget, bid_maximum, columns)
+    added = bid_adding[:bid_count]      # the share of each bid that is new demand; a bid is stored cut to that share
+    _add_bids(markets, packed, keys, numpy.nonzero(added > 0.0)[0], bid_market, bid_buyer, bid_flexible[:bid_count] * added,
+              bid_reference, bid_budget[:bid_count] * added, bid_maximum, columns)
     if clear_count:
         prices = numpy.where(clear_has_price[:clear_count], clear_price[:clear_count], numpy.nan)
         if columns is not None:

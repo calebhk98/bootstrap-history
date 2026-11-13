@@ -10,6 +10,7 @@ from sim.compiled_tables.causes import OK
 from sim.compiled_tables.growth import NO_ROOM, claim_row
 from sim.economy import goods_market_kernels as kernels
 from sim.economy.goods_market_kernels import LOGIT_INTENSITY, ROUNDING_SHARE
+from sim.economy.stock_residue import STOCK_RESIDUE_UNITS
 from sim.economy.year_ledger_kernels import touch as touch_figure
 
 
@@ -44,7 +45,7 @@ def choice_weights(asks, stocked):
 
 
 def requested_round_one(asks, quantities, floors, flexibles, budgets, references, exponents, maximums, capped):
-    stocked = quantities > ROUNDING_SHARE * quantities
+    stocked = quantities >= STOCK_RESIDUE_UNITS
     weights, running = choice_weights(asks, stocked)
     requested = 0.0
     for bid in range(len(floors)):

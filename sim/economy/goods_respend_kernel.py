@@ -14,8 +14,9 @@ from sim.jit import njit
 
 from .goods_market_kernels import KERNEL, allocate_arrays
 from .goods_respend_basket_kernel import place_priced_bids, price_basket
-from .goods_respend_market_kernel import (lowest_ask, quantity_of, quote_of, units_at_quote, wanted_adding,
-                                          wanted_adding_untraded, wants_at)
+from .goods_respend_market_kernel import (added_at_quote, added_fraction, bid_units, lowest_ask, quantity_of, quote_of,
+                                          units_at_quote, wanted_adding, wanted_adding_untraded, wants_at)
+from .stock_residue import STOCK_RESIDUE_UNITS
 
 
 @njit(**KERNEL)
@@ -44,7 +45,7 @@ def asks_unchanged(valid, before, now):
 
 
 @njit(**KERNEL)
-def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid, area_market, need_ptr, need_weight,
+def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, counted_units, area_market, need_ptr, need_weight,
                    need_slot, need_has_limits, need_good_ptr, goods, effects, limits, limited, basket_exponent,
                    basket_substitution, basket_need_of_good, need_count, max_goods, market_good, offer_ptr,
                    offer_reservation, offer_quantity, offer_key, offer_agent, offer_order, market_last_price, market_has_last,
@@ -52,7 +53,7 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                    agent_import, agent_export, first_market, first_buyer, first_floor, first_flexible,
                    first_reference, first_exponent, first_budget, first_maximum, first_units, first_money,
                    wanted_share, negligible_share, minimum_share, rounding_share, capacity):
-    """Run the rounds. Mutates `has_bid`, `offer_quantity`, `key_stock` and `agent_cash` (their final state is the answer).
+    """Run the rounds. Mutates `counted_units` (the units each buyer has counted as demand in each market), `offer_quantity`, `key_stock` and `agent_cash` (their final state is the answer).
 
     Returns `overflow` (a log filled to `capacity`: run again with more), the counts of rows logged, then the logs: bids (round,
     market, buyer, flexible, reference, budget, ceiling, whether it adds demand), clearings (market, round, quantity traded,
@@ -106,7 +107,7 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
     log_bid_reference = numpy.empty(capacity)
     log_bid_budget = numpy.empty(capacity)
     log_bid_maximum = numpy.empty(capacity)
-    log_bid_adding = numpy.empty(capacity, dtype=numpy.bool_)
+    log_bid_adding = numpy.empty(capacity)
     log_clear_market = numpy.empty(capacity, dtype=numpy.int64)
     log_clear_round = numpy.empty(capacity, dtype=numpy.int64)
     log_clear_quantity = numpy.empty(capacity)
@@ -173,7 +174,8 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
     reference_buffer = numpy.zeros(buyers)
     exponent_buffer = numpy.zeros(buyers)
     maximum_buffer = numpy.zeros(buyers)
-    adding_buffer = numpy.zeros(buyers, dtype=numpy.bool_)
+    adding_buffer = numpy.zeros(buyers)
+    added_buffer = numpy.zeros(buyers)
     units_buffer = numpy.zeros(buyers)
     first_wants = numpy.zeros(buyers)
     quote_units = numpy.zeros(buyers)
@@ -270,7 +272,8 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                 flexibles[position] = gen_amount[bid] / gen_ask[bid]
                 exponents[position] = -basket_substitution[buyer_basket[buyer]]
                 maximums[position] = gen_ceiling[bid]
-                adding[position] = not has_bid[market, buyer]
+                adding[position] = added_fraction(bid_units(0.0, flexibles[position], budgets[position], references[position]),
+                                                  counted_units[market, buyer])
                 scale += gen_ask[bid]
             minimum = minimum_share * scale / bids
             capped = False
@@ -282,7 +285,7 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
             active = 0
             supply = 0.0
             for offer in range(offer_ptr[market], offer_ptr[market + 1]):
-                if offer_quantity[offer] > 0.0:
+                if offer_quantity[offer] >= STOCK_RESIDUE_UNITS:
                     active += 1
                     supply += offer_quantity[offer]
             offers = offer_buffer[:active]
@@ -290,7 +293,7 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
             quantities = quantity_buffer[:active]
             slot = 0
             for offer in range(offer_ptr[market], offer_ptr[market + 1]):
-                if offer_quantity[offer] > 0.0:
+                if offer_quantity[offer] >= STOCK_RESIDUE_UNITS:
                     offers[slot] = offer
                     asks[slot] = max(offer_reservation[offer], minimum)
                     quantities[slot] = offer_quantity[offer]
@@ -355,9 +358,12 @@ def respend_rounds(buyer_agent, buyer_basket, buyer_area_row, buyer_key, has_bid
                 if quote == quote:
                     units_at_quote(quote, asks[0] if active > 0 else nan, first_wants, floors, flexibles, budgets,
                                    references, exponents, maximums, quote_units[:bids])
-                market_wanted[market] += wanted_adding_untraded(quote, quote_units[:bids], adding, wanted_share)
+                added_at_quote(quote, quote_units[:bids], adding, floors, flexibles, budgets, references, exponents, maximums,
+                               added_buffer[:bids])
+                market_wanted[market] += wanted_adding_untraded(quote, quote_units[:bids], added_buffer[:bids], adding, wanted_share)
             for position in range(bids):
-                has_bid[market, gen_buyer[placed[first + position]]] = True
+                counted_units[market, gen_buyer[placed[first + position]]] += \
+                    bid_units(0.0, flexibles[position], budgets[position], references[position]) * adding[position]
             # settlement: pairs in offer-major order, scaled to the stock and purses, then walked
             units_got = units_buffer[:bids]
             money_paid = paid_buffer[:bids]

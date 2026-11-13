@@ -7,6 +7,7 @@ import numpy
 from sim.jit import njit
 
 from .goods_market_kernels import KERNEL, want_at
+from .stock_residue import STOCK_RESIDUE_UNITS
 
 
 @njit(**KERNEL)
@@ -22,7 +23,7 @@ def lowest_ask(first, last, reservation, quantity):
     """market_quote.lowest_unfilled_ask over offers `first` to `last`: NaN when none has stock and a positive reservation."""
     lowest = numpy.nan
     for offer in range(first, last):
-        if quantity[offer] > 0.0 and reservation[offer] > 0.0 and not lowest <= reservation[offer]:
+        if quantity[offer] >= STOCK_RESIDUE_UNITS and reservation[offer] > 0.0 and not lowest <= reservation[offer]:
             lowest = reservation[offer]
     return lowest
 
@@ -35,6 +36,43 @@ def best_bid_ceiling(maximums, budgets):
         if budgets[bid] > 0.0 and maximums[bid] < numpy.inf and maximums[bid] > 0.0 and not best >= maximums[bid]:
             best = maximums[bid]
     return best
+
+
+@njit(**KERNEL)
+def bid_units(floor, flexible, budget, reference):
+    """The units a bid counts as asking for, at its own reference price: its floor and, with a budget and a reference price, its
+    flexible part (goods_respend.bid_units)."""
+    if budget > 0.0 and flexible > 0.0 and reference > 0.0:
+        return floor + flexible
+    return floor
+
+
+@njit(**KERNEL)
+def added_fraction(units, counted):
+    """The share of a bid of `units` that is new demand: what exceeds the `counted` units the buyer already has in the market."""
+    if units <= 0.0:
+        return 0.0
+    return max(0.0, units - counted) / units
+
+
+@njit(**KERNEL)
+def all_adding(adding):
+    """Whether every bid adds in full (the fractions are all one)."""
+    for bid in range(len(adding)):
+        if adding[bid] < 1.0:
+            return False
+    return True
+
+
+@njit(**KERNEL)
+def added_units(units, fraction, price, floor, flexible, budget, reference, exponent, maximum):
+    """What the added share of a bid asks for at a price: all of `units` (its quantity at the price) when it adds in full, nothing
+    when it adds none, else the quantity of the bid cut to that share (flexible part and budget scaled together)."""
+    if fraction >= 1.0:
+        return units
+    if fraction <= 0.0:
+        return 0.0
+    return quantity_of(price, floor, flexible * fraction, budget * fraction, reference, exponent, maximum)
 
 
 @njit(**KERNEL)
@@ -54,11 +92,7 @@ def wanted_adding(price, adding, share, requested, traded, floors, flexibles, bu
                                   maximums[bid])
     else:
         wanted = 0.0
-    adds = 0
-    for bid in range(count):
-        if adding[bid]:
-            adds += 1
-    if adds == count:
+    if all_adding(adding):
         return wanted
     if quote != quote:
         return 0.0
@@ -67,8 +101,8 @@ def wanted_adding(price, adding, share, requested, traded, floors, flexibles, bu
     for bid in range(count):
         units = quantity_of(quote, floors[bid], flexibles[bid], budgets[bid], references[bid], exponents[bid], maximums[bid])
         total += units
-        if adding[bid]:
-            added += units
+        added += added_units(units, adding[bid], quote, floors[bid], flexibles[bid], budgets[bid], references[bid], exponents[bid],
+                             maximums[bid])
     if total <= 0.0:
         return 0.0
     return share * wanted * added / total
@@ -106,21 +140,26 @@ def units_at_quote(quote, first_price, first_wants, floors, flexibles, budgets, 
 
 
 @njit(**KERNEL)
-def wanted_adding_untraded(quote, units, adding, share):
-    """`wanted_adding` of a round that traded nothing, from the bids' `units` at `quote`: what the buyers asked for, less what
-    buyers already counted in the market asked again."""
+def added_at_quote(quote, units, adding, floors, flexibles, budgets, references, exponents, maximums, added):
+    """Fills `added` with `added_units` of each bid at `quote`, given the bids' `units` there."""
+    for bid in range(len(floors)):
+        added[bid] = added_units(units[bid], adding[bid], quote, floors[bid], flexibles[bid], budgets[bid], references[bid],
+                                 exponents[bid], maximums[bid])
+
+
+@njit(**KERNEL)
+def wanted_adding_untraded(quote, units, added, adding, share):
+    """`wanted_adding` of a round that traded nothing, from the bids' `units` at `quote` and the `added` part of them: what the
+    buyers asked for, less what buyers already counted in the market asked again."""
     if quote != quote:
         return 0.0
     total = 0.0
-    added = 0.0
-    adds = 0
+    added_total = 0.0
     for bid in range(len(units)):
         total += units[bid]
-        if adding[bid]:
-            adds += 1
-            added += units[bid]
-    if adds == len(units):
+        added_total += added[bid]
+    if all_adding(adding):
         return total
     if total <= 0.0:
         return 0.0
-    return share * total * added / total
+    return share * total * added_total / total
