@@ -20,6 +20,7 @@ from sim.world.need_basket import (Basket, PricedNeed, need_units, price_ceiling
 from . import durable_stock, household_grown_floors, households_buffer_stock, households_store, lender_ask, opening_resting
 from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
 from .households_basket import need_prices
+from .opening_demand_kernel import flexible_budget_left
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
@@ -203,7 +204,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     usable = cash * (1.0 - BUDGET_SAFETY_SHARE)
     floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
     # surplus goes on only what the year's spending allows, so stocking up a durable is paid from income
-    left = min(usable, max(spending, floor_wanted * floor_scale)) - floor_wanted * floor_scale
+    left = flexible_budget_left(usable, spending, floor_wanted, floor_scale)
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     bids = []
     budget_total = 0.0

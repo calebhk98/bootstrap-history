@@ -90,6 +90,17 @@ PARTIALS = 64        # room for the partial sums of an exact sum (an exact sum o
 
 
 @njit
+def flexible_budget_left(usable, spending, floor_wanted, floor_scale):
+    """The cash left for flexible spending once the floors are paid: the spending beyond the floors, within the usable cash.
+    When the floors take all the usable cash (wanted floors, `floor_scale` below one) nothing is left, exactly: the scaled floors
+    differ from the usable cash by rounding, and that residue must not become bids. No floors wanted leaves the whole spending."""
+    if floor_wanted > 0.0 and floor_scale < 1.0:
+        return 0.0
+    scaled = floor_wanted * floor_scale
+    return min(usable, max(spending, scaled)) - scaled
+
+
+@njit
 def _add(partials, count, term):
     """One more term into the exact sum held in `partials[:count]` (the algorithm of `math.fsum`); returns the new count."""
     x = term
@@ -443,7 +454,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
     floor_wanted = floor_spend * (1.0 + constants[K_FLOOR_MARGIN])
     usable = cash * (1.0 - constants[K_SAFETY])
     floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
-    left = min(usable, max(spending, floor_wanted * floor_scale)) - floor_wanted * floor_scale
+    left = flexible_budget_left(usable, spending, floor_wanted, floor_scale)
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     budget_total = 0.0
     for index in range(r0, r1):

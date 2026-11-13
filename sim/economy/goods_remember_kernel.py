@@ -119,7 +119,7 @@ def remembered(old, cleared, quantity, usual):
 @njit(**KERNEL)
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years, resumed_share):
     """`year_goods.price_after_trade` (the resumed-trade rule included)."""
-    if old_was_quote and not numpy.isnan(old) and cleared > old:
+    if old_was_quote and not numpy.isnan(old):
         return remembered(old, cleared, quantity, reference_volume)
     paid = numpy.nan if old_was_quote else old
     volume_rule = remembered(paid, cleared, quantity, reference_volume)
