@@ -111,6 +111,8 @@ def clear_with_cause(requests: Sequence[LoanRequest], offers: Sequence[FundsOffe
                                           [(ceiling, request.amount) for ceiling, request, can in zip(ceilings, requests, able)
                                            if can])
     base_rate = sticky_move(last_rate, target, RATE_ADJUSTMENT_SHARE_PER_YEAR)
+    if lowest_ask is not None and base_rate < lowest_ask <= max(ceilings, default=-math.inf):
+        base_rate = lowest_ask      # a rate below every ask lends nothing while a borrower would pay the ask
     if not any(able):       # lenders alone are not a price: the rate still drifts toward the lowest ask
         return LoanClearing([], max(0.0, base_rate), list(requests), NO_BORROWER_AT_ASK)
     nominal_ceiling = None if rate_ceiling is None else rate_ceiling + max(0.0, expected_inflation)
