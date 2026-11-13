@@ -85,8 +85,11 @@ def value_in_use(recipe: Recipe, good: GoodId, prices: Mapping[GoodId, float], w
 def _extra_hours_cost(recipe: Recipe, step, wages: Mapping[TradeId, float]) -> Optional[float]:
     if any(trade not in wages for trade in step.trades):
         return None
-    return math.fsum((step.hours_factor - 1.0) * recipe.labour_hours[trade] * wages[trade] for trade in step.trades
-                     if step.hours_factor > 1.0)
+    total = 0.0                     # added in the step's trade order, as the entry kernels add it
+    for trade in step.trades:
+        if step.hours_factor > 1.0:
+            total += (step.hours_factor - 1.0) * recipe.labour_hours[trade] * wages[trade]
+    return total
 
 
 def _step_cost(recipe: Recipe, step, prices: Mapping[GoodId, float], wages: Mapping[TradeId, float]) -> Optional[float]:
@@ -95,3 +98,19 @@ def _step_cost(recipe: Recipe, step, prices: Mapping[GoodId, float], wages: Mapp
     if hours is None or (step.good and step.good not in prices):
         return None
     return (step.units_per_run * prices[step.good] if step.good else 0.0) + hours
+
+
+def wear_cost_per_run(recipe: Recipe, prices: Mapping[GoodId, float], wages: Mapping[TradeId, float]) -> float:
+    """What a run pays to cover the wear of its tools at these prices and wages: for each wear good, the tool at its price,
+    else the first step of its fallback chain that can be priced (the next tool at its price plus the extra hours, or the
+    extra hours of working by hand), else infinite. Zero for a recipe with no tool wear."""
+    total = 0.0
+    for good, per_run in recipe.tool_wear_sorted:
+        if per_run <= 0.0:
+            continue
+        if prices.get(good) is not None:
+            total += per_run * prices[good]
+            continue
+        costs = (_step_cost(recipe, step, prices, wages) for step in recipe.tool_fallbacks.get(good, ()))
+        total += next((cost for cost in costs if cost is not None), math.inf)
+    return total
