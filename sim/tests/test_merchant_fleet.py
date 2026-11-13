@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import carriage_fleet_book, carriage_wear, inventory, merchants, merchants_legs
+from sim.economy import carriage_fleet, carriage_fleet_book, carriage_wear, inventory, merchants, merchants_legs
 from sim.book import Book
 from sim.economy.carriage_fleet import FleetLimit
 from sim.economy.types import EDGE_PRODUCTION, GoodsMove, GoodSpec
@@ -131,3 +131,20 @@ class HiringIdleFleets(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FleetWantedFollowsTheRoutesOverAServiceLife(unittest.TestCase):
+    """A merchant revises the fleet it wants by one service life's share of the gap to what last year's routes called for."""
+
+    def test_the_first_year_takes_what_the_routes_called_for(self):
+        self.assertAlmostEqual(carriage_fleet.revised_wanted({}, {CART: 2.0}, {CART: CART_LIFE})[CART], 2.0)
+
+    def test_a_year_of_no_wear_sheds_one_life_share_of_the_fleet(self):
+        revised = carriage_fleet.revised_wanted({CART: 2.0}, {CART: 0.0}, {CART: CART_LIFE})
+        self.assertAlmostEqual(revised[CART], 2.0 * (1.0 - 1.0 / CART_LIFE))
+
+    def test_a_steady_call_leaves_the_wanted_fleet_unchanged(self):
+        self.assertAlmostEqual(carriage_fleet.revised_wanted({CART: 2.0}, {CART: 2.0}, {CART: CART_LIFE})[CART], 2.0)
+
+    def test_a_swing_in_the_call_moves_the_wanted_fleet_a_life_share_of_the_way(self):
+        self.assertAlmostEqual(carriage_fleet.revised_wanted({CART: 1.0}, {CART: 11.0}, {CART: CART_LIFE})[CART], 2.0)

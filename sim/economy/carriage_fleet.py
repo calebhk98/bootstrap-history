@@ -32,3 +32,18 @@ def tonnes_within(spare: Mapping[GoodId, float], per_tonne: Mapping[GoodId, floa
 def wanted_fleet(wanted_wear: Mapping[GoodId, float], lives: Mapping[GoodId, float]) -> Dict[GoodId, float]:
     """Units of each fleet good to hold to bear `wanted_wear` units of wear a year."""
     return {good: units * lives[good] for good, units in wanted_wear.items() if lives.get(good, 0.0) > 0.0}
+
+
+def revised_wanted(previous: Mapping[GoodId, float], called: Mapping[GoodId, float],
+                   lives: Mapping[GoodId, float]) -> Dict[GoodId, float]:
+    """The wear a year of each fleet good a merchant wants to be able to bear after a year in which its routes called for
+    `called`: it moves from `previous` by one service life's share of the gap, since a carrier is bought to last its
+    life and one year's haul is not a reason to buy or shed the fleet; a good it had no figure for takes the call."""
+    revised: Dict[GoodId, float] = {}
+    for good in sorted(set(previous) | set(called)):
+        life = lives.get(good, 0.0)
+        if life <= 0.0:
+            continue
+        call = called.get(good, 0.0)
+        revised[good] = call if good not in previous else previous[good] + (call - previous[good]) / life
+    return revised

@@ -2,7 +2,7 @@
 from sim.geography.api import flow_ledger
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import carried_book, carriage_fleet_book, carriage_wear_batch, carriage_hours, carriage_wear, merchants, merchants_transit, route_dues
+from . import carried_book, carriage_fleet, carriage_fleet_book, carriage_wear_batch, carriage_hours, carriage_wear, merchants, merchants_transit, route_dues
 from .cohort_reads import poorest_by_tile, populated_tiles
 from .market_memory import market_key
 from .inventory import held_stock
@@ -76,8 +76,9 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
             shipping.append(merchant.agent_id)
             worn[merchant.agent_id] = {good: units for good, units in merchant.carrier_wear.items() if good not in lives}
             if lives:
-                merchant.carrier_fleet_wanted = {good: max(0.0, units - hired.get(merchant.agent_id, {}).get(good, 0.0))
-                                                 for good, units in done.fleet_wanted.items()}
+                called = {good: max(0.0, units - hired.get(merchant.agent_id, {}).get(good, 0.0))
+                          for good, units in done.fleet_wanted.items()}
+                merchant.carrier_fleet_wanted = carriage_fleet.revised_wanted(merchant.carrier_fleet_wanted, called, lives)
                 rent = answer.rent_of(row)
                 postings.extend(rent)
                 rents.extend(rent)
