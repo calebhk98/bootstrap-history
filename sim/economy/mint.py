@@ -76,6 +76,20 @@ def _lose_worn_metal(record) -> None:
                            for tile, quantity in sorted(held.items())])
 
 
+def cash_wanted(record) -> float:
+    """Money holders want in their cash balances: cohorts' and producers' cash targets and merchants' capital base."""
+    return (table_of(record.cohorts).exact_total("cash_target")
+            + record.producers.exact_total("cash_target")
+            + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
+
+
+def meltable_metal(record) -> float:
+    """Metal of the money above what holders want to keep, the most the mint may offer for sale (the counterpart of
+    `yearly_monetisation`): selling more would retire money holders still want. None when holders want it all."""
+    spec = record.currency
+    return max(0.0, record.book.money_supply(spec.currency_id) - cash_wanted(record)) * spec.backing_per_unit
+
+
 def yearly_monetisation(setup, record) -> float:
     """Most money the mint turns metal or a commodity into in a year: what holders want to add to their cash
     balances, plus what the money loses (wear of coin, loss of weighed metal, spoilage of a commodity) over the
@@ -85,9 +99,7 @@ def yearly_monetisation(setup, record) -> float:
     (Complaints/reports/economy-research-commodity-money.md)."""
     spec = record.currency
     supply = record.book.money_supply(spec.currency_id)
-    wanted = (table_of(record.cohorts).exact_total("cash_target")
-              + record.producers.exact_total("cash_target")
-              + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
+    wanted = cash_wanted(record)
     loss = loss_share(setup, spec)
     return (max(0.0, wanted - supply) + loss * supply) / (1.0 - loss)       # the money struck wears too, before the year ends
 
@@ -127,6 +139,7 @@ def staff(setup, record, view, labour_bids) -> None:
 
 def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[str, float]:
     """Post the mint's bids and offers; returns the metal it holds by tile, for `settle_mint`.
+    The offer is the backing of the money above what holders want to keep, and only where `melting_pays`.
     `hours_hired` is what the mint's staff were hired for this year, by trade; it limits the metal struck
     where the coin standard names a minting recipe."""
     spec = record.currency
@@ -136,11 +149,15 @@ def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[s
     _lose_worn_metal(record)
     held = stock_by_tile(record.book, metal)
     rows = OrderRows(order_book, MINT)
+    meltable = meltable_metal(record)
     for tile, quantity in sorted(held.items()):
-        if not mint_price.melting_pays(record.memory.prices.get(market_key(metal, area_map.area_of(metal, tile))),
-                                       currency.mint_parity(spec)):
+        area = area_map.area_of(metal, tile)
+        offered = min(quantity, meltable)       # the metal of money holders still want stays in the mint
+        if offered <= 0.0 or not mint_price.melting_pays(record.memory.prices.get(market_key(metal, area)),
+                                                         currency.mint_parity(spec)):
             continue
-        rows.offer(EDGE_MINT, metal, area_map.area_of(metal, tile), tile, quantity, currency.mint_parity(spec))
+        meltable -= offered
+        rows.offer(EDGE_MINT, metal, area, tile, offered, currency.mint_parity(spec))
     strike_price = currency.mint_price(spec)
     coin_metal = min(yearly_monetisation(setup, record) * spec.backing_per_unit,
                      mint_labour.strike_limit_fine_kilograms(setup, spec, hours_hired or {}))
