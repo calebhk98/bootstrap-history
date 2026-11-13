@@ -231,3 +231,18 @@ names the number still unsourced. Count what is left with the command at the top
 - Still stuck, with the reason in each row: engine, dynamo and foundry works (no wall or roof masses), tin and silver
   recoveries, backstrap weaving, wells, leather goods, fish, carts, barges, the aqueduct and the warship (sources blocked
   or giving no figure), and the stock rows whose numbers live in `data/world/living_stock.json`.
+
+**Pass 12 (derive from two sources).** Rows with no direct figure were derived: a documented comparable scaled by
+output (Thorpe's phosphorus galley, Lunge's vessels, Fairbanks 1907 machine-tool weights, Gillette's crane and brick
+rates), a rate from a trade manual or modern craftsperson times the quantity, or a bracket from two sources. Each row's
+basis gives the arithmetic and labels the glue assumptions; every row still at D carries a "tried:" list naming three
+approaches. Count what is left with the command at the top.
+
+For the code side, two findings this pass could not apply as data:
+- `silver_smelted_native_kg`: Cohen et al., Historical Metallurgy 44(2) 2010 (Cuiza huayrachina) gives about 0.5 kg
+  charcoal a kg of charge and 0.4 furnace hours a kg, against 0.3 and 0.113 held. Applying them moves the starting-wage
+  metal-cost spread past the limit in `sim/tests/test_opening_wage_anchor.py`, so the values were kept and the finding is
+  in the row's basis. A sourced input should not be held back by an outcome check; the check or the route needs a look.
+- The Las Medulas hydraulic works: opened sources derive about 50,000 build hours against the 500,000 of
+  `AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC` in `sim/world/deposits.py`, which a test ties to the gold rows; the
+  arithmetic is in the `gold_kg` basis.
