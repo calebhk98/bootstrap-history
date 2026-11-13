@@ -21,6 +21,7 @@ from .goods_market import quantity_at
 from .producer_store import ProducerStore
 from .producers import Producer, kept_output_prices, live_input_prices, live_wages
 from .protocols import MarketView
+from .stock_residue import STOCK_RESIDUE_UNITS
 from .types import AreaId, Bid, ClearingResult, GoodId, Offer, Recipe, TileId
 
 ENTRY_SHARE_OF_UNMET_DEMAND = declare(
@@ -106,19 +107,20 @@ def producers_to_close(producers: Mapping[str, Producer], pending, debtors) -> L
     if isinstance(producers, ProducerStore):
         order = producers.order()
         table = producers.table
-        small = table.capacity_runs[order] <= CLOSED_CAPACITY_SHARE_OF_PAST_SCALE * np.maximum(
-            np.maximum(table.last_runs[order], table.expected_sales[order]), 0.0)
+        small = (table.capacity_runs[order] <= CLOSED_CAPACITY_SHARE_OF_PAST_SCALE * np.maximum(
+            np.maximum(table.last_runs[order], table.expected_sales[order]), 0.0)) | (table.capacity_runs[order] < STOCK_RESIDUE_UNITS)
         return [agent_id for agent_id in (producers.ids[row] for row in order[small].tolist())
                 if agent_id not in pending and agent_id not in debtors]
     return [agent_id for agent_id, producer in sorted(producers.items())
-            if producer.capacity_runs <= CLOSED_CAPACITY_SHARE_OF_PAST_SCALE * max(
-                producer.last_runs, producer.expected_sales, 0.0)
+            if (producer.capacity_runs <= CLOSED_CAPACITY_SHARE_OF_PAST_SCALE * max(
+                producer.last_runs, producer.expected_sales, 0.0) or producer.capacity_runs < STOCK_RESIDUE_UNITS)
             and agent_id not in pending and agent_id not in debtors]
 
 
 def gap_beyond_spare(unmet: float, spare_output: float) -> float:
     """The part of a market's unmet demand its makers could not have met from idle capacity."""
-    return max(0.0, unmet - max(0.0, spare_output))
+    gap = unmet - max(0.0, spare_output)
+    return gap if gap >= STOCK_RESIDUE_UNITS else 0.0       # a gap that small is rounding residue, no demand
 
 
 def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
@@ -145,7 +147,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
     requests = []       # (recipe id, tile, runs the entrant is planned on, rate) for each recipe of each market
     for key in sorted(unmet):
         demand = unmet[key]
-        if demand.quantity <= 0.0:
+        if demand.quantity < STOCK_RESIDUE_UNITS:
             continue
         market_rate = view.interest_rate(view.currency_of(demand.area))
         candidates = makers.get(demand.good, ()) if market_rate is not None else ()
@@ -172,7 +174,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
         remaining = demand.quantity
         for negative_return, recipe_id in sorted(ranked):
             recipe = recipes[recipe_id]
-            if remaining <= 0.0:
+            if remaining < STOCK_RESIDUE_UNITS:
                 break
             whole_gap_runs = remaining / recipe.outputs[demand.good]
             tile = demand.anchor_tile
@@ -185,7 +187,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                     continue
                 runs = sized_runs(recipe, demand.good, picked[1], whole_gap_runs, demand.anchor_tile, traded, picked[0], backed)
                 tile = picked[0]
-            if runs > 0.0 and math.isfinite(runs):
+            if runs * recipe.outputs[demand.good] >= STOCK_RESIDUE_UNITS and math.isfinite(runs):      # an entrant of residue size is no entrant
                 plans.append(EntryPlan(recipe_id, tile, demand.good, runs, -negative_return))
                 remaining -= runs * recipe.outputs[demand.good]
     return plans

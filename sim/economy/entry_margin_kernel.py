@@ -17,6 +17,7 @@ from .entry_plan_steps import site_newcomer
 from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .entry_trial import ENTRY_PRICE_MARGIN_SHARE
 from .producers_close import LOSS_YEARS_BEFORE_EXIT
+from .stock_residue import STOCK_RESIDUE_UNITS
 from .year_arrays_costs import KERNEL
 
 
@@ -76,7 +77,7 @@ def margin_plans(market_good, market_anchor, market_place, market_capacity, mark
                                            recipe_scalar[recipe, 1] > 0.0)
                 if tile < 0:
                     continue
-            if runs > 0.0 and numpy.isfinite(runs):
+            if runs * made >= STOCK_RESIDUE_UNITS and numpy.isfinite(runs):      # an entrant of residue size is no entrant
                 row = claim_row(plans)
                 if row == NO_ROOM:
                     return -1
@@ -111,7 +112,7 @@ def trial_plans(market_good, market_anchor, market_place, market_price, rank_fir
                                        recipe_scalar[recipe, 1] > 0.0)
             if tile < 0:
                 continue
-            if runs > 0.0 and numpy.isfinite(runs):
+            if runs * made >= STOCK_RESIDUE_UNITS and numpy.isfinite(runs):      # an entrant of residue size is no entrant
                 row = claim_row(plans)
                 if row == NO_ROOM:
                     return -1
