@@ -9,6 +9,7 @@ from sim.agents.api import ActorRecord, Firm
 from sim.agents.government import Government
 from sim.agents.player import Player
 from sim.agents import research
+from sim.agents.player_commands import CommandRejected
 
 from .agents_fake_world import FakeWorld, make_node
 
@@ -68,17 +69,17 @@ for name, actor in actors().items():
 	world = ResearchWorld()
 	try:
 		actor.copying.start_research("deep", world)
-		refused = False
-	except Exception as reason:
-		refused = "tech" in str(reason)
-	check("%s cannot research past a prerequisite it lacks" % name, refused and not actor.works, name)
+		cause = None
+	except CommandRejected as reason:
+		cause = getattr(reason.args[0], "cause", None)
+	check("%s cannot research past a prerequisite it lacks" % name, cause == "prerequisites_unknown" and not actor.works, (name, cause))
 	poor = actors(money=1.0)[name]
 	try:
 		poor.copying.start_research("tech", world)
-		refused = False
-	except Exception:
-		refused = True
-	check("%s cannot start research its purse cannot pay" % name, refused and not poor.works, name)
+		cause = None
+	except CommandRejected as reason:
+		cause = getattr(reason.args[0], "cause", None)
+	check("%s cannot start research its purse cannot pay" % name, cause == "cannot_afford" and not poor.works, (name, cause))
 
 # ---- literacy scales progress -------------------------------------------------------------
 slow = years_to_learn(actors()["firm"], ResearchWorld(productivity=0.5), "tech")

@@ -32,6 +32,7 @@ class _Host:
 class UnsizedDistrictTests(unittest.TestCase):
     def test_every_worked_district_on_the_tiles_has_a_size_unless_the_output_model_sizes_it(self):
         records = {row["id"]: row for row in geography.deposit_records()}
+        checked = 0
         for name in CIVILISATIONS:
             host = _Host(name)
             tiles = geography.tiles_held(host.civ, host.world_map)
@@ -39,6 +40,9 @@ class UnsizedDistrictTests(unittest.TestCase):
                 for row in geography.worked_deposits(tiles, resource_id, host.cfg["start_year"], (), host.world_map):
                     if "share_of_empire_output" not in records[row["id"]]:
                         self.assertIsNotNone(row["size_tonnes"], (name, row["id"]))
+                        self.assertGreater(row["size_tonnes"], 0.0, (name, row["id"]))
+                        checked += 1
+        self.assertGreater(checked, 0)
 
     def test_a_civilisation_with_only_unsized_districts_gets_sites_from_them(self):
         for name, resource_id in (("han_china_100ad", "iron"), ("mexica_1500", "copper"), ("norse_900ad", "iron")):
