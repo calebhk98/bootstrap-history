@@ -856,6 +856,13 @@ What still fails, and the evidence:
 - The remaining movers on Norse are watched goods' prices and inventories with a period-2 or a four-year cycle (fish and steel follow the
   wage floor's swing; mules and oxen follow lumpy merchant fleet buying, `carriage_fleet_book.to_buy`), and a slow fall of the wage while
   idle hours stay above hired hours where the floor binds (`sim/labour/market/asks.py`, `clearing_kernel.py` reservation at the floor).
+- **Mexica is worse on this branch than on main**, through the own-plot fix: once households can afford their flexible food,
+  part of it goes to cacao (a food and the money's backing good); cacao's price rises above the mint's parity, the mint sells its
+  cacao at parity whenever the remembered price is at least parity (`mint_price.melting_pays`, `mint.mint_orders`), households eat
+  the money's backing and the money stock falls by most of itself within a decade (`opening-checks --civs mexica_1500` fails the
+  staple, sited ores, money against wear and wage over floor checks, which main passed in its last rebuild, Complaint 970). On main
+  the leak suppressed that demand. Nothing grows cacao in any spin-up year although the recipe exists, Mexica knows its node and
+  about half its tiles have the climate: being traced (placement or entry).
 - Silver now trades at parity far above its making cost (`price_over_cost_coin_metal`), Complaint 519's question in another form.
 - Hunger sits on fertility-0 tiles whose people have no plot and whose markets sell out (`household_hours_year.usable_plot_hours`).
 
