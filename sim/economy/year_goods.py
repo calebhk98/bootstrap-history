@@ -115,7 +115,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     left_markets = LeftMarkets(year_markets)
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     home_outputs = year_tax_in_kind.home_outputs(setup, record.producers, year_tax_in_kind.taxed_goods(in_kind)) if in_kind else None
-    metal = record.currency.backing_good if currency.has_mint(record.currency) else None        # the good whose markets the mint reads
+    metal = record.currency.backing_good if mint_price.paid_in_metal(record.currency) else None        # the good whose markets the mint reads
     plant_makers: Dict[str, list] = {}       # a good -> the producers whose plant is built from it
     store = record.producers
     plant_goods_of = [list(setup.recipes[name].plant_goods) if name in setup.recipes else [] for name in store.names["recipes"].name_list]       # by the store's recipe number
@@ -206,9 +206,9 @@ def _received_price(setup, record, good, market, ledger: YearLedger) -> Optional
     quantity = math.fsum([result.quantity for result in traded] + [units for units, _price in later])
     if quantity <= 0.0:
         return None
-    if not currency.has_mint(spec) or good != spec.backing_good:
+    if not mint_price.paid_in_metal(spec) or good != spec.backing_good:
         return math.fsum([result.quantity * result.price for result in traded] + [units * price for units, price in later]) / quantity
-    return math.fsum([result.quantity * mint_price.received_price(currency.mint_price(spec), result, ledger.settled_to_mint(result))
+    return math.fsum([result.quantity * mint_price.received_price(mint_price.paid_price(spec), result, ledger.settled_to_mint(result))
                       for result in traded] + [units * price for units, price in later]) / quantity
 
 
