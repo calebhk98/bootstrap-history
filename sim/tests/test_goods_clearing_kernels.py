@@ -72,6 +72,8 @@ def _old_affordable(prices, budgets_left):
 
 
 def old_allocate(bids, offers, asks, schedule):
+    """The numpy form of the rule: what a round could not serve is sent on as a share of the buyer's choice, and the quantity asked
+    for is what was taken and what was still unmet at the end."""
     prices = numpy.array(asks, dtype=float)
     quantities = numpy.array([offer.quantity for offer in offers], dtype=float)
     ceilings = schedule.maximum_array()
@@ -85,7 +87,6 @@ def old_allocate(bids, offers, asks, schedule):
     stocked = left > ROUNDING_SHARE * quantities
     weights, sums = _old_weights(prices, stocked, ceilings)
     requests = wants * weights[:, None] / sums[None, :]
-    requested = float(requests.sum())
     served, left, short = _old_serve(requests, left, tiers)
     flow = served.copy()
     taken = served.sum(axis=0)
@@ -97,14 +98,16 @@ def old_allocate(bids, offers, asks, schedule):
         if not stocked.any() or not (unmet > 0.0).any():
             break
         weights, sums = _old_weights(prices, stocked, ceilings)
-        again = numpy.minimum(unmet[None, :], _old_affordable(prices, numpy.maximum(0.0, budgets - cost)))
-        again = numpy.minimum(again, numpy.maximum(0.0, wants - taken[None, :]))
-        again[:, unmet <= 0.0] = 0.0
-        served, left, short = _old_serve(again * weights[:, None] / sums[None, :], left, tiers)
+        unserved_share = numpy.where(wants > 0.0, short / numpy.where(wants > 0.0, wants, 1.0), 0.0).sum(axis=0)
+        again = numpy.minimum(unserved_share[None, :] * wants * weights[:, None] / sums[None, :],
+                              _old_affordable(prices, numpy.maximum(0.0, budgets - cost)))
+        again[:, unserved_share <= 0.0] = 0.0
+        served, left, short = _old_serve(again, left, tiers)
         flow += served
         taken = taken + served.sum(axis=0)
         cost = cost + prices @ served
         unmet = short.sum(axis=0)
+    requested = float(taken.sum() + unmet.sum())
     return taken, cost, quantities - left, requested, flow
 
 
@@ -125,13 +128,21 @@ def old_best_price(current, unit_value, market_size, rivals, stock, floor, ceili
 
 # ---- the old bisection of demand_search.raise_asks ------------------------------------------------------------
 
+def old_first_round_requests(offers, asks, schedule):
+    """What the buyers ask for at the asks before any seller runs out (the search for the level that sells the stock reads this)."""
+    prices = numpy.array(asks, dtype=float)
+    quantities = numpy.array([offer.quantity for offer in offers], dtype=float)
+    weights, sums = _old_weights(prices, quantities > ROUNDING_SHARE * quantities, schedule.maximum_array())
+    return float((schedule.matrix_at(prices) * weights[:, None] / sums[None, :]).sum())
+
+
 def old_demand_covers(buyers, offers):
     supply = math.fsum(offer.quantity for offer in offers if offer.quantity > 0.0)
     ordered = goods_market.in_clearing_order(offers)
     asks = goods_market._asks(buyers, ordered)
     requested = 0.0
     if ordered and buyers.schedule.total_at(asks[0]) > 0.0 and supply > ROUNDING_SHARE * buyers.schedule.total_at(asks[0]):
-        requested = old_allocate(buyers.bids, ordered, asks, buyers.schedule)[3]
+        requested = old_first_round_requests(ordered, asks, buyers.schedule)
     return requested >= supply * (1.0 - ROUNDING_SHARE)
 
 
