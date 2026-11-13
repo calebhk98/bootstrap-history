@@ -537,15 +537,17 @@ HOIST_FRAME_HOURS = declare(
     why="Building the windlass frame and headworks over a shaft.")
 
 AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC = declare(
-    "AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC", 500000.0,
-    kind="temporary_heuristic",
+    "AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC", 52400.0,
+    kind="engineering_estimate",
     unit="labourer-hours to build ONE aqueduct and sluice system",
-    source="Pliny, Natural History 33.66-78 describes aqueducts carrying "
-           "water many kilometres to Las Medulas.",
-    confidence="D",
-    why="No ancient source gives labour-hours; an order-of-magnitude "
-        "placeholder for canal length times digging rate. One system "
-        "supplies the flow set by AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND.")
+    source="es.wikipedia Las Medulas (opened): seven canals, about 300 km, 1.28 m wide and 0.90 m deep (1.152 m3 a "
+           "metre); Gillette, Handbook of Cost Data p. 123 (archive.org handbookofcostda00gillrich, opened): hardpan "
+           "dug and loaded at 3.5 hours a m3. One system recovers about 284 kg of gold a year, 4.3 percent of Pliny's "
+           "6,560 kg for the district, so 4.3 percent of 300 km = 13 km; 13,000 x 1.152 x 3.5 = 52,400 hours. "
+           "Channel only (reservoirs, sluice heads and tunnels not counted), so a lower bound.",
+    confidence="C",
+    why="Canal length times a digging rate. One system supplies the flow set by "
+        "AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND.")
 
 AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND = declare(
     "AQUEDUCT_WATER_FLOW_CUBIC_METRES_PER_SECOND", 0.5, kind="engineering_estimate",
