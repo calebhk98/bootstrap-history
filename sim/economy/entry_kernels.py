@@ -23,6 +23,7 @@ from sim.jit import njit
 
 from .close_kernel_cost import capital_charge
 from .entry_wear_kernel import wear_bill
+from .grid_wear import covered_inputs_at
 from .year_arrays_costs import KERNEL, bill_goods, bill_hours, price_in, recovery_factor
 
 NO_SLOT = -1
@@ -340,12 +341,15 @@ def site_choice(r, anchor, candidates, runs, tonnes_out, tables, tonnes, supply_
 
 @njit(**KERNEL)
 def pays_after_recovery(recipe, tile, rent, held_expected, slot_goods, inputs, outputs, revenue_outputs, plant_goods, labour_hours, plant_labour_hours,
-                        plant_life, price, offered, wage, area_of, rate):
+                        plant_life, price, offered, wage, area_of, rate, tools):
     """Whether `unit_cost.return_after_recovery` of a run of the recipe on the tile beats `rate`: the surplus (revenue at the
     producer's expected prices, else the price on offer in its market, less the variable cost) less the part of the plant's
     capital charge that repays the plant, over the capital a run employs (its plant and its variable cost). A run that cannot be
     priced, or employs nothing, does not pay."""
-    variable = bill_goods(inputs[recipe], price, area_of, tile) + bill_hours(labour_hours[recipe], wage, tile) + rent
+    held_none = np.full(slot_goods.shape[1], np.nan)
+    inputs_bill = covered_inputs_at(recipe, tile, held_none, slot_goods, inputs, tools, labour_hours, np.ones((1, labour_hours.shape[1])), wage,
+                                    price, area_of, np.empty(tools.bid_goods.shape[1]))
+    variable = inputs_bill + bill_hours(labour_hours[recipe], wage, tile) + rent
     plant = bill_goods(plant_goods[recipe], price, area_of, tile) + bill_hours(plant_labour_hours[recipe], wage, tile)
     employed = plant + variable
     if not np.isfinite(employed) or employed <= 0.0:
@@ -372,7 +376,7 @@ def pays_after_recovery(recipe, tile, rent, held_expected, slot_goods, inputs, o
 
 @njit(**KERNEL)
 def restake_amounts(recipe_row, tile_row, shortfall, rent, held_expected, owner_of, owner_cash, slot_goods, inputs, outputs,
-                    revenue_outputs, plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, stake_share):
+                    revenue_outputs, plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, stake_share, tools):
     """What each producer row is restaked with (zero for the rows without a shortfall, `shortfall` <= 0), in row order:
     `entry.restake` (the shortfall, from the stake share of the owner's cash now, only where the run pays after recovery), not
     above the owner's budget, which is the stake share of the cash it held when its first producer came up and is spent down.
@@ -386,7 +390,7 @@ def restake_amounts(recipe_row, tile_row, shortfall, rent, held_expected, owner_
         if np.isnan(budget[owner]):
             budget[owner] = stake_share * max(0.0, owner_cash[owner])
         if not pays_after_recovery(recipe_row[row], tile_row[row], rent[row], held_expected[row], slot_goods, inputs, outputs,
-                                   revenue_outputs, plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate):
+                                   revenue_outputs, plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, tools):
             continue
         amount = min(min(shortfall[row], stake_share * max(0.0, owner_cash[owner])), budget[owner])
         if amount > 0.0:
