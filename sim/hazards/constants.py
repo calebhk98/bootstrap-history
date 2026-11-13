@@ -143,9 +143,10 @@ BANDITRY_TAKE_STRENGTH = declare(
         "portability of each kind of holding, guarding, visibility and "
         "the state's order. Tuned, not measured.")
 OUTPUT_RECOVERY_RATE = declare(
-    "OUTPUT_RECOVERY_RATE", 0.006, kind="engineering_estimate",
+    "OUTPUT_RECOVERY_RATE", 0.006, kind="temporary_heuristic",
     unit="dimensionless per year (base recovery toward output_factor "
-         "1.0)", source="Wikipedia 'Sack of Rome (1527)': population fell from over 55,000 to 10,000 and regained its pre-sack level around 1560, about 33 years, a gap of 0.8 closed at about 0.025 a year (population used as a proxy for output, our arithmetic and assumption). Model rate 0.006, or 0.012 at full military leverage, is 2 to 4x slower; a Roman sack recovery is fast because refugees return.", confidence="C",
+         "1.0)", source="Wikipedia 'Sack of Rome (1527)': population fell from over 55,000 to 10,000 and regained its pre-sack level around 1560, about 33 years, a gap of 0.8 closed at about 0.025 a year (population used as a proxy for output, our arithmetic and assumption). Model rate 0.006 is about 4x slower than that single case (0.012 at full military leverage, 2x); one city whose refugees returned is a weak proxy for output after a war, so the value is kept and stays labelled.", confidence="D",
+    retire="Complaint 671 follow-up: recovery from rebuilt capital and returning people, not a yearly rate",
     why="Base yearly recovery rate of output_factor after a war or "
         "other output shock, doubled at full military leverage (see "
         "comment above) - an armed empire recovers roughly twice as "
