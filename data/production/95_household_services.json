@@ -11,8 +11,8 @@
    "service": true,
    "unit_dimension": "count",
    "basis": "per hour of household work done for another household",
-   "yield_basis": "An hour of a servant's work does an hour of household work: the need counts hours (data/world/needs.json, household_work), so one hour gives one unit. Confidence D: a servant is taken to work at the pace of the household member whose hour she replaces.",
-   "conf": "D",
+   "yield_basis": "An hour of a servant's work does an hour of household work: the need counts hours (data/world/needs.json, household_work), so one hour gives one unit. Pass 11: this is an identity, one hour of work supplied is one hour of the household_work need counted (no empirical rate is involved, so no outside source applies); a servant is taken to work at the pace of the household member whose hour she replaces.",
+   "conf": "C",
    "requires_node": null
   },
   "cooked_meal_kg": {

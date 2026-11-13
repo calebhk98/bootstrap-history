@@ -17,8 +17,8 @@
    "service": true,
    "unit_dimension": "count",
    "basis": "one tonne of waste carried one kilometre on level ground by porters on foot",
-   "yield_basis": "crew_hours_per_tonne_km of the foot carriage mode, from sim/geography carriage_rates: porters carry a load of about 27 kg at about 22 km a day over a ten-hour working day. Print it with `python3 -c \"from sim.geography import api; print(api.carriage_rates(['foot', 'pack', 'cart']))\"`.",
-   "conf": "D",
+   "yield_basis": "crew_hours_per_tonne_km of the foot carriage mode, from sim/geography carriage_rates: porters carry a load of about 27 kg at about 22 km a day over a ten-hour working day. Pass 11 check: Wikipedia, Tlamemeh (https://en.wikipedia.org/wiki/Tlamemeh, opened) gives Mexica porters 'carrying on average 23 kilos' on 'a daily commute of 21 to 25 kilometers'; by one arithmetic step a tonne needs 1000 / 23 = 43 porters for 23 km a day, 10 hours each (the ten-hour day is an assumption, not in the page), which is 43 * 10 / 23 = 19 crew hours per tonne-km against the 16.8 here, same ballpark. Print it with `python3 -c \"from sim.geography import api; print(api.carriage_rates(['foot', 'pack', 'cart']))\"`.",
+   "conf": "C",
    "requires_node": null
   },
   "waste_haulage_by_pack_animal": {
