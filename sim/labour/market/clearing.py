@@ -36,7 +36,7 @@ ON_THE_JOB_SEARCH_SHARE = declare(
         "look while employed; not fitted.")
 
 
-SUPPLY_SOLVE_STEPS = 60      # a numerical bound: the bisection for the wage a rising supply meets a step of demand at
+SUPPLY_SOLVE_STEPS = 60      # a numerical bound: the bisection for the wage a rising supply meets the falling demand at
 
 
 def ask_floor(inputs: YearInputs, area: str, base_reservation: float) -> float:
@@ -94,31 +94,54 @@ def target_for_demand(reservation: float, offered: float, demand: Sequence[Tuple
     return reservation
 
 
+def demand_intervals(reservation: float, bids: Sequence[EmployerHoursBid]) -> List[Tuple[float, float, float]]:
+    """(lower end, cap, hours) of the demand the bids make above the reservation wage, lowest cap first: the hours of every
+    bid at one cap are summed, and each cap's hours are spread evenly over the wage interval from the next lower cap (the
+    reservation wage for the lowest) up to the cap. Bids under the reservation wage are never wanted at a payable wage."""
+    hours_at_cap: Dict[float, float] = {}
+    for bid in bids:
+        if bid.maximum_wage >= reservation:
+            hours_at_cap[bid.maximum_wage] = hours_at_cap.get(bid.maximum_wage, 0.0) + bid.hours
+    intervals = []
+    lower = reservation
+    for cap in sorted(hours_at_cap):
+        intervals.append((lower, cap, hours_at_cap[cap]))
+        lower = cap
+    return intervals
+
+
+def hours_wanted_at(wage: float, intervals: Sequence[Tuple[float, float, float]]) -> float:
+    """The hours employers want at a wage: each interval's hours in full at or below its lower end, none above its cap,
+    and falling in a straight line between (a zero-width interval wants all its hours up to its cap)."""
+    total = 0.0
+    for lower, cap, hours in intervals:
+        if wage <= lower:
+            total += hours
+        elif wage < cap:
+            total += hours * ((cap - wage) / (cap - lower))
+    return total
+
+
 def supply_target(reservation: float, supply: Callable[[float], float], bids: Sequence[EmployerHoursBid]) -> float:
     """The lowest wage at which the hours sold (`supply`, rising in the wage) cover the hours employers want at it
-    (bids taken highest maximum first): the reservation wage where they do already. Within a step of demand it is
-    the wage the supply reaches that step's hours at, so a small excess of hours moves the wage a little, where hours
-    all offered at the reservation wage move it all the way."""
-    caps = sorted({bid.maximum_wage for bid in bids if bid.maximum_wage >= reservation})       # lowest first
-    edges = [reservation] + caps
-    for index in range(len(edges)):      # the demand on (edges[index], edges[index + 1]] is that of the bids at or above edges[index + 1]
-        low = edges[index]
-        high = edges[index + 1] if index + 1 < len(edges) else None
-        wanted = math.fsum(bid.hours for bid in bids if bid.maximum_wage >= (high if high is not None else math.inf))
-        if high is None:
-            return low           # above every cap nobody wants an hour, so the wage cannot be above the highest cap
-        if supply(high) < wanted:
+    (`hours_wanted_at`, falling in the wage): the reservation wage where they do already. Demand and supply are both
+    continuous, so a small excess of demand over supply moves the wage a small way."""
+    intervals = demand_intervals(reservation, bids)
+    low = reservation
+    for _lower, high, _hours in intervals:
+        if supply(high) < hours_wanted_at(high, intervals):
+            low = high
             continue
-        if supply(low) >= wanted:
+        if supply(low) >= hours_wanted_at(low, intervals):
             return low
         for _step in range(SUPPLY_SOLVE_STEPS):
             middle = (low + high) / 2.0
-            if supply(middle) >= wanted:
+            if supply(middle) >= hours_wanted_at(middle, intervals):
                 high = middle
             else:
                 low = middle
         return high
-    return reservation
+    return low
 
 
 def pressure(last: float, reservation: float, offered: float, bids: Sequence[EmployerHoursBid]) -> float:

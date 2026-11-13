@@ -202,6 +202,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     crew_hours = carriage_opening_hours.of_merchants(setup, record, carriage, 1.0 / value_of_tonne if value_of_tonne > 0.0 else 0.0)
     record.labour.seed_workforce(labour_state.opening_workforce(      # the mint's capacity follows the money struck
         setup, record, sold_by_area, crew_hours))
+    labour_state.seed_opening_wages(record.labour.workforce, setup.opening_wages)
     record.labour.seed_hired_hours(opening_resting.resting_hours_held(
         opening_placement.capped_contracts(labour_state.producers_hours_by_employer(setup, record),
                                            {area: labour_state.people_by_trade(record.labour.workforce, area) for area in record.labour.workforce.workers},
