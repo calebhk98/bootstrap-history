@@ -850,8 +850,7 @@ Fixed here:
 - **An unpriced tool is costed by its fallback chain in placement and entry** (`tool_fallback.wear_cost_per_run`, `unit_cost.input_cost_per_run`,
   `entry_wear_kernel`; test `test_tool_wear_cost`). A tool with no price made every cost rule infinite, so a recipe was never placed or entered,
   though producers' own planning already covers a missing tool by the next tool or by hand (`tool_fallback.draws`). In Mexica, with no iron,
-  that kept cacao (the money's backing good) and the other recipes using iron tools from ever being made. On Norse it took the trimmed stage
-  from a falling price level to a steady one, and every settle gap but the rate's below its earlier value (`spin-up-trace --civ norse_900ad --stages`).
+  that kept cacao (the money's backing good) and the other recipes using iron tools from ever being made. One Norse run after it showed a steady price level and smaller gaps; the ensemble below shows that was one calm draw.
 
 Tried and not merged (branches pushed for reference):
 - `smooth-base-rate`: the rate's declared partial adjustment (`RATE_ADJUSTMENT_SHARE_PER_YEAR`) is overridden in nearly every year by three
@@ -870,6 +869,12 @@ Tried and not merged (branches pushed for reference):
   its target and the whole gap once it falls below, so the stock drifts for years and one catch-up purchase lands on the producers.
   Buying back each year's wear and closing a shortfall over years settled England's inventories but made one Norse run hungrier;
   not judged on single runs (see the chaos note below).
+
+**Correction on the measurements above.** The before-and-after figures in this update are single trajectories. A four-member
+ensemble of the head on Norse (`spin-up-trace --civ norse_900ad --stages --ensemble 4`; members differ only in households' cash at
+the rounding level) shows the end gaps spread over large factors between members, the unperturbed member among the calmest, and the
+price level still falling over the trimmed stage in every member. So the fixes above stand on their mechanisms and rule tests; what
+each did to settling is not established by one run, and the spin-up does not settle on the head.
 
 What still fails, and the evidence:
 - The run is chaotic, not only path-sensitive: changing the summation order of the close's input bill (last-digit
