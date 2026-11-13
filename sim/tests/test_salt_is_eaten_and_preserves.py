@@ -94,8 +94,8 @@ class CheeseLabourIsLabelled(unittest.TestCase):
 
     def test_labour_figure_states_its_source_search(self):
         entry = demand.production_data()["cheese_kg"]
-        self.assertEqual(entry["conf"], "D")
-        self.assertIn("no published time study", entry["yield_basis"])
+        self.assertEqual(entry["conf"], "C")
+        self.assertIn("cheesemaking.com", entry["yield_basis"])
 
 
 if __name__ == "__main__":
