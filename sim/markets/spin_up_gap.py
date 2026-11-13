@@ -28,11 +28,27 @@ def change_gap(new, old, floor=0.0):
     return abs(new - old) / base
 
 
+def price_gaps(new_prices, old_prices):
+    """{good: change} for the goods priced last year: a good priced in both years by its relative change, one priced last
+    year and not now by a whole change; a good with no price last year is skipped."""
+    return {good: 1.0 if new_prices.get(good) is None else change_gap(new_prices[good], old)
+            for good, old in old_prices.items() if old is not None and old > 0.0}
+
+
 def price_gap(new_prices, old_prices):
-    """The largest relative change among the watched goods: one priced in both years by its relative change, one priced
-    last year and not now by a whole change; a good with no price last year is skipped."""
-    return max((1.0 if new_prices.get(good) is None else change_gap(new_prices[good], old)
-                for good, old in old_prices.items() if old is not None and old > 0.0), default=0.0)
+    """The largest change among the watched goods (`price_gaps`); none when none was priced last year."""
+    return max(price_gaps(new_prices, old_prices).values(), default=0.0)
+
+
+def worst_price_change(states):
+    """(good, change): the watched good with the largest change between any two consecutive `states`; (None, 0.0) when
+    no good changed or fewer than two states are given."""
+    worst = (None, 0.0)
+    for before, after in zip(states, states[1:]):
+        for good, gap in price_gaps(after["prices"], before["prices"]).items():
+            if gap > worst[1]:
+                worst = (good, gap)
+    return worst
 
 
 def state_gaps(before, after):

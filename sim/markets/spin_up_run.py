@@ -5,24 +5,16 @@ data files and on the source this module can reach, port_key.SPIN_UP_SOURCE_MODU
 import collections
 
 from sim.agents.api import PURSE_CURRENCY
-from sim.constants import declare
 from sim.economy import api as economy_api
-from sim.economy.api import EconomyYearInputs
 from sim.prices.api import solve_cache
 
-from . import port_sites
 from .port_key import spin_up_key
 from .port_trace import TraceRows
 from .spin_up_trace_cache import keep_trace
 from .spin_up import (SPIN_UP_CACHE_DIRECTORY, SPIN_UP_MAXIMUM_YEARS, SPIN_UP_MEASURED_YEARS, SPIN_UP_TOLERANCE,
                       SPIN_UP_TRIMMED_YEARS, spin_up_years)
+from .spin_up_year import SPIN_UP_WATCHED_GOODS, watched_goods, year_inputs, year_state   # the first is read from here by the tools
 from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, window_gaps
-
-SPIN_UP_WATCHED_GOODS = declare(
-    "SPIN_UP_WATCHED_GOODS", 12, kind="temporary_heuristic", unit="goods", source=None, confidence="D", retire="Complaints/473",
-    why="The spin-up reads whether prices have settled from the goods the opening basket spends most on; this many cover "
-        "most of the spending, and a settled-ness test over every good would be dominated by thinly traded ones.")
-
 
 def spin_up_cache_key(setup):
     years = spin_up_years()
@@ -50,11 +42,8 @@ def spun_up(setup):
 def spin_up(economy, trace=None):
     """Hidden years from the opening until prices and the interest rate settle; then the price level is rebased to one.
     `trace` (port_trace.TraceRows), when given, gets a row for each first-stage year."""
-    basket = economy_api.opening_quantities(economy)
-    prices = economy_api.opening_prices_of(economy)
-    watched = sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:SPIN_UP_WATCHED_GOODS]
-    inputs = EconomyYearInputs(year=0, population_by_tile={},
-                        yield_factor_by_producer=port_sites.crop_yields(economy), engine_orders={})
+    watched = watched_goods(economy)
+    inputs = year_inputs(economy)
     first_stage = settle(economy, inputs, watched, trace)
     economy_api.trim_workforce_to_expected_hours(economy)
     final_states = settle_trimmed(economy, inputs, watched)
@@ -99,10 +88,8 @@ def settle_trimmed(economy, inputs, watched):
     states = collections.deque(maxlen=int(SPIN_UP_MEASURED_YEARS))
     for _year in range(spin_up_years()[1]):
         outcome = economy.step(inputs)
-        state = economy_api.spin_up_state(economy, outcome)
-        state.update(price_level=outcome.basket_price_level, rate=economy_api.interest_rate(economy),
-                     prices={good: outcome.prices[good] for good in watched if outcome.prices.get(good) is not None})
-        states.append(state)
+        states.append(year_state(economy_api.spin_up_state(economy, outcome), outcome.basket_price_level,
+                                 economy_api.interest_rate(economy), outcome.prices, watched))
     return list(states)
 
 
