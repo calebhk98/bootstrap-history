@@ -25,9 +25,8 @@ class SwitchRules(NamedTuple):
     """The switching rule's constants (switching.py declares them)."""
     consideration_floor: float     # share of a trade's workers who reconsider it in a year
     remaining_share: float         # share of a career still ahead of an established worker
-    plan_tolerance: float          # years of subsistence a destination's income may move before odds are worked out again
     taste: float                   # years of subsistence per e-fold of choice odds
-    negligible: float              # share of the workers weighing a switch under which a destination is not trained for
+    negligible: float              # share of the workers weighing a switch trimmed off each destination's odds (a destination under it is not trained for)
     retraining_share: float        # share of the training years a related trade takes
     rounds: int                    # rounds of choices a year
     apprentices_per_master: float  # trainees taught at once per practising worker
