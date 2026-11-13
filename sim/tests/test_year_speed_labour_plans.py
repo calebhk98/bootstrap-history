@@ -1,6 +1,6 @@
 """Numba port, labour switching: the moves an area plans in a round (`switching._planned_moves`, over arrays by
 `switching_kernel.plan_area`) agree with the plain Python rules kept in `labour_switching_reference`, over several
-rounds in which destinations' incomes after training move by less and by more than the plan-reuse tolerance; no game.
+rounds in which destinations' incomes after training move or stay put (a plan is reused only while none has changed); no game.
 
 The kernel sums the logit weights left to right where the plain code used `math.fsum`, so amounts agree to a relative
 tolerance."""
