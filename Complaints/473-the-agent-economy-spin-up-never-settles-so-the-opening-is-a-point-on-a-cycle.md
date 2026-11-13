@@ -859,5 +859,6 @@ What still fails, and the evidence:
 - Silver now trades at parity far above its making cost (`price_over_cost_coin_metal`), Complaint 519's question in another form.
 - Hunger sits on fertility-0 tiles whose people have no plot and whose markets sell out (`household_hours_year.usable_plot_hours`).
 
-Measure: `python3 sim/simulator.py opening-checks --civs <civ>` on the branch head, and the settle gaps by quantity in each opening's saved
-`spin_up_result["gaps"]`.
+Measure: `python3 sim/simulator.py spin-up-trace --civ <civ> --stages` prints both stages year by year (settle quantities, money by
+holder, watched prices) and the gap by quantity over the measured years, with the watched good that moves most;
+`python3 sim/simulator.py opening-checks --civs <civ>` reads the opening's own saved `spin_up_result`.
