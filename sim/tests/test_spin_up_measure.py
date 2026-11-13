@@ -7,7 +7,7 @@ import types
 import unittest
 from unittest import mock
 
-from sim.markets import spin_up, spin_up_gap, spin_up_run
+from sim.markets import spin_up, spin_up_gap, spin_up_run, spin_up_year
 from sim.book import Book, GoodsMove
 from sim.economy import year_close
 from sim.economy.spin_up_state import food_floor_units, spin_up_state as year_state_of   # a pure read of a record, not a builder
@@ -130,7 +130,7 @@ class OrderTests(unittest.TestCase):
         api = spin_up_run.economy_api
         first = {"settled": True, "years": 3, "gap": 0.0}
         with mock.patch.object(api, "opening_quantities", lambda economy: {}), \
-                mock.patch.object(spin_up_run.port_sites, "crop_yields", lambda economy: {}), \
+                mock.patch.object(spin_up_year.port_sites, "crop_yields", lambda economy: {}), \
                 mock.patch.object(api, "trim_workforce_to_expected_hours", lambda economy: calls.append("trim")), \
                 mock.patch.object(api, "finish_spin_up", lambda economy: calls.append("finish")), \
                 mock.patch.object(api, "note_spin_up_result",

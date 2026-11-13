@@ -1178,9 +1178,14 @@ def main():
     subparser.add_argument("--civ", default="", help="civilisation id (default: the default one)")
     subparser.add_argument("--fixture", default="", choices=("small", "stationary"),
                            help="step the hand-built fixture economy instead of a civilisation's spin-up")
-    subparser.add_argument("--years", type=int, default=60, help="years to run (default 60)")
+    subparser.add_argument("--years", type=int, default=60, help="years to run (default 60; ignored with --stages)")
+    subparser.add_argument("--stages", action="store_true", help="replay the spin-up as the run takes it: the first stage "
+                           "for its full years without the early stop, the workforce trim, the trimmed stage; print "
+                           "each year's settle quantities, rate, wage, money and watched prices, then the settle gaps "
+                           "the opening ends with (about 4 minutes)")
     subparser.add_argument("--csv", default="", help="also write the year's columns to this CSV file (macro columns and "
-                           "money by holder for a civilisation; the fixture's columns with --fixture)")
+                           "money by holder for a civilisation; the fixture's columns with --fixture; every --stages "
+                           "column, one column per watched good)")
     subparser = sub.add_parser("spin-up-sensitivity", help="run a civilisation's spin-up under variants of how the economy "
                                "adjusts and print each variant's price-level and wage drift, cycle amplitude and period; "
                                "one spin-up per variant (minutes each on Rome)")

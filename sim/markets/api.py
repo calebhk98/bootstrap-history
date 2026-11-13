@@ -23,6 +23,19 @@ def spin_up_trace(game, years):
 	return trace(game, years)
 
 
+def spin_up_stages(game):
+	"""(watched goods, generator of one row per year) of the full-length hidden spin-up of the opening `game` saved,
+	stage by stage as the run takes it."""
+	from .spin_up_stages import replay_opening
+	return replay_opening(game.view("agent_opening_setup")())
+
+
+def spin_up_end_gaps(rows):
+	"""The settle gaps the opening ends with, from the rows `spin_up_stages` gave (spin_up_stages.end_gaps)."""
+	from .spin_up_stages import end_gaps
+	return end_gaps(rows)
+
+
 def sensitivity_table(game, years, skip, variants=None):
 	from .port_trace import sensitivity_table as table
 	return table(game, years, skip, variants)
