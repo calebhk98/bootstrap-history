@@ -93,6 +93,15 @@ before and the five civilisations' opening checks took about half an hour togeth
 does not install `requirements.txt`, it should (`pip install -r requirements.txt`). `sim/jit.py` says its settings keep a
 game reproducible with or without numba; that was not checked here.
 
+The setup script to add to the "Full Access" cloud environment (its settings, Setup script); it was proposed from
+the session but could not be approved from the phone app. It runs from the directory holding the checkouts, and was
+tested there:
+
+```bash
+#!/bin/bash
+if [ -d bootstrap-history ]; then pip install -q -r bootstrap-history/requirements.txt; fi
+```
+
 ## 6. A new trade's crew that never runs never learns (Mexica's tools)
 
 **What was found** (Mexica at d77138668, scratch probes; no committed command prints a producer's practice by year).
