@@ -241,8 +241,8 @@ approaches. Count what is left with the command at the top.
 For the code side, two findings this pass could not apply as data:
 - `silver_smelted_native_kg`: Cohen et al., Historical Metallurgy 44(2) 2010 (Cuiza huayrachina) gives about 0.5 kg
   charcoal a kg of charge and 0.4 furnace hours a kg, against 0.3 and 0.113 held. Applying them moves the starting-wage
-  metal-cost spread past the limit in `sim/tests/test_opening_wage_anchor.py`, so the values were kept and the finding is
-  in the row's basis. A sourced input should not be held back by an outcome check; the check or the route needs a look.
+  metal-cost spread past the limit in `sim/tests/test_opening_wage_anchor.py`. The sourced values are applied and that
+  test now fails (1.257 against 1.25); the check or the route needs a look.
 - The Las Medulas hydraulic works: opened sources derive about 50,000 build hours against the 500,000 of
-  `AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC` in `sim/world/deposits.py`, which a test ties to the gold rows; the
-  arithmetic is in the `gold_kg` basis.
+  `AQUEDUCT_CONSTRUCTION_HOURS_ALLUVIAL_HYDRAULIC` in `sim/world/deposits.py`. Applied: the constant and both gold
+  rows now hold 52,400 hours (channel only, a lower bound); the arithmetic is in the `gold_kg` basis.
