@@ -90,7 +90,10 @@
    "status": "historic",
    "conf": "C",
    "source": "Mahd adh Dhahab ('Cradle of Gold'), Hejaz, an ancient gold, silver and copper working; Luce, O'Neil and Rye, Mahd adh Dhahab: Precambrian epithermal gold deposit in Saudi Arabia, US Geological Survey Open-File Report 78-388 (1978), https://pubs.usgs.gov/publication/ofr78388. Silver is a minor product.",
-   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "contained_tonnes": 31.17,
+   "contained_basis": "Recorded production 1939 to 1954 of 1,002,029 troy ounces of silver x 31.1035 g = 31.17 t silver (the same period gave 765,768 oz gold); the ancient workings (about 950 BC and 750 to 1258 AD) have no production figure, and no reserve is given, so a lower bound",
+   "contained_source": "USGS Open-File Report 76-865, Geology and ore deposits of the Mahd adh Dhahab district, Kingdom of Saudi Arabia, https://pubs.usgs.gov/of/1976/0865/report.pdf : \"The early production is not known, but the recorded production in 1939-54 is 765,768 fine ounces gold and 1,002,029 ounces silver.\""
   },
   {
    "id": "wadi_sawawin_iron",
@@ -156,7 +159,10 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "A",
-   "source": "Zawar, Udaipur, Rajasthan: lead-zinc-silver mines with a Mauryan-period phase (radiocarbon on mine timbers, late first millennium BC) and a second phase from the fourteenth century, where medieval zinc distillation was practised; Craddock and Hegde, Early Indian Metallurgy (Zawar, Agucha, Dariba), https://esamskriti.com/e/Culture/Indian-Culture/ZINC-Mining-in-Zawar-region-of-Rajasthan~Interview-with-Dr.-Paul-T.-Craddock-1.aspx."
+   "source": "Zawar, Udaipur, Rajasthan: lead-zinc-silver mines with a Mauryan-period phase (radiocarbon on mine timbers, late first millennium BC) and a second phase from the fourteenth century, where medieval zinc distillation was practised; Craddock and Hegde, Early Indian Metallurgy (Zawar, Agucha, Dariba), https://esamskriti.com/e/Culture/Indian-Culture/ZINC-Mining-in-Zawar-region-of-Rajasthan~Interview-with-Dr.-Paul-T.-Craddock-1.aspx.",
+   "contained_tonnes": 752400,
+   "contained_basis": "Reserve of 62.7 Mt at 1.2% lead = 752,400 t lead (Hindustan Zinc, FY2025-26); modern company reserve, ancient and past output not added, so a lower bound",
+   "contained_source": "Hindustan Zinc, Integrated Annual Report FY2025-26, Business Snapshot, https://integratedreport.hzlindia.com/annual-integrated-report-fy-2025-26/business-snapshot.html : \"Zawar Mines Udaipur, Rajasthan 103.7 Mnt Resource 62.7 Mnt Reserves Reserve metal grades 2.5% Zinc 1.2% Lead 21 g/MT Silver\""
   },
   {
    "id": "zawar_silver",
@@ -169,7 +175,10 @@
    "status": "historic",
    "conf": "C",
    "source": "Zawar, Rajasthan: silver from the argentiferous galena, as the lead entry; Craddock and Hegde, Early Indian Metallurgy. Silver recovery here is not independently re-checked.",
-   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "contained_tonnes": 1317,
+   "contained_basis": "Reserve of 62.7 Mt at 21 g/t silver = 1,317 t silver (Hindustan Zinc, FY2025-26); the company does not say whether the silver is recovered; ancient and past output not added, so a lower bound",
+   "contained_source": "Hindustan Zinc, Integrated Annual Report FY2025-26, Business Snapshot, https://integratedreport.hzlindia.com/annual-integrated-report-fy-2025-26/business-snapshot.html : \"Zawar Mines Udaipur, Rajasthan 103.7 Mnt Resource 62.7 Mnt Reserves Reserve metal grades 2.5% Zinc 1.2% Lead 21 g/MT Silver\""
   },
   {
    "id": "chadormalu_iron",
@@ -482,7 +491,10 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Zimapan (Hidalgo), a lead-silver-zinc district worked from the sixteenth century on older native workings."
+   "source": "Zimapan (Hidalgo), a lead-silver-zinc district worked from the sixteenth century on older native workings.",
+   "contained_tonnes": 20700,
+   "contained_basis": "Two recorded lead figures added: a bonanza of 1793 in the Lomo de Toro mine that yielded 5,700 tons of lead, and 15,000 tons of lead yielded by the district from 1945 to 1949 (tons taken as metric); all other years unrecorded, so a lower bound",
+   "contained_source": "USGS Professional Paper 284, Geology and ore deposits of the Zimapan mining district, State of Hidalgo, Mexico, https://pubs.usgs.gov/pp/0284/report.pdf : \"a bonanza struck in the Lomo de Toro mine yielded 5,700 tons of lead\"; \"from 1945 to 1949 the district probably yielded some 15,000 tons of lead and about the same amount of zinc\""
   },
   {
    "id": "taxco_silver",
