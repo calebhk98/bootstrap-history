@@ -14,7 +14,8 @@ from sim.jit import njit
 from .exact_sum import exact_sum
 from .plan_bids import place_bids
 from .plan_tools import run_hours
-from .plan_sums import held_value_of, hours_bill, input_bill, revenue_per_run
+from .plan_sums import held_value_of, hours_bill, revenue_per_run
+from .plan_wear import covered_input_bill
 from .year_arrays_costs import KERNEL, price_in, share_working
 
 _ROOT_TWO = math.sqrt(2.0)
@@ -112,7 +113,7 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
     good_out = np.full((count, bid_width), -1, dtype=np.int64)
     quantity_out, price_out = np.zeros((count, bid_width)), np.zeros((count, bid_width))
     budget_out, worth_out = np.zeros((count, bid_width)), np.zeros((count, bid_width))
-    market, plan_price = np.empty(bid_width), np.empty(good_slots)
+    market, plan_price = np.empty(bid_width), np.empty(bid_width)
     expected_out = np.empty(good_slots)
     made = np.empty(good_slots)
     made_value = np.empty(good_slots)
@@ -124,7 +125,6 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
             continue
         recipe, tile = recipe_row[row], tile_row[row]
         market[:], plan_price[:], expected_out[:], made[:], made_value[:] = np.nan, np.nan, np.nan, 0.0, 0.0
-        priced = True
         for slot in range(good_slots):
             good = slot_goods[recipe, slot]
             if good < 0:
@@ -140,19 +140,20 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
                 made_value[slot] = revenue_outputs[recipe, good]
                 held = held_expected[row, slot]
                 expected_out[slot] = held if not np.isnan(held) else price_in(offered, area_of, good, tile)
-            if inputs[recipe, good] > 0.0:
-                if np.isnan(live):
-                    priced = False
-                else:
-                    plan_price[slot] = held_expected[row, slot] if not np.isnan(held_expected[row, slot]) else live
+            if inputs[recipe, good] > 0.0 and not np.isnan(live):
+                plan_price[slot] = held_expected[row, slot] if not np.isnan(held_expected[row, slot]) else live
+        for place in range(good_slots, bid_width):          # the fallback goods that are not inputs
+            good = tools.bid_goods[recipe, place]
+            market[place] = price_in(price, area_of, good, tile) if good >= 0 else np.nan
+            plan_price[place] = market[place]
         revenue = revenue_per_run(recipe, slot_goods, revenue_outputs, expected_out, terms) * yield_factor[row]
-        input_cost = input_bill(recipe, slot_goods, inputs, tools.input_order, plan_price)
+        input_cost = covered_input_bill(recipe, row, tile, slot_goods, inputs, tools, labour_hours, hours_scale, wage, plan_price)
         labour_cost, total_hours, claimed_bill, hours_priced = hours_bill(
             row, recipe, tile, slot_trades, tools.hours_order, labour_hours, hours_scale, wage, hour_terms)
-        variable = input_cost + labour_cost + rent[row] if priced and hours_priced else np.inf
+        variable = input_cost + labour_cost + rent[row] if hours_priced else np.inf
         if capacity[row] <= 0.0 or revenue <= 0.0 or not np.isfinite(variable):
             continue
-        market_cost = input_bill(recipe, slot_goods, inputs, tools.input_order, market)
+        market_cost = covered_input_bill(recipe, row, tile, slot_goods, inputs, tools, labour_hours, hours_scale, wage, market)
         held_value = held_value_of(row, recipe, slot_goods, inputs, tools.input_order, capacity[row], stock, market, terms)
         paid_now = market_cost + labour_cost
         affordable = (max(cash[row], 0.0) + held_value) / paid_now if paid_now > 0.0 else capacity[row]
@@ -183,9 +184,6 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
                     hours_out[row, slot] = runs * run_hours(labour_hours, hours_scale, recipe, row, trade)
                     ceiling_out[row, slot] = room / total_hours if claimed_bill <= 0.0 else wage[trade, tile] * room / claimed_bill
         live_variable = market_cost + labour_cost + rent[row]
-        for place in range(good_slots, bid_width):          # the fallback goods that are not inputs
-            good = tools.bid_goods[recipe, place]
-            market[place] = price_in(price, area_of, good, tile) if good >= 0 else np.nan
         place_bids(row, recipe, tile, runs, max(cash[row], 0.0) - runs * labour_cost, revenue / ratio - live_variable, live_variable,
                    stock, market, slot_goods, inputs, tools, labour_hours, hours_scale, wage, good_out, quantity_out, price_out, budget_out,
                    worth_out, wanted_at, placed, order_place, terms)
