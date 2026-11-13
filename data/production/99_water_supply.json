@@ -28,7 +28,7 @@
    "unit_dimension": "mass",
    "carriage_km": 0.0,
    "basis": "per tonne of water drawn from a dug well by bucket and windlass",
-   "yield_basis": "A tonne is fifty 20 kg buckets; one drawn from 10 m takes about a minute on a windlass, so about 50 minutes, 0.8 labourer hours. The lift work is only 1000 * 9.81 * 10 = 98 kJ, so time, not energy, is the cost. The well is dearer per tonne than the river bank's carry (water_kg) where the river is close and cheaper where it is far, which this entry does not model; the choice between ways is the household mix's. An estimate of the work rate.",
+   "yield_basis": "A tonne is fifty 20 kg buckets; one drawn from 10 m takes about a minute on a windlass, so about 50 minutes, 0.8 labourer hours. The lift work is only 1000 * 9.81 * 10 = 98 kJ, so time, not energy, is the cost. The well is dearer per tonne than the river bank's carry (water_kg) where the river is close and cheaper where it is far, which this entry does not model; the choice between ways is the household mix's. An estimate of the work rate. Pass 11 partial: Seamus Collins, Hand-dug shallow wells (SKAT, 2000, https://susana.org/_resources/documents/default/3-4183-7-1617201562.pdf, opened as text) describes hand-dug wells 'with a diameter of 1.0-1.5m', excavated at 1.2-1.3 m, which matches the 1.2 m shaft; no source opened for the 20 kg bucket drawn in a minute, the 15 hours a cubic metre of digging or the 50-year life (the IISc and WaterAid pages that give digging rates returned errors), so conf stays D.",
    "requires_node": null,
    "conf": "D"
   },
