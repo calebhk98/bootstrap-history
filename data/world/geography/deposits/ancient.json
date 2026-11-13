@@ -287,7 +287,10 @@
    "surveyed_lat": 35.09,
    "surveyed_lon": 32.88,
    "surveyed_source": "Skouriotissa, Wikipedia",
-   "order": 14
+   "order": 14,
+   "contained_tonnes": 72000,
+   "contained_basis": "Derived lower bound: about 4 Mt of ancient copper slag, all produced in antiquity, times (copper in the ore less copper lost in slag). Assumptions, labelled: one tonne of ore per tonne of slag; ore at 2.5% Cu (midpoint of the 0.5 to 4.5% range given for the ore bodies); slag at 0.7% Cu (the Tonglushan figure used as a stand-in, no Cyprus slag assay was opened) gives 4 Mt x (0.025 - 0.007) = 72,000 t. Oxidised enriched ore up to 20% Cu would raise this",
+   "contained_source": "Kassianidou 2013, Cyprus copper, https://www.ancientportsantiques.com/wp-content/uploads/Documents/PLACES/Crete-Cyprus/CyprusCopper-Kassianidou2013.pdf : \"4 million tons of copper slag in 40 different locations ... All 4 million tons of slag, therefore, had been produced in Antiquity\"; Cyprus Copper Itinerary, https://www.visitcyprus.com/files/cultural_routes/Cyprus_copper_itinerary_2015.pdf : \"Their average copper content ranges from 0.5 to 4.5 per cent\"; China Daily, Tonglushan, https://www.chinadaily.com.cn/a/202606/16/WS6a3083cfa310986e2b4601cf_2.html : slag \"contained only 0.7 percent copper\""
   },
   {
    "id": "italia_lead_generic",
@@ -394,7 +397,10 @@
    "surveyed_lat": 38.08,
    "surveyed_lon": -3.63,
    "surveyed_source": "Linares, Jaen, Wikipedia",
-   "order": 18
+   "order": 18,
+   "contained_tonnes": 4666667,
+   "contained_basis": "Derived from the Cartagena silver above (35 t a year x 308 years = 10,780 t Ag) divided by the 2.31 kg of silver per tonne of lead used in this repository's own hispania_silver row (Wood 2022, not re-opened this pass) = 4.67 Mt lead. Assumes all that silver came from argentiferous galena at that ratio; a rough upper-middle value, not a count of lead pigs",
+   "contained_source": "Geochemical Perspectives Letters, Albarede et al., https://www.geochemicalperspectivesletters.org/article1613 : \"produced 35 tons of silver each year\"; Wikipedia, Sierra Minera de Cartagena-La Union, https://en.wikipedia.org/wiki/Sierra_Minera_de_Cartagena-La_Uni%C3%B3n : in Roman times silver in argentiferous galena, \"along with it, enormous quantities of lead were extracted\""
   },
   {
    "id": "laurion_lead",
@@ -487,7 +493,10 @@
    "surveyed_lon": -0.98,
    "surveyed_source": "Cartagena (Carthago Nova) silver district, Wikipedia",
    "order": 22,
-   "working_unknown": "UNKNOWN (C): no source read gives a working date or a total endowment. Strabo 3.2.10 citing Polybius attests working on a large scale by the second century BCE (about 40,000 workers); Kay 2014, reported in an OUP chapter and a Geochemical Perspectives Letters article, infers about 35 t of silver a year from the 25,000 drachmae a day, a yearly rate at one date, not a total. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. Primary to obtain: Domergue 1990."
+   "working_unknown": "UNKNOWN (C): no source read gives a working date or a total endowment. Strabo 3.2.10 citing Polybius attests working on a large scale by the second century BCE (about 40,000 workers); Kay 2014, reported in an OUP chapter and a Geochemical Perspectives Letters article, infers about 35 t of silver a year from the 25,000 drachmae a day, a yearly rate at one date, not a total. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. Primary to obtain: Domergue 1990.",
+   "contained_tonnes": 10780,
+   "contained_basis": "Rate times working years: 35 t of silver a year from the Carthago Nova region (Strabo quoting Polybius) x 308 years from the Roman capture of Cartagena in 209 BC to the end of the 1st century AD, when the Roman mines were abandoned = 10,780 t. Assumptions: the Polybius-era rate held for the whole period; Rio Tinto and the rest of Hispania are not counted",
+   "contained_source": "Geochemical Perspectives Letters, Albarede et al., https://www.geochemicalperspectivesletters.org/article1613 : ore deposits near Carthago Nova \"produced 35 tons of silver each year\" (Strabo 3.2.10, Kay 2014); Wikipedia, Sierra Minera de Cartagena-La Union, https://en.wikipedia.org/wiki/Sierra_Minera_de_Cartagena-La_Uni%C3%B3n : capture of Cartagena in 209 BC; mining \"abandoned\" at \"the end of the 1st century\""
   },
   {
    "id": "laurion_silver",
@@ -725,7 +734,10 @@
    "status": "historic",
    "source": "Wikipedia coordinate; one of the oldest copper workings; no endowment figure.",
    "conf": "B",
-   "order": 32
+   "order": 32,
+   "contained_tonnes": 19000,
+   "contained_basis": "Two modern production figures of the Timna copper works added: 5,000 tons (pure copper equivalent) in 1962 and 14,000 tons in 1968 (tons taken as metric); the other years of 1955 to 1976, and the ancient output, are unrecorded here, so a lower bound",
+   "contained_source": "Encyclopaedia Judaica via Encyclopedia.com, Timna, https://www.encyclopedia.com/religion/encyclopedias-almanacs-transcripts-and-maps/timna : the works \"increased its production from 5,000 tons (equivalent of pure copper) in 1962 to 14,000 tons in 1968\""
   },
   {
    "id": "falun_copper",
