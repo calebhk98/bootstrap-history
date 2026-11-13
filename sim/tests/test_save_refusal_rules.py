@@ -32,7 +32,7 @@ def valid_save():
     blob.update({"_civ": "rome_100ad", "_civ_live": {}, "_weights": {}, "_immortal": True,
                  "_rng": [3, list(random.Random(1).getstate()[1]), None]})
     blob["modules"]["scenario"] = {"year": 115, "fog": False}
-    return blob, SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"})
+    return blob, SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"}, view=lambda name: (lambda: {"smith": None, "labourer": None}))
 
 
 blob, game = valid_save()

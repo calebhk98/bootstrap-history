@@ -7,6 +7,7 @@ from types import SimpleNamespace
 
 from sim.content.api import service_life_years
 from sim.content.tree_source import NO_MODS_DIRECTORY
+from sim.tests import repository_tables
 
 from sim.agents import budget_lines
 from sim.book import Book, GoodsMove
@@ -29,7 +30,8 @@ def storage_economy(capital_asset):
 
 class ShipPurchases(unittest.TestCase):
     def test_fleet_planning_does_not_open_an_unopened_economy(self):
-        world = SimpleNamespace(production=SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"})),
+        world = SimpleNamespace(production_catalog=repository_tables.production_catalog,
+                                production=SimpleNamespace(techniques_granted=lambda: frozenset({"sea_mortise_tenon"})),
                                 materials=SimpleNamespace(service_life_years=lambda: service_life_years(NO_MODS_DIRECTORY)))
         port = EconomyPort(world)
         port._opening = True
@@ -39,12 +41,12 @@ class ShipPurchases(unittest.TestCase):
         self.assertGreater(goods[0]["life"], 0.0)
 
     def test_a_new_good_without_a_curated_commodity_group_can_be_bought(self):
-        world = SimpleNamespace(materials=SimpleNamespace(commodity_map=lambda: {"iron_bar_kg": "iron"}))
+        world = SimpleNamespace(production_catalog=repository_tables.production_catalog, materials=SimpleNamespace(commodity_map=lambda: {"iron_bar_kg": "iron"}))
         port = EconomyPort(world)
         self.assertEqual(port.materials_in("warship"), ["warship"])
         self.assertEqual(port.materials_in("iron"), ["iron_bar_kg"])
 
-    def test_navy_buys_missing_hulls_and_keeps_only_the_crew_on_payroll(self):
+    def test_navy_buys_missing_hulls_and_pays_a_crew_only_for_hulls_held(self):
         world = flat_namespace(
             government=lambda: SimpleNamespace(record=SimpleNamespace(levers={})),
             territory=lambda: SimpleNamespace(coast_km=100.0),
@@ -55,13 +57,14 @@ class ShipPurchases(unittest.TestCase):
             commodity_of=lambda material: material,
             material_cost=lambda material, tonnes: tonnes * 1000000.0)
         line, = budget_lines.navy_line(world)
-        self.assertEqual(line.labour, {"sailor": 60.0})
+        self.assertEqual(line.labour, {})
         self.assertAlmostEqual(line.materials.get("test_hull", 0.0), 0.001)
         self.assertGreater(line.material_cost, 0.0)
         world.fleet_goods = lambda: [{"material": "test_hull", "life": 20.0,
                                      "held": 1.0, "crew": {"sailor": 60.0}}]
         replacement, = budget_lines.navy_line(world)
         self.assertAlmostEqual(replacement.materials["test_hull"], 0.001 / 20.0)
+        self.assertEqual(replacement.labour, {"sailor": 60.0})
         world.territory = lambda: SimpleNamespace(coast_km=0.0)
         self.assertEqual(budget_lines.navy_line(world), [])
 

@@ -1,0 +1,39 @@
+# A novice crew's spoilage share is a chosen figure
+
+**Status:** closed - sourced as a ballpark derivation (0.2)
+
+**What is wrong now.** A crew still learning a recipe needs more hours per run (`sim/economy/practice.py` `hours_multiplier`, the learning curve) and
+loses part of its output: `practice.usable_output_share` takes the extra effort of the practised hours over the booked ones and spoils
+`SCRAPPED_SHARE_OF_EXTRA_EFFORT` of it, as a lower yield factor (`practice.yield_after_practice`; `producers.with_practised_yield` for the plain
+record, `year_arrays_producers.practised_yields` for the kernels). The share is an even split chosen by the author (confidence D): no source states how
+much of a new crew's extra effort is slower work and how much is work redone or thrown away.
+
+**What it would take.** A sourced split of a new crew's extra effort into slower work and scrap (Thornton and Thompson on quality learning in Liberty
+shipbuilding, or a defect-rate study of a new line), opened and cited; then the constant takes its value and drops `temporary_heuristic`.
+`python3 sim/constants.py --burndown` lists it.
+
+**Searched, no source found.** Opened and read in full text:
+- Levitt, List and Syverson 2013 (JPE 121(4)), NBER w18017 PDF (nber.org/system/files/working_papers/w18017/w18017.pdf). It
+  measures defects per vehicle only: "defects per vehicle fall more than 80 percent in the first eight weeks of production", and
+  a learning exponent of about 0.3 (defects halve per tenfold cumulative output). It states it does not measure unit cost or hours,
+  because line speed is driven by demand and calendar effects. With no fall in hours over the same period, no split follows.
+- Thompson 2001 working paper "How Much Did the Liberty Shipbuilders Learn?" (econwpa.ub.uni-muenchen.de/econ-wp/dev/papers/9712/9712001.pdf):
+  finds the Calship gain in output per worker came with a reduction in quality (fracture probability), so quality fell as speed
+  rose; the opposite sign to a scrap share of novice effort, and no split.
+- Not opened (abstract or record only, paywalled): Thornton and Thompson 2001 (AER 91(5)) and Hatch and Mowery 1998 (Management
+  Science 44(11)). Nothing is cited from them.
+Still needed: a study giving both the fall in hours and the fall in scrap or rework over one learning period, whose full text is opened.
+
+Also tried and nothing usable (opened): the AWS Inspection Trends article on pipe welding quality (aws.org, no rates by welder
+experience), Wikipedia Learning curve (hours only), a Wharton summary of turnover and smartphone failures (0.74 to 0.79 percent more
+product failure per point of weekly turnover: field failures, no scrap split). Searches for pottery, welding and new-line scrap by
+tenure returned only vendor blogs with no measured rates. Still open; confidence stays D.
+
+Split from Complaint 644, which wired the curve into spoilage.
+
+**Resolved (ballpark).** `SCRAPPED_SHARE_OF_EXTRA_EFFORT` 0.5 to 0.2, confidence C. Hours: fabrico.io/blog/operator-onboarding-checklist/
+(opened) gives new-operator productivity targets of 50-60% of standard in days 1-30, so 1 / 0.55 = 1.82 hours per unit, extra 0.82.
+Scrap: ifactoryapp.com/industries/automotive-manufacturing/gigafactory-cell-yield-improvement-ai (opened): "New gigafactories
+routinely open with scrap rates between 15 and 30 percent", "still sit near 10 percent five years into operation". Effort per good unit
+1 / (1 - scrap): 1 / 0.775 - 1 / 0.90 = 0.179 extra; 0.179 / 0.82 = 0.22. Unlike industries (battery cells, a productivity target), so
+a ballpark only; a craft-specific split would replace it.

@@ -8,9 +8,10 @@ def people_who_exist(national_estimate, employed):
     return max(national_estimate, employed)
 
 
-def supply_hours(hours_on_offer, people_existing, hours_per_person_year):
-    """The hours a market offers, never more than every existing person of the trade works in a year."""
-    return min(hours_on_offer, people_existing * hours_per_person_year)
+def supply_hours(hours_on_offer, people_existing, hours_per_person_year, people_alive):
+    """The hours a market offers, never more than every existing person of the trade works in a year, nor more than the working
+    people alive now work (the trade's figures are the clearing's; a later death in the year lowers `people_alive` under them)."""
+    return min(hours_on_offer, people_existing * hours_per_person_year, max(0.0, people_alive) * hours_per_person_year)
 
 
 def hire_leaves_nobody(on_books, rivals_staff, count, people_existing):

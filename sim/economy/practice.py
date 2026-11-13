@@ -3,7 +3,8 @@
 The recipe's booked hours are the hours of a competent crew. A producer's record keeps the cumulative runs its crew has
 made per trade (`Producer.crew_runs`); `hours_multiplier` turns that into the share by which its hours exceed the
 booked ones, on Wright's curve (`sim.labour.learning_curve`) down to the physical floor, so hours never go below the
-recipe's. A trade with no entry is an established crew, at the floor: the opening's producers are existing workshops.
+recipe's. The same extra effort spoils part of a novice run's output (`usable_output_share`), which lowers the producer's
+yield factor (`yield_after_practice`). A trade with no entry is an established crew, at the floor: the opening's producers are existing workshops.
 
 Follows Eurace@Unibi, which keeps skill with the workers and lets the firm's productivity follow the mean of its
 workers' skills: Labour/Household_Employee_Functions.c Household_update_specific_skills closes a share of the gap
@@ -40,7 +41,23 @@ SKILL_GAP_CLOSED_PER_YEAR = declare(
         "0.875; weighted by the state's 148, 455, 676, 241 and 80 workers at each level the mean is 0.4991. The "
         "skill level mix of this simulation's workers is not modelled, so the state's mix stands in.")
 
-_MULTIPLIER_STEP = 100.0        # multipliers are kept to a hundredth so a recipe has few practised copies
+SCRAPPED_SHARE_OF_EXTRA_EFFORT = declare(
+    "SCRAPPED_SHARE_OF_EXTRA_EFFORT", 0.2, kind="engineering_estimate",
+    unit="share of the extra effort of a novice run that is spoiled output",
+    source=(
+        "Derived from two opened pages, a ballpark across unlike industries. Hours: fabrico.io/blog/operator-onboarding-"
+        "checklist/ (opened): new-operator productivity targets of 50-60% of standard in days 1-30; midpoint 55%, so "
+        "1 / 0.55 = 1.82 hours per unit against 1.00, extra effort 0.82. Scrap: ifactoryapp.com/industries/automotive-"
+        "manufacturing/gigafactory-cell-yield-improvement-ai (opened): 'New gigafactories routinely open with scrap rates "
+        "between 15 and 30 percent' and 'still sit near 10 percent five years into operation'; midpoint 22.5% against "
+        "10%. Effort per good unit is 1 / (1 - scrap): 1 / 0.775 - 1 / 0.90 = 1.290 - 1.111 = 0.179 extra. Share "
+        "0.179 / 0.82 = 0.22, rounded to 0.2."),
+    confidence="C",
+    why="A novice run takes more hours than a competent one (the learning curve); part of the extra effort is slower "
+        "work and part is work redone or thrown away, which lowers what a run yields. The share is the extra effort "
+        "per good unit that scrap explains, from the start-up scrap and productivity figures in the source.")
+
+_MULTIPLIER_STEP = 100.0       # multipliers are kept to a hundredth so a recipe has few practised copies
 _practised: Dict[Tuple[int, Tuple[Tuple[str, float], ...]], tuple] = {}
 
 
@@ -84,6 +101,27 @@ def hired_share(runs_before: float, runs_now: float) -> float:
 def practised_multiplier(units: float) -> float:
     """What `recipe_for` multiplies a trade's booked hours by at `units`: the hours multiplier to a hundredth, never below one."""
     return max(1.0, round(hours_multiplier(units) * _MULTIPLIER_STEP) / _MULTIPLIER_STEP)
+
+
+def usable_output_share(booked_hours: float, practised_hours: float) -> float:
+    """The share of a run's output that is usable: the extra effort of the practised hours over the booked ones (the
+    curve's excess, in (0, 1)) times `SCRAPPED_SHARE_OF_EXTRA_EFFORT` is spoiled. One for a crew at the booked hours
+    and for a recipe with no hours; never zero, since only part of the extra effort is scrap."""
+    if booked_hours <= 0.0 or practised_hours <= booked_hours:
+        return 1.0
+    extra_effort = 1.0 - booked_hours / practised_hours
+    return 1.0 - SCRAPPED_SHARE_OF_EXTRA_EFFORT * extra_effort
+
+
+def yield_after_practice(yield_factor: float, recipe, practice: Mapping[str, float]) -> float:
+    """A producer's yield factor times the usable share of its crew's runs (`usable_output_share` of the booked hours and
+    the practised ones `recipe_for` gives); the yield factor itself for an established crew."""
+    if not practice:
+        return yield_factor
+    practised = recipe_for(recipe, practice)
+    if practised is recipe:
+        return yield_factor
+    return yield_factor * usable_output_share(math.fsum(recipe.labour_hours.values()), math.fsum(practised.labour_hours.values()))
 
 
 def recipe_for(recipe, practice: Mapping[str, float]):

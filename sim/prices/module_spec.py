@@ -14,6 +14,7 @@ READS_BY_OWNER = {
     "workforce": ("money_per_labour_hour", "farm_land_hectares", "wage_schedule_for", "unskilled_trade"),
     "markets": ("material_seller", "producers_stamp"),
     "land": ("home_tiles_held",),
+    "content": ("mods_directory",),
 }
 
 # not cached: the techniques, the projects and the economy are written by code outside the owners' commands

@@ -5,7 +5,7 @@ costs him. These read the state's present rates (levers included) and the share 
 so a higher rate lowers the return the actor decides on. Nothing here is a response: the actors' existing rules turn the
 lower return into fewer hands on the land or land given up.
 """
-from typing import Any, Optional
+from typing import Any, Dict, Optional
 
 
 def harvest_share_taken(world: Any, material: Optional[str] = None) -> float:
@@ -27,6 +27,17 @@ def harvest_share_taken(world: Any, material: Optional[str] = None) -> float:
 			covered = world.revenue.arable_share(frozenset(chosen - set(excepted or ())))
 		taken += float(form["rate"]) * covered * world.collection.collectible_share(None if tiles is None else tiles)
 	return min(1.0, taken)
+
+
+def harvest_share_by_material(world: Any) -> Dict[str, float]:
+	"""`harvest_share_taken` for each material the state's harvest forms are paid in and for the staple, the shares a grower
+	of that material nets off what the harvest fetches (the economy's producers and households read them by good)."""
+	staple = world.quotes.staple_material()
+	materials = {staple}
+	for form in world.revenue.revenue_forms():
+		if form["basis"] == "harvest" and float(form["rate"]) > 0.0 and form.get("paid_in"):
+			materials.add(form["paid_in"])
+	return {material: harvest_share_taken(world, material) for material in sorted(materials)}
 
 
 def land_tax_share_of_rent(world: Any) -> float:

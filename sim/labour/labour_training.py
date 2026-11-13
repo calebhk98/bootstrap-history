@@ -9,7 +9,6 @@ from .room_advice import hire_room_refusal
 from .staff_moves import crosses_literacy_wall
 from sim.ledger.api import PayEdge
 from .market import trades as market_trades
-from sim.world.demand import production_data
 
 
 class Training:
@@ -48,14 +47,20 @@ class Training:
     def training_years_from(self, trade, source):
         """Years to turn a person of `source` into `trade`: the trade's full apprenticeship scaled by the share
         of its tasks the source does not do (trade_formation)."""
-        shares = trade_formation.task_shares_for(production_data())
+        shares = self._task_shares()
         uncovered = trade_formation.uncovered_share(shares.get(trade, {}), shares.get(source, {}))
         return trade_formation.training_years(self._full_years(trade), uncovered)
 
     def uncovered_from(self, trade, source):
         """The share of `trade`'s tasks that people of `source` do not already do."""
-        shares = trade_formation.task_shares_for(production_data())
+        shares = self._task_shares()
         return trade_formation.uncovered_share(shares.get(trade, {}), shares.get(source, {}))
+
+    def _task_shares(self):
+        """Task shares of every trade, a service trade doing the tasks of the trade the registry says it is taught from."""
+        registry = trade_data.registry_of(self._world)
+        links = {trade: fields["taught_from"] for trade, fields in registry.items() if fields.get("taught_from")}
+        return trade_formation.task_shares_for(self._world.trades.production_catalog, links)
 
     def training_hours_per_person(self, trade, source=None):
         """The teacher's own hours to teach one person `trade` from `source` (default: the nearest practised trade)."""
@@ -77,7 +82,7 @@ class Training:
         created = self._world.workforce.trades_created
         present = [other for other in self._world.trades.wages
                    if other != trade and (other not in self._world.trades.trades_absent or other in created)]
-        ranked = trade_formation.nearest_sources(trade, trade_formation.task_shares_for(production_data()), present)
+        ranked = trade_formation.nearest_sources(trade, self._task_shares(), present)
         return ranked[0][1] if ranked else None
 
     def train_check(self, trade, count, frm=None):
@@ -142,7 +147,7 @@ class Training:
         """The first actor other than you that holds the knowledge to teach `trade` (trade_formation.teachers_of),
         or None when you teach it yourself from what you know."""
         by_actor, baseline, demonstrated = self._world.knowledge.teaching_knowledge()
-        teachers = trade_formation.teachers_of(trade, trade_formation.gating_nodes_for(production_data()), by_actor, baseline,
+        teachers = trade_formation.teachers_of(trade, trade_formation.gating_nodes_for(self._world.trades.production_catalog), by_actor, baseline,
                                                demonstrated)
         named = [teacher for teacher in teachers if teacher in by_actor]
         return named[0] if named else None

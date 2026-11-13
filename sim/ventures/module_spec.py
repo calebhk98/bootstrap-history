@@ -1,7 +1,7 @@
 """The ventures module's spec (sim/assembly).
 
 Every read is a view of an owner that has not moved yet, published by the engine bridge under the name the owner will publish, or a
-view of a module that has moved. Every view it publishes is uncached: the sets of what is operating and shut are the business's own, read only."""
+view of a module that has moved. Every view it publishes is uncached: the sets of what is operating and shut are copies of the business's own."""
 from sim.assembly.api import KEYED, QUOTE, ModuleSpec, ViewSpec
 from sim.actors.api import SellSeatConcern
 from sim.ledger.api import PayEdge

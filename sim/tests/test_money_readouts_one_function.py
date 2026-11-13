@@ -49,7 +49,7 @@ class _Labour:
         return 100.0
 
 
-trainer = Game(labour=_Labour(), capital=1000.0)
+trainer = Game(labour=_Labour(), capital=1000.0, trades_absent=frozenset({"machinist"}))
 quote = _quote_train(trainer, {}, {"trade": "machinist", "n": 2})
 reply = _cmd_train(trainer, {}, {"trade": "machinist", "n": 2}, None)
 check("quote train states the plan's fee as paid_now and its wage bill", quote["paid_now"] == round(plan["fee"], 1)

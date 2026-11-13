@@ -75,8 +75,8 @@
       "name": "Third century crisis",
       "causes_not_modelled": [
         "Sasanian and Germanic pressure on the frontiers: no neighbouring polity with an army is simulated for this civilisation.",
-        "Army-made emperors and an undefined succession: ruler legitimacy is not simulated.",
-        "The Decian edict is a loyalty test with no simulated ruler; its values shift rides on this event's fiscal cause."
+        "Army-made emperors: a defecting army backs a claimant and rises (Complaint 486), but no legion's loyalty to a named general or a ruler's standing with the people is simulated.",
+        "The Decian edict is a loyalty test with no ruler's religious policy simulated; its values shift rides on this event's fiscal cause."
       ],
       "causes": [
         {
@@ -509,6 +509,8 @@
   "starting_techs": [
     "fud_cattle_herd",
     "fud_pig_herd",
+    "fud_horse_herd",
+    "fud_mule_herd",
     "fud_goat_herd",
     "fud_sheep_flock",
     "ag2_composting",
@@ -777,9 +779,10 @@
   },
   "wage_index": 1.0,
   "unsupplied_basket_goods": {
+    "platinum_g": "the platinum-group-metals node is not held at the start and no partner supplies platinum; the ornament need is met by the other ornament metals and goods the society works",
+    "rice_kg": "the rice-cultivation node is not held at the start and no partner supplies rice; households eat the civilisation's own staple until the node is learned",
     "cacao_kg": "an American crop; no partner grows it and the cultivation node is not held, so household demand for it has no supply until a founder brings the stock",
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
-    "cement_portland_kg": "Portland cement is a modern industrial product far past this start; households bid for it only because the need data lists it as shelter",
     "foxglove_leaf_kg": "medical use of foxglove leaf dates from long after this start; the need data lists it for health, so households bid without a technique or tradition to supply it",
     "maize_kg": "an American crop unknown across the Old World before contact; no partner supplies it",
     "mat_sugar": "cane sugar was not made here; where it was known it came from regions the model has no partner for, and the voyage node it is gated on is not held",
@@ -818,8 +821,8 @@
       "basis": "adult_labour_years",
       "rate": 0.04,
       "_internal": {
-        "source": "Provincial poll tax (tributum capitis), for instance the Egyptian laographia of some twenty drachmae a man against a wage of about a drachma a day. Italy and citizens were exempt, which this empire-wide share ignores.",
-        "confidence": "D"
+        "source": "Provincial poll tax (tributum capitis); citizens were exempt (Wikipedia, Tributum capitis, opened). John Gee, The Cares of This World (rsc.byu.edu/new-testament-history-culture-society/cares-world, opened), citing Wallace, Taxation in Egypt: 'The tax rate was 3-5 denarii/year for urban dwellers and 10 denarii/year for rural dwellers'; 'Wages for a day laborer in Egypt during the first century were 20-40 drachmas per month', at 4 drachmas to the denarius 60 to 120 denarii a year. So the tax is 3-5 of 60-120 (0.025 to 0.08) in towns and 10 of 60-120 (0.08 to 0.17) in the country; 0.04 is the empire-wide average once Italy and citizens, who did not pay, are counted in.",
+        "confidence": "C"
       }
     },
     {
@@ -843,8 +846,8 @@
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
-      "confidence": "D"
+      "source": "Wikipedia, Religion in ancient Rome (opened): six Vestals and three major and twelve lesser flamines; the colleges were small and aristocratic, temple staff were slaves and freedmen, and no overall count is on the page. Ratio check: 15000 in 65 million is 0.02 per cent, a fiftieth of England's church (1.0 per cent), as expected for a state cult with few full-time priests. A ballpark, with no direct count; Scholars (2000): Wikipedia, Education in ancient Rome (opened): grammatici were paid 200 denarii per pupil per month in Diocletian's edict (AD 301), so a paid teaching profession existed, but no count of teachers is given. 2000 in 65 million is 0.003 per cent, a fifteenth of the Han academy's 0.05 per cent (Wikipedia Taixue, a state university with no Roman counterpart); a floor, since private teachers in every town are not counted. A ballpark.",
+      "confidence": "C"
     },
     "cast": {
       "source": "Slaves as a share of the empire's people: about a tenth (Scheidel 2005, 'Human Mobility in Roman Italy, II: The Slave Population', JRS 95: 64-79, which counts one to one and a half million in Italy at most; the empire-wide tenth is a secondary summary of Scheidel, a plausible range being 8 to 15 per cent). Italy and the cities ran higher, the provinces lower; one stratum holds the empire-wide share. The other strata keep the default split's proportions (sim/agents/strata_seed.py) scaled to fill the rest of the people. Owners are the rich stratum. The older third-to-two-fifths figure for Italy is unsupported (Scheidel 2005: 65).",

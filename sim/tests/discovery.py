@@ -68,3 +68,22 @@ def discover_topic_seconds(tests_dir=TESTS_DIR):
                     and isinstance(node.value, ast.Constant) and isinstance(node.value.value, (int, float))):
                 found[name] = float(node.value.value)
     return found
+
+
+def discover_civilisations(tests_dir=TESTS_DIR):
+    """{topic: civilisation ids} for files that set a module-level `CIVILISATIONS` tuple of strings: the starts the
+    topic builds (empty when it builds no game). Read from the syntax tree, so finding them imports nothing."""
+    found = {}
+    for name in discover_topics(tests_dir):
+        path = os.path.join(tests_dir, "test_%s.py" % name)
+        with open(path, encoding="utf-8") as handle:
+            source = handle.read()
+        if "CIVILISATIONS" not in source:
+            continue
+        for node in ast.parse(source, filename=path).body:
+            if (isinstance(node, ast.Assign)
+                    and any(isinstance(target, ast.Name) and target.id == "CIVILISATIONS" for target in node.targets)
+                    and isinstance(node.value, ast.Tuple)
+                    and all(isinstance(item, ast.Constant) and isinstance(item.value, str) for item in node.value.elts)):
+                found[name] = tuple(item.value for item in node.value.elts)
+    return found

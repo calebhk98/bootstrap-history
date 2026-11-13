@@ -61,7 +61,7 @@ def add_up_bids(row, employer, hours, first, count, entry_employer, entry_hours)
 
 @njit
 def worth_in(rates, world, area, trade, trade_wage):
-    """`formation_bonded.worth_in`: present value of a trained person's hours in the area over a career; NaN when neither the
+    """`worth_in`: present value of a trained person's hours in the area over a career; NaN when neither the
     trade's wage nor the area's wage floor is known there."""
     floor = world.floor_per_hour[area]
     no_floor = math.isnan(floor) or floor <= 0.0

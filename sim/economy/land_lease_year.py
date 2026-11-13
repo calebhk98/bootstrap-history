@@ -9,7 +9,7 @@ falls when labour is scarce.
 """
 from typing import Dict, List, Mapping, Tuple
 
-from . import land_bid_year, land_tenancy, titles, titles_ground, titles_worked
+from . import land_bid_year, land_tenancy, plot_means, titles, titles_ground, titles_worked
 from .cohort_reads import figures_in_id_order, tiles_by_first_id
 from .households_own import Option, plot_hectares
 from .setup import labour_area
@@ -71,8 +71,7 @@ def lease_in_market(setup, record, view, options: Mapping[str, List[Option]]) ->
     outside = _outside_options(setup, margins, record.land.land_rent)
 
     def tools_of(cohort, recipe):
-        goods = set(recipe.tool_wear) | {step.good for steps in recipe.tool_fallbacks.values() for step in steps if step.good}
-        return {good: view.stock(cohort.agent_id, good, cohort.tile) for good in goods}
+        return {good: view.stock(cohort.agent_id, good, cohort.tile) for good in plot_means.means_goods(recipe)}
 
     offers: List[land_tenancy.TenancyRequest] = []
     lots: List[land_tenancy.Lot] = []

@@ -6,7 +6,7 @@ import numpy
 
 from sim.compiled_tables.growth import reserve_rows
 
-from .ask_adjust import ASK_BAND_CEILING
+from .ask_ceiling import AskAlternatives
 from .goods_table_group import name_ranks
 
 PAIRS_PER_ROW = 12        # room reserved for pairs, per bid and offer row: a guess that only saves growing the table again (`reserve_cleared_rows`)
@@ -22,7 +22,8 @@ class ClearingContext:
         self._rates = {}
         self._area_rates, self._area_rates_known = numpy.zeros(0), numpy.zeros(0, dtype=numpy.bool_)
         self._producer_rows = None
-        self._multiples = numpy.zeros(0)
+        self._multiples = {}
+        self.alternatives = AskAlternatives(setup, record)
         self._scratch = None
         self._room_reserved = False
 
@@ -69,13 +70,11 @@ class ClearingContext:
         known[area_id] = True
 
     def ask_known_areas_and_tiles(self) -> None:
-        """Ask now for the lending rate of every area and the band multiple of every tile numbered so far, so the packing and decision
-        kernels do not find them missing and run again. Both are reads of the memory and the setup that do not change within the
-        year, so asking early gives the figures asking late would; an area or tile numbered later is still asked when found missing."""
+        """Ask now for the lending rate of every area numbered so far, so the packing kernel does not find them missing and run again. It
+        is a read of the memory that does not change within the year, so asking early gives the figure asking late would; an area numbered
+        later is still asked when found missing. A good's band multiples are asked when its markets clear (`band_multiple_table`)."""
         for area_id in range(len(self.orders.memory_tables.areas.name_list)):
             self.note_area_rate(area_id)
-        for tile in range(len(self.band_multiple_table())):
-            self.note_band_multiple(tile)
 
     def scratch(self, areas: int, tiles: int) -> tuple:
         """(areas, tiles, room) the fused clearing kernel marks what it needs answered in: all false and zero between calls."""
@@ -116,17 +115,19 @@ class ClearingContext:
             self._producer_rows = grown
         return self._producer_rows
 
-    def band_multiple_table(self) -> numpy.ndarray:
-        """Per tile id: the most, as a multiple of a unit's cost, an ask may be there (the substitution markup, never past ASK_BAND_CEILING);
-        NaN for a tile not asked about yet (`note_band_multiple` fills one in)."""
+    def band_multiple_table(self, good: str) -> numpy.ndarray:
+        """Per tile id: the most, as a multiple of a unit's cost, an ask for `good` may be there (`ask_ceiling.band_multiple`: what its
+        buyers' cheapest alternative costs, else the substitution markup, else the stated multiple); NaN for a tile not asked about
+        yet (`note_band_multiple` fills one in)."""
         count = len(self.book.tile_ids.name_list)
-        if len(self._multiples) < count:
+        table = self._multiples.get(good)
+        if table is None or len(table) < count:
             grown = numpy.full(count, numpy.nan)
-            grown[:len(self._multiples)] = self._multiples
-            self._multiples = grown
-        return self._multiples
+            if table is not None:
+                grown[:len(table)] = table
+            table = self._multiples[good] = grown
+        return table
 
-    def note_band_multiple(self, tile: int) -> None:
-        """Work out the band multiple of a tile the decision kernel found missing from `band_multiple_table`."""
-        elasticity = self.setup.basket_for(self.book.tile_ids.name_list[tile]).substitution
-        self._multiples[tile] = min(elasticity / (elasticity - 1.0) if elasticity > 1.0 else ASK_BAND_CEILING, ASK_BAND_CEILING)
+    def note_band_multiple(self, tile: int, good: str) -> None:
+        """Work out the band multiple of `good` on a tile the decision kernel found missing from `band_multiple_table`."""
+        self.band_multiple_table(good)[tile] = self.alternatives.multiple(good, self.book.tile_ids.name_list[tile])

@@ -32,3 +32,7 @@ class SeatsSeat:
     # offers other actors have made the seat (plain dicts, as the exchange keeps them) and how many it has made
     offers: List[Dict[str, Any]] = field(default_factory=list)
     offer_serial: int = 0
+    # spies the seat funds against each other seat (target id -> count), and what it believes of each (target id -> kind -> belief,
+    # sim/world/belief.py)
+    spies: Dict[str, int] = field(default_factory=dict)
+    beliefs: Dict[str, Dict[str, Dict[str, Any]]] = field(default_factory=dict)

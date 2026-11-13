@@ -16,14 +16,16 @@ from sim.world.shared_constants import LABOUR_OUTPUT_ELASTICITY
 
 from .households_basket import tile_need_prices
 from .priced_need_list import priced_needs_of
-from . import cohort_prime, household_work_year, land_bid, titles_plots
+from . import cohort_prime, harvest_tax, household_work_year, land_bid, titles_plots
 from .cohort_store import table_of
 from .households_own import Option
 
 
 def _grown(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]], fertility: float,
-           people_per_worker: float, hectares_per_hour: Mapping[str, float]) -> list:
-    """(price, hectares, hectares per need unit, reference hours per hectare) of each need the plot grows for a worker's household."""
+           people_per_worker: float, hectares_per_hour: Mapping[str, float],
+           share_by_good: Optional[Mapping[str, float]] = None) -> list:
+    """(price, hectares, hectares per need unit, reference hours per hectare) of each need the plot grows for a worker's household;
+    the price is what the harvest leaves him once the state has taken its share of the good (`share_by_good`, harvest_tax.py)."""
     grown = []
     for spec, price_index, _first, _end in priced_needs_of(priced).blocks():
         rows = options.get(spec.need_id)
@@ -33,7 +35,7 @@ def _grown(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]]
         if per_hour <= 0.0:
             continue
         per_unit = per_hour * rows[0][0]
-        grown.append((price_index, spec.subsistence_per_person * people_per_worker * per_unit, per_unit,
+        grown.append((price_index * harvest_tax.kept_share(rows[0][2], share_by_good or {}), spec.subsistence_per_person * people_per_worker * per_unit, per_unit,
                       1.0 / (fertility * per_hour)))
     return grown
 
@@ -66,8 +68,10 @@ def plot_value_per_worker_year(priced: Sequence[PricedNeed], options: Mapping[st
 
 def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
                          fertility: float, hours_per_worker_year: float, people_per_worker: float,
-                         hectares_per_hour: Mapping[str, float], hectares_held: Optional[float] = None) -> float:
-    """Money the next hour on the family's plot adds, with the worker's year of hours on it. `hectares_held`, when
+                         hectares_per_hour: Mapping[str, float], hectares_held: Optional[float] = None,
+                         share_by_good: Optional[Mapping[str, float]] = None) -> float:
+    """Money the next hour on the family's plot adds, with the worker's year of hours on it, net of the state's share of the
+    harvest of each good (`share_by_good`: the state's take, harvest_tax.py; none: no tax). `hectares_held`, when
     given and less than the land the floors take, is the land the worker has: the hours are worked on that.
 
     `hectares_per_hour` is the land by recipe that one hour of its work takes at the recipe's own intensity.
@@ -78,7 +82,7 @@ def plot_return_per_hour(priced: Sequence[PricedNeed], options: Mapping[str, Seq
     the need's price. Needs weigh by the land they take."""
     if fertility <= 0.0 or hours_per_worker_year <= 0.0:
         return 0.0
-    grown = _grown(priced, options, fertility, people_per_worker, hectares_per_hour)
+    grown = _grown(priced, options, fertility, people_per_worker, hectares_per_hour, share_by_good)
     plot = math.fsum(row[1] for row in grown)
     if plot <= 0.0:
         return 0.0
@@ -108,12 +112,13 @@ def survival_cost_per_worker_year(priced: Sequence[PricedNeed], options: Mapping
 
 def wage_floor_per_worker_year(priced: Sequence[PricedNeed], options: Mapping[str, Sequence[Option]],
                                fertility: float, hours_per_worker_year: float, people_per_worker: float,
-                               hectares_per_hour: Mapping[str, float], hectares_held: Optional[float] = None) -> float:
+                               hectares_per_hour: Mapping[str, float], hectares_held: Optional[float] = None,
+                               share_by_good: Optional[Mapping[str, float]] = None) -> float:
     """The least a worker sells his year for: the greater of what the hours would add on the plot
     (plot_return_per_hour) and what his household needs to stay fed beyond what the plot gives, both on the land
     he holds (`hectares_held`, per worker; None: the whole plot)."""
     opportunity = plot_return_per_hour(priced, options, fertility, hours_per_worker_year, people_per_worker,
-                                       hectares_per_hour, hectares_held) * max(0.0, hours_per_worker_year)
+                                       hectares_per_hour, hectares_held, share_by_good) * max(0.0, hours_per_worker_year)
     return max(opportunity, survival_cost_per_worker_year(priced, options, fertility, hours_per_worker_year,
                                                           people_per_worker, hectares_per_hour, hectares_held))
 
@@ -145,12 +150,13 @@ def ask_floor_by_tile(setup, record, view, options: Mapping[str, Sequence[Option
         working = sum(working_people)
         if working <= 0.0:
             floors[tile] = wage_floor_per_worker_year(tile_need_prices(setup, view, tile), options, fertility, setup.working_hours_per_year, 1.0,
-                                                      hectares_per_hour, 0.0)
+                                                      hectares_per_hour, 0.0, setup.harvest_share_by_good)
             continue
         signatures = household_work_year.signatures_of(record, store, rows, buying=False)
         floors[tile] = sum(working_people[place] * wage_floor_per_worker_year(
             household_work_year.priced_basket_of(setup, view, tile, signatures[place]), options, fertility, setup.working_hours_per_year,
-            people[place] / working_people[place], hectares_per_hour, held.get(store.ids[row], 0.0) / working_people[place])
+            people[place] / working_people[place], hectares_per_hour, held.get(store.ids[row], 0.0) / working_people[place],
+            setup.harvest_share_by_good)
             for place, row in enumerate(rows.tolist())) / working
     return floors
 

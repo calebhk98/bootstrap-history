@@ -12,11 +12,17 @@ def base_visibility(mode: str, in_public_use: bool, copy_difficulty: float, secr
     One run in public shows what the product and the yard give away, which is the reciprocal of how hard its
     know-how is to copy from sight; one kept shut (a secret, a licensed one, or any not yet run in public) shows
     only what leaks past the door, `secret_exposure` of that."""
+    return visibility_of(mode, in_public_use, copy_difficulty, secret_exposure / copy_difficulty)
+
+
+def visibility_of(mode: str, in_public_use: bool, copy_difficulty: float, kept_share: float) -> float:
+    """Like `base_visibility`, with the share of a kept invention that leaks given directly (`kept_share`, 0..1; contacts and
+    spies raise it, sim/world/espionage.py)."""
     if mode == "publish":
         return 1.0
     if mode == "default" and in_public_use:
         return 1.0 / copy_difficulty
-    return secret_exposure / copy_difficulty
+    return kept_share
 
 
 def years_to_be_believed(mode: str, proof_years: float, secret_exposure: float) -> float:

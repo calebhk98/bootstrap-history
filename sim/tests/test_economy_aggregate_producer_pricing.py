@@ -8,7 +8,7 @@ import types
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
-from sim.economy import goods_market, seller_offers, unsold_search
+from sim.economy import ask_adjust, goods_market, seller_offers, unsold_search
 from sim.economy.producers import Producer
 from sim.economy.types import Bid, Offer, Recipe
 
@@ -16,6 +16,8 @@ GOOD, AREA, TILE = "grain", "area", "tile"
 SHOPS = 20
 TOTAL = 1000.0
 ASK = 1.0
+BAND = 3.0      # the width the buyers give (ask_ceiling.py), written out
+BAND_FROM_BUYERS = seller_offers.UnitCosts(types.SimpleNamespace(multiple=lambda good, tile: BAND))
 
 
 class View(ViewDefaults):
@@ -65,7 +67,7 @@ def cleared(producers, quantities, bids=None, ask=ASK):
     bids = bids or demand()
     setup, record = game(producers)
     offers = [Offer(each.agent_id, GOOD, AREA, TILE, quantity, ask) for each, quantity in zip(producers, quantities)]
-    chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, 1.0)
+    chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, 1.0, BAND_FROM_BUYERS)
     result = goods_market.clear_at_one_price(bids, chosen, GOOD, AREA, "", 1.0)
     sold = sum(fill.quantity for fill in result.fills if fill.side == "sell")
     return result.price, sold
@@ -85,7 +87,7 @@ class AggregateProducerTests(unittest.TestCase):
         ask = 1.5 * cost
         price, _sold = cleared([producer("only", 1)], [TOTAL], ask=ask)
         self.assertGreater(price, ask)     # it raises its ask against the residual demand, within the band
-        self.assertLessEqual(price, cost * seller_offers.ASK_BAND_CEILING * (1.0 + 1e-9))
+        self.assertLessEqual(price, cost * BAND * (1.0 + 1e-9))
 
     def test_an_aggregate_keeps_the_price_taking_ask(self):
         setup, record = game([producer("whole", SHOPS)])

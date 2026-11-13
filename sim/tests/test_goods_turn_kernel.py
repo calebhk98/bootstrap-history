@@ -3,6 +3,7 @@
 random recipes with tool fallbacks, practised crews and short stocks. The tables the kernels read are those of a real `Book` and `YearLedger`."""
 QUICK_TOPIC = True
 
+import dataclasses
 import random
 import unittest
 
@@ -11,6 +12,7 @@ import numpy
 from sim.book import Book
 from sim.economy import goods_turn_spec, producers
 from sim.economy.practice import practised_multiplier
+from sim.economy.year_arrays_producers import practised_yields
 from sim.economy.goods_turn_kernel import produce_turn
 from sim.economy.goods_turn_offers_kernel import offer_pairs
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_MINT, EDGE_PRODUCTION, GoodsMove, Recipe, ToolFallback
@@ -50,12 +52,9 @@ def random_recipe(rng, number):
     return Recipe("r%d" % number, outputs, inputs, hours, tool_wear=wear, tool_fallbacks=fallbacks)
 
 
-class Producer:
-    """The fields of a producer that `production_lines` reads."""
-
-    def __init__(self, agent_id, recipe, capacity, yield_factor, crew_runs):
-        self.agent_id, self.tile, self.recipe_id = agent_id, TILE, recipe.recipe_id
-        self.capacity_runs, self.yield_factor, self.crew_runs = capacity, yield_factor, crew_runs
+def Producer(agent_id, recipe, capacity, yield_factor, crew_runs):
+    """A producer of the recipe (`production_lines` reads its yield factor lowered by the crew's spoilage)."""
+    return producers.Producer(agent_id, "owner", recipe.recipe_id, TILE, capacity, yield_factor, crew_runs=crew_runs)
 
 
 def world(seed):
@@ -80,6 +79,13 @@ def world(seed):
     return rng, recipes, book, ledger, producers_made
 
 
+def kernel_yield(matrices, made, practice_scale):
+    """The yield factors the kernel is given: each producer's lowered by its crew's spoilage (`practised_yields`)."""
+    booked = matrices.labour_hours[numpy.array([matrices.recipes.row[each.recipe_id] for each in made], dtype=numpy.int64)]
+    crewed = [place for place, each in enumerate(made) if each.crew_runs]
+    return practised_yields(numpy.array([each.yield_factor for each in made]), booked, practice_scale, crewed)
+
+
 def kernel_moves(recipes, book, ledger, made, runs, practice_scale):
     """`produce_turn` for `made` with `runs` planned: its moves as (producer id, good, quantity, is output) tuples."""
     matrices = build_recipe_matrices(recipes, {}, GOODS)
@@ -92,7 +98,7 @@ def kernel_moves(recipes, book, ledger, made, runs, practice_scale):
     tile = numpy.full(len(made), book.tile_ids.numbers[TILE], dtype=numpy.int64)
     place, good, quantity, output = produce_turn(
         numpy.array(runs, dtype=float), agent, tile, numpy.array([matrices.recipes.row[each.recipe_id] for each in made], dtype=numpy.int64),
-        numpy.array([each.capacity_runs for each in made]), numpy.array([each.yield_factor for each in made]),
+        numpy.array([each.capacity_runs for each in made]), kernel_yield(matrices, made, practice_scale),
         numpy.arange(len(made)), practice_scale, spec.hard_ptr, spec.hard_good, spec.hard_per_run, spec.wear_ptr, spec.wear_draw,
         spec.wear_per_run, spec.step_ptr, spec.step_draw, spec.step_units, spec.step_factor, spec.step_trade_ptr, spec.step_trade_slot,
         spec.draw_ptr, spec.draw_good, spec.draw_listed, spec.labour_ptr, spec.labour_trade, spec.labour_hours, spec.output_ptr,
@@ -141,8 +147,7 @@ class ProduceTurnIsProductionLines(unittest.TestCase):
         for seed in range(200, 230):
             rng, recipes, book, ledger, made = world(seed)
             runs = [20.0] * len(made)
-            for each in made:
-                each.crew_runs = {trade: 1.0 for trade in recipes[each.recipe_id].labour_hours}
+            made[:] = [dataclasses.replace(each, crew_runs={trade: 1.0 for trade in recipes[each.recipe_id].labour_hours}) for each in made]
             self.assertEqual(kernel_moves(recipes, book, ledger, made, runs, scale_of(made, recipes)),
                              python_moves(recipes, book, ledger, made, runs), seed)
 

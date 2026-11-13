@@ -17,6 +17,8 @@ from sim.ui.proto.parse_portfolio import _parse_portfolio
 from sim.ui.proto.portfolio_scale import page_rows
 from sim.ui.proto.state_log import _agent_log_filter_rows, _is_failure_line, _log_scrub
 
+from sim.engine.data import MODDIR
+
 from .harness import check
 
 
@@ -29,7 +31,8 @@ class Stub(StandIn):
         super().__init__(
             fog_of_war=lambda: self.fog, goal=lambda: {"node": self.goal, "year": None}, techniques_held=lambda: self.done,
             acting_balance=lambda: self.capital, active_projects=lambda: self.active, tree_nodes=lambda: self.nodes,
-            year=lambda: self.year, techniques_revealed=lambda: self.revealed, fog_scrub=lambda text: self.fog_scrub(text))
+            year=lambda: self.year, techniques_revealed=lambda: self.revealed, fog_scrub=lambda text: self.fog_scrub(text),
+            mods_directory=lambda: MODDIR)
         self.__dict__.update(fields)
         self.state = _Namespace(interface={})
 
@@ -97,7 +100,7 @@ check("a multi-word trade name matches", page_rows(rows, trades, {"group": group
 
 # 6. goals tree is cached per game
 calls = []
-ui_port.load = lambda: calls.append(1) or ({"meta": {}},)
+ui_port.load = lambda mods_dir=None: calls.append(1) or ({"meta": {}},)
 ui_port.selectable_goals = lambda tree, nodes: []
 first, second = Stub(nodes={}), Stub(nodes={})
 goals_watch._catalog(first)

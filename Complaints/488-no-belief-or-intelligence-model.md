@@ -1,6 +1,26 @@
 # No belief or intelligence model: countries see the true world, except for tech names under fog
 
-**Status:** open
+**Status:** open - beliefs, news lag, espionage and a spy-and-contact-driven leak are built for seats; army-strength beliefs, battle reports, deception, and decisions reading beliefs remain.
+
+## Built
+
+- `sim/world/belief.py`: a belief is `{value, variance, year}`; news ages by distance over `NEWS_SPEED_KM_PER_YEAR`, an unrefreshed
+  belief loses reliability at `VARIANCE_GROWTH_PER_YEAR`, signals merge by precision. `years_until_unreliable` is the memory rule;
+  `MERCHANT_STRETCH_MEMORY_YEARS` (517) is retired and `merchants_stretch.memory_years()` derives the span from it.
+- `sim/world/espionage.py`: `secret_exposure` replaces the fixed `SECRET_EXPOSURE / copy_difficulty` for seats: it rises with the
+  holder's contacts (other seats) and the spies placed, `observation_variance` sharpens signals with spies.
+- `sim/seats/intelligence*.py`: command `PlaceSpies` (any seat, debits a person-year of labour per spy each year, unpaid spies lapse),
+  views `seat_beliefs` and `seat_spies`; each year `Sight.hear_of_other_seats` writes the acting seat's beliefs about every other
+  seat's technique count and cash from noisy, lagged readings (noise is a keyed draw, the game's random stream is untouched).
+- Tests: `sim/tests/test_belief.py`.
+
+## What is left
+
+- Beliefs about army size and strength (campaigns code is owned by 484/485), and battle reports reaching powers differently.
+- No decision reads `seat_beliefs` yet (offers, trade, war choices still use true figures).
+- Contacts are the count of other seats, not real trade contact volume; actors' own exposure (`sim/actors/world_disclosure.py`) still
+  uses the fixed share; news does not yet ride freight routes.
+- Deception (a deliberate false belief) and a cover story are not built.
 
 - Fog is a per-seat set of revealed technology ids (`sim/knowledge/module.py`, `sim/seats/sight.py`). A seat hears of
   another seat's techniques when distance-scaled visibility passes a threshold (`sim/seats/visibility.py`).

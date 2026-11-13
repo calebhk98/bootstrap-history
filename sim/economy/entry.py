@@ -19,7 +19,7 @@ from . import entry_practice, market_quote, unit_cost
 from .entry_sizing import Traded, sized_runs
 from .goods_market import quantity_at
 from .producer_store import ProducerStore
-from .producers import Producer, expected_output_prices, live_input_prices, live_wages
+from .producers import Producer, kept_output_prices, live_input_prices, live_wages
 from .protocols import MarketView
 from .types import AreaId, Bid, ClearingResult, GoodId, Offer, Recipe, TileId
 
@@ -196,7 +196,7 @@ def _returns_at(recipe: Recipe, recipe_id: str, tile: TileId, view: MarketView, 
     """A newcomer's yearly return on the recipe at the tile (gross, which the plant loan is priced from) and the same
     after the plant's wear at `market_rate` (which it must beat to enter)."""
     probe = Producer("probe", "probe", recipe_id, tile, 1.0)
-    outputs = expected_output_prices(probe, recipe, view) or {}
+    outputs = kept_output_prices(probe, recipe, view) or {}
     inputs, wages = live_input_prices(probe, recipe, view), live_wages(probe, recipe, view)
     return (unit_cost.return_on_capital(recipe, outputs, inputs, wages, rent),
             unit_cost.return_after_recovery(recipe, outputs, inputs, wages, market_rate, rent))

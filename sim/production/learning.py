@@ -61,7 +61,7 @@ class Learning(Part):
 		if producers is None:   # nothing runs while the economy opens
 			return 1.0
 		base_tile = needs.base_tile()
-		entries = price_solver.default_production_entries()
+		entries = price_solver.default_production_entries(needs.mods_directory())
 
 		def gate(recipe):
 			entry = entries.get(recipe)

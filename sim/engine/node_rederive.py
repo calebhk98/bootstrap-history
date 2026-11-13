@@ -12,24 +12,24 @@ from . import money_units, opening_money
 from sim.production.api import node_revenue
 
 
-def held_gate_set(held_techs):
-    return frozenset(price_solver.all_gate_nodes()) & frozenset(held_techs)
+def held_gate_set(held_techs, mods_dir=None):
+    return frozenset(price_solver.all_gate_nodes(price_solver.default_production_entries(mods_dir))) & frozenset(held_techs)
 
 
 def remember_derived_gates(sim, held_techs):
-    sim._derived_gate_set = held_gate_set(held_techs)
+    sim._derived_gate_set = held_gate_set(held_techs, sim.mods_dir)
 
 
 def refresh_derived_nodes(sim):
     """Re-derive node revenue and upkeep when the gate technologies the society holds (not the founder's
     own completions, which spread by imitation and disclosure) differ from the last derivation."""
     held = sim.view("society_techs")()
-    gates = held_gate_set(held)
+    gates = held_gate_set(held, sim.mods_dir)
     if gates == sim._derived_gate_set:
         return
     schedule = opening_money.opening_schedule(sim)
     derived = node_revenue.for_civilisation(sim.nodes, sim.start_civ, schedule, held_techs=held,
-                                            unskilled_trade=sim.view("unskilled_trade")())
+                                            unskilled_trade=sim.view("unskilled_trade")(), mods_dir=sim.mods_dir)
     money_units.price_nodes(derived.values(), schedule.wages_per_hour(), schedule.money_per_labour_hour)
     priced = opening_money.priced_schedule(sim, schedule)
     sim.nodes = opening_money.priced_nodes(derived, priced)

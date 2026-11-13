@@ -93,7 +93,7 @@ def assess(world: Any) -> assessment_table.AssessmentTable:
 			raise ValueError("form %r is paid in %r but its basis %r yields %r"
 							 % (declared["form"], material, declared["basis"], base.material))
 		collectible = world.collection.collectible_share(tiles)
-		kept = authority.kept_on(world, tiles)
+		kept = authority.kept_on(world, tiles, authority.competence_of(world))
 		figures = {"rate": rate, "collectible": collectible, "kept": kept}
 		if base.payers:
 			names = declared.get("from_strata")

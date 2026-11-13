@@ -1,6 +1,6 @@
 # No check that the occupational distribution of a baseline run is plausible
 
-**Status:** open - farm share now read by head count and inside its band for rome, england and han; the non-farm groups are still outside theirs. Check written; it was last measured before the wheat-labour and grain-input changes, so the table below is historical and needs a re-measure (GitHub #64 tracks)
+**Status:** open - audited 2026-11: no trade is missing from a group (the registry is fully listed; unattributed is the single `labourer` fallback pool), so the gap is demand, not data; building and food_processing await a decision below; farm share now read by head count and inside its band for rome, england and han; the non-farm groups are still outside theirs. Check written; it was last measured before the wheat-labour and grain-input changes, so the table below is historical and needs a re-measure (GitHub #64 tracks)
 
 Part of Complaint 530 (Most ancient occupations have no trade, and their hours are booked as farming).
 
@@ -32,6 +32,10 @@ the like bill instead of the new trades; (2) soldiers, merchants, scribes and ca
 hours of a few thousandths. The test closes this complaint once these are fixed, not by moving the bands.
 
 ## Changes since that measurement
+
+- The "by hours worked" table read zero for every group because `society_labour_hours` had no writer (Complaint 971, fixed: the hours are the labour core's people times a person-year's hours). Re-measured with `python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad`: by people, agriculture, textiles, transport and services are inside their bands; building and food processing are below theirs, and other crafts and unattributed are above; the hours table now repeats the people table (each person counts one person-year).
+
+- Re-measured after shelter stopped being a direct satisfier of brick, timber, stone blocks and cement (`data/world/needs.json`), on commit 2094a71f with the rebuilt openings: `python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad`. By people, agriculture, transport, other crafts and services are inside their bands; textiles, building and food processing are below theirs, and unattributed (the `labourer` pool) is above. Textiles fell below its band since the earlier re-measure; the cause is not traced.
 
 - Wheat labour is sourced: `wheat_kg` books about 475 farmer-hours a hectare from Columella 2.12.1 (was 150), built in
   `data/world/farm_labour.json` (Complaint 646, passes 6 and 7). The farm share in the undisturbed Rome scenario fell,
@@ -113,3 +117,14 @@ lint only). The shares are measured against the bands by
 build them are `test_occupational_hours_rule`.
 
 Test migration (rule-tests-05): the farm share baseline check of `farm_edges_scenario` is deleted; the same share is measured by `python3 sim/simulator.py economy-check --civs rome_100ad --years 1 --occupations`.
+
+## Occupation-group audit (building and food processing below band, unattributed above)
+
+- Data gap: none. Every trade in `data/world/trades.json` is in exactly one group (`test_every_registry_trade_is_in_exactly_one_group`), no mod adds a trade, and the new `test_unattributed_holds_exactly_the_fallback_trades` keeps the unattributed group to the registry's `fallback` trade (`labourer`). The cited sources count people by main occupation and give no separate day-labourer row, so the pool has no band-data home; follow-up is to shrink it by billing recipes to their trades, not to regroup it.
+- Food processing: `data/production/95_grain_milling.json` bills about six miller-hours a tonne of flour and `95_bread.json` 60 baker-hours a tonne of bread, physical figures (conf D). Per head that is a few hours a year against a person-year of thousands, so these trades come out under the band's low edge even with full demand. Bread is bought only by households without a hearth (`data/world/needs.json:139` `ready_to_eat`; `sim/economy/households_work.py:147`, `:57`); households with a hearth grind and cook themselves (household work, not a trade). Not a wiring bug; the low edge (0.01, "recalled", no source) is the doubtful number.
+- Building: `data/production/97_building_services.json` has `brick_wall_m3`, `stone_wall_m3`, `timber_frame_m3` billing mason and carpenter hours, and `data/world/needs.json:143-145` also credits raw `brick_1000`, `timber_m3`, `stone_blocks` with shelter directly. A household can meet shelter by buying the materials with no laying labour (cheaper), so mason and carpenter demand shrinks. Candidate wiring fix: drop the direct `satisfies` of the three raw materials so shelter is bought only as laid wall. Not done: it changes every economy's housing basket, `sim/tests/test_need_shares_carriage.py:74-85` and the price-solve fixtures assume the current set, and it cannot be judged without the long run. Orchestrator: run the command below, and if building stays under band, try that change.
+- Command: `python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad`. Expectation: unchanged by this commit (data and a test only); 619 stays open.
+
+## Shelter only through laid walls (2026-11)
+
+`data/world/needs.json` no longer credits raw `brick_1000`, `timber_m3`, `stone_blocks` and `cement_portland_kg` with shelter, so shelter is met by `brick_wall_m3`, `stone_wall_m3` and `timber_frame_m3`, which bill mason and carpenter hours. No test or fixture needed a change. Measure with `python3 sim/simulator.py economy-check --occupations --years 3 --civs rome_100ad`. The food-processing band's low edge stays unsourced: the Shaw-Taylor and Wrigley project pages opened give only sector totals (see the band's `band_source`).

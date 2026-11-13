@@ -11,8 +11,9 @@ Readers that still want a solver price; list them with
 `grep -rn "solved_prices(\|_price_tables()\|_material_prices()" sim --include=*.py | grep -v tests`:
 
 - the wage schedule's opening anchor (`sim/workforce/wage_schedule.py`);
-- the energy price tables (`sim/prices/energy_prices.py`);
-- the markets module's table reads (`sim/markets/goods_offers.py`, `sim/markets/port.py` `_material_prices`).
+- the energy price tables (`sim/prices/energy_prices.py`).
+
+The markets module's table reads (`sim/markets/goods_offers.py`, `sim/markets/port.py`) are gone: the grep no longer finds them there.
 
 What it would take: each reads the economy's price (`sim.economy.api`, `sim/economy/prices_at.py`) and the solver keeps one
 job, the cost of making a good with given techniques and input prices. A fix on one side of the seam is invisible on the

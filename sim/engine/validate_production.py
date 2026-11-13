@@ -57,10 +57,10 @@ PRODUCTION_DIR = os.path.join(ROOT, "data", "production")
 ENERGY_CARRIER_FIELDS = ("thermal_mj", "mechanical_mj", "electrical_mj")
 
 
-def load_production():
-    """Load the one canonical base-and-enabled-mod production graph."""
+def load_production(mods_dir=None):
+    """Load the one canonical base-and-enabled-mod production graph of `mods_dir` (the repository's when none is named)."""
     from sim.content.api import load_production_catalog
-    return load_production_catalog(ROOT), []
+    return load_production_catalog(ROOT, mods_dir), []
 
 
 def materials_the_tree_consumes(nodes):
@@ -231,6 +231,35 @@ def check_requires_node(where, entry, known_nodes):
                                 "removes this technique from every gated "
                                 "solve" % (where, required))
     return problems
+
+
+def check_animal_gate(where, entry):
+    """A draught or pack animal is made only by a society that can keep it: the entry names the node that holds it."""
+    serves = (entry.get("carrier_use") or {}).get("serves") or {}
+    if "animal" in serves and not entry.get("requires_node"):
+        return ["%s: serves %s as a carrier animal but states no requires_node, so a society without the animal would "
+                "breed and hold it" % (where, serves["animal"])]
+    return []
+
+
+def check_durable_gate(entries, serving_durables):
+    """A durable good that serves a need is held by households wherever it has a price, so every entry making it
+    names the node that lets a society make it (a price alone must not create a stock)."""
+    return ["%s: makes %s, a durable that serves a need, but states no requires_node, so a society that never made it "
+            "would hold it" % (name, good)
+            for name, entry in sorted(entries.items())
+            for good in sorted(set(entry.get("outputs") or {}) & set(serving_durables))
+            if not entry.get("requires_node")]
+
+
+def need_serving_durables():
+    """Goods that serve a need (data/world/needs.json) and have a service life (data/world/service_lives.json)."""
+    import json
+
+    def load(name):
+        with open(os.path.join(ROOT, "data", "world", name), encoding="utf-8") as handle:
+            return json.load(handle)
+    return set(load("needs.json")["goods"]) & set(load("service_lives.json")["years"])
 
 
 def check_operated_by(where, entry, known_nodes):
@@ -520,6 +549,7 @@ def check(entries, known_materials, known_trades, known_nodes=None):
         problems.extend(check_labour_hours(where, entry, known_trades))
         problems.extend(check_energy_carrier_fields(where, entry))
         problems.extend(check_requires_node(where, entry, known_nodes))
+        problems.extend(check_animal_gate(where, entry))
         problems.extend(check_operated_by(where, entry, known_nodes))
         problems.extend(check_capital(where, entry, known_materials, known_trades))
         problems.extend(check_yield_basis(where, entry))
@@ -538,4 +568,5 @@ def production_problems(nodes):
     known_trades = set(load_trade_registry(ROOT, entries))
     known_materials = material_namespace(entries, nodes.values())
     return (["duplicate %s" % duplicate for duplicate in duplicates]
-            + check(entries, known_materials, known_trades, known_nodes=set(nodes)))
+            + check(entries, known_materials, known_trades, known_nodes=set(nodes))
+            + check_durable_gate(entries, need_serving_durables()))

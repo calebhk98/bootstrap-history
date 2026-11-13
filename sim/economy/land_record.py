@@ -15,7 +15,8 @@ class LandRecord(OwnedRecord):
     titles: Dict[TileId, Dict[AgentId, float]] = field(default_factory=dict)   # tile -> holder -> share of its land (titles.py)
     tenancies: Dict[TileId, List[Dict[str, Any]]] = field(default_factory=dict)   # tile -> rows of tenant, lessor, share, arrears
     cleared_hectares: Dict[TileId, float] = field(default_factory=dict)   # tile -> ground cleared and taken up, added to its cropland (titles_ground.py)
+    sale_price_by_tile: Dict[TileId, float] = field(default_factory=dict)   # tile -> price a hectare of it last changed hands at (title_sales_year.py)
 
-    OWNERS = ("land_record", "titles", "titles_flight", "titles_ground", "land_market", "opening_rent")
+    OWNERS = ("land_record", "titles", "titles_flight", "titles_ground", "land_market", "opening_rent", "title_sales_year")
     AGENT_KEYED = ("titles", "tenancies")
-    SAVED_SORTED = ("titles", "tenancies", "cleared_hectares", "rent_paid")
+    SAVED_SORTED = ("titles", "tenancies", "cleared_hectares", "rent_paid", "sale_price_by_tile")

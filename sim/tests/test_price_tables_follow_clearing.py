@@ -23,7 +23,7 @@ def module_with(hectares):
 def farmed_hectares_given_to_the_solver(hectares):
     asked = []
 
-    def solver(granted, document, civilization, farmed_hectares, interest_rate, unskilled_trade):
+    def solver(granted, document, civilization, farmed_hectares, interest_rate, unskilled_trade, mods_dir=None):
         asked.append(farmed_hectares)
         return {"hectare_land": 1.0}, {"hectare_land": "derived"}
 

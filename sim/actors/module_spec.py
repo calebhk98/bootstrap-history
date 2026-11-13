@@ -17,7 +17,8 @@ from sim.markets.api import ForgetActorOrders, NoteActorPurchase, NoteActorSale
 from sim.polity.api import AddScandal
 from sim.production.api import AccrueExperience
 from sim.reporting.api import RecordEvent
-from sim.seats.api import AnswerOffer, ApplyForPatent, MakeOffer, SetDealing
+from sim.seats.api import (AddLicensee, AnswerOffer, ApplyForPatent, DropLapsedOffers, DropOffer, GiveShares, KeepOffer, MakeOffer, NextOfferSerial,
+                           ReceivePatent, ReleasePatent, TakeShares)
 from sim.ventures.api import AdoptPlant, ReleasePlant
 from sim.workforce.api import ReleaseStaff
 
@@ -34,7 +35,7 @@ READS_BY_OWNER = {
 	            "material_substitutes", "materials_serving", "home_household_tonnes", "border_duty_per_tonne"),
 	"workforce": ("trade_registry", "farm_share_of_hours", "staff", "trade_available", "trade_population", "people_who_exist", "taught_trade_people",
 	              "available_trades", "is_craft_trade", "base_tile", "labour_market",
-	              "money_per_labour_hour", "hours_per_person_year", "staff_on_all_books"),
+	              "money_per_labour_hour", "hours_per_person_year", "staff_on_all_books", "town_mortality_premium_by_tile"),
 	"production": ("is_venture", "revenue_estimate", "upkeep", "concern_takings", "concern_gross", "concern_upkeep",
 	               "node_output_market_factor", "concern_volume_ratio", "concern_baskets_now", "industry_depth", "industry_scale_ceiling",
 	               "ramp_share_at_full_depth", "basket_market_factor"),
@@ -51,7 +52,8 @@ READS_BY_OWNER = {
 	"ventures": ("operating", "operating_by_seat", "venture_opened_year", "venture_size", "concern_staff"),
 	"knowledge": ("tree_nodes", "techniques_held", "techniques_granted", "techniques_by_seat"),
 	"projects": ("substitute_quality_discount", "project_cost", "effective_risk", "seat_review"),
-	"content": ("declared_actor_kinds", "trades_absent", "not_traded_materials"),
+	"content": ("declared_actor_kinds", "trades_absent", "not_traded_materials", "mods_directory"),
+	"resources": ("mine_output_by_tile",),
 	"land": ("home_tiles_held", "home_modes", "reach_days"),
 	"ledger": ("transfer_listening", "seat_balance", "acting_balance"),
 	"materials": ("material_commodity", "materials_without_a_seller"),
@@ -70,6 +72,8 @@ MODULE_SPECS = (ModuleSpec(
 	publishes=(
 		ViewSpec("cast", "cast", **_LIVE),
 		ViewSpec("cast_state", "cast_state", **_LIVE),
+		ViewSpec("actor_exists", "actor_exists", kind=KEYED, **_LIVE),
+		ViewSpec("actor_sheet", "actor_sheet", kind=KEYED, **_LIVE),
 		ViewSpec("cast_recorded", "cast_recorded", **_LIVE),
 		ViewSpec("society_techs", "society_techs", seat_scoped=True, **_LIVE),
 		ViewSpec("government_figures", "government_figures", kind=KEYED, **_LIVE),
@@ -91,6 +95,7 @@ MODULE_SPECS = (ModuleSpec(
 		ViewSpec("has_state", "has_state", kind=KEYED, **_LIVE),
 		ViewSpec("countries", "countries", **_LIVE),
 		ViewSpec("organised_factions", "organised_factions", kind=KEYED, **_LIVE),
+		ViewSpec("stratum_grievances", "stratum_grievances", kind=KEYED, **_LIVE),
 		ViewSpec("home_country", "home_country", **_LIVE),
 		ViewSpec("state_knowledge", "state_knowledge", **_LIVE),
 		ViewSpec("holder_treasury", "holder_treasury", kind=KEYED, **_LIVE),
@@ -131,5 +136,6 @@ MODULE_SPECS = (ModuleSpec(
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(ChargeKeeping, ChargeActorsTheft, RefreshLenderOffers, AccrueExperience, ForgetActorOrders, NoteActorSale,
 	       NoteActorPurchase, ReleaseStaff, NoteActorHomeTrade, NoteActorTrade, NoteCargoLeg, AddScandal, RecordEvent, PayActor,
-	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques, SetDealing, ReleasePlant, AdoptPlant),
+	       CreditSeat, DebitSeat, NoteSeatCash, RestorePurse, ReceiveTechniques, ReleasePatent, ReceivePatent, AddLicensee, GiveShares, TakeShares, KeepOffer,
+	       DropOffer, DropLapsedOffers, NextOfferSerial, ReleasePlant, AdoptPlant),
 ),)

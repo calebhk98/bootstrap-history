@@ -66,7 +66,7 @@ class CopyVisibility(unittest.TestCase):
         self.assertEqual(difficulty_of({"a": nodes[0]}, "a"), 1.25)
 
     def test_the_category_table_is_checked(self):
-        self.assertEqual(validate_copy_visibility.check_category_table(copy_visibility_defaults.table()), [])
+        self.assertEqual(validate_copy_visibility.check_category_table(copy_visibility_defaults.table(data.MODDIR)), [])
         bad = {"x": {"copy_visibility": 0.0, "reason": "The frame is open to view and can be copied."}, "y": {"copy_visibility": 0.5, "reason": "short"}}
         self.assertEqual(len(validate_copy_visibility.check_category_table(bad)), 2)
 
@@ -80,7 +80,7 @@ class CopyVisibility(unittest.TestCase):
         self.assertGreater(len(taken), len(nodes) // 2)
 
     def test_what_shows_follows_the_kind_of_thing(self):
-        table = copy_visibility_defaults.table()
+        table = copy_visibility_defaults.table(data.MODDIR)
         self.assertGreater(table["bridges"]["copy_visibility"], table["organic_chemistry"]["copy_visibility"])
         self.assertGreater(table["wind_prime"]["copy_visibility"], table["alloys"]["copy_visibility"])
 

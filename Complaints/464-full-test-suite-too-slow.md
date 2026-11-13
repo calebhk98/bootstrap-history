@@ -1,6 +1,6 @@
 # The full test suite takes far longer than fifteen minutes
 
-**Status:** partly - a cold full suite runs inside thirty minutes on four cores; some topics still time out cold (see Where it stands; re-measure)
+**Status:** partly - the spin-up key is scoped (item 1 done); a cold full suite runs inside thirty minutes on four cores; some topics still time out cold (see Where it stands; re-measure); open: the warm-up of every civilisation (967), year cost (497, 968)
 
 The quick tier (`python3 -m sim.tests`) runs only topics marked `QUICK_TOPIC = True`, a few to
 a process, and stays fast after engine edits. The full suite (`python3 -m sim.tests --slow
@@ -34,13 +34,9 @@ quick topics batched with it.
 
 ## What would cut it further
 
-1. **Any engine edit re-runs the agent-economy spin-up** (now a short one in the suite). Its key
-   (`port_year.py`, `.cache/agent_economy`) hashes every `.py` under `sim/`, because
-   the spin-up reads a setup built from the whole `Sim`, and only the opening values and the
-   civilisation are in the key. Put the setup itself (or its digest) in the key and scope the
-   source to what `sim.economy.api` imports, as `prices.py` now does with `source_modules`.
-   Until then, the first full run after any edit pays one spin-up per civilisation and
-   configuration the tests open.
+1. **Any engine edit re-runs the agent-economy spin-up** (now a short one in the suite). Done: the key (`sim/markets/port_key.py`, `.cache/agent_economy`) hashes only the modules
+   named in `SPIN_UP_SOURCE_MODULES` (today `sim.markets.spin_up_run`) plus the setup values, so an
+   edit outside them no longer re-runs the spin-up. What still costs is the runner's warm-up of every civilisation (967).
 2. **CLI tests start a process per call.** Done for every caller that only sends commands: `proto()`
    and the topics that drive `simulator.py` call `sim/tests/cli_in_process.py`, which runs the real
    `sim.ui.cli.main` on the same argv, swaps stdin, stdout, stderr, argv, the environment and the working

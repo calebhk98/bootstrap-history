@@ -207,7 +207,7 @@ def _valid_save():
 	blob.update({"_civ": "rome_100ad", "_weights": {}, "_immortal": True,
 	             "_rng": [3, list(random.Random(1).getstate()[1]), None]})
 	blob["modules"]["scenario"] = {"year": 115, "fog": False}
-	game = SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"})
+	game = SimpleNamespace(nodes={"aqueduct": {}, "stone_cutting": {}}, civ={"id": "rome_100ad"}, view=lambda name: (lambda: {"smith": None, "labourer": None}))
 	return blob, game
 
 
@@ -271,7 +271,7 @@ def _test_flat_legacy_v2_save_rejected_by_load_state():
 	from types import SimpleNamespace
 	from sim.engine.saveload import load_state
 	state = SimpleNamespace(acting_record=SimpleNamespace(household=SimpleNamespace(saving_target=1250.0)))
-	game = SimpleNamespace(nodes={"printing_press": {}}, civ={"id": "rome_100ad"}, state=state, fog=False)
+	game = SimpleNamespace(nodes={"printing_press": {}}, civ={"id": "rome_100ad"}, state=state, fog=False, view=lambda name: (lambda: {"smith": None, "labourer": None}))
 	flat_v2_blob = {
 		"_civ": "rome_100ad",
 		"_goal": "printing_press",

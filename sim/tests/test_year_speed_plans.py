@@ -28,9 +28,18 @@ def near(left, right):
 class PlansAreThePlainPlans(unittest.TestCase):
 
     def test_every_producer_of_random_economies(self):
+        self.compare_all(0.0)
+
+    def test_every_producer_of_random_economies_with_a_harvest_tax(self):
+        """The same, the state taking a third of every harvest: the kernel nets it as the plain plan does."""
+        self.compare_all(1.0 / 3.0)
+
+    def compare_all(self, share):
         compared = running = 0
         for seed in range(8):
             setup, record, view, _ledger, area_map = economy_of(seed, producer_count=60)
+            self.assertIs(view.setup, setup)
+            setup.harvest_share_by_good = {good: share for good in setup.specs} if share else {}
             for producer_id in sorted(record.producers)[::7]:      # some idle after a bankruptcy
                 record.producers[producer_id] = replace(record.producers[producer_id], idle_years=2)
             arrays = refreshed(YearArrays.build(setup, record, area_map, view), setup, record, view)

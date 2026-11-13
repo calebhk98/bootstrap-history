@@ -5,6 +5,7 @@ from collections import defaultdict
 
 from sim.engine.ui_port import node_names
 from sim.engine.ui_port import IdentityCache
+from sim.content.directory_stamp import DirectoryMemo
 
 # The real ids, and a case-folded index onto them. Built once: parse_typed has
 # no Sim to ask and runs on every line a player types. The names need only the merged
@@ -39,7 +40,33 @@ for _nn_k, _nn_n in _NODES_ONCE.items():
 del _nn_k, _nn_n
 
 
-def _resolve_by_name(text):
+class NodeNames:
+    """The node ids and names of one tree: the case-folded id index and the normalised-name index."""
+
+    def __init__(self, names):
+        self.ids = frozenset(names)
+        self.ids_lower = {node_id.lower(): node_id for node_id in self.ids}
+        self.by_name = defaultdict(list)
+        for node_id, record in names.items():
+            self.by_name[_norm_name(record["name"])].append(node_id)
+
+
+_REPOSITORY_NAMES = None
+_names_by_directory = DirectoryMemo()
+
+
+def names_for(mods_dir=None):
+    """The name index of the tree with the mods of `mods_dir` applied, built once per directory; the repository's tree when none
+    is named (the command line's)."""
+    global _REPOSITORY_NAMES
+    if mods_dir is None:
+        if _REPOSITORY_NAMES is None:
+            _REPOSITORY_NAMES = NodeNames(_NODES_ONCE)
+        return _REPOSITORY_NAMES
+    return _names_by_directory.get(mods_dir, lambda: NodeNames(node_names(mods_dir)))
+
+
+def _resolve_by_name(text, names=None):
     """Every id whose name matches `text`, case and punctuation folded.
 
     Exact match first, so that typing a name back verbatim - which is what a
@@ -50,19 +77,20 @@ def _resolve_by_name(text):
     id typo, extended to names because a player cannot be expected to know
     that names, unlike ids, are not unique.
     """
+    by_name = NODE_NAME_NORM if names is None else names.by_name
     normalized_query = _norm_name(text)
     if not normalized_query:
         return []
-    exact = NODE_NAME_NORM.get(normalized_query)
+    exact = by_name.get(normalized_query)
     if exact:
         return list(exact)
     if len(normalized_query) < 3:
         return []            # too short to mean anything as a name fragment
-    prefix = [node_id for normalized_name, ids in NODE_NAME_NORM.items() if normalized_name.startswith(normalized_query) for node_id in ids]
+    prefix = [node_id for normalized_name, ids in by_name.items() if normalized_name.startswith(normalized_query) for node_id in ids]
     if prefix:
         return prefix
     if len(normalized_query) >= 4:
-        return [node_id for normalized_name, ids in NODE_NAME_NORM.items() if normalized_query in normalized_name for node_id in ids]
+        return [node_id for normalized_name, ids in by_name.items() if normalized_query in normalized_name for node_id in ids]
     return []
 
 

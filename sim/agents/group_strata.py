@@ -46,13 +46,13 @@ def remember_welfare(strata: List[Any], world: Any = None) -> None:
 		remember_idle([stratum for stratum in strata if organisable(stratum)], world)
 	for stratum in strata:
 		record = stratum.record
-		if not organisable(stratum):
+		if record.members <= 0.0:
 			continue
 		if record.welfare_reference <= 0.0:
 			record.welfare_reference = record.welfare
 		else:
 			record.welfare_reference += STRATUM_WELFARE_MEMORY_RATE * (record.welfare - record.welfare_reference)
-		if world is None:
+		if world is None or not organisable(stratum):
 			continue
 		for component, income in grievance_parts(stratum, holders, world).items():
 			reference = record.income_reference.get(component, 0.0)

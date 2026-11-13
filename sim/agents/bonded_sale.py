@@ -11,19 +11,28 @@ from .strata_seed import has_bondage
 from .stratum import stratum_id
 
 CAPTIVE_SHARE_OF_DEFEATED_LOSSES = declare(
-	"CAPTIVE_SHARE_OF_DEFEATED_LOSSES", 0.2, kind="temporary_heuristic", unit="share of the people a beaten force loses",
-	source=None, confidence="D",
+	"CAPTIVE_SHARE_OF_DEFEATED_LOSSES", 0.2, kind="engineering_estimate", unit="share of the people a beaten force loses",
+	source="Wikipedia 'Battle of Cannae' (https://en.wikipedia.org/wiki/Battle_of_Cannae, opened 2026-11): Livy 48,200 Romans "
+		"killed and 19,300 captured, 19,300 / 67,500 = 0.29; Polybius about 70,000 killed and 10,000 captured, "
+		"10,000 / 80,000 = 0.125; Plutarch 50,000 killed and 4,000 + 10,000 captured, 14,000 / 64,000 = 0.22. Wikipedia 'Atuatuci' "
+		"(https://en.wikipedia.org/wiki/Atuatuci): 4,000 killed and the surviving 53,000 sold, 0.93 of a besieged people.",
+	confidence="C",
 	why="Of the people a force loses in a defeat, this share is taken alive and, where the winner's society keeps bonded "
-		"people, added to them. Scheidel 2005 (JRS 95, the section on the sex ratio of the slave supply, read in the Gwern copy; page not read) writes that the enslavement of "
-		"non-combatants was a natural outcome of war and that women and children more often survive military defeat than "
-		"adult men; he gives no share, and no source read gives one.",
-	retire="648 captives by campaign record (Roman and other sources of prisoners taken per battle)")
+		"people, added to them. Field-battle accounts of one famous defeat give 0.125 to 0.29 (mean 0.21); a besieged people "
+		"that cannot leave gives 0.93, so 0.2 is the field-battle ballpark. Counts are the ancient authors' own, from one "
+		"battle; Scheidel 2005 (JRS 95) adds that women and children more often survived defeat than adult men.")
 
 CAPTIVE_SHARE_OF_CONQUERED_PEOPLE = declare(
 	"CAPTIVE_SHARE_OF_CONQUERED_PEOPLE", 0.02, kind="temporary_heuristic", unit="share of a taken tile's people",
-	source=None, confidence="D",
+	source="Sacked or besieged peoples carried off, from opened pages: Wikipedia 'Third Punic War' (50,000 survivors sold of a "
+		"population estimated from 90,000 to 800,000, so 0.06 to 0.56); Wikipedia 'Atuatuci' (53,000 sold of a fortress holding "
+		"at least 57,000, 0.93). A tile that surrendered under the custom of sparing those who yield before the ram touches the "
+		"wall is not carried off in any case opened; no count of how many taken tiles were sacked was found.",
+	confidence="D",
 	why="When a tile is taken by force, this share of its people is carried off as bonded where the taker's society keeps "
-		"bonded people (Scheidel 2005 on the enslavement of non-combatants after a defeat; no share is given).",
+		"bonded people. Where a place is sacked 0.06 to 0.93 of its people are sold (cases above); a tile taken by "
+		"capitulation loses none. 0.02 is the average if about one taken tile in ten to fifteen is sacked, an "
+		"assumption with no source, so the figure stays a labelled heuristic.",
 	retire="648 captives by campaign record (Roman and other sources of prisoners taken per battle)")
 
 

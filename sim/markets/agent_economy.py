@@ -15,7 +15,6 @@ object for the economy and the record.
 from sim.economy import api as economy_api
 from sim.economy.api import Economy
 from sim.agents.api import PURSE_CURRENCY
-from sim.prices.api import prices as price_solver
 from sim.rekey import rekey
 
 from . import port_late, spin_up_run
@@ -34,6 +33,12 @@ class AgentEconomy:
         self._economy = None
         self._built_from = None          # the stored dict the live economy belongs to; a load replaces it
         self.figures = YearFigures()
+
+    def production_catalog(self):
+        return self._world.production_catalog()
+
+    def tonnes_per_unit(self, material):
+        return self._world.tonnes_per_unit(material)
 
     @property
     def stored(self):
@@ -83,7 +88,7 @@ class AgentEconomy:
         if held == self.stored.get("techniques_admitted"):
             return
         self.stored["techniques_admitted"] = held
-        production = price_solver.default_production_entries()
+        production = self._world.production_catalog()
         grown = port_late.opening_with_techniques(self._world, self.stored["opening"], frozenset(held), production,
                                                   economy_api.opening_wage_level(self._economy))
         if grown is None:

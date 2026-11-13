@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from unittest import mock
 
 from sim.actors.api import RecordConquestContact
-from sim.agents import api as agents_api
+from sim.agents import api as agents_api, army_faction, ruler
 from sim.campaigns import captives as captives_module, stability
 from sim.campaigns.commands import DisbandArmy, OrderArmy, RaiseArmy, RecallArmy
 from sim.campaigns.module import Campaigns
@@ -19,7 +19,7 @@ from sim.demography.api import AddCaptives
 from sim.geography import tile_owners
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
-from sim.polity.api import (CloseSuccessionDispute, RecordRising, ReplaceRuler, StrikeFromForce)
+from sim.polity.api import (AddArmyPlunder, CloseSuccessionDispute, RecordRising, ReplaceRuler, StrikeFromForce)
 from sim.agents import revolt
 from sim.stores.api import WriteStore
 from sim.tests import module_harness
@@ -260,24 +260,26 @@ class TakeAndHoldTests(unittest.TestCase):
         with mock.patch.object(captives_module.settlement, "population_share", lambda owned, tile: 0.5):
             module._take(army(tile=BORDER), RIVAL, {})
         kinds = [type(command) for command in module_harness.sent(module)]
-        self.assertEqual(kinds, [AddCaptives, RecordWorldEvent, TransferTile, RecordConquestContact])
+        self.assertEqual(kinds, [AddCaptives, RecordWorldEvent, AddArmyPlunder, TransferTile, RecordConquestContact])
 
-    def consolidate(self, held_since, year, owners, armies, controls=None):
-        module, _ = build(owners=owners, extra={"year": year, "store": lambda name: {"default": None, "values": controls or {}}})
+    def consolidate(self, held_since, owners, shares, controls=None):
+        collection = SimpleNamespace(collection_shares=lambda: shares)
+        module, _ = build(owners=owners, extra={"store": lambda name: {"default": None, "values": controls or {}},
+                                                "country_world": lambda owner: SimpleNamespace(collection=collection)})
         module.world.held_since = held_since
-        module.world.armies = armies
         module.consolidate_conquests()
         return module
 
-    def test_a_tile_held_with_an_army_on_it_rises_in_control_and_one_left_empty_does_not(self):
+    def test_a_tile_rises_in_control_as_the_owners_authority_on_it_grows(self):
         entry = campaign_year_rules.conquest_entry(100, OWNER, RIVAL)
-        module = self.consolidate({"t_held": dict(entry), "t_empty": dict(entry)}, 1100, {"t_held": OWNER, "t_empty": OWNER},
-                                  {"a1": army(tile="t_held").to_dict()})
-        self.assertEqual(module_harness.sent(module), [WriteStore("control", "t_held", tile_owners.conquest_level(1000.0))])
-        self.assertEqual(sorted(module.world.held_since), ["t_empty", "t_held"])
+        module = self.consolidate({"t_held": dict(entry), "t_weak": dict(entry)}, {"t_held": OWNER, "t_weak": OWNER},
+                                  {"t_held": 1.0, "t_weak": 0.1},
+                                  controls={"t_held": tile_owners.conquest_level(0.0), "t_weak": tile_owners.conquest_level(0.0)})
+        self.assertEqual(module_harness.sent(module), [WriteStore("control", "t_held", tile_owners.conquest_level(1.0))])
+        self.assertEqual(sorted(module.world.held_since), ["t_held", "t_weak"])
 
     def test_a_tile_lost_again_leaves_the_held_record(self):
-        module = self.consolidate({"t_held": campaign_year_rules.conquest_entry(100, OWNER, RIVAL)}, 120, {"t_held": RIVAL}, {})
+        module = self.consolidate({"t_held": campaign_year_rules.conquest_entry(100, OWNER, RIVAL)}, {"t_held": RIVAL}, {})
         self.assertEqual((module.world.held_since, module_harness.sent(module)), ({}, []))
 
 
@@ -410,7 +412,8 @@ class CaptivesTests(unittest.TestCase):
         self.assertAlmostEqual(taken, agents_api.captives_from_losses(1000.0))
         self.assertEqual(module_harness.sent(module), [
             AddCaptives(OWNER, taken),
-            RecordWorldEvent("captives", actors=(OWNER, RIVAL), tiles=("t1",), cause="battle", facts={"people": taken})])
+            RecordWorldEvent("captives", actors=(OWNER, RIVAL), tiles=("t1",), cause="battle", facts={"people": taken}),
+            AddArmyPlunder(OWNER, army_faction.plunder_of_captives(taken, 10.0))])
 
     def test_no_losses_take_no_captives_and_log_nothing(self):
         module = self.captor()
@@ -449,7 +452,7 @@ class RisingTests(unittest.TestCase):
 
     def rise(self, kind, on_seat=False, cause="unrest", challenger="faction_a"):
         module, _ = build()
-        record = SimpleNamespace(succession_challenger=challenger)
+        record = SimpleNamespace(succession_challenger=challenger, council_averaged=False)
         world = flat_namespace(rng_for=lambda *key: SimpleNamespace(random=lambda: 0.25))
         with mock.patch.object(stability.revolt, "resolve", return_value=outcome(kind)) as resolve, \
                 mock.patch.object(stability.ruler, "opening_age", return_value=21):
@@ -477,11 +480,11 @@ class RisingTests(unittest.TestCase):
 
     def test_a_won_rising_at_the_seat_replaces_the_ruler_backed_by_the_rising(self):
         module, _, _ = self.rise(revolt.RULER_REPLACED, on_seat=True)
-        self.assertEqual(module_harness.sent(module)[-1], ReplaceRuler(OWNER, 21, "rising"))
+        self.assertEqual(module_harness.sent(module)[-1], ReplaceRuler(OWNER, 21, "rising", ruler.draw_competence(0.25)))
 
     def test_a_disputed_accession_won_puts_the_challenger_on_the_throne(self):
         module, _, _ = self.rise(revolt.RULER_REPLACED, on_seat=True, cause="disputed_accession")
-        self.assertEqual(module_harness.sent(module)[-1], ReplaceRuler(OWNER, 21, "faction_a"))
+        self.assertEqual(module_harness.sent(module)[-1], ReplaceRuler(OWNER, 21, "faction_a", ruler.draw_competence(0.25)))
 
 
 class Accession(Campaigns):
@@ -504,7 +507,7 @@ class DisputedAccessionTests(unittest.TestCase):
     def dispute(self, backing, seat="seat"):
         module, _ = build(Accession)
         module.fought = []
-        record = SimpleNamespace(succession_challenger="faction_a")
+        record = SimpleNamespace(succession_challenger="faction_a", loyalty=1.0, army=0.0)
         world = flat_namespace(faction_backing=lambda: backing)
         with mock.patch.object(stability.battle, "terrain_factor", return_value=1.0), \
                 mock.patch.object(stability.unrest, "rising_soldiers", return_value=90.0) as soldiers, \
@@ -525,6 +528,29 @@ class DisputedAccessionTests(unittest.TestCase):
         self.assertEqual(soldiers.call_args.args, (1000.0, 0.25))
         self.assertEqual((len(module.fought), module.fought[0][3], module.fought[0][-2:]), (1, "seat", (100, "disputed_accession")))
         self.assertEqual(module_harness.sent(module), [CloseSuccessionDispute(OWNER)])
+
+
+class ArmyRisingTests(unittest.TestCase):
+
+    def rise(self, loyalty, army=100.0, seat="seat"):
+        module, _ = build(Accession)
+        module.fought = []
+        record = SimpleNamespace(loyalty=loyalty, army=army)
+        with mock.patch.object(stability.battle, "terrain_factor", return_value=1.0), \
+                mock.patch.object(stability.campaign_contest, "strength_of", return_value=50.0):
+            module._army_rises(OWNER, flat_namespace(), record, seat, 1.0, 100)
+        return module
+
+    def test_a_loyal_army_or_one_with_no_seat_does_not_rise(self):
+        self.assertEqual(self.rise(1.0).fought, [])
+        self.assertEqual(self.rise(0.0, seat=None).fought, [])
+
+    def test_an_army_with_no_loyalty_rises_at_the_seat_against_a_garrison_with_nobody_left_in_it(self):
+        module = self.rise(0.0)
+        self.assertEqual(len(module.fought), 1)
+        self.assertEqual(module.fought[0][3], "seat")
+        self.assertEqual(module.fought[0][-2:], (100, "army"))
+        self.assertEqual(module.fought[0][4], 100.0)   # soldiers
 
 
 class RecordingStability(Campaigns):

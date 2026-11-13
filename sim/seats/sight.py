@@ -1,10 +1,14 @@
 """One seat hearing of what another has built (the rule is sight_rules.py)."""
 from typing import Set
 
+from sim.agents.api import SECRET_EXPOSURE
 from sim.assembly.api import Part
 from sim.geography.api import distance_between_places
 from sim.knowledge.api import RevealNodes
 
+from sim.world import belief, espionage
+
+from . import intelligence_rules
 from .sight_rules import nodes_heard_of
 
 
@@ -20,13 +24,25 @@ class Sight(Part):
         techniques = self.needs.techniques_by_seat()
         operating = self.needs.operating_by_seat()
         heard = set()
+        fielded = self.parts.intelligence.pay_for_spies()
+        year = self.needs.year()
+        contacts = len(seats) - 2
         for builder_id in seats:
             built = techniques[builder_id].held - techniques[builder_id].granted
-            if builder_id == observer_id or not built:
+            if builder_id == observer_id:
                 continue
             distance = self.distance_between_seats(builder_id, observer_id)
+            spies = fielded.get(builder_id, 0)
+            truths = {"techniques": float(len(built)), "cash": float(self.needs.seat_balance[builder_id])}
+            self.seat.beliefs[builder_id] = intelligence_rules.beliefs_after_year(
+                self.seat.beliefs.get(builder_id), truths, observer_id, builder_id, year, distance, spies)
+            if not built:
+                continue
             heard |= nodes_heard_of(built, operating[builder_id], self.needs.disclosures[builder_id],
-                                    observer_held | observer_revealed, distance, self.needs.copy_difficulty.__getitem__)
+                                    observer_held | observer_revealed, distance, self.needs.copy_difficulty.__getitem__,
+                                    lambda node_id: espionage.secret_exposure(
+                                        SECRET_EXPOSURE, self.needs.copy_difficulty[node_id], contacts, spies,
+                                        espionage.CONTACT_LEAK_RATE, espionage.SPY_LEAK_RATE))
         self.needs.send(RevealNodes(tuple(sorted(heard))))
         return heard
 

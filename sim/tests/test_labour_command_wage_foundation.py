@@ -21,7 +21,8 @@ def stand_in_labour_views():
     return dict(
         literate_trades=(), labour_market=StandInMarket(), base_annual_wage=lambda trade: 70.0, wage=lambda trade: 0.05,
         hours_reserved=lambda trade: 0.0, market_supply=lambda trade: 1000.0,
-        hours_you_can_call_on=lambda trade: 1000.0, trade_available=lambda trade: True)
+        hours_you_can_call_on=lambda trade: 1000.0, trade_available=lambda trade: True,
+        trade_records={"smith": None, "labourer": None}, trade_family=lambda trade: "craft", trade_notes={}, trades_absent=frozenset())
 
 
 def opened_view(opened):

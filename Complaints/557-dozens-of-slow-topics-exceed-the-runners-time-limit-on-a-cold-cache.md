@@ -28,3 +28,8 @@ The runner fails any topic still running after `TOPIC_SECONDS` (`sim/tests/__mai
 
 - A per-topic time allowance for `hash_seed_order` (its subject is two fresh openings side by side): proposed, not in the tree now.
 - `step_reply_severity` with one or two years: no faster.
+
+## Warm run on 7f6cad64 (2026-11-11)
+
+`python3 -m sim.tests --slow --jobs 2 --timing` pinned to 7f6cad64 with current openings: four topics time out at the default limit
+(`mod_kernels_smoke`, `player_available_smoke`, `pollution_mod_smoke`, `religion_mod_smoke`), all passing alone with a longer limit.

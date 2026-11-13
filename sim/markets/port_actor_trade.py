@@ -7,8 +7,6 @@ from sim.actors import api as actors_api
 from sim.economy import api as economy_api
 from sim.ledger.api import UNPAID_CHARGE_KIND, PayExchange, ReceiveFromExchange
 from sim.reporting.api import RecordEvent
-from sim.prices.api import prices as price_solver
-from .unit_mass import tonnes_per_unit
 
 from . import port_actors
 
@@ -47,7 +45,7 @@ class ActorTrade:
 
     def fleet_goods(self, buyer):
         economy = self._agent.economy()
-        production = price_solver.default_production_entries()
+        production = self._world.production_catalog()
         specs = economy_api.good_specs(economy)
         tile = self._agent.actor_tile(buyer)
         candidates = [good for good in sorted(production) if good in economy_api.recipes_of(economy) and good in specs
@@ -69,10 +67,10 @@ class ActorTrade:
         def reservation(seller, node_id, material, tile):
             return self._seats.reservation(node_id, material, tile, view, seller)
 
-        moves, sale_orders = port_actors.sale_orders(economy, sales, tonnes_per_unit, agent.actor_tile, reservation)
+        moves, sale_orders = port_actors.sale_orders(economy, sales, world.tonnes_per_unit, agent.actor_tile, reservation)
         coin = economy_api.coin_per_unit(economy)
         purchase_orders, funding = port_actors.purchase_orders(
-            economy, purchases, tonnes_per_unit, agent.actor_tile, world.economy.materials_in, coin)
+            economy, purchases, world.tonnes_per_unit, agent.actor_tile, world.economy.materials_in, coin)
         economy_api.move_goods(economy, moves)
         purchase_orders, funding, refused = port_actors.keep_paid_purchases(
             purchase_orders, funding, lambda buyer, coin_spent: world.send(PayExchange(buyer, coin_spent, "market purchases")))
@@ -91,9 +89,9 @@ class ActorTrade:
         back to their seller's stores. Bought capital assets stay with their buyer and materials are used up."""
         economy = self._agent.economy()
         proceeds, refunds, delivered, unsold = port_actors.close(economy, sales, purchases)
-        actors_api.keep_deliveries(self._world.scenario.actors.actors, delivered, tonnes_per_unit)   # goods a buyer that keeps its purchases bought join its stores, in tonnes
+        actors_api.keep_deliveries(self._world.scenario.actors.actors, delivered, self._world.tonnes_per_unit)   # goods a buyer that keeps its purchases bought join its stores, in tonnes
         for seller, goods in sorted(unsold.items()):   # what did not sell goes back to the seller's stores
-            port_actors.take_back(self._world.scenario.actors.actors[seller].record.stores, goods, tonnes_per_unit)
+            port_actors.take_back(self._world.scenario.actors.actors[seller].record.stores, goods, self._world.tonnes_per_unit)
         coin = economy_api.coin_per_unit(economy)
         for amounts, label in ((proceeds, "market sales"), (refunds, "market purchases returned")):
             for actor_id, units in sorted(amounts.items()):

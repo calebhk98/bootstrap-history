@@ -17,10 +17,12 @@ import random
 import types
 import unittest
 from dataclasses import replace
+from unittest import mock
 
 import numpy as np
 
 from sim.tests.goods_fixtures import goods_on
+from sim.economy.ask_ceiling import AskAlternatives
 from sim.economy import goods_order_book, goods_year_batch, year_goods, seller_offers, unsold_search
 from sim.economy.inventory import holding_reservation
 from sim.economy.market_memory import market_key
@@ -33,6 +35,14 @@ from sim.tests.year_close_fixture import AREAS, GOODS, MONEY, TILES, economy_of
 RELATIVE = 1e-8
 
 
+def written_out_multiple(_self, good, tile):
+    """The width of the band above cost the buyers give, a fixed figure per good and tile in place of the year's prices."""
+    return 1.0 + (len(good) + len(tile)) % 4 * 0.75
+
+
+with_written_out_bands = mock.patch.object(AskAlternatives, "multiple", written_out_multiple)
+
+
 def near(left, right):
     if math.isinf(left) or math.isinf(right) or math.isnan(left) or math.isnan(right):
         return left == right or (math.isnan(left) and math.isnan(right))
@@ -41,7 +51,7 @@ def near(left, right):
 
 def with_markets(seed):
     setup, record, view, _ledger, area_map = economy_of(seed)
-    setup.basket_for = lambda tile: types.SimpleNamespace(substitution=1.0 + (hash(tile) % 3) * 0.7)
+    setup.basket_for = lambda tile: types.SimpleNamespace(substitution=1.0 + (hash(tile) % 3) * 0.7, needs=())
     record.goods = goods_on(record.memory)
     record.land = types.SimpleNamespace(land_rent={tile: random.Random(seed).uniform(0.0, 3.0) * (index % 3) for index, tile in enumerate(TILES)})
     setup.opening_rate = getattr(setup, "opening_rate", 0.04)
@@ -97,6 +107,7 @@ class OfferCostsAreTheCostFigures(unittest.TestCase):
                     self.assertTrue(near(math.nan if held is None else held, float(costs.expected[row, slot])))
 
 
+@with_written_out_bands
 class BatchedMarketsAreTheMarketsOneByOne(unittest.TestCase):
 
     def test_random_markets(self):
@@ -121,7 +132,7 @@ class BatchedMarketsAreTheMarketsOneByOne(unittest.TestCase):
                         markets.append((good, area, bids, offers, memory.prices.get(market_key(good, area))))
             batched = goods_year_batch.clear_markets(setup, record, view, arrays, costs, markets)
             for (good, area, bids, offers, last_price), (new_offers, new_result) in zip(markets, batched):
-                unit_costs = seller_offers.UnitCosts()
+                unit_costs = seller_offers.UnitCosts(AskAlternatives(setup, record))
                 chosen = seller_offers.strategic_offers(setup, record, view, bids, offers, last_price, unit_costs)
                 old_offers, old_result = unsold_search.clear_with_search(
                     setup, record, view, bids, offers, chosen, good, area, MONEY, last_price, unit_costs)

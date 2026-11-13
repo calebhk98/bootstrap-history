@@ -44,9 +44,15 @@ class YearView(View):
     def loss_rate(self, agent, currency):
         return 0.01
 
+    def land_yield(self, currency):
+        return None
 
-def year_world(rng):
-    basket, view, cohorts = random_world(rng)
+    def public_premium(self, currency):
+        return None
+
+
+def year_world(rng, need_data=None):
+    basket, view, cohorts = random_world(rng, need_data)
     held = dict(view.held)
     claims, equity = {}, {}
     for cohort in cohorts:

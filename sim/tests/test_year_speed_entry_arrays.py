@@ -180,9 +180,16 @@ class CostsAreTheOldCosts(unittest.TestCase):
 
 class ReturnsAreTheOldReturns(unittest.TestCase):
     def test_a_recipes_return_on_a_tile_as_returns_at_gives_it(self):
+        self.compare_returns(0.0)
+
+    def test_the_same_with_the_state_taking_a_third_of_every_harvest(self):
+        self.compare_returns(1.0 / 3.0)
+
+    def compare_returns(self, share):
         compared = 0
         for seed in range(8):
             setup, record, view, area_map, carriage = economy(seed)
+            setup.harvest_share_by_good = {good: share for good in setup.specs} if share else {}
             rate = 0.07
             with entry_practice.shared_crews(record.producers):
                 tables = tables_of(setup, record, view, area_map, carriage)

@@ -41,7 +41,7 @@ class NoFallbackPriceTests(unittest.TestCase):
                                 requires_node="far_node"),
         }
         steps = {"near_node": 1, "far_node": 5}
-        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held: steps[node]):
+        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held, mods_dir=None: steps[node]):
             goods, provenance = engine_prices.priced_goods_table(set(), _wage_document(), production_entries=entries)
         self.assertEqual(provenance["copper_kg"], "gated")
         self.assertNotIn("zinc_kg", goods)
@@ -55,7 +55,7 @@ class NoFallbackPriceTests(unittest.TestCase):
                             requires_node="flock_node"),
         }
         steps = {"rear_node": 3, "flock_node": 1}
-        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held: steps[node]):
+        with mock.patch.object(engine_prices, "_unheld_steps_to", lambda node, held, mods_dir=None: steps[node]):
             goods, provenance = engine_prices.priced_goods_table(set(), _wage_document(), production_entries=entries)
         self.assertEqual(provenance["draught_kg"], "gated")
         self.assertEqual(provenance["wool_kg"], "gated")
@@ -78,7 +78,8 @@ def _fake_sim(home_prices, gated=()):
             tag=lambda material: (material, material),
             prices=lambda: home_prices,
             price_per_unit=lambda material: home_prices.get(material),
-            priced_key=lambda tag, prices: tag if tag in prices else None),
+            priced_key=lambda tag, prices: tag if tag in prices else None,
+            sold_material=lambda tag: tag),
         year=100, state=types.SimpleNamespace(projects=types.SimpleNamespace()), techniques_held=frozenset,
         finance=types.SimpleNamespace(market_rate=lambda: 0.05),
         economy=types.SimpleNamespace(agent_prices_at=lambda tile=None: None),      # the economy is still opening
@@ -126,7 +127,7 @@ class ProjectNeedsASellerTests(unittest.TestCase):
 
     def _project(self, offers, stock_tonnes=0.0):
         return materials_stand_in.build(tree_nodes={"alloy_works": self.NODE}, can_be_bought=offers.can_be_bought,
-                                        goods_stock=lambda key: stock_tonnes)
+                                        goods_pool_stock=lambda key: stock_tonnes)
 
     def _verdict(self, game, why):
         return game.start_gate_material_seller("alloy_works", self.NODE, False, None, why)

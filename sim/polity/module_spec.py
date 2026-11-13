@@ -28,6 +28,7 @@ READS_BY_OWNER = {
 	"materials": ("material_pool", "material_substitutes"),
 	"reporting": ("real_output_per_head",),
 	"hazards": ("output_factor",),
+	"content": ("mods_directory",),
 }
 
 # Everything here reads the seat's own state and state written outside any command of polity (the techniques held, the cast,
@@ -84,6 +85,7 @@ MODULE_SPECS = (ModuleSpec(
 		(commands.SetGrievanceReference, "set_grievance_reference"), (commands.ResetStateUnrest, "reset_state_unrest"),
 		(commands.SetTileReadings, "set_tile_readings"), (commands.RecordRising, "record_rising"),
 		(commands.ReplaceRuler, "replace_ruler"), (commands.CloseSuccessionDispute, "close_succession_dispute"),
+		(commands.AddArmyPlunder, "add_army_plunder"),
 	),
 	# () -> (reader, seizer): a claim the acting household holds on other actors, which a confiscation counts and, once the purse is
 	# empty, takes. reader() -> money the household is owed; seizer(amount, taker) -> money actually handed to `taker`.

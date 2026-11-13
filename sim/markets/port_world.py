@@ -8,7 +8,10 @@ port_world_map.py (`map`)."""
 from types import SimpleNamespace
 
 
+from sim.world.demand import production_data
+
 from . import trade_duty
+from .unit_mass import tonnes_per_unit
 from .port_world_foreign import ForeignReads
 from .port_world_map import MapReads
 from .port_world_reads import FarmReads, MaterialReads, PortFinanceReads, ProductionReads, ScenarioReads
@@ -122,6 +125,14 @@ class PortWorld:
 	def household_need_data(self):
 		"""{"needs", "goods"} of the base game with the installed mods applied."""
 		return self._needs.household_need_data()
+
+	def production_catalog(self):
+		"""The production entries of the mods directory this game is over."""
+		return production_data(self._needs.mods_directory())
+
+	def tonnes_per_unit(self, material):
+		"""Tonnes in one unit of a material under this game's production data; None for a unit with no finite mass."""
+		return tonnes_per_unit(material, self.production_catalog())
 
 	def household_work_data(self):
 		"""The hours of household work by task, with the installed mods applied."""

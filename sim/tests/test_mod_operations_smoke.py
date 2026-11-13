@@ -91,7 +91,7 @@ def register(api):
     api.sends(Visit)
 
     @api.command("visit", group="game", summary="a visit", usage=["visit"], description="Visit the temple.")
-    def visit(access, nodes, cmd, ended):
+    def visit(access, cmd, ended):
         return {"ok": True, "visits": access.send(Visit(cmd.get("text", "pilgrim")))}
 '''
 
@@ -140,18 +140,18 @@ def register(api):
     api.uses_effects("record_event")
 
     @api.command("omen", group="game", summary="an omen", usage=["omen"], description="Record an omen.")
-    def omen(access, nodes, cmd, ended):
+    def omen(access, cmd, ended):
         return {"ok": True, "kind": api.effects.record_event(access, "omen", "a comet")["kind"]}
 
     @api.command("curse", group="game", summary="a curse", usage=["curse"], description="Pay without declaring it.")
-    def curse(access, nodes, cmd, ended):
+    def curse(access, cmd, ended):
         api.effects.pay(access, "government:x", "government:y", 1.0, "a gift")
         return {"ok": True}
 '''
 
 SAME_WORD = '''
 def register(api):
-    api.command("greet", group="game", summary="s", usage=["greet"], description="d", aliases=["hi"])(lambda sim, nodes, cmd, ended: {"ok": True})
+    api.command("greet", group="game", summary="s", usage=["greet"], description="d", aliases=["hi"])(lambda access, cmd, ended: {"ok": True})
 '''
 
 
@@ -464,7 +464,7 @@ class EffectsTests(OperationCase):
     def test_an_effect_the_mod_did_not_declare_is_refused_naming_the_mod_and_the_view(self):
         with self.assertRaises(UndeclaredRead) as caught:
             _agent_dispatch_inner(self.modded, {}, {"cmd": ALPHA + ":curse"})
-        self.assertEqual((caught.exception.mod_id, caught.exception.view), (ALPHA, "cast"))
+        self.assertEqual((caught.exception.mod_id, caught.exception.view), (ALPHA, "actor_exists"))
 
 
 class WithdrawTests(OperationCase):

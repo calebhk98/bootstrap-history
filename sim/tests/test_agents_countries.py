@@ -24,7 +24,7 @@ class CountryAnswers:
 	"""What the economy answers for a foreign country: its own pay, output and need floors."""
 
 	def pay_per_person_year(self, trade):
-		return {"labourer": 50.0, "soldier": 60.0, "scribe": 75.0}[trade]
+		return {"labourer": 50.0, "soldier": 60.0, "scribe": 75.0, "mason": 80.0}[trade]
 
 	def society_output(self):
 		return 1.0e6
@@ -235,11 +235,11 @@ check("money enters and leaves a foreign government only for taxes, the lines it
 		  for label in list(income) + list(outlays)), (income, outlays))
 check("it keeps what it does not spend", government.money > 0.0)
 check("it never levies the founder's side of the world", world.government_actor.asked == [])
-check("it copies the founder's invention it values, from its own tree",
-	  "wheel" in government.knowledge or "wheel" in government.works, (government.knowledge, government.works))
+check("a state that researches takes up only what it has heard of: the founder's invention, unheard of, is not yet copied",
+	  "wheel" not in government.knowledge and "wheel" not in government.works, (government.knowledge, government.works))
 check("its staff stay out of the founder's labour pool", government.workforce == {})
 check("a foreign government's army follows its funded share", government.record.army > 0.0)
-check("a foreign state does not research with the founder's hands", not government.researches)
+check("a foreign state researches, with its own country's hands and prices (Complaint 676)", government.researches)
 check("every actor's money other than the foreign government's is untouched", total_money(
 	[actor for actor_id, actor in registry2.actors.items() if actor_id != "government:beta"]) == 0.0)
 

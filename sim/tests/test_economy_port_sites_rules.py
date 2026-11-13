@@ -1,5 +1,6 @@
 """port_sites.site_limits and deplete on stub deposits: the seat's found deposits plus the partner economies' tiles, one limit a tile
 in runs of ore a year, and what the firms raised drawn from the tile's deposits, most left first (Complaint 416)."""
+from sim.tests import repository_tables
 import types
 
 from .harness import *  # noqa: F401,F403
@@ -21,6 +22,9 @@ class StubSim:
         return {"ore_goods": {"iron": {"iron_ore_kg": ["smelt"]}}}
 
     state = types.SimpleNamespace(economy=None)   # no forest to regrow
+
+    def production_catalog(self):
+        return repository_tables.production_catalog()
 
     def __init__(self, found, partner):
         self.found, self.partner, self.drawn = found, partner, []

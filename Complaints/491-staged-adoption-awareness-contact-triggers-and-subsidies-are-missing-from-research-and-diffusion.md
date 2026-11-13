@@ -1,6 +1,6 @@
 # Staged adoption, awareness, contact triggers and subsidy levers are missing from research and diffusion
 
-**Status:** partly (awareness, staged adoption, technique levers, own stock, contact events and share-weighted plants are built and tested; the remainder is at the end)
+**Status:** partly (every mechanism is built and tested, including samples and firm material purchases; open: the whole-game measurement; the adoption constants are sourced)
 
 What is wrong now:
 
@@ -71,16 +71,45 @@ unit count; subsidy and mandate levers on the government (481).
 - Done: the start gate counts the actor's own stock (`research_gate.materials_short_of_stock`, `Actor.held_tonnes`
   from the record's `stores`).
 - Done: the share reaches production. `adoption.plant_weight` weights a plant of the technique by the owner's share
-  (1.0 when the owner has no record), and `business_books.operate` and `business_crew.staff` run the plant at
+  (1.0 when the owner has no record), and `business_books.operate` and `business_crew.staff` (`sim/agents/business_books.py`, `business_crew.py`) run the plant at
   size times weight, so crew, takings and wages follow the share; `adoption.observed_gap` reads the plant's margin per
   unit of share. Test: `--only adoption_reaches_production`.
-- Done: the engine records contact on a conquest (`campaign_year._take` calls `contact_events.after_conquest`) and on a
-  migration (`regional_people.step_regions_of_people` calls `contact_events.after_migration` from `migrant_pairs`).
+- Done: the engine records contact on a conquest (`Contest` in `sim/campaigns/contest.py` sends `RecordConquestContact`, applied in `sim/actors/contact.py`) and on a
+  migration (`sim/demography/regions.py` sends `RecordMigrantContact`, applied in `sim/actors/contact.py`).
 - Done: purchases a buyer that `keeps_purchases` (a firm) makes at the market are delivered to its `stores`
   (`port_actors.close` returns the delivery by good; `stock_keeping.add_delivery`).
-- Remainder: (3) no node requires samples brought back from a region (expedition `returns`, rubber and latex);
-  (4) the contact and speed constants are heuristics (`sim/agents/tuning_adoption.py`): contact would be retired by a
-  measured carrier (tonnes, migrants, routes) and the logistic speed by a curve fitted to Griliches-style adoption
-  data, neither of which has a source opened yet; (5) no firm calls `market_purchase` yet (a plant's inputs are
-  costed in its books, not bought as goods), so firm stores fill only once a firm buys inputs or research materials as
-  goods; (6) the effect of the share on a whole game is unmeasured (needs the slow suite and a baseline run).
+- Done: a node can ask for a sample brought back from a region (`samples`, tokens `sample:<id>`; an action returns one in `returns.sample`,
+  `sim/land/action_results.py`). `research_gate.unmet_samples` holds the node back (refusal `samples_missing`, and for the founder the
+  returning action is listed among the missing prerequisites in `sim/projects/start_checks.py`) until the researcher has done an action
+  that returns it; `validate` refuses a sample nothing returns. Data: the West Africa voyage returns a vine sample and natural rubber asks
+  for it. Test: `--only research_start_gates`. Decided 2026-11-11 by the orchestrator, owner may overrule: a sample counts as held by
+  whoever has done the returning action (own knowledge), so knowledge that reached an actor by diffusion carries the sample with it; a
+  specimen that is carried as stock is not modelled.
+- Done: an actor that keeps its purchases (a firm) covers the materials a year of research or copying consumes from its stores first and bids at the
+  market for the rest, so the goods reach its stores and the money is not paid a second time (`sim/agents/research_materials.py`, called from
+  `imitation.work_year`). The bid is taken as filled (labelled, retire: Complaint 492). Test: `--only research_materials_covered`. A plant's
+  inputs in a firm's books are still costed, not bought as goods.
+- Done (4): the contact and speed constants in `sim/agents/tuning_adoption.py` are sourced rough ballparks (confidence C, no longer
+  temporary heuristics); each `source` field carries the arithmetic. Old, new, URL:
+  - `AWARENESS_RATE_PER_CONTACT` 0.5 to 0.38: Bass imitation coefficient average (Mahajan, Muller, Bass 1995) https://en.wikipedia.org/wiki/Bass_diffusion_model ; floor check from printing, 1 place in 1450 to 110 in 1480, 0.16 a year, https://en.wikipedia.org/wiki/Printing_press
+  - `CONTACT_FADE_PER_YEAR` 0.5 to 0.25: Dunbar, a relationship decays within at most six months, taken as a half-life, https://spectrum.ieee.org/telecom/internet/how-many-friends-can-you-really-have
+  - `DEMONSTRATION_VOLUME` 1.0 to 0.5: J-PAL Bangladesh demonstration plots, awareness +7.2 points on a base near 60 per cent, 18 per cent of the unaware a year, https://www.povertyactionlab.org/evaluation/impact-demonstration-plots-adoption-new-rice-varieties-bangladesh
+  - `TRADE_TONNES_FOR_UNIT_CONTACT` 1000 kept: a tonne is about a trader's visit (pack loads 0.1 to 0.3 t), https://en.wikipedia.org/wiki/Pack_animal
+  - `MIGRANT_CONTACT_VOLUME_PER_PERSON` 0.001 kept: one person is one visit, the same unit as a tonne.
+  - `CONQUEST_CONTACT_VOLUME` 1.0 to 5.0: a legion of about 5200 men at 0.001 each, https://en.wikipedia.org/wiki/Roman_legion
+  - `PILOT_SHARE` 0.02 kept: Kenyan trial plots, 3 x 30 square metres against 0.93 acre of maize, 2.4 per cent, https://economics.mit.edu/sites/default/files/2022-08/fertilizerjan7_2008_501pm.pdf and https://www.povertyactionlab.org/print/pdf/node/1465
+  - `TRIAL_YEARS` 2 kept: one crop cycle is the floor, two span a drought year (Iowa 1934 and 1936) given a 7 to 9 per cent gain, https://www.nber.org/system/files/chapters/c11987/c11987.pdf ; Ryan and Gross average of nine years from first knowledge to adoption, https://www.encyclopedia.com/social-sciences/encyclopedias-almanacs-transcripts-and-maps/agricultural-innovation
+  - `ADOPTION_SPEED_PER_MARGIN_GAP` 1.0 to 8.0: hybrid corn logit rose 0.78 a year (0.1 per cent in 1933 to 70 per cent about 1943, Sutch above) over a yield gain of about 0.10 (https://www.nber.org/papers/w14141), 0.78 / 0.10 = 7.8. National, so a floor for one district.
+  `RESEARCH_PROGRAMMES_AT_ONCE` and `RESEARCH_REVIEW_YEARS` (`sim/agents/tuning.py`) stay labelled: they retire to a mechanism (scholars and purse; reviews on change), and no opened source gives a count.
+  The test that pinned "fades by half" now asserts the declared share (`test_staged_adoption.py`).
+- Remainder: (6) The effect of the share, the
+  awareness gate and firm purchases on a whole game is unmeasured: needs `python3 -m sim.tests --slow` and a baseline run compared before and
+  after; the orchestrator runs it.
+
+## Whole-game measurement attempted (2026-11-12)
+
+`python3 sim/simulator.py baseline-ensemble --civ rome_100ad --seeds 2 --years 40 --jobs 2` on 86ceb664 and on c5bfc37d: the ensemble's
+`technologies` (first year each node is held) shows no node gained in forty years in any run, before or after the adoption constants were
+sourced. The ensemble records the civilisation's held nodes, not actors' adoption shares, so it cannot show staged adoption spreading;
+and both runs lose most of their population (Complaint 962), so the economy the mechanism acts in collapses. Not closed: the measurement
+needs a report of adoption shares by actor and year (`awareness.spread` and the adoption records) on a game whose baseline does not collapse.

@@ -14,11 +14,11 @@ from sim.constants import declare
 from sim.labour.api import MarketState
 from sim.refusal import Refusal
 
-from . import producer_table
+from . import producer_table, workshop_count
 from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
-from . import carriage_fleet_book, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_demand, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, opening_runs_pack, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
+from . import carriage_fleet_book, carriage_opening_hours, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_demand, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, opening_runs_pack, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
 from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -180,6 +180,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     opening_runs.fit_to_supply(setup, record)
     rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts),
                                land_lease_year.own_plot_returns(setup, record, view, own.options))
+    workshop_count.refresh_workshops(record.producers, workshop_count.runs_per_workshop_of_setup(setup))
     figure = record.capital_markets.property_income
     record.capital_markets.set_property_income(opening_rent.property_income_with_rent(figure, rent))
     incomes = opening_rent.income_after_rent({agent_id: cohort.last_year_income for agent_id, cohort in record.cohorts.items()},
@@ -197,8 +198,10 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
         own.sold, {agent_id: (labour_area(cohort.tile), cohort.working_people) for agent_id, cohort in record.cohorts.items()},
         sold_per_worker)
     record.labour.seed_sold_hours(sold_per_worker, sold_by_area)
+    value_of_tonne = carriage_fleet_book.value_per_tonne(setup, priced_goods, final_by_tile)
+    crew_hours = carriage_opening_hours.of_merchants(setup, record, carriage, 1.0 / value_of_tonne if value_of_tonne > 0.0 else 0.0)
     record.labour.seed_workforce(labour_state.opening_workforce(      # the mint's capacity follows the money struck
-        setup, record, sold_by_area))
+        setup, record, sold_by_area, crew_hours))
     record.labour.seed_hired_hours(opening_resting.resting_hours_held(
         opening_placement.capped_contracts(labour_state.producers_hours_by_employer(setup, record),
                                            {area: labour_state.people_by_trade(record.labour.workforce, area) for area in record.labour.workforce.workers},

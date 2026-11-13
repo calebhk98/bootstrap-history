@@ -2,24 +2,24 @@
   "_doc": "Service life of a durable good: the years a stock of it serves before it is worn out or lost, so users hold it and buy only to keep it up (the economy reads a good with a service life as a durable; a good not listed is used up within the year). Keyed by the good ids of data/production. Estimates, confidence C or D; a wear model per good (use, material, maintenance) would derive them. Carts are not goods in the production data yet, so they have no entry; timber, cloth and other materials that are also consumed as inputs are left out until a held-stock model separates the two uses.",
   "years": {
     "iron_tools_kg": {
-      "years": 4,
-      "confidence": "D",
-      "source": "LABELLED HEURISTIC, no source found for the working life of an iron farm tool before wear, breakage or loss replaces it; retire: Complaints/533."
+      "years": 2,
+      "confidence": "C",
+      "source": "FAO, 'Contribution of farm power to smallholder livelihoods in sub-Saharan Africa', Annex 3 Table 5 'Replacement rates (years) of tools and equipment by field site', fao.org/4/a0229e/a0229e0i.htm, opened: hoe replacement at ten sites in Ghana, Nigeria, Tanzania, Malawi and Zambia 1, 2, 2-4, 1-2, 3, 2, 1.5, 1, 2, 3 years; taking range midpoints the mean is 2.0 years (20 divided by 10). The main text (fao.org/docrep/pdf/011/aj334e/aj334e02.pdf, 'Replacement of Tools', opened) adds that hoes were replaced every year where blacksmiths use scrap steel and that with better steel 'the life of a hoe was calculated to be anything from two to 15 years'. Modern African smallholder hoes, not Roman or medieval ones: an analogue used as the nearest measured figure (was 4, no source). Axes and sickles in the same table last longer, so a mixed tool kit outlives the hoe; the hoe is the farm tool this good stands for."
     },
     "wooden_tools_kg": {
-      "years": 2,
-      "confidence": "D",
-      "source": "LABELLED HEURISTIC, no source found for the working life of a wooden hoe, spade or rake before wear or breakage; taken as half an iron tool's, since wood wears and splits faster than iron; searched in the Complaint 650 pass and no timed wear study of wooden farm tools was found; retire: Complaint 659."
+      "years": 4.0,
+      "confidence": "C",
+      "source": "Garden-use analogue scaled to farm use. Wooden handle: a permaculture forum poster (https://permies.com/t/159519/Care-wooden-handles-metal-business, opened): 'Have had a couple of handles break on hoes and rakes but they were 20 plus years old'; iron hoe in the same garden use: a reviewer 'I have had them for 10+ years' (https://www.easydigging.com/gardening/garden-hoes/reviews/, opened). Farm use wears iron hoes out in 2 years (FAO farm-power study, the iron_tools_kg row), so farm use is 2 / 10 = 0.2 of garden use, and a wooden tool's life is 20 x 0.2 = 4 years. Another opened page (https://www2.ljworld.com/living/2018/aug/11/garden-variety-repair-broken-garden-tools-avoid-costly-replacement/) says old tools 'can last a lifetime or more if cared for and kept out of the weather'. A broken handle is usually replaced, not the whole tool, so this is a ballpark for the part that fails first (was 1, half the iron life, no source)."
     },
     "brick_1000": {
-      "years": 80,
-      "confidence": "D",
-      "source": "Fired-brick walls stand for generations when roofed and repaired; taken as most of a lifetime or more. Estimate."
+      "years": 90,
+      "confidence": "C",
+      "source": "CCPIA, 'Estimated life expectancy chart for commercial building systems and components' (https://ccpia.org/estimated-life-expectancy-chart-for-commercial-building-systems-and-components/, opened): brick 'solid 80 to 100' years; midpoint 90 (a modern building-inspection chart; brick walls 60 to 100)."
     },
     "stone_blocks": {
-      "years": 100,
-      "confidence": "D",
-      "source": "Dressed-stone walls outlast brick; Roman and medieval masonry buildings still stand. Estimate of the time to rebuild."
+      "years": 87.5,
+      "confidence": "C",
+      "source": "CCPIA, 'Estimated life expectancy chart for commercial building systems and components' (https://ccpia.org/estimated-life-expectancy-chart-for-commercial-building-systems-and-components/, opened): stone siding 75 to 100 years, midpoint 87.5."
     },
     "cement_portland_kg": {
       "years": 50,
@@ -27,54 +27,54 @@
       "source": "Design working life of building structures, 50 years, in EN 1990 (Eurocode: Basis of structural design), table 2.1 category 4."
     },
     "bronze_kg": {
-      "years": 25,
-      "confidence": "D",
-      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+      "years": 20,
+      "confidence": "C",
+      "source": "Axeman (axeman.ca), 'How long should an axe last: forged axe lifespan guide' (https://axeman.ca/blogs/news/how-long-should-an-axe-last-forged-axe-lifespan-guide, opened): budget hardware-store axe '5-15 years', mid-range forged axe '20-40 years', premium Swedish forged axe '50-100+ years'; a retailer's page, so a modern analogue for a well-kept hand edge tool. Bronze is softer than steel, so it is taken as the mean of the budget (midpoint 10) and mid-range (midpoint 30) classes: (10 + 30) / 2 = 20 years. No timed bronze-tool wear study was found (searched the Bronze Age sickle and axe use-wear literature, which gives wear patterns and no durations)."
     },
     "brass_kg": {
-      "years": 20,
-      "confidence": "D",
-      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+      "years": 50,
+      "confidence": "C",
+      "source": "CCPIA, 'Estimated life expectancy chart for commercial building systems and components' (https://ccpia.org/estimated-life-expectancy-chart-for-commercial-building-systems-and-components/, opened): brass supply pipe '50+' years, taken as 50."
     },
     "iron_bar_kg": {
       "years": 10,
-      "confidence": "D",
-      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+      "confidence": "C",
+      "source": "Axeman (axeman.ca), 'How long should an axe last: forged axe lifespan guide' (https://axeman.ca/blogs/news/how-long-should-an-axe-last-forged-axe-lifespan-guide, opened): budget hardware-store axe '5-15 years', mid-range forged axe '20-40 years', premium Swedish forged axe '50-100+ years'; a retailer's page, so a modern analogue for a well-kept hand edge tool. Wrought iron bar and the tools made of it are the budget class: midpoint of 5-15 is 10 years."
     },
     "cast_iron_kg": {
-      "years": 15,
-      "confidence": "D",
-      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+      "years": 65,
+      "confidence": "C",
+      "source": "Mean of two opened figures: cast-iron cookware 'realistically last 50-75 years with good, consistent care' (https://en.fmyly.com/article/how-many-years-will-cast-iron-last/, opened; midpoint 62.5) and CCPIA, 'Estimated life expectancy chart for commercial building systems and components' (https://ccpia.org/estimated-life-expectancy-chart-for-commercial-building-systems-and-components/, opened): cast-iron waste pipe 60 to 75 years (midpoint 67.5); (62.5 + 67.5) / 2 = 65."
     },
     "steel_plate_kg": {
-      "years": 20,
-      "confidence": "D",
-      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+      "years": 44,
+      "confidence": "C",
+      "source": "CCPIA, 'Estimated life expectancy chart for commercial building systems and components' (https://ccpia.org/estimated-life-expectancy-chart-for-commercial-building-systems-and-components/, opened): steel items in the chart, midpoints in years: doors 60-75 (67.5), windows 35-60 (47.5), corrugated roof decking 30-40 (35), ducts 20-25 (22.5), stairways 50-60 (55), galvanized supply pipe 35-50 (42.5), overhead doors 35-40 (37.5); mean 43.9, taken as 44. A modern coated-steel analogue; uncoated pre-modern plate would rust sooner."
     },
     "steel_noric_kg": {
-      "years": 15,
-      "confidence": "D",
-      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+      "years": 30,
+      "confidence": "C",
+      "source": "Axeman (axeman.ca), 'How long should an axe last: forged axe lifespan guide' (https://axeman.ca/blogs/news/how-long-should-an-axe-last-forged-axe-lifespan-guide, opened): budget hardware-store axe '5-15 years', mid-range forged axe '20-40 years', premium Swedish forged axe '50-100+ years'; a retailer's page, so a modern analogue for a well-kept hand edge tool. Steel edge tools are the mid-range forged class, midpoint of 20-40 is 30 years. No separate figure was found for Noric or crucible tool steel."
     },
     "tool_steel_kg": {
-      "years": 8,
-      "confidence": "D",
-      "source": "Working life of a hand tool, blade or fitting before wear, breakage or loss replaces it; harder metals outlast softer, cutting edges wear fastest. Estimate."
+      "years": 30,
+      "confidence": "C",
+      "source": "Axeman (axeman.ca), 'How long should an axe last: forged axe lifespan guide' (https://axeman.ca/blogs/news/how-long-should-an-axe-last-forged-axe-lifespan-guide, opened): budget hardware-store axe '5-15 years', mid-range forged axe '20-40 years', premium Swedish forged axe '50-100+ years'; a retailer's page, so a modern analogue for a well-kept hand edge tool. Steel edge tools are the mid-range forged class, midpoint of 20-40 is 30 years. No separate figure was found for Noric or crucible tool steel."
     },
     "gold_kg": {
-      "years": 50,
-      "confidence": "D",
-      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life."
+      "years": 100,
+      "confidence": "C",
+      "source": "Wear alone: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened), a rate of 0.1 percent or less of a few-gram ring a year. Loss and wear together: a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC' (https://forums.collectors.com/discussion/comment/8843720, opened). Taking the 1 percent, the life is 1 / 0.01 = 100 years (was 50, from an unsourced 2 percent). A forum estimate for coin; ornaments are lost less often than coin, so it is a ballpark (confidence C)."
     },
     "silver_kg": {
-      "years": 50,
-      "confidence": "D",
-      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life."
+      "years": 100,
+      "confidence": "C",
+      "source": "Wear alone: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened), a rate of 0.1 percent or less of a few-gram ring a year. Loss and wear together: a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC' (https://forums.collectors.com/discussion/comment/8843720, opened). Taking the 1 percent, the life is 1 / 0.01 = 100 years (was 50, from an unsourced 2 percent). A forum estimate for coin; ornaments are lost less often than coin, so it is a ballpark (confidence C)."
     },
     "platinum_g": {
-      "years": 50,
-      "confidence": "D",
-      "source": "Ornament metal is durable; about 2 per cent worn or lost a year, the figure already stated in data/world/needs.json (ornament satiation_basis), is a fifty-year life."
+      "years": 100,
+      "confidence": "C",
+      "source": "Wear alone: Steinhauser's 18-carat wedding ring lost about 6 mg a year to abrasion (https://www.xetra-gold.com/en/detail/figure-of-the-month-6-milligrams/, opened), a rate of 0.1 percent or less of a few-gram ring a year. Loss and wear together: a numismatic forum estimate that coin loss 'has probably averaged about 1% annually since 600 BC' (https://forums.collectors.com/discussion/comment/8843720, opened). Taking the 1 percent, the life is 1 / 0.01 = 100 years (was 50, from an unsourced 2 percent). A forum estimate for coin; ornaments are lost less often than coin, so it is a ballpark (confidence C)."
     },
     "merchant_ship": {
       "years": 30,
@@ -92,24 +92,24 @@
       "source": "Langdon (Horses, Oxen and Technological Innovation, 1986) via Medievalists.net, https://www.medievalists.net/2023/02/horse-ox-medieval-times/ (the Medievalists.net page was opened in Complaint 646 pass 5; the book was not): 'plow horses and oxen typically have roughly the same life expectancy (a little over 5 years)' and 'the cart horse lives an average of around 7 years'. Five kept. A working life, not an age at death; the butchered animal's byproducts are the herd recipes' business, not carriage's."
     },
     "mule": {
-      "years": 10,
-      "confidence": "D",
-      "source": "LABELLED HEURISTIC, no source found for a mule's working life (Complaint 646 pass 5: NCAT Draft Animal Power for Farming gives 'Approximately 15 years; ages 3-18' for draft horses only and nothing for mules; Langdon via Medievalists.net gives about 7 years for the cart horse, see ox); mules are taken as longer lived in work than horses and oxen; retire: Complaints/646."
+      "years": 12.5,
+      "confidence": "C",
+      "source": "KNAU Earth Notes, 'Grand Canyon mules' (https://www.knau.org/post/earth-notes-grand-canyon-mules, opened): 'Guest mules have an average working life of 10 to 15 years'; midpoint 12.5. A modern hard-use pack-mule analogue (rocky trail)."
     },
     "cart": {
-      "years": 10,
-      "confidence": "D",
-      "source": "Estimate of the years before a wooden cart's frame is replaced, wheel and axle repairs folded into replacement wear until a maintenance model exists (complaint 629). Geography's CART_SERVICE_LIFE_KM is a different, unsourced heuristic."
+      "years": 15,
+      "confidence": "C",
+      "source": "Research Project on Improved Food Crop Marketing Through Appropriate Transport for Poor Farmers in Uganda, 'The Economics of Intermediate Means of Transport', Final Report (R8114), assets.publishing.service.gov.uk/media/57a08c6440f0b652dd0012d6/R8114040502.pdf, Table 2 'IMT utilisation data': 'Average vehicle life (year) 10 20 20 15' for bicycle, pack donkey, donkey cart, oxen cart; 'Source: Consultant's estimate from transport operator's surveys'. Fifteen years is the oxen cart (fourth column). A modern Ugandan operator estimate with repairs folded in, not an archaeological figure (was 10, no source). Geography's CART_SERVICE_LIFE_KM is a different, unsourced heuristic."
     },
     "pack_saddle": {
-      "years": 8,
-      "confidence": "D",
-      "source": "Estimate for a leather-and-wood pack rig in regular use, repairs folded in. Geography's PACK_SADDLE_SERVICE_LIFE_KM is an unsourced placeholder."
+      "years": 3,
+      "confidence": "C",
+      "source": "Practical Action, 'Making a packsaddle' (https://samplecontents.library.ph/en-practical_action/Transport%20and%20infrastructure/Animal%20transport/making-a-packsaddle/page14.html, opened): 'In Ethiopia these pack saddles last up to 6 months' (poorly maintained); a Mexican owner 'claimed he'd had [one] for over 20 years' (well kept). Geometric mean of 0.5 and 20 years is 3.2, taken as 3. Geography's PACK_SADDLE_SERVICE_LIFE_KM is a different, unsourced heuristic."
     },
     "river_barge": {
-      "years": 20,
-      "confidence": "D",
-      "source": "Estimate, shorter than the seagoing merchant ship's 30 years (a river barge grounds and is hauled by rope); repairs folded in. Geography's BARGE_SERVICE_LIFE_KM is an unsourced placeholder."
+      "years": 15,
+      "confidence": "C",
+      "source": "Lake Champlain Maritime Museum's executive director, quoted in Seven Days (https://www.sevendaysvt.com/arts-culture/charting-the-final-course-of-the-soon-to-be-retired-1862-replica-canal-boat-lois-mcclure-35434588/, opened): 'a typical canalboat lasted only about 15 years' in the 19th century, then was stripped, scuttled and replaced. A wooden canal boat analogue, repairs folded in. Geography's BARGE_SERVICE_LIFE_KM is a different, unsourced heuristic."
     }
   }
 }

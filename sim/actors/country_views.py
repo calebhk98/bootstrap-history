@@ -20,6 +20,9 @@ class CountryViews(Part):
 	def organised_factions(self, owner: str) -> List[Tuple[float, float]]:
 		return country_rules.organised_factions(self.parts.cast.cast().of_kind("interest_group"), str(self.needs.civilisation()["id"]), owner)
 
+	def stratum_grievances(self, owner: str) -> List[Tuple[float, float]]:
+		return country_rules.stratum_grievances(self.parts.cast.cast().of_kind("stratum"), str(self.needs.civilisation()["id"]), owner)
+
 	def home_country(self) -> Dict[str, Any]:
 		state = self.parts.cast.cast().state
 		return country_rules.home_country_facts(state.home_country, state.countries)

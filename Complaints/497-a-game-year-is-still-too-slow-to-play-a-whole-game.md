@@ -1,6 +1,6 @@
 # A game year is still too slow to play a whole game
 
-**Status:** partly - the numba port (round 12, `docs/architecture/NUMBA_PORT_PLAN.md`) took a warm Rome year from about 20 s to about 3.5 s; the redesign the one-second target needs is Complaint 968
+**Status:** partly - the numba port (round 12, `docs/architecture/NUMBA_PORT_PLAN.md`) took a warm Rome year from about 20 s to about 3.5 s (Complaint 968 measures 1.7 to 2.0 s since); the redesign the one-second target needs is Complaint 968
 
 A playtester found a new Rome game took a quarter of an hour of hidden spin-up before the first prompt and
 the better part of a minute per in-game year, so a whole game would take hours of stepping. The target is a

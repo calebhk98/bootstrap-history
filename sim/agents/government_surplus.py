@@ -8,9 +8,9 @@ labour market like every other line the state keeps up. Nothing is paid to nobod
 """
 from typing import Any, List
 
-from . import budget, government_levers, ledger, state_works
+from . import budget, government_levers, ledger, state_masonry, state_works
 from .edges import EDGE_BUILDERS
-from .tuning_spending import MASONRY_PERSON_YEARS_PER_M2, MAX_STATE_SHARE_OF_TRADE, RESERVE_CEILING_YEARS_OF_NEED
+from .tuning_spending import MAX_STATE_SHARE_OF_TRADE, RESERVE_CEILING_YEARS_OF_NEED
 
 
 class Surplus:
@@ -45,17 +45,18 @@ class Surplus:
 		excess = self.government.money - government_levers.reserve_years(self.government.record, RESERVE_CEILING_YEARS_OF_NEED) * sum(line.money for line in lines)
 		excess -= self.relieve_strata(excess, world)
 		excess -= self.government.granary.restock_granary(excess, world)
+		crew = state_masonry.person_years_by_trade(world)
+		wage = {trade: world.labour.pay_per_person_year(trade) for trade in crew}
+		people_cap = {trade: MAX_STATE_SHARE_OF_TRADE * world.labour.national_people(trade) for trade in crew}
 		for work, gap in state_works.gaps(world):
-			trade = world.labour.trade_of_role(work.role)
-			wage = world.labour.pay_per_person_year(trade)
-			if excess <= 0.0 or wage <= 0.0:
+			if excess <= 0.0 or any(pay <= 0.0 for pay in wage.values()):
 				continue
-			share_cap = MAX_STATE_SHARE_OF_TRADE * world.labour.national_people(trade)
-			people = min(gap * MASONRY_PERSON_YEARS_PER_M2, excess / wage, share_cap)
-			if people <= 0.0:
+			raised = state_masonry.square_metres_raisable(gap, excess, crew, wage, people_cap)
+			if raised <= 0.0:
 				continue
-			built = budget.Line("building " + work.name, "requisition", {trade: people}, people * wage)
+			built = budget.Line("building " + work.name, "requisition", {trade: raised * years for trade, years in crew.items()},
+								sum(raised * years * wage[trade] for trade, years in crew.items()))
 			ledger.transfer(self.government, world.setting.edge(EDGE_BUILDERS), built.money, built.name)
-			state_works.held(world)[work.name] += people / MASONRY_PERSON_YEARS_PER_M2
+			state_works.held(world)[work.name] += raised
 			self.government.employ_standing([built], 1.0, world)
 			excess -= built.money

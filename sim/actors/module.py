@@ -6,6 +6,7 @@ view `cast` and runs the actors' year when it is sent `AdvanceActors`; what the 
 the land and the seats it reads through the views its spec declares."""
 from sim.assembly.api import Module
 
+from .actor_sheets import ActorSheets
 from .cast import Cast
 from .cause_views import CauseViews
 from .contact import Contact
@@ -23,6 +24,7 @@ class Actors(Module):
 
 	PARTS = {
 		"cast": Cast,
+		"actor_sheets": ActorSheets,
 		"society": Society,
 		"country_views": CountryViews,
 		"literacy_views": LiteracyViews,

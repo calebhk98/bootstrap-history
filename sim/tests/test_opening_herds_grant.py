@@ -18,7 +18,7 @@ PRODUCTION = {"keep_flock": {"herd_stock": {"sheep_kg": 2.0}}, "weave": {"output
 
 
 def setUpModule():
-    patcher = mock.patch.object(holding, "production_data", lambda: PRODUCTION)
+    patcher = mock.patch.object(holding, "production_data", lambda mods_dir=None: PRODUCTION)
     patcher.start()
     unittest.addModuleCleanup(patcher.stop)
 

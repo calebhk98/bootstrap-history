@@ -1,5 +1,6 @@
 """Parsing what a person types at `play`'s prompt into the one JSON command dict the protocol already understands. A parser, not a second implementation - see its own module comment below."""
 
+import contextvars
 import json
 
 from . import available_args, command_registry
@@ -7,7 +8,7 @@ from sim.engine.ui_port import units
 from sim.workforce.api import REPLACE_ONLY
 from sim.refusal import Refusal
 from .buy_targets import canonical_target
-from .nodes import NODE_IDS, NODE_IDS_LOWER
+from .nodes import names_for
 from .help import example_node_id
 from .render_screen_state_views import SECTIONS
 from .quote_spending import SPENDING_QUOTERS
@@ -173,7 +174,23 @@ def _split_json_flag(rest):
     return kept, want_json, want_compact
 
 
-def parse_typed(line, table=command_registry.SHIPPED):
+_MODS_DIRECTORY = contextvars.ContextVar("typed_mods_directory", default=None)   # the mods directory of the game the line is read for
+
+
+def _names():
+    return names_for(_MODS_DIRECTORY.get())
+
+
+def parse_typed(line, table=command_registry.SHIPPED, mods_dir=None):
+    """One typed line read for the game over `mods_dir` (its tree's names and its unit words; the repository's when none)."""
+    token = _MODS_DIRECTORY.set(mods_dir)
+    try:
+        return _parse_typed_line(line, table)
+    finally:
+        _MODS_DIRECTORY.reset(token)
+
+
+def _parse_typed_line(line, table):
     """One typed line -> (command dict, None), or (None, a refusal to show).
 
     Returns (None, None) for a blank line: nothing to do and nothing to say.
@@ -283,7 +300,7 @@ def _parse_market(command, rest, words, nums, want_json):
 
 def _split_unit(words, nums):
     """(words without a trailing unit word, that word or None): a unit follows the number it measures ('buy farm 10 acre')."""
-    if nums and len(words) > 1 and units.find_unit(units.registry(), words[-1]) is not None:
+    if nums and len(words) > 1 and units.find_unit(units.registry(_MODS_DIRECTORY.get()), words[-1]) is not None:
         return words[:-1], words[-1]
     return words, None
 
@@ -548,8 +565,8 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
         # number anywhere in the line is unambiguously this, not a stray word
         # of a multi-word name.
         want = " ".join(words)
-        if want not in NODE_IDS:
-            want = NODE_IDS_LOWER.get(want.lower(), want)
+        if want not in _names().ids:
+            want = _names().ids_lower.get(want.lower(), want)
         return {"cmd": "open", "id": want, "units": nums[-1]}, None
 
     if command == "start" and str(rest[0]).lower() == "all" if rest else False:
@@ -561,7 +578,7 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
     if not rest:
         return None, ("%s needs the name of a technology, e.g. '%s "
                       "%s'. 'available' lists what you can "
-                      "begin now." % (command, command, example_node_id()))
+                      "begin now." % (command, command, example_node_id(_MODS_DIRECTORY.get())))
     # MATCHED CASE-INSENSITIVELY, NOT LOWERCASED: flattening the case would
     # break ids that genuinely carry capitals, among them the whole
     # cap_pure_2N/4N/6N/9N purity ladder, which sits on the critical path
@@ -582,8 +599,8 @@ def _parse_open_or_named_tech(command, rest, words, nums, want_json):
     # `why <id> full` repeats the explanations that are otherwise shown once.
     full = command == "why" and len(rest) > 1 and str(rest[-1]).lower() == "full"
     want = " ".join(rest[:-1] if full else rest)
-    if want not in NODE_IDS:
-        want = NODE_IDS_LOWER.get(want.lower(), want)
+    if want not in _names().ids:
+        want = _names().ids_lower.get(want.lower(), want)
     return ({"cmd": command, "id": want, "full": True} if full
             else {"cmd": command, "id": want}), None
 
@@ -848,8 +865,8 @@ def _parse_keep(command, rest, words, nums, want_json):
     if not rest:
         return {"cmd": "keep"}, None
     node_id = rest[0]
-    if node_id not in NODE_IDS:
-        node_id = NODE_IDS_LOWER.get(node_id.lower(), node_id)
+    if node_id not in _names().ids:
+        node_id = _names().ids_lower.get(node_id.lower(), node_id)
     mode = rest[1].lower() if len(rest) > 1 else "staffed"
     if mode not in ("staffed", "on", "off", "true", "false"):
         return None, "say 'keep %s staffed' or 'keep %s off'." % (node_id, node_id)
@@ -861,7 +878,7 @@ def _parse_saving(command, rest, words, nums, want_json):
         return {"cmd": "saving"}, None
     if rest[0].lower() in ("off", "stop", "clear", "none"):
         return {"cmd": "saving", "off": True}, None
-    node_id = NODE_IDS_LOWER.get(rest[0].lower(), rest[0])
+    node_id = _names().ids_lower.get(rest[0].lower(), rest[0])
     out = {"cmd": "saving", "id": node_id}
     if len(rest) > 1:
         try:

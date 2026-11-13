@@ -28,7 +28,7 @@ class CraftHelpTests(unittest.TestCase):
         self.assertIn("labourer", report["not_craft"])
 
     def test_the_help_names_the_labouring_trades_as_not_craft(self):
-        sim = Game(labour=_Labour())
+        sim = Game(labour=_Labour(), trade_family=FAMILIES.get)
         names = _non_craft_labour_names(sim)
         self.assertIn("labourers", names)
         self.assertNotIn("smiths", names)

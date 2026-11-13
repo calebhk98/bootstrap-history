@@ -59,3 +59,22 @@ for name in actors():
 
 check("the shortfall is the people missing, never negative",
 	  research_gate.hands_short(3, 1.0) == 2.0 and research_gate.hands_short(1, 5.0) == 0.0)
+
+# ---- samples brought back from a region ---------------------------------------------------------
+sample_nodes = {"voyage": {"returns": {"sample": ["vine"]}}, "other": {"returns": {"route": ["coast"]}},
+				"rubber": {"samples": ["sample:vine"]}, "plain": {}}
+check("a node asking for a sample is held back until an action returning it is known",
+	  research_gate.unmet_samples(sample_nodes["rubber"], sample_nodes, lambda source: source == "other") == ["voyage"])
+check("it opens once the returning action is known",
+	  research_gate.unmet_samples(sample_nodes["rubber"], sample_nodes, lambda source: source == "voyage") == [])
+check("a node asking for nothing is never held for samples",
+	  research_gate.unmet_samples(sample_nodes["plain"], sample_nodes, lambda source: False) == [])
+
+for name in actors():
+	actor = actors()[name]
+	world = world_with(samples=["sample:vine"])
+	world.setting.nodes["voyage"] = dict(world.setting.nodes["base"], returns={"sample": ["vine"]})
+	check("%s is refused a node asking for a sample it has not brought back" % name,
+		  refused_cause(actor, world, "tech") == "samples_missing", name)
+	actor.knowledge.add("voyage")
+	check("%s starts once it has done the action that returns the sample" % name, refused_cause(actor, world, "tech") is None, name)

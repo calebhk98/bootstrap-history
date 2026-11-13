@@ -68,7 +68,8 @@ def credit_requests(store: MerchantTable, route, record_book, debts, currency, i
     numbers = merchant_year.book_numbers(store, record_book, asked_rows)
     held = held_by_slot(store, asked_rows, numbers, book, record_book)
     counts, _good, _source, _destination, source_slot, destination_slot, rank, _price, outlay, _ceiling = merchants_batch.search_arrays(
-        route, expected, [store.homes[row] for row in asked_rows.tolist()], float(interest_rate), merchants.MERCHANT_MARGIN_SHARE)
+        route, expected, [store.homes[row] for row in asked_rows.tolist()], float(interest_rate), merchants.MERCHANT_MARGIN_SHARE,
+        [store.traded[row] for row in asked_rows.tolist()])
     offsets = numpy.concatenate(([0], numpy.cumsum(counts))).astype(numpy.int64)
     wanted, gain = merchants_credit_kernel.commit_credit_all(
         offsets, destination_slot, source_slot, rank, outlay, merchant_year.purses(record_book, numbers, currency), limit[asking], volumes, held,

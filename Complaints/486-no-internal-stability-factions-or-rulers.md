@@ -1,6 +1,6 @@
 # No internal stability: no unrest, revolt, provincial autonomy, factions, ruler competence or succession
 
-**Status:** partly - unrest, risings against the garrison, a ruler's life and accession, disputed accession, confiscation and land reform are built; open: the remainders below
+**Status:** partly - unrest (strata included), risings against the garrison, a ruler's life, competence and accession, disputed accession, the army as a faction, confiscation and land reform are built; open: the remainders below
 
 - Bonded strata exist (`sim/agents/stratum*.py`) and drive income only; there is no unrest, flight or
   revolt (`grep -rni "revolt\|unrest\|rebel" sim/agents sim/engine` finds hazard prose and a label).
@@ -25,7 +25,7 @@ by head) and desertion that rises with the years of pay owed (`sim/world/campaig
 The heuristics `STARVATION_LOSS_PER_UNFED_DAY`, `DESERTION_PER_YEAR_OF_PAY_OWED`, `ASSAULT_MIN_CHANCE` and
 `RETREAT_BELOW_FED_SHARE` retire to this complaint (morale and commanders as actors).
 
-**Built (tests `sim/tests/test_stability_rules.py`, scenario `test_stability_scenario.py`):**
+**Built (tests `sim/tests/test_stability_rules.py`, also `test_stability_tile_passes.py`, `test_stability_kernels.py`, `test_stability_phase_and_save_rule.py`; the earlier scenario test `test_stability_scenario.py` is gone):**
 - Unrest (`sim/agents/unrest.py`): grievance is what the state took (taxes, levies) and owes beyond what it gave (the dole), over
   its taxpayers' income, felt only above the take people are used to (`adapted`, `adapt`), plus the interest groups' own
   grievances (people-weighted), plus land taken off holders on the tile (fading), plus hunger from the tile's own food
@@ -47,9 +47,18 @@ The heuristics `STARVATION_LOSS_PER_UNFED_DAY`, `DESERTION_PER_YEAR_OF_PAY_OWED`
   returned reviews and listings without a count; Scheidel was not opened). So no range check is made; the frequency in a
   baseline run is to be measured and printed, not asserted.
 
-**Left:** a ruler's competence and the "averaged council" switch; a faction of the army (loyalty, mutiny; `group_servants.py`
-still acts on the headcount) and temples or governors as factions; slaves and the bonded as a source of risings (strata do not
-yet feed unrest); a baseline ensemble of risings per century against a source; the rebels' dead are not taken off the people;
+- Ruler competence (`sim/agents/ruler.py`): drawn at each accession (and once for the ruler found at the opening) as a lognormal of
+  median one (`COMPETENCE_LOG_SPREAD`); `record.council_averaged` makes every draw one (the averaged council). It scales the state's
+  reach (`authority.levy_reach`) and what officials keep (`authority.kept_on`) through `reach_factor` and `keep_factor`.
+- The army as a faction (`sim/agents/army_faction.py`, `group_servants.py`): plunder from captives taken (`AddArmyPlunder`) is set
+  against the pay owed before the loyalty step; below the mutiny line the defecting share of the army counts in the accession
+  backing, backs a disputed accession as a challenger, and rises at the seat against a garrison weaker by those soldiers
+  (`Stability._army_rises`). Heuristics `COMPETENCE_LOG_SPREAD`, `ARMY_WEIGHT_SHARE_OF_FACTIONS`, `CAPTIVE_VALUE_IN_YEARS_OF_UNSKILLED_PAY`.
+- Strata feed unrest: every stratum's welfare (real income in baskets) below its remembered reference, the bonded included
+  (`country_rules.stratum_grievances`, view `stratum_grievances`), enters the felt grievance as the larger of it and the groups' own.
+  Tests: `sim/tests/test_stability_remainder.py`.
+
+**Left:** temples or governors as factions; a baseline ensemble of risings per century against a source; the rebels' dead are not taken off the people;
 a won rising leaves the tile unowned (no rebel state or secession); the ruler's health is the band's baseline; state-held land
 rent is booked to the state's account in the economy, not yet to its treasury; the decree reaches the home state's tiles only;
 the liability rule's heavier take is read as unrest but is not charged to payers (657 wires it only through the migration

@@ -5,6 +5,7 @@ stub game whose economy answers prices, offered tonnes and responses; nothing bu
 from sim.engine import purchase_rule  # noqa: F401  (first: the engine modules import each other in a fixed order)
 QUICK_TOPIC = True
 
+from sim.tests import repository_tables
 import math
 import types
 import unittest
@@ -59,11 +60,14 @@ def stub_game():
             prices=lambda: TABLE_PRICE_PER_UNIT,
             tag=lambda material: (material, material),
             priced_key=lambda tag, prices: tag if tag in prices else None,
+            sold_material=lambda tag: tag, sale_forms=lambda tag: [tag], stock_form=lambda material: material,
+            form_stock_t=lambda key: 0.0,
             price_per_unit=TABLE_PRICE_PER_UNIT.get,
             market_tonnes=lambda key: 1000.0),
         foreign=types.SimpleNamespace(
             material_carriage_per_tonne=lambda key, price_per_tonne: CARRIAGE_PER_TONNE.get(key, 0.0)),
         market_flows=lambda: flows,
+        tonnes_per_unit=repository_tables.tonnes_per_unit,
         year=100, state=types.SimpleNamespace(projects=types.SimpleNamespace(), acting_seat="founder"), techniques_held=frozenset,
         finance=types.SimpleNamespace(market_rate=lambda: 0.05),
         **market_stand_in.market_memory())

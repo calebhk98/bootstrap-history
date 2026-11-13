@@ -5,10 +5,11 @@ from typing import Any, Dict, List, Optional, Set
 from .business import Business
 from .edges import Edge
 from .purses import Purses
+from .record_dealings import RecordDealings
 
 
 @dataclass
-class ActorRecord:
+class ActorRecord(RecordDealings):
 	"""Persistent state shared by every non-founder actor (a firm, a government)."""
 	kind: str = "firm"
 	name: str = ""
@@ -79,6 +80,9 @@ class ActorRecord:
 	# disputes his accession by arms (settled at the seat in the revolt phase), and the state's unrest and risings
 	ruler_age: Optional[float] = None
 	ruler_backer: str = ""
+	ruler_competence: Optional[float] = None   # drawn at each accession (ruler.draw_competence); None before the first
+	council_averaged: bool = False             # a scenario switch: every ruler is the average one
+	army_plunder: float = 0.0                  # money's worth the army took in campaign this year, set against its arrears
 	succession_challenger: str = ""
 	unrest_by_tile: Dict[str, float] = field(default_factory=dict)
 	land_taken_by_tile: Dict[str, float] = field(default_factory=dict)   # share of a tile's land taken off holders, fading (unrest.py)

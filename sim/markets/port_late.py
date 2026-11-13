@@ -19,6 +19,17 @@ def techniques_held(sim):
     return sim.production.techniques_granted() | frozenset(sim.production.techniques_in_use())
 
 
+def worth_of(material, live, opening, wage_level):
+    """Money a unit of the material is worth today: the economy's live price where it has one, else the opening's
+    (opening-year money) scaled to today's, else None. It prices the inputs of a late cost and is the reference
+    price that splits a joint run's cost among its outputs by value."""
+    price = live.get(material)
+    if price and price > 0.0:
+        return price
+    opening_price = opening.get(material)
+    return opening_price * wage_level if opening_price and opening_price > 0.0 else None
+
+
 def late_goods_costs(sim, prices, goods, held_nodes, production, wage_level=1.0):
     """{good: opening-year money per unit} the cost of making each good that has no price yet, at the economy's live
     input prices (the opening's, scaled to today's money, where the economy has none) and live wages, the cheapest way
@@ -27,11 +38,7 @@ def late_goods_costs(sim, prices, goods, held_nodes, production, wage_level=1.0)
     wages = {}
 
     def input_price_of(material):
-        price = live.get(material)
-        if price and price > 0.0:
-            return price
-        opening = prices.get(material)      # opening-year money: scaled to today's
-        return opening * wage_level if opening and opening > 0.0 else None
+        return worth_of(material, live, prices, wage_level)
 
     registry = sim.state.trade_registry
 
@@ -53,8 +60,8 @@ def late_goods_costs(sim, prices, goods, held_nodes, production, wage_level=1.0)
     for good in goods:
         if good in prices:
             continue
-        made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, rent_of=rent_of, production=production,
-                              civilization=sim.scenario.held_civ)
+        made = cost_of_making(good, held_nodes, input_price_of, wage_of, rate, rent_of=rent_of,
+                              reference_price_of=input_price_of, production=production, civilization=sim.scenario.held_civ)
         if made is not None and made.unit_cost > 0.0:
             found[good] = made.unit_cost / wage_level
     return found
@@ -68,8 +75,8 @@ def opening_with_techniques(sim, opening, held_nodes, production, wage_level):
     added = [entry_id for entry_id in allowed_entries(production, held_nodes) if entry_id not in known]
     if not added:
         return None
-    touched = set()
-    for entry_id in added:
+    touched = set()      # every good of the entries the techniques allow: an entry already known can now be made from what an added one makes
+    for entry_id in allowed_entries(production, held_nodes):
         entry = production[entry_id]
         touched.update(entry.get("outputs") or {}, entry.get("inputs") or {})
     prices = dict(opening["prices"])

@@ -226,8 +226,8 @@ actors (21), hazards, workforce (20 each), projects (19).
 - [x] The static tables moved out of `sim/engine/data.py` into `sim/content/`: the production catalogue, trade registry and tree
   builder (`catalog.py`, `tree_source.py`, `tree_merge.py`), `trades.py`, `tech_effects.py` and `foreign_economies.py`. The `content`
   module publishes `trade_records`, `trade_notes`, `trades_absent`, `trade_family`, `tech_effects`, `foreign_economy_records` and
-  `not_traded_materials`, read once per game from its directory. The engine keeps import-time copies of the tables for its own readers
-  (Complaint 840 says where they can disagree). `calculated_goods_prices`, `held_goods_prices_in_hours` and
+  `not_traded_materials`, read once per game from its directory. The engine keeps no import-time copies for a game's readers: they read the views, or take the game's
+  mods directory (Complaint 840, closed). `calculated_goods_prices`, `held_goods_prices_in_hours` and
   `partner_own_economy` are the prices module's (`sim/prices/calculated.py`), read from the scenario's `civilisation` and
   `civilisation_record` and workforce's `wage_schedule_for`; `border_terms` is no view: the markets port reads `store_book` and
   `trade_duty.terms_in_book` applies the relations store's rule. Measured after: 46 reads answered by the bridge (51 before).

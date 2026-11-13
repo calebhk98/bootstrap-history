@@ -106,7 +106,7 @@ class WorkersAskFollowSales(unittest.TestCase):
 class SellersOfGoodsAskFollowSales(unittest.TestCase):
     def test_a_seller_that_sold_out_expects_more_than_the_price_it_saw(self):
         view = View({"grain": 0.7, "seed": 1.0}, {"hand": 1.0}, stock=0.0)
-        expected = producers.next_expectations(seller(), FARM, view)["grain"]
+        expected = producers.next_expectations(seller(), FARM, view, ask_multiples={"grain": 3.0})["grain"]
         self.assertGreater(expected, 0.7)
 
     def test_a_seller_that_keeps_selling_out_raises_its_ask_year_after_year(self):
@@ -114,7 +114,7 @@ class SellersOfGoodsAskFollowSales(unittest.TestCase):
         view = View({"grain": 0.7, "seed": 1.0}, {"hand": 1.0}, stock=0.0)
         path = []
         for _ in range(4):
-            producer = producers.replaced(producer, expected_prices=producers.next_expectations(producer, FARM, view))
+            producer = producers.replaced(producer, expected_prices=producers.next_expectations(producer, FARM, view, ask_multiples={"grain": 3.0}))
             path.append(producer.expected_prices["grain"])
         self.assertTrue(all(later > earlier for earlier, later in zip(path, path[1:])), path)
 

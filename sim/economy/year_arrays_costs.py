@@ -93,10 +93,11 @@ def expected_bill(quantities, held_expected, slot_of_recipe, price, area_of, til
 
 @njit(**KERNEL)
 def unit_costs(recipe_row, tile_row, yield_factor, rent, held_expected, slot_goods, slot_of, inputs, outputs, plant_goods,
-               labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, spread):
+               labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, spread, revenue_outputs):
     """(cost, input share of the run's variable cost, expected price) by producer row and recipe slot, for the slots that
     are outputs of the producer's recipe (NaN elsewhere); and by producer row the share of its plant a run pays at the prices it
-    plans with (producers.share_that_pays). The expected price is the producer's own, else the price on offer in its
+    plans with (producers.share_that_pays), the revenue of which is the outputs `revenue_outputs` as they fetch after the state's
+    harvest share. The expected price is the producer's own, else the price on offer in its
     market, NaN where neither."""
     producers, slots = held_expected.shape
     pays = np.zeros(producers)
@@ -119,6 +120,7 @@ def unit_costs(recipe_row, tile_row, yield_factor, rent, held_expected, slot_goo
         planned = expected_bill(inputs[recipe], held_expected[row], slot_of[recipe], price, area_of, tile) \
             + bill_hours(labour_hours[recipe], wage, tile) + rent[row]
         revenue = 0.0
+        kept_revenue = 0.0
         total_output = 0.0
         for slot in range(slots):
             good = slot_goods[recipe, slot]
@@ -131,6 +133,7 @@ def unit_costs(recipe_row, tile_row, yield_factor, rent, held_expected, slot_goo
                 expected[row, slot] = found
                 if not np.isnan(found):
                     revenue += outputs[recipe, good] * found
+                    kept_revenue += revenue_outputs[recipe, good] * found
         for slot in range(slots):
             good = slot_goods[recipe, slot]
             if good < 0:
@@ -149,7 +152,7 @@ def unit_costs(recipe_row, tile_row, yield_factor, rent, held_expected, slot_goo
             else:
                 part = outputs[recipe, good] / total_output
             cost[row, slot] = run_cost * part / made
-        pays[row] = share_working(revenue * yield_factor[row], planned, spread) if np.isfinite(planned) else 0.0
+        pays[row] = share_working(kept_revenue * yield_factor[row], planned, spread) if np.isfinite(planned) else 0.0
     return cost, share, expected, pays
 
 
@@ -179,7 +182,8 @@ class OfferCosts:
             producers.recipe_row, producers.tile_row, producers.yield_factor, producers.land_rent_per_run,
             producers.expected_prices, matrices.slot_goods, slot_of, matrices.inputs, matrices.outputs, matrices.plant_goods,
             matrices.labour_hours, matrices.plant_labour_hours, matrices.plant_life_years, memory.price, memory.offered,
-            memory.wage, arrays.area_index.of_good_tile, float(interest_rate), COST_SPREAD_WITHIN_PRODUCER)
+            memory.wage, arrays.area_index.of_good_tile, float(interest_rate), COST_SPREAD_WITHIN_PRODUCER,
+            arrays.revenue_outputs)
         return cls(cost, share, expected, slot_of, pays)
 
 

@@ -12,9 +12,9 @@
   "seed_level": "core",
   "settlement_level": "claimed",
   "conquest": {
-    "_note": "A tile taken by an army is held at `initial`; each step names the level it rises to after the owner has held the tile that many years with an army on it. The years are a labelled heuristic.",
+    "_note": "A tile taken by an army is held at `initial`; each step names the level it rises to once the owner's authority on the tile (its collection reach times the share of risings its garrison puts down, 0 to 1) is at least `authority_at_least`. The threshold is a labelled heuristic.",
     "initial": "garrisoned",
-    "steps": [{"level": "integrated", "after_years": 30}],
-    "retire": "Complaints/484: control from garrison against unrest and distance"
+    "steps": [{"level": "integrated", "authority_at_least": 0.5}],
+    "retire": "Complaints/484: the level a state holds a tile at follows from what it collects, orders and levies there"
   }
 }

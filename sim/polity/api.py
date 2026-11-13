@@ -2,7 +2,7 @@
 
 WALL = "two-way"  # nothing here imports sim/engine/
 
-from .commands import (AddGovernance, AddScandal, AnswerStateDemands, CarryOutTransfers, CloseStandingYear,
+from .commands import (AddArmyPlunder, AddGovernance, AddScandal, AnswerStateDemands, CarryOutTransfers, CloseStandingYear,
                        CloseSuccessionDispute, GainReputation, RaiseScandal, RecordBribe, RecordRising, RegisterPeople, RenewStanding,
                        ReplaceRuler, ResetStateUnrest, ScaleFamiliarity, ScaleProtection, SetGrievanceReference, SetLandTakenMemory,
                        SetReputation, SetTileReadings, SettleWithState, SetValueWeights, ShiftValueWeight, StrikeFromForce, WithdrawFromPublicLife)

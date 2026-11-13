@@ -134,6 +134,7 @@ class EconomyYearInputs:
     farmed_forms: Tuple[str, ...] = ()                      # money revenue forms the state lets to the best bidder this year (tax_farming.py)
     tax_rates: Tuple[Tuple[str, float], ...] = ()           # (form, rate) the state holds this year; a form not named keeps its rate (taxes.with_rates)
     land_tax_share_of_rent: float = 0.0                     # share of a rent the state's land forms take from the owner (land_market.settle_year)
+    harvest_share_by_good: Tuple[Tuple[str, float], ...] = ()   # (good, share of its harvest the state's forms take from growers): producers and households net it off what a harvest fetches (harvest_tax.py)
     taxed_share_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # share of a stayer's income the state takes on each tile, liability rule included (flight_routes.py)
     state_reach_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # share of the people on each tile the state's officials reach: the chance a leaver is recaptured there
     amnesty_share: float = 0.0                              # share of a fugitive's arrears the state waives (government_levers_tax.amnesty_share)
@@ -146,4 +147,5 @@ class EconomyYearInputs:
     credit_asks: Tuple[LoanRequest, ...] = ()               # credit lines the engine's seats ask for: they join the year's clearing and are granted a room (credit_lines.py)
     standing_bids: Tuple[Bid, ...] = ()                     # demand settled outside the book (the founder's draws): entry reads it as bids, nothing clears
     state_capacity: float = 1.0                             # share of what the state assesses its officials collect this year (0..1); follows the officials (taxes.assess)
+    state_bond_premium: Optional[float] = None                # how far the yield the home state's bonds sell at exceeds their coupon (the going rate), zero when it does not, None without bonds; households reach it only with a bond market (lender_ask.reachable_public_premium)
     working_people_by_tile: Mapping[TileId, float] = field(default_factory=dict)   # demography's working-age people on each tile; a tile it names sets its cohorts' working people (the working-age share follows demography)

@@ -20,7 +20,7 @@ from typing import Dict, List, Optional, Sequence, Tuple
 from sim.constants import declare
 from sim.world import capital_market
 
-from . import bank_credit_risk, bank_spread, credit_claims
+from . import bank_credit_risk, bank_spread, credit_claims, deposit_insurance
 from .types import AgentId, FundsOffer, Loan, Transfer
 
 DEPOSIT_BANKING = "deposit_banking"        # the institution a society must hold for its households to found banks
@@ -138,11 +138,12 @@ def solvency(record, bank_id: AgentId, money: str) -> float:
 def fail(record, bank: Bank, year: int, money: str) -> None:
     """The bank stops lending and taking deposits, each deposit falls due at the year's end (paid in proportion to
     what the bank holds, the rest arrears the one default rule writes off, so the depositors bear it), and its
-    founder loses the capital the bank no longer holds."""
+    founder loses the capital the bank no longer holds. An insurer of deposits pays the depositors first."""
     bank.failed_year = year
     bank.owner_loss = max(0.0, bank.paid_in - max(0.0, capital_of(record, bank.agent_id, money)))
     for deposit in deposits_of(record, bank.agent_id):
         deposit.years_left = 1.0
+    deposit_insurance.settle(record, bank.agent_id, money)
 
 
 def run_on_insolvent(record, money: str, year: int) -> List[AgentId]:

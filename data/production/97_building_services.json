@@ -11,8 +11,8 @@
     "roof_tile_kg": 100.0
    },
    "labour_hours": {
-    "mason": 24.0,
-    "labourer": 24.0
+    "mason": 18.0,
+    "labourer": 18.0
    },
    "satisfies": {
     "shelter": 1.0
@@ -20,7 +20,7 @@
    "unit_dimension": "volume",
    "unit_mass_kg": 1800.0,
    "basis": "per cubic metre of laid brick wall",
-   "yield_basis": "The bricks are the number that build a cubic metre at the effectiveness data/world/needs.json gives brick_1000 for shelter (1.4 cubic metres of wall per thousand bricks, so 1/1.4 = 0.714 thousand). Mortar joints are about a fifth of a brick wall by volume, at about 1800 kg per cubic metre of lime-sand mortar, so about 360 kg. A bricklayer laid a few hundred bricks in a working day by hand (here 300 in ten hours), which is 0.714 * 1000 / 300 * 10 = 24 mason hours; a labourer carries bricks and mortar to him hour for hour. Order of magnitude only; the rate is the estimate, the quantities are arithmetic. ROOF: a masonry house is roofed in tile, 100 kg of tile for each cubic metre of wall: about 1.6 square metres of roof a cubic metre of wall (a 5 m by 8 m house with 3 m walls 0.4 m thick) at about 60 kg a square metre; the house shape and the tile weight are ASSUMED, a modern 'Roman' tile is 69 kg a square metre by conversion from a Ludowici product sheet seen in a search summary, not opened (LABELLED HEURISTIC, conf D; retire: Complaints/533).",
+   "yield_basis": "The bricks are the number that build a cubic metre at the effectiveness data/world/needs.json gives brick_1000 for shelter (1.4 cubic metres of wall per thousand bricks, so 1/1.4 = 0.714 thousand). Mortar joints are about a fifth of a brick wall by volume, at about 1800 kg per cubic metre of lime-sand mortar, so about 360 kg. A bricklayer laid a few hundred bricks in a working day by hand (Trade Warehouse, 'How many bricks can you lay in an hour', https://tradewarehouse.co.uk/blogs/bricks-blog/how-many-bricks-can-you-lay-in-an-hour, opened: 'Experienced professionals can typically lay between 300 to 500 bricks per day', 40 to 60 an hour; taken at the low end, 40 an hour), which is 0.714 * 1000 / 40 = 18 mason hours (was 24 at 30 an hour); a labourer carries bricks and mortar to him hour for hour. Order of magnitude only; the rate is the estimate, the quantities are arithmetic. ROOF: a masonry house is roofed in tile, 100 kg of tile for each cubic metre of wall: about 1.6 square metres of roof a cubic metre of wall (a 5 m by 8 m house with 3 m walls 0.4 m thick) at about 60 kg a square metre; the house shape and the tile weight are ASSUMED, a modern 'Roman' tile is 69 kg a square metre by conversion from a Ludowici product sheet seen in a search summary, not opened (LABELLED HEURISTIC, conf D; retire: Complaints/533).",
    "conf": "D",
    "requires_node": "cap_heat_0700"
   },
@@ -65,7 +65,7 @@
    "unit_dimension": "volume",
    "unit_mass_kg": 600.0,
    "basis": "per cubic metre of timber in a framed wall or roof, cut, jointed and raised",
-   "yield_basis": "One cubic metre of timber in the frame is one cubic metre of the structure the shelter need counts (the effectiveness data/world/needs.json gives timber_m3). Hewing to size, cutting joints and raising a frame by hand took a carpenter some tens of hours per cubic metre of timber, taken as 30; labourers help to raise it. An estimate of the work rate, confidence D. NAILS: 2 kg of nails a cubic metre of frame for pegged and nailed joints and boarding (LABELLED HEURISTIC, conf D, no source found; retire: Complaints/533).",
+   "yield_basis": "One cubic metre of timber in the frame is one cubic metre of the structure the shelter need counts (the effectiveness data/world/needs.json gives timber_m3). Hewing to size, cutting joints and raising a frame by hand took a carpenter some tens of hours per cubic metre of timber, taken as 30; labourers help to raise it. An estimate of the work rate, confidence D. NAILS: 2 kg of nails a cubic metre of frame for pegged and nailed joints and boarding (LABELLED HEURISTIC, conf D, no source found; retire: Complaints/533). SOURCE READ (Pass 8): Mortise and Tenon Magazine, 'The Efficiency of Hewing' (https://www.mortiseandtenonmag.com/blogs/blog/the-efficiency-of-hewing, opened): 'a leisurely 8x8x12' post took around three hours to produce', about 0.15 cubic metres, so hewing alone is about 20 hours a cubic metre; the 30 carpenter hours then leave about 10 for joints and raising, which the source does not bound. Conf D.",
    "conf": "D",
    "requires_node": null
   }

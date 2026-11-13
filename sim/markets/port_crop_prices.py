@@ -50,4 +50,4 @@ def opening_costs_at_tiles(sim, production_data, allowed, fertility_by_tile: Map
     yields = supply_yields(recipes, first, wages, fertility_by_tile, people_by_tile)
     if not yields:
         return first
-    return port_costs.opening_costs(sim, with_outputs_at(port_costs.cost_entries(), yields))
+    return port_costs.opening_costs(sim, with_outputs_at(port_costs.cost_entries(sim), yields))

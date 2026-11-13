@@ -61,6 +61,8 @@ class YearLedger(PostingNotes):
         self.delivered_by_market = MarketFigureView(tables, 0, "delivered")     # (good, area): goods settlement moved
         self.unmet_demand = MarketFigureView(tables, 1, "unmet")              # (good, area): quantity
         self.crew_hours_bought: Dict[AgentId, Dict[Tuple[str, str], float]] = {}   # merchants that bid for crew: hours sold them by (trade, area)
+        self.carriage_bids: list = []     # the merchants' crew bids written to the year's labour market (`carriage_hours.bid_figures` rows)
+        self.carriage_fees: List[Transfer] = []   # the carriage fees merchants paid at dispatch
         self.own_plot_hours: Dict[AgentId, Dict[str, float]] = {}   # hours worked on its own plot, by recipe
         self.grown_units: Dict[AgentId, Dict[str, float]] = {}    # need units of that
         self.buy_fills: Dict[AgentId, List[Fill]] = {}

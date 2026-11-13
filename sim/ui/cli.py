@@ -348,7 +348,7 @@ def cmd_validate(args):
     print("\n".join(_dead_end_lines(nodes, production)))
     errs += validate_copy_visibility.check_copy_visibility(nodes)
     from sim.engine import copy_visibility_defaults
-    errs += validate_copy_visibility.check_category_table(copy_visibility_defaults.table())
+    errs += validate_copy_visibility.check_category_table(copy_visibility_defaults.table(MODDIR))
     warns += ["%s: no copy_visibility of its own and no entry for its category, so it keeps the count of trades and materials" % node_id
               for node_id in copy_visibility_defaults.undeclared(nodes)]
     errs += _data_source_errors(nodes)
@@ -1123,6 +1123,11 @@ def main():
     subparser.add_argument("--accounts", action="store_true", help="print each year's accounts instead of the health "
                            "figures: production, use, consumption, investment and stock per good, food eaten against "
                            "need by tile and cohort, the real wage against the opening's basket (Complaint 554)")
+    subparser.add_argument("--routes", action="store_true", help="with --accounts: also print each year's merchant tonnes "
+                           "by route length and value per kilogram (Complaint 517)")
+    subparser.add_argument("--carriage", action="store_true", help="with --accounts: also print each year's carriage hours "
+                           "demanded and hired by carrier trade, and the carriage fee paid to a household instead of "
+                           "hired crew (Complaints 552, 613)")
     subparser.add_argument("--occupations", action="store_true", help="also print each occupation group's share of "
                            "working hours against its plausibility band (Complaint 619)")
     subparser.add_argument("--session", default=None, help="with --accounts: resume this save instead of a fresh game "

@@ -7,7 +7,6 @@ Everything here is read from figures the engine already computes
 import difflib
 
 import sim.engine.ui_port as ui_port
-from sim.engine.ui_port import WAGES
 
 DEFAULT_MATERIAL_PAGE = 40
 
@@ -52,7 +51,7 @@ def wage_rows(sim):
     return [{"trade": trade, "a_year_of_one": round(sim.view("labour_market")().quote_annual(trade), 0),
              "available_here": bool(sim.view("trade_available")[trade]),
              "you_employ": round(sim.view("staff")()["employees"].get(trade, 0.0), 2)}
-            for trade in sorted(WAGES)]
+            for trade in sorted(sim.view("trade_records")())]
 
 
 def unknown_material_reply(material, known):

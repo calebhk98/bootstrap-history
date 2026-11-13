@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - one-year closure test and stationary quantities exist (Update 6); the mint is served first and money is sustained (Updates 4, 8); producers, rent, credit, goods and labour rules reworked (Update 22); the fixtures still drift in price level, wage and money and Rome is not re-measured
+**Status:** partly - the shipped openings fail `spin_up_settled` for every civilisation (Complaint 970); one-year closure test and stationary quantities exist (Update 6); the mint is served first and money is sustained (Updates 4, 8); producers, rent, credit, goods and labour rules reworked (Update 22); the fixtures still drift in price level, wage and money and Rome is not re-measured
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -53,7 +53,7 @@ The cycle reaches the player. Over the first two decades the `money` screen's ma
 digits to the ceiling `bounded_rate` sets (four times the civilisation's `starting_interest_rate`,
 `sim/world/capital_market.py`), and stayed there for several years. Over the same years "funds lenders hold"
 fell to about a quarter of its year-104 figure. Funds lenders hold is built mostly from `household_saving()`
-(`sim/finance/capital_market.py`, `sim/actors/world_credit.py` `household_saving`), so household saving collapsed. The founder's borrowing is far too
+(`sim/finance/capital_market.py`, `sim/actors/world_credit.py`; that function no longer exists: `grep -rn household_saving sim` finds nothing), so household saving collapsed. The founder's borrowing is far too
 small to move it. A founder who had borrowed at a normal rate to hire staff paid well over half the debt in
 interest each year and went insolvent. Wages (and with them the workshop's revenue, which is a markup on
 wages) fell through the same years. Reproduce by stepping a year at a time and reading `money`.
@@ -66,7 +66,7 @@ deposit ceilings and demand-limited co-products, the metal the money loses a yea
 priced at the marginal cost of its metal.
 
 Fixed: the money stock follows from the transactions and the metal's cost, the chain behind the coin metal exists at the
-opening, and `test_the_money_stock_keeps_up_with_wear` passes (the mint's strikes are about wear over the last decades;
+opening, and the wear test passed at the time (`test_the_money_stock_keeps_up_with_wear`, since removed; the mint tests are `sim/tests/test_mint_settles_by_regime.py` and `test_economy_mint.py`) (the mint's strikes are about wear over the last decades;
 `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`).
 
 Not fixed (so this complaint stays open): the spin-up still reports not settled for every civilisation. The price level no
@@ -125,7 +125,7 @@ transmission rules are held by `test_money_reaches_prices`.
 
 What is built: `sim/economy/opening_stationary.py` (a plain function: the runs that meet a final demand by the
 input-output solve in `opening_runs`, the hours they hire, and the incomes they pay, so wages plus profit equal the
-value of final demand), `economy_fixture.stationary_setup` (the fixture with each worker offering the hours its runs
+value of final demand), `stationary_setup` (now `sim/economy/fixture_setups.py`; the fixture with each worker offering the hours its runs
 hire plus a stated slack), and `sim/tests/test_opening_stationary_rules.py` (a stepped year against the settling
 bounds in `sim/economy/settling.py`). The opening does not yet seed its producers from the solver. Run:
 `python3 -m unittest sim.tests.test_opening_stationary_rules sim.tests.test_opening_input_stocks`; the red parts are
@@ -780,7 +780,7 @@ Still short on the small fixture in the middle years: the metal's makers supply 
 
 What the code does now, each rule with its owner:
 - Producers pay out cash above next year's needs (`firm_finance.cash_to_keep`, `excess_cash`, `payout`, called from `firm_year.py`).
-- Land rent counts in producers' running costs (`year_ledger.note_rent`), and a producer whose remembered earnings are negative closes
+- Land rent counts in producers' running costs (rent is posted by `sim/economy/year_ledger_postings.py`), and a producer whose remembered earnings are negative closes
   that share of its capacity, at most a year's change in output (`producer_losses.shed_share`, used by `producers_close.close_year`).
 - Sellers turned away from by buyers raise their asks within the year to where requests meet the stock (`demand_search.raise_asks`,
   `unsold_search.raise_sold_out`); a sold-out seller's expectation is not pulled to cost (`ask_adjust.regressive_weight`) and a crowd

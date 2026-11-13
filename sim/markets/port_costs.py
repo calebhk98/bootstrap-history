@@ -6,7 +6,6 @@ stand-in; no price table, no demand, no income. The economy's markets then move 
 from sim.economy import api as economy_api
 from sim.labour import api as labour_api
 from sim.prices.api import long_run_costs
-from sim.prices.api import prices as price_solver
 
 
 def wage_function(sim):
@@ -26,15 +25,15 @@ def wage_function(sim):
     return wage_of
 
 
-def cost_entries():
+def cost_entries(sim):
     """The production entries the cost table is solved over."""
-    return price_solver.default_production_entries()
+    return sim.production_catalog()
 
 
 def opening_costs(sim, production=None):
     """{good: money per unit} the cost of making each good the society can make with the techniques it holds,
     at the opening wages, rate and rent. `production` replaces the shared entries (a crop made at its tiles' yield)."""
-    production = cost_entries() if production is None else production
+    production = cost_entries(sim) if production is None else production
     techniques = sim.production.techniques_granted() | frozenset(sim.production.techniques_in_use())
     wage_of = wage_function(sim)
     rent_of = long_run_costs.opening_rent_of(techniques, wage_of, sim.scenario.civ, production,

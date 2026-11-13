@@ -43,7 +43,7 @@ def _derive(civ, nodes, held=None):
     return node_revenue.for_civilisation(nodes, civ, _Schedule(), held_techs=held)
 
 
-def _stamp(copies, goods, wages, rate, energy):
+def _stamp(copies, goods, wages, rate, energy, mods_dir=None):
     for node in copies:
         node["rev_hours"] = 7.0 + len(goods)
 
@@ -82,7 +82,7 @@ with mock.patch.dict(node_revenue._DERIVED_FOR_CIVILISATION, clear=True), \
 def _game(derived_gates, held):
     log = []
     game = SimpleNamespace(
-        _derived_gate_set=derived_gates, view=lambda name: (lambda *arguments: held), start_civ={"id": "testland"}, nodes={"old": {}},
+        _derived_gate_set=derived_gates, mods_dir=None, view=lambda name: (lambda *arguments: held), start_civ={"id": "testland"}, nodes={"old": {}},
         state=SimpleNamespace(economy=SimpleNamespace(nodes_money_per_labour_hour=None)),
         _done_changed=lambda: log.append("done"), _operating_changed=lambda: log.append("operating"), log=log)
     return game

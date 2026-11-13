@@ -14,7 +14,7 @@ from .state import ProductionSeat
 
 READS_BY_OWNER = {
 	"scenario": ("year", "game_setting", "civilisation"),
-	"content": ("trade_family",),
+	"content": ("trade_family", "mods_directory"),
 	"workforce": ("money_per_labour_hour", "staff", "staff_version", "hour_commitments", "hours_available", "wage_signature",
 	              "market_annual_wage", "standing_job_pay", "capacity_job_pay", "headcount", "base_tile", "people_who_exist", "hours_per_person_year",
 	              "literacy_references"),

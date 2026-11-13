@@ -3,13 +3,12 @@ is called with prices built here, so a failure names the line of arithmetic; the
 QUICK_TOPIC = True
 from .harness import *
 
-from sim.engine.data import ANNUAL_WAGE
+from sim.tests.repository_tables import ANNUAL_WAGE, STARTING_SCHEDULE
 from sim.labour.labour_market_api import LabourMarket
-from sim.engine.data import _STARTING_SCHEDULE
 from sim.labour.wages import training_premium
 from sim.workforce.wage_schedule import HOUSEHOLD_TIME_PREFERENCE
 from sim.labour.wage_factors import annual_wage, housing_factor, tools_factor, weighted_factor
-CHEMIST_TRAINING_YEARS = _STARTING_SCHEDULE.training_years["chemist"]
+CHEMIST_TRAINING_YEARS = STARTING_SCHEDULE.training_years["chemist"]
 
 SHARES = (LabourMarket.WAGE_SHARE_FOOD, LabourMarket.WAGE_SHARE_HOUSING, LabourMarket.WAGE_SHARE_TOOLS,
           LabourMarket.WAGE_SHARE_SKILL_AND_DIFFICULTY)

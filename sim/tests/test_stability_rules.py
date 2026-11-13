@@ -224,13 +224,13 @@ class RulerTests(unittest.TestCase):
 
         record.ruler_age = 80.0
         world = World()
-        world.rng_for = draws(0.0, 0.99)       # the ruler dies; the even-ish split is not disputed
+        world.rng_for = draws(0.5, 0.0, 0.5, 0.99)       # a median ruler is found; he dies; the even-ish split is not disputed
         state.accede(world)
         self.assertTrue(record.accession_due)
         self.assertAlmostEqual(record.ruler_age, ruler.heir_age(81.0))
         self.assertEqual((record.ruler_backer, record.succession_challenger), ("g1", ""))
         record.accession_due, record.ruler_age = False, 60.0
-        world.rng_for = draws(0.0, 0.0)        # he dies again and the runner-up disputes it
+        world.rng_for = draws(0.0, 0.5, 0.0)        # he dies again and the runner-up disputes it
         state.accede(world)
         self.assertEqual((record.ruler_backer, record.succession_challenger), ("g1", "g2"))
         record.accession_due, record.ruler_age, record.succession_challenger = False, ruler.opening_age(), ""

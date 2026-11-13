@@ -383,19 +383,19 @@
     {
      "name": "Alban Hills (Colli Albani), south-east of Rome",
      "lat": 41.75,
-     "lon": 12.70,
+     "lon": 12.7,
      "source": "Pozzolana rossa and the tuffs of the Alban Hills volcanic field supplied Rome's own concrete; Lancaster, Concrete Vaulted Construction in Imperial Rome (2005); Jackson et al. 2014."
     },
     {
      "name": "Santorini (Thera)",
-     "lat": 36.40,
-     "lon": 25.40,
+     "lat": 36.4,
+     "lon": 25.4,
      "source": "Minoan-eruption ash of Santorini (Theraic earth) is a pozzolana worked on the island from antiquity; Jackson et al. 2014 and the Aegean hydraulic-mortar literature name it as the Greek source."
     },
     {
      "name": "Eifel volcanic field (Brohl and Nette valleys)",
-     "lat": 50.40,
-     "lon": 7.30,
+     "lat": 50.4,
+     "lon": 7.3,
      "source": "Laacher See trass, a volcanic tuff, was quarried in the Roman Rhineland and ground for hydraulic mortar; conf C, citation to be checked against the Eifel Roman quarry literature."
     }
    ],
@@ -561,6 +561,62 @@
    ],
    "cost_multiplier": 6,
    "note": "The West African gold trade is why the trans-Saharan routes existed. Reachable by sea, which is exactly what the Portuguese did to cut out the Saharan middlemen."
+  },
+  {
+   "id": "flint",
+   "goods": [
+    "flint_kg"
+   ],
+   "cost_multiplier": 1,
+   "places": [
+    {
+     "name": "Grime's Graves, Norfolk",
+     "lat": 52.476,
+     "lon": 0.675,
+     "source": "https://en.wikipedia.org/wiki/Grime%27s_Graves : Neolithic flint mining complex, coordinates 52.47585 N 0.67541 E; at least 433 shafts."
+    },
+    {
+     "name": "Cissbury Ring, Sussex",
+     "lat": 50.858,
+     "lon": -0.375,
+     "source": "https://en.wikipedia.org/wiki/Cissbury_Ring : Neolithic flint mine, around 270 shafts; coordinates 50.858 N 0.375 W."
+    },
+    {
+     "name": "Spiennes, Hainaut",
+     "lat": 50.419,
+     "lon": 3.944,
+     "source": "https://en.wikipedia.org/wiki/Spiennes : neolithic flint mines; coordinates 50 25 09 N 3 56 38 E."
+    },
+    {
+     "name": "Krzemionki, Swietokrzyskie",
+     "lat": 50.968,
+     "lon": 21.502,
+     "source": "https://en.wikipedia.org/wiki/Krzemionki : striped flint mines worked about 3900 to 1600 BC; coordinates 50 58 4.7 N 21 30 8.3 E."
+    }
+   ],
+   "note": "Flint is common in chalk across northern Europe; these are the documented mined sources. The multiplier is 1 because the engine's haul rule, not a premium, prices the distance (as for pozzolana)."
+  },
+  {
+   "id": "obsidian",
+   "goods": [
+    "obsidian_kg"
+   ],
+   "cost_multiplier": 1,
+   "places": [
+    {
+     "name": "Sierra de las Navajas, Hidalgo (near Pachuca)",
+     "lat": 20.14,
+     "lon": -98.71,
+     "source": "https://en.wikipedia.org/wiki/Sierra_de_las_Navajas : one of the most important archaeological obsidian sources in Mesoamerica, near Pachuca, supplying Teotihuacan, Tula and Tenochtitlan; position from https://en.wikipedia.org/wiki/Pachuca (Rosario Mine 20.139 N 98.722 W)."
+    },
+    {
+     "name": "Milos, Cyclades",
+     "lat": 36.6875,
+     "lon": 24.4325,
+     "source": "https://en.wikipedia.org/wiki/Milos : obsidian from Milos was a commodity as early as 15,000 years ago; coordinates 36.6875 N 24.4325 E."
+    }
+   ],
+   "note": "Obsidian outcrops only on volcanic ground; the Pachuca source served the Mexica and Milos the Aegean."
   }
  ]
 }

@@ -6,6 +6,8 @@
  "supervision_hours_per_hired_hour": 0.1,
  "supervision_basis": "Hours of a household's own it spends directing and checking each hour a servant works for it. No source found: a labelled estimate, confidence D. The servant's keep is already in the price an hour of service sells at (the servant's wage and the cost of what makes the service).",
  "supervision_retire": "Complaints/645 follow-up: a time-use or servant-management source for the hours a household spends directing servants, then derive it from the servant's hours and the household's staff",
+ "servant_year_hours": 2000,
+ "servant_year_basis": "Hours a servant works a year, the labour year of the working-year research (HOURS_PER_PERSON_YEAR in sim/unit_conversions.py, Complaints/reports/research-working-year.md: a ten-hour day over 200 working days). A servant is hired whole, never a share of a year (sim/economy/household_servants.py). Remove the key to make hiring divisible.",
  "supervision_conf": "D",
  "tasks": {
   "water_and_fuel": {

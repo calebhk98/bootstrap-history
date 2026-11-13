@@ -44,7 +44,7 @@ class HerdRecipesMakeProductsTogether(unittest.TestCase):
     def test_no_recipe_makes_a_herd_product_alone(self):
         for key, entry in self.production.items():
             made = [good for good in entry["outputs"] if good in HERD_PRODUCTS]
-            if made and key not in HERDS:
+            if made and key not in HERDS and not entry.get("herd_stock"):
                 self.assertTrue(key.endswith("_kg") and len(entry["outputs"]) > 1 and "meat_kg" in entry["outputs"],
                                 "%s makes %s outside a herd recipe" % (key, made))
 

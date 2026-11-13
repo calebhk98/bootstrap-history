@@ -21,6 +21,8 @@ files (which this task does not own).
 
 Pins rent_hours_per_kg_by_ore_material and the iron blast-furnace/bloomery fallback for rome_100ad.
 """
+
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
 import unittest
 from unittest import mock
 

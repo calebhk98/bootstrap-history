@@ -1,20 +1,13 @@
 # A higher tax rate has no consequence beyond revenue and a typed burden weight
 
-**Status:** partly - a harvest tax and a land tax reach the farmer's and the owner's own rules; concealment of income from a form follows the rate and the officials' reach in both layers (actors and the economy's money, harvest and trade forms), and the AI state's rate-raise yield counts it; the flight comparison, the liability rule and the amnesty, immunity and remission levers are rules, fed by the engine into the labour market's year inputs (tenants flee, fugitives are kept and return) and into the AI state's menu, which nets the base lost to flight; unrest (486) is open, so `FISCAL_BURDEN_WEIGHT` stays
+**Status:** partly - the base answers a raise by hiding, flight and unrest; both hiding constants are now sourced ballparks (confidence C); what remains is non-sourcing work (the immunity and flight items under Still open) and a pre-modern check of the curve
 
 Follows from 626 (tax rates as a state choice).
 
-**What is wrong now.** A state can raise the rate of a form (a player's lever, or an AI state's `raise_rate` response). The
-base now responds in three ways (below), but not in these:
-
-- Flight from a taxed tile: `sim/labour/market/migration.py` (workers weigh the log of expected income over subsistence in
-  each area against their own, less moving cost) has no per-area after-tax figure. `tax_burden.harvest_share_taken` already
-  gives one for the harvest; it would pass through `YearInputs` into `_real_income`.
-- No unrest from a heavy burden (486).
-- The producers' land demand and run decisions in the economy do not net a harvest tax off expected revenue
-  (`land_market.demands_of`).
-- The AI state's `raise_rate` option does not count the base lost through flight or unrest. It weighs a raise by
-  `FISCAL_BURDEN_WEIGHT` (`sim/agents/tuning_fiscal.py`), a labelled stand-in; it retires when the menu values those too.
+**What is wrong now.** Nothing in the list that opened this complaint: the AI state's menu foresees unrest, a harvest tax reaches the
+land demand, the farm-hours choice and the producers' run, plant and entry decisions (`harvest_tax.py`, the plan, close and entry
+kernels and their reference functions), and `FISCAL_BURDEN_WEIGHT` is deleted. The hiding constants' missing source is
+below (Sourcing the hiding curve).
 
 **Why it matters.** Without a full response of the base there is a ceiling to taxation only at the rate cap, and a state
 cannot lose by overtaxing in every way a real one does (CLAUDE.md 4.1: the outcome should come from lower-level state, not
@@ -43,8 +36,7 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
   (`sim/markets/port_setup.py`), so the economy imports nothing from the actors. Customs duties on border imports
   are not under it. `HIDEABLE_SHARE_OF_INCOME` and `HIDING_MARGINAL_COST_AT_CEILING` (`sim/agents/tuning_evasion.py`) are
   labelled heuristics with `retire` 657.
-- Tests: `test_tax_pressure_reaches_decisions.py` (rules called with built inputs; the engine wiring is covered only by
-  whole-game topics), `test_tax_evasion.py`, `test_tax_evasion_economy.py`.
+- Tests: `test_tax_evasion.py`, `test_tax_evasion_economy.py`, `test_tax_flight_and_liability.py`.
 
 - **Flight is the migration rule.** `sim/labour/market/migration.py` scores each route by the income kept after the state's take
   in that area (`YearInputs.taxed_share`) less the move's cost, which now includes the expected penalty of recapture
@@ -74,21 +66,67 @@ can leave lowers the base next year; an AI state with the loss in its menu raise
   and `Government.pull_tax_response_levers` sets the levers the choice covered money with.
 - Tests: `test_tax_flight_wiring.py` (rules called with built inputs; the engine's year is covered only by the whole-game smoke topics).
 
-**`FISCAL_BURDEN_WEIGHT` stays.** The menu now nets flight for a rate raise, but (1) unrest (486) is the other loss it stood in for and is not modelled;
-(2) the levy and the demand in kind, which also carry `income_taken`, do not net flight; (3) with the migration rule's cap on the share who consider
-moving in a year, flight alone never makes a raise yield less in any rate or reach tried, so the loss the weight stands for is not all flight.
+- **The AI state's menu foresees unrest.** `sim/agents/fiscal_unrest.py` calls `unrest.grievance` and `unrest.unrest` (the rules the
+  stability phase reads) on the extra take of an option: a take above the one people are used to is their grievance, the share it
+  makes discontented does not pay it, so `net_of_unrest` is the money the option still raises and `lost_per_money_kept` is the
+  consequence (`unrest_lost`) the policies value. The levy, the demand in kind, a rate raise and collective liability go through
+  it (`fiscal_response._taxed_option`). `FISCAL_BURDEN_WEIGHT` and the `income_taken` consequence are deleted. Unrest is counted
+  from the extra take alone (hunger and the liability burden of the tiles are not in the menu's reading). Test: `test_fiscal_unrest.py`,
+  `test_state_fiscal_response.py` (a rate raise is offered for less than its gross yield).
+- **Harvest tax reaches land demand and farm hours.** `tax_burden.harvest_share_by_material` (the figure `stability.py` reads, per
+  material) goes to the economy as `EconomyYearInputs.harvest_share_by_good` and `EconomySetup.harvest_share_by_good`; `sim/economy/harvest_tax.py`
+  nets it off the output prices in `land_market.demands_of`, in `land_bid_year.best_margin` (a household's land bid) and in
+  `labour_ask_floor.plot_return_per_hour` (the next plot hour against the wage, so `plot_hours_kept` and the wage floor fall with the tax).
+  Tests: `test_economy_harvest_tax.py`, `test_economy_land_market.py`, `test_economy_labour_ask_floor.py`.
+- **Remission** is offered exactly where a cut yields more (`rate_cut_yield`), which is past the rate that yields most; it is not
+  offered below it by design (tested in `test_tax_flight_wiring.py`).
 
 **Still open.** (a) Immunity is read only where a fugitive weighs returning to deserted land: released land is still never taken up by anyone else (nothing in the economy
 fills a title below one on a tile except a clearer's new ground), so a taker's years without tax are not applied after the first comparison. All net outflow from a taxed area is
 treated as flight (no split of the part that is not about tax); a fugitive's refuge is the area that gained most that year, not tracked per person; arrears accrue as a year's take at
-the area's subsistence, not the person's income, and `Route.expected_penalty` counts this year's take only (the fugitives' arrears are not added to a new leaver's). Whole-game effect not
-measured (a slow topic and the fingerprint are needed). (b) `remission` is never offered in the cases tried (see above). (d) Unrest (486). (e) The hiding-cost curve has no source.
+the area's subsistence, not the person's income, and `Route.expected_penalty` counts this year's take only. The levy and the demand in kind do not net flight (they net unrest). Whole-game effect
+not measured (a slow topic and the fingerprint are needed). Whole-game effect of the harvest tax on runs not measured (a slow topic and the fingerprint are needed).
 
 ## Research needed
 
-No source on pre-modern tax pressure, flight and abandonment was opened, so the hiding constants and `FISCAL_BURDEN_WEIGHT`
-have none. The question: how did taxpayers respond to a heavier take in the Roman and medieval worlds, by form (flight of
+No source on pre-modern tax pressure, flight and abandonment was opened, so the hiding constants
+have none (see Sourcing the hiding curve below). The question: how did taxpayers respond to a heavier take in the Roman and medieval worlds, by form (flight of
 tenants and the abandoned land of the late empire, anachoresis in Roman Egypt, concealment, evasion, revolt), and at what
 share of the harvest did each begin? Sources to open: Roman Egypt tax-flight papyri studies, the Codex Theodosianus on agri
 deserti, and medieval English peasant flight and tallage studies. A response curve fitted to those is a validation of the
 mechanism, not an input to it.
+
+## Sourcing the hiding curve
+
+**Searched, nothing usable opened (2026-11):** web searches for Roman Egypt census and tax evasion (Monson and Scheidel,
+*Fiscal Regimes and the Political Economy of Premodern States*, 2015, pp. 229-257, is named as the general introduction but
+its text was not reachable; the ResearchGate and academia.edu papers on evasion in Roman Egypt returned HTTP 403 or search
+snippets only); pre-modern concealment shares and bribe costs (Mughal, Ming, medieval: only modern evasion studies and
+popular essays); Zhang Juzheng's 1581 Ming land survey (opened *Fir and Empire*, Appendix A, "Forests in Tax Data": surveys
+"added nearly a quarter more farmland", read there as reregistering forest converted to farmland, and registration figures are
+"at best indexes of fiscal acreage"; it does not give a hideable share or a cost of hiding). No source found.
+
+**Searched again (second pass), one partial datum:** Habib, *The Agrarian System of Mughal India* (archive.org
+`the-agrarian-system-of-mughal-india-1556-to-1707`, OCR text, read for concealment, collusion and measurement): it describes
+qanungos colluding with 'amils to make fictitious accounts and reduce assessments (Aurangzeb's order, ch. on revenue
+assignments) and a patwari/qanungo commission of two per cent of the revenue (*Ain*, I, p. 300, "sad-dot"), but gives no share of
+land found off the rolls by measurement. Ray Huang's *Taxation and Governmental Finance* and Ho Ping-ti's *Studies on the
+Population of China* (archive.org borrowable only, HTTP 401) and the Cambridge chapter page (host not reachable) could not be
+opened. The one figure opened: Arslan 2022, "Tahrir Defteri Verilerinin Nufus Hesaplamalari icin Guvenilirligine Dair Mukayeseli
+bir Inceleme", Medeniyet Belleten 2/3, p. 21 (https://dergipark.org.tr/en/download/article-file/2568111): 95 adult men found
+in the 1559-1561 Uskudar court records are absent from the 1560 tahrir, "approximately 14%" of the 676 registered adult men, a
+lower bound; about 20 were exempt. That is persons off the rolls in one town, not an income share and not a response to
+officials looking harder, so neither constant changes (0.5 and 0.5); the datum is recorded in `HIDEABLE_SHARE_OF_INCOME`'s
+`why`. Still unsourced: the ceiling and the cost of the last unit hidden. Status stays partly.
+
+**What it would take.** Open a work that gives, for a pre-modern agrarian state, either the share of land or income found
+off the rolls when officials looked harder (cadastral resurveys: Ming 1581, Roman Egypt census cycle, Domesday, Mughal
+`zabt`), or what concealment cost payers (fees to scribes and surveyors). Cite author, work, page. Set the two constants
+from it, or replace them by the holdings model the `retire` text names. Candidates: Monson and Scheidel (eds.) 2015; Kiser and
+Kane on tax farming; papyrological studies of Roman Egypt land declarations.
+
+## Sourced (2026-11, ballpark standard)
+
+- `HIDEABLE_SHARE_OF_INCOME` 0.5 -> 0.55, confidence C, now `engineering_estimate`. Congressional Research Service IF11887 (https://www.everycrsreport.com/reports/IF11887.html): IRS net misreporting 1 per cent of wages and salaries, 15 per cent of partnership and S-corporation income, 55 per cent of sole-proprietor income (2014-2016). The income class with no third-party reporting is the analogue for a state with none. Arslan 2022 (Uskudar tahrir, 14 per cent of men off the rolls) is a lower bound for persons.
+- `HIDING_MARGINAL_COST_AT_CEILING` 0.5 kept, confidence C, derived: Anderson 2014 (https://dergipark.org.tr/en/download/article-file/1730550, average tax bribe 2.1 to 8.1 per cent of revenues across transition countries) over Alm, Martinez-Vazquez and McClellan 2016 (https://econpapers.repec.org/RePEc:eee:jeborg:v:124:y:2016:i:c:p:146-163, bribe-soliciting inspectors go with 4 to 10 points less of sales reported) gives 0.21 to 2.0 bribe per unit hidden; geometric middle 0.65. The range is wide; 0.5 sits inside it.
+- Both are modern analogues, not pre-modern measurements. A pre-modern response curve (Roman and medieval) is still a validation target, not an input.

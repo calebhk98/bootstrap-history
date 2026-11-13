@@ -52,6 +52,21 @@ class PlotReturnTests(unittest.TestCase):
         self.assertEqual(plot_return_per_hour([], OPTIONS, 1.0, 1000.0, 2.0, HECTARES), 0.0)
 
 
+class PlotReturnNetOfHarvestTaxTests(unittest.TestCase):
+    def test_the_state_taking_a_fifth_of_the_grain_lowers_the_return_to_four_fifths(self):
+        self.assertAlmostEqual(plot_return_per_hour([FOOD], OPTIONS, 1.0, 1000.0, 2.0, HECTARES, None, {"grain": 0.2}),
+                               0.8 * plot_return_per_hour([FOOD], OPTIONS, 1.0, 1000.0, 2.0, HECTARES))
+
+    def test_a_tax_on_another_good_changes_nothing(self):
+        self.assertAlmostEqual(plot_return_per_hour([FOOD], OPTIONS, 1.0, 1000.0, 2.0, HECTARES, None, {"barley": 0.5}),
+                               plot_return_per_hour([FOOD], OPTIONS, 1.0, 1000.0, 2.0, HECTARES))
+
+    def test_the_wage_floor_from_the_plot_does_not_rise_with_the_tax(self):
+        taxed = wage_floor_per_worker_year([FOOD], OPTIONS, 1.0, 1000.0, 2.0, HECTARES, None, {"grain": 0.5})
+        free = wage_floor_per_worker_year([FOOD], OPTIONS, 1.0, 1000.0, 2.0, HECTARES)
+        self.assertLessEqual(taxed, free)
+
+
 class SurvivalCostTests(unittest.TestCase):
     def test_the_cost_is_the_basket_less_what_the_plot_grows(self):
         # two people at ten food units (twenty) and one cloth unit (thirty) each cost a hundred; the plot grows forty

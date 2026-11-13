@@ -9,7 +9,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from sim.agents.api import collection, liability, revolt, ruler, tax_burden, unrest
+from sim.agents.api import army_faction, collection, liability, revolt, ruler, tax_burden, unrest
 from sim.agents.api import government_levers_tax
 from sim.assembly.api import Part
 from sim.hazards.api import RecordWorldEvent
@@ -25,7 +25,7 @@ RISINGS_KEPT = 20
 
 
 class Stability(Part):
-	"""The phase `revolts`. Reads: civilisation, countries, has_state, country_world, organised_factions, food_eaten,
+	"""The phase `revolts`. Reads: civilisation, countries, has_state, country_world, organised_factions, stratum_grievances, food_eaten,
 	year, tile_owner; the module's own garrisons and sites. Sends the state's commands (polity), TransferTile and
 	RecordWorldEvent."""
 
@@ -73,7 +73,8 @@ class Stability(Part):
 		self.needs.send(RegisterPeople(owner, people_by_tile))
 		state_grievance = self._state_grievance(world, record)
 		faction_grievance, faction_members = self._faction_readings(owner, people)
-		felt = faction_grievance
+		strata_grievance = unrest.faction_grievance(self.needs.stratum_grievances[owner], people)
+		felt = unrest.felt_pressure(faction_grievance, strata_grievance)
 		if state_grievance is not None:
 			grown_used_to = state_grievance if record.grievance_reference is None else record.grievance_reference
 			felt += unrest.adapted(state_grievance, grown_used_to)
@@ -85,6 +86,7 @@ class Stability(Part):
 		self.needs.send(ResetStateUnrest(owner))
 		self._read_tiles(owner, world, record, people_by_tile, registered, felt, rule, rate, reference, seat, year,
 		                 unrest.organisation(faction_members, people))
+		self._army_rises(owner, world, record, seat, reference, year)
 		if record.succession_challenger:
 			self._disputed_accession(owner, world, record, seat, people_by_tile, faction_members, reference, year)
 
@@ -139,23 +141,43 @@ class Stability(Part):
 		if result.kind == revolt.TILE_LOST:
 			self.needs.send(TransferTile(tile, None, "revolt"))
 		elif result.kind == revolt.RULER_REPLACED:
-			self.needs.send(ReplaceRuler(owner, ruler.opening_age(),
-			                             "rising" if cause == "unrest" else record.succession_challenger))
+			competence = ruler.draw_competence(world.setting.rng_for("competence", tile, year).random(), record.council_averaged)
+			backers = {"unrest": "rising", "army": army_faction.ARMY_FACTION}
+			self.needs.send(ReplaceRuler(owner, ruler.opening_age(), backers.get(cause, record.succession_challenger), competence))
 		return result.kind
+
+	def _army_rises(self, owner: str, world: Any, record: Any, seat: Optional[str], reference: float, year: int) -> None:
+		"""The soldiers who have turned from their paymaster (loyalty below the mutiny line) rise at the seat against the garrison there,
+		which is weaker by those soldiers."""
+		defecting = army_faction.defecting_share(record.loyalty)
+		if seat is None or defecting <= 0.0 or record.army <= 0.0:
+			return
+		soldiers = army_faction.rising_soldiers(record.army, defecting)
+		garrison = self._garrison_on(owner, seat)
+		terrain = battle.terrain_factor(self.parts.campaign_year.campaign_site(seat).ruggedness, self.parts.contest.tile_fortification(seat))
+		against = 0.0 if garrison is None else army_faction.remaining_garrison(campaign_contest.strength_of(garrison, reference, terrain), defecting)
+		strength = battle.effective_strength(soldiers, reference, reference, 1.0)
+		if unrest.rises(strength, against):
+			self._rising(owner, world, record, seat, soldiers, strength, garrison, against, True, year, "army")
 
 	def _disputed_accession(self, owner: str, world: Any, record: Any, seat: Optional[str], people_by_tile: Dict[str, float],
 	                        faction_members: float, reference: float, year: int) -> None:
 		"""The runner-up faction takes arms at the seat against the garrison there, in proportion to its backing."""
 		challenger = record.succession_challenger
-		backing = world.groups.faction_backing()
+		defecting = army_faction.defecting_share(record.loyalty)
+		backing = army_faction.with_army(world.groups.faction_backing(), defecting)
 		total = sum(backing.values())
 		if seat is None or challenger not in backing or total <= 0.0:
 			self.needs.send(CloseSuccessionDispute(owner))
 			return
-		soldiers = unrest.rising_soldiers(people_by_tile[seat], backing[challenger] / total)
+		if challenger == army_faction.ARMY_FACTION:
+			soldiers = army_faction.rising_soldiers(record.army, defecting)
+		else:
+			soldiers = unrest.rising_soldiers(people_by_tile[seat], backing[challenger] / total)
 		garrison = self._garrison_on(owner, seat)
 		terrain = battle.terrain_factor(self.parts.campaign_year.campaign_site(seat).ruggedness, self.parts.contest.tile_fortification(seat))
 		against = 0.0 if garrison is None else campaign_contest.strength_of(garrison, reference, terrain)
-		self._rising(owner, world, record, seat, soldiers, unrest.rising_strength(soldiers, reference), garrison, against,
-		             True, year, "disputed_accession")
+		strength = (battle.effective_strength(soldiers, reference, reference, 1.0) if challenger == army_faction.ARMY_FACTION
+		            else unrest.rising_strength(soldiers, reference))
+		self._rising(owner, world, record, seat, soldiers, strength, garrison, against, True, year, "disputed_accession")
 		self.needs.send(CloseSuccessionDispute(owner))

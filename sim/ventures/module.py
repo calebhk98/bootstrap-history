@@ -2,7 +2,7 @@
 hand, the founder's sales and the roll-out of public works.
 
 The businesses are its seat state, written only by its commands (a deal's plants pass by `ReleasePlant` and `AdoptPlant`). The views
-over what is operating and shut hand out the record's own sets, read only, and are uncached."""
+over what is operating and shut hand out copies of the record's sets, and are uncached."""
 from sim.assembly.api import Module
 
 from .coverage import Coverage

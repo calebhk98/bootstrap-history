@@ -11,6 +11,7 @@ import unittest
 
 from sim.content import foreign_economies, tech_effects, trades
 from sim.content.api import OpenContent, Trade
+from sim.content.directory_stamp import DirectoryMemo
 from sim.content.module import Content
 
 MOD = "test_tables_a1b2"
@@ -71,6 +72,64 @@ class TechEffectsTests(unittest.TestCase):
         write_mod(mods, {os.path.join("data", "civilizations", "_TECH_EFFECTS.json"): {MOD + ":spark": {"w_magic_fear": 0.2}}})
         loaded = tech_effects.load_tech_effects(mods, path)
         self.assertEqual(set(loaded), {MOD + ":spark", "press"})
+
+
+class TwoDirectoriesTwoTables(unittest.TestCase):
+    """Complaint 840: the trade registry and the technology effects are functions of the mods directory a game holds, so two
+    directories in one process give two tables (no import-time table stands for both)."""
+
+    def setUp(self):
+        self.root = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.root)
+        self.with_mod = os.path.join(self.root, "with_mod")
+        self.without_mod = os.path.join(self.root, "without_mod")
+        os.makedirs(self.without_mod)
+        write_mod(self.with_mod, {os.path.join("data", "world", "trades.json"): {"trades": {MOD + ":scribe": {"family": "scholar", "note": "writes"}}},
+                                  os.path.join("data", "civilizations", "_TECH_EFFECTS.json"): {MOD + ":spark": {"w_magic_fear": 0.2}}})
+
+    def test_the_trade_registries_of_two_directories_differ_by_the_mods_trade(self):
+        with_mod = trades.trade_registry(self.with_mod)
+        without_mod = trades.trade_registry(self.without_mod)
+        self.assertEqual(set(with_mod) - set(without_mod), {MOD + ":scribe"})
+        self.assertEqual(trades.trade_family(with_mod, MOD + ":scribe"), "scholar")
+        self.assertEqual(trades.trade_notes(with_mod)[MOD + ":scribe"], "writes")
+
+    def test_the_tech_effects_of_two_directories_differ_by_the_mods_node(self):
+        with_mod = tech_effects.load_tech_effects(self.with_mod)
+        without_mod = tech_effects.load_tech_effects(self.without_mod)
+        self.assertEqual(set(with_mod) - set(without_mod), {MOD + ":spark"})
+        self.assertEqual(set(without_mod) - set(with_mod), set())
+
+    def test_a_directory_is_built_once_until_a_file_under_it_changes(self):
+        builds = []
+        memo = DirectoryMemo()
+        self.assertEqual(memo.get(self.with_mod, lambda: builds.append(1) or "first"), "first")
+        self.assertEqual(memo.get(self.with_mod, lambda: builds.append(1) or "again"), "first")
+        self.assertEqual(len(builds), 1)
+        write_json(os.path.join(self.with_mod, MOD, "extra.json"), {"changed": True})
+        self.assertEqual(memo.get(self.with_mod, lambda: builds.append(1) or "second"), "second")
+        self.assertEqual(memo.get(self.without_mod, lambda: builds.append(1) or "other"), "other")
+
+    def test_a_changed_trade_file_gives_a_new_registry(self):
+        self.assertEqual(trades.trade_notes(trades.trade_registry(self.with_mod))[MOD + ":scribe"], "writes")
+        write_json(os.path.join(self.with_mod, MOD, "data", "world", "trades.json"),
+                   {"trades": {MOD + ":scribe": {"family": "scholar", "note": "copies books"}}})
+        self.assertEqual(trades.trade_notes(trades.trade_registry(self.with_mod))[MOD + ":scribe"], "copies books")
+
+    def test_a_caller_changing_its_table_does_not_change_the_next_ones(self):
+        trades.trade_registry(self.with_mod).clear()
+        self.assertIn(MOD + ":scribe", trades.trade_registry(self.with_mod))
+        tech_effects.load_tech_effects(self.with_mod)[MOD + ":spark"]["w_magic_fear"] = 9.0
+        self.assertEqual(tech_effects.load_tech_effects(self.with_mod)[MOD + ":spark"]["w_magic_fear"], 0.2)
+
+    def test_two_directories_give_two_production_catalogues(self):
+        from sim.prices import prices
+        write_json(os.path.join(self.with_mod, MOD, "data", "production", "extra.json"),
+                   {"materials": {MOD + ":gizmo": {"outputs": {MOD + ":gizmo": 1.0}, "labour_hours": {"labourer": 1.0}}}})
+        with_mod = prices.default_production_entries(self.with_mod)
+        without_mod = prices.default_production_entries(self.without_mod)
+        self.assertEqual(set(with_mod) - set(without_mod), {MOD + ":gizmo"})
+        self.assertIs(prices.default_production_entries(self.with_mod), with_mod)
 
 
 class ForeignEconomyTests(unittest.TestCase):

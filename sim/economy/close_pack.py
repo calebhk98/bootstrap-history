@@ -11,6 +11,7 @@ from sim.loans.close_kernel import producer_loans
 
 from . import ask_adjust, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
 from .close_pack_markets import clearing_and_unmet, columns_of_markets
+from .close_pack_asks import ask_multiples
 from .close_pack_kernels import held_goods, pair_values_by_slot, slot_stocks
 from .year_arrays import YearArrays
 from .year_arrays_memory import NO_AREA
@@ -20,7 +21,7 @@ def constants_array() -> np.ndarray:
     return np.array([
         producers.EXPECTATION_ADJUSTMENT_SHARE, producers.REGRESSIVE_EXPECTATION_WEIGHT, producers.COST_SPREAD_WITHIN_PRODUCER,
         producers.OUTPUT_CHANGE_SHARE_PER_YEAR, producers.STOCK_CLEARING_YEARS, inventory.DEFAULT_MONTHS_OF_COVER,
-        ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR, ask_adjust.ASK_BAND_CEILING, producers_close.CLOSED_CAPACITY_SHARE,
+        ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR, producers_close.CLOSED_CAPACITY_SHARE,
         producers_close.WORKING_CAPITAL_YEARS_OF_VARIABLE_COST, plant_investment.INVESTMENT_INERTIA,
         firm_finance.DIVIDEND_EARNINGS_RATIO, firm_finance.FULL_PAYOUT_YEARS_OF_REVENUE, firm_finance.DEBT_RESCALING_FACTOR,
         firm_finance.BANKRUPTCY_IDLE_YEARS, firm_finance.CASH_BUFFER_SHARE_OF_COSTS, firm_finance.ARREARS_EPSILON,
@@ -50,6 +51,7 @@ class ClosePack:
     spoilage: np.ndarray
     ground: np.ndarray
     currencies: list
+    ask_multiple: np.ndarray
 
 
 def _loans(record, arrays: YearArrays, pack_arrays) -> None:
@@ -156,7 +158,8 @@ def pack(setup, record, view, ledger, arrays: YearArrays) -> ClosePack:
             spoilage[column] = spec.spoilage_per_year
             ground[column] = not spec.portable
     return ClosePack(rate_of, cash_in_currency, cash_in_money, revenue, running, stock, sold, made, hours, interest, commitments,
-                     arrears, debt, held_start, held_good, held_quantity, clearing, unmet, spoilage, ground, currencies)
+                     arrears, debt, held_start, held_good, held_quantity, clearing, unmet, spoilage, ground, currencies,
+                     ask_multiples(setup, record, arrays))
 
 
 def figure_values(values: np.ndarray, orders: np.ndarray, agent_numbers: np.ndarray) -> np.ndarray:

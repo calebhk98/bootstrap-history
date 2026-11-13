@@ -20,6 +20,7 @@ class Army:
     progress_days: float = 0.0          # days already marched toward the next tile on its way
     home_tile: str = ""                 # the tile it was raised at, where it falls back to
     raised_year: int = 0
+    readiness: float = 1.0              # drill and morale against the reference soldier, 0 to 1 (army_readiness.py)
     log: List[Dict[str, Any]] = field(default_factory=list)   # this year's events, for the owner's report
 
     def to_dict(self) -> Dict[str, Any]:

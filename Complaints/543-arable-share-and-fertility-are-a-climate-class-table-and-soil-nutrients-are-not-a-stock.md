@@ -98,7 +98,7 @@ soils resist tillage until the tool and team can pull hard enough.
 
 ## Left
 
-- **Manure bought by farms.** No crop recipe takes `manure_kg` or `nightsoil_kg` as an input, and a recipe's yield is fixed per run, so a bought input
+- **Manure bought by farms.** Only the market-garden recipe (`vegetable_kg` in `data/production/95_town_excreta_and_gardens.json`) buys `nightsoil_kg`; no field-crop recipe takes `manure_kg` or `nightsoil_kg`, and a recipe's yield is fixed per run, so a bought input
   cannot raise it. It needs an optional-input yield response in the producers (`sim/economy/producers*`, owned by another agent) that reports the nitrogen
   applied per tile to `state.economy.soil_nitrogen`; then `FREE_MANURE_SPREAD_SHARE` goes. A shortage of manure must lower yield, not stop the farm.
 - A soil texture layer (SoilGrids or HWSD) in place of the heavy-soil stand-in and the daily temperature range stand-in; a land-cover layer in place of the arable ceiling.

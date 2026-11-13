@@ -28,7 +28,6 @@ from .invariants import check_labour_market_invariants, check_yearly_invariants
 @dataclass(frozen=True)
 class StepContext:
 	"""Immutable dependencies used by the turn phases."""
-	trade_family: object
 	invariant_checker: object
 
 

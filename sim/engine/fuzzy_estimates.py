@@ -19,7 +19,6 @@ import re
 
 from sim.scenario.api import SetFuzzyEstimates
 
-from .data import WAGES
 
 DEFAULT_ACTOR = "player"
 DECOY_LIMIT = 3
@@ -82,7 +81,7 @@ def decoy_hours(sim, node_id, actor=None):
         return {}
     node = sim.nodes[node_id]
     rng = _rng(sim, actor_of(sim, actor), node_id, "decoys")
-    candidates = sorted(trade for trade in WAGES if trade not in node["lab"])
+    candidates = sorted(trade for trade in sim.view("trade_records")() if trade not in node["lab"])
     if not candidates:
         return {}
     count = min(len(candidates), 1 + int(rng.random() * DECOY_LIMIT))

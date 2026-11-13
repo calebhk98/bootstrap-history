@@ -1,7 +1,7 @@
 """Pursue a goal: begin what is startable on its route, through the rush machinery and its guards."""
 
 from sim.engine.ui_port import closure, hard_pre, topo_order
-from .nodes import _resolve_by_name
+from .nodes import _resolve_by_name, names_for
 
 FOG_REFUSAL = ("route planning is switched off under fog of war: nobody can lay out a road to somewhere "
                "they have not been. Use 'available' to see what you could begin now.")
@@ -17,7 +17,7 @@ def resolve_goal(sim, raw):
     text = str(raw).strip()
     if text in nodes:
         return text, None
-    candidates = _resolve_by_name(text)
+    candidates = _resolve_by_name(text, names_for(sim.view("mods_directory")()))
     if len(candidates) == 1:
         return candidates[0], None
     return None, ("more than one thing is called %r; say which by id" % text if candidates

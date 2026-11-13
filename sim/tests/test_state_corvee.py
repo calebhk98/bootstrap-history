@@ -10,7 +10,7 @@ from .harness import check
 
 from sim.agents import budget, budget_works, headcount, revenue, revenue_labour, state_works
 from sim.agents.api import ActorRecord, Government, Hands
-from sim.agents.tuning_spending import MASONRY_PERSON_YEARS_PER_M2
+from sim.agents import state_masonry
 from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
 
 from .agents_fake_world import FakeWorld
@@ -157,7 +157,7 @@ world.state.record.corvee_spare_years = 3.0
 world.state.corvee.build_works_by_corvee(world)
 raised = state_works.held(world)["capital_buildings"] - stock_before
 check("spare corvee labour raises the works the state lacks, at the masonry a person-year builds",
-	  abs(raised - 3.0 / MASONRY_PERSON_YEARS_PER_M2) < 1e-9, raised)
+	  abs(raised - 3.0 / state_masonry.person_years_total(world)) < 1e-9, raised)
 check("it pays nobody for it", world.state.money == 0.0 and not world.state.record.outlays, world.state.record.outlays)
 
 # ---- conscripts count against the pool the country can spare ------------------------------------------------

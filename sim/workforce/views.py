@@ -130,10 +130,10 @@ class Views(Part):
 
 	def cleared_wage_change(self):
 		"""How far the unskilled hour's cleared wage moved between the last two clearings, as a share; None before there are two."""
-		world = self.world
-		if not world.cleared_wage or not world.cleared_wage_before:
+		society = self.world
+		if not society.cleared_wage or not society.cleared_wage_before:
 			return None
-		return world.cleared_wage / world.cleared_wage_before - 1.0
+		return society.cleared_wage / society.cleared_wage_before - 1.0
 
 	def wage_materials(self):
 		"""The materials a wage is set against, in order: the staple, then every trade's tool materials."""

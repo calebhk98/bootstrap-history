@@ -28,6 +28,7 @@ def stand_in(**changes):
         materials=SimpleNamespace(
             prices=lambda: {"wheat_kg": 3.0, "iron": 5.0},
             priced_key=lambda material, prices: material if material in prices else None,
+            sold_material=lambda tag: tag,
             commodity_materials=lambda commodity: [commodity]),
         _price_tables=lambda: (None, {"wheat_kg": "solved", "iron": "solved"}))
     values.update(changes)

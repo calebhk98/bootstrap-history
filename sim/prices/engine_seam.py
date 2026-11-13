@@ -5,19 +5,19 @@ when the data loaders have an owner of their own."""
 from typing import Any, Dict, List, Optional
 
 
-def load_production() -> Any:
+def load_production(mods_dir: Optional[str] = None) -> Any:
     from sim.engine.validate_production import load_production as loaded
-    return loaded()
+    return loaded(mods_dir)
 
 
-def load_mod_tree_nodes(root: str) -> Any:
+def load_mod_tree_nodes(root: str, mods_dir: Optional[str] = None) -> Any:
     from sim.content.api import load_mod_tree_nodes as loaded
-    return loaded(root)
+    return loaded(root, mods_dir)
 
 
-def load_trade_registry(root: str, production_entries: Any, nodes: Any = ()) -> Any:
+def load_trade_registry(root: str, production_entries: Any, nodes: Any = (), mods_dir: Optional[str] = None) -> Any:
     from sim.content.api import load_trade_registry as loaded
-    return loaded(root, production_entries, nodes=nodes)
+    return loaded(root, production_entries, mods_dir, nodes=nodes)
 
 
 def closure(nodes: Dict[str, Any], node_id: str) -> Any:
@@ -25,9 +25,9 @@ def closure(nodes: Dict[str, Any], node_id: str) -> Any:
     return reached(nodes, node_id)
 
 
-def load_civ(civilization_id: Optional[str]) -> Any:
+def load_civ(civilization_id: Optional[str], mods_dir: Optional[str] = None) -> Any:
     from sim.engine.data import load_civ as loaded
-    return loaded(civilization_id)
+    return loaded(civilization_id, mods_dir=mods_dir)
 
 
 def shipped_opening(namespace: str, key: str) -> Any:

@@ -26,8 +26,7 @@ class LimitedBasketTests(unittest.TestCase):
         rng = random.Random(8)
         compared = skipped = binding = 0
         for _case in range(60):
-            with mock.patch.object(opening_tests, "NEED_DATA", LIMITED_DATA):
-                basket, view, cohorts = year_tests.year_world(rng)
+            basket, view, cohorts = year_tests.year_world(rng, LIMITED_DATA)
             year_tests.stores.clear()
             units = year_tests.random_units(rng, cohorts, basket)
             priceds = [households.need_prices(basket, view, cohort.tile) for cohort in cohorts]
@@ -48,6 +47,15 @@ class LimitedBasketTests(unittest.TestCase):
                                for need in priced)
         self.assertGreaterEqual(compared, 0.8 * (compared + skipped), "most cases are compared (%d skipped)" % skipped)
         self.assertGreater(binding, 20, "baskets with limits are exercised")
+
+
+class NeedDataIsAnArgument(unittest.TestCase):
+    def test_world_takes_limits_from_the_data_given_not_from_a_module_attribute(self):
+        for module_data in (opening_tests.NEED_DATA, {"needs": {}, "goods": {}}):     # a stale copy of the module holds other data
+            with mock.patch.object(opening_tests, "NEED_DATA", module_data):
+                basket, _view, _cohorts = year_tests.year_world(random.Random(1), LIMITED_DATA)
+            limited = {need.need_id: dict(need.share_limits) for need in basket.needs if need.share_limits}
+            self.assertEqual(limited, {"light": {"oil": 0.45, "tallow": 0.3}, "food": {"millet": 0.25}})
 
 
 if __name__ == "__main__":

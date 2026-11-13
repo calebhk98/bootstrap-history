@@ -7,15 +7,15 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy.market_memory_asks import REPRESENTATIVE_TRADE_SHARE
-from sim.economy.market_memory_offers import NO_OFFER_MEMORY_SHARE, price_after_thin_trade
+from sim.economy.market_memory_offers import THIN_TRADE_COST_SHARE, price_after_thin_trade
 
 
 class DeadMarketMemoryTests(unittest.TestCase):
     def test_a_representative_trade_leaves_the_price_alone(self):
         self.assertEqual(price_after_thin_trade(100.0, 10.0, 1000.0 * REPRESENTATIVE_TRADE_SHARE, 1000.0), 100.0)
 
-    def test_no_trade_closes_the_no_offer_share_of_the_gap_to_cost(self):
-        expected = 100.0 + NO_OFFER_MEMORY_SHARE * (10.0 - 100.0)
+    def test_no_trade_closes_the_thin_trade_share_of_the_gap_to_cost(self):
+        expected = 100.0 + THIN_TRADE_COST_SHARE * (10.0 - 100.0)
         self.assertAlmostEqual(price_after_thin_trade(100.0, 10.0, 0.0, 1000.0), expected)
 
     def test_a_sliver_of_trade_relaxes_almost_as_far_as_none(self):

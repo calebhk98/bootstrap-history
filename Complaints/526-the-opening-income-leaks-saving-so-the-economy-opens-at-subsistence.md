@@ -5,7 +5,7 @@
 **What is wrong now.** The opening sets household income as the fixed point of income and the demand it pays for
 (`sim/economy/opening_income.py`). Households save part of any surplus and nothing in the fixed point spends that saving
 (no investment demand), so the fixed point falls toward the cost of the households' floors: every opening is a stationary
-near-subsistence economy. Test fixtures state a surplus through `surplus_households` (607). During the spin-up the labour market clears at the households' outside option, far below the
+near-subsistence economy. The test helper `surplus_households` (607) is no longer used by any test. During the spin-up the labour market clears at the households' outside option, far below the
 cost-table wage, so wage and price level fall for decades and no spin-up settles. Measure:
 `python3 sim/simulator.py opening-checks`; `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60`.
 
@@ -37,11 +37,11 @@ set opens with a larger surplus.
 
 **Tried and why it failed.**
 
-- An opening rate search (branch `fix-526-opening-rate`, not merged; `sim/economy/opening_rate.py` is not in main): lifted
+- An opening rate search (branch `fix-526-opening-rate`, not merged; the `sim/economy/opening_rate.py` on main is the credit-market opening rate, not this search): lifted
   settled income by about a third then flat, and the wage drifted lower than without it, so the rate is not what drives the wage.
 - Counting durables and land as held wealth: settled income barely moved.
 - Correct accounting (546, 547) moved where the spin-up's drift stops; the shipped openings cannot be regenerated
-  (`python3 sim/simulator.py openings` refuses failing checks) until this is fixed or the failure is shipped with
+  (`python3 sim/simulator.py openings` refuses failing checks; tracked in 970) until this is fixed or the failure is shipped with
   `--allow-failing REASON`.
 
 ## Update: does more money reach prices?

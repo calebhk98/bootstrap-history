@@ -1,6 +1,6 @@
 # Lenders ask nothing for what their money earns elsewhere or for default, so the rate clears at zero
 
-**Status:** partly - lenders' lowest ask (time preference plus expected inflation plus loss record), the bank spread and Eurace's default-probability markup with a value-at-risk cap are built; open: the land-yield and public-debt alternatives have no live input, `market_rate()` is not re-measured since the Eurace changes, the engine-facing rate still clamps nominally
+**Status:** partly - the heuristics are gone (a lost claim's life is the mean term of the claims the lender held at the last close, `claim_terms.py`; the state's bond premium over the going rate is added to the lender's own alternative, no gate); only the opening rate re-measure on a civilisation (the orchestrator's) remains
 
 **What was wrong.** Households lent at `max(0, expected_inflation)`, `credit.clear` (`sim/economy/credit.py`) floored the rate at zero
 and dropped it to the lowest ask when funds sat idle, and a bank asked its depositors' rate plus a fixed margin. So a
@@ -9,9 +9,9 @@ sides would agree to.
 
 ## What is built
 
-- `sim/economy/lender_ask.py`: `lowest_ask` is the best of the lender's alternatives (time preference plus expected
-  inflation, land yield, public yield) plus its expected loss rate; `loss_rate` is the share of the lender's credit
-  exposure that went bad (`record.credit_losses`); `land_yield` is rent over title price, nothing where the land has no price.
+- `sim/economy/lender_ask.py`: `lowest_ask` is the lender's time preference plus the inflation it expects, plus its expected loss rate;
+  `loss_rate` clamps the lender's remembered yearly loss rate (`loss_memory.py`, fed by `record.credit_losses`). It takes no land-yield or
+  public-yield alternative (none exists in the sim: `grep -rn "def land_yield\|public_yield" sim`).
 - Households offer at that ask where they lend (`households_orders.py`, `lending.lend_working_capital`).
 - `sim/economy/bank_spread.py`: a bank's spread is its loss rate plus `BANK_SPREAD_AT_NO_CAPITAL` times how far its capital
   ratio falls short of `BANK_CAPITAL_SHARE_OF_LOANS` (shape after Caiani et al. 2016 and Lavoie; labelled heuristic with `retire`).
@@ -39,26 +39,31 @@ sides would agree to.
 
 ## What is wrong now
 
-- Land yield has no live input: no title is bought or sold at a price (`titles_value` capitalises rent at the live rate, so
-  rent over that price is the rate itself, a circle). It needs titles that trade at a price (538, 551).
-- Public debt: no state bond reaches the household lender's choice, so `public_yield_available` stays unfed.
-- Expected loss reads the loss share of exposure as a yearly rate; a lender that lost and then holds no claims asks the
-  whole loss share. `RATE_FLOOR_SHARE` (capital_market) is a separate typed floor that this does not retire.
-- `capital_market.market_rate_answered` still bounds the engine-facing rate nominally (`bounded_rate` takes `expected_inflation`
-  but the engine-facing `market_rate` (`sim/finance/capital_market.py`) does not pass it), and the clearing's cause is not stored on the record.
-- `market_rate()` reports `record.memory.rates[currency]`: the base rate of the last `_lend` clearing of the spin-up, the
-  year's second and smaller clearing (the first, `lending.lend_working_capital`, writes nothing to memory). It is a marginal
-  rate, not a loan-weighted average and not a real rate, so it sits below the median ask where the cheapest lender's funds
-  cover the request. Whether this is what a caller wants is undecided.
+- Land yield is fed: titles sell at a price in the title sale market (`title_sales.py`, `title_sales_year.py`, 538), the year's price per tile is kept in `record.land.sale_price_by_tile`, and `rent / price` of the tiles that sold is `CreditRecord.land_yield`, read through `CreditView.land_yield` into `lowest_ask` by households' offers and working-capital lending. Buyers bid the rent over their own alternative rate (time preference plus expected inflation, the state's bonds where in reach), never the lending rate, so the yield is not the rate by construction; it is kept from the last year that sold. Tests: `test_economy_title_sales.py`.
+- The public-debt alternative is the state's bond premium: how far the yield it sells at exceeds its coupon (the going rate), zero when it does not
+  (`port_public_debt.bond_premium_over_coupon`, `EconomyYearInputs.state_bond_premium`, `CreditRecord.public_premium`). `lowest_ask` adds it to the lender's
+  own alternative (time preference plus expected inflation), never the bond's whole yield, which tracks the cleared rate and would ratchet it. A society with no bond market or a state with no bonds offers none.
+- A lost claim's life is the claim-weighted mean term (years run plus years left) of the loans the lender held at the last year's close, else of the whole book,
+  else one year (`claim_terms.mean_term_years`, `loss_memory.age`, `CreditRecord.claim_lives`); `LOSS_CLAIM_LIFE_YEARS` is deleted.
 - The opening rate and the entry of firms in the default game have not been re-measured since the Eurace price, wage,
-  credit and finance rules landed. Measure: `from sim.tests import harness; game = harness.sim(capital=1e7)` on Rome with the
+  credit and finance rules landed, nor since the changes above. Measure: `from sim.tests import harness; game = harness.sim(capital=1e7)` on Rome with the
   full spin-up, then `game.economy._answering_agent().economy().record.memory.rates` and `game.actors.active_firms()`
   (probes: `Complaints/reports/641-rate-probe.md`). Rate level and the price index it reads expected inflation from
-  belong to 473.
+  belong to 473. Not run by the agent that built the land yield; the orchestrator runs it, and with the land yield now in the ask a rate that moves is expected where titles sell.
+
+## Built since
+
+- `lender_ask.lowest_ask(time_preference, expected_inflation, expected_loss_rate, land_yield, public_yield)`: the best alternative plus the loss.
+- `loss_memory.blend`: a lender's year rate is its loss over its claims plus the lost claim for its life (`LOSS_CLAIM_LIFE_YEARS`), not the whole loss share.
+- `CreditRecord.note_clearing` / `average_rate` / `last_clearing_cause`: both of a year's clearings (working capital and the ordinary one) add to the
+  loan-weighted average and the cause is kept. `economy.api.market_rate` (`reported_rate.py`) is that average (else the remembered base rate), bounded by
+  `bounded_rate` with the expected inflation lenders hold; `market_rate_answered` no longer clamps. The planning base rate (`memory.rates`) stays the
+  marginal rate of the last clearing.
+- `RATE_FLOOR_SHARE` is the discount floor of equity and secondary trade, not a floor lenders ask; it is kept, with `retire="Complaints/106"`.
 
 ## What it would take
 
-Feed the two alternatives (titles at a price, a state bond reachable by households), re-measure the opening rate, and retire
+Both alternatives are built (titles at a price, a state bond reachable by households) and in `lowest_ask`; left: re-measure the opening rate, and retire
 `RATE_FLOOR_SHARE` if the lenders' floor now does its job. Tests call the ask and clearing functions with built offers: a
 glut leaves the rate at the lenders' floor, not zero; a lender with past losses asks more.
 
@@ -69,3 +74,12 @@ glut leaves the rate at the lenders' floor, not zero; a lender with past losses 
   `Clearing.limited` (`collateral_bound`) and the rest stays unmet. A working-capital request pledges the producer's cash, the
   goods it holds and its plant, not the loan itself (`producers_working_capital.pledgeable_assets`, `request`).
   Not re-measured on a civilisation; fixtures: `python3 sim/simulator.py spin-up-trace --fixture small --years 50` (the `rate` column).
+
+## Opening rate re-measured (commit d846ed11, rebuilt openings)
+
+`python3 sim/simulator.py opening-checks` reports `rate_against_history` passing for all five base civilisations, but the solved opening
+rate is the same in each: the households' time preference plus the expected inflation they open with
+(`sim/economy/opening_rate.py` `opening_market_rate`), since the resting opening has no borrower and no lender with spare cash, so
+nothing clears and the rate is the cheapest lender's lowest ask. The land yield and the bond premium cannot enter at the opening
+(no title has sold yet, no bond has been priced); whether they move the rate is a reading of later years, not of the opening.
+Still open: that later-year reading on a civilisation, and retiring `RATE_FLOOR_SHARE` (`sim/world/capital_market.py`, `retire` 106).

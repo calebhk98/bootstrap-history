@@ -14,7 +14,8 @@ from sim.actors.module import Actors
 from sim.actors.seat_parties import Ports
 from sim.refusal import Refusal
 from sim.agents.api import Plant
-from sim.seats.api import SeatsSeat, SetDealing
+from sim.seats.api import (AddLicensee, DropLapsedOffers, DropOffer, GiveShares, KeepOffer, NextOfferSerial, ReceivePatent, ReleasePatent,
+                           SeatsSeat, TakeShares)
 from sim.seats.module import Seats
 from sim.tests import module_harness
 from sim.tests.money_host import MoneyHost
@@ -103,20 +104,58 @@ class TheOwnersKeepTheirRecords(unittest.TestCase):
         self.assertEqual(published["shares_issued"], 0.0)
         self.assertEqual(slots["second"].patents, {"loom": {"granted": 1}})
 
-    def test_set_dealing_replaces_one_stored_field_of_the_named_seat_with_a_copy(self):
-        slots = {"founder": SeatsSeat(), "second": SeatsSeat()}
+    def seats(self, **fields):
+        slots = {"founder": SeatsSeat(), "second": SeatsSeat(**fields)}
         module = module_harness.build(Seats, module_id="seats")
         module.slots = lambda: slots
-        offers = [{"id": "offer:1"}]
-        module.set_dealing(SetDealing("second", "offers", offers))
-        offers[0]["id"] = "changed"
-        self.assertEqual((slots["second"].offers, slots["founder"].offers), ([{"id": "offer:1"}], []))
+        return module, slots
 
-    def test_set_dealing_refuses_a_field_that_is_not_a_dealing(self):
-        module = module_harness.build(Seats, module_id="seats")
-        module.slots = lambda: {"founder": SeatsSeat()}
-        with self.assertRaises(KeyError):
-            module.set_dealing(SetDealing("founder", "goal", "x"))
+    def test_a_patent_released_leaves_the_named_seat_and_answers_the_right(self):
+        module, slots = self.seats(patents={"loom": {"granted": 1, "expires": 9, "licensees": ["firm:1", "firm:2"]}})
+        entry = module.release_patent(ReleasePatent("second", "loom", "firm:1"))
+        self.assertEqual((entry["licensees"], slots["second"].patents), (["firm:2"], {}))
+
+    def test_a_patent_received_is_held_as_a_copy(self):
+        module, slots = self.seats()
+        entry = {"granted": 1, "expires": 9, "licensees": []}
+        module.receive_patent(ReceivePatent("second", "loom", entry))
+        entry["expires"] = 99
+        self.assertEqual((slots["second"].patents["loom"]["expires"], slots["founder"].patents), (9, {}))
+
+    def test_a_licensee_is_added_once(self):
+        module, slots = self.seats(patents={"loom": {"granted": 1, "expires": 9, "licensees": []}})
+        module.add_licensee(AddLicensee("second", "loom", "firm:1"))
+        module.add_licensee(AddLicensee("second", "loom", "firm:1"))
+        self.assertEqual(slots["second"].patents["loom"]["licensees"], ["firm:1"])
+
+    def test_shares_given_and_taken_move_the_held_and_issued_figures(self):
+        module, slots = self.seats(shares_held={"firm:1": 0.3})
+        module.give_shares(GiveShares("second", "firm:1", 0.1, False))
+        module.give_shares(GiveShares("second", "second", 0.2, True))
+        module.take_shares(TakeShares("second", "firm:2", 0.4, False))
+        module.take_shares(TakeShares("second", "second", 0.05, True))
+        seat = slots["second"]
+        self.assertEqual((round(seat.shares_issued, 9), {issuer: round(share, 9) for issuer, share in seat.shares_held.items()}),
+                         (0.15, {"firm:1": 0.2, "firm:2": 0.4}))
+
+    def test_an_offer_is_kept_dropped_and_lapses(self):
+        module, slots = self.seats()
+        module.keep_offer(KeepOffer("second", {"id": "a#1", "expires": 100}))
+        module.keep_offer(KeepOffer("second", {"id": "b#1", "expires": 120}))
+        module.keep_offer(KeepOffer("second", {"id": "c#1", "expires": 130}))
+        module.drop_offer(DropOffer("second", "c#1"))
+        lapsed = module.drop_lapsed_offers(DropLapsedOffers("second", 110))
+        self.assertEqual((lapsed, [offer["id"] for offer in slots["second"].offers]), (["a#1"], ["b#1"]))
+
+    def test_the_offer_count_rises_by_one_and_is_answered(self):
+        module, slots = self.seats(offer_serial=4)
+        self.assertEqual((module.next_offer_serial(NextOfferSerial("second")), slots["second"].offer_serial), (5, 5))
+
+    def test_a_dealing_read_after_another_partys_write_is_the_new_figure(self):
+        module, _slots = self.seats()
+        before = module.seat_dealings("second")
+        module.keep_offer(KeepOffer("second", {"id": "a#1", "expires": 100}))
+        self.assertEqual((before["offers"], module.seat_dealings("second")["offers"]), ([], [{"id": "a#1", "expires": 100}]))
 
     def ventures(self):
         seats = {"founder": VenturesSeat(), "second": VenturesSeat()}

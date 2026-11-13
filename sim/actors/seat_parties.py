@@ -11,7 +11,8 @@ from sim.agents.api import HouseholdParty
 from sim.assembly.api import Part
 from sim.knowledge.api import ReceiveTechniques
 from sim.ledger.api import CreditSeat, DebitSeat, NoteSeatCash, RestorePurse
-from sim.seats.api import SetDealing
+from sim.seats.api import (AddLicensee, DropLapsedOffers, DropOffer, GiveShares, KeepOffer, NextOfferSerial, ReceivePatent, ReleasePatent,
+                           TakeShares)
 from sim.ventures.api import AdoptPlant, ReleasePlant
 
 
@@ -58,8 +59,32 @@ class Ports:
     def dealing(self, field: str) -> Any:
         return self._needs.seat_dealings[self._seat_id][field]
 
-    def store_dealing(self, field: str, value: Any) -> None:
-        self._needs.send(SetDealing(self._seat_id, field, value))
+    def release_patent(self, node_id: str, taker_id: str) -> Any:
+        return self._needs.send(ReleasePatent(self._seat_id, node_id, taker_id))
+
+    def receive_patent(self, node_id: str, entry: Any) -> None:
+        self._needs.send(ReceivePatent(self._seat_id, node_id, entry))
+
+    def add_licensee(self, node_id: str, licensee_id: str) -> None:
+        self._needs.send(AddLicensee(self._seat_id, node_id, licensee_id))
+
+    def give_shares(self, issuer_id: str, share: float, own_issue: bool) -> None:
+        self._needs.send(GiveShares(self._seat_id, issuer_id, share, own_issue))
+
+    def take_shares(self, issuer_id: str, share: float, own_issue: bool) -> None:
+        self._needs.send(TakeShares(self._seat_id, issuer_id, share, own_issue))
+
+    def keep_offer(self, offer: Any) -> None:
+        self._needs.send(KeepOffer(self._seat_id, offer))
+
+    def drop_offer(self, offer_id: str) -> None:
+        self._needs.send(DropOffer(self._seat_id, offer_id))
+
+    def drop_lapsed_offers(self, year: int) -> Any:
+        return self._needs.send(DropLapsedOffers(self._seat_id, year))
+
+    def next_offer_serial(self) -> int:
+        return self._needs.send(NextOfferSerial(self._seat_id))
 
     def concerns(self) -> Any:
         return self._needs.operating()

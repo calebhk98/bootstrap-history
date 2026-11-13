@@ -7,7 +7,7 @@ wage over the floor a household needs, whether the spin-up stopped moving.
 """
 import math
 from dataclasses import dataclass
-from typing import Dict, Mapping, Optional, Sequence
+from typing import Collection, Dict, Mapping, Optional, Sequence
 
 from sim.markets.api import coin_wear_per_year
 
@@ -38,16 +38,34 @@ class CheckResult:
                 "passed": self.passed, "detail": dict(self.detail)}
 
 
-def price_over_cost(name: str, ratios: Mapping[str, float], bound: float = PRICE_OVER_COST_BOUND) -> CheckResult:
+def unmeasured_cause(good: Optional[str], prices: Mapping[str, float], costs: Mapping[str, float],
+                     stale: Collection[str]) -> Optional[str]:
+    """Why `good` has no price-over-cost ratio, or None when it has one: no such good, its market did not clear
+    lately (its shown price is then its making cost, not a trade), no price, or no making cost."""
+    if not good:
+        return "no_good"
+    if good in stale:
+        return "market_did_not_clear"
+    if not prices.get(good):
+        return "no_price"
+    if not costs.get(good):
+        return "no_making_cost"
+    return None
+
+
+def price_over_cost(name: str, ratios: Mapping[str, float], bound: float = PRICE_OVER_COST_BOUND,
+                    unmeasured: Optional[Mapping[str, str]] = None) -> CheckResult:
     """`ratios` is {good: price over its making cost}. The value is the ratio furthest from one (in either
     direction); the check passes when every ratio stands between 1/bound and bound. No ratio: no value, and fail
-    (a check that measured nothing has not passed)."""
+    (a check that measured nothing has not passed). `unmeasured` is {good: cause} of the goods left out
+    (`unmeasured_cause`); it is kept in the detail."""
     usable = {good: ratio for good, ratio in ratios.items() if ratio > 0.0 and math.isfinite(ratio)}
     if not usable:
-        return CheckResult(name, None, bound, "within", False, {"ratios": {}, "outside": {}})
+        return CheckResult(name, None, bound, "within", False,
+                           {"ratios": {}, "outside": {}, "unmeasured": dict(unmeasured or {})})
     worst = max(usable.values(), key=lambda ratio: abs(math.log(ratio)))
     outside = {good: ratio for good, ratio in usable.items() if ratio > bound or ratio < 1.0 / bound}
-    return CheckResult(name, worst, bound, "within", not outside, {"ratios": dict(usable), "outside": outside})
+    return CheckResult(name, worst, bound, "within", not outside, {"ratios": dict(usable), "outside": outside, "unmeasured": dict(unmeasured or {})})
 
 
 def money_against_wear(rows: Sequence[Mapping[str, float]], wear_share: float = coin_wear_per_year(),

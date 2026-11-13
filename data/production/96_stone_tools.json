@@ -1,52 +1,68 @@
 {
- "_note": "Stone tools: obsidian and flint are quarried, and a knapper strikes blades and tools from them (Complaint 618, part of 530). Every figure not read from a source is a labelled heuristic with a retire field naming Complaint 650. Complaint 650 research pass (see Complaints/reports/research-stone-and-wooden-tools.md): no new source was found for quarry hours, hours per blade, flint tool mass or knapper training; the mass balance of the blade entry stays the only sourced figure.",
+ "_note": "Stone tools: obsidian and flint are quarried, and a knapper strikes blades and tools from them (Complaint 618, part of 530). Figures are sourced to pages opened in the Complaint 650 passes; a derived figure shows its arithmetic. ",
  "materials": {
   "obsidian_kg": {
-   "outputs": {"obsidian_kg": 1000.0},
+   "outputs": {
+    "obsidian_kg": 1000.0
+   },
    "inputs": {},
-   "labour_hours": {"labourer": 20.0},
+   "labour_hours": {
+    "labourer": 280.0
+   },
    "extracted_from": "quarry",
    "unit_dimension": "mass",
    "basis": "per tonne of raw obsidian nodules or flows broken free and carried clear of the outcrop",
-   "yield_basis": "EXTRACTED. LABELLED HEURISTIC (conf D), no source found for hours per tonne of obsidian won from an outcrop or mine: set beside the copper_ore_kg and stone_kg entries' hard-rock effort (labourers only, since glass breaks along its own fracture and needs no wedging). Where obsidian outcrops is a property of the map, not of this recipe; no deposit is placed yet, so any civilisation can run it (retire: Complaint 650).",
-   "retire": "Complaint 650",
-   "conf": "D",
+   "yield_basis": "EXTRACTED. No obsidian-specific rate was found (searches on Sierra de las Navajas, Chivay and experimental obsidian quarrying returned no hours or kilograms per person). Taken by analogy with hand-mined flint, the nearest sourced figure: Grime's Graves, Wikipedia (https://en.wikipedia.org/wiki/Grime%27s_Graves): \"more than 2,000 tonnes of chalk had to be removed from the larger shafts, taking 20 men around five months, before stone of sufficient quality was reached\"; \"The medium-depth shafts yielded as much as 60 tons of flint nodules\". DERIVATION: 20 men x 5 months x about 21 working days x 8 hours = 16,800 labour hours (the working calendar is the author's assumption) / 60 tonnes = about 280 hours a tonne of flint, counting the chalk dug through to reach the seam. A deep-shaft figure: flint from an outcrop or gravel costs less, so this is a ceiling. Where obsidian outcrops is a property of the map; no deposit is placed yet.",
+   "conf": "C",
    "requires_node": null
   },
   "flint_kg": {
-   "outputs": {"flint_kg": 1000.0},
+   "outputs": {
+    "flint_kg": 1000.0
+   },
    "inputs": {},
-   "labour_hours": {"labourer": 20.0},
+   "labour_hours": {
+    "labourer": 280.0
+   },
    "extracted_from": "quarry",
    "unit_dimension": "mass",
    "basis": "per tonne of raw flint nodules dug from chalk or gravel and carried clear",
-   "yield_basis": "EXTRACTED. LABELLED HEURISTIC (conf D), no source found for hours per tonne of flint dug; set equal to obsidian_kg and in the range of the stone_kg entry's labour. Where flint lies is a property of the map and no deposit is placed yet (retire: Complaint 650).",
-   "retire": "Complaint 650",
-   "conf": "D",
+   "yield_basis": "EXTRACTED. Grime's Graves, Wikipedia (https://en.wikipedia.org/wiki/Grime%27s_Graves): \"more than 2,000 tonnes of chalk had to be removed from the larger shafts, taking 20 men around five months, before stone of sufficient quality was reached\"; \"The medium-depth shafts yielded as much as 60 tons of flint nodules\". DERIVATION: 20 men x 5 months x about 21 working days x 8 hours = 16,800 labour hours (the working calendar is the author's assumption) / 60 tonnes = about 280 hours a tonne of flint, counting the chalk dug through to reach the seam. A deep-shaft figure: flint from an outcrop or gravel costs less, so this is a ceiling. Where flint lies is a property of the map; no deposit is placed yet.",
+   "conf": "C",
    "requires_node": null
   },
   "obsidian_blade_kg": {
-   "outputs": {"obsidian_blade_kg": 1000.0},
-   "inputs": {"obsidian_kg": 1099.0},
-   "labour_hours": {"knapper": 4600.0},
+   "outputs": {
+    "obsidian_blade_kg": 1000.0
+   },
+   "inputs": {
+    "obsidian_kg": 1570.0
+   },
+   "labour_hours": {
+    "knapper": 2200.0
+   },
    "unit_dimension": "mass",
    "unit_mass_kg": 1.0,
    "basis": "per tonne of pressure-flaked prismatic obsidian blades, before use",
-   "yield_basis": "MASS: SOURCED. Sheets and Muto, 'Pressure Blades and Total Cutting Edge: An Experiment in Lithic Technology', Science 175 (1972), abstract read at https://vivo.colorado.edu/display/pubid_69138 : \"Pressure techniques were used to remove 83 blades from a preformed obsidian core weighing 820 grams\"; \"The blades represented 91 percent of the original weight\"; \"yielding 17.32 meters of acute cutting edge\". So 1000 kg of blades needs 1000 / 0.91 = 1099 kg of preformed core, and a blade weighs about 0.91 * 820 / 83 = 9.0 g (about 110 blades a kilogram). The experiment starts from an already preformed core, so the mass lost shaping raw nodules into cores is NOT counted here (no source found; retire: Complaint 650). LABOUR: LABELLED HEURISTIC (conf D), no source found for hours per blade: Clark's Ojo de Agua workshop estimate, read at https://www.cambridge.org/core/journals/ancient-mesoamerica/article/prismatic-blademaking-craftsmanship-and-production/4DE4B3F54E0E94388CDDD6D11FD7AF52 , gives \"The maximum level of output from his workshop was 26,000, or fewer, fine blades per year\" as \"the equivalent of part-time work during a three-month period\" but no hours. The figure used is 4600 hours a tonne, about three minutes a blade including core preparation (author's estimate; retire: Complaint 650). Gate: the tree node mat_obsidian_blade.",
-   "retire": "Complaint 650",
-   "conf": "D",
+   "yield_basis": "MASS: Sheets and Muto, 'Pressure Blades and Total Cutting Edge: An Experiment in Lithic Technology', Science 175 (1972), abstract read at https://vivo.colorado.edu/display/pubid_69138 : \"Pressure techniques were used to remove 83 blades from a preformed obsidian core weighing 820 grams\"; \"The blades represented 91 percent of the original weight\". So 1000 kg of blades needs 1000 / 0.91 = 1099 kg of preformed core, and a blade weighs about 0.91 * 820 / 83 = 9.0 g (about 110 blades a kilogram). The experiment starts from a preformed core, so the mass lost shaping a raw nodule into a core is added from Castaneda, 'A few good blades', Journal of Lithic Studies 3(2) (2016), PDF opened at https://journals.ed.ac.uk/lithicstudies/article/download/1435/2295/6648 : in the first reduction of a flint nodule \"a 30% of the initial volume was discarded\" (geodes and fissures). Flint is used as the analogue for obsidian, both being conchoidal glass-like stone; so a core is 70 percent of the nodule and 1000 kg of blades needs 1099 / 0.70 = 1570 kg of raw obsidian. LABOUR: John E. Clark, 'Prismatic Blademaking, Craftsmanship, and Production', Ancient Mesoamerica 8 (1997), abstract read at https://www.cambridge.org/core/journals/ancient-mesoamerica/article/prismatic-blademaking-craftsmanship-and-production/4DE4B3F54E0E94388CDDD6D11FD7AF52 : the Ojo de Agua workshop's \"maximum level of output\" was \"26,000, or fewer, fine blades per year\", \"the equivalent of part-time work during a three-month period\". DERIVATION: 26,000 blades / 110 blades a kilogram = 236 kg; three months full time (13 weeks x 40 hours = 520 hours) is an upper bound on hours since the work was part-time; 520 / 0.236 = about 2200 hours a tonne, core preparation included. Floor cross-check: Clark's 1979 draft (https://objects.lib.uidaho.edu/crabtree/CE_B3_F2-Item24.pdf) quotes Clavijero, \"in one hour a craftsman removed more than a hundred\", about 1100 hours a tonne for detaching alone. Gate: the tree node mat_obsidian_blade.",
+   "conf": "C",
    "requires_node": "mat_obsidian_blade"
   },
   "flint_tool_kg": {
-   "outputs": {"flint_tool_kg": 1000.0},
-   "inputs": {"flint_kg": 3000.0},
-   "labour_hours": {"knapper": 3000.0},
+   "outputs": {
+    "flint_tool_kg": 1000.0
+   },
+   "inputs": {
+    "flint_kg": 5000.0
+   },
+   "labour_hours": {
+    "knapper": 900.0
+   },
    "unit_dimension": "mass",
    "unit_mass_kg": 1.0,
    "basis": "per tonne of knapped flint tools (hand axes, scrapers, flake knives, sickle flints)",
-   "yield_basis": "LABELLED HEURISTIC (conf D), no source found for the finished mass of tools per kilogram of flint or for hours per kilogram of tools. Percussion flaking discards most of a nodule as debitage, taken here as two thirds, and the labour is set below the blade figure because tools are struck by hard-hammer percussion, not fine pressure (author's estimate; retire: Complaint 650). Needs no technology: flaking flint is older than any node in the tree.",
-   "retire": "Complaint 650",
-   "conf": "D",
+   "yield_basis": "MASS: Finkel and Gopher, 'Size Matters', Lithic Technology 43(3) (2018), PDF opened at https://humanities.tau.ac.il/sites/humanities.tau.ac.il/files/media_server/all-units/%D7%91%D7%99%D7%AA%20%D7%A1%D7%A4%D7%A8%20%D7%9C%D7%9E%D7%93%D7%A2%D7%99%20%D7%94%D7%99%D7%94%D7%93%D7%95%D7%AA/%D7%A2%D7%91%D7%95%D7%93%D7%95%D7%AA%20%D7%93%D7%95%D7%A7%D7%98%D7%95%D7%A8%D7%98/Finkel%20Meir/Finkel-%202018%20Size%20Matters.pdf : \"a weight ratio of 1:4 between end product and knapping waste (or 80 per cent waste) is a reasonable expected measure of reduction efficiency\" for Neolithic bifacials, so 1000 kg of roughouts takes 1000 / 0.2 = 5000 kg of flint. Wasteful end: Putt et al. 2014 (https://pmc.ncbi.nlm.nih.gov/articles/PMC4938430, Table 5), cobbles of 7984 g reduced to cores of 364 g, 94.8 percent lost. LABOUR: Hand axe, Wikipedia (https://en.wikipedia.org/wiki/Hand_axe): \"An experienced flintknapper needs less than 15 minutes to produce a good quality hand axe\"; a forum comment (https://www.greaterwrong.com/posts/bkjqfhKd8ZWHK9XqF/should-you-make-stone-tools/comment/TsYzcSL3oFfPtnqzJ) quotes David Miles, Tale of the Axe, at about 20 minutes. DERIVATION: 20 minutes = 0.33 hours for a finished core of 0.364 kg (Putt et al. Table 5) = 0.92 hours a kilogram, rounded to 900 hours a tonne; an experienced knapper's rate. Needs no technology: flaking flint is older than any node in the tree.",
+   "conf": "C",
    "requires_node": null
   }
  }

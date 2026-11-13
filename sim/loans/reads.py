@@ -76,3 +76,12 @@ def arrears_history(store: LoanStore, remembered_losses: Mapping[str, float]) ->
     """What the market holds against each borrower: the losses it caused earlier, then its loans' arrears added in loan order."""
     table = store.table
     return totals_by_agent(store, table.borrower, table.arrears, _selected(store, None), remembered_losses)
+
+
+def claim_term_years_by_lender(store: LoanStore, arrears_share: float, year: int, currency: Optional[str] = None) -> Dict[str, float]:
+    """For each lender, its claims' worth times each loan's term (the years it ran so far plus the years left), added in loan order."""
+    table = store.table
+    count = len(store)
+    claims = claim_values(table.principal, table.arrears, count, arrears_share)
+    terms = numpy.maximum(table.years_left[:count], 0.0) + numpy.maximum(year - table.issued_year[:count], 0)
+    return totals_by_agent(store, table.lender, claims * terms, _selected(store, currency))

@@ -3,6 +3,7 @@ what they raise is drawn from those deposits. The rules are called on a stand-in
 the room the seat's own mines take is `found_deposits` (test_mine_names_a_deposit)."""
 QUICK_TOPIC = True
 
+from sim.tests import repository_tables
 import types
 import unittest
 
@@ -34,6 +35,9 @@ class Host:
 
     def draw_deposit(self, deposit_id, tonnes):
         self.drawn.append((deposit_id, tonnes))
+
+    def production_catalog(self):
+        return repository_tables.production_catalog()
 
     def send(self, command):   # the felled-timber commands: no recipe here fells wood
         return None

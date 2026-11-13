@@ -38,7 +38,7 @@ class Sharing(Module):
 		"""The node's material bill, reused while the world stamp and the node's stock hold."""
 		if self._scope is None:
 			return compute()
-		stock = tuple(self.needs.goods_stock[commodity] for commodity in self._bill_commodities(node_id))
+		stock = tuple(self.needs.goods_pool_stock[commodity] for commodity in self._bill_commodities(node_id))
 		return self.shared_answer(("bill", node_id), stock, compute)
 
 	def _bill_commodities(self, node_id: str) -> tuple:

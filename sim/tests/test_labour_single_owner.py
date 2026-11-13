@@ -33,6 +33,14 @@ copy = book.employed_by_trade()
 copy["labourer"] = 99.0
 check("the staff the owner reports is a copy", household.employees["labourer"] == 3.0)
 
+# ---- a hire through the clearing shows in the staff, and leaves the standing bid as posted ----
+household.staff_wanted["labourer"] = 8.0
+book.record_hired("labourer", 5.0)
+check("a clearing's hire is the founder's head count", book.employed("labourer") == 5.0 and household.employees["labourer"] == 5.0)
+check("a clearing's hire leaves the standing bid as posted", household.staff_wanted["labourer"] == 8.0)
+book.record_hired("labourer", 0.0)
+check("a clearing that hired nobody leaves the trade off the book", "labourer" not in household.employees)
+
 # ---- a reservation is the founder's staff plus the other employers' ----
 book.set_employed("artisan", 2.0)
 check("reserved people are the book plus the firms' and states' staff", book.reserved_people("artisan") == 6.0, book.reserved_people("artisan"))
@@ -68,3 +76,18 @@ with mock.patch.object(labour_supply.trade_data, "drawn_from_unskilled_pool", la
         mock.patch.object(labour_supply.trade_data, "registry_of", lambda world: {}):
     check("the national estimate of a trade is the core's headcount where the core holds people of it",
           _Estimate({"smith": 42.0}).national_trade_population("smith") == 42.0)
+
+
+# ---- a hire draws on the people of the tiles reached, never on the trade's hours idle elsewhere ----
+def _Reach(by_tile, base_tile="home"):
+    world = SimpleNamespace(people=SimpleNamespace(population=SimpleNamespace(total=1000.0, working_age=600.0)),
+                            trades=SimpleNamespace(trades_absent=()),
+                            economy=SimpleNamespace(agent_people_by_tile_and_trade=lambda: by_tile))
+    return labour_supply.Supply(world, book=None, capacity=None, settlement=SimpleNamespace(base_tile=lambda: base_tile),
+                                trades=SimpleNamespace(LITERATE_TRADES=()))
+
+
+with mock.patch.object(labour_supply.trade_data, "drawn_from_unskilled_pool", lambda trade: False):
+    _reach = _Reach({"home": {"carter": 3.0}, "far": {"carter": 500.0}})
+    check("a hire's hands are the trade's people in the base tile, not those of other tiles",
+          _reach.hands_available("carter") == 3.0, _reach.hands_available("carter"))

@@ -1,6 +1,6 @@
 # Most ancient occupations have no trade, and their hours are booked as farming
 
-**Status:** open - umbrella; remaining children are 613 and 619 (closes when they do)
+**Status:** open - umbrella; remaining child is 619 (closes when it does); 613 closed
 
 An outside list of the twenty commonest occupations in classical civilisations (Rome, Greece, Mesopotamia, Egypt) was
 checked against the trade registry (`data/world/trades.json`) and the `labour_hours` of `data/production/`. The list is a
@@ -15,7 +15,7 @@ and shipwrights), 618 (Mexica stone tools, obsidian knappers).
 
 Open:
 
-- 613: porters and dockworkers are invisible labourers. Land carriage on foot is a route mode
+- 613 (closed): porters and dockworkers are invisible labourers. Land carriage on foot is a route mode
   (`sim/geography/routes_rates.py`, `_porter`) whose hours are `labourer`; in a society without draught animals porters
   were one of the largest labour groups.
 - 619: no baseline check (CLAUDE.md 4.2) that the occupational distribution of a Rome run falls in a plausible range (most

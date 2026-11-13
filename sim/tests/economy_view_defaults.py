@@ -48,6 +48,12 @@ class ViewDefaults:
     def loss_rate(self, agent, currency):
         return 0.0
 
+    def land_yield(self, currency):
+        return None
+
+    def public_premium(self, currency):
+        return None
+
     def prices_across(self, good, areas):
         return [self.price(good, each.area_id) for each in areas]
 

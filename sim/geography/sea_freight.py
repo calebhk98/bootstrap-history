@@ -129,12 +129,19 @@ HULL_TIMBER_KG_PER_CARGO_TONNE = declare(
     why="Sets the hull's price (timber at its price) for the carrier's capital charge.")
 
 PORT_HANDLING_HOURS_PER_TONNE = declare(
-    "PORT_HANDLING_HOURS_PER_TONNE", 2.0, kind="temporary_heuristic",
+    "PORT_HANDLING_HOURS_PER_TONNE", 4.8, kind="engineering_estimate",
     unit="labour-hours per tonne per sea leg (loading plus unloading)",
-    source=None, confidence="D",
-    why="Stevedoring at the two ports of a sea leg; a person shifts "
-        "roughly a tonne in a few hours with ropes and baskets. Not yet "
-        "derived from a lifting model.")
+    source=(
+        "Derived from two opened pages. Port Economics, Management and Policy, 'Loading Break-bulk Cargo, Port of New "
+        "Orleans, early 20th Century' (porteconomicsmanagement.org/?p=5664): 'The typical productivity level of a "
+        "longshoremen crew was 5 to 10 tons per hour'. Gang size: marereport.namma.org/?p=412 (a 1960s New York "
+        "longshoreman's account): a gang is 'the ten men in the hold of the ship plus the two winchmen and hatch "
+        "tender', with four dock workers and a foreman, eighteen in all. Arithmetic: 18 workers / 7.5 tonnes an hour "
+        "(midpoint) = 2.4 worker-hours per tonne for one end, so 4.8 for loading plus unloading. A 20th-century "
+        "gang with winches; a pre-mechanical port would need no fewer hours."),
+    confidence="C",
+    why="Stevedoring at the two ports of a sea leg, in worker-hours per tonne, from a break-bulk gang's tonnes an hour "
+        "and its size. Priced at the dockworker wage of the port's area (sim/markets/port_setup.py handling_wage).")
 
 
 def ground_km_per_day():

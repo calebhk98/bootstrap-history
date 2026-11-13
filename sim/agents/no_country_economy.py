@@ -8,3 +8,4 @@ class NoCountryEconomy(LookupError):
 	def __init__(self, country: str, figure: str = "economy") -> None:
 		super().__init__("country %r has no %s of its own in the agent economy" % (country, figure))
 		self.country = country
+		self.figure = figure

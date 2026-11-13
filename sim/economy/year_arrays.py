@@ -12,6 +12,7 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from . import harvest_tax
 from .setup import labour_area
 from .year_arrays_cohorts import CohortColumns
 from .year_arrays_memory import AreaIndex, MemoryArrays
@@ -60,6 +61,11 @@ def _memory_arrays(setup, matrices: RecipeMatrices, tiles: Names, area_index: Ar
                               wage_grid(setup, view, matrices.trades, tiles))
 
 
+def revenue_outputs_of(setup, matrices: RecipeMatrices) -> np.ndarray:
+    """`harvest_tax.revenue_outputs` of the year's matrices at the share the setup holds this year."""
+    return harvest_tax.revenue_outputs(matrices.outputs, matrices.goods.ids, getattr(setup, "harvest_share_by_good", {}))
+
+
 def _held(collection) -> tuple:
     return tuple(collection.items()) if hasattr(collection, "items") else tuple((each, each) for each in collection)
 
@@ -86,6 +92,7 @@ class YearArrays:
     area_map: object
     source: tuple = ()               # `source_of(setup)` when the matrices were built (`carried` checks it)
     tools: ToolTables = None         # the recipes' tool fallbacks over the matrices' numbering (year_arrays_tools.py)
+    revenue_outputs: np.ndarray = None   # the matrices' outputs as they fetch a grower after the state's harvest share (harvest_tax.revenue_outputs); the year's, so `sync` makes it again
 
     @classmethod
     def build(cls, setup, record, area_map, view) -> "YearArrays":
@@ -95,7 +102,7 @@ class YearArrays:
         area_index = AreaIndex.build(area_map, matrices.goods, tiles)
         return cls(matrices, tiles, area_index, ProducerColumns.build(record.producers, matrices, tiles),
                    CohortColumns.build(record.cohorts, tiles), _memory_arrays(setup, matrices, tiles, area_index, record, view),
-                   area_map, source_of(setup), tool_tables(setup.recipes, matrices))
+                   area_map, source_of(setup), tool_tables(setup.recipes, matrices), revenue_outputs_of(setup, matrices))
 
     @classmethod
     def carried(cls, previous, setup, record, area_map, view) -> "YearArrays":
@@ -116,4 +123,5 @@ class YearArrays:
         except KeyError:
             return YearArrays.build(setup, record, self.area_map, view)
         memory = _memory_arrays(setup, self.matrices, self.tiles, self.area_index, record, view, self.memory)
-        return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map, self.source, self.tools)
+        return YearArrays(self.matrices, self.tiles, self.area_index, producers, cohorts, memory, self.area_map, self.source, self.tools,
+                          revenue_outputs_of(setup, self.matrices))

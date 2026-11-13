@@ -749,8 +749,8 @@
    "lon": -98.57,
    "deposit_type": "placer_gold",
    "status": "historic",
-   "conf": "D",
-   "source": "The Codex Mendoza tribute lists record gold paid to Tenochtitlan by the provinces of Tlapa and of the Oaxaca highlands and coast (Berdan and Anawalt, The Essential Codex Mendoza, 1997), washed from river gravels; no source found that was opened in this pass (the Codex Mendoza folios were not reached), so the entry stays a labelled place of unknown size. Position is Tlapa (Guerrero), a representative point for the placer districts. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
+   "conf": "C",
+   "source": "The Codex Mendoza tribute lists record gold paid to Tenochtitlan by the provinces of Tlapa and of the Oaxaca highlands and coast (Berdan and Anawalt, The Essential Codex Mendoza, 1997), washed from river gravels; opened this pass: the Codex Mendoza (uknowledge.uky.edu/world_mexico_codices/11) lists 39 provinces paying semi-annual tribute and, among its gold, Tochtepec in northern Oaxaca paying a gold diadem, headband and bead necklaces a year; the abstract at cambridge.org/core/services/aop-cambridge-core/content/view/S095653611500022X says the gold dust and bullion recorded as tribute 'was sufficient to produce 22,000-27,000 small and medium-sized ornaments annually'. Neither page names Tlapa, so the Oaxaca gold is sourced and the Tlapa placement is not; the entry stays a place of unknown size. Position is Tlapa (Guerrero), a representative point for the placer districts. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
    "order": 38
   },

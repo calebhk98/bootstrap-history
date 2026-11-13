@@ -53,18 +53,22 @@ check("satiation moves freed spending to the open needs identically under every 
 # The opening years of the agent economy are cached on disk, so the usual two-seed run (see
 # run_reproducibility) replays whichever spin-up a process first computed and never exercises them.
 # Here the cache is a fresh directory and the spin-up is long enough for cohorts to reach their
-# satiation limits (re-measure by finding the first year two hash seeds' records differ).
+# satiation limits (re-measure by finding the first year two hash seeds' records differ). It builds the
+# cheapest base civilisation: the same opening and year code as Rome at a fraction of Rome's cold cost (time one
+# build with the script below under `time`, and Rome's with civ='rome_100ad').
 SPIN_UP_YEARS = "6,0"
+SPIN_UP_CIVILISATION = "norse_900ad"
+SPIN_UP_SECONDS = 600
 SPIN_UP_SCRIPT = """
 import hashlib, json, sys, tempfile
 sys.path.insert(0, %r)
 from sim.tests.harness import economy_port, sim
 from sim.markets import spin_up_run
 spin_up_run.SPIN_UP_CACHE_DIRECTORY = tempfile.mkdtemp()
-game = sim()
+game = sim(civ=%r)
 record = economy_port(game).agent.stored["record"]
 print(hashlib.sha256(json.dumps(record, sort_keys=True, default=str).encode()).hexdigest())
-""" % ROOT
+""" % (ROOT, SPIN_UP_CIVILISATION)
 
 
 def _spin_up_under(hash_seed):
@@ -79,7 +83,12 @@ _spin_ups = [_spin_up_under(hash_seed) for hash_seed in (1, 2)] if SLOW else []
 def _same_spin_up_under_other_hash_seed():
     digests = []
     for process in _spin_ups:
-        stdout, stderr = process.communicate(timeout=600)
+        try:
+            stdout, stderr = process.communicate(timeout=SPIN_UP_SECONDS)
+        except subprocess.TimeoutExpired:
+            for running in _spin_ups:
+                running.kill()
+            return False, "a spin-up took over %d s" % SPIN_UP_SECONDS
         if process.returncode != 0:
             raise RuntimeError("spin-up subprocess failed: %s" % stderr[-2000:])
         digests.append(stdout.strip())

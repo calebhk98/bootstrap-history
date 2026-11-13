@@ -66,11 +66,12 @@ def _rows(route, merchant, stock, interest_rate, only_held=None, area_map=None) 
                 if slot is not None:
                     source_allowed[slot] = True
     if only_held is None:
-        prepared = merchants_batch.rows_for(route, merchant.agent_id, float(interest_rate), merchant.home_tile, stock.expected)
+        prepared = merchants_batch.rows_for(route, merchant.agent_id, float(interest_rate), merchant.home_tile, stock.expected,
+                                         merchant.traded_tiles)
         if prepared is not None:
             return prepared
     return merchants_book.search(route, stock.expected, merchant.home_tile, interest_rate, merchants.MERCHANT_MARGIN_SHARE,
-                                 good_allowed, source_allowed)
+                                 good_allowed, source_allowed, merchant.traded_tiles)
 
 
 def prepare_rows(route, merchants, interest_rate: float) -> None:

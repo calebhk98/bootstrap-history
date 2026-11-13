@@ -57,7 +57,7 @@ class TechniquesInReach(unittest.TestCase):
         entries = {"make_a": {"requires_node": "node_a", "outputs": {"a_kg": 1.0}}}
         worked = []
 
-        def work_out(held, held_gate_nodes, resolvable_materials, production_entries):
+        def work_out(held, held_gate_nodes, resolvable_materials, production_entries, mods_dir=None):
             worked.append(1)
             return frozenset(["make_a"])
         with mock.patch.object(prices, "_entries_in_reach", work_out):
@@ -68,7 +68,7 @@ class TechniquesInReach(unittest.TestCase):
     def test_another_catalogue_is_worked_out_again(self):
         worked = []
 
-        def work_out(held, held_gate_nodes, resolvable_materials, production_entries):
+        def work_out(held, held_gate_nodes, resolvable_materials, production_entries, mods_dir=None):
             worked.append(1)
             return frozenset()
         with mock.patch.object(prices, "_entries_in_reach", work_out):

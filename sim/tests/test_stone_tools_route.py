@@ -61,14 +61,16 @@ class StoneRouteTests(unittest.TestCase):
         priced = need_basket.priced_need(_IMPLEMENTS, 1.0 - _BASKET.substitution,
                                          {"obsidian_blade_kg": 10.0, "flint_tool_kg": 10.0}.get)
         shares = {good: share for good, _price, _effect, share in priced.goods}
-        self.assertGreater(shares["obsidian_blade_kg"], shares["flint_tool_kg"])
+        effects = {good: effect for good, _price, effect, _share in priced.goods}
+        more_effective, less_effective = sorted(effects, key=effects.get, reverse=True)
+        self.assertGreater(shares[more_effective], shares[less_effective])
 
     def test_the_blade_recipe_follows_the_measured_mass_balance(self):
         recipe = _PRODUCTION["obsidian_blade_kg"]
         self.assertEqual(recipe["requires_node"], "mat_obsidian_blade")
         self.assertIn("mat_obsidian_blade", _civilisation("mexica_1500")["starting_techs"])
-        # 91 percent of a preformed core's weight leaves as blades (Sheets and Muto 1972)
-        self.assertAlmostEqual(recipe["outputs"]["obsidian_blade_kg"] / recipe["inputs"]["obsidian_kg"], 0.91, places=2)
+        # 91 percent of a preformed core's weight leaves as blades (Sheets and Muto 1972), and a core is 70 percent of its nodule (Castaneda 2016)
+        self.assertAlmostEqual(recipe["outputs"]["obsidian_blade_kg"] / recipe["inputs"]["obsidian_kg"], 0.91 * 0.70, places=2)
         self.assertEqual(set(recipe["labour_hours"]), {"knapper"})
 
     def test_raw_stone_is_extracted_without_inputs_and_flint_tools_need_no_node(self):
@@ -84,10 +86,14 @@ class StoneRouteTests(unittest.TestCase):
         self.assertTrue(knapper["training_source"])
         self.assertTrue(knapper["fatality_source"])
 
-    def test_every_unsourced_stone_figure_names_its_retirement(self):
+    def test_every_stone_figure_is_either_sourced_or_names_its_retirement(self):
         for good in ("obsidian_kg", "flint_kg", "obsidian_blade_kg", "flint_tool_kg"):
-            self.assertTrue(_PRODUCTION[good]["retire"], good)
-            self.assertEqual(_PRODUCTION[good]["conf"], "D")
+            recipe = _PRODUCTION[good]
+            if recipe.get("retire"):
+                self.assertEqual(recipe["conf"], "D", good)
+            else:
+                self.assertIn(recipe["conf"], ("A", "B", "C"), good)
+                self.assertIn("http", recipe["yield_basis"], good)
 
 
 if __name__ == "__main__":

@@ -56,8 +56,8 @@
    "source": "CDC smallpox overview, stacks.cdc.gov/view/cdc/26503: 'Most scabs will have fallen off three weeks after the rash appears' and 'The person is contagious to others until all of the scabs have fallen off'; the 21 day mean is the rash-to-scab span (the 2 to 4 day prodrome, when only sometimes contagious, is not counted)"
   },
   "density_exponent": {
-   "confidence": "unsourced",
-   "source": "Heuristic inside the range Rader et al. 2020 (Nature Medicine, abstract read: crowded cities see longer epidemics with larger attack rates; scaling weaker than linear) supports; the report gives no exponent per route. Respiratory person-to-person contact sits mid-range; vary across the ensemble"
+   "confidence": "derived",
+   "source": "Wikipedia, Basic reproduction number (en.wikipedia.org/wiki/Basic_reproduction_number, opened): R0 = contact rate / recovery rate, the contact rate set by 'the number of susceptible people in the population that the infected people contact'; whether contact rises with density is not stated there. Chowell et al., 1918 influenza in England and Wales (PMC2596813, opened): 'we found no association between transmissibility, death rates and indicators of population density and residential crowding', R between 1.3 and 1.9, and deaths scaling as population to the power 0.71-0.77 in rural areas and about 1.0 in towns. So the exponent of contact on crowding lies between 0 (that study) and 1 (mass action, density-dependent contact); 0.5 is the midpoint, a ballpark. Rader et al. 2020 (Nature Medicine; search summary only, full text not opened): crowded cities have longer epidemics and larger attack rates."
   }
  }
 }

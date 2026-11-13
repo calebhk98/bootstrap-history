@@ -4,7 +4,7 @@ become its title. The rules are in land_bid.py."""
 import dataclasses
 from typing import Dict, List, Mapping
 
-from . import land_bid, land_market, sites, titles_ground, titles_value, titles_worked, trade_wages
+from . import harvest_tax, land_bid, land_market, sites, titles_ground, titles_value, titles_worked, trade_wages
 from .cohort_reads import figures_of
 from .goods_order_tables import LAND
 from .households_own import Option, plot_hectares
@@ -34,6 +34,7 @@ def best_margin(setup, view, tile_id: str, options: Mapping[str, List[Option]], 
         prices = {good: view.price(good, view.area_of(good, tile_id)) for good in recipe.outputs}
         if None in prices.values():
             continue
+        prices = harvest_tax.net_output_prices(prices, setup.harvest_share_by_good)
         rows.append((land_bid.crop_margin_per_hectare(recipe, land, tile_spec.fertility, prices, wages),
                      land_bid.hours_per_hectare(recipe, land), recipe_id))
     return max(rows, default=(0.0, 0.0, ""))

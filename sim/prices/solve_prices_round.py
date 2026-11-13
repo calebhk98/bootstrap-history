@@ -117,10 +117,11 @@ def build_plans(production_entries, recipe_ids_in_order, resolvable_materials, w
 
 
 def round_candidates(plans, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs,
-                     reference_price_by_material=None):
+                     reference_price_by_material=None, producers_of=None):
     """{material: [(price, recipe_id)]} for this round: sole-output recipes first, whose cheapest price per
     material is what a joint recipe's output is worth when made alone, and so its reference price for the
-    split unless the caller gave one."""
+    split unless the caller gave one. With `producers_of`, a recipe offers only the outputs it is listed as a
+    producer of (its cost is still split across all its outputs)."""
     result_by_recipe = {}
     direct_price_by_material = {}
     for plan in plans:
@@ -146,7 +147,8 @@ def round_candidates(plans, prices, wage_by_trade, band_price_by_carrier, intere
         if result is None:
             continue
         for material, price in result[1].items():
-            if plan.output_meets_floor[material]:
+            if plan.output_meets_floor[material] and (
+                    producers_of is None or plan.recipe_id in producers_of.get(material, ())):
                 candidates_by_material[material].append((price, plan.recipe_id))
     return candidates_by_material
 

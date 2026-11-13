@@ -189,7 +189,7 @@ handed an `access` that answers exactly that.
 * `access.memory()`: the mod's own JSON dict inside the saved game.
 
 `register(api)` registers commands (`@api.command(name, group=..., summary=...,
-usage=[...], description=...)` with a handler `(access, nodes, cmd, ended) -> dict`), headline figures (`@api.figure(name, label, unit=...)` on
+usage=[...], description=...)` with a handler `(access, cmd, ended) -> dict`), headline figures (`@api.figure(name, label, unit=...)` on
 `compute(access) -> {"value", "components", "flows", "drivers"}`), actor kinds (`api.actor_kind`),
 policies (`api.policy`), spawners (`api.spawner`, `function(access)`; it founds an actor by sending `AddActor`) and a player actor's
 orders (`api.player_command`, `handler(access, actor_id, order)`); every name is forced into `<mod_id>:`. An actor kind's class runs
@@ -258,7 +258,7 @@ A provider's first argument is its mod's `access`; it reads only what the mod de
   is averaged over the tile's people and reaches `Population.step` (`urban_mortality_premium`). A provider should read a
   store a phase wrote (`handle.get(access, tile)`), so a loaded game answers as the live one did.
 * `api.wealth_claims(owed, seize)`: `owed(access) -> money` the acting household is owed by other actors and
-  `seize(access, amount, taker) -> money taken` for the `taker`; a confiscation counts the first and, once the purse is empty,
+  `seize(access, amount, taker_id) -> money taken` for the actor with id `taker_id`; a confiscation counts the first and, once the purse is empty,
   takes the second (the polity module's `wealth_claims` point).
 * `api.externality(provider)`: `provider(access, year) -> {"deaths_by_band": {band: people}, "yield_factor_by_tile":
   {tile: factor}}` (either key optional; the demography module's `externality` point, which agriculture reads too). Deaths join the year's epidemic deaths before

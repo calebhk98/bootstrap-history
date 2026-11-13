@@ -28,12 +28,13 @@ class Inputs(NamedTuple):
 
 
 class Throttle(Part):
-    """Needs: year, held_goods, goods_stock_opening, mine_capacity, forest_hectares, nitre_beds, active_project_ids,
+    """Needs: year, held_goods, goods_stock_opening, commodity_record, mine_capacity, forest_hectares, nitre_beds, active_project_ids,
     tree_nodes, shortage_remedy_plan. Sends BankStock, ResetDraws, NoteDraw, RecordEvent."""
 
     def throttle_inputs(self, demand: Any) -> Inputs:
         needs = self.needs
-        industrial, lab = rules.throttle_demand_split(demand, self.parts.supply.material_pool)
+        industrial, lab = rules.throttle_demand_split(demand, self.parts.supply.material_pool,
+                                                         self.parts.supply.stock_form)
         stock = needs.held_goods()
         opening = needs.goods_stock_opening()
         electricity_need = self.parts.electricity.electricity_demand_kw()
@@ -47,7 +48,7 @@ class Throttle(Part):
     def read_throttle(self, inputs: Inputs) -> rules.ThrottleReading:
         return rules.throttle_reading(inputs.industrial, inputs.lab, self.parts.supply.own_production_tags(), inputs.electricity_need,
                                       inputs.electricity_have, inputs.opening, self.parts.supply.own_material_supply, self.parts.supply.market_tonnes,
-                                      RESOURCE_THROTTLE_FLOOR)
+                                      self.parts.supply.flow_form, RESOURCE_THROTTLE_FLOOR)
 
     def portfolio_quote(self) -> Tuple[float, Optional[str]]:
         """(the pace, the pool that binds it) as the books stand, nothing changed. A reading the last take already made

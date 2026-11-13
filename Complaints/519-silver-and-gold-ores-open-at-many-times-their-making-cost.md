@@ -9,7 +9,7 @@ unsettled opening (473), could not name the function that broke, and its common-
 fixed, a rule test for the silver and gold chain goes with the fix.
 
 **Closed part (producer sizing).** The mint's bid for the coin metal was its whole strike capacity
-(`MINT_YEARLY_STRIKE_SHARE` times the money stock, `mint.yearly_monetisation`). Its unmet part, at a clearing price under the
+(a strike-share constant, since removed, times the money stock, `mint.yearly_monetisation`). Its unmet part, at a clearing price under the
 strike price, entered `year_close.runs_sold` through `expected_sales.demand_seen`, so the first year's close sized the silver
 producers to the capacity, not to the wear to replace. The mint now takes in what holders want to add plus what the money loses
 (as commodity money already did) and the heuristic is gone. Measure: the probe of silver recipes' `expected_sales` after one
@@ -18,7 +18,7 @@ money stock, which makes the second year's mint bid large (check `cash_target` i
 
 **Evidence on the cause** (details in `Complaints/reports/519-history.md`):
 
-- Not the mint: cutting `MINT_YEARLY_STRIKE_SHARE` by orders of magnitude leaves Rome's silver price unchanged.
+- Not the mint: cutting the (since removed) `MINT_YEARLY_STRIKE_SHARE` by orders of magnitude leaves Rome's silver price unchanged.
 - Silver sits at the coin's mint parity at the opening; the ore sites take the margin.
 - Unverified lead: the opening's price level in coin (wage, wheat) against the coin standard; the same drift as 473 and
   526. Check through `reprice_opening_money` and `coin_revaluation.py`.
@@ -36,3 +36,7 @@ money stock, which makes the second year's mint bid large (check `cash_target` i
 - Sizing a named district at the size-weighted mean was dropped: it lifts iron districts to a tonnage nobody worked in antiquity.
 - Site room was a cause for the common ores (ore grade defaulting to pure metal; yearly room a flat share of endowment); both
   fixed (`resources_district.district_grade`, `mine_deposits.found_deposits`).
+
+## Measured on 2094a71f
+
+The opening checks printed by the openings rebuild (`python3 sim/simulator.py opening-checks` gives the same rows) put `price_over_cost_coin_metal` inside its band (0.1 to 10) for Rome, England, Norse and Mexica; Rome and England sit about five times cost, so the metal no longer opens at tens of times its cost there. Han's reads n/a (no price for its coin metal; 970). The ores' own ratios (silver ore, Han gold lode ore) are not printed by that command and were not re-measured.

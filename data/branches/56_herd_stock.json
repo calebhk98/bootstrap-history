@@ -186,5 +186,49 @@
   "up_hours": 0,
   "note": "A herd of about a hundred pigs: pork, lard and skins from the same animals. It cannot be researched; the pigs have to be held.",
   "unheld_reason": "the society had no pigs to start with; the founder brings them by trade or an expedition"
+ },
+ {
+  "id": "fud_horse_herd",
+  "name": "A herd of horses",
+  "cat": "livestock",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {
+   "horse_kg": 8000
+  },
+  "traits": [],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "A stud of about twenty horses on pasture: working horses reared to harness, and skins. It cannot be researched; the horses have to be held.",
+  "unheld_reason": "the society had no horses to start with; the founder brings them by trade or an expedition"
+ },
+ {
+  "id": "fud_mule_herd",
+  "name": "A mule stud",
+  "cat": "livestock",
+  "kind": "RESOURCE",
+  "pre": [],
+  "holds": {
+   "mule_kg": 8000
+  },
+  "traits": [],
+  "kb": "75_agriculture_food.md",
+  "ph": 10,
+  "lab": {
+   "labourer": 100
+  },
+  "mat": {},
+  "build_yrs": 0,
+  "adopt_yrs": 0,
+  "up_hours": 0,
+  "note": "A stud of mares and jack asses on pasture: mules reared to work, and skins from the same animals. It cannot be researched; the mares and asses have to be held.",
+  "unheld_reason": "the society had no horses or asses to start with; the founder brings them by trade or an expedition"
  }
 ]

@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_adjust, inventory, practice, tool_fallback, trade_wages, unit_cost
+from . import ask_adjust, harvest_tax, inventory, practice, tool_fallback, trade_wages, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
 from .priced_reads import cleared_prices_for, offered_prices_for
@@ -95,7 +95,7 @@ class Producer:
     last_runs: float = -1.0                 # runs it worked last year; below zero before its first year
     land_rent_per_run: float = 0.0          # rent on the land a run works, set yearly by the land market
     land_run_cap: Optional[float] = None    # runs the land it was granted allows; None for no limit
-    workshops: int = 1                      # independent workshops it stands for: each newcomer to its recipe and tile joins it
+    workshops: int = 1                      # independent workshops it stands for: its capacity over one plant's runs (workshop_count.py); a recipe with no plant counts the newcomers that joined it
     net_earnings_history: Tuple[float, ...] = ()   # its last years' net earnings, oldest first (firm_finance.py)
     revenue_history: Tuple[float, ...] = ()        # its last years' revenue, oldest first
     idle_years: int = 0                     # years it stays idle after a bankruptcy: no runs, no dividend
@@ -135,6 +135,17 @@ def expected_output_prices_at(expected_prices: Mapping[GoodId, float], tile: Til
         if price is not None:
             prices[good] = price
     return prices
+
+
+def kept_output_prices(producer: Producer, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
+    """`expected_output_prices` as they fetch the producer once the state has taken its share of each harvest: what it plans its
+    runs, its plant and its land on (the asks it posts stay at the gross price)."""
+    return kept_output_prices_at(producer.expected_prices, producer.tile, recipe, view)
+
+
+def kept_output_prices_at(expected_prices: Mapping[GoodId, float], tile: TileId, recipe: Recipe, view: MarketView) -> Dict[GoodId, float]:
+    """`kept_output_prices` for a producer on `tile` holding `expected_prices`, read from the store's row with no `Producer`."""
+    return harvest_tax.net_output_prices(expected_output_prices_at(expected_prices, tile, recipe, view), harvest_tax.share_of_view(view))
 
 
 _names_of_recipe: Dict[int, tuple] = {}      # id of a recipe -> (recipe, its goods and its trades, sorted)
@@ -211,12 +222,15 @@ def live_wages_at(tile: TileId, recipe: Recipe, view: MarketView) -> Dict[str, f
 
 def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
                       live_inputs: Optional[Dict[GoodId, float]] = None,
-                      wages: Optional[Dict[str, float]] = None) -> Dict[GoodId, float]:
+                      wages: Optional[Dict[str, float]] = None,
+                      ask_multiples: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, float]:
     """Expected prices, for outputs and for the inputs a run uses up, moved toward the latest clearing
     prices. Output prices also go part of the way back toward what a run costs to make
     (REGRESSIVE_EXPECTATION_WEIGHT): a producer knows a price far above cost brings more output and one
     far below drives makers out. A good with no price keeps its old one. `live_inputs` and `wages` are
-    `live_input_prices` and `live_wages` when the caller has them already."""
+    `live_input_prices` and `live_wages` when the caller has them already. `ask_multiples` is the width of the band above cost
+    each output may rise to (`ask_ceiling.AskAlternatives.multiple`); an output it leaves out has no room above cost."""
+    ask_multiples = ask_multiples or {}
     updated = dict(producer.expected_prices)
     latest_prices = {}
     bare_quotes = set()      # outputs whose latest price is a bid ceiling or an ask, not a price that traded
@@ -251,12 +265,13 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
                    if good in worked else 0.0)
             updated[good] += ask_adjust.regressive_weight(REGRESSIVE_EXPECTATION_WEIGHT, gap) * (updated[good] * break_even - updated[good])
     for good in sorted(bare_quotes & set(cost_covering)):
-        updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share)
+        updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share,
+                                  ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE))
     for good in ask_adjust.worked_outputs(producer, recipe):
         if good in latest_prices:
             updated[good] = ask_adjust.adjusted_within_band(
                 updated[good], cost_covering.get(good), ask_adjust.unsold_stock(producer, recipe, view, good),
-                ask_adjust.target_of(producer, recipe, good), input_share=input_share)
+                ask_adjust.target_of(producer, recipe, good), ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE), input_share=input_share)
     return updated
 
 
@@ -267,7 +282,7 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
     inputs = _with_expected(live_input_prices(producer, recipe, view) if live_inputs is None else dict(live_inputs),
                             recipe, prices)
     wages = live_wages(producer, recipe, view) if wages is None else wages
-    revenue = unit_cost.revenue_per_run(recipe, prices) * producer.yield_factor
+    revenue = unit_cost.revenue_per_run(recipe, harvest_tax.net_output_prices(prices, harvest_tax.share_of_view(view))) * producer.yield_factor
     rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
     if rate is None:
         return None, 0.0
@@ -278,14 +293,21 @@ def _break_even_scale(producer, recipe, view, prices, live_inputs=None, wages=No
     return cost / revenue, unit_cost.input_cost_per_run(recipe, inputs) / cost
 
 
+def with_practised_yield(producer: Producer, recipe: Recipe) -> Producer:
+    """The producer with its yield factor lowered by the spoilage of a crew still learning (`practice.yield_after_practice`)."""
+    practised = practice.yield_after_practice(producer.yield_factor, recipe, producer.crew_runs)
+    return producer if practised == producer.yield_factor else replaced(producer, yield_factor=practised)
+
+
 def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> Plan:
     """Runs this year and the orders that carry them out. Idle (zero runs, no orders) when a run's
     expected revenue, after the yield, does not cover its variable cost at expected input prices and
     live wages."""
     if producer.idle_years > 0:
         return Plan(0.0)
+    producer = with_practised_yield(producer, recipe)
     recipe = practice.recipe_for(recipe, producer.crew_runs)
-    outputs = expected_output_prices(producer, recipe, view)
+    outputs = kept_output_prices(producer, recipe, view)
     market_inputs = paid_input_prices(producer, recipe, view, live_input_prices(producer, recipe, view))
     inputs = expected_input_prices(producer, recipe, view, market_inputs)
     wages = live_wages(producer, recipe, view)
@@ -346,7 +368,7 @@ def share_that_pays(producer: Producer, recipe: Recipe, view: MarketView,
     limit): none when a run's expected revenue does not cover its variable cost or an input cannot be
     priced. `outputs` is `expected_output_prices` when the caller has it already."""
     if outputs is None:
-        outputs = expected_output_prices(producer, recipe, view)
+        outputs = kept_output_prices(producer, recipe, view)
     variable = (unit_cost.variable_cost_per_run(recipe, expected_input_prices(producer, recipe, view),
                                                 live_wages(producer, recipe, view), producer.land_rent_per_run))
     if not math.isfinite(variable):
@@ -522,6 +544,7 @@ def production_lines(producer: Producer, recipe: Recipe, inputs_held: Mapping[Go
     not what goes in. Tools are not an input that stops a run: a run short of its tool draws the recipe's next
     tool (`tool_fallbacks`), then works by hand, and the extra hours that takes can lower the runs the hours
     hired allow."""
+    producer = with_practised_yield(producer, recipe)
     recipe = practice.recipe_for(recipe, producer.crew_runs)
     limit = producer.capacity_runs if runs_planned is None else min(runs_planned, producer.capacity_runs)
     for good, per_run in recipe.hard_inputs.items():

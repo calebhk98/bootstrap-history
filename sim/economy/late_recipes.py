@@ -27,6 +27,9 @@ def admit_recipes(economy, source) -> bool:
         yield_factor_by_recipe_tile={**setup.yield_factor_by_recipe_tile,
                                      **{key: factor for key, factor in source.yield_factor_by_recipe_tile.items()
                                         if recipe_of_tile_key(key) in added}},
+        crop_suitability_by_recipe_tile={**setup.crop_suitability_by_recipe_tile,
+                                         **{key: factor for key, factor in source.crop_suitability_by_recipe_tile.items()
+                                            if recipe_of_tile_key(key) in added}},
         specs={**setup.specs, **{good: spec for good, spec in source.specs.items() if good not in setup.specs}},
         opening_wages={**setup.opening_wages, **{trade: wage for trade, wage in source.opening_wages.items()
                                                  if trade not in setup.opening_wages}},

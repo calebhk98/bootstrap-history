@@ -167,7 +167,7 @@
   "id": "exp_coastal_africa",
   "name": "Coastal voyage down West Africa",
   "cat": "expedition",
-  "returns": {"route": ["west_african_coast"]},
+  "returns": {"route": ["west_african_coast"], "sample": ["landolphia_vine"]},
   "risks": {"crew": {"sailor": 0.3}, "hull": {"timber_m3": 0.5, "iron_bar_kg": 0.5, "canvas_kg": 0.5}, "cargo": {"wine_common_kg": 0.3}},
   "kind": "INFRASTRUCTURE",
   "pre": [

@@ -1,6 +1,6 @@
 # A thin unskilled labour market sets every trade's reservation wage, stops farming in its area, and leaves a neighbour hungry
 
-**Status:** open - a regression from branch economy-labour-single-source-cleanup (commit ebd549c); a fix was drafted and measured, not merged
+**Status:** partly - the unskilled wage is an option only for the hours its jobs can take (`sim/labour/market/unskilled_reach.py`); measured on england_1300, hungry spin-up years fall to about a third, in count and in food short, and the first traced year is fed, but some remain
 
 **What is wrong.** In England's spin-up, households on some partner tiles go short of food in single years while holding years
 of income in cash. On the branch the spin-up has several such years, the worst short by a large share of the whole economy's
@@ -33,15 +33,21 @@ unskilled jobs are only as many as that market still wants.
 `port_trace.spin_up_trace(game, years)` on a `Sim` built as `sim/ui/cli_spin_up_trace.py` builds one, for `england_1300`,
 once on this branch and once on main. Four years reproduce the first hungry year in a couple of minutes.
 
-**What it would take.** Three options were weighed:
+**What was done.** The second option, as a mean ask: `clear_one` and the packed kernel (`clearing_kernel.market_heads`, cell
+`JOBS`) no longer floor a trade's reservation at the whole start-of-year unskilled wage. The hours employers bid for the unskilled
+trade at that wage or more (`ImportCosts.jobs_at`) are the jobs the option can take; the share of the trade's hours they cover
+(`unskilled_reach.share_reaching_unskilled`) asks the unskilled wage and the rest ask the trade's own reservation, so the
+reservation is the mean (`reservation_with_unskilled_option`). It is continuous in the jobs, unchanged where the unskilled
+market has jobs for every hour of the trade or no option is stated, and a handful of hours at a spike wage no longer sets a
+whole trade's reservation. Regression tests: `sim/tests/test_unskilled_reach.py` (the rule, a thin and a deep unskilled
+market through `clear_all`, and the plain rule against the packed kernel).
 
-- Count the unskilled wage only at the chance a switcher is hired at it. A draft on branch fix30-unskilled-option
-  (`sim/labour/market/unskilled_chance.py`) removes the first hungry year, but its chance jumps from one to a fraction as
-  the unskilled market passes from supplied to short, so near balance a trade's reservation would flip year to year.
-- Split the trade's supply: the hours that the unskilled market's unfilled demand can absorb ask the unskilled wage, the
-  rest ask their own reservation. Continuous, and unchanged where the unskilled market is supplied.
-- Drop the unskilled floor from the clearing and leave moves between trades to the yearly switching rule
-  (`sim/labour/market/switching.py`), which already moves workers toward better pay: one rule for one fact.
+**Measured (2026-11-11), with the wrapper below and a fresh spin-up cache, against the branch before the change:** fewer hungry spin-up years and about a third of the food short over the whole spin-up; the traced years after the opening are all fed, where before the second traced year was hungry. Hungry years remain in the later spin-up, so the rule is not the whole cause. No committed command runs this; it is the wrapper this paragraph names.
+
+**What is left.** Find the cause of the remaining hungry years (the open questions below). The game measurement: wrap `sim.economy.api.spin_up_state` to print `sum(outcome.hunger_by_tile.values())`
+each year and run `port_trace.spin_up_trace(game, 4)` on a `Sim` built as `sim/ui/cli_spin_up_trace.py` builds one, for
+`england_1300`; the hungry years should be gone or as small as before the contract removal. If a hungry year remains, the
+open questions below are next. The commit and branch this text once named are not in the repository.
 
 Open questions found on the way: why `work@france_05` has almost no unskilled workers at the opening, and why the
 branch's year-0 wages in some trades differ from main's.

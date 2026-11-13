@@ -6,7 +6,6 @@ trade (port_actor_trade), the seats' concerns (port_seat_concerns) and the input
 from sim.agents.api import COIN_RESTRIKE_SHARE_PER_YEAR
 from sim.demography.api import MovePeople
 from sim.economy import api as economy_api
-from .unit_mass import tonnes_per_unit
 
 from . import (port_bondage, port_cargo, port_cropland, port_dues, port_duty, port_goods_orders, port_health, port_sites,
                port_staff, trade_duty)
@@ -32,7 +31,8 @@ class YearRun:
         # the year's working day is set before any hours are posted, so posting and settling convert people and hours alike;
         # the tariff the home state holds is read now, as the landed goods are priced
         economy.change_setup(**port_cropland.follow_farm_sites(world, economy_api.economy_tiles(economy),
-                                                                      economy_api.crop_site_inputs(economy)[0]),
+                                                                      economy_api.crop_site_inputs(economy)[0],
+                                                                      economy_api.crop_suitability_inputs(economy)),
                              working_hours_per_year=float(world.scenario.HOURS_PER_PERSON_YEAR),
                              carried_tariff=port_duty.carried_tariffs(
                                  economy_api.economy_countries(economy), economy_api.home_country(economy),
@@ -40,7 +40,7 @@ class YearRun:
         agent.sync_ways()
         agent.admit_techniques()
         orders, offered, seat_inputs = self._seats.orders()
-        moves, cargo_orders, fundings = port_cargo.cargo_orders(economy, legs, tonnes_per_unit)
+        moves, cargo_orders, fundings = port_cargo.cargo_orders(economy, legs, world.tonnes_per_unit)
         economy_api.move_goods(economy, moves)
         economy_api.post_transfers(economy, fundings)
         orders.update(cargo_orders)
@@ -71,7 +71,7 @@ class YearRun:
         agent.stored["seat_trades"] = port_goods_orders.settle(world, economy, goods_posted)
         port_dues.settle(world, economy)
         self._seats.settle(offered, seat_inputs)
-        world.foreign.settle_trader_cargo(port_cargo.close_cargo_accounts(economy, legs, tonnes_per_unit))
+        world.foreign.settle_trader_cargo(port_cargo.close_cargo_accounts(economy, legs, world.tonnes_per_unit))
         agent.figures.forget()
         agent.note_year_run()
         self.note_volume_baseline(economy)

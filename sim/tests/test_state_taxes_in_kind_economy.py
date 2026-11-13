@@ -4,6 +4,7 @@ readings that carry the economy's record to the state (units to tonnes, the tile
 stand-ins built here; the levy, its price and its stores are held by test_state_taxes_in_kind."""
 QUICK_TOPIC = True
 
+from sim.tests import repository_tables
 from types import SimpleNamespace
 
 from .harness import check
@@ -15,7 +16,7 @@ from sim.markets.reads_producers import ProducerReads
 GOOD = "cloth_kg"
 UNITS_BY_TILE = {"a": {GOOD: 4000.0, "wheat_kg": 9000.0}, "b": {GOOD: 1000.0}, "far": {GOOD: 7000.0}}
 
-port = SimpleNamespace(economy=lambda: SimpleNamespace(record=SimpleNamespace(goods=SimpleNamespace(output_by_tile=UNITS_BY_TILE))))
+port = SimpleNamespace(tonnes_per_unit=repository_tables.tonnes_per_unit, economy=lambda: SimpleNamespace(record=SimpleNamespace(goods=SimpleNamespace(output_by_tile=UNITS_BY_TILE))))
 tonnes_by_tile = ProducerReads(port).output_tonnes_of(GOOD)
 check("the economy's units of a kilogram good are reported in tonnes, a thousand units to the tonne",
       abs(tonnes_by_tile["a"] - 4.0) < 1e-12 and abs(tonnes_by_tile["b"] - 1.0) < 1e-12, tonnes_by_tile)
@@ -28,7 +29,7 @@ class OutputView(Revenue):
     """The revenue part over a stand-in game that holds tiles a and b and answers tonnes by tile."""
 
     def __init__(self, by_tile):
-        super().__init__(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={GOOD: by_tile, "silk_kg": {}})))
+        super().__init__(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={GOOD: by_tile, "silk_kg": {}}, mine_output_by_tile={GOOD: {}, "silk_kg": {}})))
 
     def held_tiles(self):
         return ["a", "b"]

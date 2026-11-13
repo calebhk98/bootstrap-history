@@ -1,7 +1,7 @@
 """What the cast answers about countries and their treasuries: plain functions of the registry or of written-out inputs."""
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
-from sim.agents.api import GOVERNMENT_PREFIX, CountryLiteracy, seed_strata
+from sim.agents.api import GOVERNMENT_PREFIX, CountryLiteracy, seed_strata, unrest
 from sim.coin.api import visibility_factor
 from sim.world import stock_dynamics
 
@@ -21,6 +21,14 @@ def organised_factions(groups: Sequence[Any], home_id: str, owner: str) -> List[
 	"""[(members, grievance)] of the organised interest groups whose country (the home country when unset) is the owner."""
 	return [(group.record.members, group.record.grievance) for group in groups
 	        if group.organised() and (group.record.country or home_id) == owner]
+
+
+def stratum_grievances(strata: Sequence[Any], home_id: str, owner: str) -> List[Tuple[float, float]]:
+	"""[(members, grievance)] of the owner's strata with people in them, the bonded among them: how far each one's real income
+	(welfare) is below what it has come to expect."""
+	return [(stratum.record.members, unrest.stratum_grievance(stratum.record.welfare, stratum.record.welfare_reference))
+	        for stratum in strata
+	        if stratum.record.members > 0.0 and (stratum.record.country or home_id) == owner]
 
 
 def treasury_account(holder: str, joined_seats: Sequence[str], government_id: Optional[str]) -> str:

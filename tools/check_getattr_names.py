@@ -46,6 +46,7 @@ OPTIONAL = {
 	"record": "the record of an actor or a seat (sim/agents/base.py, household_party.py); an edge or a bare party has none",
 	"keys": "a payment's purpose is a mapping of label to share or a single label (sim/coin/rules.py); a label has no keys",
 	"OWNERS": "class constant of the economy record's part classes (sim/economy/*_record.py); a table field's type (a Dict[...]) has none",
+	"harvest_share_by_good": "field of the economy's year setup (sim/economy/setup.py), which a port always fills; the stand-in setups of the year-array tests are built without the harvest tax",
 	"to_canon_dict": "defined by the few saved classes with a canonical form; serialize_state meets arbitrary objects (sim/engine/state.py)",
 }
 

@@ -14,7 +14,8 @@ import math
 from typing import Dict, List, Mapping, Optional
 
 from sim.constants import declare
-from sim.world.need_basket import Basket, PricedNeed, need_units, price_ceilings, quality_reach, with_quality_reach
+from sim.world.need_basket import (Basket, PricedNeed, need_units, price_ceilings, quality_reach, satiation_limit,
+                                   with_quality_reach)
 
 from . import durable_stock, households_buffer_stock, households_store, lender_ask, opening_resting
 from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
@@ -22,6 +23,7 @@ from .households_basket import need_prices
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
+from .satiated_demand import bid_elasticity, is_satiated
 from .types import Bid, FundsOffer, GoodId, GoodSpec
 
 FLOOR_BUDGET_PRICE_MARGIN = declare(
@@ -33,26 +35,33 @@ FLOOR_BUDGET_PRICE_MARGIN = declare(
 BUDGET_SAFETY_SHARE = 1e-9
 
 WEALTH_DRAWDOWN_LIMIT = declare(
-    "WEALTH_DRAWDOWN_LIMIT", 1.0, kind="temporary_heuristic",
+    "WEALTH_DRAWDOWN_LIMIT", 0.7, kind="engineering_estimate",
     unit="share of a year's income that wealth above target may add to spending in a year", source=(
-        'No source found: the pace at which a household spends wealth above target was not found in '
-        'a source that could be opened. The pace is an assumption.'),
-    confidence="D",
+        'Frankenberg, Smith and Thomas, "Economic shocks, wealth and welfare" (CCPR-009-03, 2003; '
+        'ccpr.ucla.edu/wp-content/uploads/2024/04/Economic-shocks_-wealth-and-welfare.pdf, opened): Indonesia 1998, '
+        '"over half the households in the rural sector and close to one-third of urban households who owned jewelry '
+        'in 1997 had sold all their holdings by 1998". Gold is the liquid store, so about a third to a half of '
+        'holders ran it to nothing in one crisis year; take half of the store as the most drawn in a year. The store '
+        'is the wealth target of 16.67 months, about 1.39 years of income (WEALTH_INCOME_RATIO_TARGET): '
+        '0.5 * 1.39 = 0.69, rounded to 0.7. A ballpark from one modern crisis.'),
+    confidence="C",
     why="Households smooth consumption: wealth above what they want to keep is spent down over several "
         "years, not in the one year their target falls. Without a limit a fall in the target sends the "
-        "whole stock of cash to the shops at once and nothing is left to lend. The pace is an assumption; "
-        "no society's spending is measured against its wealth here.",
-    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
+        "whole stock of cash to the shops at once and nothing is left to lend.")
 
 SPENDING_CUT_LIMIT = declare(
-    "SPENDING_CUT_LIMIT", 0.3, kind="temporary_heuristic",
+    "SPENDING_CUT_LIMIT", 0.3, kind="engineering_estimate",
     unit="largest share of its expected spending a household cuts in a year", source=(
-        'No source found: the share of expected spending a household cuts in a year was not found in '
-        'a source that could be opened. The share is an assumption.'), confidence="D",
+        'Frankenberg, Smith and Thomas, "Economic shocks, wealth and welfare" (CCPR-009-03, 2003; '
+        'ccpr.ucla.edu/wp-content/uploads/2024/04/Economic-shocks_-wealth-and-welfare.pdf, opened): Indonesia 1998, '
+        'a crisis with real GDP down around 15% and formal real wages down some 40%: "on average, household per capita '
+        'consumption declined by around 20% in one year" ("almost 25%" in the later table text); "deferrable" items '
+        '(clothing, furniture, ceremonies) fell "by over one-third". So the mean household cut about a fifth in one '
+        'of the worst recorded years; the cap sits above that mean. A ballpark, from one modern crisis.'),
+    confidence="C",
     why="Households smooth consumption: a rise in the wealth they want to hold is saved over several years, "
-        "not in the one year it appears. The share is an assumption; no society's spending is measured "
-        "against its expected spending here.",
-    retire="Complaints/607: the opening holds the wealth its households want and saving has a user")
+        "not in the one year it appears. The cap is about the mean cut of a severe crisis year (see source), so "
+        "a household cuts less than that in an ordinary year and not more in any.")
 
 
 def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId, GoodSpec],
@@ -161,6 +170,8 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     for need in priced:
         need_id = need.spec.need_id
         ceilings = need.ceilings or price_ceilings(need.goods)
+        limit = satiation_limit(basket, need_id, need.spec.subsistence_per_person)
+        satiated = is_satiated(totals[need_id], math.nan if limit is None else limit, cohort.people)
         affordable, _affordable_share, household_cap = affordable_goods(
             need.goods, household_budget_for_need(totals[need_id], need.price_index, cohort.people),
             need.spec.subsistence_per_person > 0.0)
@@ -181,7 +192,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                 ratio = durable_stock.replacement_for_flow(stock_flow, specs[good]) / flow
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 rows.append((need.spec.subsistence_per_person > 0.0, good, price,
-                             floor_quantity * ratio, flexible_quantity * ratio, ceiling))
+                             floor_quantity * ratio, flexible_quantity * ratio, ceiling, satiated))
     floor_spend = math.fsum(row[2] * row[3] for row in rows)
     flexible_spend = math.fsum(row[2] * row[4] for row in rows)
     floor_wanted = floor_spend * (1.0 + FLOOR_BUDGET_PRICE_MARGIN)
@@ -192,14 +203,14 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     bids = []
     budget_total = 0.0
-    for has_floor, good, price, floor, flex, ceiling in sorted(rows, key=lambda row: row[1]):
+    for has_floor, good, price, floor, flex, ceiling, satiated in sorted(rows, key=lambda row: row[1]):
         budget = (floor * price * (1.0 + FLOOR_BUDGET_PRICE_MARGIN) * floor_scale
                   + flex * price * flexible_scale)
         if budget <= 0.0:
             continue
         budget_total += budget
         bids.append(Bid(cohort.agent_id, good, view.area_of(good, cohort.tile), cohort.tile,
-                        floor, flex, price, basket.substitution, budget, 0 if has_floor else 1,
+                        floor, flex, price, bid_elasticity(basket.substitution, satiated), budget, 0 if has_floor else 1,
                         maximum_price=ceiling))
     funds = ()
     savings = cash - budget_total - target
@@ -222,6 +233,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                                                      above_buffer, real_rate, cash, floor_cost))
     if savings > 0.0:
         ask = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, cohort.expected_inflation,
-                                    expected_loss_rate=view.loss_rate(cohort.agent_id, area_currency))
+                                    expected_loss_rate=view.loss_rate(cohort.agent_id, area_currency),
+                                    land_yield=view.land_yield(area_currency), public_premium=view.public_premium(area_currency))
         funds = (FundsOffer(cohort.agent_id, area_currency, savings, ask),)
     return AgentOrders(bids=tuple(bids), offers=offers, funds_offers=funds)

@@ -103,7 +103,7 @@ class WorkedSharesTests(unittest.TestCase):
     def _record(self):
         tenancies = {"t1": [{"lessor": "a", "tenant": "b", "share": 0.2}, {"lessor": "a", "tenant": "c", "share": 0.1},
                             {"lessor": "c", "tenant": "b", "share": 0.05}]}
-        return types.SimpleNamespace(land=types.SimpleNamespace(titles={"t1": {"a": 0.6, "c": 0.3}, "t2": {"d": 1.0}}, tenancies=tenancies))
+        return types.SimpleNamespace(cohorts={}, land=types.SimpleNamespace(titles={"t1": {"a": 0.6, "c": 0.3}, "t2": {"d": 1.0}}, tenancies=tenancies))
 
     def test_worked_shares_equals_worked_share_for_each_pair(self):
         record = self._record()

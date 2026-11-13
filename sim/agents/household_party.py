@@ -10,7 +10,6 @@ from typing import Any, ContextManager, Dict, Iterable, Optional, Protocol
 
 from .business_plant import Plant
 from .records import ActorRecord
-from .tracked import plain, tracked
 
 
 class SeatPorts(Protocol):
@@ -27,7 +26,15 @@ class SeatPorts(Protocol):
 	def knowledge(self) -> Any: ...                  # the nodes the seat holds
 	def receive(self, nodes: Iterable[str], granted: bool) -> None: ...   # know-how handed to the seat complete
 	def dealing(self, field: str) -> Any: ...        # a copy of the seat's stored patents, shares held, shares issued, offers or offer count
-	def store_dealing(self, field: str, value: Any) -> None: ...   # the seat's stored figure becomes the one the deal left
+	def release_patent(self, node_id: str, taker_id: str) -> Any: ...   # each of these sends the seats module the matching command (sim/seats/commands.py)
+	def receive_patent(self, node_id: str, entry: Any) -> None: ...
+	def add_licensee(self, node_id: str, licensee_id: str) -> None: ...
+	def give_shares(self, issuer_id: str, share: float, own_issue: bool) -> None: ...
+	def take_shares(self, issuer_id: str, share: float, own_issue: bool) -> None: ...
+	def keep_offer(self, offer: Any) -> None: ...
+	def drop_offer(self, offer_id: str) -> None: ...
+	def drop_lapsed_offers(self, year: int) -> Any: ...
+	def next_offer_serial(self) -> int: ...
 	def concerns(self) -> Any: ...                   # the plants the seat runs (read only)
 	def opened_year(self, node_id: str, default: int) -> int: ...
 	def plant_size(self, node_id: str) -> float: ...
@@ -37,61 +44,84 @@ class SeatPorts(Protocol):
 
 class SeatRecord(ActorRecord):
 	"""An actor record whose patents, shares and issued equity are the seat's own, kept by the seats module. Each read is a fresh copy of the
-	stored figure that reports a change to `ports.store_dealing`, so the exchange changes the record in place, as it does an actor's, and the
-	owner is sent the result. `ports` is None until the party attaches them."""
+	stored figure; each change the exchange makes (`release_patent`, `give_shares`, `keep_offer`, ...) is the matching command to the owner,
+	which applies the same rule (`dealing_figures.py`) to its figure. `ports` is None until the party attaches them."""
 
 	ports: Any = None
 
-	def _dealing(self, field: str) -> Any:
-		if self.ports is None:
-			return None
-		root: list = []
-		root.append(tracked(self.ports.dealing(field), lambda: self.ports.store_dealing(field, plain(root[0]))))
-		return root[0]
+	def _read(self, field: str, empty: Any) -> Any:
+		return self.ports.dealing(field) if self.ports is not None else empty
 
-	def _store(self, field: str, value: Any) -> None:
+	def _refuse_write(self) -> None:
 		if self.ports is not None:
-			self.ports.store_dealing(field, plain(value))
+			raise AttributeError("a seat's dealings change by the seats module's commands, not by assignment")
 
 	@property
 	def patents(self) -> Any:
-		return self._dealing("patents") if self.ports is not None else {}
+		return self._read("patents", {})
 
 	@patents.setter
 	def patents(self, value: Any) -> None:
-		self._store("patents", value)
+		self._refuse_write()
 
 	@property
 	def shares_held(self) -> Any:
-		return self._dealing("shares_held") if self.ports is not None else {}
+		return self._read("shares_held", {})
 
 	@shares_held.setter
 	def shares_held(self, value: Any) -> None:
-		self._store("shares_held", value)
+		self._refuse_write()
 
 	@property
 	def issued(self) -> float:
-		return self.ports.dealing("shares_issued") if self.ports is not None else 0.0
+		return self._read("shares_issued", 0.0)
 
 	@issued.setter
 	def issued(self, value: float) -> None:
-		self._store("shares_issued", value)
+		self._refuse_write()
 
 	@property
 	def offers(self) -> Any:
-		return self._dealing("offers") if self.ports is not None else []
+		return self._read("offers", [])
 
 	@offers.setter
 	def offers(self, value: Any) -> None:
-		self._store("offers", value)
+		self._refuse_write()
 
 	@property
 	def offer_serial(self) -> int:
-		return self.ports.dealing("offer_serial") if self.ports is not None else 0
+		return self._read("offer_serial", 0)
 
 	@offer_serial.setter
 	def offer_serial(self, value: int) -> None:
-		self._store("offer_serial", value)
+		self._refuse_write()
+
+	def release_patent(self, node_id: str, taker_id: str) -> Any:
+		return self.ports.release_patent(node_id, taker_id)
+
+	def receive_patent(self, node_id: str, entry: Any) -> None:
+		self.ports.receive_patent(node_id, entry)
+
+	def add_licensee(self, node_id: str, licensee_id: str) -> None:
+		self.ports.add_licensee(node_id, licensee_id)
+
+	def give_shares(self, issuer_id: str, share: float, own_issue: bool) -> None:
+		self.ports.give_shares(issuer_id, share, own_issue)
+
+	def take_shares(self, issuer_id: str, share: float, own_issue: bool) -> None:
+		self.ports.take_shares(issuer_id, share, own_issue)
+
+	def keep_offer(self, offer: Any) -> None:
+		self.ports.keep_offer(offer)
+
+	def drop_offer(self, offer_id: str) -> None:
+		self.ports.drop_offer(offer_id)
+
+	def drop_lapsed_offers(self, year: int) -> Any:
+		return self.ports.drop_lapsed_offers(year)
+
+	def next_offer_serial(self) -> int:
+		return self.ports.next_offer_serial()
 
 
 class HouseholdHoldings:

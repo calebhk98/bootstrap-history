@@ -2,6 +2,7 @@
 
 `PortWorld.scenario`, `.materials`, `.finance`, `.production` and `.farm` hold them, as `.state`, `.labour`, `.map` and `.foreign` hold theirs."""
 from sim.diffusion.api import NoteFirstRuns
+from sim.ledger.api import pool_rules as ledger_pool_rules
 from sim.prices.api import rules as price_rules
 
 
@@ -73,6 +74,21 @@ class MaterialReads:
 	def priced_key(self, tag, prices):
 		return price_rules.priced_key(tag, prices, self._needs.commodity_record[tag])
 
+	def sale_forms(self, tag):
+		"""The materials a sale of `tag` offers: the form it names, or for a pool's own name the forms the seat holds."""
+		commodity = self._needs.material_pool[tag][0]
+		return price_rules.sale_forms(tag, commodity, self._needs.commodity_record[commodity], self._needs.held_by_form[commodity])
+
+	def sold_material(self, tag):
+		"""The material a sale of `tag` is priced and cleared as (the first of `sale_forms`)."""
+		return self.sale_forms(tag)[0]
+
+	def stock_form(self, material):
+		"""The key a held tonne of `material` is kept under in the ledger: the material itself where its pool names it as a
+		form, else the pool's id."""
+		commodity = self._needs.material_pool[material][0]
+		return ledger_pool_rules.form_key(material, commodity, {commodity: self._needs.commodity_record[commodity]})
+
 	def spoilage_rates(self):
 		"""{good: continuous decay rate a year} of the goods that spoil, with the installed mods applied."""
 		return self._needs.spoilage_rates()
@@ -92,7 +108,11 @@ class MaterialReads:
 		return self._needs.material_market_tonnes[commodity]
 
 	def stock_t(self, commodity):
-		return self._needs.goods_stock[commodity]
+		return self._needs.goods_pool_stock[commodity]
+
+	def form_stock_t(self, key):
+		"""Tonnes held under exactly this ledger key (one form of a pool)."""
+		return self._needs.goods_stock[key]
 
 	def serves_a_need(self, material):
 		return self._needs.material_serves_a_need[material]

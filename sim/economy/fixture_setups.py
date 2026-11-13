@@ -9,14 +9,15 @@ from sim.world.need_demand import NEED_SUBSTITUTION_ELASTICITY
 from sim.world.need_basket import Basket, NeedSpec
 from sim.economy.setup import EconomySetup, SetupTrade
 from sim.economy.tile_costs import world_map_of
-from sim.economy.types import CurrencySpec, GoodSpec, Recipe, TileSpec
+from sim.economy.types import CurrencySpec, GoodSpec, Recipe, TileSpec, ToolFallback
 
 
 TOWN, FARMS, HILLS = "town", "farms", "hills"
-GRAIN, ORE, METAL = "grain_kg", "ore_kg", "metal_kg"
+GRAIN, ORE, METAL, HOE = "grain_kg", "ore_kg", "metal_kg", "hoe"
 FOOD, ORNAMENT = "food", "ornament"
 LABOURER, MINER, SMITH = "labourer", "miner", "smith"
 MINE, SMELT, FARM = "dig_ore", "smelt_metal", "grow_grain"
+CLIMATE = "Cfb"
 
 
 def tiles():
@@ -97,3 +98,17 @@ def stationary_setup(slack_share: float = 0.0, **changes) -> EconomySetup:
     return dataclasses.replace(stated, working_hours_per_year=hours, **changes)
 
 
+
+
+def plot_tool_setup(**changes) -> EconomySetup:
+    """The three-tile economy whose households grow grain on their own plots with a hoe: a run takes a hoe's wear, and
+    the next step is working by hand at twice the hours (tool_fallback). Nothing makes a hoe, so a cohort that holds none
+    works by hand."""
+    farm = Recipe(FARM, {GRAIN: 1000.0}, {HOE: 1.0}, {LABOURER: 300.0}, climate_classes=(CLIMATE,), tool_wear={HOE: 1.0},
+                  tool_fallbacks={HOE: (ToolFallback("", 0.0, 2.0, (LABOURER,)),)})
+    the_specs = {**specs(), HOE: GoodSpec(HOE, 1.0, 0.0, 10.0, "tool")}
+    the_tiles = {tile_id: dataclasses.replace(tile, climate_class=CLIMATE) for tile_id, tile in tiles().items()}
+    setup = small_setup(recipes={**recipes(), FARM: farm}, specs=the_specs, land_per_run={FARM: PLOT_LAND_PER_RUN},
+                        tiles=the_tiles, world_map=world_map_of(the_tiles),
+                        opening_prices={GRAIN: 0.3, ORE: 0.05, METAL: 95.0, HOE: 5.0})
+    return dataclasses.replace(setup, **changes) if changes else setup

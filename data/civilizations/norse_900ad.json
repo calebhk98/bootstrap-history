@@ -274,6 +274,7 @@
   "starting_techs": [
     "fud_cattle_herd",
     "fud_pig_herd",
+    "fud_horse_herd",
     "fud_goat_herd",
     "fud_sheep_flock",
     "ag2_composting",
@@ -465,13 +466,14 @@
     "silver": "the Sala silver mine is dated by its catalogue entry to the fifteenth century at the latest, so no Scandinavian silver was mined in 900; Norse silver was hack-silver and Arab coin that came east to west through trade and plunder; a note on where the metal came from, with no figure to source"
   },
   "unsupplied_basket_goods": {
+    "platinum_g": "the platinum-group-metals node is not held at the start and no partner supplies platinum; the ornament need is met by the other ornament metals and goods the society works",
+    "rice_kg": "the rice-cultivation node is not held at the start and no partner supplies rice; households eat the civilisation's own staple until the node is learned",
     "light_oil_lamp": "the lamp recipe's gate is held but its input olive_oil_kg is gated on a node this society does not hold and no partner supplies it, so no lamp can be filled; light came from other sources the recipe set does not model",
     "light_oil_lamp_linen_wick": "the lamp recipe's gate is held but its input olive_oil_kg is gated on a node this society does not hold and no partner supplies it, so no lamp can be filled; light came from other sources the recipe set does not model",
     "olive_oil_kg": "olives do not ripen in a Scandinavian climate and the olive-growing node is not held; oil reached the north only by trade the model has no partner for here, so households fall back on tallow",
     "cacao_kg": "an American crop; no partner grows it and the cultivation node is not held, so household demand for it has no supply until a founder brings the stock",
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
     "cast_iron_kg": "cast iron needs the blast furnace, which this society does not yet have and no partner supplies",
-    "cement_portland_kg": "Portland cement is a modern industrial product far past this start; households bid for it only because the need data lists it as shelter",
     "foxglove_leaf_kg": "medical use of foxglove leaf dates from long after this start; the need data lists it for health, so households bid without a technique or tradition to supply it",
     "maize_kg": "an American crop unknown across the Old World before contact; no partner supplies it",
     "mat_opium": "opium poppy cultivation and its medical use were not part of this society's tradition and no partner supplies it",
@@ -517,8 +519,8 @@
       "rate": 0.04,
       "paid_in": "wheat_kg",
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): the king's due from farmers in feasting and tribute (veizla, skatt) taken in kind; the share carries over the civilisation's former fitted tax share and has no source of its own.",
-        "confidence": "D"
+        "source": "Derived from England, the nearest taxed neighbour: Wikipedia, Hide (unit) (en.wikipedia.org/wiki/Hide_(unit), opened): a hide was worth 'roughly 20 shillings a year' around 1084 and a normal geld was 'two shillings per hide', so a levy year took 2/20 = 10 per cent of land income; Wikipedia, Danegeld (opened) lists payments in 991, 994, 1007, 1012 and 1016-18, about one year in four to five over 991-1018, so 0.10 / 4.5 = 0.02 a year on average. The Heimskringla passage (sourcebooks.web.fordham.edu/source/norwaytaxes1.asp, opened) adds dues in kind and a levy of one man in seven for war. 0.04 is a ballpark within a factor of two of that, for a weaker state than England's.",
+        "confidence": "C"
       }
     },
     {
@@ -526,8 +528,8 @@
       "basis": "imports_value",
       "rate": 0.05,
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): tolls at trading towns (Hedeby, Kaupang) are attested; their rate is not.",
-        "confidence": "D"
+        "source": "Wikipedia, Sound Dues (en.wikipedia.org/wiki/Sound_Dues, opened): from 1567 the toll was 'a 1-2% tax on the cargo value'; Wikipedia, Alcabala (opened): a 5 per cent sales duty in Castile in 1341, 2 to 14 per cent over its history; Hedeby's royal tolls are attested without a rate (Wikipedia, Hedeby, opened). No Viking Age rate was found; 5 per cent is the upper end of those later northern and southern European duties, a ballpark.",
+        "confidence": "C"
       }
     },
     {
@@ -535,27 +537,27 @@
       "basis": "exports_value",
       "rate": 0.05,
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): tolls at trading towns (Hedeby, Kaupang) are attested; their rate is not.",
-        "confidence": "D"
+        "source": "Wikipedia, Sound Dues (en.wikipedia.org/wiki/Sound_Dues, opened): from 1567 the toll was 'a 1-2% tax on the cargo value'; Wikipedia, Alcabala (opened): a 5 per cent sales duty in Castile in 1341, 2 to 14 per cent over its history; Hedeby's royal tolls are attested without a rate (Wikipedia, Hedeby, opened). No Viking Age rate was found; 5 per cent is the upper end of those later northern and southern European duties, a ballpark.",
+        "confidence": "C"
       }
     }
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
-      "confidence": "D"
+      "source": "Wikipedia, Goði (en.wikipedia.org/wiki/Go%C3%B0i, opened): 36 goðorð (chieftaincies carrying a priestly office) originally and 39 from 964 in Iceland; no population or temple-staff count is given. Ratio check: 1500 in 1.5 million is 0.1 per cent, a tenth of England's church (1.0 per cent: about 45000 in 4.5 million, Wikipedia Dissolution of the Monasteries and the Munro table), as expected for a cult with part-time chieftain-priests and no full-time clergy. A ballpark, with no direct count.",
+      "confidence": "C"
     },
     "starting_interest_rate": {
-      "source": "No Norse lending record survives for this date. Set from the neighbouring Carolingian and Anglo-Saxon world, where credit was informal and short-term rates high. Weak evidence.",
-      "confidence": "D"
+      "source": "No Norse lending record survives for this date. Wikipedia, Usury (en.wikipedia.org/wiki/Usury, opened): in the Roman Empire 'The annual rates of interest on loans varied in the range of 4-12 percent' and higher rates were typically 24 or 48 percent; short-term rates before the 16th century fall were 'around 20-30% p.a.'. 0.2 sits in that high-rate range, a ballpark borrowed from other times and places.",
+      "confidence": "C"
     },
     "starting_tax_share": {
-      "source": "Levies were tribute, thing dues, and ship-levy service to a chieftain or king, not a steady share of revenue. A low share reflects weak state reach; an estimate.",
-      "confidence": "D"
+      "source": "Derived from England, the nearest taxed neighbour: Wikipedia, Hide (unit) (en.wikipedia.org/wiki/Hide_(unit), opened): a hide was worth 'roughly 20 shillings a year' around 1084 and a normal geld was 'two shillings per hide', so a levy year took 2/20 = 10 per cent of land income; Wikipedia, Danegeld (opened) lists payments in 991, 994, 1007, 1012 and 1016-18, about one year in four to five over 991-1018, so 0.10 / 4.5 = 0.02 a year on average. The Heimskringla passage (sourcebooks.web.fordham.edu/source/norwaytaxes1.asp, opened) adds dues in kind and a levy of one man in seven for war. 0.04 is a ballpark within a factor of two of that, for a weaker state than England's. Levies were tribute, thing dues and ship-levy service to a chieftain or king, not a steady share of revenue.",
+      "confidence": "C"
     },
     "standing_army": {
-      "source": "The retinues (hirdmen) of the kings and great chieftains; the leidang fleet was mustered for a season, not kept (Sawyer, Kings and Vikings). An approximate opening headcount of men kept in a ruler's pay.",
-      "confidence": "D"
+      "source": "The retinues (hirdmen) of the kings and great chieftains; the leidang fleet was mustered for a season, not kept (Sawyer, Kings and Vikings). Wikipedia, Huskarl (en.wikipedia.org/wiki/Huskarl, opened): Cnut 'is said to have kept about 3,000 to 4,000 men in England as his bodyguard' (sources a century later), paid in coin; Wikipedia, Leidang (opened): a levy ship carried 24 crewmen and a steersman and served two or three summer months. 2000 kept in a ruler's pay is a ballpark below the great king's bodyguard.",
+      "confidence": "C"
     }
   },
   "needs_first": {

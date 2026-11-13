@@ -10,7 +10,7 @@ import re
 from .harness import check
 
 from sim.agents.api import business_review
-from sim.engine.data import TRADE_FAMILY
+from sim.tests.repository_tables import TRADE_FAMILY, TRADE_REGISTRY
 from sim.projects import closure_reasons
 from sim.projects.staffing_report import StaffingReport
 from sim.reporting.api import RecordEvent
@@ -117,11 +117,11 @@ check("each project's order is reported on its own", len(other.said_about("Schoo
 # ---- 246: the interchangeability sentence comes from the trade table ---------------------------------------------------------
 scholar_trades = sorted(trade for trade, family in TRADE_FAMILY.items() if family == "scholar")
 craft_trades = sorted(trade for trade, family in TRADE_FAMILY.items() if family == "craft")
-sentence = _scholar_family_names()
+sentence = _scholar_family_names(Game(trade_records=TRADE_REGISTRY))
 check("every scholar-family trade is named in the sentence", bool(scholar_trades) and all(trade + "s" in sentence for trade in scholar_trades), sentence)
 check("no craft trade is called a scholar in the sentence", bool(craft_trades) and not any(trade + "s" in sentence for trade in craft_trades), sentence)
 labour = Game(craft_trades_report=lambda: craft_trades_report(["smith", "chemist", "potter", "labourer"], lambda trade: trade in ("smith", "potter")))
 check("the labouring trades named are those the supervision check says are not craft, and not the scholar family's",
-      _non_craft_labour_names(Game(labour=labour)) == ("labourers" if TRADE_FAMILY.get("chemist") == "scholar" else "chemists, labourers"),
-      _non_craft_labour_names(Game(labour=labour)))
+      _non_craft_labour_names(Game(labour=labour, trade_family=TRADE_FAMILY.get)) == ("labourers" if TRADE_FAMILY.get("chemist") == "scholar" else "chemists, labourers"),
+      _non_craft_labour_names(Game(labour=labour, trade_family=TRADE_FAMILY.get)))
 check("the craft test splits the trades", craft_trades_report(["b", "a", "c"], lambda trade: trade == "a") == {"craft": ["a"], "not_craft": ["b", "c"]})

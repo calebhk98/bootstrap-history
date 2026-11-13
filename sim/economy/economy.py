@@ -14,7 +14,7 @@ from sim.world import capital_market
 from .cohort_store import table_of
 from .rates import own_rate
 from . import cohort_people, plan_table, plan_year, producer_table
-from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
+from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, lender_ask, secondary_trade, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from . import producer_blocks, transfer_rows
 from .market_areas_follow import follow
@@ -25,7 +25,8 @@ from .mint_labour import close_year as close_mint_year, mint_agent
 from .money_audit import MoneyAudit, year_report
 from .flow_rates import flow_imbalance
 from .entry_year import close_idle_producers, open_entrants, restake_owners
-from . import capital_year, household_offers_year, land_bid_year, land_lease_year, lend_requests
+from . import capital_year, household_offers_year, land_bid_year, land_lease_year, lend_requests, title_sales_year
+from . import plot_means
 from .households_own import (hours_for_own_plan, own_production, own_production_options, plot_hectares)
 from . import flight_step, households_cohort, trade_wages
 from .labour_inputs import labour_context
@@ -52,6 +53,7 @@ from .labour_supply import HourSupply
 from .labour_results_table import hours_totals
 from .labour_state import people_in_pairs
 from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
+from . import carried_by_length, carriage_report
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import standing_block
 from .year_ledger import YearLedger
@@ -76,6 +78,8 @@ class YearOutcome:
     bonded_lots: list = field(default_factory=list)   # the lots bought: origin and destination tile, trade, people, the owners' ask and the carriage paid
     accounts: Optional[YearAccounts] = None        # production, use, consumption, investment, stocks; food eaten; real wage
     migrated_by_tile: Dict[str, float] = field(default_factory=dict)   # net working people the labour market moved to (+) or from (-) each tile: a request to demography, which moves the people
+    carriage_hours_report: Optional[carriage_report.CarriageReport] = None   # carriage hours demanded and hired by carrier trade, and the fallback fee
+    merchant_routes: list = field(default_factory=list)   # the year's merchant tonnes by route length and value per kilogram (`carried_by_length.LengthBand`)
 
 
 def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> float:
@@ -148,7 +152,8 @@ class Economy:
         return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, self.setup,
                           labour_area, loans=lambda: self.record.credit.loans, equity=self._equity_read,
                           loss_rates=lambda: self.record.credit.loss_rates,
-                          pooled=self.record.credit.contracts.deposit_value)
+                          pooled=self.record.credit.contracts.deposit_value, public_premium=lambda: self.record.credit.public_premium,
+                          land_yield=lambda: self.record.credit.land_yield)
 
     def _equity_read(self, view) -> Dict[str, float]:
         arrays = self._year_arrays
@@ -179,6 +184,7 @@ class Economy:
         changes: Dict[str, Any] = {}
         if inputs.tax_rates:
             changes["tax_forms"] = taxes.with_rates(self.setup.tax_forms, inputs.tax_rates)
+        changes["harvest_share_by_good"] = dict(inputs.harvest_share_by_good)      # a tax lifted this year is lifted here
         if inputs.site_limits:   # empty keeps the last declared
             changes["site_limits"] = tuple(inputs.site_limits)
         if changes:
@@ -194,6 +200,7 @@ class Economy:
                              state_capacity=inputs.state_capacity, book=record.book, markets=record.memory.tables)
         self._follow_population(inputs)
         self._follow_yields(inputs)
+        record.credit.set_public_premium(lender_ask.reachable_public_premium(inputs.state_bond_premium, secondary_trade.BOND_MARKET in inputs.institutions))
         sites.apply_site_limits(record, setup)
         view = self.view()
         arrays = self._year_arrays = YearArrays.carried(self._year_arrays, setup, record, self.area_map, view)
@@ -201,6 +208,7 @@ class Economy:
         debt_relief.forgive(record, inputs.debt_relief_tiles)
         titles_moves.apply(record, inputs.title_moves)
         tax_farming.run_auctions(setup, record, inputs.farmed_forms, record.memory.rates[setup.currency_id])
+        title_sales_year.run(setup, record, record.credit.public_premium, record.memory.rates.get(money))
         lending.lend_working_capital(setup, record, view)
         plans = plan_year.plans_of(setup, record, view, arrays, money)
         labour_bids = LabourBidTable()
@@ -209,7 +217,7 @@ class Economy:
             labour_bids.add_objects(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
         staff_mint(setup, record, view, labour_bids)
-        carriage_hours.write_bids(labour_bids, setup, record)    # merchants' carriers, from last year's shipments
+        ledger.carriage_bids = carriage_hours.write_bids(labour_bids, setup, record)    # merchants' carriers, from last year's shipments
         outside_option = outside_option_by_tile(setup, record, view)
         land_lease_year.lease_in_market(setup, record, view, self.own_plot_options())
         land_bid_year.take_up_own(setup, record, self.own_plot_options())
@@ -245,7 +253,7 @@ class Economy:
         bondage_hours.deliver(ledger.hours_hired, held_placed)
         record.labour.set_hours_paid_by_employer(dict(sorted(ledger.hours_hired.as_plain().items())))   # what seats' staff books read; one pass over the ledger table
         capital_year.insure(setup, record, view, inputs.harvest_factor, view.year, inputs.institutions)     # cover is bought and the weather settles it
-        self._grow_own(offers, ledger, inputs.harvest_factor, kept)
+        self._grow_own(offers, ledger, view, inputs.harvest_factor, kept)
         capital_year.note_exposure(setup, record, view, self.area_map, ledger, inputs.harvest_factor, inputs.institutions)
         order_book = new_order_book(setup, record)
         funds = cohort_orders(setup, record, view, ledger, order_book, self.own_plot_options())
@@ -337,12 +345,14 @@ class Economy:
         usual fertility (it plants before it knows the harvest), and the household work it does itself
         (household_work_year.py)."""
         plan, held, options = {}, self.hectares_held(), self.own_plot_options()
+        means = plot_means.plot_goods(options, self.setup.recipes)
         store = table_of(self.record.cohorts)
         for cohort in store.figures(store.order(), with_plan=True):
             cohort_id = cohort.agent_id
             tile = self.setup.tiles.get(cohort.tile)
             plan[cohort_id] = hours_for_own_plan(cohort, options, tile.fertility if tile else 0.0,
-                                                 self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0))
+                                                 self.setup.recipes, self.setup.land_per_run, held.get(cohort_id, 0.0),
+                                                 plot_means.held_of(view, cohort_id, cohort.tile, means))
         self._work_hours = household_offers_year.decide(self.setup, self.record, view, everyone)
         return plan, self._work_hours
 
@@ -357,11 +367,12 @@ class Economy:
     def hectares_held(self) -> Dict[str, float]:
         return titles_plots.hectares_held(self.setup, self.record)
 
-    def _grow_own(self, offers, ledger: YearLedger, harvest_factor: float = 1.0,
+    def _grow_own(self, offers, ledger: YearLedger, view, harvest_factor: float = 1.0,
                   kept: Optional[Dict[str, float]] = None) -> None:
         """Hours kept back and hours nobody hired go into the household's own plot (households_own.py)."""
         setup, record = self.setup, self.record
         options = self.own_plot_options()
+        means = plot_means.plot_goods(options, setup.recipes)
         kept = kept or {}
         self._own_hectares = {}
         held = self.hectares_held()
@@ -378,7 +389,8 @@ class Economy:
             moves, grown, units = own_production(cohort, idle, options, setup.recipes,
                                                  (tile.fertility if tile else 0.0) * harvest_factor,
                                                  setup.basket_for(cohort.tile), setup.land_per_run,
-                                                 held.get(cohort.agent_id, 0.0), hours_used)
+                                                 held.get(cohort.agent_id, 0.0), hours_used,
+                                                 plot_means.held_of(view, cohort_id, cohort.tile, means))
             if hours_used:
                 ledger.own_plot_hours[cohort_id] = hours_used
             spare_ids.append(cohort_id)
@@ -423,6 +435,7 @@ class Economy:
                                            rate_ceiling=capital_market.RATE_CEILING_SHARE * setup.opening_rate,
                                            expected_inflation=lending.expected_inflation_of(record))
         loans, unmet = clearing.loans, clearing.unmet
+        record.credit.note_clearing(view.year, clearing.rate, loans, clearing.cause)
         every_loan = loans
         loans, granted = credit_lines.split_lines(loans, [ask.borrower for ask in credit_asks])
         record.credit.grant_lines(granted, [ask.borrower for ask in credit_asks])
@@ -485,7 +498,7 @@ class Economy:
             recipe = setup.recipes[producer.recipe_id]
             inputs = producers.live_input_prices_at(producer.tile, recipe, view)
             wages = producers.live_wages_at(producer.tile, recipe, view)
-            earning = unit_cost.return_on_capital(recipe, producers.expected_output_prices_at(
+            earning = unit_cost.return_on_capital(recipe, producers.kept_output_prices_at(
                 producer.expected_prices, producer.tile, recipe, view), inputs, wages)
             cash = cash_of[producer_id]
             if earning is None or not earning > rate or cash <= 0.0:
@@ -553,4 +566,6 @@ class Economy:
                            wage_floor_per_hour=ledger.wage_floor_per_hour, extraction=extraction,
                            money_audit=year_report(record),
                            migrated_by_tile=dict(ledger.migrated_by_tile), bonded_lots=list(ledger.bonded_lots),
-                           accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages))
+                           accounts=build_accounts(setup, record, ledger, stocks_at_start, prices, mean_wages),
+                           carriage_hours_report=carriage_report.build(ledger.carriage_bids, ledger.crew_hours_bought, ledger.carriage_fees),
+                           merchant_routes=carried_by_length.tabulate(record.carriage.carried_goods, self.carriage.days_between))

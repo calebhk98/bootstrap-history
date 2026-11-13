@@ -141,6 +141,10 @@ class PeoplePart(Protocol):
 	def urban_population(self) -> float:
 		...
 
+	def urban_mortality_premium(self) -> Optional[float]:
+		"""The extra share of the baseline death rate a town resident bears, or None where no figure is kept."""
+		...
+
 	def subsistence_kg_per_person_year(self) -> float:
 		...
 
@@ -610,6 +614,10 @@ class EnterprisesPart(Protocol):
 		"""Tonnes of each material a concern uses up in a year at its founding size."""
 		...
 
+	def recipe_labour_hours(self, material: str) -> Dict[str, float]:
+		"""Hours of each trade one unit of a material takes to make, from its production entry; empty when it states none."""
+		...
+
 	def book_takings(self, node_id: str, opened_year: int) -> float:
 		"""Yearly takings of one founding size of a concern at its ramp in the tree's book coin (no cost scale, no hazard factor)."""
 		...
@@ -739,7 +747,12 @@ class ResearchPart(Protocol):
 		...
 
 	def research_cost(self, node_id: str, max_age_years: int) -> float:
-		"""Money to pioneer the node, labour included; a figure at most `max_age_years` old may be reused."""
+		"""Money to pioneer the node, labour included, in the asking actor's country; a figure at most `max_age_years` old may be
+		reused. A country that quotes one of its materials nowhere refuses (NoCountryEconomy)."""
+		...
+
+	def material_tonnes(self, node_id: str) -> Dict[str, float]:
+		"""Tonnes of each material pioneering the node consumes."""
 		...
 
 

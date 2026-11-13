@@ -5,7 +5,7 @@ from typing import Mapping
 
 from . import unit_cost
 from .land_market import LandResult, use_rent_per_hectare
-from .producers import Producer, expected_output_prices
+from .producers import Producer, kept_output_prices
 from .types import TileId
 
 
@@ -24,5 +24,5 @@ def site_rent_per_run(setup, record, view, recipe_id: str, tile: TileId, yield_f
         return 0.0
     recipe = setup.recipes[recipe_id]
     probe = Producer("probe", "probe", recipe_id, tile, 1.0)
-    revenue = unit_cost.revenue_per_run(recipe, expected_output_prices(probe, recipe, view)) * yield_factor
+    revenue = unit_cost.revenue_per_run(recipe, kept_output_prices(probe, recipe, view)) * yield_factor
     return rent_per_run(record.land.land_rent, record.land.land_mean_value, tile, setup.land_per_run.get(recipe_id, 0.0), revenue)

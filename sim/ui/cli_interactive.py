@@ -158,7 +158,7 @@ def _play_loop(sim, nodes, session, app_cfg, args, collecting, policy, sitting):
             if should_exit:
                 return exit_value
             continue
-        cmd, err = parse_typed(line, table_of(sim))
+        cmd, err = parse_typed(line, table_of(sim), sim.view("mods_directory")())
         if err:
             print("   " + err)
             continue

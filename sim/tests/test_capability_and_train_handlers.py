@@ -3,6 +3,7 @@ from an ordinary concern, and the first training of a new trade says hiring is a
 the dispatcher calls it. The membership rule (`CAPABILITY_INSTITUTIONS`) is data from the `capability` mechanic, tested in
 test_round8g_display."""
 import unittest
+from types import SimpleNamespace
 
 from sim.refusal import LogLine
 
@@ -24,6 +25,7 @@ def _ventures_stand_in(idle):
         CAPABILITY_INSTITUTIONS=frozenset({CAPABILITY}), FOUNDER_IS_WORTH=1.0, founder_alive=True, view=lambda name: (lambda: {"artisans": 2.0}),
         done=set(idle), operating=set(), labour=labour, policy={}, year=100, capital=1000.0,
         state=Game(projects=Game(keep_staffed=set()), acting_record=Game(seat_progress=Game(said_explanations=None))),
+        trade_records={"chemist": SimpleNamespace(family="scholar"), "smith": SimpleNamespace(family="craft")}, trade_family=lambda trade: "labour",
         is_venture=lambda node_id: True, venture_capex=lambda node_id: 100.0, venture_staff_free=lambda: (1.0, 1.0),
         venture_staff_used=lambda: (0.0, 0.0), venture_staff_who_is_watching_what=lambda: [],
         venture_forecast_basis=lambda node_id: "forecast", venture_sale_basis=lambda node_id: "sale",
@@ -74,7 +76,7 @@ def _train_stand_in():
         trainee_wage_bill=lambda trade, count: 10.0 * count,
         train=lambda trade, quantity, source: (True, "teaching %d %s" % (quantity, trade)),
         director_pool=lambda: 100.0, director_hours_committed=lambda: 10.0)
-    return Game(labour=labour, capital=500.0)
+    return Game(labour=labour, capital=500.0, trades_absent=frozenset({"machinist"}))
 
 
 class TrainSaysHiringIsASecondStep(unittest.TestCase):

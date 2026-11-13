@@ -97,6 +97,20 @@ def faction_grievance(factions: Sequence[Tuple[float, float]], people: float) ->
 	return sum(min(members, people) * max(0.0, grievance_share) for members, grievance_share in factions) / people
 
 
+def stratum_grievance(real_income: float, expected_income: float) -> float:
+	"""How far a stratum's real income (its welfare, in baskets of subsistence) is below what it has come to expect, as a share of that;
+	zero where nothing is expected."""
+	if expected_income <= 0.0:
+		return 0.0
+	return max(0.0, expected_income - real_income) / expected_income
+
+
+def felt_pressure(groups_grievance: float, strata_grievance: float) -> float:
+	"""The grievance of the country's people over incomes: the larger of the organised groups' and the strata's, since a group
+	is made of strata whose incomes fell and the two would count the same loss twice."""
+	return max(max(0.0, groups_grievance), max(0.0, strata_grievance))
+
+
 def unrest(grievance_share: float, hunger_share: Optional[float], burden: float) -> float:
 	"""Share of a tile's people discontented, 0 to 1, rising with every pressure and never reaching one."""
 	pressure = max(0.0, grievance_share) + max(0.0, hunger_share or 0.0) + max(0.0, burden)

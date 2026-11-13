@@ -67,6 +67,7 @@ class EconomySetup:
     fuel_need: str  # the basket need fuel meets (need_roles.FUEL_ROLE); a hearth's cooking fuel is added to its floor
     hunger_need: str  # the basket need whose unmet floor counts as hunger (need_roles.HUNGER_ROLE)
     work_need: str  # the basket need met by hours of household work (need_roles.HOUSEHOLD_WORK_ROLE)
+    harvest_share_by_good: Dict[GoodId, float] = field(default_factory=dict)   # good -> share of its harvest the state's forms take from growers this year (the port sets it; harvest_tax.py)
     hiding: Any = None  # (rate, reach) -> share of its base a payer hides; the port hands in the actor layer's rule, None: none
     flight: Any = None  # the actors' flight rules (expected_penalty_of_leaving, arrears_owed_by_fugitive, share_after_immunity), handed in by the port; None: no flight
     debt_bondage_years: float = 0.0               # term of service a landless household in default owes its creditor; 0: the society has no debt bondage (bondage.py)
@@ -80,6 +81,7 @@ class EconomySetup:
     need_share_by_trade: Dict[str, float] = field(default_factory=dict)   # trade -> its share of the society's non-farm labour need (recipes and carriage), seeds the trades no producer's runs staff
     carriage_wage: float = 0.0     # the wage an hour (unskilled trade) the land carriage rates were priced at; 0: they follow no wage
     yield_factor_by_recipe_tile: Dict[str, float] = field(default_factory=dict)
+    crop_suitability_by_recipe_tile: Dict[str, float] = field(default_factory=dict)   # recipe@tile -> the crop's own yield against the reference field on the tile (its climate envelopes); a key absent counts as one, so a tile's new fertility carries to every crop through it
     land_per_run: Dict[str, float] = field(default_factory=dict)      # hectare-years of land a run takes
     basket_by_tile: Dict[TileId, Any] = field(default_factory=dict)   # floors that follow the tile's climate
     household_work: Dict[str, Any] = field(default_factory=dict)      # hours of household work by task (data/world/household_work.json); empty: none is modelled
@@ -185,11 +187,12 @@ def recipe_of_tile_key(key: str) -> str:
 
 
 def goods_specs(goods: Mapping[GoodId, str], spoilage_rates: Mapping[GoodId, float],
-                service_lives: Optional[Mapping[GoodId, float]] = None) -> Dict[GoodId, GoodSpec]:
+                service_lives: Optional[Mapping[GoodId, float]] = None,
+                production: Optional[Mapping[str, Any]] = None) -> Dict[GoodId, GoodSpec]:
     """A `GoodSpec` per good (its unit mass from `good_mass`), the spoilage table and any stated
     service life. `goods` maps each good to a category label from data."""
     service_lives = service_lives or {}
-    production = demand.production_data()
+    production = demand.production_data() if production is None else production
     specs = {}
     for good, category in sorted(goods.items()):
         mass = unit_mass(good, production)

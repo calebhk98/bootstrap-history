@@ -56,6 +56,11 @@ class StubWorld:
     def trade_exists(self, trade):
         return True
 
+    def recipe_labour_hours(self, material):
+        return {"mason": 20.0, "labourer": 40.0}
+
+    hours_per_person_year = 2000.0
+
 
 def ship(material="trireme", life=20.0, held=0.0, crew=None):
     return {"material": material, "life": life, "held": held, "crew": crew or {"sailor": 100.0}}
@@ -77,6 +82,7 @@ class PublicBuildings(unittest.TestCase):
         small = budget_lines.public_buildings_line(StubWorld(urban=10000.0))[0]
         large = budget_lines.public_buildings_line(StubWorld(urban=20000.0))[0]
         self.assertIn("mason", small.labour)
+        self.assertIn("labourer", small.labour)   # the laid-wall recipe's second trade is kept too
         self.assertAlmostEqual(large.money, 2.0 * small.money)
 
     def test_no_town_dwellers_keep_no_buildings(self):
@@ -113,12 +119,27 @@ class Dole(unittest.TestCase):
 
 
 class Navy(unittest.TestCase):
-    def test_a_navy_is_manned_by_sailors_for_the_ships_the_coast_asks(self):
-        line = budget_lines.navy_line(StubWorld(coast_km=500.0, fleet=[ship()]))[0]
-        self.assertAlmostEqual(line.labour["sailor"], 500.0 / COAST_KM_PER_SHIP * 100.0)
+    def test_a_navy_is_manned_by_sailors_for_the_hulls_held_up_to_the_ships_the_coast_asks(self):
+        wanted = 500.0 / COAST_KM_PER_SHIP
+        line = budget_lines.navy_line(StubWorld(coast_km=500.0, fleet=[ship(held=wanted)]))[0]
+        self.assertAlmostEqual(line.labour["sailor"], wanted * 100.0)
+        line = budget_lines.navy_line(StubWorld(coast_km=500.0, fleet=[ship(held=wanted * 3.0)]))[0]
+        self.assertAlmostEqual(line.labour["sailor"], wanted * 100.0)
+
+    def test_sailors_are_not_paid_for_ships_not_yet_built(self):
+        line = budget_lines.navy_line(StubWorld(coast_km=500.0, fleet=[ship(held=0.0)]))[0]
+        self.assertEqual(line.labour, {})
+        self.assertEqual(line.wages, 0.0)
+        half = budget_lines.navy_line(StubWorld(coast_km=500.0, fleet=[ship(held=2.0)]))[0]
+        self.assertAlmostEqual(half.labour["sailor"], 200.0)
+
+    def test_crewed_hulls_is_the_lesser_of_wanted_and_held(self):
+        self.assertEqual(budget_lines.crewed_hulls(5.0, 2.0), 2.0)
+        self.assertEqual(budget_lines.crewed_hulls(5.0, 9.0), 5.0)
+        self.assertEqual(budget_lines.crewed_hulls(5.0, 0.0), 0.0)
 
     def test_the_lever_sets_the_fleet_instead_of_the_coast(self):
-        line = budget_lines.navy_line(StubWorld(coast_km=500.0, fleet=[ship()], levers={"navy": 2.0}))[0]
+        line = budget_lines.navy_line(StubWorld(coast_km=500.0, fleet=[ship(held=10.0)], levers={"navy": 2.0}))[0]
         self.assertAlmostEqual(line.labour["sailor"], 200.0)
 
     def test_no_coast_or_no_ship_type_keeps_no_navy(self):
@@ -132,8 +153,8 @@ class Navy(unittest.TestCase):
         self.assertEqual(many_held.material_cost, 0.0)
 
     def test_the_ship_type_cheaper_to_keep_is_chosen(self):
-        cheap = ship(material="cheap", crew={"sailor": 10.0})
-        dear = ship(material="dear", crew={"sailor": 100.0})
+        cheap = ship(material="cheap", crew={"sailor": 10.0}, held=10.0)
+        dear = ship(material="dear", crew={"sailor": 100.0}, held=10.0)
         line = budget_lines.navy_line(StubWorld(coast_km=500.0, fleet=[dear, cheap]))[0]
         self.assertAlmostEqual(line.labour["sailor"], 5.0 * 10.0)
 

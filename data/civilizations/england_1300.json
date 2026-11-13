@@ -39,7 +39,7 @@
   },
   "disease_exposure": {
     "endemic": ["smallpox", "measles"],
-    "_note": "Initial conditions for the disease model (sim/disease), not outcomes. Each source names the map tiles where its pathogens live outside the nation; `circulating` says they are always present there (else they start there now and then), `carrier_modes` the carriage the outsiders bring, and `years` (optional) when the contact exists at all. A pathogen reaches the nation with a chance that falls with the days of travel between the source and the tiles the nation holds; when it arrives, who dies and when comes from immunity, age, food and technology. `endemic` names pathogens the people already carry at the start: the model opens them at the immune state their own numbers imply (sim/disease/endemic_state.py). England's smallpox and measles are listed from the size of its towns and its trade with the continent; no source was read for this (Complaints/669). Every other pathogen has not been met.",
+    "_note": "Initial conditions for the disease model (sim/disease), not outcomes. Each source names the map tiles where its pathogens live outside the nation; `circulating` says they are always present there (else they start there now and then), `carrier_modes` the carriage the outsiders bring, and `years` (optional) when the contact exists at all. A pathogen reaches the nation with a chance that falls with the days of travel between the source and the tiles the nation holds; when it arrives, who dies and when comes from immunity, age, food and technology. `endemic` names pathogens the people already carry at the start: the model opens them at the immune state their own numbers imply (sim/disease/endemic_state.py). England's smallpox and measles are listed on derived grounds: Wikipedia, Measles (en.wikipedia.org/wiki/Measles, opened) says the virus diverged from rinderpest 'between 1100 and 1200 AD', was described by Rhazes (860-932) and 'requires a susceptible population of over 500,000 to sustain an epidemic', against England's four and a half million people at the start; Wikipedia, History of smallpox (opened) has smallpox described in western Europe from 581 AD (Gregory of Tours) and returning through Iberia in 710 AD, so it had some centuries to settle by 1300. Neither source names England. Every other pathogen has not been met.",
     "outside_contact": [
       {
         "tiles": ["turkey_01", "turkey_02", "turkey_03", "turkey_04", "turkey_05", "turkey_06", "turkey_07", "turkey_08", "turkey_09", "egypt_01", "egypt_02", "egypt_03", "egypt_04", "egypt_05", "egypt_06", "egypt_07", "egypt_08", "egypt_09", "greece_01", "greece_02", "syria_01", "italy_01", "italy_02", "italy_03", "italy_04", "italy_05", "spain_01", "spain_02", "spain_03", "spain_04", "spain_05"],
@@ -493,6 +493,8 @@
   "starting_techs": [
     "fud_cattle_herd",
     "fud_pig_herd",
+    "fud_horse_herd",
+    "fud_mule_herd",
     "fud_goat_herd",
     "fud_sheep_flock",
     "ag2_composting",
@@ -736,10 +738,11 @@
     "mercury": "no cinnabar is worked in England; mercury reached it by trade from the Spanish deposits at Almaden and the Italian ones at Monte Amiata, not from an English working"
   },
   "unsupplied_basket_goods": {
+    "platinum_g": "the platinum-group-metals node is not held at the start and no partner supplies platinum; the ornament need is met by the other ornament metals and goods the society works",
+    "rice_kg": "the rice-cultivation node is not held at the start and no partner supplies rice; households eat the civilisation's own staple until the node is learned",
     "cacao_kg": "an American crop; no partner grows it and the cultivation node is not held, so household demand for it has no supply until a founder brings the stock",
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
     "cast_iron_kg": "cast iron needs the blast furnace, which this society does not yet have and no partner supplies",
-    "cement_portland_kg": "Portland cement is a modern industrial product far past this start; households bid for it only because the need data lists it as shelter",
     "foxglove_leaf_kg": "medical use of foxglove leaf dates from long after this start; the need data lists it for health, so households bid without a technique or tradition to supply it",
     "maize_kg": "an American crop unknown across the Old World before contact; no partner supplies it",
     "mat_sugar": "cane sugar was not made here; where it was known it came from regions the model has no partner for, and the voyage node it is gated on is not held",
@@ -782,8 +785,8 @@
       "basis": "coin_stock",
       "rate": 0.017,
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): the lay subsidy was a fifteenth or tenth of movable goods, voted in some years and not others; one year in four at a fifteenth averages to about this share of a year. Coin stands in for movables, the only wealth the simulation holds as a stock.",
-        "confidence": "D"
+        "source": "Rate: Wikipedia, Taxation in medieval England (en.wikipedia.org/wiki/Taxation_in_medieval_England, opened): the tax on moveable property was 'fixed by convention at a fifteenth for those in the country' and a tenth for town dwellers, and 'it was not an annual tax'; Yorkshire Lay Subsidy introduction (british-history.ac.uk/yorks-arch-soc/vol21/vii-xix, opened): a ninth in 1297 and 'a Fifteenth of all personalty' in 1301. The 0.017 is a fifteenth (0.067) levied one year in four; how often it was voted is an estimate. Coin stands in for movables, the only wealth the simulation holds as a stock.",
+        "confidence": "C"
       }
     },
     {
@@ -807,8 +810,8 @@
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
-      "confidence": "D"
+      "source": "Church: Campbell 2005 as tabulated in Munro, English Lords and Peasants (economics.utoronto.ca/munro5/EngLordsPeasants.pdf, table opened): about 8,500 parish clergy holding land and 826 religious houses about 1310; Wikipedia, Dissolution of the Monasteries (en.wikipedia.org/wiki/Dissolution_of_the_Monasteries, opened): some 12,000 in religious orders in the 1530s (Bernard). 8,500 + 12,000 = 20,500 is a floor that leaves out unbeneficed priests, clerks and the houses' servants, so 45000 is a ballpark of about twice it. Academy (3000 scholars): no source found, a placeholder. Only starting sizes are set here; what each collects follows from the land market's rent, the goods tithed and the spread of schooling.",
+      "confidence": "C"
     },
     "starting_interest_rate": {
       "source": "Canon law forbade Christian usury; Jewish lenders (expelled 1290) charged up to the statutory two pence a pound a week, and Italian merchant-bankers disguised interest at lower effective rates. An estimate between these.",
@@ -819,8 +822,8 @@
       "confidence": "C"
     },
     "standing_army": {
-      "source": "Paid garrisons of the royal castles and the household troops; armies for a campaign were raised by commissions of array and indentures, not kept (Prestwich, Armies and Warfare in the Middle Ages). An approximate opening headcount of the force the Crown kept in pay in peace.",
-      "confidence": "D"
+      "source": "Paid garrisons of the royal castles and the household troops; armies for a campaign were raised by commissions of array and indentures, not kept (Prestwich, Armies and Warfare in the Middle Ages). Order of magnitude: Edward I's paid household was 'more than 500 mounted men' for the 1297 Flanders campaign and 'almost 800' for 1298 (medievalists.net/2025/12/how-medieval-soldiers-profited-from-war-under-edward-i, opened), campaign strengths; the castle garrisons come on top and no garrison count was found. 3000 in pay in peace is a ballpark above the household.",
+      "confidence": "C"
     }
   },
   "needs_first": {

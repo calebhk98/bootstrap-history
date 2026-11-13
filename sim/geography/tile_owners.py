@@ -40,14 +40,15 @@ def settlement_level() -> str:
     return str(_data()["settlement_level"])
 
 
-def conquest_level(years_held: Optional[float] = None) -> str:
-    """The level a tile taken by an army is held at: `initial` when it has just been taken (`years_held` None or 0),
-    and each step's level once the owner has held it with an army that many years (the highest step reached)."""
+def conquest_level(authority: Optional[float] = None) -> str:
+    """The level a tile taken by an army is held at: `initial` when it has just been taken (`authority` None or 0), and
+    the firmest step's level whose `authority_at_least` the owner's authority on the tile (0 to 1) has reached."""
     conquest = _data()["conquest"]
     level = str(conquest["initial"])
-    for step in sorted(conquest["steps"], key=lambda entry: entry["after_years"]):
-        if years_held is not None and years_held >= step["after_years"]:
-            level = str(step["level"])
+    reached = -1.0
+    for step in conquest["steps"]:
+        if authority is not None and authority >= step["authority_at_least"] > reached:
+            level, reached = str(step["level"]), float(step["authority_at_least"])
     _require_level(level)
     return level
 

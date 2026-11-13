@@ -6,6 +6,7 @@
 and every change to a fact another module owns is that owner's command. What is still handed out live: the project sets the views of knowledge and projects return, and the game
 a mod's provider is handed."""
 from sim.agents.api import edges
+from sim.labour.api import society_hours_by_trade
 
 from .world_commands import WorldCommands
 from .world_reads_game import GameReads, StandingReads
@@ -48,8 +49,20 @@ class WorkforceWorld:
 
     @property
     def society(self):
-        """The society's labour hours by trade: the module's own world state."""
-        return self._owner.world
+        """The society's labour hours by trade, from the labour core's people."""
+        return SocietyReads(self._needs)
+
+
+class SocietyReads:
+    """The society's labour hours by trade, worked out from the agent economy's people each time they are read."""
+
+    def __init__(self, needs):
+        self._needs = needs
+
+    @property
+    def society_labour_hours(self):
+        """{trade: hours the society's workers of it can give in a year}; empty while the agent economy opens."""
+        return society_hours_by_trade(self._needs.agent_people_by_trade(), self._needs.agent_working_hours())
 
 
 class ProjectReads:

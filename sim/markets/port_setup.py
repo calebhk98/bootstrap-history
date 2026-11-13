@@ -14,7 +14,7 @@ from sim.world import demand, need_basket
 from sim.geography.api import dues_hours_per_tonne, sea_freight, settlement
 from sim.labour import api as labour_api
 
-from . import port_closure, port_crop_prices, port_sites
+from . import port_closure, port_crop_choice, port_crop_prices, port_sites
 from .port_stores import opening_store_values
 from sim.freight.api import SEA_MODE
 
@@ -73,7 +73,7 @@ def opening_values(sim):
     civ = sim.scenario.civ
     tile_ids = sim.map.tiles_held_by(civ)
     people = float(sim.scenario.population.total)
-    production = demand.production_data()
+    production = sim.production_catalog()
     registry = sim.state.trade_registry
     allowed = allowed_entries(production, set(sim.production.techniques_granted()))
     mint_recipe = mint_recipe_id(civ, production, set(sim.production.techniques_granted()))
@@ -83,11 +83,12 @@ def opening_values(sim):
     for opened in partners.values():
         partner_prices.update(opened.pop("prices"))
     everyone_runs = sorted(set(allowed).union(*(opened["recipes"] for opened in partners.values())))
-    labour_trades = sorted({trade for entry_id in everyone_runs + ([mint_recipe] if mint_recipe else [])
-                            for trade in (production[entry_id].get("labour_hours") or {})}
-                           | {unskilled})
     modes = sim.foreign.freight_mode_costs(cargo="goods")
     rates = sim.map.mode_crews(sorted(modes))
+    handling_trades = {str(rate["handling_trade"]) for rate in rates.values() if rate.get("handling_trade")}
+    labour_trades = sorted({trade for entry_id in everyone_runs + ([mint_recipe] if mint_recipe else [])
+                            for trade in (production[entry_id].get("labour_hours") or {})}
+                           | {unskilled} | handling_trades)   # the handling trade's wage is quoted to price port handling
     people_by_tile = {tile: people * settlement.population_share(tile_ids, tile) for tile in tile_ids}
     fertility = {tile: spec.fertility for tile, spec in opening_tiles(sim, tile_ids).items()}
     prices = dict(partner_prices)
@@ -121,6 +122,12 @@ def opening_values(sim):
         "stores": opening_store_values(sim, tile_ids, int(sim.scenario.cfg["start_year"])),
         "literacy": {field: sim.production.literacy(field) for field in LITERACY_FIELDS},
     }
+
+
+def handling_wage(wages, handling_trade, unskilled_trade):
+    """The hourly wage that prices a port's handling hours: the handling trade's (dockworker) quote, or the unskilled
+    trade's where the mode names no handling trade or the opening holds no quote for it."""
+    return wages.get(handling_trade) or wages[unskilled_trade]
 
 
 def society_at_opening(civ, opening):
@@ -188,7 +195,7 @@ def build_setup(sim, opening=None, production=None):
     population_by_tile = {tile: float(opening["population_by_tile"].get(tile, 0.0)) for tile in tile_ids}
     for opened in partners.values():
         population_by_tile.update({tile: float(people) for tile, people in opened["population_by_tile"].items()})
-    production = production or demand.production_data()
+    production = production or sim.production_catalog()
     every_recipe = sorted(set(opening["recipes"]).union(*(opened["recipes"] for opened in partners.values())))
     recipes = recipes_from_production_data(production, every_recipe)
     trades_data = sim.state.trade_registry
@@ -196,6 +203,7 @@ def build_setup(sim, opening=None, production=None):
     recipes = tool_wear_recipes(recipes, trades_data, life_years, float(sim.scenario.HOURS_PER_PERSON_YEAR))
     mint_recipe = (recipes_from_production_data(production, [opening["mint_recipe"]])[opening["mint_recipe"]]
                    if opening.get("mint_recipe") else None)
+    crop_suitability_by_recipe_tile = port_crop_choice.crop_suitabilities(production, recipes, tiles, world_map, recipe_tile_key)
     need_data = sim.household_need_data()
     basket = need_basket.make_basket(need_data, production, civ_values=society_at_opening(civ, opening))
     goods = set()
@@ -204,9 +212,10 @@ def build_setup(sim, opening=None, production=None):
     for need in basket.needs:
         goods.update(good for good, _effect in need.goods)
     specs = goods_specs({good: "" for good in goods},
-                        sim.materials.spoilage_rates(), life_years)
+                        sim.materials.spoilage_rates(), life_years, production=production)
     prices = {good: price for good, price in opening["prices"].items() if good in specs and price > 0.0}
     prices = port_closure.makeable_prices(prices, production, recipes)
+    recipes = port_closure.runnable_recipes(recipes, prices)
     recipes = {recipe_id: plant_builds.with_plant_from(recipe, prices) for recipe_id, recipe in recipes.items()}
     training_years = labour_api.wage_provider.training_years_by_trade(trades_data)
     trades = {trade: SetupTrade(trade, training_years[trade],
@@ -216,7 +225,8 @@ def build_setup(sim, opening=None, production=None):
     by_people = sorted(tile_ids, key=lambda tile: (-population_by_tile[tile], tile))   # the home country's tiles
     coastal = [tile for tile in by_people if tiles[tile].coastal]
     unskilled_wage = wages[opening["unskilled_trade"]]   # the carriers' hour is the opening's quote of the unskilled trade, as every other wage
-    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * unskilled_wage
+    port_handling = sea_freight.PORT_HANDLING_HOURS_PER_TONNE * handling_wage(
+        wages, opening["carriage_handling_trade"].get(SEA_MODE), opening["unskilled_trade"])
     dues = {mode: hours * unskilled_wage for mode, hours in dues_hours_per_tonne(world_map).items()
             if hours > 0.0}      # tolls and port dues: unskilled hours at the opening wage, paid to the tile's holder (economy/route_dues.py)
     return EconomySetup(
@@ -251,11 +261,12 @@ def build_setup(sim, opening=None, production=None):
         capital_tile=by_people[0], port_tile=(coastal or by_people)[0],
         land_per_run={recipe_id: float(production[recipe_id].get("land_hectare_years") or 0.0)
                       for recipe_id in recipes if production[recipe_id].get("land_hectare_years")},
-        yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles),
+        yield_factor_by_recipe_tile=cropland_yields(production, recipes, tiles, crop_suitability_by_recipe_tile),
+        crop_suitability_by_recipe_tile=crop_suitability_by_recipe_tile,
         basket_by_tile=baskets_by_tile(basket, need_data, sim.map.tile_climates(all_tile_ids), all_tile_ids), coin_per_unit=unit,
         household_work=sim.household_work_data(), ready_to_eat=households_work.ready_to_eat_goods(need_data),
         milled_as=household_grinding.milled_as_map(need_data),
-        recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners),
+        recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners, recipes),
         tile_owners=sim.farm.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),
         kernels=dict(sim.bound_kernels()),
@@ -280,21 +291,23 @@ def tool_wear_recipes(recipes, trades_data, life_years, hours_per_worker_year):
     return {recipe_id: with_tool_wear(recipe, wear_per_hour, makeable, order, factors) for recipe_id, recipe in recipes.items()}
 
 
-def cropland_yields(production, recipes, tiles):
+def cropland_yields(production, recipes, tiles, suitability=None):
     """{recipe@tile: yield factor} for the recipes that grow on arable land: the tile's soil, climate and water
-    (geography's crop_site) against the reference field. Pasture, forest and mines do not read it."""
-    return {recipe_tile_key(recipe_id, tile_id): tile.fertility
+    (geography's crop_site) against the reference field, times the crop's own suitability for the tile
+    (`port_crop_choice`; one where the recipe states none). Pasture, forest and mines do not read it."""
+    suitability = suitability or {}
+    return {recipe_tile_key(recipe_id, tile_id): tile.fertility * suitability.get(recipe_tile_key(recipe_id, tile_id), 1.0)
             for recipe_id in sorted(recipes) if str(production[recipe_id].get("extracted_from") or "").startswith(port_crop_prices.ARABLE_SOURCE)
             for tile_id, tile in sorted(tiles.items())}
 
 
-def recipes_by_country(home_id, home_recipes, partners):
-    """Which recipes each country's producers can run; empty when there is only the home country."""
+def recipes_by_country(home_id, home_recipes, partners, known):
+    """Which recipes each country's producers can run; empty when there is only the home country. Only the recipes in `known`."""
     if not partners:
         return {}
     by_country = {home_id: tuple(sorted(home_recipes))}
     by_country.update({partner: tuple(sorted(opened["recipes"])) for partner, opened in partners.items()})
-    return by_country
+    return {country: tuple(recipe_id for recipe_id in ids if recipe_id in known) for country, ids in by_country.items()}
 
 
 def _counted_currency(civ, unit):

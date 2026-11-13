@@ -15,7 +15,7 @@ Measured by walking `inputs` and `outputs` of `data/production/*.json` and the g
 - **Households buy materials, not goods.** `iron_bar_kg` meets `implements_and_arms`, `ceramic_kg`
   meets `vessels`, `flour_kg` meets `food`, `leather_kg` meets `clothing`. There are no tools,
   nails, amphorae, tiles, lamps (531), bread (530), sandals, harness, carts, yokes, furniture or ships.
-- **The army wears bar iron** (`sim/agents/budget.py`, `EQUIPMENT_MATERIAL = "iron_bar_kg"`).
+- **The army wears bar iron** (`sim/agents/budget.py` asks `world.army.equipment_material()`, which reads the soldier trade's `equipment_material` field in `data/world/trades.json` through `sim/actors/world_army.py`).
 - **Farms buy no tools.** `labourer`, the farm trade, has no `tool_basket` in `data/world/trades.json`;
   the only iron a grain field draws is in the plough-team capital of one wheat technique. Fishers,
   carters and soldiers have no tool basket either. Farms take no manure or storage jars, and seed is
@@ -76,7 +76,7 @@ still holds: employers hold no tool stock. See Complaints/659 for the measuremen
 **Remainder, exact.**
 
 - Fisher and carter tool baskets: no tool source was found, and no recipe hires either trade (fishers gather food by hours in `sim/labour/food_gathering.py`, carters work through carrier wear), so a basket would charge nothing. Needs a recipe that hires them first.
-- Army bar iron: `EQUIPMENT_MATERIAL` in `sim/agents/budget.py` (not edited here; another stream owns agents). Needs a good the army wears (tools, arms) with its own recipe.
+- Army bar iron: the soldier trade's `equipment_material` in `data/world/trades.json`, read by `sim/agents/budget.py` through `world.army.equipment_material()`. Needs a good the army wears (tools, arms) with its own recipe.
 - Fulling: `cloth_kg` has urine but no fuller's earth; there is no fuller's earth material or deposit and no source for the quantity (Pliny 35.57 not read).
 - Millstone wear (`95_grain_milling.json`), and employers holding a tool stock instead of buying the yearly wear (engine change in producers, not made).
 - Footwear, carts and nails are not yet wear-modelled as household durables beyond their service lives.

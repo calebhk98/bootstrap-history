@@ -1,11 +1,13 @@
 """What a researching actor asks of the world: hands, sellers and substitutes."""
-from typing import Any, List, Optional
+import math
+from typing import Any, Dict, List, Optional
 
 from sim.agents.api import OBSERVATION_RANGE_KM, TRADE_TONNES_FOR_UNIT_CONTACT, research_gate
 from sim.geography.api import flow_ledger
 from sim.labour import api as labour_api
 
 from sim.seats import api as seats_api
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
 
@@ -50,6 +52,16 @@ class Research:
 
 	def purchasable_substitute_discount(self) -> float:
 		return self.needs.substitute_quality_discount()
+
+	def material_tonnes(self, node_id: str) -> Dict[str, float]:
+		"""Tonnes of each material pioneering the node consumes (its stated units at the mass of a unit); a unit with no
+		mass, land, moves no tonnes and adds none."""
+		tonnes = {}
+		for material, units in sorted((self.world.setting.nodes[node_id].get("mat") or {}).items()):
+			kilograms = self.needs.unit_mass_kg(material)
+			if math.isfinite(kilograms):
+				tonnes[material] = float(units) * kilograms / KILOGRAMS_PER_TONNE
+		return tonnes
 
 	def research_cost(self, node_id: str, max_age_years: int) -> float:
 		"""What the node costs to pioneer, worked out afresh only when the last figure is `max_age_years` old

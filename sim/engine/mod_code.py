@@ -118,6 +118,8 @@ def narrowing_world(method: Callable, mod_id: str) -> Callable:
 
 
 TYPED_POINTS = {"actor_kinds": "actor_kind", "actor_spawners": "spawner", "player_commands": "player_command"}
+# views whose answer is a live object, and what a mod reads in their place
+LIVE_VIEWS_REFUSED = {"cast": "actor_exists or actor_sheet"}
 
 
 class ModCodeApi:
@@ -129,7 +131,11 @@ class ModCodeApi:
 
     def reads(self, *views: str) -> None:
         """Declare the published views the mod's code reads. Its commands, phases, figures and providers are handed a
-        `ModAccess` that answers `access.view(name)` for these only; any other view is refused naming this mod and the view."""
+        `ModAccess` that answers `access.view(name)` for these only; any other view is refused naming this mod and the view.
+        The actors module's live registry (`cast`) cannot be declared: `actor_exists` and `actor_sheet` answer plain data."""
+        live = [name for name in views if name in LIVE_VIEWS_REFUSED]
+        if live:
+            raise ModError("mod %s declares the view %s, which answers a live object; read %s instead" % (self.mod_id, live[0], LIVE_VIEWS_REFUSED[live[0]]))
         self.operations.reads = self.operations.reads + tuple(name for name in views if name not in self.operations.reads)
 
     def sends(self, *commands: type) -> None:
@@ -192,7 +198,8 @@ class ModCodeApi:
         return name if name.startswith(self.mod_id + SEPARATOR) else self.mod_id + SEPARATOR + name
 
     def command(self, name: str, **fields: Any) -> Callable:
-        """Decorator for a handler `(access, nodes, cmd, ended) -> dict`; fields as in sim/ui/proto/command_registry.py
+        """Decorator for a handler `(access, cmd, ended) -> dict` (the tech tree's node table is the `tree_nodes` view, declared
+        with `api.reads`); fields as in sim/ui/proto/command_registry.py
         (group, summary, usage and description are required). Offered to the interface module's `interface_commands` point."""
         missing = [required for required in ("group", "summary", "usage", "description") if required not in fields]
         if missing:
@@ -200,7 +207,8 @@ class ModCodeApi:
 
         def decorate(handler: Callable) -> Callable:
             declaration = CommandDeclaration(self.mod_id, self.qualified(name), CODE,
-                                             dict(fields, aliases=list(fields.get("aliases", ()))), self.with_access(handler))
+                                             dict(fields, aliases=list(fields.get("aliases", ()))),
+                                             lambda game, _nodes, cmd, ended: handler(self.access_of(game), cmd, ended))
             self.record_answer("interface_commands", lambda: [declaration])
             return handler
         return decorate
@@ -311,9 +319,9 @@ class ModCodeApi:
 
     def wealth_claims(self, owed: Callable, seize: Callable) -> None:
         """Register claims on other actors that a state's confiscation counts: `owed(access) -> amount` is what the acting
-        household could be made to pay from them, `seize(access, amount, taker) -> amount taken` takes it for the `taker`
+        household could be made to pay from them, `seize(access, amount, taker_id) -> amount taken` takes it for the actor with id `taker_id`
         (the polity module's `wealth_claims` point)."""
-        self.record_answer("wealth_claims", NeedsAccess(lambda access: (lambda: owed(access), lambda amount, taker: seize(access, amount, taker))))
+        self.record_answer("wealth_claims", NeedsAccess(lambda access: (lambda: owed(access), lambda amount, taker: seize(access, amount, taker.actor_id))))
 
     @staticmethod
     def rng(world: Any, *parts: Any) -> random.Random:

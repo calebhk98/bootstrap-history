@@ -19,8 +19,7 @@ from sim.engine.critical_path_remaining import active_years_left, remaining_crit
 from sim.engine.data import (  # noqa: F401
     CIVDIR, civilization_ids, DEFAULTS, downstream_count, goal_catalog,
     is_downstream, KNOWLEDGE_DIR, load, load_civ, node_names, MODDIR,
-    money_unit_note, money_word, resolve_goal, ROOT, selectable_goals, STARTING_KITS, STRATS,
-    trade_family, TRADE_FAMILY, TRADE_NOTES, TRADES_ABSENT, WAGES,
+    money_unit_note, money_word, resolve_goal, ROOT, selectable_goals, STARTING_KITS, starting_kits, STRATS,
     win_condition_describe)
 from sim.engine.default_civilisation import default_civilisation_id  # noqa: F401
 from sim.geography.api import load_geography  # noqa: F401

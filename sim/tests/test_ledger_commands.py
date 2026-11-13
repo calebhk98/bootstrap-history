@@ -200,8 +200,13 @@ class WithdrawHouseholdMoneyCommand(unittest.TestCase):
 class TonnesLedgerState(unittest.TestCase):
     """The seat's tonnes ledger and the capacity pool are the ledger's own state."""
 
+    IRON = {"material_keys": ["iron_bar_kg", "iron_ore_kg"], "raised_material": "iron_ore_kg"}
+
     def module(self, stock=None):
-        return module_harness.build(Ledger, views={"year": 100}, seat=LedgerSeat(material_stock_ledger=stock), world=LedgerWorld(), module_id="ledger")
+        records = {"iron": self.IRON}
+        views = {"year": 100, "commodity_record": lambda commodity: records.get(commodity, {}),
+                 "material_commodity_map": lambda: {"iron_bar_kg": "iron", "iron_ore_kg": "iron"}}
+        return module_harness.build(Ledger, views=views, seat=LedgerSeat(material_stock_ledger=stock), world=LedgerWorld(), module_id="ledger")
 
     def test_a_change_is_counted_in_the_stock_and_in_the_years_opening_snapshot(self):
         module = self.module({"iron": 2.0})
@@ -216,10 +221,24 @@ class TonnesLedgerState(unittest.TestCase):
         self.assertEqual(module.seat.material_stock_opening, {"year": 100, "tonnes": {"iron": 5.0}})
 
     def test_the_first_change_of_the_year_snapshots_the_stock_before_it(self):
-        module = self.module({"iron": 2.0})
-        module.bank_stock(BankStock((("iron", 4.0),)))
-        self.assertEqual(module.seat.material_stock_opening["tonnes"], {"iron": 2.0})
-        self.assertEqual(module.seat.material_stock_ledger["iron"], 4.0)
+        module = self.module({"iron_ore_kg": 2.0})
+        module.bank_stock(BankStock((("iron_ore_kg", 4.0),)))
+        self.assertEqual(module.seat.material_stock_opening["tonnes"], {"iron_ore_kg": 2.0})
+        self.assertEqual(module.seat.material_stock_ledger["iron_ore_kg"], 4.0)
+
+    def test_a_bar_bought_and_ore_mined_are_two_entries_and_the_pool_total_is_both(self):
+        module = self.module({})
+        module.change_stock(ChangeStock("iron_bar_kg", 2.0))
+        module.bank_stock(BankStock((("iron_ore_kg", 3.0),)))
+        self.assertEqual(dict(module.held_goods()), {"iron_bar_kg": 2.0, "iron_ore_kg": 3.0})
+        self.assertEqual((module.goods_stock("iron_bar_kg"), module.goods_pool_stock("iron")), (2.0, 5.0))
+        self.assertEqual(module.held_by_form("iron"), {"iron_bar_kg": 2.0, "iron_ore_kg": 3.0})
+
+    def test_taking_ore_beyond_the_ore_held_is_refused_and_leaves_the_bar(self):
+        module = self.module({"iron_bar_kg": 2.0, "iron_ore_kg": 1.0})
+        refusal = module.change_stock(ChangeStock("iron_ore_kg", -2.0))
+        self.assertEqual(refusal.cause, "not_held")
+        self.assertEqual(dict(module.held_goods()), {"iron_bar_kg": 2.0, "iron_ore_kg": 1.0})
 
     def test_drawing_down_never_takes_the_stock_below_zero(self):
         module = self.module({"grain": 1.0})

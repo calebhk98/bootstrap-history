@@ -14,7 +14,7 @@
    },
    "unit_dimension": "count",
    "basis": "per written page of a letter, account or copied text on papyrus",
-   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day, taken here as three hours a page (an estimate of the work rate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are.",
+   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting; the ink mass is still an estimate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are.",
    "requires_node": "prn_carbon_ink",
    "conf": "D",
    "satisfies": {
@@ -34,7 +34,7 @@
    },
    "unit_dimension": "count",
    "basis": "per written page of a letter, account or copied text on parchment",
-   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day, taken here as three hours a page (an estimate of the work rate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are.",
+   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting; the ink mass is still an estimate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are.",
    "requires_node": "prn_parchment_sheets",
    "conf": "D",
    "satisfies": {
@@ -54,7 +54,7 @@
    },
    "unit_dimension": "count",
    "basis": "per written page of a letter, account or copied text on paper",
-   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day, taken here as three hours a page (an estimate of the work rate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. A sheet of paper is about five grams.",
+   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting; the ink mass is still an estimate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. A sheet of paper is about five grams.",
    "requires_node": "prn_hand_papermaking",
    "capital": [
     {

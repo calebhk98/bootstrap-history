@@ -58,7 +58,7 @@
      },
      "service_life_years": 30,
      "annual_output_at_basis": 5.0,
-     "capital_basis": "Newcomen engines were built in ironworks with a boring mill for the cylinder, a foundry and an erecting shed; a works of that kind completed a handful of engines in a year. Building and tool masses are order-of-magnitude figures.",
+     "capital_basis": "Newcomen engines were built in ironworks with a boring mill for the cylinder, a foundry and an erecting shed; a works of that kind completed a handful of engines in a year. Building and tool masses are order-of-magnitude figures. PASS 9 (Complaint 671): opened en.wikipedia.org/wiki/Newcomen_atmospheric_engine (hundreds built in the 18th century, over a hundred installed by Newcomen death, cylinders bored at Coalbrookdale and Carron) and the Fairbottom Bobs article (28 in bore, 8 ft stroke, 11 hp, 14 strokes a minute). These bound the engine and the national count (about a hundred in under two decades, several makers), consistent with a handful a year for one works, but no opened page gives the masses of an engine works, so stone, timber and iron stay estimates. Stays D.",
      "conf": "D"
     }
    ],
@@ -100,7 +100,7 @@
      },
      "service_life_years": 30,
      "annual_output_at_basis": 4.0,
-     "capital_basis": "A compound engine is built in a machine shop with large lathes and planers and a crane bay; a shop completes a few engines of this size a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "A compound engine is built in a machine shop with large lathes and planers and a crane bay; a shop completes a few engines of this size a year. Masses are order-of-magnitude figures. PASS 9: opened en.wikipedia.org/wiki/Compound_steam_engine; it gives configurations, no weights or shop outputs. Failing inputs: works masses, engines a year. Stays D.",
      "conf": "D"
     }
    ],
@@ -142,7 +142,7 @@
      },
      "service_life_years": 30,
      "annual_output_at_basis": 3.0,
-     "capital_basis": "A high-pressure turbine set needs a heavy machine shop with large lathes, a balancing pit and a test bay; such a works completes a few sets a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "A high-pressure turbine set needs a heavy machine shop with large lathes, a balancing pit and a test bay; such a works completes a few sets a year. Masses are order-of-magnitude figures. Opened: Wikipedia 'C. A. Parsons and Company' says the company was producing up to 50 turbines a year at Heaton at the start of the twentieth century, an upper bound beside the three sets a year taken here for this works; and the Newcastle Sitelines record (https://sitelines.newcastle.gov.uk/SMR/4334) says the original 1889 Heaton works was about two acres, one workshop with a small pattern shop, smithy, test house and office, 48 staff. Neither gives masses or build hours; the row stays D. PASS 9: no page opened for a turbine works (search found none with masses or sets a year). Stays D.",
      "conf": "D"
     }
    ],
@@ -182,7 +182,7 @@
      },
      "service_life_years": 25,
      "annual_output_at_basis": 100.0,
-     "capital_basis": "Early dynamo makers worked in a machine shop with a winding room and a test bench; a small works completed on the order of a hundred machines a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "Early dynamo makers worked in a machine shop with a winding room and a test bench; a small works completed on the order of a hundred machines a year. Masses are order-of-magnitude figures. PASS 9 (Complaint 671): no page on a dynamo or motor works with masses or annual output was opened. Motor catalogue weights seen in search summaries only (an 11 kW totally enclosed induction motor 87 to 144 kg, about 8 to 13 kg a kW) bound the product, not the shop. Stays D.",
      "conf": "D"
     }
    ],
@@ -222,7 +222,7 @@
      },
      "service_life_years": 25,
      "annual_output_at_basis": 60.0,
-     "capital_basis": "A motor is the dynamo's inverse and is built in the same kind of shop; being smaller, a small works finishes a hundred and fifty or so in a year. Masses are order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "capital_basis": "A motor is the dynamo's inverse and is built in the same kind of shop; being smaller, a small works finishes a hundred and fifty or so in a year. Masses are order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works. PASS 9: see dynamo_unit; the catalogue weight bounds the unit (8 to 13 kg per kW for an 11 kW induction motor, search summary only), not the shop that builds it. Stays D.",
      "conf": "D"
     }
    ],
@@ -261,7 +261,7 @@
      },
      "service_life_years": 12,
      "annual_output_at_basis": 15000.0,
-     "capital_basis": "A module line of about ten megawatts a year, at the order of a hundred and fifty watts per square metre, turns out some sixty-six thousand square metres a year. Equipment and building masses are reasoned order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works.",
+     "capital_basis": "A module line of about ten megawatts a year, at the order of a hundred and fifty watts per square metre, turns out some sixty-six thousand square metres a year. Equipment and building masses are reasoned order-of-magnitude figures. The plant is taken at the size the node's own crew can run at the entry's labour hours, a smaller plant of the same kind, so the figures are scaled down from the full-size works. PASS 9 (Complaint 671): arithmetic only: 10 MW a year at 150 W per m2 is 66,667 m2 a year, so the 15000 m2 is the scaled plant. Module mass of 10 to 13 kg per m2 and 190 to 250 W per m2 were seen in search summaries (the pv-magazine and epj-pv pages were not opened: 403). No page gave module-line equipment or building masses. Stays D.",
      "conf": "D"
     }
    ],
@@ -301,7 +301,7 @@
     },
     "service_life_years": 10,
     "annual_output_at_basis": 140.0,
-    "capital_basis": "A cable crew lays a main with a horse wagon, drum gear and hand tools; the entry states eleven hours of crew time a main and a crew works about fifteen hundred hours a year, so about a hundred and forty mains. Masses are reasoned estimates.",
+    "capital_basis": "A cable crew lays a main with a horse wagon, drum gear and hand tools; the entry states eleven hours of crew time a main and a crew works about fifteen hundred hours a year, so about a hundred and forty mains. Masses are reasoned estimates. PASS 9 (Complaint 671): cable weights seen in search summaries only (4 x 95 mm2 aluminium bundled overhead cable about 1,470 to 1,760 kg per km, single-core 16 mm2 copper 230 kg per km); none was opened, and a cable weight bounds the main, not the wagon, drum gear and horse here. Stays D.",
     "conf": "D"
    }
   ],
@@ -338,7 +338,7 @@
     },
     "service_life_years": 10,
     "annual_output_at_basis": 140.0,
-    "capital_basis": "The three-wire main is laid by the same crew and gear as the two-wire main, at the same crew time per main.",
+    "capital_basis": "The three-wire main is laid by the same crew and gear as the two-wire main, at the same crew time per main. PASS 9 (Complaint 671): cable weights seen in search summaries only (4 x 95 mm2 aluminium bundled overhead cable about 1,470 to 1,760 kg per km, single-core 16 mm2 copper 230 kg per km); none was opened, and a cable weight bounds the main, not the wagon, drum gear and horse here. Stays D.",
     "conf": "D"
    }
   ],

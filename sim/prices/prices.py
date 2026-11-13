@@ -212,6 +212,7 @@ _DEFAULT_PRODUCTION_ENTRIES: Optional[ProductionEntries] = None
 # hold an identical gate-node set while holding entirely different regions.
 _SOLVE_CACHE: Dict[Tuple[Any, ...], Tuple[ProductionEntries, SolvedPrices]] = {}
 _TREE_NODES: Dict[str, Any] = {}
+_TREE_NODES_BY_DIRECTORY: Dict[str, Dict[str, Any]] = {}
 
 
 def _default_production_entries() -> ProductionEntries:
@@ -234,6 +235,7 @@ def reset_caches_for_tests() -> None:
     _DEFAULT_PRODUCTION_ENTRIES = None
     _SOLVE_CACHE.clear()
     _TREE_NODES.clear()
+    _TREE_NODES_BY_DIRECTORY.clear()
     solve_prices_core.forget_numeraires()
     rent_standin.forget_land_rents()
 
@@ -291,9 +293,15 @@ def solver_wage_ratios(production_entries: ProductionEntries,
     return dict(document_ratios)
 
 
-def default_production_entries() -> ProductionEntries:
-    """The committed production catalogue, read once per process."""
-    return _default_production_entries()
+def default_production_entries(mods_dir: Optional[str] = None) -> ProductionEntries:
+    """The production catalogue of `mods_dir`, read once per directory; the committed one when none is named."""
+    default = _default_production_entries()
+    if mods_dir is None:
+        return default
+    entries = engine_seam.load_production(mods_dir)[0]
+    # The repository's own directory is the default object, so the engine tolerance and the disk cache apply to it
+    # whichever way the caller named it.
+    return default if entries is engine_seam.load_production(None)[0] else entries
 
 
 def waste_dump_minimum_distance(civilization: Optional[Mapping[str, Any]]) -> float:
@@ -347,13 +355,29 @@ ENGINE_SOLVE_TOLERANCE = declare(
         "own tolerance runs many more rounds for digits nothing reads.")
 
 
-def civilization_record(civilization: Optional[Mapping[str, Any]], civilization_id: Optional[str] = None
-                        ) -> Mapping[str, Any]:
+def civilization_record(civilization: Optional[Mapping[str, Any]], civilization_id: Optional[str] = None,
+                        mods_dir: Optional[str] = None) -> Mapping[str, Any]:
     """The civilisation record every solve reads: the one the caller holds, else the mod-applied record of
     `civilization_id` (the reference civilisation's when none). An id that names no record is an error."""
     if civilization is not None:
         return civilization
-    return engine_seam.load_civ(civilization_id)
+    return engine_seam.load_civ(civilization_id, mods_dir)
+
+
+def producers_with_admitted(available_entries: ProductionEntries, admitted_entry_keys: FrozenSet[str]
+                            ) -> Dict[str, List[str]]:
+    """The producers index of a solve, where an admitted recipe (one the society does not hold) produces only the
+    outputs no held recipe makes: it prices its new outputs and cannot undercut a held route to the rest."""
+    held_entries = {key: entry for key, entry in available_entries.items() if key not in admitted_entry_keys}
+    held_outputs = set(production_entries_outputs(held_entries))
+    producers_of = solve_prices_core.build_producers_index(held_entries)
+    for key in available_entries:
+        if key not in admitted_entry_keys:
+            continue
+        for material in available_entries[key].get("outputs") or {}:
+            if material not in held_outputs:
+                producers_of.setdefault(material, []).append(key)
+    return producers_of
 
 
 def _solve_to_json(production_entries: ProductionEntries,
@@ -377,7 +401,7 @@ def _solve_to_json(production_entries: ProductionEntries,
         solve_prices_core.techniques_available_to(production_entries, gate_nodes_held)
     for entry_key in admitted_entry_keys:
         available_entries[entry_key] = production_entries[entry_key]
-    producers_of = solve_prices_core.build_producers_index(available_entries)
+    producers_of = producers_with_admitted(available_entries, admitted_entry_keys)
     wage_by_trade = solver_wage_ratios(production_entries, document_ratios)
 
     if rent_hours_per_kg_by_material is None:
@@ -548,17 +572,22 @@ def solved_prices_at_wages(held_technology_ids: Iterable[str],
 _SOLVER_SOURCE = ("sim.prices.prices",)
 
 
-def _tree_nodes() -> Dict[str, Any]:
-    """The tech tree by node id, read once per process."""
+def _tree_nodes(mods_dir: Optional[str] = None) -> Dict[str, Any]:
+    """The tech tree by node id with the mods of `mods_dir` applied (the committed ones when none), read once per directory."""
+    if mods_dir is not None:
+        if mods_dir not in _TREE_NODES_BY_DIRECTORY:
+            root = os.path.dirname(os.path.dirname(HERE))
+            _TREE_NODES_BY_DIRECTORY[mods_dir] = {node["id"]: node for node in engine_seam.load_mod_tree_nodes(root, mods_dir)}
+        return _TREE_NODES_BY_DIRECTORY[mods_dir]
     if _TREE_NODES.get("nodes") is None:
         root = os.path.dirname(os.path.dirname(HERE))
         _TREE_NODES["nodes"] = {node["id"]: node for node in engine_seam.load_mod_tree_nodes(root)}
     return _TREE_NODES["nodes"]
 
 
-def _unheld_steps_to(node_id: str, held: Set[str]) -> int:
+def _unheld_steps_to(node_id: str, held: Set[str], mods_dir: Optional[str] = None) -> int:
     """How many technologies not yet held stand between a society and this one, itself included."""
-    nodes = _tree_nodes()
+    nodes = _tree_nodes(mods_dir)
     if node_id not in nodes:
         return len(nodes)
     return len(_requirements_of(nodes, node_id) - held)
@@ -584,7 +613,7 @@ IN_REACH_MEMO_LIMIT = 256
 
 
 def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
-                     production_entries: ProductionEntries) -> FrozenSet[str]:
+                     production_entries: ProductionEntries, mods_dir: Optional[str] = None) -> FrozenSet[str]:
     """`_entries_in_reach`, remembered per argument set: a society asks again for the techniques it holds."""
     memo = _TREE_NODES.setdefault("in_reach", {})
     if memo.get("entries") is not production_entries:
@@ -595,31 +624,31 @@ def entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable
         if len(memo) > IN_REACH_MEMO_LIMIT:
             memo.clear()
             memo["entries"] = production_entries
-        memo[key] = _entries_in_reach(held, held_gate_nodes, resolvable_materials, production_entries)
+        memo[key] = _entries_in_reach(held, held_gate_nodes, resolvable_materials, production_entries, mods_dir)
     return memo[key]
 
 
 def _entries_in_reach(held: Set[str], held_gate_nodes: FrozenSet[str], resolvable_materials: Set[str],
-                      production_entries: ProductionEntries) -> FrozenSet[str]:
+                      production_entries: ProductionEntries, mods_dir: Optional[str] = None) -> FrozenSet[str]:
     """Keys of techniques not held that make only materials the held set cannot make, where the technique
-    is the fewest research steps away for every material it makes.
+    is the fewest research steps away for every new material it makes.
 
     Such a technique prices a new material through the techniques held for everything else and cannot
     undercut one already held; a later, cheaper route to the same material, or a joint process whose
-    co-product a nearer technique already makes, is left out (the material then prices at the nearer one)."""
+    new co-product a nearer technique already makes, is left out (the material then prices at the nearer one).
+    A joint process that also makes something already held (a herd's meat beside its draught animal) is in reach
+    for its new outputs; the held output neither shuts it out nor decides which technique is nearest."""
     # a waste co-product (manure, straw) is tipped when nobody takes it, so it neither shuts a joint process out
     # because the held set already makes it nor decides which technique is nearest
     products = {material for material in production_entries_outputs(production_entries)
-                if material not in disposal_cost.waste_materials()}
+                if material not in disposal_cost.waste_materials() and material not in resolvable_materials}
     candidates = {}
     for key, entry in production_entries.items():
         gate = entry.get("requires_node")
         outputs = entry.get("outputs") or {}
         if gate is None or gate in held_gate_nodes or not any(material in products for material in outputs):
             continue
-        if any(material in resolvable_materials and material in products for material in outputs):
-            continue
-        candidates[key] = (_unheld_steps_to(gate, held), key)
+        candidates[key] = (_unheld_steps_to(gate, held, mods_dir), key)
     nearest: Dict[str, Tuple[int, str]] = {}
     for key, rank in candidates.items():
         for material in production_entries[key]["outputs"]:
@@ -651,21 +680,22 @@ def priced_goods_in_hours(held_technology_ids: Iterable[str],
                           interest_rate: Optional[float] = None,
                           civilization: Optional[Mapping[str, Any]] = None,
                           farmed_hectares: Optional[float] = None,
-                          rent_hours_per_kg_by_material: Optional[Mapping[str, float]] = None
+                          rent_hours_per_kg_by_material: Optional[Mapping[str, float]] = None,
+                          mods_dir: Optional[str] = None
                           ) -> Tuple[Prices, Provenance, Dict[str, str]]:
     """(hours, provenance, recipe) per material: what `priced_goods_table` prices, in labour hours, with the
     recipe that makes each. Wages are hours of unskilled labour an hour of each trade is worth."""
     entries = (production_entries if production_entries is not None
-               else _default_production_entries())
+               else default_production_entries(mods_dir))
     held = frozenset(held_technology_ids)
-    civilization = civilization_record(civilization, civilization_id)
-    arguments = dict(production_entries=production_entries, civilization_id=civilization["id"],
+    civilization = civilization_record(civilization, civilization_id, mods_dir)
+    arguments = dict(production_entries=entries, civilization_id=civilization["id"],
                      interest_rate=interest_rate, civilization=civilization, farmed_hectares=farmed_hectares,
                      rent_hours_per_kg_by_material=rent_hours_per_kg_by_material)
     solved = solved_prices_at_wages(held, document_ratios, **arguments)
     in_reach = solved_prices_at_wages(
         solved.gate_nodes_held, document_ratios,
-        admitted_entry_keys=entries_in_reach(held, solved.gate_nodes_held, solved.resolvable_materials, entries),
+        admitted_entry_keys=entries_in_reach(held, solved.gate_nodes_held, solved.resolvable_materials, entries, mods_dir),
         **arguments)
     hours = {}
     provenance = {}
@@ -689,15 +719,16 @@ def goods_in_hours(held_technology_ids: Iterable[str],
                    farmed_hectares: Optional[float] = None,
                    interest_rate: Optional[float] = None,
                    production_entries: Optional[ProductionEntries] = None,
-                   unskilled_trade: Optional[str] = None
+                   unskilled_trade: Optional[str] = None,
+                   mods_dir: Optional[str] = None
                    ) -> Tuple[Prices, Provenance]:
     """(labour-hour cost of each good, provenance): the one builder of the goods table. `document` is the wage
     document of the civilisation's opening schedule, which supplies the wage ratios against the hour of
     `unskilled_trade` (the live registry's, else the committed one's); the table is in labour hours and a caller
     states it in a coin by `rules.money_prices`."""
     hours, provenance, _recipe = priced_goods_in_hours(
-        held_technology_ids, solve_prices_core.wage_ratios_by_trade(document, unskilled_trade), production_entries,
-        interest_rate=interest_rate, civilization=civilization, farmed_hectares=farmed_hectares)
+        held_technology_ids, solve_prices_core.wage_ratios_by_trade(document, unskilled_trade, mods_dir), production_entries,
+        interest_rate=interest_rate, civilization=civilization, farmed_hectares=farmed_hectares, mods_dir=mods_dir)
     return hours, provenance
 
 
@@ -708,7 +739,8 @@ def priced_goods_table(held_technology_ids: Iterable[str],
                        interest_rate: Optional[float] = None,
                        civilization: Optional[Mapping[str, Any]] = None,
                        farmed_hectares: Optional[float] = None,
-                       unskilled_trade: Optional[str] = None
+                       unskilled_trade: Optional[str] = None,
+                       mods_dir: Optional[str] = None
                        ) -> Tuple[Prices, Provenance]:
     """(goods_in_money, provenance) - what it costs to make every material
     the recipes can make, in the coin of `prices_json`. A cost, not a price: the
@@ -732,7 +764,7 @@ def priced_goods_table(held_technology_ids: Iterable[str],
     without reading a file by id. The rent charged is the opening's stand-in. `unskilled_trade` is the trade whose hour
     the wages are stated against: the live registry's, else the committed one's.
     """
-    civilization = civilization_record(civilization, civilization_id)
+    civilization = civilization_record(civilization, civilization_id, mods_dir)
     hours, provenance = goods_in_hours(
-        held_technology_ids, prices_json, civilization, farmed_hectares, interest_rate, production_entries, unskilled_trade)
+        held_technology_ids, prices_json, civilization, farmed_hectares, interest_rate, production_entries, unskilled_trade, mods_dir)
     return {material: hours_to_denarii(cost, prices_json) for material, cost in hours.items()}, provenance

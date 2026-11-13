@@ -5,7 +5,7 @@ Eurace@Unibi's firm (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_
 current stock), which Eurace's own price rule (Market_Research/Firm_market_research_functions.c, Firm_set_price)
 reads only as a cap on expected sales. The search for unsold stock inside the year (unsold_search.py) is the other
 half of the cut: this is the price the seller carries into next year. A seller whose stock is all gone but whose ask is
-already a multiple of what a unit costs it learns nothing more by asking higher (ASK_BAND_CEILING), and a good whose
+already a multiple of what a unit costs it learns nothing more by asking higher (the width ask_ceiling.py derives from its buyers), and a good whose
 supply cannot respond does not climb for decades."""
 import math
 from typing import List, Optional
@@ -24,18 +24,10 @@ GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR = declare(
         "lets a cobweb settle; a fixed step either way does not. Raises that were too fast swung durable purchases "
         "(Complaint 468).")
 
-ASK_BAND_CEILING = declare(
-    "ASK_BAND_CEILING", 3.0, kind="temporary_heuristic",
-    unit="multiple of a unit's cost that bounds a seller's ask above when buyers' substitution does not",
-    source=None, confidence="D", retire="Complaints/643-a-seller-facing-inelastic-demand-has-an-unbounded-ask.md",
-    why="Lengnick 2013 (eq 8-9) holds each firm's price between two multiples of its marginal cost and Caiani "
-        "et al. 2016 (eq 3.6-3.7) set it as a markup on expected unit cost, so no seller's ask is unbounded. "
-        "Where buyers substitute toward other goods the band's width is derived (substitution_markup in "
-        "seller_offers.py); where they do not, a width from the seller's cost structure (the buyers' cheapest "
-        "alternative way to meet the need, priced from the recipes) is not yet built, so a stated multiple stands in.")
+NO_BOUND_MULTIPLE = 1.0      # the band's width for a seller whose buyers give no ceiling (ask_ceiling.py): no room above what a unit costs it
 
 
-def band_edge(break_even_price: float, input_share: float = 0.0, ceiling_multiple: float = ASK_BAND_CEILING) -> float:
+def band_edge(break_even_price: float, input_share: float, ceiling_multiple: float) -> float:
     """The top of the band: the multiple applies to what the seller adds (its labour, rent and plant), and the inputs it
     buys pass through at their cost. A multiple of the whole unit cost would compound along a chain of makers, each
     marking up inputs already marked up (a multiple to the power of the stages); this adds one multiple of each
@@ -60,7 +52,7 @@ def regressive_weight(weight: float, gap: float) -> float:
 
 
 def adjusted_within_band(expected_price: float, break_even_price: Optional[float], stock: float, target_stock: float,
-                         ceiling_multiple: float = ASK_BAND_CEILING, input_share: float = 0.0) -> float:
+                         ceiling_multiple: float, input_share: float = 0.0) -> float:
     """`expected_price` moved one step by the gap between `stock` and `target_stock`, inside the band: the price that just
     covers a unit's cost (`break_even_price`) below, `band_edge` above. A seller already outside the band on the side it
     is moving away from is left where it is, not pulled in here; one with no cost to anchor on does not move."""

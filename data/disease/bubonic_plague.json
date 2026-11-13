@@ -44,8 +44,8 @@
    "source": "WHO plague fact sheet, who.int/news-room/fact-sheets/detail/plague: 'a case-fatality ratio of 30% to 60% for the bubonic type'; 0.45 is the midpoint (the page gives no untreated qualifier for that range)"
   },
   "immunity": {
-   "confidence": "unsourced",
-   "source": "No source found: the WHO plague fact sheet makes no statement on immunity, and Dean et al. 2018 (PMC5819418) say their models ignore immunity; lifelong immunity is a labelled assumption"
+   "confidence": "read",
+   "source": "Madagascar plague patients (PMC7653777, opened): anti-F1 antibody 'could persist for more than a decade in both BP and PP recovered patients', one patient seropositive at 14.8 years, which the authors say 'suggests its probable involvement in patients' protection'; the paper does not report reinfections. A Chinese cohort of 65 survivors over 16 years reported no reinfection (search summary only, not opened). Lifelong immunity is therefore a ballpark, a decade or more is read; Dean et al. 2018 (PMC5819418) say their models ignore immunity."
   },
   "stage.incubating": {
    "confidence": "read",
@@ -56,8 +56,8 @@
    "source": "Dean et al. 2018 (PMC5819418, Table 2): an average duration of infection of 10 days for bubonic plague in humans in the rat-flea model (the human-ectoparasite model splits it into 8 mildly and 2 highly infectious days, the same 10 total). Shape 2 is a broad spread, not sourced"
   },
   "density_exponent": {
-   "confidence": "unsourced",
-   "source": "Heuristic inside the range Rader et al. 2020 supports (crowded cities see longer epidemics with larger attack rates; weaker than linear); vary across the ensemble"
+   "confidence": "derived",
+   "source": "Wikipedia, Basic reproduction number (en.wikipedia.org/wiki/Basic_reproduction_number, opened): R0 = contact rate / recovery rate, the contact rate set by 'the number of susceptible people in the population that the infected people contact'; whether contact rises with density is not stated there. Chowell et al., 1918 influenza in England and Wales (PMC2596813, opened): 'we found no association between transmissibility, death rates and indicators of population density and residential crowding', R between 1.3 and 1.9, and deaths scaling as population to the power 0.71-0.77 in rural areas and about 1.0 in towns. So the exponent of contact on crowding lies between 0 (that study) and 1 (mass action, density-dependent contact); 0.5 is the midpoint, a ballpark. Rader et al. 2020 (Nature Medicine; search summary only, full text not opened): crowded cities have longer epidemics and larger attack rates."
   }
  }
 }

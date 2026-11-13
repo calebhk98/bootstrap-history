@@ -1,6 +1,6 @@
 """Validation rule: an action's declared results are of a known kind, and what a lane asks for can be returned.
 
-`returns` on a node is {kind: [ids]} with kind one of knowledge, route, partner. Knowledge names a
+`returns` on a node is {kind: [ids]} with kind one of knowledge, route, partner, sample. Knowledge names a
 node. A `route:` or `partner:` token in a mode's or lane's `requires_nodes` must be returned by some node."""
 from typing import Any, Iterable, List, Mapping
 
@@ -27,6 +27,10 @@ def check_action_results(nodes: Mapping[str, Mapping[str, Any]], gated_entries: 
             is_token = needed.split(":", 1)[0] in ("route", "partner") and ":" in needed
             if is_token and needed not in returned:
                 problems.append("%s: requires_nodes asks for %s, which no node returns" % (entry.get("id"), needed))
+    for node_id in sorted(nodes):
+        for needed in nodes[node_id].get("samples") or ():
+            if needed not in returned or not needed.startswith("sample:"):
+                problems.append("%s: samples asks for %s, which no node returns as a sample" % (node_id, needed))
     return problems
 
 

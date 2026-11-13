@@ -23,6 +23,7 @@ def supply_with_schools(schools):
         economy=types.SimpleNamespace(agent_working_hours=lambda: HOURS_PER_PERSON),
         workforce=types.SimpleNamespace(trade_schools=schools),
         trades=types.SimpleNamespace(trades_absent=set()),
+        people=types.SimpleNamespace(population=types.SimpleNamespace(working_age=1.0e6)),
         actors=types.SimpleNamespace(actor_staff_fte=lambda trade: 0.0))
     trades = types.SimpleNamespace(trade_available=lambda trade: True, LITERATE_TRADES=frozenset())
     return OfferedSupply(world, None, None, None, trades)

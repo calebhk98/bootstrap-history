@@ -55,24 +55,13 @@ class PlacementByAreaHoursTests(unittest.TestCase):
 
 
 class SeedsWhereHiredTests(unittest.TestCase):
-    def test_a_seeded_trade_no_hirer_asks_is_dropped_and_one_a_hirer_asks_is_kept(self):
-        seeds = {"port": {"sailor": 1000.0, "charcoal_burner": 450.0}, "inland": {"charcoal_burner": 50.0}}
-        self.assertEqual(opening_placement.seeds_where_hired(seeds, {"sailor"}), {"port": {"sailor": 1000.0}})
+    def test_a_seed_is_cut_to_the_hours_the_areas_carriage_crews_ask_and_one_nobody_asks_is_dropped(self):
+        seeds = {"port": {"sailor": 1000.0, "charcoal_burner": 450.0}, "inland": {"charcoal_burner": 50.0, "carter": 300.0}}
+        hirers = {"port": {"sailor": 400.0}, "inland": {"carter": 900.0}}
+        self.assertEqual(opening_placement.seeds_where_hired(seeds, hirers), {"port": {"sailor": 400.0}, "inland": {"carter": 300.0}})
 
     def test_no_hirer_keeps_nothing(self):
-        self.assertEqual(opening_placement.seeds_where_hired({"port": {"sailor": 1000.0}}, set()), {})
-
-
-class CarriageTradesTests(unittest.TestCase):
-    def test_the_modes_crew_trades_and_the_handling_trade_hire(self):
-        setup = SimpleNamespace(unskilled_trade="labourer",
-                                carriage_crew={"land": ("carter", 0.1), "sea": ("sailor", 0.2), "river": ("", 0.3), "air": ("pilot", 0.0)},
-                                carriage_handling={"sea": 2.0, "land": 0.0}, carriage_handling_trade={"sea": "stevedore"})
-        self.assertEqual(opening_placement.carriage_trades(setup), {"carter", "sailor", "labourer", "stevedore"})
-
-    def test_carriage_that_hires_no_hours_hires_no_trade(self):
-        setup = SimpleNamespace(unskilled_trade="labourer", carriage_crew={}, carriage_handling={}, carriage_handling_trade={})
-        self.assertEqual(opening_placement.carriage_trades(setup), set())
+        self.assertEqual(opening_placement.seeds_where_hired({"port": {"sailor": 1000.0}}, {}), {})
 
 
 class CappedContractsTests(unittest.TestCase):

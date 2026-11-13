@@ -9,7 +9,7 @@ from sim.agents import budget, budget_works, revenue, state_works
 from sim.agents.api import Government
 from sim.agents.records import ActorRecord
 from sim.agents.tuning_spending import (GRANARY_LOSS_SHARE_PER_YEAR,
-										MASONRY_PERSON_YEARS_PER_M2, PUBLIC_BUILDING_LIFE_YEARS)
+										MASONRY_WALL_M3_PER_M2, PUBLIC_BUILDING_LIFE_YEARS)
 from sim.tests.agents_fake_world import FakeWorld
 
 QUICK_TOPIC = True
@@ -87,7 +87,7 @@ upkeep = lines_by_name(budget_works.works_upkeep_lines(world))
 check("upkeep is a named masons' line for each work held",
       set(upkeep) == {"fortifications", "water_works"} and "mason" in upkeep["fortifications"].labour, upkeep)
 check("upkeep is the labour that replaces the stock once in a building's life",
-      abs(upkeep["fortifications"].labour["mason"] - stock["fortifications"] * MASONRY_PERSON_YEARS_PER_M2 / PUBLIC_BUILDING_LIFE_YEARS) < 1e-6)
+      abs(upkeep["fortifications"].labour["mason"] - stock["fortifications"] * FakeWorld.MASONRY_HOURS["mason"] * MASONRY_WALL_M3_PER_M2 / FakeWorld.hours_per_person_year / PUBLIC_BUILDING_LIFE_YEARS) < 1e-6)
 state_works.wear(stock, 0.5, 100.0)
 check("works whose upkeep goes unpaid decay", stock["water_works"] < state_works.water_works_wanted(world), stock)
 

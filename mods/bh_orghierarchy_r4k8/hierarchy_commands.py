@@ -119,7 +119,7 @@ def _workers_from(access, cmd, managers_hired):
 
 def register(api):
     parameters = load_parameters()
-    api.reads("game_config", "hours_per_person_year", "techniques_held", "staff", "hours_available", "hire_check", "wage_bill")
+    api.reads("tree_nodes", "game_config", "hours_per_person_year", "techniques_held", "staff", "hours_available", "hire_check", "wage_bill")
     api.sends(FireStaff, HireStaff)
     manager_trade = parameters["manager_trade"]["value"]
 
@@ -141,7 +141,7 @@ def register(api):
                              "the coordination hours one report costs; known technologies cut those hours. Managers "
                              "needed are workers / span, layer by layer, and each layer loses part of an order. "
                              "Spans and losses are labelled heuristics (span_data.json). Spends nothing.")
-    def hierarchy(access, nodes, cmd, ended):
+    def hierarchy(access, cmd, ended):
         workers, source = _workers_from(access, cmd, hired(access))
         known = set(access.view("techniques_held")())
         manager_hours = _manager_hours(access)
@@ -160,7 +160,7 @@ def register(api):
             "orders_reaching_workers_intact": round(result["order_fidelity"], 3),
             "known_channels": {channel: {"best_known": node, "coordination_factor": factor}
                                for channel, (factor, node) in result["factors"].items()},
-            "technologies": technology_contributions(workers, manager_hours, parameters, known, nodes),
+            "technologies": technology_contributions(workers, manager_hours, parameters, known, access.view("tree_nodes")()),
             "managers_this_mod_hired": hired(access), "manager_trade": manager_trade,
             "note": "Heuristic spans (see span_data.json); nothing here changes the game unless you run staff_managers.",
         }
@@ -174,7 +174,7 @@ def register(api):
                              "for your staff, through the ordinary hire path (fee, first year's wage, the labour "
                              "market's own supply limits). With release it lets go the surplus. It does not run by "
                              "itself; managers hired shrink the hours your own direct reports take from the pool.")
-    def staff_managers(access, nodes, cmd, ended):
+    def staff_managers(access, cmd, ended):
         if ended:
             return {"ok": False, "error": "the run has ended (%s)" % ended}
         workers, _source = _workers_from(access, {}, hired(access))

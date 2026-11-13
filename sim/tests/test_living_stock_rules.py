@@ -258,9 +258,9 @@ class YearsTurn(unittest.TestCase):
         tonnes = {material: units * tonnes_per_unit(material) for material, units in held.items()}
         module = _module(tonnes, stock_land={"place": None, "pasture_kg": 0.0},
                          endemic_stock_loss=lambda place, species: 0.0, nursery_room_units=lambda *arguments: None,
-                         hours_hired_once=lambda purpose: {})
+                         hours_hired_once=lambda purpose: {}, mods_directory=lambda: "")
         with mock.patch.object(yearly, "stock_rates", lambda: self.RATES), \
-                mock.patch.object(yearly, "stock_entry", lambda material: None):   # growth takes no hired labour
+                mock.patch.object(yearly, "stock_entry", lambda material, production=None: None):   # growth takes no hired labour
             module.step_living_stock("founder")
         changes = {}
         for sent in module_harness.sent(module):

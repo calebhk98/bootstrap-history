@@ -4,7 +4,7 @@ it hires become its floor of the `household_work` need, bought from domestic ser
 import dataclasses
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
-from . import household_grinding, households_work, labour_state, titles_worked, trade_wages
+from . import household_grinding, household_servants, household_urban, households_work, labour_state, titles_worked, trade_wages
 from . import households_cohort
 from .households_cohort import Cohort
 from .market_memory import market_key
@@ -17,19 +17,22 @@ HEARTH_EPSILON = 1e-9
 
 
 def has_hearth(record, cohort: Cohort) -> bool:
-    """A cohort cooks at a hearth of its own when it works land: it holds a title or a tenancy on its tile.
-    (No urban marker exists yet; a landless townsman is a cohort with no title or tenancy.)"""
+    """A cohort cooks at a hearth of its own when it works land (it holds a title or a tenancy on its tile) and its tile is
+    not urban (`household_urban.is_urban`): a town has no hearths of its own."""
     return hearth_of(record, cohort.tile, cohort.agent_id)
 
 
 def hearth_of(record, tile: str, agent_id: str) -> bool:
     """`has_hearth` for a cohort named by its tile and id (the cohort table's columns hold both, so no cohort is built)."""
-    return titles_worked.worked_share(record, tile, agent_id) > HEARTH_EPSILON
+    return (titles_worked.worked_share(record, tile, agent_id) > HEARTH_EPSILON
+            and not household_urban.is_urban(household_urban.tile_rows(record, tile)))
 
 
 def hearths_of(record, tiles: Sequence[str], agent_ids: Sequence[str]) -> List[bool]:
     """`hearth_of` for each (tile, id) pair, the tiles' tenancies read once."""
-    return [share > HEARTH_EPSILON for share in titles_worked.worked_shares(record, tiles, agent_ids)]
+    urban = household_urban.urban_tiles(record, tiles)
+    return [share > HEARTH_EPSILON and not urban[tile]
+            for tile, share in zip(tiles, titles_worked.worked_shares(record, tiles, agent_ids))]
 
 
 def food_basket(setup, record, cohort: Cohort):
@@ -268,13 +271,35 @@ def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffe
     if not setup.household_work:
         return 0.0, 0.0, ()
     value, needed, price, milled = work_terms(setup, record, view, cohort, offers, expected, mine)
-    return planned_hours(needed, value, price, service_price_floor, milled)
+    return planned_hours(needed, value, price, service_price_floor, milled, whole_servant_terms(setup, cohort))
 
 
-def planned_hours(needed: float, value: float, price: float, service_price_floor: float, milled: Tuple[str, ...]):
-    """(hours hired, hours done itself, grains bought milled) from the terms of `work_terms`."""
-    hired = households_work.hired_hours(needed, value, max(price, service_price_floor))
+def planned_hours(needed: float, value: float, price: float, service_price_floor: float, milled: Tuple[str, ...],
+                  whole: Optional[Tuple[float, Optional[float], float]] = None):
+    """(hours hired, hours done itself, grains bought milled) from the terms of `work_terms`. With `whole` given
+    (`whole_servant_terms`), each household hires a whole servant or none (`household_servants.hired_hours_whole`),
+    none above its budget; else the hiring is divisible."""
+    cost = max(price, service_price_floor)
+    if whole is not None:
+        households, budget_per_household, servant_year_hours = whole
+        hired = household_servants.hired_hours_whole(needed, households, value, cost, budget_per_household, servant_year_hours)
+    else:
+        hired = households_work.hired_hours(needed, value, cost)
     return hired, households_work.own_hours(needed, hired), milled
+
+
+def whole_servant_terms(setup, cohort: Cohort) -> Optional[Tuple[float, Optional[float], float]]:
+    """(households, income a household has to pay a servant from, hours of a servant's year), or None where the data file
+    gives no `servant_year_hours` (hiring is then divisible). The income is last year's over the cohort's households; None
+    for a cohort no year has paid yet (its budget is then no bound)."""
+    year_hours = setup.household_work.get("servant_year_hours")
+    if not year_hours:
+        return None
+    households = household_servants.households_in(cohort.people)
+    if households <= 0.0:
+        return None
+    budget = cohort.last_year_income / households if cohort.last_year_income > 0.0 else None
+    return households, budget, float(year_hours)
 
 
 def plans(setup, record, view, offers: Sequence[LabourOffer],

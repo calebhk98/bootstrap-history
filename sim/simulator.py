@@ -39,11 +39,10 @@ while _SIM_DIR in sys.path:
 	sys.path.remove(_SIM_DIR)
 
 from sim.engine.data import *            # noqa: F401,F403
-from sim.engine.data import (ANNUAL_WAGE, CIVDIR, DEFAULTS,
-                         RESFILE, STARTING_KITS, STRATS, TECH_EFFECTS,
-                         TRADES_ABSENT, TRADE_FAMILY, TRADE_NOTES, WAGES,
+from sim.engine.data import (CIVDIR, DEFAULTS,
+                         RESFILE, STARTING_KITS, STRATS,
                          load, load_civ, load_resources,
-                         trade_family, goal_catalog, goal_lookup, resolve_goal)      # noqa: F401
+                         goal_catalog, goal_lookup, resolve_goal)      # noqa: F401
 from sim.geography.api import haversine_km, load_geography  # noqa: F401
 from sim.scenario.api import money_short  # noqa: F401
 from sim.knowledge.api import closure, critical_path, hard_pre, topo_order  # noqa: F401

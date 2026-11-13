@@ -3,7 +3,6 @@
 Money is counted in coin here, the engine's unit; quantities in tonnes. Everything is read through `sim.economy.api` and
 kept in the agent's `YearFigures` until the economy's state changes."""
 from sim.economy import api as economy_api
-from .unit_mass import tonnes_per_unit
 
 
 
@@ -34,7 +33,7 @@ class PriceReads:
             economy = agent.economy()
             coin = economy_api.coin_per_unit(economy)
             prices, figures.stale = economy_api.shown_prices_of(economy)
-            figures.answers = ({good: price * coin for good, price in prices.items()}, economy_api.interest_rate(economy))
+            figures.answers = ({good: price * coin for good, price in prices.items()}, economy_api.market_rate(economy))
         return figures.answers
 
     def price_kind(self, good):
@@ -69,7 +68,7 @@ class PriceReads:
     def offered_tonnes(self, material, tile):
         """Tonnes the sellers of a material in the tile's market area held at the last clearing; None when the area
         has no book for it."""
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._agent.tonnes_per_unit(material)
         economy = self._agent.economy()
         if per_unit is None or material not in economy.area_map.goods():
             return None
@@ -124,7 +123,7 @@ class PriceReads:
 
     def market_record(self, material):
         """Tonnes the material's markets sold, left unsold and left unmet last year."""
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._agent.tonnes_per_unit(material)
         record = economy_api.market_record(self._agent.economy(), material)
         return None if per_unit is None else {name: quantity * per_unit for name, quantity in record.items()}
 
@@ -132,7 +131,7 @@ class PriceReads:
         """Factor on a material's price once more tonnes land in its market or are taken out, from the book the
         market last cleared: at the port when no tile is named (the price the economy shows nationally), else on the
         tile's own area. None when the market has none."""
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._agent.tonnes_per_unit(material)
         economy = self._agent.economy()
         if per_unit is None or material not in economy.area_map.goods():
             return None

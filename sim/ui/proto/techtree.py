@@ -372,9 +372,9 @@ def _available_params(cmd):
             _sort_fn, reverse, heard_offset)
 
 
-def _matches_find(nodes, find, node_id):
+def _matches_find(nodes, find, node_id, tags=None):
     """Every query word reaches the node's text, category or topic vocabulary."""
-    return tree_filters.matches_find(nodes, find, node_id)
+    return tree_filters.matches_find(nodes, find, node_id, tags=tags)
 
 
 def _busy_subject_note(sim, nodes, want_subject, fog):
@@ -404,7 +404,7 @@ def _select_startable(sim, nodes, startable, fog, find, want_subject, afford, ke
     """
     sel, why_these = startable, None
     if find:
-        sel = [node_id for node_id in startable if _matches_find(nodes, find, node_id)]
+        sel = [node_id for node_id in startable if _matches_find(nodes, find, node_id, tree_filters.tags_for(sim))]
         why_these = "matching %r" % find
     elif want_subject:
         sel = [node_id for node_id in startable if want_subject in _subject_of(nodes[node_id]).lower()]
@@ -457,7 +457,7 @@ def _heard_all_sorted(sim, nodes, find, want_subject, _sort_fn, reverse, keep=No
     # heard-of-but-not-yet-startable is exactly the case this list exists
     # to answer.
     if find:
-        _heard_all = [node_id for node_id in _heard_all if _matches_find(nodes, find, node_id)]
+        _heard_all = [node_id for node_id in _heard_all if _matches_find(nodes, find, node_id, tree_filters.tags_for(sim))]
     elif want_subject:
         _heard_all = [node_id for node_id in _heard_all
                       if want_subject in _subject_of(nodes[node_id]).lower()]
@@ -777,10 +777,10 @@ def _agent_available(sim, nodes, cmd=None):
                                  % (sort_by, ", ".join(_SORT_KEY_NAMES)), choices=_SORT_KEY_NAMES)}
 
     state, filter_error = tree_filters.parse_state(cmd)
-    tag, category, topic_error = tree_filters.parse_topic(cmd, nodes)
+    tag, category, topic_error = tree_filters.parse_topic(cmd, nodes, tree_filters.tags_for(sim))
     if filter_error or topic_error:
         return {"ok": False, "error": filter_error or topic_error}
-    keep = tree_filters.topic_keeper(nodes, tag, category)
+    keep = tree_filters.topic_keeper(nodes, tag, category, tree_filters.tags_for(sim))
     known = tree_filters.known_ids(sim, nodes, startable)
 
     # Blocked, active and done lists come from the tree_filters module.
@@ -870,7 +870,7 @@ def _material_row(row, sim):
                if (row["years_of_supply_it_takes"] or 0.0) >= NEVER_PRODUCED_YEARS else {}),
             **({"own_unit": own_unit}
                if (own_unit := own_unit_quantities(row["material"], row["needed_tonnes"], row["held_tonnes"],
-                                                   row["missing_tonnes"])) else {}),
+                                                   row["missing_tonnes"], None if sim is None else sim.view("mods_directory")())) else {}),
             "own_supply_tonnes_per_year": round(row["own_supply_tonnes_per_year"], 3),
             **({"scarcity_note": "your own output of %s of %s counts as supply against the demand "
                                  "on it, which lowers the premium on anything you still buy"

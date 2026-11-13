@@ -53,14 +53,24 @@ class ClearLandTests(unittest.TestCase):
         self.assertEqual(rents, sorted(rents))
         self.assertGreater(rents[-1], 0.0)
 
-    def test_a_land_short_tile_charges_scarcity_rent_and_grants_a_share(self):
+    def test_a_land_short_tile_charges_the_surplus_of_the_use_left_out(self):
         shares, fertilities = band_spread()
         result = clear_land({"t": 100.0}, [demand(hectares=300.0)])
         self.assertAlmostEqual(result.granted_hectares["p1"], 100.0)
         differential = sum(100.0 * share * VALUE * (fertility - fertilities[-1])
                            for share, fertility in zip(shares, fertilities)) / 100.0
-        scarcity = land_market.LAND_SCARCITY_RENT_SHARE * (VALUE * fertilities[-1] - COST)
-        self.assertAlmostEqual(result.rent_per_hectare_by_tile["t"], differential + scarcity)
+        surplus_on_marginal_land = VALUE * fertilities[-1] - COST
+        self.assertAlmostEqual(result.rent_per_hectare_by_tile["t"], differential + surplus_on_marginal_land)
+
+    def test_the_scarcity_rent_is_the_best_use_left_out_not_a_share_of_the_worst_land(self):
+        rich = LandDemand("rich", "t", 100.0, 200.0, COST)
+        poor = LandDemand("poor", "t", 100.0, VALUE, COST)
+        both = clear_land({"t": 100.0}, [rich, poor])
+        only_poor_left_out = clear_land({"t": 100.0}, [LandDemand("rich", "t", 100.0, 200.0, COST)])
+        self.assertEqual(both.granted_hectares["rich"], 100.0)
+        self.assertEqual(both.granted_hectares["poor"], 0.0)
+        # the poor use is left out and would pay its surplus on the marginal land; no demand is left out when only the rich asks
+        self.assertGreater(both.rent_per_hectare_by_tile["t"], only_poor_left_out.rent_per_hectare_by_tile["t"])
 
     def test_the_grant_is_shared_in_proportion_to_demand(self):
         result = clear_land({"t": 100.0}, [demand("a", hectares=100.0), demand("b", hectares=300.0)])
@@ -128,8 +138,23 @@ def economy_of(arable_by_tile, runs_by_tile):
         book.transfer(Transfer(EDGE_MINT, producer_id, "coin", 1e6, "opening"))
     record = SimpleNamespace(producers=ProducerStore(producers), book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
     titles.seed(record)
-    setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run=LAND_PER_RUN, currency_id="coin")
+    setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run=LAND_PER_RUN, currency_id="coin", harvest_share_by_good={})
     return setup, record
+
+
+class DemandNetOfHarvestTaxTests(unittest.TestCase):
+    def value_per_hectare(self, share_by_good):
+        setup, record = economy_of({"short": 100.0}, {"short": 300.0})
+        setup.harvest_share_by_good = share_by_good
+        view = View({"grain": 1.0}, {"hand": 0.5})
+        demands = land_market.demands_of(setup, record, view, {"producer:short": 300.0})
+        return demands[0].output_value_per_hectare
+
+    def test_a_producer_values_a_hectare_at_what_the_harvest_leaves_it(self):
+        self.assertAlmostEqual(self.value_per_hectare({"grain": 0.25}), 0.75 * self.value_per_hectare({}))
+
+    def test_a_tax_on_a_good_it_does_not_grow_changes_nothing(self):
+        self.assertAlmostEqual(self.value_per_hectare({"barley": 0.5}), self.value_per_hectare({}))
 
 
 class SettleYearTests(unittest.TestCase):

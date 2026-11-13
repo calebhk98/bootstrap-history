@@ -6,7 +6,7 @@ from .commands import (BankStock, ChangeStock, CloseCashPeriod, CreditSeat, Debi
 from .ledger import MONEY, STOCK, Ledger
 from .state import LedgerSeat, LedgerWorld
 
-LEGACY_READS = ("cast", "cast_state", "seat_list", "year")
+LEGACY_READS = ("cast", "cast_state", "seat_list", "year", "commodity_record", "material_commodity_map")
 
 MODULE_SPECS = (ModuleSpec(
 	"ledger", Ledger, channels=(MONEY, STOCK), world_state=LedgerWorld, seat_state=LedgerSeat,
@@ -14,6 +14,8 @@ MODULE_SPECS = (ModuleSpec(
 		# not cached: the purse is an account in the actors' book, which its own owner moves too, and the opening snapshot and the
 		# cash book answer by the year, which the ledger's channels do not carry
 		ViewSpec("goods_stock", "goods_stock", kind=KEYED, channels=(STOCK,), seat_scoped=True, cached=False),
+		ViewSpec("goods_pool_stock", "goods_pool_stock", kind=KEYED, channels=(STOCK,), seat_scoped=True, cached=False),
+		ViewSpec("held_by_form", "held_by_form", kind=KEYED, channels=(STOCK,), seat_scoped=True, cached=False),
 		ViewSpec("acting_balance", "acting_balance", channels=(MONEY,), seat_scoped=True, cached=False),
 		ViewSpec("seat_balance", "seat_balance", kind=KEYED, channels=(MONEY,), cached=False),
 		ViewSpec("cash_book", "cash_book", channels=(MONEY,), seat_scoped=True, cached=False),

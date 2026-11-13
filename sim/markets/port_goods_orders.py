@@ -19,7 +19,6 @@ from sim.economy import api as economy_api
 from sim.economy.api import EDGE_EXCHANGE, EDGE_LEGACY, AgentOrders, Bid, GoodsMove, Offer, Transfer
 from sim.ledger.api import ChangeStock, PayEdge, ReceiveFromEdge
 from sim.refusal import Refusal
-from .unit_mass import tonnes_per_unit
 
 from . import port_staff
 
@@ -37,8 +36,8 @@ def sale_account(seat_id, index):
 # ---- the posted orders (the port's stored record) ----
 
 def add_order(stored, seat_id, order):
-    """The seat's order, {"side": "buy"|"sell", "material", "good", "stock_key", "tonnes", "limit_per_tonne", "carriage_per_tonne",
-    "cost_factor", "project"}, waits for the year's clearing. A buy's limit is the market price per tonne at most; carriage and
+    """The seat's order, {"side": "buy"|"sell", "material", "good", "stock_key" (the pool), "form_key" (the ledger key the tonnes move
+    in), "tonnes", "limit_per_tonne", "carriage_per_tonne", "cost_factor", "project"}, waits for the year's clearing. A buy's limit is the market price per tonne at most; carriage and
     the cost factor are charged on the tonnes that arrive. The order gets a unique "order_id", carried into its result so the
     one who placed it finds it again; that id is returned."""
     order["order_id"] = stored["next_order_id"] = stored.get("next_order_id", 0) + 1
@@ -71,6 +70,12 @@ def posted_tonnes(stored, seat_id, side, stock_key):
     """Tonnes of a commodity the seat has ordered to buy or sell and the year's clearing has not yet settled."""
     return sum(order["tonnes"] for order in stored.get("seat_orders", {}).get(seat_id, ())
                if order["side"] == side and order["stock_key"] == stock_key)
+
+
+def posted_form_tonnes(stored, seat_id, side, form_key):
+    """Tonnes of one form of a pool (a ledger key) the seat has ordered to buy or sell and the year's clearing has not yet settled."""
+    return sum(order["tonnes"] for order in stored.get("seat_orders", {}).get(seat_id, ())
+               if order["side"] == side and order.get("form_key", order["stock_key"]) == form_key)
 
 
 def traded_tonnes(stored, seat_id, side):
@@ -126,7 +131,7 @@ def post(sim, economy, orders_by_seat, tile_of):
             entries = posted.setdefault(seat_id, [])
             for index, order in enumerate(orders):
                 good = order["good"]
-                per_unit = None if good is None or good not in traded else tonnes_per_unit(good)
+                per_unit = None if good is None or good not in traded else sim.tonnes_per_unit(good)
                 if per_unit is None:
                     entries.append({"refused": refused(order, "not_traded", "%s is not traded in the economy." % order["material"])})
                     continue
@@ -149,11 +154,11 @@ def post(sim, economy, orders_by_seat, tile_of):
                         Bid(account, good, area, tile, 0.0, units, price, 0.0, budget, maximum_price=price))
                     entries.append({"order": order, "account": account, "extra": extra, "budget": budget})
                 else:
-                    tonnes = min(order["tonnes"], sim.materials.stock_t(order["stock_key"]))
+                    tonnes = min(order["tonnes"], sim.materials.form_stock_t(order["form_key"]))
                     if tonnes <= 0.0:
                         entries.append({"refused": refused(order, "not_held", "no %s is held to sell." % order["material"])})
                         continue
-                    moved = sim.send(ChangeStock(order["stock_key"], -tonnes))
+                    moved = sim.send(ChangeStock(order["form_key"], -tonnes))
                     if isinstance(moved, Refusal):
                         entries.append({"refused": refused(order, "not_held", moved)})
                         continue
@@ -184,7 +189,7 @@ def settle(sim, economy, posted):
                 for tile, quantity in sorted(tiles.items()):
                     if quantity > 0.0:
                         moves.append(GoodsMove(entry["account"], EDGE_LEGACY, good, tile, quantity, "seat goods delivered"))
-                        tonnes += quantity * (tonnes_per_unit(good) or 0.0)
+                        tonnes += quantity * (sim.tonnes_per_unit(good) or 0.0)
             money = max(0.0, book.balance(entry["account"], currency))
             if money > 0.0:
                 transfers.append(Transfer(entry["account"], EDGE_EXCHANGE, currency, money, "exchange"))
@@ -227,7 +232,7 @@ def settle(sim, economy, posted):
                 trade["sold"][key] = trade["sold"].get(key, 0.0) + sold
                 result.update(sold_tonnes=sold, proceeds=money)
             if stocked > 0.0:
-                refusals.append(sim.send(ChangeStock(key, stocked)))
+                refusals.append(sim.send(ChangeStock(order["form_key"], stocked)))
             refused_posting = next((reply for reply in refusals if isinstance(reply, Refusal)), None)
             if refused_posting is not None:
                 result["refused"] = {"cause": "settlement_refused", "text": str(refused_posting)}

@@ -31,6 +31,10 @@ class CountryPeople(SharedPart):
 	def literacy(self, field: str) -> float:
 		return CountryLiteracy(self.country_strata()).get(field)
 
+	def urban_mortality_premium(self) -> None:
+		"""A country does not follow its towns' mortality: no figure."""
+		return None
+
 	def frontier_disease_loss(self) -> None:
 		"""A country does not follow its regions' disease: no figure."""
 		return None

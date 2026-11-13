@@ -10,9 +10,11 @@ QUICK_TOPIC = True
 
 import math
 import unittest
+from unittest import mock
 
 import numpy as np
 
+from sim.economy.ask_ceiling import AskAlternatives
 from sim.economy import expansion_price, firm_finance, firm_year, producers, producers_close, year_close
 from sim.economy.close_kernel import REQUEST_EXPAND, REQUEST_NONE, STATE_OK
 from sim.economy.close_pack import pack
@@ -21,6 +23,11 @@ from sim.economy.expected_sales import market_capacities
 from sim.economy.producers import live_input_prices, live_wages
 from sim.economy.year_arrays import YearArrays
 from sim.tests.year_close_fixture import economy_of
+
+def written_out_multiple(_self, good, tile):
+    """The width of the band above cost the buyers give, a fixed figure per good and tile in place of the year's prices."""
+    return 1.0 + (len(good) + len(tile)) % 4 * 0.75
+
 
 STATES = ("ok", "crisis", "illiquid", "insolvent")
 SHARE = 0.9
@@ -51,13 +58,14 @@ def old_close(setup, record, view, ledger, area_map, producer_id):
         [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],
         {good: spec.service_life_years for good, spec in setup.specs.items()}, firm_finance.interest_due(loans, producer_id), demand,
         spoilage={good: setup.specs[good].spoilage_per_year for good in recipe.outputs if good in setup.specs},
-        inputs=inputs, wages=wages)
+        inputs=inputs, wages=wages, ask_multiples={good: written_out_multiple(None, good, producer.tile) for good in recipe.outputs})
     year = None
     if not closed.exited:
         closed, _paid, year = firm_year.settle_year(setup, record, view, producer, closed, recipe, revenue, costs, loans, inputs, wages)
     return closed, year, demand, here
 
 
+@mock.patch.object(AskAlternatives, "multiple", written_out_multiple)
 class KernelEqualsThePerProducerClose(unittest.TestCase):
     def test_every_producer_closes_as_the_python_close_does(self):
         compared = exits = bankrupt = expansions = 0

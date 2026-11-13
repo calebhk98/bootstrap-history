@@ -508,7 +508,7 @@ Left from the passes and sweeps above, not owner questions:
 
 - `RESPEND_APPORTIONED_WANTED_SHARE` (`sim/economy/goods_respend_year.py`) retires when each adding bid's own wanted
   quantity replaces the pro rata share at one price (its retire text names this complaint).
-- `Purses.pay_up_to` still has callers (`bonded_sale.py`, `stratum_year.py`); sweep 4 found its retry path broken and no
+- `pay_up_to` (now the function in `sim/agents/ledger.py`, not a `Purses` method) still has callers (`bonded_sale.py`, `country_money.py`, `government.py`; `stratum_year.py` no longer calls it); sweep 4 found its retry path broken and no
   later sweep re-checked it.
 - Tool gaps: `check_record_owners` matches by parameter name and `check_module_reads` by regular expression.
 - The slow tier (`python3 -m sim.tests --slow`), the protocol goldens, the shipped openings and the Rome spin-up trace

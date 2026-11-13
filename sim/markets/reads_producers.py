@@ -1,6 +1,5 @@
 """What the agent economy answers about its producers and the people who work for them. Part of the port."""
 from sim.economy import api as economy_api
-from .unit_mass import tonnes_per_unit
 
 
 class ProducerReads:
@@ -34,7 +33,7 @@ class ProducerReads:
             return 0.0
         economy = self._agent.economy()
         units = economy_api.capacity_units_by_material(economy)       # summed in id order, kept while the producers are unchanged
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._agent.tonnes_per_unit(material)
         return 0.0 if per_unit is None else units.get(material, 0.0) * per_unit
 
     def worker_years_by_recipe(self):
@@ -63,7 +62,7 @@ class ProducerReads:
     def output_tonnes_of(self, material):
         """{tile: tonnes of `material` the producers made there last year}, in tile order, for every tile that made anything; zero
         where the material has no mass."""
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._agent.tonnes_per_unit(material)
         units = economy_api.output_of(self._agent.economy(), material)
         return {tile: 0.0 if per_unit is None else made * per_unit for tile, made in units.items()}
 

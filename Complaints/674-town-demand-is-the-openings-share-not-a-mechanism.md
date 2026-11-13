@@ -5,7 +5,7 @@
 Left over from 603. A region's urban people are never more than its farms' surplus plus what it can carry in
 (`sim/world/urban_share.py`), but below that ceiling the share is the civilisation's typed `urban_fraction`, read once at the opening
 and kept as each region's share of its people (`state.population.urban_share_of_people`). The ceiling is far above the
-typed share (`python3 -m sim.tests.urban_share_opening` prints both), so food rarely binds in a baseline and the share does not rise
+typed share (the script `sim.tests.urban_share_opening` that printed both was removed and has no replacement), so food rarely binds in a baseline and the share does not rise
 or fall with the things that build towns.
 
 **What it would take.** A demand side from lower-level state: the state's taxes and the landowners' rents spent in a
@@ -16,6 +16,6 @@ graveyard effect. Then the typed figure is only a validation. Depends on 536 and
 **Heuristic to retire.** A region's opening share of its people in town is held for the whole game.
 
 Test migration (slow-test overhaul): `test_urban_share_scenario` is deleted. Whether a civilisation's computed opening share sits inside its sourced
-band (`data/world/urban_share_bands.json`) and whether coastal towns feed more than inland ones are read off the opening by
-`python3 -m sim.tests.urban_share_opening [civilisation_id ...]` (the `inside_band` field); the rules are `test_urban_share_rules`, and the
+band (`data/world/urban_share_bands.json`) and whether coastal towns feed more than inland ones were read off the opening by
+`sim.tests.urban_share_opening` (removed; its `inside_band` field has no replacement command); the rules are `test_urban_share_rules`, and the
 typed-figure-read-once and shrinking-ceiling wiring is `test_urban_share_wiring`.

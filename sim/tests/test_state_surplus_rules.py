@@ -13,7 +13,8 @@ from sim.agents.government_granary import Granary
 from sim.agents.edges import EDGE_BUILDERS
 from sim.agents.purses import Purses
 from sim.agents.records import ActorRecord
-from sim.agents.tuning_spending import MASONRY_PERSON_YEARS_PER_M2, RESERVE_CEILING_YEARS_OF_NEED
+from sim.agents import state_masonry
+from sim.agents.tuning_spending import RESERVE_CEILING_YEARS_OF_NEED
 from sim.finance.api import rules
 from sim.finance.constants import LENDABLE_RESERVE_SHARE
 
@@ -72,7 +73,7 @@ class SurplusSpending(unittest.TestCase):
         work = state_works.WORKS[-1]
         gap = 10.0
         surplus_spent(world, [(work, gap)])
-        paid = gap * MASONRY_PERSON_YEARS_PER_M2 * WAGE
+        paid = gap * state_masonry.wage_cost_per_square_metre(world)
         self.assertAlmostEqual(world.state.record.outlays["building " + work.name], paid)
         self.assertAlmostEqual(world.state.money, 1.0e9 - paid)
         self.assertAlmostEqual(world.setting.edge(EDGE_BUILDERS).balance(), paid)

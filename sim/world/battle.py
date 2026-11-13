@@ -72,10 +72,11 @@ def terrain_factor(ruggedness: float, fortification: float = 0.0) -> float:
 
 
 def effective_strength(soldiers: float, equipment_kg: float, reference_kg: float, supply_state: float,
-                       terrain: float = 1.0) -> float:
-    """Numbers times equipment quality times supply state (share of its ration met, 0 to 1) times terrain."""
+                       terrain: float = 1.0, readiness: float = 1.0) -> float:
+    """Numbers times equipment quality times supply state (share of its ration met, 0 to 1) times readiness (drill and
+    morale, 0 to 1) times terrain."""
     return (max(0.0, soldiers) * equipment_quality(equipment_kg, reference_kg)
-            * max(0.0, min(1.0, supply_state)) * max(0.0, terrain))
+            * max(0.0, min(1.0, supply_state)) * max(0.0, min(1.0, readiness)) * max(0.0, terrain))
 
 
 def attacker_win_probability(attacker: float, defender: float) -> float:

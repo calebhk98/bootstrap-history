@@ -128,21 +128,28 @@ def opening_fleet(setup, record, wear, final_value_per_tonne: float) -> List[Goo
     return moves
 
 
-def endow(setup, record, carriage, prices: Mapping[GoodId, float], final_by_tile) -> None:
-    """Give the merchants their opening fleets, sized to the opening's trade: a tonne of what the households buy is
-    worth the national demand's value over its mass."""
-    if not carriage_wear.wears(setup):
-        return
+def value_per_tonne(setup, prices: Mapping[GoodId, float], final_by_tile) -> float:
+    """What a tonne of the goods the households buy is worth: the national demand's value over its mass; 0 when nothing is priced."""
     totals: Dict[GoodId, float] = {}
     for demand in final_by_tile.values():
         for good, quantity in demand.items():
             totals[good] = totals.get(good, 0.0) + quantity
     priced = {good: quantity for good, quantity in totals.items() if good in setup.specs and good in prices}    # a good with no price has no value to count
     tonnes = math.fsum(quantity * setup.specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE for good, quantity in priced.items())
-    value = math.fsum(quantity * prices[good] for good, quantity in priced.items())
     if tonnes <= 0.0:
+        return 0.0
+    return math.fsum(quantity * prices[good] for good, quantity in priced.items()) / tonnes
+
+
+def endow(setup, record, carriage, prices: Mapping[GoodId, float], final_by_tile) -> None:
+    """Give the merchants their opening fleets, sized to the opening's trade: a tonne of what the households buy is
+    worth the national demand's value over its mass."""
+    if not carriage_wear.wears(setup):
         return
-    moves = opening_fleet(setup, record, carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance), value / tonnes)
+    per_tonne = value_per_tonne(setup, prices, final_by_tile)
+    if per_tonne <= 0.0:
+        return
+    moves = opening_fleet(setup, record, carriage_wear.Wear(setup, carriage, record.carriage.area_imbalance), per_tonne)
     if moves:
         record.book.move_many(moves)
 

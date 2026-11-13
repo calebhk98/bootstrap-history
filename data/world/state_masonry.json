@@ -1,0 +1,4 @@
+{
+ "_note": "The laid-wall service (data/production) whose labour the state's masonry works are counted in: a square metre of public building takes the labour of the volume of laid wall it holds (sim/world/state_masonry.py). The service is a recipe, so the trades that raise the works, and the hours they take, come from the same data that households' shelter is built from.",
+ "service": "stone_wall_m3"
+}

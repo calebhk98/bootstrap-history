@@ -29,11 +29,11 @@ def decide_reservations(context, good: str, pack: BatchPack) -> numpy.ndarray:
          spoilage, missing_count, missing_tiles) = decide_inputs(
             pack.offer_rows, pack.offer_ptr, offers, producer_rows, producers.recipe_row, producers.workshops, producers.expected_sales,
             producers.yield_factor, costs.slot_of, matrices.goods.row[good], costs.cost, costs.input_share, costs.expected, matrices.outputs,
-            context.band_multiple_table(), spec.spoilage_per_year if spec is not None else 0.0)
+            context.band_multiple_table(good), spec.spoilage_per_year if spec is not None else 0.0)
         if missing_count == 0:
             break
         for tile in numpy.flatnonzero(missing_tiles).tolist():
-            context.note_band_multiple(tile)
+            context.note_band_multiple(tile, good)
     floors, flexibles, budgets, references, exponents, capped, tier_ptr, tier_values, maximums = pack.demand
     steps = price_setting
     return goods_year_kernel.decide_markets(

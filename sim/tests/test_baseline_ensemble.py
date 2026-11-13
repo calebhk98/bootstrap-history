@@ -9,7 +9,7 @@ import tempfile
 
 from .harness import check
 
-from sim.engine import baseline_ensemble
+from sim.engine import baseline_ensemble, baseline_game
 from sim.ui.proto import screen_divergence
 from sim.tests.ui_stand_in import Game
 
@@ -20,10 +20,15 @@ def stub_runner(civilisation_id, seed, years):
 	for offset in range(years + 1):
 		rows.append({"year": 100 + offset, "population": 1000.0 + seed * offset, "wage_per_hour": 1.0,
 					 "literacy_general": 0.1, "literacy_elite": 0.9, "territory_tiles": 10,
+					 "bonded_share": 0.1 - 0.001 * seed * offset,
 					 "technologies": sorted(["opening_tech"] + (["early_tech"] if offset >= 2 else [])
 											+ (["late_tech"] if offset >= 3 * seed else []))})
 	return rows
 
+
+rows = [{"members": 80.0, "bonded": False}, {"members": 10.0, "bonded": True}, {"members": 10.0, "bonded": False}]
+check("the bonded share is the bonded members over all counted", baseline_game.bonded_share(rows) == 0.1)
+check("no people counted gives a share of zero", baseline_game.bonded_share([]) == 0.0)
 
 ensemble = baseline_ensemble.run_ensemble("fixture_civ", [1, 2, 3, 4, 5], 6, runner=stub_runner)
 check("the ensemble records its runs and horizon", ensemble["runs"] == 5 and ensemble["years"] == 6
@@ -31,6 +36,10 @@ check("the ensemble records its runs and horizon", ensemble["runs"] == 5 and ens
 population = ensemble["metrics"]["population"]
 check("each metric has a value per year from the opening", len(population["median"]) == 7)
 check("the median at an offset is the middle run", population["median"][4] == 1000.0 + 3 * 4)
+bonded = ensemble["metrics"]["bonded_share"]
+check("the bonded share is tabulated per year, the median at an offset being the middle run",
+	len(bonded["median"]) == 7 and abs(bonded["median"][4] - (0.1 - 0.001 * 3 * 4)) < 1e-12 and bonded["p10"][4] < bonded["p90"][4])
+check("the bonded share is bounded by the runs' own values at the opening", bonded["p10"][0] == bonded["p90"][0] == 0.1)
 check("the lower and upper bands bracket it", population["p10"][4] <= population["median"][4] <= population["p90"][4]
 	and population["p10"][4] < population["p90"][4])
 check("technologies hold the offset each run first held them",

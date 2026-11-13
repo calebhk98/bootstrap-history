@@ -9,14 +9,12 @@ back each year and drawn from the tile's stock (the resources module's `timber_f
 from sim.economy.api import SiteLimit
 from sim.resources.api import FellTimber, RegrowTimber
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
-from sim.world import demand
 
 TIMBER_SOURCE = "standing timber"
 
 
-def timber_recipes(outputs_by_recipe):
+def timber_recipes(outputs_by_recipe, production):
     """{recipe id: (kg felled a run, labour hours a run)} for the recipes that fell standing timber."""
-    production = demand.production_data()
     found = {}
     for recipe_id, outputs in sorted(outputs_by_recipe.items()):
         entry = production.get(recipe_id) or {}
@@ -35,7 +33,7 @@ def haul_hours_per_tonne_km(sim):
 
 def limits(sim, outputs_by_recipe, tile_ids):
     """[SiteLimit] for the timber recipes over `tile_ids`: runs the standing wood allows, yield cut by the haul."""
-    recipes = timber_recipes(outputs_by_recipe)
+    recipes = timber_recipes(outputs_by_recipe, sim.production_catalog())
     if not recipes:
         return []
     felled = sim.farm.timber_felled()
@@ -56,7 +54,7 @@ def limits(sim, outputs_by_recipe, tile_ids):
 
 def fell(sim, extraction, outputs_by_recipe):
     """Take what the firms felled last year ({(recipe id, tile): runs}) from the tiles' stock."""
-    recipes = timber_recipes(outputs_by_recipe)
+    recipes = timber_recipes(outputs_by_recipe, sim.production_catalog())
     if not recipes:
         return
     cuts = tuple((tile, runs * recipes[recipe_id][0] / KILOGRAMS_PER_TONNE)

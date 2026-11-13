@@ -25,6 +25,10 @@ class Site:
 	def needs(self) -> Any:
 		return self.world.needs
 
+	def production_catalog(self) -> Any:
+		"""The production entries of the mods directory this game is over."""
+		return production_data(self.needs.mods_directory())
+
 	def worked_hectares(self, node_id: str, capacity: float = 1.0) -> float:
 		"""Hectare-years of land a year of a concern run at `capacity` times its founding size works: for
 		each production entry the concern gates that works land, its declared yearly output over the
@@ -32,12 +36,13 @@ class Site:
 		or whose entries work no land."""
 		node = self.world.setting.nodes[node_id]
 		hectares = 0.0
-		for entry in production_data().values():
+		production = self.production_catalog()
+		for entry in production.values():
 			land_per_batch = float(entry.get("land_hectare_years") or 0.0)
 			if entry.get("requires_node") != node_id or land_per_batch <= 0.0:
 				continue
 			for material, kilograms in sorted((entry.get("outputs") or {}).items()):
-				tonnes = supply.concern_output_tonnes(node, node_id, material, 1.0, 1.0)
+				tonnes = supply.concern_output_tonnes(node, node_id, material, 1.0, 1.0, production=production)
 				if tonnes > 0.0 and kilograms > 0.0:
 					hectares += tonnes * KILOGRAMS_PER_TONNE / kilograms * land_per_batch
 					break

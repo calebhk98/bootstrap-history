@@ -205,7 +205,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 2000.0,
-     "capital_basis": "Silver is dissolved in nitric acid in glazed vessels and crystallised out of the light for photography and mirror-silvering; the trade ran to a few tonnes a year at most. Masses are reasoned estimates.",
+     "capital_basis": "Silver is dissolved in nitric acid in glazed vessels and crystallised out of the light for photography and mirror-silvering; the trade ran to a few tonnes a year at most. Masses are reasoned estimates. Masses and output are the author's estimate (grade D, no opened figure bounds the mass or capacity); no page opened gave silver nitrate plant sizes. Pass 10: still D. Missing: batch size and vessel volumes for silver nitrate, and room size (no opened page).",
      "conf": "D"
     }
    ],
@@ -237,7 +237,7 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Bone ash is digested in dilute sulphuric acid in wooden vats lined with lead, which resists the acid; the liquor is run off the gypsum and boiled down in lead pans. A works of this size makes about a hundred tonnes of acid a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "Bone ash is digested in dilute sulphuric acid in wooden vats lined with lead, which resists the acid; the liquor is run off the gypsum and boiled down in lead pans. A works of this size makes about a hundred tonnes of acid a year. Masses are order-of-magnitude figures. Lead lining weight: chestofbooks.com Estimating Sheet Lead Work: 6 lb and 8 lb sheet lead are the weights generally used for lining tanks, 6 lb meaning 6 lb per square foot; 2500 kg is 5500 lb, about 920 square feet of 6 lb lining. Output is the author's estimate (grade D, no opened figure bounds the mass or capacity). Lead labour rate now opened: fixing sheet lead covering is 1.15 to 1.25 m2/h (code 5) and 1.35 to 1.45 m2/h (code 6) for a squad of plumber and mate on flat work (table 'Outputs in m2/hour for fixing lead sheet covering', constructiontechnology2015.blogspot.com/2015/08/roof-coverings-part-03-lead-sheet.html); it is roofing, with no burned or wiped seam time, so it only bounds a lining. Pass 10: still D. Missing: digest batch size and cycle time, hence vat and pan area; output is the author's.",
      "conf": "D"
     }
    ],
@@ -273,7 +273,7 @@
      },
      "service_life_years": 10,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Soda ash is boiled with slaked lime in iron or timber tanks, the lye settled and drawn off, and boiled down in cast-iron pans, which corrode within years; a works of this size makes about a hundred tonnes of caustic a year, a reasoned figure for an early soap-maker's supplier. Masses are order-of-magnitude figures.",
+     "capital_basis": "Soda ash is boiled with slaked lime in iron or timber tanks, the lye settled and drawn off, and boiled down in cast-iron pans, which corrode within years; a works of this size makes about a hundred tonnes of caustic a year, a reasoned figure for an early soap-maker's supplier. Masses are order-of-magnitude figures. Tank type as for lixiviation in lenntech.com Soda industries (www.lenntech.com/chemistry/soda-industries.htm); masses and output are the author's estimate (grade D, no opened figure bounds the mass or capacity). Plate labour now opened: 5 tons a year per man in boiler assembly (Piggott in oldcopper.org/broseley/journals/15.html), 400 h a tonne at 2000 h a year. Pass 10: still D. Missing: causticising batch size and pan area; Britannica 1911 has cast-iron finishing pots of 10 to 20 tons for caustic liquor but no works output.",
      "conf": "D"
     }
    ],
@@ -309,7 +309,7 @@
      },
      "service_life_years": 25,
      "annual_output_at_basis": 60000.0,
-     "capital_basis": "One mill house with a pair of edge-runners incorporates about two hundred kilograms of powder a day, so on the order of sixty tonnes in a working year; the mill is built light of timber so an explosion does little harm and is rebuilt or repaired through the decades. Masses are order-of-magnitude figures.",
+     "capital_basis": "One mill house with a pair of edge-runners incorporates about two hundred kilograms of powder a day, so on the order of sixty tonnes in a working year; the mill is built light of timber so an explosion does little harm and is rebuilt or repaired through the decades. Masses are order-of-magnitude figures. Throughput check: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Gunpowder) says incorporation takes about four hours under two heavy iron wheels, so a mill running two charges a day at about 100 kg a charge gives the 200 kg a day, about 60 tonnes a working year at 300 days; the charge size and building masses are the author's estimate (grade D, no opened figure bounds the mass or capacity). Pass 10: still D. Missing: runner stone mass, mill house size and charge. A search result (not an opened page) gave a 50 lb charge per bed, 3 hours for cannon and 5 for rifle powder, and about 100,000 lb a year from one pair of runners (Popular Science Monthly vol 6 page 743); the page returned 401, so it is not a citation.",
      "conf": "D"
     }
    ],
@@ -343,7 +343,7 @@
      },
      "service_life_years": 15,
      "annual_output_at_basis": 100000.0,
-     "capital_basis": "Boric acid is dissolved with soda ash in a hot lead-lined pan and the borax crystallised out in tanks; lead resists the alkaline liquor. A refinery of this size turns out about a hundred tonnes a year. Masses are order-of-magnitude figures.",
+     "capital_basis": "Boric acid is dissolved with soda ash in a hot lead-lined pan and the borax crystallised out in tanks; lead resists the alkaline liquor. A refinery of this size turns out about a hundred tonnes a year. Masses are order-of-magnitude figures. Process: Britannica 1911 (en.wikisource.org/wiki/1911_Encyclopædia_Britannica/Borax) says borax is made by dissolving soda in lead-lined steam-heated pans and adding boric acid; chestofbooks.com Estimating Sheet Lead Work: 6 lb and 8 lb sheet lead are the weights generally used for lining tanks, 6 lb meaning 6 lb per square foot; 1000 kg is 2200 lb, about 370 square feet of 6 lb lining. Output is the author's estimate (grade D, no opened figure bounds the mass or capacity). Lead labour rate now opened: fixing sheet lead covering is 1.15 to 1.25 m2/h (code 5) and 1.35 to 1.45 m2/h (code 6) for a squad of plumber and mate on flat work (table 'Outputs in m2/hour for fixing lead sheet covering', constructiontechnology2015.blogspot.com/2015/08/roof-coverings-part-03-lead-sheet.html); it is roofing, with no burned or wiped seam time, so it only bounds a lining. Pass 10: still D. Missing: borax batch size and crystallising time, hence tank area; output is the author's.",
      "conf": "D"
     }
    ],

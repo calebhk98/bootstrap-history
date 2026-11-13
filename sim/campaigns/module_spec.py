@@ -6,7 +6,7 @@ from sim.assembly.api import KEYED, ModuleSpec, PhaseHook, ViewSpec
 from sim.demography.api import AddCaptives
 from sim.hazards.api import RecordWorldEvent
 from sim.land.api import TransferTile
-from sim.polity.api import (CloseSuccessionDispute, RecordRising, RegisterPeople, ReplaceRuler, ResetStateUnrest,
+from sim.polity.api import (AddArmyPlunder, CloseSuccessionDispute, RecordRising, RegisterPeople, ReplaceRuler, ResetStateUnrest,
                             SetGrievanceReference, SetLandTakenMemory, SetTileReadings, StrikeFromForce)
 from sim.stores.api import WriteStore
 
@@ -17,7 +17,7 @@ from .state import CampaignsWorld
 
 READS_BY_OWNER = {
 	"land": ("tile_owner", "tiles_owned_by", "tile_owner_map", "tile_facts", "route_between", "reach_from", "home_modes"),
-	"actors": ("has_state", "country_world", "countries"),
+	"actors": ("has_state", "country_world", "countries", "stratum_grievances"),
 	"polity": ("organised_factions",),
 	"seats": ("played_countries",),
 	"demography": ("food_eaten",),
@@ -36,6 +36,6 @@ MODULE_SPECS = (ModuleSpec(
 	reads=tuple(name for names in READS_BY_OWNER.values() for name in names),
 	sends=(TransferTile, StrikeFromForce, AddCaptives, RecordWorldEvent, RecordConquestContact, WriteStore, SetLandTakenMemory,
 	       RegisterPeople, SetGrievanceReference, ResetStateUnrest, SetTileReadings, RecordRising, ReplaceRuler,
-	       CloseSuccessionDispute),
+	       CloseSuccessionDispute, AddArmyPlunder),
 	phases=(PhaseHook("campaigns", "step_campaigns"), PhaseHook("revolts", "step_revolts")),
 ),)

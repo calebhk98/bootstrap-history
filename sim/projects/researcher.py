@@ -27,7 +27,7 @@ class SeatResearcher:
 		return self._needs.hours_available["scholar_hands" if family == "scholar" else "craft_hands"]
 
 	def held_tonnes(self, material: str) -> float:
-		return self._needs.goods_stock[self._needs.material_pool[material][0]]
+		return self._needs.goods_pool_stock[self._needs.material_pool[material][0]]
 
 	def copy_budget(self, world: Any) -> float:
 		"""Cash and credit not already owed on work in hand."""

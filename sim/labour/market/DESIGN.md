@@ -81,7 +81,7 @@ area × trade: `[years_left, people per band, completion_bonus]`. Market wages a
    - The comparison is the log of real expected wage (expected wage over subsistence) in the same trade, less the moving cost in years of subsistence.
    - Only listed routes are considered, so the cost is areas × routes × trades.
 
-6. **Formation** (`formation.py`, `formation_bonded.py`), run last. A (trade, area) where employers want hours and no one
+6. **Formation** (`formation.py`, `formation_year.py`, `formation_buy.py`), run last. A (trade, area) where employers want hours and no one
    works or trains in the trade gets its first hands from the routes that need no teacher.
    - Migrants come first, from the areas that hold the trade, most spare hands first and no more than they can release
      (`spare_people`, `migration_takes`).

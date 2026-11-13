@@ -236,7 +236,7 @@ if MARKER:
 
 def register(api):
     @api.command("hello", group="game", summary="s", usage=["hello"], description="d")
-    def hello(sim, nodes, cmd, ended):
+    def hello(access, cmd, ended):
         return {"ok": True, "greeting": "hi", "mod": api.mod_id}
 '''
 

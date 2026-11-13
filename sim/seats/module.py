@@ -9,6 +9,7 @@ from .founder import Founder
 from .goals import Goals
 from .handover import Handover
 from .holders import Holders
+from .intelligence import Intelligence
 from .run import Run
 from .sight import Sight
 
@@ -20,6 +21,7 @@ class Seats(Module):
         "run": Run,
         "handover": Handover,
         "sight": Sight,
+        "intelligence": Intelligence,
         "dealings": Dealings,
         "goals": Goals,
         "founder": Founder,

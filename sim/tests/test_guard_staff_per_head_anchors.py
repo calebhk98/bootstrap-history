@@ -39,11 +39,8 @@ class GuardStaffPerHead(unittest.TestCase):
 		self.assertGreater(ratio, 0.0)
 		self.assertLess(ratio, max(VILLAGE_HIGH, CAPITAL_ROME))
 
-	@unittest.expectedFailure
 	def test_the_states_guards_per_head_fall_inside_the_sourced_range(self):
-		# Complaint 660 (open): the sizing rule's figure falls far below the lowest sourced density. The anchors are settled
-		# places, not province-wide averages, so the lowest is a generous floor; the gap stays visible until the rule sizes
-		# guards from what they did (patrols per settlement, crimes per district) rather than PATROL_DAYS_PER_PERSON.
+		# PATROL_DAYS_PER_PERSON is set at the lowest sourced density (the nome capital), so the figure sits inside the range.
 		ratio = rome_guards_per_head()
 		self.assertGreaterEqual(ratio, min(NOME_CAPITAL, VILLAGE_LOW, CAPITAL_ROME))
 		self.assertLessEqual(ratio, max(VILLAGE_HIGH, CAPITAL_ROME))

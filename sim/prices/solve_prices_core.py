@@ -54,16 +54,17 @@ def forget_numeraires() -> None:
     _NUMERAIRE_BY_CATALOGUE.clear()
 
 
-def numeraire_trade(production_entries=None, registry=None):
+def numeraire_trade(production_entries=None, registry=None, mods_dir=None):
     """The trade whose hour is the unit every wage is stated in: the trade registry's unskilled one, the same trade
     the economy's labour markets fall back to (`sim.labour.api.trade_of_role`). `registry` is a live one (trade id
-    to its fields); without it the registry is read for `production_entries` (the committed catalogue's when none)."""
+    to its fields); without it the registry is read for `production_entries` (the catalogue of `mods_dir` when none)."""
     if registry is None:
-        entries = engine_seam.load_production()[0] if production_entries is None else production_entries
+        entries = engine_seam.load_production(mods_dir)[0] if production_entries is None else production_entries
         cached = _NUMERAIRE_BY_CATALOGUE.get(id(entries))
         if cached is not None and cached[0] is entries:
             return cached[1]
-        loaded = engine_seam.load_trade_registry(REPO_ROOT, entries, nodes=engine_seam.load_mod_tree_nodes(REPO_ROOT))
+        loaded = engine_seam.load_trade_registry(
+            REPO_ROOT, entries, nodes=engine_seam.load_mod_tree_nodes(REPO_ROOT, mods_dir), mods_dir=mods_dir)
         registry = {trade_id: {"family": trade.family, "training_years": trade.training_years, **trade.extra}
                     for trade_id, trade in loaded.items()}
         trade = trade_of_role(registry, "unskilled")
@@ -309,18 +310,18 @@ def meets_capability_floor(material, entry, floor_by_carrier):
 # for why algorithmic and computational parameters get their own file.
 
 
-def wage_ratios_by_trade(prices_json, unskilled_trade=None):
+def wage_ratios_by_trade(prices_json, unskilled_trade=None, mods_dir=None):
     """{trade: hours of unskilled labour one hour of this trade is worth}.
 
     The wage document is money per hour per trade, with no notion of
     unskilled labour as a unit. Dividing every rate
-    by the unskilled trade's rate (`unskilled_trade`, default `numeraire_trade()`) turns it into what the design doc
+    by the unskilled trade's rate (`unskilled_trade`, default `numeraire_trade()` over `mods_dir`'s trades) turns it into what the design doc
     calls the numeraire: the unskilled wage is 1.0 by construction, and
     every other trade is stated as how many unskilled hours it is worth,
     which is a ratio the denarii happen to cancel out of.
     """
     wage_table = prices_json["wage_rates_denarii_per_hour"]
-    unskilled_rate = wage_table[unskilled_trade or numeraire_trade()]["rate"]
+    unskilled_rate = wage_table[unskilled_trade or numeraire_trade(mods_dir=mods_dir)]["rate"]
     return {trade: entry["rate"] / unskilled_rate
             for trade, entry in wage_table.items()
             if not trade.startswith("_")}
@@ -819,8 +820,22 @@ def capital_cost_hours_per_unit(capital_goods, current_prices, wage_by_trade, in
 
         yearly_share = stand_yearly_share(
                 interest_rate, service_life_years, capital_good.get("establishment_years") or 0.0)
-        capital_cost_hours += build_cost_hours * yearly_share / capital_good["annual_output_at_basis"]
+        yearly_charge = build_cost_hours * yearly_share - own_births_credit_hours(
+            capital_good, build_materials, service_life_years, current_prices)
+        capital_cost_hours += max(0.0, yearly_charge) / capital_good["annual_output_at_basis"]
     return capital_cost_hours
+
+
+def own_births_credit_hours(capital_good, build_materials, service_life_years, current_prices):
+    """Hours a year of the wear that a stock's own young replace: of each build material the good names in
+    `replaced_by_own_births_per_year` (units a year), the births, up to the units that wear out in a year (the
+    build quantity over the life), are priced at the material's price and taken off the wear. Interest on the
+    stock is left in the charge."""
+    credit = 0.0
+    for material, births in (capital_good.get("replaced_by_own_births_per_year") or {}).items():
+        wears_out = build_materials.get(material, 0.0) / service_life_years
+        credit += min(births, wears_out) * current_prices[material]
+    return credit
 
 
 def batch_energy_cost_hours(entry, current_prices, capability_band_price_by_carrier):
@@ -1078,7 +1093,7 @@ def solve(production_entries, producers_of, resolvable_materials, wage_by_trade,
 
         candidates_by_material = solve_prices_round.round_candidates(
             plans, prices, wage_by_trade, band_price_by_carrier, interest_rate, disposal_costs,
-            reference_price_by_material)
+            reference_price_by_material, producers_of)
 
         prices, final_residual = _solve_round_update_prices(
             resolvable_materials, prices, candidates_by_material, round_damping, chosen_recipe_by_material,

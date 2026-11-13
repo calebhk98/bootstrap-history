@@ -45,7 +45,7 @@ still two code paths, with a grep that finds each (the allowlist test was remove
    as "venture revenue") leaves those concerns out before the ceiling; `revenue()` is still estimate plus the forecast of the
    book concerns, read from last year's sale record with its `sale_basis`, so `ventures`, `why`, `revenue`, `money` and
    `revenue_sources` are unchanged in kind. A concern that offers nothing the economy trades is still paid by the estimate.
-   Measure: `python3 -m sim.tests.income_probe` (opens concerns whose goods the economy trades on a Rome game and prints, per year,
+   Measure: `sim.tests.income_probe` (removed from the repository; `git log -S income_probe` finds its last commits) opened concerns whose goods the economy trades on a Rome game and prints, per year,
    the credits by purpose beside the forecast); run it on `origin/main` and on the branch. The comparison and its meaning are in
    the branch report: the clearing paid several times what the estimate quoted for the one concern that survives staffing,
    which is the 510 opening question (do plants pay their way) showing up in the founder's books.

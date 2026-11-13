@@ -129,21 +129,22 @@ def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, q
 
 
 @njit(**KERNEL)
-def price_after_thin_trade(price, cost, quantity, usual, representative_share, no_offer_share):
+def price_after_thin_trade(price, cost, quantity, usual, representative_share, thin_trade_share):
     """`market_memory_offers.price_after_thin_trade`."""
     if numpy.isnan(price) or numpy.isnan(cost) or cost <= 0.0 or cost >= price or usual <= 0.0:
         return price
     short = 1.0 - quantity / (representative_share * usual)
-    return price + no_offer_share * (short if short > 0.0 else 0.0) * (cost - price)
+    return price + thin_trade_share * (short if short > 0.0 else 0.0) * (cost - price)
 
 
 @njit(**KERNEL)
 def signals(old, was_quote, usual, quiet_years, total, received, wanted_at_old, quote_price, quote_kind, has_bids, offers_left, cost,
-            bid_funded, bid_best, representative_share, resumed_share, no_offer_share):
+            bid_funded, bid_best, representative_share, resumed_share, no_offer_share, thin_trade_share):
     """Per market: (the signal its memory moves toward (NaN: none), the kind of the quote it rests on (`NO_QUOTE` when it rests on trade or
     on nothing), whether it came from trade). A market that traded is weighed against its usual volume or a share of what buyers wanted
     at the old price; one that did not moves toward its quote, which for a market with bids and no offers left is what a maker would
-    have to ask to cover its cost, else the best bid unfilled."""
+    have to ask to cover its cost, else the best bid unfilled. A market with nothing to quote plans from the cost of making the good,
+    taken whole (kind COST_COVERING); with no cost either its signal is NaN and the caller forgets its planning price."""
     markets = len(old)
     signal = numpy.full(markets, numpy.nan)
     kind = numpy.zeros(markets, dtype=numpy.int64)
@@ -156,7 +157,7 @@ def signals(old, was_quote, usual, quiet_years, total, received, wanted_at_old, 
             figure = price_after_trade(old[market], was_quote[market], received[market], total[market], reference, quiet_years[market],
                                        resumed_share)
             if total[market] < representative_share * usual[market]:
-                figure = price_after_thin_trade(figure, cost[market], total[market], usual[market], representative_share, no_offer_share)
+                figure = price_after_thin_trade(figure, cost[market], total[market], usual[market], representative_share, thin_trade_share)
             signal[market] = figure
             continue
         price, code = quote_price[market], quote_kind[market]
@@ -167,6 +168,10 @@ def signals(old, was_quote, usual, quiet_years, total, received, wanted_at_old, 
                 price, code = bid_best[market], BEST_UNFILLED_BID
             else:
                 price, code = numpy.nan, NO_QUOTE
+        if code == NO_QUOTE and not numpy.isnan(cost[market]) and cost[market] > 0.0:      # nothing traded and nothing to quote: plan from the making cost
+            kind[market] = COST_COVERING
+            signal[market] = cost[market]
+            continue
         if code != NO_QUOTE:
             kind[market] = code
             signal[market] = price if numpy.isnan(old[market]) else old[market] + no_offer_share * (price - old[market])

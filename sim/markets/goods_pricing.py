@@ -11,7 +11,6 @@ import math
 
 from sim.constants import declare
 
-from .unit_mass import tonnes_per_unit
 
 # Points along an order at which the economy's response is read; the order's mean climb is their mean.
 PRICE_SLICES = declare(
@@ -38,14 +37,14 @@ class GoodsPricing:
         """Money per tonne it costs the home society to make a material (the cost table); None when no technique
         in reach makes it."""
         cost = self._sim.materials.price_per_unit(material)
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._sim.tonnes_per_unit(material)
         return None if cost is None or per_unit is None else cost / per_unit
 
     def price_at_tile_per_tonne(self, material):
         """Money per tonne to buy a material from the cheapest seller in reach before carriage: the economy's price
         on the acting tile; None when no one in reach sells it."""
         price = self.market.offers.unit_price(material)
-        per_unit = tonnes_per_unit(material)
+        per_unit = self._sim.tonnes_per_unit(material)
         return None if price is None or per_unit is None else price / per_unit
 
     def price_kind(self, material):
@@ -64,6 +63,11 @@ class GoodsPricing:
         """The key the economy trades a material under (a curated commodity is traded as the material it is priced as),
         or None when no one sells it."""
         return self._sim.materials.priced_key(material, self.market.offers.home_prices())
+
+    def sold_as(self, material):
+        """The material a sale of `material` is priced and cleared as: the form it names, or for a pool's own name the form the seat
+        holds (the one its mines raise first). Ore is never priced as bar, nor bar as ore."""
+        return self._sim.materials.sold_material(material)
 
     def _climb(self, material, taken_before, tonnes, selling=False):
         """Mean factor on the price while buying (or selling) `tonnes` more of a material after `taken_before`

@@ -19,6 +19,7 @@ REAL_LAB = dict(NODE["lab"])
 def game(salt=12345, enabled=True, done=(), active=None):
     """What the estimate functions read of a game."""
     return scenario_stand_in.host(fuzzy_estimates=enabled, fuzzy_salt=salt, year=100, done=set(done), active=dict(active or {}),
+                                  trade_records={"smith": None, "mason": None, "potter": None, "scribe": None},
                                   nodes={NODE_ID: NODE, "other_work": dict(NODE, id="other_work")})
 
 

@@ -5,7 +5,7 @@
   "cast": {
     "actors": [
       {"actor_id": "church:home", "kind": "church", "name": "the temples", "members": 6000, "stipend_trade": "scribe", "endowment_hectares": 20000, "tithe_rate": 0.0, "tithe_need": "food"},
-      {"actor_id": "academy:home", "kind": "academy", "name": "the scholars", "members": 5000, "stipend_trade": "scholar", "endowment_hectares": 0, "patronage_rate": 0.8}
+      {"actor_id": "academy:home", "kind": "academy", "name": "the scholars", "members": 30000, "stipend_trade": "scholar", "endowment_hectares": 0, "patronage_rate": 0.8}
     ]
   },
   "bondage_years": 12,
@@ -503,6 +503,8 @@
   "starting_techs": [
     "fud_cattle_herd",
     "fud_pig_herd",
+    "fud_horse_herd",
+    "fud_mule_herd",
     "fud_goat_herd",
     "fud_sheep_flock",
     "bellows_water_blown",
@@ -668,10 +670,11 @@
   },
   "wage_index": 0.7,
   "unsupplied_basket_goods": {
+    "platinum_g": "the platinum-group-metals node is not held at the start and no partner supplies platinum; the ornament need is met by the other ornament metals and goods the society works",
+    "rice_kg": "the rice-cultivation node is not held at the start and no partner supplies rice; households eat the civilisation's own staple until the node is learned",
     "obsidian_blade_kg": "the obsidian blade knapping node is not held and no partner supplies blades; iron, bronze and knapped flint tools meet the implements need",
     "cacao_kg": "an American crop; no partner grows it and the cultivation node is not held, so household demand for it has no supply until a founder brings the stock",
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
-    "cement_portland_kg": "Portland cement is a modern industrial product far past this start; households bid for it only because the need data lists it as shelter",
     "foxglove_leaf_kg": "medical use of foxglove leaf dates from long after this start; the need data lists it for health, so households bid without a technique or tradition to supply it",
     "maize_kg": "an American crop unknown across the Old World before contact; no partner supplies it",
     "mat_sugar": "cane sugar was not made here; where it was known it came from regions the model has no partner for, and the voyage node it is gated on is not held",
@@ -747,8 +750,8 @@
       "basis": "imports_value",
       "rate": 0.05,
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): pass and market dues are attested under the Han but no rate is; a placeholder at a few per cent.",
-        "confidence": "D"
+        "source": "Wikipedia, Economy of the Han dynasty (en.wikipedia.org/wiki/Economy_of_the_Han_dynasty, opened): market officials were charged with 'collecting commercial taxes', and the property tax on merchants was raised in 119 BC 'from 120 coins per 10,000 coins of property to 120 coins per 2,000' (1.2 to 6 per cent of property a year). Wikipedia, Taxation in premodern China (opened) lists the Eastern Han commercial tax as 'None' and gives no customs entry. A few per cent of the value of trade is a ballpark between the two; no Eastern Han duty rate was found.",
+        "confidence": "C"
       }
     },
     {
@@ -756,27 +759,27 @@
       "basis": "exports_value",
       "rate": 0.05,
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): pass and market dues are attested under the Han but no rate is; a placeholder at a few per cent.",
-        "confidence": "D"
+        "source": "Wikipedia, Economy of the Han dynasty (en.wikipedia.org/wiki/Economy_of_the_Han_dynasty, opened): market officials were charged with 'collecting commercial taxes', and the property tax on merchants was raised in 119 BC 'from 120 coins per 10,000 coins of property to 120 coins per 2,000' (1.2 to 6 per cent of property a year). Wikipedia, Taxation in premodern China (opened) lists the Eastern Han commercial tax as 'None' and gives no customs entry. A few per cent of the value of trade is a ballpark between the two; no Eastern Han duty rate was found.",
+        "confidence": "C"
       }
     }
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
-      "confidence": "D"
+      "source": "Academy: Wikipedia, Taixue (en.wikipedia.org/wiki/Taixue, opened): 'The university held 30,000 students and academicians during the 2nd century', a line marked citation needed there; members raised from 5000 to that figure. Temples (6000): ancientwarhistory.com/?p=8439 (opened; a popular-history site, treat with caution) says a reform of 40 BCE abolished '160+ regional shrines' and another in 32 BCE closed '475' shrines, so the state network ran to hundreds in the late Western Han at least and far more with local temples; 6000 in 58 million people is one per 10,000, a ballpark with no count of the Eastern Han network. Ratio check: the academy at 30,000 is 0.05 per cent of 58 million. Only starting sizes are set here; what each collects follows from the land market's rent, the goods tithed and the spread of schooling.",
+      "confidence": "C"
     },
     "starting_interest_rate": {
       "source": "Shiji ch.129 puts a lending return near a fifth a year; Han memorials (Chao Cuo) describe peasant debt doubling within a year, so the spread is wide. Eastern Han specifics are thin.",
       "confidence": "C"
     },
     "starting_tax_share": {
-      "source": "Land tax at a thirtieth of harvest, plus poll tax, a merchant surcharge, and corvee commuted to cash and the salt and iron regime. Merchants were taxed above farmers; the combined share on trading revenue is an estimate.",
-      "confidence": "D"
+      "source": "Wikipedia, Han dynasty (en.wikipedia.org/wiki/Han_dynasty, opened): land tax cut 'from one-fifteenth of a farming household's crop yield to one-thirtieth' in 168 BC; 'The annual poll tax rate for adult men and women was 120 coins and 20 coins for minors'; merchants paid 240 coins; one month of conscripted labour a year for men fifteen to fifty-six, commutable to cash in the Eastern Han. The combined share on trading revenue is an estimate: the merchant property tax of 120 coins per 2,000 (Economy of the Han dynasty, opened) is 6 per cent of property, so 0.08 is a ballpark of a thirtieth of harvest plus poll and merchant surcharges.",
+      "confidence": "C"
     },
     "standing_army": {
-      "source": "The Eastern Han standing army: border garrisons and the capital troops, a few hundred thousand at most, far below the Former Han's conscript levies (Bielenstein, The Bureaucracy of Han Times). An approximate opening headcount.",
-      "confidence": "D"
+      "source": "The Eastern Han standing army: border garrisons and the capital troops, far below the Former Han's conscript levies (Bielenstein, The Bureaucracy of Han Times). Wikipedia, Military of the Han dynasty (en.wikipedia.org/wiki/Military_of_the_Han_dynasty, opened): 'The total number of soldiers protecting the capital in the Eastern Han, amounted to some 20,000'; the Northern Army was 'around 4,200 troops' after 31-39 AD; the Western Han standing army was 'some 600,000 to 700,000 men'. 200000 is a ballpark between the capital's 20,000 plus frontier garrisons and the Western total; no Eastern Han frontier count was found.",
+      "confidence": "C"
     }
   },
   "needs_first": {

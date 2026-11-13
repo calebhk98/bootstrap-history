@@ -14,24 +14,34 @@ from sim.constants import declare
 MONTHS_PER_YEAR = 12
 
 CARROL_CONSUMPTION_PARAMETER = declare(
-    "CARROL_CONSUMPTION_PARAMETER", 0.01, kind="temporary_heuristic",
+    "CARROL_CONSUMPTION_PARAMETER", 0.01, kind="engineering_estimate",
     unit="share of the payment account spent each month, on top of income",
     source=(
-        "Eurace@Unibi user manual (documents/EuraceUnibi-UserManual.pdf, section 10.1.3, 'carrol consumption "
-        "parameter', opened): 0.01. The C (Cons_Goods/Household_Consumer_Functions.c) has no default; it declares "
-        "the variable only. Not measured for any pre-modern society."), confidence="D",
+        "Eurace@Unibi user manual (section 10.1.3, 'carrol consumption parameter', opened): 0.01, which compounds "
+        "to 1 - 0.99 ** 12 = 0.114 of the account a year. Bracketed by the marginal propensity to consume out of wealth, "
+        "both opened: Wikipedia 'Wealth effect' (en.wikipedia.org/wiki/Wealth_effect), citing Carroll and Zhou: "
+        "'households increase their annual consumption by 6 cents for every additional dollar of home equity' (illiquid "
+        "wealth, 0.06 a year); Jorgensen, Danmarks Nationalbank Working Paper 112 (nationalbanken.dk, 2017, annual "
+        "tax-record data): 'an aggregate MPC out of liquid assets of 49%' (0.49 a year). Cash sits between the "
+        "two, and 0.114 a year is inside 0.06 to 0.49. Modern households; not measured for a pre-modern society."),
+    confidence="C",
     why="The monthly share of cash a household spends beyond its income; the yearly share compounds it "
-        "(`yearly_cash_share`). A method driven by income risk, age and the return on saving would replace it.",
-    retire="Complaints/606: a method driven by income risk, age and the return on saving replaces the stored share")
+        "(`yearly_cash_share`). A higher share (a windfall rate near 0.07 a month) makes the cash cap or the "
+        "drawdown limit bind before wealth does, so the stock stops moving spending.")
+
 WEALTH_INCOME_RATIO_TARGET = declare(
-    "WEALTH_INCOME_RATIO_TARGET", 16.67, kind="temporary_heuristic",
+    "WEALTH_INCOME_RATIO_TARGET", 16.67, kind="engineering_estimate",
     unit="monthly mean net incomes held as share wealth, above which share wealth is spent",
     source=(
         "Eurace@Unibi user manual (section 10.1.3, 'wealth income ratio target', opened): 16.67. The C has no "
-        "default. Not measured for any pre-modern society."), confidence="D",
+        "default. Not measured for any pre-modern society. Order of magnitude only: Piketty and Zucman, 'Wealth and "
+        "Inheritance in the Long Run', Handbook of Income Distribution ch. 15 (gabriel-zucman.eu/files/PikettyZucman2015.pdf, "
+        "opened): European aggregate wealth was 'as large as 600-700%' of national income in the eighteenth and nineteenth "
+        "centuries, 'Agricultural land ... made the majority of national capital', and durable goods 30-50% of national "
+        "income. This target, 16.67 months (1.4 years) of income held as share wealth, is a fraction of that and below the "
+        "non-land remainder."), confidence="C",
     why="Share wealth above this many months of income adds to spending, below it cuts spending, at the "
-        "carrol share. One value for every household.",
-    retire="Complaints/606: a method driven by income risk, age and the return on saving replaces the stored ratio")
+        "carrol share. One value for every household.")
 
 
 def yearly_cash_share(monthly_share: float = None) -> float:

@@ -10,7 +10,7 @@ from .constants import NITRE_SHORTAGE_SAFETY_BUFFER, NITRE_YIELD_T_PER_M2
 
 
 class Remedies(Part):
-    """Needs: material_demand, charcoal_per_hectare, material_shortfall, material_market_tonnes, goods_stock,
+    """Needs: material_demand, charcoal_per_hectare, material_shortfall, material_market_tonnes, goods_pool_stock,
     material_unsupplied_sentence, price_index, area_text, mass_rate_text, mass_per_area_text, money_text."""
 
     def shortage_remedy_plan(self, binding: Optional[str], shortfall_t: Optional[float] = None) -> Dict[str, Any]:
@@ -51,7 +51,7 @@ class Remedies(Part):
         demand = needs.material_demand().get("saltpetre_kg", 0.0) / KILOGRAMS_PER_TONNE
         deficit = sizing.nitre_deficit_tonnes(
             shortfall_t, demand, self.seat.nitre_bed_m2, NITRE_YIELD_T_PER_M2, needs.material_market_tonnes["saltpetre"],
-            needs.goods_stock["saltpetre"])
+            needs.goods_pool_stock["saltpetre"])
         # twenty per cent headroom keeps a tiny change in the portfolio from putting the player straight back into shortage
         square_meters = sizing.nitre_bed_square_metres(deficit, NITRE_SHORTAGE_SAFETY_BUFFER, NITRE_YIELD_T_PER_M2)
         return {"text": (

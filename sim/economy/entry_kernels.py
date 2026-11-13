@@ -103,16 +103,16 @@ def labour_bill(r, t, kind, hours, slot_trades, wage, start_units, runs, planned
 
 
 @njit
-def revenue_at(r, t, which, quantity, slot_goods, price):
+def revenue_at(r, t, which, quantity, slot_goods, price, layer=3):
     """unit_cost.revenue_per_run: every output at its price (`which` 0: the remembered price, 1: the price on offer), an output
-    with none left out."""
+    with none left out. `layer` picks the quantities: 3, what the run makes as it fetches after the state's harvest share; 1, what it makes."""
     total = 0.0
     for slot in range(slot_goods.shape[1]):
         good = slot_goods[r, slot]
         if good == NO_SLOT:
             break
-        amount = quantity[1, r, good]
-        if amount <= 0.0:
+        amount = quantity[layer, r, good]
+        if quantity[1, r, good] <= 0.0:
             continue
         found = price[which, t, good]
         if not np.isnan(found):
@@ -152,7 +152,7 @@ def full_cost_one(r, t, good, runs, rate, tables):
     run_cost = variable + capital_charge(plant, recipe_scalar[r, 0], rate)
     if not np.isfinite(run_cost):
         return np.inf
-    revenue = revenue_at(r, t, 0, quantity, slot_goods, price)
+    revenue = revenue_at(r, t, 0, quantity, slot_goods, price, 1)       # the cost is shared by what is made, not by what the tax leaves
     own_price = price[0, t, good]
     own_value = made * own_price if not np.isnan(own_price) else 0.0
     if revenue > 0.0 and own_value > 0.0:
@@ -326,7 +326,7 @@ def site_choice(r, anchor, candidates, runs, tonnes_out, tables, tonnes, supply_
 
 
 @njit(**KERNEL)
-def pays_after_recovery(recipe, tile, rent, held_expected, slot_goods, inputs, outputs, plant_goods, labour_hours, plant_labour_hours,
+def pays_after_recovery(recipe, tile, rent, held_expected, slot_goods, inputs, outputs, revenue_outputs, plant_goods, labour_hours, plant_labour_hours,
                         plant_life, price, offered, wage, area_of, rate):
     """Whether `unit_cost.return_after_recovery` of a run of the recipe on the tile beats `rate`: the surplus (revenue at the
     producer's expected prices, else the price on offer in its market, less the variable cost) less the part of the plant's
@@ -347,7 +347,7 @@ def pays_after_recovery(recipe, tile, rent, held_expected, slot_goods, inputs, o
             if np.isnan(found):
                 found = price_in(offered, area_of, good, tile)
             if not np.isnan(found):
-                revenue += outputs[recipe, good] * found
+                revenue += revenue_outputs[recipe, good] * found
     if plant == 0.0:
         charge = 0.0
     elif plant_life[recipe] <= 0.0:
@@ -359,7 +359,7 @@ def pays_after_recovery(recipe, tile, rent, held_expected, slot_goods, inputs, o
 
 @njit(**KERNEL)
 def restake_amounts(recipe_row, tile_row, shortfall, rent, held_expected, owner_of, owner_cash, slot_goods, inputs, outputs,
-                    plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, stake_share):
+                    revenue_outputs, plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate, stake_share):
     """What each producer row is restaked with (zero for the rows without a shortfall, `shortfall` <= 0), in row order:
     `entry.restake` (the shortfall, from the stake share of the owner's cash now, only where the run pays after recovery), not
     above the owner's budget, which is the stake share of the cash it held when its first producer came up and is spent down.
@@ -373,7 +373,7 @@ def restake_amounts(recipe_row, tile_row, shortfall, rent, held_expected, owner_
         if np.isnan(budget[owner]):
             budget[owner] = stake_share * max(0.0, owner_cash[owner])
         if not pays_after_recovery(recipe_row[row], tile_row[row], rent[row], held_expected[row], slot_goods, inputs, outputs,
-                                   plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate):
+                                   revenue_outputs, plant_goods, labour_hours, plant_labour_hours, plant_life, price, offered, wage, area_of, rate):
             continue
         amount = min(min(shortfall[row], stake_share * max(0.0, owner_cash[owner])), budget[owner])
         if amount > 0.0:

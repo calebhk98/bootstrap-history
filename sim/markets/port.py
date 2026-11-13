@@ -8,7 +8,6 @@ the agent economy answers, and the engine's own opening figures answer
 while it opens. The port reads the game through `PortWorld` (port_world.py).
 """
 from sim.economy import api as economy_api
-from sim.prices.api import prices as price_solver
 
 from . import port_actors, port_goods_orders
 from .port_setup import allowed_entries
@@ -135,7 +134,7 @@ class EconomyPort:
         parts = self.answering()
         if parts is not None:
             return parts.trade.fleet_goods(buyer)
-        production = price_solver.default_production_entries()
+        production = self._sim.production_catalog()
         lives = self._sim.materials.service_life_years()
         allowed = allowed_entries(production, set(self._sim.production.techniques_granted()))
         return port_actors.fleet_goods(production, allowed, lambda good: lives.get(good, 0.0), lambda _good: 0.0)
@@ -147,7 +146,7 @@ class EconomyPort:
         if materials:
             return materials
         return ([commodity] if any(commodity in entry.get("outputs", {})
-                                   for entry in price_solver.default_production_entries().values()) else [])
+                                   for entry in self._sim.production_catalog().values()) else [])
 
     # ---- the economy's life ----------------------------------------------------------------------
     def flush_record(self):

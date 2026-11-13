@@ -14,8 +14,8 @@ from sim.jit import njit
 
 from . import close_kernel_cost as cost
 
-K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_ASK_CEILING, K_CLOSED, K_WORKING_YEARS = range(10)
-K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(10, 19)
+K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_CLOSED, K_WORKING_YEARS = range(9)
+K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(9, 18)
 
 STATE_OK, STATE_CRISIS, STATE_ILLIQUID, STATE_INSOLVENT = 0, 1, 2, 3
 REQUEST_NONE, REQUEST_EXPAND, REQUEST_WORKING_CAPITAL = 0, 1, 2
@@ -70,10 +70,10 @@ def market_capacity_of(slot_goods, outputs, area_of, recipe_row, tile_row, capac
 
 @njit
 def close_rows(rows, constants,
-               slot_goods, slot_trades, slot_is_input, slot_is_output, slot_is_plant, inputs, outputs, plant_goods, labour,
+               slot_goods, slot_trades, slot_is_input, slot_is_output, slot_is_plant, inputs, outputs, revenue_outputs, plant_goods, labour,
                plant_labour, plant_life, idle_wear,
                recipe_row, tile_row, capacity, yield_factor, years_of_loss, cash_target, expected_sales, last_runs,
-               land_rent, earnings_history, revenue_history, history_count, expected,
+               land_rent, earnings_history, revenue_history, history_count, expected, ask_multiple,
                area_of, price, offered, cleared, bare_quote, wage, clearing, unmet, market_capacity, spoilage, ground,
                rate_of, cash_in_currency, cash_in_money, revenue, running_costs, stock, sold, made, hours_hired,
                interest, commitments, arrears, debt, held_start, held_good, held_quantity, share,
@@ -84,6 +84,7 @@ def close_rows(rows, constants,
     width = slot_goods.shape[1]
     trade_width = slot_trades.shape[1]
     q_in, q_out, q_plant = np.zeros(width), np.zeros(width), np.zeros(width)
+    q_val = np.zeros(width)      # q_out as it fetches after the state's harvest share: what the runs are valued at
     live, exp, old_exp, latest = np.zeros(width), np.zeros(width), np.zeros(width), np.zeros(width)
     inputs_be, cover, prices, scratch = np.zeros(width), np.zeros(width), np.zeros(width), np.zeros(width)
     here = np.zeros(width)
@@ -103,6 +104,7 @@ def close_rows(rows, constants,
             count = slot + 1
             q_in[slot] = inputs[recipe, good] if slot_is_input[recipe, slot] else 0.0
             q_out[slot] = outputs[recipe, good] if slot_is_output[recipe, slot] else 0.0
+            q_val[slot] = revenue_outputs[recipe, good] if slot_is_output[recipe, slot] else 0.0
             q_plant[slot] = plant_goods[recipe, good] if slot_is_plant[recipe, slot] else 0.0
             live[slot] = (cost.price_at(price, area_of, good, tile)
                           if slot_is_input[recipe, slot] or slot_is_plant[recipe, slot] else np.nan)
@@ -160,7 +162,7 @@ def close_rows(rows, constants,
         break_even = np.nan
         input_share = 0.0
         if not no_rate:
-            expected_revenue = cost.revenue_per_run(q_out, exp, count) * yield_
+            expected_revenue = cost.revenue_per_run(q_val, exp, count) * yield_
             variable = cost.bill(q_in, inputs_be, count) + cost.bill(q_lab, wages, trades) + rent
             plant_value = cost.bill(q_plant, inputs_be, count) + cost.bill(q_pl, wages, trades)
             full = variable + cost.capital_charge(plant_value, life, rate)
@@ -182,7 +184,7 @@ def close_rows(rows, constants,
                 exp[slot] += weight * (exp[slot] * break_even - exp[slot])
             for slot in range(count):
                 if has_latest[slot] and cost.flag_at(bare_quote, area_of, slot_goods[recipe, slot], tile):
-                    exp[slot] = cost.held_to_band(exp[slot], old_exp[slot], cover[slot], input_share, constants[K_ASK_CEILING])
+                    exp[slot] = cost.held_to_band(exp[slot], old_exp[slot], cover[slot], input_share, ask_multiple[row, slot])
         else:
             for slot in range(count):
                 cover[slot] = np.nan
@@ -191,7 +193,7 @@ def close_rows(rows, constants,
                 if has_latest[slot]:
                     unsold = stock[row, slot] - q_in[slot] * cap_old
                     exp[slot] = cost.adjusted_within_band(exp[slot], cover[slot], unsold, target_cover * q_out[slot],
-                                                          constants[K_ASK_CEILING], input_share, constants[K_ASK_STEP])
+                                                          ask_multiple[row, slot], input_share, constants[K_ASK_STEP])
         for slot in range(count):
             new_expected[row, slot] = exp[slot]
 
@@ -268,7 +270,7 @@ def close_rows(rows, constants,
                                                                  spoilage[slot_goods[recipe, slot]])
             run_cost = variable_now + rent
             if math.isfinite(run_cost):
-                revenue_run = cost.revenue_per_run(q_out, prices, count) * yield_
+                revenue_run = cost.revenue_per_run(q_val, prices, count) * yield_
                 cost_run = run_cost
         margin = revenue_run - cost_run
         pays = cost.share_working(revenue_run, cost_run, constants[K_SPREAD]) if math.isfinite(margin) else 0.0
@@ -313,7 +315,7 @@ def close_rows(rows, constants,
                     continue
                 kept_price = old_exp[slot]
                 scratch[slot] = kept_price if not np.isnan(kept_price) else cost.price_at(offered, area_of, slot_goods[recipe, slot], tile)
-            wanted = plan_runs(q_out, scratch, stock, row, count, sales_expected, yield_, cost_run, constants[K_MONTHS],
+            wanted = plan_runs(q_out, q_val, scratch, stock, row, count, sales_expected, yield_, cost_run, constants[K_MONTHS],
                                constants[K_CLEARING], slot_is_output, recipe)
             planned = cost.within_a_years_change(worked, np.nan, cap_old, worked if math.isinf(wanted) else wanted, constants[K_CHANGE])
             gap = planned - new_cap
@@ -337,15 +339,15 @@ def close_rows(rows, constants,
                         continue
                     kept_price = old_exp[slot]
                     scratch[slot] = kept_price if not np.isnan(kept_price) else cost.price_at(offered, area_of, slot_goods[recipe, slot], tile)
-                before = return_after_recovery(q_out, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages, life, rate)
+                before = return_after_recovery(q_val, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages, life, rate)
                 if not np.isnan(before) and before > rate:
                     for slot in range(count):
                         added[row, slot] = growth * q_out[slot] * yield_
                         if not np.isnan(scratch[slot]):
                             scratch[slot] = scratch[slot] * share[row, slot]
                     needs_share[row] = True
-                    after = return_after_recovery(q_out, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages, life, rate)
-                    yearly = return_on_capital(q_out, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages)
+                    after = return_after_recovery(q_val, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages, life, rate)
+                    yearly = return_on_capital(q_val, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages)
                     if not (np.isnan(yearly) or np.isnan(after) or after <= rate):
                         kind = REQUEST_EXPAND
                         amount = growth * value
@@ -451,7 +453,7 @@ def close_rows(rows, constants,
 
 
 @njit
-def plan_runs(q_out, output_price, stock, row, count, sales, yield_, run_cost, months, clearing_years, slot_is_output, recipe):
+def plan_runs(q_out, q_val, output_price, stock, row, count, sales, yield_, run_cost, months, clearing_years, slot_is_output, recipe):
     """producers.runs_for_stock with the prices the producer expects."""
     if sales <= 0.0:
         return np.inf
@@ -478,7 +480,7 @@ def plan_runs(q_out, output_price, stock, row, count, sales, yield_, run_cost, m
         paying = -1
         for slot in range(count):
             if slot_is_output[recipe, slot] and not np.isnan(output_price[slot]):
-                value = q_out[slot] * output_price[slot]
+                value = q_val[slot] * output_price[slot]
                 total += value
                 if paying < 0 or value > best:
                     paying = slot
@@ -490,14 +492,14 @@ def plan_runs(q_out, output_price, stock, row, count, sales, yield_, run_cost, m
                     break
         for slot in range(count):
             if not np.isnan(gaps[slot]) and gaps[slot] < 0.0:
-                value = q_out[slot] * output_price[slot] if not np.isnan(output_price[slot]) else np.nan
+                value = q_val[slot] * output_price[slot] if not np.isnan(output_price[slot]) else np.nan
                 keeps = slot == paying or (not np.isnan(value) and value >= total - value)
                 if not keeps:
                     counted[slot] = False
         sells = 0.0
         for slot in range(count):
             if slot_is_output[recipe, slot] and not np.isnan(output_price[slot]) and not (not np.isnan(gaps[slot]) and gaps[slot] < 0.0):
-                sells += q_out[slot] * output_price[slot]
+                sells += q_val[slot] * output_price[slot]
         sells *= yield_
         if sells > 0.0 and sells >= run_cost:
             for slot in range(count):

@@ -12,7 +12,7 @@ from . import route_dues, carried_book, carriage_wear, national_prices, crop_sit
 from .bank_founding import found_from_outside
 from .diagnostics import person_equivalent_unemployment
 from .fixture_setups import GRAIN as FIXTURE_STAPLE, LABOURER as FIXTURE_UNSKILLED_TRADE, small_setup as fixture_small_setup, stationary_setup as fixture_stationary_setup
-from . import banks
+from . import banks, lending, reported_rate
 from .banks import DEPOSIT_BANKING
 from .cohort_reads import figures_in_id_order
 from .funds import POOLED_FUNDS
@@ -70,7 +70,7 @@ __all__ = [
     "EconomyYearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "SetupTrade", "SiteLimit",
     "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "WAGE_CEILING_MULTIPLE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "premium_for_training_years", "HOUSEHOLD_TIME_PREFERENCE", "title_wealth",
-    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "producers_of",
+    "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "market_rate", "producers_of",
     "account_balance", "account_holdings",
     "credit_room", "credit_line_request", "economy_from_record", "blank_economy", "export_record", "economy_book", "bank_dividends_to", "economy_contracts", "finish_spin_up", "note_spin_up_result", "spin_up_state", "money_year_figures","shown_prices_of","shown_price_kinds_of",
     "settle_agent_takings", "route_dues_account", "tile_holders", "indebted_tiles", "fugitive_share_by_tile", "title_holdings", "money_revenue_forms", "admit_recipes", "move_goods", "post_transfers", "cohort_incomes", "cohort_land_rents", "land_rent_per_hectare",
@@ -82,7 +82,7 @@ __all__ = [
     "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
     "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
-    "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs",
+    "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs", "crop_suitability_inputs",
 ]
 
 
@@ -235,6 +235,13 @@ def wages_by_trade_weighted(economy, country=None):
 def interest_rate(economy):
     """The economy's own currency's rate from last year's memory, or None when it has none."""
     return economy.record.memory.rates.get(economy.setup.currency_id)
+
+
+def market_rate(economy):
+    """The rate the engine reads as the market rate (`reported_rate`): the year's loan-weighted average, bounded; None before the economy holds a rate."""
+    record = economy.record
+    return reported_rate.reported_rate(economy.setup.opening_rate, record.credit.average_rate(), interest_rate(economy),
+                                       lending.expected_inflation_of(record))
 
 
 def credit_room(economy, borrower_id):
@@ -663,6 +670,11 @@ def health_figures(economy, outcomes, staple, metals):
 def crop_site_inputs(economy):
     """(yield factor by recipe and tile, land a run takes by recipe) for the producers that crop land."""
     return economy.setup.yield_factor_by_recipe_tile, economy.setup.land_per_run
+
+
+def crop_suitability_inputs(economy):
+    """{recipe@tile: the crop's yield against the reference field's on the tile} (the crops that state a climate)."""
+    return economy.setup.crop_suitability_by_recipe_tile
 
 
 def actor_fundable_amount(economy, amount, existing_debt, collateral_value, arrears):

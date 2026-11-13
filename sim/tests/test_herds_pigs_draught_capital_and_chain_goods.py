@@ -15,7 +15,8 @@ from sim.content.tree_source import load_base_tree
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 HERD_HEAD = 100.0
-HERD_RECIPES = {"wool_kg": "sheep_kg", "milk_kg": "goat_kg", "meat_kg": "cattle_kg", "lard_kg": "pig_kg"}
+HERD_RECIPES = {"wool_kg": "sheep_kg", "milk_kg": "goat_kg", "meat_kg": "cattle_kg", "lard_kg": "pig_kg",
+                "draught_animal_kg": "horse_kg", "draught_mule_kg": "mule_kg"}
 
 
 def rows():
@@ -54,10 +55,20 @@ class PigHerdTests(unittest.TestCase):
         self.assertIn(entry["requires_node"], civilisations["rome_100ad"]["starting_techs"])
         self.assertNotIn(entry["requires_node"], civilisations["mexica_1500"]["starting_techs"])
 
-    def test_lard_feeds_people_and_bristle_is_not_invented(self):
-        goods = load_needs(ROOT)["goods"]
-        self.assertGreater(goods["lard_kg"]["satisfies"]["food"], 0.0)
-        self.assertNotIn("bristle_kg", {good for entry in self.production.values() for good in entry["outputs"]})
+    def test_lard_feeds_people(self):
+        self.assertGreater(load_needs(ROOT)["goods"]["lard_kg"]["satisfies"]["food"], 0.0)
+
+    def test_bristle_is_a_slaughter_product_of_the_pig_herd_and_only_there(self):
+        makers = sorted(key for key, entry in self.production.items() if "bristles_kg" in entry["outputs"])
+        self.assertEqual(makers, ["lard_kg"])
+        slaughtered = HERD_HEAD * self.row["offtake_per_head_year"]
+        self.assertAlmostEqual(self.production["lard_kg"]["outputs"]["bristles_kg"],
+                               slaughtered * self.row["bristle_kg_per_slaughtered_pig"], places=3)
+        self.assertGreater(self.row["bristle_sorting_hours_per_kg"], 0.0)
+
+    def test_a_consumer_of_bristle_exists(self):
+        nodes = {node["id"]: node for node in load_base_tree()["nodes"]}
+        self.assertTrue([node_id for node_id, node in nodes.items() if "bristles_kg" in (node.get("mat") or {})])
 
 
 class DraughtFromTheHerdTests(unittest.TestCase):
@@ -85,18 +96,82 @@ class HerdIsCapitalTests(unittest.TestCase):
             self.assertAlmostEqual(capital["service_life_years"], 1.0 / stock_rows[stock]["annual_loss"], places=3)
             self.assertAlmostEqual(capital["annual_output_at_basis"], max(entry["outputs"].values()))
 
-    def test_the_yearly_charge_per_batch_is_the_herd_value_times_the_loss(self):
+    def test_the_yearly_charge_per_batch_is_the_deaths_the_herds_own_young_do_not_replace(self):
         production, stock_rows = load_production_catalog(ROOT), rows()
         for key, stock in HERD_RECIPES.items():
             entry = production[key]
             price = 3.0
             per_unit = core.capital_cost_hours_per_unit(entry["capital"], {stock: price}, {}, 0.0)
             batch = per_unit * max(entry["outputs"].values())
-            self.assertAlmostEqual(batch, entry["herd_stock"][stock] * price * stock_rows[stock]["annual_loss"], places=2, msg=key)
+            deaths = entry["herd_stock"][stock] * stock_rows[stock]["annual_loss"]
+            births = entry["capital"][0]["replaced_by_own_births_per_year"][stock]
+            self.assertAlmostEqual(batch, price * max(0.0, deaths - births), places=2, msg=key)
+
+    def test_each_herds_births_kept_are_the_increase_less_the_offtake_of_the_row(self):
+        production, stock_rows = load_production_catalog(ROOT), rows()
+        for key, stock in HERD_RECIPES.items():
+            row = stock_rows[stock]
+            offtake = 0.0 if row.get("offtake_is_not_stock") else row["offtake_per_head_year"]
+            expected = HERD_HEAD * row["live_weight_kg_per_head"] * max(0.0, row["natural_increase"] - offtake)
+            self.assertAlmostEqual(production[key]["capital"][0]["replaced_by_own_births_per_year"][stock], expected, places=2, msg=key)
+
+    def test_interest_on_the_herd_stays_in_the_charge_when_births_cover_the_deaths(self):
+        entry = load_production_catalog(ROOT)["wool_kg"]
+        free = core.capital_cost_hours_per_unit(entry["capital"], {"sheep_kg": 3.0}, {}, 0.0)
+        paid = core.capital_cost_hours_per_unit(entry["capital"], {"sheep_kg": 3.0}, {}, 0.05)
+        self.assertEqual(free, 0.0)
+        self.assertGreater(paid, 0.0)
+
+    def test_births_credit_is_capped_at_the_units_that_wear_out(self):
+        good = {"replaced_by_own_births_per_year": {"herd_kg": 500.0}}
+        self.assertAlmostEqual(core.own_births_credit_hours(good, {"herd_kg": 1000.0}, 10.0, {"herd_kg": 2.0}), 200.0)
+        good = {"replaced_by_own_births_per_year": {"herd_kg": 40.0}}
+        self.assertAlmostEqual(core.own_births_credit_hours(good, {"herd_kg": 1000.0}, 10.0, {"herd_kg": 2.0}), 80.0)
+        self.assertEqual(core.own_births_credit_hours({}, {"herd_kg": 1000.0}, 10.0, {"herd_kg": 2.0}), 0.0)
 
     def test_a_herd_that_cannot_be_priced_has_no_capital_cost(self):
         entry = load_production_catalog(ROOT)["lard_kg"]
         self.assertIsNone(core.capital_cost_hours_per_unit(entry["capital"], {}, {}, 0.0))
+
+
+class HorseAndMuleHerdTests(unittest.TestCase):
+
+    def setUp(self):
+        self.production = load_production_catalog(ROOT)
+        self.rows = rows()
+
+    def test_working_animals_come_from_herds_and_no_recipe_makes_them_alone(self):
+        makers = sorted(key for key, entry in self.production.items() if "draught_animal_kg" in entry["outputs"])
+        self.assertEqual(makers, ["draught_animal_kg", "draught_mule_kg", "meat_kg"])
+        for key in ("draught_animal_kg", "draught_mule_kg"):
+            self.assertIn("herd_stock", self.production[key])
+
+    def test_the_horse_herd_rears_the_row_offtake_to_work(self):
+        row, entry = self.rows["horse_kg"], self.production["draught_animal_kg"]
+        self.assertAlmostEqual(entry["outputs"]["draught_animal_kg"], HERD_HEAD * row["offtake_per_head_year"] * row["live_weight_kg_per_head"], places=2)
+        self.assertAlmostEqual(entry["land_hectare_years"], HERD_HEAD / row["head_per_hectare"], places=3)
+        self.assertLessEqual(row["offtake_per_head_year"], row["natural_increase"] - row["annual_loss"])
+        self.assertIn("Varro", row["source"])
+
+    def test_the_mule_stud_rears_mules_from_mares_and_asses(self):
+        row, entry = self.rows["mule_kg"], self.production["draught_mule_kg"]
+        self.assertAlmostEqual(entry["outputs"]["draught_animal_kg"], HERD_HEAD * row["offtake_per_head_year"] * row["mule_live_weight_kg_per_head"], places=2)
+        self.assertGreater(row["offtake_per_head_year"], row["natural_increase"], "a mule does not breed: its young are the product, not the stud")
+        self.assertIn("Deng", row["source"])
+
+    def test_the_stock_that_grows_working_animals_reads_a_herd_entry(self):
+        from sim.living_stock.data import stock_entry
+        entry = stock_entry("draught_animal_kg", self.production)
+        self.assertIn("herd_stock", entry)
+
+    def test_the_gate_nodes_hold_the_herds_and_mexica_lacks_them(self):
+        nodes = {node["id"]: node for node in load_base_tree()["nodes"]}
+        civilisations = start_check.load_civilisations(ROOT)
+        for key, stock in (("draught_animal_kg", "horse_kg"), ("draught_mule_kg", "mule_kg")):
+            gate = self.production[key]["requires_node"]
+            self.assertIn(stock, nodes[gate]["holds"])
+            self.assertIn(gate, civilisations["rome_100ad"]["starting_techs"])
+            self.assertNotIn(gate, civilisations["mexica_1500"]["starting_techs"])
 
 
 class JointCostSplitTests(unittest.TestCase):
@@ -110,6 +185,13 @@ class JointCostSplitTests(unittest.TestCase):
             self.assertAlmostEqual(sum(prices[good] * outputs[good] for good in outputs), 1000.0, places=4)
         self.assertGreater(by_value["lard_kg"] / by_value["meat_kg"], by_mass["lard_kg"] / by_mass["meat_kg"])
         self.assertAlmostEqual(by_mass["lard_kg"], by_mass["meat_kg"])
+
+    def test_the_economys_price_is_the_reference_and_the_opening_price_the_fallback(self):
+        from sim.markets.port_late import worth_of
+        self.assertEqual(worth_of("meat_kg", {"meat_kg": 7.0}, {"meat_kg": 2.0}, 3.0), 7.0)
+        self.assertEqual(worth_of("meat_kg", {}, {"meat_kg": 2.0}, 3.0), 6.0)
+        self.assertEqual(worth_of("meat_kg", {"meat_kg": 0.0}, {}, 3.0), None)
+        self.assertIsNone(worth_of("hide_kg", {}, {"hide_kg": 0.0}, 3.0))
 
 
 class ChainGoodsTests(unittest.TestCase):

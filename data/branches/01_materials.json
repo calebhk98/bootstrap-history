@@ -807,6 +807,7 @@
   "name": "Natural rubber",
   "cat": "located_material",
   "kind": "RESOURCE",
+  "samples": ["sample:landolphia_vine"],
   "pre": [
    "exp_coastal_africa"
   ],

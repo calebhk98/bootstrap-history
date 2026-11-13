@@ -52,18 +52,8 @@ def receives_problem(taker: Any, shares: Dict[str, float]) -> str:
 def hand_over(source: Any, target: Any, shares: Dict[str, float]) -> None:
 	"""Move shares from `source` to `target`; an issuer giving its own raises what it has issued."""
 	for issuer_id, share in sorted(shares.items()):
-		if issuer_id == source.actor_id:
-			source.record.issued += share
-		else:
-			left = source.record.shares_held.get(issuer_id, 0.0) - share
-			if left > EPSILON:
-				source.record.shares_held[issuer_id] = left
-			else:
-				source.record.shares_held.pop(issuer_id, None)
-		if issuer_id == target.actor_id:
-			target.record.issued = max(0.0, target.record.issued - share)
-		else:
-			target.record.shares_held[issuer_id] = target.record.shares_held.get(issuer_id, 0.0) + share
+		source.record.give_shares(issuer_id, share, issuer_id == source.actor_id)
+		target.record.take_shares(issuer_id, share, issuer_id == target.actor_id)
 
 
 def shares_worth(shares: Dict[str, float], find_actor: Any) -> float:

@@ -24,7 +24,7 @@ from .entry_tables import EntryTables
 from .entry_trial import reachable_capacity, trial_entry_plans
 from .entry import (ENTRANT_OWNER_STAKE_SHARE, EntryPlan, UnmetDemand, entrant_loan, entry_plans, gap_beyond_spare,
                     producers_to_close, restake)
-from .producers import expected_output_prices, live_input_prices, live_input_prices_at, live_wages, live_wages_at
+from .producers import kept_output_prices, live_input_prices, live_input_prices_at, live_wages, live_wages_at
 from .producers_close import working_capital_target
 from .market_memory import market_key
 from .setup import recipe_tile_key
@@ -217,7 +217,7 @@ def restake_owners(setup, record, view, arrays=None) -> None:
         if key not in reads:
             reads[key] = (live_input_prices(producer, recipe, view), live_wages(producer, recipe, view))
         inputs, wages = reads[key]
-        earning = unit_cost.return_after_recovery(recipe, expected_output_prices(producer, recipe, view) or {}, inputs, wages, rate,
+        earning = unit_cost.return_after_recovery(recipe, kept_output_prices(producer, recipe, view) or {}, inputs, wages, rate,
                                                   producer.land_rent_per_run)
         pays = earning is not None and earning > rate
         if producer.owner not in budget:
@@ -248,7 +248,7 @@ def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -
     owner_cash = record.book.balances_of(owners, money)
     amounts = entry_kernels.restake_amounts(
         columns.recipe_row, columns.tile_row, shortfall, columns.land_rent_per_run, columns.expected_prices, owner_of, owner_cash,
-        matrices.slot_goods, matrices.inputs, matrices.outputs, matrices.plant_goods, matrices.labour_hours,
+        matrices.slot_goods, matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.plant_goods, matrices.labour_hours,
         matrices.plant_labour_hours, matrices.plant_life_years, memory.price, memory.offered, memory.wage,
         arrays.area_index.of_good_tile, float(rate), ENTRANT_OWNER_STAKE_SHARE)
     post_in_order(record.book, [([Transfer(owner_names[row], ids[row], money, float(amounts[row]), "owner's stake")], ())

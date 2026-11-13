@@ -63,6 +63,14 @@ class GoodsMarket:
         """Tonnes of a commodity the seat's (the asking one by default) running works drew from the market this year."""
         return self._sim.market_flows()["drawn"].get(seat_id or self.acting_party_id, {}).get(commodity, 0.0)
 
+    def ordered_to_sell(self, material):
+        """Tonnes of the form a sale of `material` is for that the asking seat has already ordered sold this year."""
+        return port_goods_orders.posted_form_tonnes(self._stored, self.acting_party_id, "sell", self.sold_form_key(material))
+
+    def sold_form_key(self, material):
+        """The ledger key a sale of `material` takes its tonnes from."""
+        return self._sim.materials.stock_form(self.pricing.sold_as(material))
+
     def posted_tonnes(self, side, commodity, seat_id=None):
         """Tonnes the seat (the asking one by default) has ordered to buy or sell of a commodity that the year's clearing has not
         yet settled."""
@@ -107,7 +115,7 @@ class GoodsMarket:
         emp_key = sim.materials.tag(material)[0]
         good = self.pricing.economy_good(material)
         offered = None if good is None else sim.economy.agent_offered_tonnes(good)
-        proceeds = self.pricing.sale_proceeds(material, 0.0, self.posted_tonnes("sell", emp_key))
+        proceeds = self.pricing.sale_proceeds(self.pricing.sold_as(material), 0.0, self.ordered_to_sell(material))
         if proceeds is None:
             return None
         carriage = self.pricing.carriage_per_tonne(material, price)
@@ -123,7 +131,7 @@ class GoodsMarket:
     def _with_buyers(self, material, quote):
         """The quote with the tonnes the economy's buyers took and still wanted last year of the good the material is
         traded as, None where the economy does not trade it."""
-        good = self.pricing.economy_good(material)
+        good = self.pricing.economy_good(self.pricing.sold_as(material))
         record = None if good is None else self._sim.economy.agent_good_market_record(good)
         return {**quote, "buyers_take_tonnes_per_year": None if record is None else record["sold"] + record["unmet"]}
 
@@ -140,10 +148,9 @@ class GoodsMarket:
         quote = self.quote(material)
         if not quote:
             return 0.0, 0.0
-        key = quote["stock_key"]
-        ordered = self.posted_tonnes("sell", key)
-        return (max(0.0, self._sim.materials.stock_t(key) - ordered),
-                self.sale_room_tonnes(self._with_buyers(material, quote), ordered))
+        forms = self._sim.materials.sale_forms(material)
+        held = sum(max(0.0, self._sim.materials.form_stock_t(self._sim.materials.stock_form(form)) - self.ordered_to_sell(form)) for form in forms)
+        return held, self.sale_room_tonnes(self._with_buyers(material, quote), self.ordered_to_sell(material))
 
     def quote_sell(self, material, tonnes):
         """(stock key, tonnes the market takes now, money for them): what a sale at today's quote would fetch, for refusals
@@ -157,7 +164,7 @@ class GoodsMarket:
         sold = tonnes_sold(tonnes, held, room)
         if sold <= 0:
             return key, 0.0, 0.0
-        proceeds = self.pricing.sale_proceeds(material, sold, self.posted_tonnes("sell", key))
+        proceeds = self.pricing.sale_proceeds(self.pricing.sold_as(material), sold, self.ordered_to_sell(material))
         if proceeds is None:
             return None, 0.0, 0.0
         return key, sold, proceeds[0]
@@ -177,6 +184,24 @@ class GoodsMarket:
             return Refusal("no_such_order", "no order to %s %s is posted." % (side, material), material=material, side=side)
         return {"cancelled": count, "tonnes": tonnes, "side": side, "material": material, "kept_for_projects": projects}
 
+    def _post_pool_sale(self, forms, tonnes, limit_per_tonne, project, cost_factor):
+        """A sale of a pool by its own name while the seat holds several forms of it: one order per form held, each priced and cleared
+        as its own good, the tonnes taken from the forms in order. Answers the first order's reply with the tonnes of all of them and
+        every reply under "orders", or the first refusal when none was posted."""
+        replies, remaining = [], tonnes
+        for form in forms:
+            held = self.sale_limits(form)[0]
+            if remaining <= 0 or held <= 0:
+                continue
+            reply = self.post_order("sell", form, min(remaining, held), limit_per_tonne, project, cost_factor)
+            replies.append(reply)
+            if not isinstance(reply, Refusal):
+                remaining -= reply["tonnes"]
+        posted = [reply for reply in replies if not isinstance(reply, Refusal)]
+        if not posted:
+            return replies[0] if replies else Refusal("not_enough_held", "no %s is held that is not already ordered sold." % forms[0], material=forms[0])
+        return {**posted[0], "tonnes": sum(reply["tonnes"] for reply in posted), "orders": posted}
+
     def post_order(self, side, material, tonnes, limit_per_tonne=None, project=None, cost_factor=1.0, limit_includes_carriage=False):
         """Post the asking seat's order for the year's clearing: "buy" `tonnes` paying the market no more than `limit_per_tonne`,
         or "sell" them (cut to the stock not already ordered sold) at no less; the quote's mean price over the order when no limit
@@ -190,7 +215,10 @@ class GoodsMarket:
             return Refusal("no_price", "%s has no price here, so it cannot be ordered." % material, material=material)
         if tonnes <= 0:
             return Refusal("no_quantity", "an order needs a quantity above zero.", material=material)
-        good = self.pricing.economy_good(material)
+        forms = self._sim.materials.sale_forms(material) if side == "sell" else [material]
+        if len(forms) > 1:
+            return self._post_pool_sale(forms, tonnes, limit_per_tonne, project, cost_factor)
+        good = self.pricing.economy_good(material if side == "buy" else self.pricing.sold_as(material))
         if good is None:
             return Refusal("not_traded", "%s is not traded in the economy, so it cannot be ordered." % material, material=material)
         key = quote["stock_key"]
@@ -207,14 +235,15 @@ class GoodsMarket:
                 return Refusal("not_enough_held", "no %s is held that is not already ordered sold." % material, material=material)
         carriage = quote["carriage_per_tonne"] if buying else 0.0
         mean = (self.pricing.purchase_cost(quote["material"], tonnes)[1] - carriage if buying
-                else self.pricing.sale_proceeds(quote["material"], tonnes, self.posted_tonnes("sell", key))[1])
+                else self.pricing.sale_proceeds(self.pricing.sold_as(quote["material"]), tonnes, self.ordered_to_sell(quote["material"]))[1])
         limit = float(limit_per_tonne) if limit_per_tonne is not None else mean
         if buying and limit_per_tonne is not None and limit_includes_carriage:
             limit -= carriage
         if limit <= 0:
             return Refusal("no_limit", "an order needs a price limit above zero%s." % (" once carriage is counted" if buying else ""),
                            material=material, limit_per_tonne=limit)
-        order = {"side": side, "material": quote["material"], "good": good, "stock_key": key, "tonnes": tonnes,
+        form_key = self._sim.materials.stock_form(quote["material"] if buying else self.pricing.sold_as(quote["material"]))
+        order = {"side": side, "material": quote["material"], "good": good, "stock_key": key, "form_key": form_key, "tonnes": tonnes,
                  "limit_per_tonne": limit, "carriage_per_tonne": carriage, "cost_factor": float(cost_factor), "project": project}
         committed = None
         if buying:

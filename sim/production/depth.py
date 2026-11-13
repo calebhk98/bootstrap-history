@@ -104,7 +104,7 @@ class Depth(Part):
 		by_recipe = self.needs.agent_worker_years_by_recipe()
 		if by_recipe is None:
 			return None
-		gate = {key: entry.get("requires_node") for key, entry in price_solver.default_production_entries().items()}
+		gate = {key: entry.get("requires_node") for key, entry in price_solver.default_production_entries(self.needs.mods_directory()).items()}
 		years = {}
 		for recipe_id, worker_years in by_recipe.items():
 			node_id = gate.get(recipe_id)

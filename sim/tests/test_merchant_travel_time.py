@@ -182,6 +182,7 @@ class InformationLagTests(unittest.TestCase):
         who.expected_prices = {("salt", area_a): 2.0, ("salt", area_b): 2.1}   # the news that has arrived says it is cheap
         self.assertEqual(merchants.orders(who, view, carriage, area_map, 1000.0, {}, light, 0.0).bids, ())
         who.expected_prices = {("salt", area_a): 2.0, ("salt", area_b): 9.0}
+        who.traded_tiles = {"b": 0}      # the far market is in its stretch only once it has traded there
         self.assertEqual(len(merchants.orders(who, view, carriage, area_map, 1000.0, {}, light, 0.0).bids), 1)
 
 

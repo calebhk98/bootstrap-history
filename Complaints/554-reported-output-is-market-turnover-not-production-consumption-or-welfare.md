@@ -1,6 +1,6 @@
 # Reported output is market turnover, not production, consumption or welfare
 
-**Status:** partly (the yearly accounts exist; baseline checks for feasibility, reproduction and bounded dynamics exist and the bounded-dynamics one fails today; responses and historical fit do not)
+**Status:** partly (the yearly accounts exist; baseline checks for feasibility and food eaten over need exist; bounded dynamics is checked only by the opening check `spin_up_settled`, which fails on main, see 970 and 473; responses and historical fit do not)
 
 Found by an outside reviewer reading the repository; checked against the code.
 
@@ -26,14 +26,13 @@ Found by an outside reviewer reading the repository; checked against the code.
 - Tests: `python3 -m unittest sim.tests.test_year_accounts` (the fixture's identity, self-grown food outside market
   turnover, calories by cohort).
 
-- Baseline checks on a controlled run (`sim/economy/baseline_checks.py`, `sim/economy/settling.py`, both through
-  `sim/economy/api.py`): feasibility of every year's accounts (uses within production plus inflow plus stock, flows
-  closing, no negative stock), reproduction (stocks not eaten through, food eaten per tile, the mint replacing the coin
-  that wears), and bounded dynamics (the price level, unskilled wage, money stock and interest rate: largest year over
-  year change and a trend of the log series over the last years, drift counted only when monotone; the bounds are
-  labelled temporary heuristics retiring with 473). `settling.settling_report(rows)` and `settling.format_report`
-  take the rows `spin_up_trace` returns. Tests: topics `baseline_fixture` (small fixture, seconds) and
-  `baseline_rome` (Rome spin-up, slow); the settling tests fail today and are meant to (473).
+- Baseline checks on a controlled run (`sim/tests/baseline_checks.py`): `feasibility` of every year's accounts (uses within
+  production plus inflow plus stock, flows closing, no negative stock) and `food_eaten_over_need` per tile. Tests:
+  `sim/tests/test_baseline_checks_rules.py`. The earlier settling report (`sim/economy/settling.py`) and its topics
+  `baseline_fixture` and `baseline_rome` no longer exist. What can be checked now for bounded dynamics (price level, unskilled wage,
+  money stock, interest rate not drifting): `python3 sim/simulator.py spin-up-trace --civ rome_100ad --years 60` and the opening
+  check `spin_up_settled` (`sim/engine/opening_checks.py`, run by `python3 sim/simulator.py opening-checks`), which fails today (473, 970).
+  Reproduction (stocks not eaten through, the mint replacing the coin that wears) has no check of its own now.
   Not built: sensible responses (harvest loss, blocked route, productivity gain) and historical fit.
 
 ## What it would take

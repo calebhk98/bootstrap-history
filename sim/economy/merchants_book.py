@@ -15,7 +15,7 @@ import numpy as np
 
 from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
-from . import merchants_book_kernel, merchants_kernel, merchants_search
+from . import merchants_book_kernel, merchants_kernel, merchants_search, merchants_stretch
 from .merchant_figures import MarketFigures, market_name
 
 _books: "weakref.WeakKeyDictionary" = weakref.WeakKeyDictionary()
@@ -124,6 +124,14 @@ class RouteBook:
         return flags
 
 
+    def known(self, carriage, stretch) -> np.ndarray:
+        """For each slot, whether a merchant with this stretch (`merchants_stretch.stretch_of`) knows its price."""
+        flags = np.zeros(self.slots, np.bool_)
+        for tile in stretch:
+            flags |= self.news_current(carriage, tile)
+        return flags
+
+
 def book_for(area_map, specs, carriage) -> RouteBook:
     """The book of these three objects, made again when any is not the one it was made from."""
     try:
@@ -145,6 +153,7 @@ class RoutePass:
     book: RouteBook
     view_prices: np.ndarray
     carriage: object
+    offered: Optional[np.ndarray] = None               # per slot, whether a buyer can buy there (`offered_price`); None: every slot
     prepared: dict = field(default_factory=dict)       # rows searched ahead for some merchants (`merchants_batch`), by agent id
     stock_slots: dict = field(default_factory=dict)    # (good, tile) -> the slot of the market a stock there sells in, None for none
 
@@ -164,14 +173,35 @@ class RoutePass:
 
 def route_pass(view, carriage, area_map, specs) -> RoutePass:
     book = book_for(area_map, specs, carriage)
+    offered = np.zeros(book.slots, np.bool_)
+    for good_index, (good, areas) in enumerate(zip(book.goods, book.areas)):
+        base = int(book.slot_base[good_index])
+        offered[base:base + len(areas)] = [view.offered_price(good, area.area_id) is not None for area in areas]
     in_slots = getattr(view, "prices_by_slot", None)
     if in_slots is not None:
-        return RoutePass(book, in_slots(book), carriage)
+        return RoutePass(book, in_slots(book), carriage, offered)
     prices = np.zeros(book.slots, np.float64)
     for good_index, (good, areas) in enumerate(zip(book.goods, book.areas)):
         base = int(book.slot_base[good_index])
         prices[base:base + len(areas)] = [price or 0.0 for price in view.prices_across(good, areas)]
-    return RoutePass(book, prices, carriage)
+    return RoutePass(book, prices, carriage, offered)
+
+
+def buyable_sources(offered: Optional[np.ndarray], expected: np.ndarray) -> Optional[np.ndarray]:
+    """The slots a merchant can buy in: where it has an expectation (not NaN) or the market has a price on offer; None when
+    every slot counts (`offered` is None)."""
+    return None if offered is None else offered | ~np.isnan(expected)
+
+
+def only_sources(rows: "MerchantRows", sources: Optional[np.ndarray]) -> "MerchantRows":
+    """`rows` less those whose source slot is not in `sources` (a mask over slots; None keeps all)."""
+    if sources is None:
+        return rows
+    keep = sources[rows.source_slot]
+    if keep.all():
+        return rows
+    return MerchantRows(rows.good[keep], rows.source[keep], rows.destination[keep], rows.source_slot[keep], rows.destination_slot[keep],
+                        rows.rank[keep], rows.price_here[keep], rows.outlay[keep], rows.ceiling[keep])
 
 
 class DenseShares:
@@ -213,15 +243,20 @@ def merchant_array(book: RouteBook, table: Mapping[Tuple[str, str], Optional[flo
 
 
 def search(route: RoutePass, expected: np.ndarray, home_tile, interest_rate: float, margin_share: float,
-           good_allowed: Optional[np.ndarray] = None, source_allowed: Optional[np.ndarray] = None) -> MerchantRows:
+           good_allowed: Optional[np.ndarray] = None, source_allowed: Optional[np.ndarray] = None,
+           traded_tiles=()) -> MerchantRows:
     """The rows `merchants.candidate_routes` gives for a merchant with these expected prices (NaN: none), sorted by
     rank, then good, source area id and destination area id. An expectation stands in for last year's price where
-    there is one; otherwise the view's price counts where the news has reached the merchant."""
+    there is one; otherwise the view's price counts where the news has reached the merchant. A full search leaves out sources with no
+    expectation and nothing on offer (`buyable_sources`). Only areas in the merchant's stretch (its home tile and
+    `traded_tiles`, `merchants_stretch`) are seen at all."""
     book = route.book
     carriage = route.carriage
     seen = np.where(np.isnan(expected), np.where(book.news_current(carriage, home_tile), route.view_prices, 0.0), expected)
+    seen = np.where(book.known(carriage, merchants_stretch.stretch_of(home_tile, traded_tiles)), seen, 0.0)
     if good_allowed is None:
         good_allowed = np.ones(len(book.goods), np.bool_)
+    held_search = source_allowed is not None       # selling what it holds: the sources are where the stock lies, bought or not
     if source_allowed is None:
         source_allowed = np.ones(book.slots, np.bool_)
     while True:
@@ -235,5 +270,6 @@ def search(route: RoutePass, expected: np.ndarray, home_tile, interest_rate: flo
     order = np.lexsort((book.id_rank_flat[book.order_base[good] + destination],
                         book.id_rank_flat[book.order_base[good] + source], good, rank))
     good, source, destination = good[order], source[order], destination[order]
-    return MerchantRows(good, source, destination, book.slot_base[good] + source, book.slot_base[good] + destination,
+    rows = MerchantRows(good, source, destination, book.slot_base[good] + source, book.slot_base[good] + destination,
                         rank[order], price_here[order], outlay[order], ceiling[order])
+    return rows if held_search else only_sources(rows, buyable_sources(route.offered, expected))

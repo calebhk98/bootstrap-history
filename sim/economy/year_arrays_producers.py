@@ -5,12 +5,13 @@ into the year's numbering (recipe row, tile row) through a lookup array, the exp
 slot, and the crew's practice becomes the hours multiplier of each trade. No `Producer` is built. The table is the store: a phase
 that changes producers writes the store, and `refresh` reads the store again when its `version` rose (the same object when
 nothing was written). `rows` says which store row each column row is, valid until the store is compacted."""
+import math
 from dataclasses import dataclass, field
 from typing import Dict, List, Mapping, Tuple
 
 import numpy as np
 
-from .practice import practised_multiplier
+from .practice import practised_multiplier, usable_output_share
 from .producer_blocks import crews_of
 from .producer_store import ProducerStore
 from .year_arrays_price_kernel import expected_prices_by_slot
@@ -85,6 +86,11 @@ class ProducerColumns:
                       table.owner[order], tile_numbers, _crews(store, order), store, store.version, store.layout, matrices, tiles)
         return columns
 
+    def practised_yield(self) -> np.ndarray:
+        """`yield_factor` lowered, for a crew still learning, by its spoilage (`practised_yields`; `producers.with_practised_yield`
+        for the plain record)."""
+        return practised_yields(self.yield_factor, self.matrices.labour_hours[self.recipe_row], self.hours_scale, list(self.crews))
+
     def owners(self) -> List[str]:
         """Each producer's owner, by row."""
         return self.store.name_of("owners", self.owner_number)
@@ -99,6 +105,16 @@ class ProducerColumns:
         if store is self.store and store.version == self.version and not store._dead:
             return self
         return ProducerColumns.of(store, self.matrices, self.tiles)
+
+
+def practised_yields(yield_factor: np.ndarray, booked_hours: np.ndarray, hours_scale: np.ndarray, crewed) -> np.ndarray:
+    """`yield_factor` with each crewed producer's entry times `practice.usable_output_share` of its booked hours (producer by trade)
+    and the practised ones (the booked times `hours_scale`)."""
+    yields = yield_factor.copy()
+    for position in crewed:
+        practised = booked_hours[position] * hours_scale[position]
+        yields[position] = yields[position] * usable_output_share(math.fsum(booked_hours[position].tolist()), math.fsum(practised.tolist()))
+    return yields
 
 
 def _padded(column: np.ndarray, rows: np.ndarray, width: int) -> np.ndarray:

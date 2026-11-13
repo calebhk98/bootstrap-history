@@ -16,7 +16,7 @@ from sim.jit import njit
 
 from .sold_hours_kernel import sold_hours_range
 
-EVERYONE, WANTED, MOST, WAGE, FIRST, LAST, CELL_FIELDS = range(7)
+EVERYONE, WANTED, MOST, WAGE, FIRST, LAST, JOBS, CELL_FIELDS = range(8)
 STATUS, HEAD_WAGE, HEAD_TARGET, HEAD_GOAL, HEAD_OFFERED, HEAD_RESERVATION, HEAD_BASE, HEAD_LOWEST, HEAD_CEILING, \
     HEAD_FULL, HEAD_FIELDS = range(11)
 FETCH_BISECTION_STEPS = 40      # a numerical bound: the search for the wage at which fetched hands fill a shortage
@@ -318,10 +318,14 @@ def market_heads(cells, offers, exponent, constant, subsistence, ask_floor, scal
         lowest = base
         if not math.isnan(ask_floor[area]):
             lowest = ask_floor[area] / max(hours, 1e-12)
-        option = 0.0
-        if trade != fallback and not math.isnan(cells[WAGE, area, fallback]):
+        reservation = max(base * scale[area, trade], lowest)
+        if trade != fallback and not math.isnan(cells[WAGE, area, fallback]):      # `unskilled_reach.reservation_with_unskilled_option`
             option = cells[WAGE, area, fallback]
-        reservation = max(max(base * scale[area, trade], lowest), option)
+            if option > reservation:
+                share = 1.0
+                if cells[EVERYONE, area, trade] > 0.0:
+                    share = min(1.0, max(0.0, cells[JOBS, area, fallback]) / cells[EVERYONE, area, trade])
+                reservation = reservation + share * (option - reservation)
         last = cells[WAGE, area, trade]
         if trade == fallback:
             substitute = np.inf

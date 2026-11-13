@@ -1,6 +1,8 @@
 """The goods market's views: quotes, the year's book and the goods categories."""
 from sim.assembly.api import Part
 
+from sim.world.demand import production_data
+
 from . import trade_duty, unit_mass
 
 
@@ -68,7 +70,7 @@ class GoodsViews(Part):
 
 	def unit_mass_kg(self, material):
 		"""Kilograms in one unit of a material, as the freight model reads it."""
-		return unit_mass.unit_mass_kg(material)
+		return unit_mass.unit_mass_kg(material, production_data(self.needs.mods_directory()))
 
 	def border_duty_per_tonne(self, source, destination, price_per_tonne):
 		"""Money the destination country's state charges on a tonne bought at `price_per_tonne` in `source`; infinite on an embargo."""

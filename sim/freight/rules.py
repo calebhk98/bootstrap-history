@@ -21,6 +21,13 @@ def freight_markup(book_price_per_kg: Optional[float], haul_cost_per_tonne: Opti
     return 1.0 + freight_per_kg / book_price_per_kg + cargo_cost_share
 
 
+def usable_mode_costs(mode_costs: Mapping[str, float], usable_modes: Iterable[str]) -> Dict[str, float]:
+    """`mode_costs` of the modes in `usable_modes` only: a mode whose means (the nodes its data requires) the society
+    does not hold is not offered, however well its carrier could be priced."""
+    usable = frozenset(usable_modes)
+    return {mode: cost for mode, cost in mode_costs.items() if mode in usable}
+
+
 def dues_money_per_tonne(dues_hours: Mapping[str, float], wage: float) -> Dict[str, float]:
     """{mode: money per tonne} of the modes that levy dues, the hours per tonne paid at the carrier's wage."""
     return {mode: hours * wage for mode, hours in dues_hours.items() if hours > 0.0}

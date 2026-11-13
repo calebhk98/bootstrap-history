@@ -1,5 +1,5 @@
 """A siege and a storm, and a tile won: the army that stands on another owner's tile fights its defenders by the battle
-rule; a tile won is held at the level the control data names and rises with the years it is held."""
+rule; a tile won is held at the level the control data names and rises as its owner's authority on it grows."""
 from typing import Dict, List
 
 from sim.actors.api import RecordConquestContact
@@ -62,6 +62,8 @@ class Contest(Part):
 			result = turn["result"]
 			outcome = turn["outcome"]
 			if outcome is not None:
+				for member in [army] + field:
+					member.log.append({"kind": "battle", "tile": tile})
 				self.needs.send(RecordWorldEvent(
 					"battle", actors=(army.owner, defender), tiles=(tile,), cause="assault",
 					facts=dict(attacker_won=outcome.attacker_won, attacker_win_probability=outcome.attacker_win_probability,
@@ -106,16 +108,20 @@ class Contest(Part):
 		if campaign_year_rules.rout(army, owned_home):
 			armies.pop(army.army_id, None)
 
+	def tile_authority(self, owner: str, tile: str) -> float:
+		"""What the owner's state can collect, order and levy on the tile (reach times hold, 0 to 1); none for an owner with no state."""
+		if not self.needs.has_state[owner]:
+			return 0.0
+		return float(self.needs.country_world[owner].collection.collection_shares().get(tile, 0.0))
+
 	def consolidate_conquests(self) -> None:
-		"""A tile taken by an army rises in control the longer its owner holds it with an army on it."""
+		"""A tile taken by an army rises in control as its owner's authority on it (reach from the seat, hold against risings)
+		reaches the data's thresholds."""
 		held_since = self.world.held_since
 		controls = self.needs.store[CONTROL_STORE]
-		year = int(self.needs.year())
 		levels = tile_owners.control_levels()
 		for tile, entry in sorted(held_since.items()):
-			garrisoned = any(record["owner"] == entry["by"] and record["tile"] == tile
-			                 for record in self.world.armies.values())
-			keep, level = campaign_year_rules.consolidation(entry, self.needs.tile_owner[tile], garrisoned, year,
+			keep, level = campaign_year_rules.consolidation(entry, self.needs.tile_owner[tile], self.tile_authority(entry["by"], tile),
 			                                                controls["values"].get(tile, controls["default"]), levels,
 			                                                tile_owners.conquest_level)
 			if not keep:

@@ -601,10 +601,15 @@
     "silver": "the Taxco silver mines are dated by their catalogue entry to the 1530s, after this start, so no silver deposit in the catalogue was being worked; silver in Mexica hands came by tribute and trade as worked objects from West Mexican and Oaxacan metalworkers; a note on where the metal came from, with no figure to source"
   },
   "unsupplied_basket_goods": {
+    "platinum_g": "the platinum-group-metals node is not held at the start and no partner supplies platinum; the ornament need is met by the other ornament metals and goods the society works",
+    "rice_kg": "the rice-cultivation node is not held at the start and no partner supplies rice; households eat the civilisation's own staple until the node is learned",
     "lard_kg": "No pigs are held and no partner supplies them: its households cook with other fats and oils.",
     "bronze_kg": "the bronze gate is held but its input tin_kg is gated on a node this society does not hold and no partner supplies tin; implements are met by stone and obsidian tools instead",
     "cheese_kg": "cheese needs milk_kg, and with no milking animals in the Americas the herd nodes are not held",
     "dyed_cloth_kg": "the dyed-cloth recipe is gated on the madder dyeing node, which this society does not hold (it is listed among its gated nodes), and no partner supplies the dyed cloth; the recipe set has no other dye gate for it (Complaints/533)",
+    "linen_kg": "linen is woven from flax, an Old World crop; the linen node is not held (it is among the goods that wait for the Old World) and no partner supplies it, so households clothe themselves in the cotton and other cloth this society makes",
+    "light_tallow_candle_linen": "the candle needs a linen wick and tallow, and neither the linen node nor the tallow node is held; light came from other sources the recipe set does not model",
+    "light_tallow_candle_linen_wick": "the wick is linen cloth and the linen node is not held, so no wick can be made; light came from other sources the recipe set does not model",
     "felt_kg": "the felting gate is held but its input wool_kg needs a sheep flock this society never kept",
     "light_oil_lamp": "the lamp recipe's gate is held but its input olive_oil_kg is gated on a node this society does not hold and no partner supplies it, so no lamp can be filled; light came from other sources the recipe set does not model",
     "light_oil_lamp_linen_wick": "the lamp recipe's gate is held but its input olive_oil_kg is gated on a node this society does not hold and no partner supplies it, so no lamp can be filled; light came from other sources the recipe set does not model",
@@ -614,7 +619,6 @@
     "camphor_kg": "camphor came from East Asian and Indonesian trade; the distillation node it is gated on is not held and no partner supplies it",
     "canvas_kg": "heavy sailcloth needs the Old World frame loom and the sailing ships this society lacked",
     "cast_iron_kg": "cast iron needs the blast furnace, which this society does not yet have and no partner supplies",
-    "cement_portland_kg": "Portland cement is a modern industrial product far past this start; households bid for it only because the need data lists it as shelter",
     "foxglove_leaf_kg": "medical use of foxglove leaf dates from long after this start; the need data lists it for health, so households bid without a technique or tradition to supply it",
     "iron_bar_kg": "no ironworking; the society works stone, bronze, copper and the precious metals",
     "mat_opium": "opium poppy cultivation and its medical use were not part of this society's tradition and no partner supplies it",
@@ -778,8 +782,8 @@
       "rate": 0.15,
       "paid_in": "wheat_kg",
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): commoners' tribute in goods to the calpixqui (Codex Mendoza tribute lists name the goods, not a share of the harvest); the share carries over the civilisation's former fitted share and has no source of its own.",
-        "confidence": "D"
+        "source": "Codex Mendoza tribute lists name goods, not a share of harvest (pages.ucsd.edu/~dkjordan/arch/aztec/mexic-12.html, opened: over 125,000 cloaks and thousands of skins due about every eighty days; no percentage given). Ballpark from opened agrarian analogues: Han land tax a thirtieth (3.3 per cent, Wikipedia Han dynasty), an English geld year 2 shillings on a hide worth 20 (10 per cent, Wikipedia Hide (unit)). The 0.15 is above both, reflecting that the Aztec lists are large against a population of about 6 million (Wikipedia Aztec Empire, infobox), and has no direct source.",
+        "confidence": "C"
       }
     },
     {
@@ -787,27 +791,27 @@
       "basis": "imports_value",
       "rate": 0.05,
       "_internal": {
-        "source": "TEMPORARY HEURISTIC (CLAUDE.md 4.4): market and long-distance traders (pochteca) paid dues to the ruler; the rate is unattested.",
-        "confidence": "D"
+        "source": "No Aztec market-dues rate was found: Wikipedia Tlatelolco (opened) gives Cortes's '60,000 buyers and sellers' a day and Wikipedia Aztec economy pages give no rate. Analogue, Wikipedia Alcabala (opened): a sales duty of 5 per cent in Castile in 1341, 2 to 14 per cent over time, and 'generally lower' in the Americas. 0.05 is that analogue, a ballpark.",
+        "confidence": "C"
       }
     }
   ],
   "_internal": {
     "cast_actors": {
-      "source": "Initial conditions of a church and an academy, placeholders to be replaced by a count of the clergy and scholars and of the land and tithes that kept them. Only the starting sizes are set here; what each collects and whether its people are out of pocket later follow from the land market's rent, the sales of the goods tithed and the spread of schooling.",
-      "confidence": "D"
+      "source": "Wikipedia, Aztec religion (opened): 'many tiers of priests, priestesses, novices, nuns, and monks (some part-time)', trained at the calmecac and telpochcalli, a temple in each calpulli; Wikipedia, Templo Mayor (opened): Sahagun counted 78 buildings in the sacred precinct. No headcount is on any opened page. Analogue: England's church of about 45000 in 4.5 million people is 1.0 per cent, and Wikipedia, Dissolution of the Monasteries (opened) has one adult man in fifty in a religious order; 40000 in 5 million is 0.8 per cent, the same range, a ballpark. Scholars (2000): Wikipedia, Tenochtitlan (opened): four camps of 20 districts, so 80 calpulli, and '200,000+' people; Wikipedia, Calmecac (opened): the school for noblemen's sons, run by priests, one in the capital and others in villages, no count; Wikipedia, Calpulli (opened): the calpulli ran telpochcalli schools. 2000 in 5 million is 0.04 per cent, close to the Han academy's 0.05 per cent (Wikipedia Taixue); a ballpark.",
+      "confidence": "C"
     },
     "starting_interest_rate": {
       "source": "Credit was in kind (cacao, cloth, maize) with pledges of labour; no attested monetary interest rate. A placeholder for near-absent formal lending.",
       "confidence": "E"
     },
     "starting_tax_share": {
-      "source": "Commoner tribute in goods and labour recorded in the Codex Mendoza and Matricula de Tributos; the share falling on a trading household is an estimate.",
-      "confidence": "D"
+      "source": "Commoner tribute in goods and labour recorded in the Codex Mendoza and Matricula de Tributos; the share falling on a trading household is an estimate. Wikipedia, Aztecs (opened): 'imperial taxes imposed a burden on commoner households, who had to increase their work to pay their share'; analogues: Han combined land, poll and labour burden estimated at 0.08 and the Norse and English figures in this pass. 0.2 is above those, a ballpark, because tribute and tequitl labour both fell on commoners.",
+      "confidence": "C"
     },
     "standing_army": {
-      "source": "The warrior orders and the palace guard, the men who fought as a profession; the rest of an army was levied from the calpulli for the campaign (Hassig, Aztec Warfare). An approximate opening headcount.",
-      "confidence": "D"
+      "source": "The warrior orders and the palace guard, the men who fought as a profession; the rest of an army was levied from the calpulli for the campaign (Hassig, Aztec Warfare). Wikipedia, Aztec warfare (opened): 'Aztec society had no standing army', only elite warrior societies and the soldiers of a few fortifications were full-time; brewminate.com/yaoyotl-aztec-warfare (opened): each town supplied about 400 men and 'as many as 25 such divisions, or 200,000 men, could be mobilized'. 20000 is the orders plus the levy kept on call, about a tenth of that campaign figure, a ballpark; no count of the orders was found.",
+      "confidence": "C"
     }
   }
 }

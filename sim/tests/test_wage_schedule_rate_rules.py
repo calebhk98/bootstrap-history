@@ -8,6 +8,7 @@ import unittest
 from sim.economy import api as economy_api
 from sim.economy.recipes import recipes_from_production_data
 from sim.engine import data
+from sim.tests.repository_tables import TRADE_REGISTRY
 from sim.workforce import wage_schedule
 from sim.labour import wages
 from sim.world import demand
@@ -19,7 +20,7 @@ class TrainingPremium(unittest.TestCase):
 
     def test_the_schedule_prices_training_at_the_households_time_preference(self):
         civ = data.load_civ("rome_100ad")
-        schedule = wage_schedule.build_schedule(data.TRADE_REGISTRY, civ)
+        schedule = wage_schedule.build_schedule(TRADE_REGISTRY, civ)
         years = schedule.training_years["smith"]
         self.assertAlmostEqual(schedule.premium("smith"), 1.0 + economy_api.premium_for_training_years(years))
         self.assertAlmostEqual(schedule.premium("smith"), wages.training_premium(
@@ -27,8 +28,8 @@ class TrainingPremium(unittest.TestCase):
 
     def test_the_civilisations_lending_rate_does_not_move_the_training_premium(self):
         civ = dict(data.load_civ("rome_100ad"))
-        low = wage_schedule.build_schedule(data.TRADE_REGISTRY, dict(civ, starting_interest_rate=0.02)).premium("smith")
-        high = wage_schedule.build_schedule(data.TRADE_REGISTRY, dict(civ, starting_interest_rate=0.20)).premium("smith")
+        low = wage_schedule.build_schedule(TRADE_REGISTRY, dict(civ, starting_interest_rate=0.02)).premium("smith")
+        high = wage_schedule.build_schedule(TRADE_REGISTRY, dict(civ, starting_interest_rate=0.20)).premium("smith")
         self.assertAlmostEqual(high, low)
 
 

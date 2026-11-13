@@ -21,6 +21,8 @@ files.
 
 Land-limited materials state land_hectare_years and the solver charges rent for it.
 """
+
+CIVILISATIONS = ()   # builds no game, so the runner warms no start for it
 import unittest
 
 from sim.prices import solve_prices_core, rent_standin, engine_seam
@@ -176,16 +178,22 @@ class WhichMaterialsCarryLandTests(unittest.TestCase):
 
     def test_livestock_byproducts_and_the_two_not_land_limited_entries_do_not(self):
         # bone_kg and kin: their own yield_basis declines to charge the
-        # animal's land/feed cost (hide_kg and fat_kg now come from the herd
+        # animal's land/feed cost (hide_kg, fat_kg and bristles_kg now come from the herd
         # recipes, which carry the land). beeswax_kg and papyrus_sheet: their own yield_basis
         # states directly that land is not their binding constraint.
-        excluded = {"bone_kg", "bristles_kg", "horsehair_kg",
-                   "beeswax_kg", "papyrus_sheet"}
+        excluded = {"bone_kg", "horsehair_kg", "beeswax_kg", "papyrus_sheet"}
         for material in excluded:
             entry = self.production_entries.get(material)
             self.assertIsNotNone(entry, material)
             self.assertFalse(entry.get("land_hectare_years"),
                             "%s should not carry land_hectare_years" % material)
+
+    def test_bristle_has_no_entry_of_its_own_and_the_pig_herd_that_makes_it_carries_the_land(self):
+        self.assertNotIn("bristles_kg", self.production_entries)
+        makers = sorted(key for key, entry in self.production_entries.items()
+                        if "bristles_kg" in (entry.get("outputs") or {}))
+        self.assertEqual(makers, ["lard_kg"])
+        self.assertGreater(self.production_entries["lard_kg"].get("land_hectare_years"), 0.0)
 
 
 class WiringDoesNotBreakTheSolveTests(unittest.TestCase):

@@ -44,7 +44,8 @@ def a_view(stock=None, own=None, market=None, own_supply=None, unpriced=()):
 
 def bill(view, needs, span=1.0):
     return rules.material_bill(needs, span, tonnes_per_unit, view.material_pool, view.goods_stock, view.unclaimed_own,
-                               view.material_purchase_cost, view.market_tonnes, view.own_supply)
+                               view.material_purchase_cost, view.market_tonnes, view.own_supply,
+                               lambda material: view.material_pool(material)[0], lambda commodity: commodity)
 
 
 def row_of(result, material):

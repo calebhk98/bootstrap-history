@@ -22,7 +22,7 @@ OFF? - turns out to have a real, specific answer, not a shrug: no, and not
 because of money or the generic scholar/artisan pools, both of which end up
 abundant (`diagnose_capital_trap` reads them off a live Sim).
 It stalls on a small, fixed set of NAMED CRAFT TRADES the tree calls
-`TRADES_ABSENT` - chemist, electrician, engineer, machinist, optician -
+The game's `trades_absent` view - chemist, electrician, engineer, machinist, optician -
 which do not exist in this civilisation at all until someone teaches
 them (`trade_available` in sim/labour/labour_trades.py). This note is a dated finding about the rules as they were
 when it was written (the trade-formation rules are in sim/labour/trade_formation.py); re-measure before relying on it.
@@ -122,7 +122,7 @@ _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__f
 if _REPO_ROOT not in sys.path:
     sys.path.insert(0, _REPO_ROOT)
 
-from sim.engine.data import TRADES_ABSENT, load, load_civ, resolve_goal
+from sim.engine.data import load, load_civ, resolve_goal
 from sim.knowledge.api import closure
 from sim.engine.core import Sim
 
@@ -159,7 +159,7 @@ def fitness(sim, need):
 # ----------------------------------------------------------------------------
 
 def diagnose_scarce_trades(sim, nodes, outstanding, backlog_ratio=6.0):
-    """Which of the five taught trades (TRADES_ABSENT) are actually the
+    """Which of the five taught trades (the `trades_absent` view) are actually the
     thing holding this run up, read off a simulated household rather than
     guessed at.
 
@@ -177,7 +177,7 @@ def diagnose_scarce_trades(sim, nodes, outstanding, backlog_ratio=6.0):
     years per node.
     """
     scarce = {}
-    for trade in TRADES_ABSENT:
+    for trade in sorted(sim.view("trades_absent")()):
         contested = [node_id for node_id in outstanding if nodes[node_id]["lab"].get(trade, 0.0) > 0]
         if len(contested) < 2:
             continue

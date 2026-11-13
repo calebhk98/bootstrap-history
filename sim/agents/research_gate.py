@@ -7,6 +7,7 @@ exactly when the same facts would open it to the other.
 from typing import Any, Callable, Dict, List, Optional
 
 from sim.labour.api import craft_family
+from sim.land.api import action_results
 from sim.refusal import Refusal
 
 from . import awareness
@@ -17,6 +18,17 @@ SCHOLAR_FAMILY = "scholar"
 
 def unmet_prerequisites(node: Dict[str, Any], knows: Callable[[str], bool]) -> List[str]:
 	return [prerequisite for prerequisite in node.get("pre") or () if not knows(prerequisite)]
+
+
+def unmet_samples(node: Dict[str, Any], nodes: Dict[str, Dict[str, Any]], knows: Callable[[str], bool]) -> List[str]:
+	"""For each sample the node asks for (`samples`, tokens `sample:id`) that no action the researcher has done returns,
+	the first node whose action returns it (the thing to do first), sorted and without repeats."""
+	missing = set()
+	for token in node.get("samples") or ():
+		sources = action_results.sample_sources(nodes, token)
+		if not any(knows(source) for source in sources):
+			missing.add(sources[0] if sources else token)
+	return sorted(missing)
 
 
 def substitute_quality(node: Dict[str, Any], group: Dict[str, Any], has_option: Callable[[str], bool],
@@ -70,6 +82,10 @@ def refusals(actor: Any, node_id: str, world: Any) -> List[Refusal]:
 	if missing:
 		found.append(Refusal("prerequisites_unknown", "prerequisites unknown: " + ", ".join(sorted(missing)),
 							 missing=sorted(missing)))
+	absent_samples = unmet_samples(node, world.setting.nodes, lambda source: actor.knows(source, world))
+	if absent_samples:
+		found.append(Refusal("samples_missing", "has no sample brought back from the region: do " + ", ".join(absent_samples),
+							 missing=absent_samples))
 	group = unserved_substitute_group(node, lambda option: actor.knows(option, world),
 									  lambda option: option in world.setting.nodes, world.research.purchasable_substitute_discount())
 	if group is not None:

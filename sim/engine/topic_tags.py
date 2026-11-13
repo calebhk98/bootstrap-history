@@ -9,6 +9,7 @@ import os
 from typing import Dict, Optional
 
 from sim.content.api import ModError, get_ordered_mods
+from sim.content.directory_stamp import DirectoryMemo
 from sim.content.api import check_new_id
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -48,9 +49,14 @@ def load_topic_tags(root: str, mods_dir: Optional[str] = None) -> Dict[str, Dict
             for tag, spec in merged.items()}
 
 
-def current() -> Dict[str, Dict[str, tuple]]:
-    """The tags for the active mods directory, loaded once."""
+_by_directory = DirectoryMemo()
+
+
+def current(mods_dir: Optional[str] = None) -> Dict[str, Dict[str, tuple]]:
+    """The tags for `mods_dir` (loaded once per directory), else for the active mods directory, loaded once."""
     global _cache
+    if mods_dir is not None:
+        return _by_directory.get(mods_dir, lambda: load_topic_tags(_ROOT, mods_dir))
     if _cache is None:
         _cache = load_topic_tags(_ROOT, _mods_dir)
     return _cache

@@ -14,6 +14,7 @@ MEAL = Recipe("meal", {"meal": 1000.0}, {"flour": 300.0}, {"cook": 40.0})
 FLOUR_PRICE, COOK_WAGE = 1.0, 0.5
 UNIT_COST = (300.0 * FLOUR_PRICE + 40.0 * COOK_WAGE) / 1000.0
 INPUT_SHARE = 300.0 * FLOUR_PRICE / (300.0 * FLOUR_PRICE + 40.0 * COOK_WAGE)
+MULTIPLE = 3.0
 
 
 class View(ViewDefaults):
@@ -57,17 +58,17 @@ def maker(expected_meal):
 
 class HeldToBandTests(unittest.TestCase):
     def test_a_quote_cannot_lift_an_expectation_past_the_band_edge(self):
-        edge = ask_adjust.band_edge(UNIT_COST, INPUT_SHARE)
-        self.assertAlmostEqual(planning_price.held_to_band(500.0, 0.1, UNIT_COST, INPUT_SHARE), edge)
+        edge = ask_adjust.band_edge(UNIT_COST, INPUT_SHARE, MULTIPLE)
+        self.assertAlmostEqual(planning_price.held_to_band(500.0, 0.1, UNIT_COST, INPUT_SHARE, MULTIPLE), edge)
 
     def test_a_quote_inside_the_band_passes(self):
-        self.assertEqual(planning_price.held_to_band(UNIT_COST, 0.1, UNIT_COST, INPUT_SHARE), UNIT_COST)
+        self.assertEqual(planning_price.held_to_band(UNIT_COST, 0.1, UNIT_COST, INPUT_SHARE, MULTIPLE), UNIT_COST)
 
     def test_a_quote_never_cuts_an_expectation_that_stands_above_the_band(self):
-        self.assertEqual(planning_price.held_to_band(500.0, 4.0, UNIT_COST, INPUT_SHARE), 4.0)
+        self.assertEqual(planning_price.held_to_band(500.0, 4.0, UNIT_COST, INPUT_SHARE, MULTIPLE), 4.0)
 
     def test_with_no_unit_cost_the_expectation_is_left_alone(self):
-        self.assertEqual(planning_price.held_to_band(500.0, 0.1, None, INPUT_SHARE), 500.0)
+        self.assertEqual(planning_price.held_to_band(500.0, 0.1, None, INPUT_SHARE, MULTIPLE), 500.0)
 
     def test_only_a_bid_ceiling_or_an_ask_is_a_bare_quote(self):
         self.assertTrue(planning_price.is_bare_quote(View(5.0, QUOTE_BEST_UNFILLED_BID), "meal", "area"))
@@ -78,16 +79,16 @@ class HeldToBandTests(unittest.TestCase):
 
 class NextExpectationsTests(unittest.TestCase):
     def test_a_bid_ceiling_far_above_cost_lifts_the_expectation_only_to_the_band_edge(self):
-        expected = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, QUOTE_BEST_UNFILLED_BID))["meal"]
-        self.assertLessEqual(expected, ask_adjust.band_edge(UNIT_COST, INPUT_SHARE) * 1.0001)
+        expected = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, QUOTE_BEST_UNFILLED_BID), ask_multiples={"meal": MULTIPLE})["meal"]
+        self.assertLessEqual(expected, ask_adjust.band_edge(UNIT_COST, INPUT_SHARE, MULTIPLE) * 1.0001)
         self.assertGreaterEqual(expected, UNIT_COST)
 
     def test_an_ask_far_above_cost_lifts_the_expectation_only_to_the_band_edge(self):
-        expected = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, QUOTE_LOWEST_UNFILLED_ASK))["meal"]
-        self.assertLessEqual(expected, ask_adjust.band_edge(UNIT_COST, INPUT_SHARE) * 1.0001)
+        expected = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, QUOTE_LOWEST_UNFILLED_ASK), ask_multiples={"meal": MULTIPLE})["meal"]
+        self.assertLessEqual(expected, ask_adjust.band_edge(UNIT_COST, INPUT_SHARE, MULTIPLE) * 1.0001)
 
     def test_the_same_figure_as_a_traded_price_moves_the_expectation_further(self):
-        quoted = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, QUOTE_BEST_UNFILLED_BID))["meal"]
+        quoted = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, QUOTE_BEST_UNFILLED_BID), ask_multiples={"meal": MULTIPLE})["meal"]
         traded = producers.next_expectations(maker(UNIT_COST), MEAL, View(700.0, PRICE_SMOOTHED_TRADE))["meal"]
         self.assertGreater(traded, 10.0 * quoted)
 

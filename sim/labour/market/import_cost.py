@@ -26,6 +26,7 @@ class ImportCosts:
         self._spare_sources: Dict[Tuple[str, Tuple[str, ...]], Tuple[List[float], float]] = {}
         self._spare: Dict[Tuple[str, str], float] = {}      # _spare_at_most answers: the same inputs for the whole year
         self._bid_totals: Optional[Tuple[Dict[Tuple[str, str], float], Dict[Tuple[str, str], float]]] = None
+        self._bids_by_market: Optional[Dict[Tuple[str, str], list]] = None
 
     @property
     def wanted(self) -> Dict[Tuple[str, str], float]:
@@ -46,6 +47,14 @@ class ImportCosts:
                 most[(bid.area, bid.trade)] = max(most.get((bid.area, bid.trade), 0.0), bid.maximum_wage)
             self._bid_totals = (wanted, most)
         return self._bid_totals
+
+    def jobs_at(self, area: str, trade: str, wage: float) -> float:
+        """The hours employers bid for a trade in an area at `wage` or more."""
+        if self._bids_by_market is None:
+            self._bids_by_market = {}
+            for bid in self.inputs.bids:
+                self._bids_by_market.setdefault((bid.area, bid.trade), []).append(bid)
+        return math.fsum(max(bid.hours, 0.0) for bid in self._bids_by_market.get((area, trade), ()) if bid.maximum_wage >= wage)
 
     def reach(self, area: str) -> List[Tuple[float, str]]:
         """(cheapest moving cost over the routes, area) for every other area reachable from `area`, nearest

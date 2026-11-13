@@ -100,10 +100,11 @@ class Concerns:
 		node = self.world.setting.nodes[node_id]
 		if not node.get("annual_output_t"):
 			return supply.concern_output_tonnes(node, node_id, material, self.ramp(opened_year, node_id), staffed,
-												self._derived_tonnes(node_id, material))
+												self._derived_tonnes(node_id, material),
+												production=self.world.site.production_catalog())
 		return supply.concern_output_tonnes(node, node_id, material,
 											self.ramp(opened_year, node_id), staffed
-											* self.needs.concern_volume_ratio(node_id))
+											* self.needs.concern_volume_ratio(node_id), production=self.world.site.production_catalog())
 
 	def _derived_tonnes(self, node_id: str, material: str) -> float:
 		"""Tonnes a year of a material the concern's staff and plant turn out now, from the production data (its

@@ -140,19 +140,21 @@ def demand_and_own_supply(by_tag: Mapping[Tuple[str, str], float], own_supply_of
     return totals
 
 
-def throttle_demand_split(demand: Mapping[str, float], tag_of_material: Callable[[str], Tuple[str, str]]
+def throttle_demand_split(demand: Mapping[str, float], tag_of_material: Callable[[str], Tuple[str, str]],
+                          form_of_material: Callable[[str], str]
                           ) -> Tuple[collections.Counter, collections.Counter]:
-    """`demand` as (industrial, laboratory) tonnes a year by (commodity, tag): a key in grams is a bench quantity."""
+    """`demand` as (industrial, laboratory) tonnes a year by (commodity, tag, ledger key): a key in grams is a bench quantity."""
     industrial: collections.Counter = collections.Counter()
     lab: collections.Counter = collections.Counter()
     for material, amount in sorted(demand.items()):
         if not amount:
             continue
-        pair = tag_of_material(material)
+        commodity, tag = tag_of_material(material)
+        unit = (commodity, tag, form_of_material(material))
         if material.endswith(LAB_SCALE_SUFFIX) and not material.endswith("_kg"):
-            lab[pair] += amount / KILOGRAMS_PER_TONNE
+            lab[unit] += amount / KILOGRAMS_PER_TONNE
         else:
-            industrial[pair] += amount
+            industrial[unit] += amount
     return industrial, lab
 
 
@@ -227,30 +229,37 @@ class ThrottleReading(NamedTuple):
     """The year's material pace, the pool that binds it and what banking it leaves in the tonnes ledger."""
     pace: float
     binding: Optional[str]
-    banked: Tuple[Tuple[str, float], ...]     # (commodity, tonnes) in the order they are set; a later set of one commodity wins
+    banked: Tuple[Tuple[str, float], ...]     # (ledger key, tonnes) in the order they are set
     draws: Tuple[Tuple[str, float], ...]      # (commodity, tonnes drawn beyond what was owned) in the same order
 
 
-def throttle_reading(industrial: Mapping[Tuple[str, str], float], lab: Mapping[Tuple[str, str], float],
+def throttle_reading(industrial: Mapping[Tuple[str, str, str], float], lab: Mapping[Tuple[str, str, str], float],
                      own_tags: Iterable[Tuple[str, str]], electricity_need: float, electricity_have: float,
                      opening_stock: Mapping[str, float], own_supply_of: Callable[[str], float],
-                     market_tonnes_of: Callable[[str], float], pace_floor: float) -> ThrottleReading:
+                     market_tonnes_of: Callable[[str], float], flow_key_of: Callable[[str], str], pace_floor: float) -> ThrottleReading:
     """How much of the year's planned work the materials and electricity support: the worst of electricity and each
-    tracked pool, the unused owned part of every pool banked again. Changes nothing."""
+    tracked form of each pool, the unused owned part of every form banked again. A form is met from the stock held under its
+    own key, then the pool's own flow only where that flow yields the form (`flow_key_of`), then the pool's market offer, which
+    the forms of a pool's tag share. Changes nothing."""
     worst, who = 1.0, None
     if electricity_need > 1e-9 and electricity_have < electricity_need:
         fraction = max(pace_floor, electricity_have / electricity_need)
         if fraction < worst:
             worst, who = fraction, "electricity"
-    all_tags = set(industrial) | set(lab) | set(own_tags)
+    units = set(industrial) | set(lab)
+    units |= {(commodity, tag, flow_key_of(commodity)) for commodity, tag in own_tags}
     banked: List[Tuple[str, float]] = []
     draws: List[Tuple[str, float]] = []
-    for commodity, tag in sorted(all_tags):
-        draw = draw_one_material(opening_stock.get(commodity, 0.0), own_supply_of(tag), market_tonnes_of(commodity),
-                                 lab.get((commodity, tag), 0.0), industrial.get((commodity, tag), 0.0), pace_floor)
+    headroom_left: Dict[Tuple[str, str], float] = {}
+    for commodity, tag, key in sorted(units):
+        headroom_left.setdefault((commodity, tag), market_tonnes_of(commodity))
+        flow = own_supply_of(tag) if key == flow_key_of(commodity) else 0.0
+        draw = draw_one_material(opening_stock.get(key, 0.0), flow, headroom_left[commodity, tag], lab.get((commodity, tag, key), 0.0),
+                                 industrial.get((commodity, tag, key), 0.0), pace_floor)
+        headroom_left[commodity, tag] -= max(0.0, draw.net_draw)
         if draw.pace is not None and draw.pace < worst:
             worst, who = draw.pace, commodity
-        banked.append((commodity, draw.banked))
+        banked.append((key, draw.banked))
         draws.append((commodity, draw.net_draw))
     return ThrottleReading(worst, who, tuple(banked), tuple(draws))
 
@@ -364,10 +373,13 @@ def installed_by_tier(done: Set[str], generation_nodes: Mapping[str, Mapping[str
 def material_bill(needs: Mapping[str, float], span: float, tonnes_per_unit: Callable[[str], float],
                   tag_of_material: Callable[[str], Tuple[str, str]], stock_of: Callable[[str], float],
                   unclaimed_own_of: Callable[[str], float], purchase_cost: Callable[..., Any],
-                  market_tonnes_of: Callable[[str], float], own_supply_of: Callable[[str], float]) -> Dict[str, Any]:
+                  market_tonnes_of: Callable[[str], float], own_supply_of: Callable[[str], float],
+                  form_of_material: Callable[[str], str], flow_key_of: Callable[[str], str]) -> Dict[str, Any]:
     """The rows of a project's material bill and the cost of what is missing. `needs` is {material key: units}; `span`
-    the years the build takes. Each need is met from the stock, then the seat's own unclaimed output over the build, then
-    bought; what the market can deliver this year is paid at the start and the rest at today's quote."""
+    the years the build takes. Each need is met from the stock held under its own ledger key (`form_of_material`; `stock_of`
+    reads one key), then the seat's own unclaimed output over the build where the pool's flow yields that key (`flow_key_of`),
+    then bought: ore held or mined never meets a need for bar. What the market can deliver this year is paid at the start
+    and the rest at today's quote."""
     stock_left: Dict[str, float] = {}
     own_left: Dict[str, float] = {}
     headroom_left: Dict[str, float] = {}
@@ -377,11 +389,12 @@ def material_bill(needs: Mapping[str, float], span: float, tonnes_per_unit: Call
     for material, units in sorted(needs.items()):
         commodity, tag = tag_of_material(material)
         needed = units * tonnes_per_unit(material)
-        stock_left.setdefault(commodity, stock_of(commodity))
+        key = form_of_material(material)
+        stock_left.setdefault(key, stock_of(key))
         own_left.setdefault(tag, unclaimed_own_of(tag) * span)
-        from_stock = min(needed, stock_left[commodity])
-        stock_left[commodity] -= from_stock
-        from_own = min(needed - from_stock, own_left[tag])
+        from_stock = min(needed, stock_left[key])
+        stock_left[key] -= from_stock
+        from_own = min(needed - from_stock, own_left[tag]) if key == flow_key_of(commodity) else 0.0
         own_left[tag] -= from_own
         missing = needed - from_stock - from_own
         quoted = purchase_cost(material, missing, bought[commodity, tag])

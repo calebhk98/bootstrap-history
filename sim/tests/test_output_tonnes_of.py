@@ -2,6 +2,7 @@
 
 QUICK_TOPIC = True
 
+from sim.tests import repository_tables
 import random
 import unittest
 from types import SimpleNamespace
@@ -16,7 +17,7 @@ GOODS = ["wheat_kg", "cloth_kg", "iron_bar_kg", "salt_kg"]
 
 def _reads(output_by_tile):
     economy = SimpleNamespace(record=SimpleNamespace(goods=SimpleNamespace(output_by_tile=output_by_tile)))
-    return ProducerReads(SimpleNamespace(economy=lambda: economy))
+    return ProducerReads(SimpleNamespace(economy=lambda: economy, tonnes_per_unit=repository_tables.tonnes_per_unit))
 
 
 class OutputTonnesTests(unittest.TestCase):
@@ -33,6 +34,6 @@ class OutputTonnesTests(unittest.TestCase):
             held = set(generator.sample(tiles, len(tiles) // 2))
             reads = _reads(output)
             for good in GOODS:
-                view = Revenue(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={good: reads.output_tonnes_of(good)})))
+                view = Revenue(SimpleNamespace(needs=fake_needs(agent_output_tonnes_of={good: reads.output_tonnes_of(good)}, mine_output_by_tile={good: {}})))
                 view.held_tiles = lambda held=held: sorted(held)
                 self.assertEqual(view.output_tonnes(good), output_tonnes_by_table(output, good, held), (seed, good))

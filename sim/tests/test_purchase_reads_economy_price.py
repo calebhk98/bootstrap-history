@@ -4,6 +4,7 @@ game counts it. The market runs on a stub sim (its economy's prices, book and ca
 test_complaint_147_project_materials::test_the_missing_part_is_priced_at_the_market_quote."""
 QUICK_TOPIC = True
 
+from sim.tests import repository_tables
 from types import SimpleNamespace
 
 from .harness import check
@@ -60,10 +61,11 @@ class _Market(GoodsMarket):
     def __init__(self, paid, cost_table=None):
         self.economy = _Economy(paid)
         sim = SimpleNamespace(
-            economy=self.economy, **market_stand_in.market_memory(), state=SimpleNamespace(acting_seat="seat"),
+            economy=self.economy, tonnes_per_unit=repository_tables.tonnes_per_unit, **market_stand_in.market_memory(), state=SimpleNamespace(acting_seat="seat"),
             materials=SimpleNamespace(
                 prices=lambda: dict(cost_table if cost_table is not None else paid),
                 priced_key=lambda material, prices: material if material in prices else None,
+                sold_material=lambda tag: tag, sale_forms=lambda tag: [tag], stock_form=lambda material: material, form_stock_t=lambda key: 0.0,
                 tag=lambda material: (material, None),
                 price_per_unit=lambda material: (cost_table if cost_table is not None else paid).get(material)),
             foreign=SimpleNamespace(material_carriage_per_tonne=lambda key, price: CARRIAGE))
@@ -73,6 +75,9 @@ class _Market(GoodsMarket):
 
     def posted_tonnes(self, side, commodity, seat_id=None):
         return self.bought.get(commodity, 0.0) if side == "buy" else 0.0
+
+    def ordered_to_sell(self, material):
+        return 0.0
 
     def drawn_tonnes(self, commodity):
         return 0.0

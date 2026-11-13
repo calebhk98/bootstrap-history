@@ -1,5 +1,5 @@
 """Naming a project in a note: an exact id or name, never one fog hides."""
-from .nodes import NODE_NAME_NORM, NODE_IDS_LOWER, _did_you_mean, _norm_name
+from .nodes import _did_you_mean, _norm_name, names_for
 
 MAX_NAME_WORDS = 8
 
@@ -7,10 +7,11 @@ MAX_NAME_WORDS = 8
 def candidates(sim, text):
     """Visible node ids whose id or full name is exactly `text`, case and punctuation folded."""
     found = []
-    by_id = NODE_IDS_LOWER.get(str(text).strip().lower())
+    names = names_for(sim.view("mods_directory")())
+    by_id = names.ids_lower.get(str(text).strip().lower())
     if by_id:
         found.append(by_id)
-    for node_id in NODE_NAME_NORM.get(_norm_name(text), ()):
+    for node_id in names.by_name.get(_norm_name(text), ()):
         if node_id not in found:
             found.append(node_id)
     return [node_id for node_id in found

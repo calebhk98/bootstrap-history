@@ -19,7 +19,6 @@ class TrainingRow:
 
 @dataclass
 class WorkforceSociety:
-    society_labour_hours: Dict[str, float] = field(default_factory=dict)   # trade -> hours the society's workers of it give in a year
     # the unskilled hour's cleared wage at the last two clearings (the port notes it after each); the wage event reads the change
     cleared_wage: Optional[float] = None
     cleared_wage_before: Optional[float] = None

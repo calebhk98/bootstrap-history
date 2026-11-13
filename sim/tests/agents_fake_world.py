@@ -24,7 +24,7 @@ class FakePart:
 		self.__dict__["_world"] = world
 
 	def __getattr__(self, name: str) -> Any:
-		if name in ("frontier_disease_loss", "fugitive_share") and not hasattr(self.__dict__["_world"], name):
+		if name in ("frontier_disease_loss", "fugitive_share", "urban_mortality_premium") and not hasattr(self.__dict__["_world"], name):
 			return lambda: None      # a world that does not follow its regions' disease or its people's flight
 		return getattr(self.__dict__["_world"], name)
 
@@ -50,7 +50,7 @@ def flat_world(cls: Any) -> Any:
 
 def flat_namespace(**members: Any) -> Any:
 	"""A stand-in world of plain members (`SimpleNamespace(**members)`) whose parts answer them, as `flat_world` does a class."""
-	world = SimpleNamespace(**{"frontier_disease_loss": lambda: None, "fugitive_share": lambda: None, **members})
+	world = SimpleNamespace(**{"frontier_disease_loss": lambda: None, "fugitive_share": lambda: None, "urban_mortality_premium": lambda: None, **members})
 	for part in world_surface():
 		if part not in members:
 			setattr(world, part, FakePart(world))
@@ -72,6 +72,7 @@ class FakeGovernment:
 
 	def __init__(self) -> None:
 		self.asked: List[float] = []
+		self.record = SimpleNamespace(ruler_competence=None)
 
 	def collect(self, actor: Any, takings: float, world: Any) -> float:
 		self.asked.append(takings)
@@ -122,6 +123,7 @@ class FakeWorld:
 		# trade family -> people that can be put on research; node -> materials no one sells
 		self.hands: Dict[str, float] = {}
 		self.unsold: Dict[str, List[str]] = {}
+		self.research_tonnes: Dict[str, Dict[str, float]] = {}
 		# the parts of the world protocol, each answered by the flat member of this class
 		for part in world_surface():
 			setattr(self, part, FakePart(self))
@@ -137,6 +139,14 @@ class FakeWorld:
 
 	def trade_of_role(self, role: str) -> str:
 		return self.ROLE_TRADES[role]
+
+	MASONRY_HOURS = {"mason": 20.0, "labourer": 40.0}   # hours per cubic metre of the laid-wall service
+
+	def recipe_labour_hours(self, material: str) -> Dict[str, float]:
+		return dict(self.MASONRY_HOURS)
+
+	def trade_exists(self, trade: str) -> bool:
+		return trade in self.ROLE_TRADES.values()
 
 	def equipment_material(self) -> str:
 		return "iron_bar_kg"
@@ -189,6 +199,12 @@ class FakeWorld:
 
 	def unsold_materials(self, actor: Any, node_id: str) -> List[str]:
 		return list(self.unsold.get(node_id, ()))
+
+	def material_tonnes(self, node_id: str) -> Dict[str, float]:
+		return dict(self.research_tonnes.get(node_id, {}))
+
+	def commodity_of(self, material: str) -> str:
+		return material
 
 	def research_cost(self, node_id: str, max_age_years: int) -> float:
 		return self.copy_cost(node_id)

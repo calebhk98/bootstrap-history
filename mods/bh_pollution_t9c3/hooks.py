@@ -166,7 +166,7 @@ def register(api):
                              "turns them into emissions per tile with the factors in the mod's data, disperses them over the "
                              "tile's settled airshed, and shows the concentration, the excess deaths and lost harvest that "
                              "exposure implies, and the cleanup technologies held. Drivers name which source made each kilogram.")
-    def pollution(access, nodes, cmd, ended):
+    def pollution(access, cmd, ended):
         picture = assess(access)
         year = access.view("year")()
         memory = access.memory()

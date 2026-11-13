@@ -4,7 +4,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.engine.data import TRADE_FAMILY
+from sim.tests.repository_tables import TRADE_FAMILY, trade_family
 from sim.labour.hire_outcome import craft_trades_report
 
 
@@ -20,13 +20,11 @@ class CraftTradesReportTests(unittest.TestCase):
         self.assertFalse(set(report["craft"]) & set(report["not_craft"]))
 
     def test_the_craft_trades_the_help_names_are_those_the_family_table_calls_craft(self):
-        from sim.engine.data import trade_family
         report = craft_trades_report(TRADE_FAMILY, lambda trade: trade_family(trade) == "craft")
         self.assertEqual(sorted(report["craft"]), sorted(trade for trade, family in TRADE_FAMILY.items() if family == "craft"))
         self.assertTrue(report["craft"])
 
     def test_the_labourer_does_not_supervise_as_craft(self):
-        from sim.engine.data import trade_family
         self.assertNotEqual(trade_family("labourer"), "craft")
 
 

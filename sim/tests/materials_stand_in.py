@@ -32,7 +32,7 @@ def build(seat: Optional[MaterialsSeat] = None, views: Optional[Dict[str, Any]] 
         "hard_prerequisites": lambda node_id: [], "projects_record": projects(), "active_projects_version": 0, "techniques_version": 0,
         "operating": set(), "default_population": 65e6, "pop_scale": 1.0, "empire_output": {},
         "mechanic": collections.defaultdict(dict), "effect_best": lambda channel: None, "running_stamp": (None, (), None),
-        "running": lambda node_id: False, "goods_stock": lambda commodity: 0.0,
+        "running": lambda node_id: False, "goods_stock": lambda commodity: 0.0, "goods_pool_stock": lambda commodity: 0.0,
         "held_goods": ledger_rules.StockLedger(), "goods_stock_opening": {}, "goods_quote": lambda material: None,
         "can_be_bought": lambda material: False, "unit_mass_kg": unit_mass_kg,
         "purchase_quote": lambda material, tonnes, already=0.0: None if tonnes < 0 else (tonnes, 1.0),
