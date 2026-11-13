@@ -77,7 +77,10 @@
    "deposit_type": "ophiolite_massive_sulphide",
    "status": "historic",
    "conf": "B",
-   "source": "Wadi Jizzi and Lasail copper of the Semail ophiolite, smelted from the third millennium BC (Magan of the cuneiform texts); Weisgerber's excavations of the Oman copper smelting sites."
+   "source": "Wadi Jizzi and Lasail copper of the Semail ophiolite, smelted from the third millennium BC (Magan of the cuneiform texts); Weisgerber's excavations of the Oman copper smelting sites.",
+   "contained_tonnes": 3500,
+   "contained_basis": "Slag times a metal-per-slag ratio: Gebel Saleli smelting site 45 (Oman) holds about 35,000 t of slag dated Bronze Age to early and middle Islamic (Hauptmann 1985, as quoted); copper slag to metal ratio taken as 10:1 (Crew's approximate figure) = 3,500 t copper. The slag heap is not all Magan period, the ratio is approximate, and other Omani heaps (Lasail, about 100,000 t of slag per Aramco World, mostly Islamic) are not counted, so the figure is an order of magnitude only",
+   "contained_source": "Cseryova, Slags from copper processing at the Al Salili site, 2000 BC, Sultanate of Oman, Charles University thesis, https://dspace.cuni.cz/bitstream/20.500.11956/177034/1/130347368.pdf : \"Gebel Saleli site 45 was recognised 35.000 tons of Bronze Age to early and middle Islamic slags\"; Crew 1991, Journal of the Historical Metallurgy Society 25(2), https://www.hmsjournal.org/index.php/home/article/download/544/523/523 , note 2: \"the copper slag to metal ratio is taken as 10:1. This is an approximate figure only\"; Aramco World May/June 1983, https://archive.aramcoworld.com/issue/198303/oman-the.lost.land.htm : Lasail \"slag heaps contain some 100,000 tons of material\""
   },
   {
    "id": "mahd_adh_dhahab",
@@ -120,7 +123,10 @@
    "deposit_type": "laterite_and_hematite_ore",
    "status": "historic",
    "conf": "C",
-   "source": "Konasamudram and Nirmal (Telangana), the Deccan centre where wootz crucible steel was made from local ores; Craddock on early Indian iron and steel. Share for the subcontinent's iron."
+   "source": "Konasamudram and Nirmal (Telangana), the Deccan centre where wootz crucible steel was made from local ores; Craddock on early Indian iron and steel. Share for the subcontinent's iron.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) rate times quantity, Jaikishan, Desai and Rehren 2021 (Advances in Archaeomaterials 2:15-23) document a hoard of 60 crucible steel ingots but the ingot weights are in the paywalled text; (2) slag mass times ratio, no slag mass for Konasamudram in the UCL Papers from the Institute of Archaeology article or the Exeter thesis (403 on both hosts); (3) stand-in, Telangana bloomery sites have no tonnage in any page opened. Method ready once a slag mass is found: iron = slag / 3.2 to 5.3 (Crew 1991)",
+   "contained_source": "none: DOAJ abstract of Jaikishan et al. 2021, https://doaj.org/api/articles/22168632c70c477ebd719802be7e8c17 (abstract only)"
   },
   {
    "id": "khetri_copper",
@@ -147,7 +153,10 @@
    "deposit_type": "pegmatite_cassiterite",
    "status": "historic",
    "conf": "D",
-   "source": "Cassiterite of the Hazaribagh-Gaya mica belt, Bihar-Jharkhand, as a placeholder for the small Indian tin output. No source found for tin in Hazaribagh or Gaya (Indian Bureau of Mines Bihar listings omit tin; India's commercial cassiterite is in Bastar and Dantewada, Chhattisgarh), so the occurrence is unverified. Ancient India imported most of its tin."
+   "source": "Cassiterite of the Hazaribagh-Gaya mica belt, Bihar-Jharkhand, as a placeholder for the small Indian tin output. No source found for tin in Hazaribagh or Gaya (Indian Bureau of Mines Bihar listings omit tin; India's commercial cassiterite is in Bastar and Dantewada, Chhattisgarh), so the occurrence is unverified. Ancient India imported most of its tin.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) comparable, no cassiterite output for Hazaribagh or Gaya in any page opened (Wikipedia Hazaribagh lists coal only); (2) stand-in, India's commercial cassiterite (Bastar) has no tonnage in a page opened; (3) flow times years, Indian tin output pages not reached. The row itself notes ancient India imported most of its tin",
+   "contained_source": "none"
   },
   {
    "id": "zawar_lead",
@@ -205,7 +214,10 @@
    "deposit_type": "vein_copper",
    "status": "historic",
    "conf": "C",
-   "source": "Talmessi and Meskani copper-nickel-cobalt ores, Anarak district, Iran; Encyclopaedia Iranica (Copper ii, Copper resources in Iran; Anarak) gives Talmessi as a possible early native-copper mine and Anarak copper mining as probably pre-Islamic, so Bronze Age working here is not confirmed. Kerman's Sar Cheshmeh is the larger modern body."
+   "source": "Talmessi and Meskani copper-nickel-cobalt ores, Anarak district, Iran; Encyclopaedia Iranica (Copper ii, Copper resources in Iran; Anarak) gives Talmessi as a possible early native-copper mine and Anarak copper mining as probably pre-Islamic, so Bronze Age working here is not confirmed. Kerman's Sar Cheshmeh is the larger modern body.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) comparable, Mineral Resource Map lists Talmessi (Melouk area) with copper, nickel and cobalt but an empty production section; (2) stand-in, the search for Anarak or Talmessi tonnage returned only unrelated deposits; (3) rate times quantity, no Anarak slag or smelter output page found",
+   "contained_source": "none"
   },
   {
    "id": "mushiston_tin",
@@ -217,7 +229,10 @@
    "deposit_type": "pegmatite_cassiterite",
    "status": "historic",
    "conf": "B",
-   "source": "Mushiston copper-tin deposit, Kaznok valley of the Zeravshan mountains about 35 km south of Penjikent (Tajikistan), mined from the end of the third millennium BC; Karnab, Lapas and Changali (Uzbekistan) lie farther west and are not covered by this point. Cierny, Weisgerber and Parzinger on Central Asian tin; Frontiers in Earth Science 2023, doi 10.3389/feart.2023.1224873. Position approximate."
+   "source": "Mushiston copper-tin deposit, Kaznok valley of the Zeravshan mountains about 35 km south of Penjikent (Tajikistan), mined from the end of the third millennium BC; Karnab, Lapas and Changali (Uzbekistan) lie farther west and are not covered by this point. Cierny, Weisgerber and Parzinger on Central Asian tin; Frontiers in Earth Science 2023, doi 10.3389/feart.2023.1224873. Position approximate.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) comparable, the Mushiston Sn deposit papers (Konopelko, Cherny et al. 2022) were found only as abstracts with no tonnage; (2) flow times years, no output for the Bronze Age workings; (3) stand-in, no Central Asian tin deposit with a published tonnage opened",
+   "contained_source": "none"
   },
   {
    "id": "karamazar_lead",
@@ -305,7 +320,10 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "D",
-   "source": "Shuikoushan (Changning, Hunan), a lead-zinc-copper district; Qing-period Hunan lead mining is covered by Lin Rongqin on Hunan mining, but Shuikoushan's own early history was not found. Date of first working unverified."
+   "source": "Shuikoushan (Changning, Hunan), a lead-zinc-copper district; Qing-period Hunan lead mining is covered by Lin Rongqin on Hunan mining, but Shuikoushan's own early history was not found. Date of first working unverified.",
+   "contained_tonnes": 800000,
+   "contained_basis": "Rate times years, three assumptions labelled: Kangjiawan mine at Shuikoushan produced 42,000 t of ore in one month holding 3,019 t of lead plus zinc (7.2% combined); the district mine capacity is 450,000 t of ore a year, so about 32,300 t of lead plus zinc a year; lead taken as half of that (assumption, no split in any page) = about 16,200 t a year; worked 50 years (assumption, founding year not found) = about 800,000 t. Order of magnitude, a lower bound for the district",
+   "contained_source": "SMM, Shuikoushan Nonferrous Metals Reports Best Metal Yields in 10 Years, https://news.metal.com/newscontent/100732356/Shuikoushan-Nonferrous-Metals-Reports-Best-Metal-Yields-in-10-Years : \"Its Kangjiawan mine produced 42,000 tonnes of output in March, which contains 3,019 tonnes of lead and zinc\"; Wood Mackenzie, Shuikoushan zinc mine, https://www.woodmac.com/reports/metals-shuikoushan-zinc-mine-16198925 : \"an underground mine with a capacity of 450ktpa, producing primarily zinc and lead concentrates\""
   },
   {
    "id": "huize_silver",
@@ -318,7 +336,10 @@
    "status": "historic",
    "conf": "C",
    "source": "Huize and the Yunnan silver mines: Yunnan was the most productive silver region from the Yuan onward, Ming records name about twenty mines and Qing records about two hundred, and the Jinniu mines at Huize were productive from the late 1780s (Heidelberg Sinology mining project, https://www.zo.uni-heidelberg.de/sinologie/research/epm/12_jinniu_huize.html). Von Glahn, Fountain of Fortune (1996), covers the Ming-Qing silver economy but was not found to treat Huize.",
-   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "contained_tonnes": 650,
+   "contained_basis": "Derived resource, not output: the Huize ore field holds more than 5 Mt of zinc plus lead metal at ore grades of 25% to 35% combined, so 14 to 20 Mt of ore; silver at 46 g/t (assumption: low end of a 46 to 100 g/t range seen only in a search snippet of Minerals 2023, 13(3), 363, whose page returned 503 and is not a citation) gives 650 t silver at 14 Mt. Ming and Qing output is not added. tried: Chinese Wikipedia Huize (no figures), Heidelberg Jinniu page (site down), Frontiers 2023 review (no silver tonnage)",
+   "contained_source": "Geochemical Journal 41(1), 2007, Isotope geochemistry of the Huize Zn-Pb ore field, https://www.jstage.jst.go.jp/article/geochemj/41/1/41_1_65/_article : \"The Zn and Pb reserves of these two deposits are more than 5 Mt with ore grades ranging from 25% to 35% in weight.\""
   },
   {
    "id": "taruga_iron",
@@ -330,7 +351,10 @@
    "deposit_type": "laterite_bog_ore",
    "status": "historic",
    "conf": "B",
-   "source": "Taruga and the Nok culture (central Nigeria), among the earliest iron smelting in West Africa, from the middle of the first millennium BC; Fagg Rackham, Franke, Junius, Maennel and Beck, Early West African Iron Smelting: The Legacy of Taruga in Light of Recent Nok Research, African Archaeological Review (2017), doi 10.1007/s10437-017-9262-2."
+   "source": "Taruga and the Nok culture (central Nigeria), among the earliest iron smelting in West Africa, from the middle of the first millennium BC; Fagg Rackham, Franke, Junius, Maennel and Beck, Early West African Iron Smelting: The Legacy of Taruga in Light of Recent Nok Research, African Archaeological Review (2017), doi 10.1007/s10437-017-9262-2.",
+   "contained_tonnes": 8.6,
+   "contained_basis": "Stand-in slag-only West African site: Lejja (Nigeria), Otobo Ugwu square, more than 800 cylindrical slag blocks of 34 to 57 kg each (midpoint 45.5 kg, assumption) = about 36.4 t of slag; slag to iron ratio 3.2:1 to 5.3:1 (Crew 1991), midpoint 4.25 = 8.6 t iron. Taruga itself has 13 excavated furnaces but no published slag total, so this is an order-of-magnitude lower bound for one site",
+   "contained_source": "Wikipedia, Lejja, https://en.wikipedia.org/wiki/Lejja : \"more than 800 cylindrical slag blocks, each weighing 34 to 57 kg\" (citing Eze-Uzomaka et al., Heritage Science 2024); Crew 1991, J. Historical Metallurgy Society 25(2), https://www.hmsjournal.org/index.php/home/article/download/544/523/523 : \"slag to iron ratios of 3.2: 1 and 5.3: 1\""
   },
   {
    "id": "akjoujt_copper",
@@ -357,7 +381,10 @@
    "deposit_type": "skarn_iron",
    "status": "historic",
    "conf": "D",
-   "source": "Trai Cau and Thai Nguyen iron of northern Vietnam (Geological Survey of Vietnam); iron smelting spread to Dong Son and Oc Eo cultures from the late first millennium BC. Position approximate."
+   "source": "Trai Cau and Thai Nguyen iron of northern Vietnam (Geological Survey of Vietnam); iron smelting spread to Dong Son and Oc Eo cultures from the late first millennium BC. Position approximate.",
+   "contained_tonnes": 22300000,
+   "contained_basis": "Province-level resource used for the row: 44.6 Mt of iron ore for Thai Nguyen province, times 50% Fe (assumption, no grade in the page; a resource not a reserve, and the row's ancient workings are a tiny part of it)",
+   "contained_source": "Thai Nguyen Province news portal, Thai Nguyen builds a deep processing hub for metal minerals, https://en.thainguyen.gov.vn/thainguyen-news/thai-nguyen-builds-a-deep-processing-hub-for-metal-minerals-in-the-northern-midland-and-mountainous-region-285167 : \"44.6 million metric tons of iron ore\""
   },
   {
    "id": "khao_wong_prachan_copper",
@@ -369,7 +396,10 @@
    "deposit_type": "vein_copper",
    "status": "historic",
    "conf": "B",
-   "source": "Khao Wong Prachan valley (Lopburi, Thailand), Bronze Age copper mining and smelting; Pigott and Natapintu, Thailand's early copper-base metallurgy."
+   "source": "Khao Wong Prachan valley (Lopburi, Thailand), Bronze Age copper mining and smelting; Pigott and Natapintu, Thailand's early copper-base metallurgy.",
+   "contained_tonnes": 20000,
+   "contained_basis": "Slag times ratio: slag at Non Pa Wai alone estimated at hundreds of thousands of tons, taken as 200,000 t (the low end of 'hundreds of thousands'), at the 10:1 copper slag to metal ratio (Crew 1991, approximate) = 20,000 t copper; Nil Kham Haeng not counted, so a lower bound",
+   "contained_source": "White and Hamilton, The Transmission of Early Bronze Technology to Thailand, 2014, https://os.pennds.org/archaeobib_filestore/pdf_articles/bookchapters/2014_WhiteHamilton.pdf : \"The slag remains at Non Pa Wai alone are estimated to weigh hundreds of thousands of tons (Pigott 1999).\"; Crew 1991, https://www.hmsjournal.org/index.php/home/article/download/544/523/523 note 2: copper slag to metal ratio 10:1"
   },
   {
    "id": "copperbelt_silver",
@@ -382,7 +412,10 @@
    "status": "modern",
    "conf": "D",
    "source": "Silver won as a minor by-product of the Central African Copperbelt; no ancient silver mining is attested in the region. The share stands for the region's small silver output.",
-   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, CEIC (citing USGS) gives Zambia silver averaging 8 t a year over 1986 to 2019, about 270 t, from a search result only (page returned 403); (2) USGS minerals yearbook Zambia (403); (3) stand-in, no Congolese Copperbelt silver figure reached",
+   "contained_source": "none opened"
   },
   {
    "id": "nizhny_tagil_iron",
@@ -394,7 +427,10 @@
    "deposit_type": "skarn_magnetite",
    "status": "historic",
    "conf": "C",
-   "source": "Mount Vysokaya and Gora Blagodat, central Urals, the magnetite behind the Demidov Nizhny Tagil ironworks (begun 1725); Hudson, The Rise of the Demidov Family and the Russian Iron Industry in the Eighteenth Century (Oriental Research Partners, 1986)."
+   "source": "Mount Vysokaya and Gora Blagodat, central Urals, the magnetite behind the Demidov Nizhny Tagil ironworks (begun 1725); Hudson, The Rise of the Demidov Family and the Russian Iron Industry in the Eighteenth Century (Oriental Research Partners, 1986).",
+   "contained_tonnes": 45000000,
+   "contained_basis": "Stand-in is Gora Blagodat alone: cumulative output reached 150 Mt of ore by the early 2000s at an average of about 30% Fe = 45 Mt iron; Mount Vysokaya (the other half of the district) and remaining reserves are not counted, so a lower bound",
+   "contained_source": "Wikipedia, Blagodat (mountain), https://en.wikipedia.org/wiki/Blagodat_(mountain) : cumulative output \"reached 150 million tonnes of ore\"; \"average iron content in the mined ore was about 30%\""
   },
   {
    "id": "gumeshevsk_copper",
@@ -467,7 +503,10 @@
    "deposit_type": "vein_copper",
    "status": "historic",
    "conf": "C",
-   "source": "Inguaran, Michoacan, a copper source of West Mexican metallurgy, which began after about AD 700 along the Ecuador-Peru maritime route; Hosler, The Sounds and Colors of Power (MIT Press, 1994) and Hosler and Macfarlane, Copper Sources, Metal Production and Metals Trade in Late Postclassic Mesoamerica, Science 273 (1996) 1819-1824. Inguaran itself is not named in any source found, so its place among the sampled ores is unverified."
+   "source": "Inguaran, Michoacan, a copper source of West Mexican metallurgy, which began after about AD 700 along the Ecuador-Peru maritime route; Hosler, The Sounds and Colors of Power (MIT Press, 1994) and Hosler and Macfarlane, Copper Sources, Metal Production and Metals Trade in Late Postclassic Mesoamerica, Science 273 (1996) 1819-1824. Inguaran itself is not named in any source found, so its place among the sampled ores is unverified.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, Garcia Zaldua 2019 (Kent PhD thesis) gives single deliveries only (53 quintals, about 2.5 t, from the natives of Michoacan in 1542) and no district total; (2) comparable, The Americas 1981 article on the king's copper mine at Inguaran is paywalled; (3) stand-in, no other Mexican copper district with a tonnage opened. The thesis says Inguaran was the most important copper mine of colonial Michoacan",
+   "contained_source": "Garcia Zaldua, When Worlds Collide, University of Kent PhD 2019, https://kar.kent.ac.uk/74402/ (read as pdftotext; no total)"
   },
   {
    "id": "taxco_tin",
@@ -479,7 +518,10 @@
    "deposit_type": "vein_cassiterite",
    "status": "historic",
    "conf": "D",
-   "source": "Small cassiterite occurrences in the Taxco-Guerrero belt may have supplied tin bronze in prehispanic Mexico (Hosler); not verified. Position approximate."
+   "source": "Small cassiterite occurrences in the Taxco-Guerrero belt may have supplied tin bronze in prehispanic Mexico (Hosler); not verified. Position approximate.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) comparable, no cassiterite occurrence tonnage for Guerrero in any page opened; (2) flow times years, the row itself says the tin source is unverified; (3) stand-in, no Mesoamerican tin deposit with a published tonnage opened",
+   "contained_source": "none"
   },
   {
    "id": "zimapan_lead",
@@ -508,7 +550,10 @@
    "conf": "B",
    "source": "Taxco, Guerrero, early Spanish silver mines of the 1530s (Encyclopedia.com, Taxco; Wikipedia, Taxco gives about 1532) and part of the Mexican silver belt with Zacatecas; Bakewell, Silver Mining and Society in Colonial Mexico: Zacatecas 1546-1700 (Cambridge University Press, 1971) covers Zacatecas, not Taxco.",
    "first_worked": 1532,
-   "first_worked_source": "This entry's own source: Wikipedia, Taxco, gives about 1532 for the early Spanish silver mines. No size is given (the geological model sizes the district)."
+   "first_worked_source": "This entry's own source: Wikipedia, Taxco, gives about 1532 for the early Spanish silver mines. No size is given (the geological model sizes the district).",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, Wikipedia Taxco and Encyclopedia.com Taxco give dates (about 1532, 'remained productive into the twentieth century') and no output; (2) comparable, Encyclopedia.com 'Mining, the Americas' does not mention Taxco; (3) stand-in, the Grace's Guide Cerro de Pasco 1871 figure (2,000,000 oz silver a year, about 62 t) is a different district",
+   "contained_source": "none"
   },
   {
    "id": "oruro_tin",
@@ -535,7 +580,10 @@
    "deposit_type": "carbonate_replacement",
    "status": "historic",
    "conf": "C",
-   "source": "Cerro de Pasco, Peru, a lead-zinc-silver district worked from the colonial period on pre-Inca workings."
+   "source": "Cerro de Pasco, Peru, a lead-zinc-silver district worked from the colonial period on pre-Inca workings.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN for lead. tried: (1) flow times years, Grace's Guide gives the Cerro de Pasco silver return of 2,000,000 ounces a year in 1871 (about 62 t) but no lead; (2) USGS minerals yearbook Peru pages (403); (3) Wikipedia and Spanish Wikipedia Cerro de Pasco give dates only (discovery 1630, 1820 to 1825 interruption)",
+   "contained_source": "Grace's Guide, Cerro De Pasco Mines, Peru, https://www.gracesguide.co.uk/Cerro_De_Pasco_Mines,_Peru : \"the united returns amount to 2,000,000 ounces of silver per annum\" (1871)"
   },
   {
    "id": "keweenaw_copper",
@@ -637,7 +685,10 @@
    "deposit_type": "nitre_efflorescence",
    "status": "historic",
    "conf": "B",
-   "source": "Saran, Tirhut and Patna districts on the Gangetic plain: potassium nitrate leached from efflorescent soils, the world's main saltpetre supply from the 1600s; Buchanan, Hamilton and East India Company records."
+   "source": "Saran, Tirhut and Patna districts on the Gangetic plain: potassium nitrate leached from efflorescent soils, the world's main saltpetre supply from the 1600s; Buchanan, Hamilton and East India Company records.",
+   "contained_tonnes": 116000,
+   "contained_basis": "Flow times years, lower bound, soil nitre that regenerates: the English Company alone exported 34,132 maunds a year on average in 1733 to 1738 (36,246, 31,778, 24,190, 31,698, 46,746 for 1733, 1735, 1736, 1737, 1738), at 34 kg a maund (75 lb: 5 maunds = 375 lb = 170 kg in the second source) = 1,160 t a year; times an assumed 100 years of trade (1650 to 1750, assumption) = 116,000 t. The Dutch and other companies exported 'more or less the same volume' and are not added; a 1665 Patna report said 1,000 tons a year could be procured and Bihar exported over 20,000 t a year in the late 19th century, so the yearly flow is at least 1,000 t and the stock regenerates",
+   "contained_source": "Banglapedia, Saltpetre, https://en.banglapedia.org/index.php/Saltpetre : English Company exports in maunds for 1733, 1735, 1736, 1737, 1738, and \"all other European companies exported saltpetre more or less in the same volume\"; Firearms History blog, The History of Saltpeter XII, https://firearmshistory.blogspot.com/2016/05/the-history-of-saltpeter-xii.html : \"5 maunds (375 lbs. or 170 kg.) per season\", \"1000 tonns might easily yearly be procured\" (Patna 1665), \"over 20,000 tons of saltpeter were exported annually from Bihar alone\""
   },
   {
    "id": "iranian_plateau_saltpetre",
@@ -649,7 +700,10 @@
    "deposit_type": "nitre_efflorescence",
    "status": "historic",
    "conf": "D",
-   "source": "Nitre earths of the Iranian plateau (Khorasan, Kerman, Yazd) leached for saltpetre in the Safavid period. Position approximate."
+   "source": "Nitre earths of the Iranian plateau (Khorasan, Kerman, Yazd) leached for saltpetre in the Safavid period. Position approximate.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN, regenerating soil flow. tried: (1) flow times years, Matthee's history of firearms in Persia names saltpetre at Natanz and Lar and 21 munitions factories at Yazd and 17 at Shiraz but gives no quantity; (2) nitre-bed yield times area, only 1 kg of saltpetre per 100 kg of earth (People's Daily on the Laojun caves) and no Iranian area; (3) stand-in, Bengal (see bengal_saltpetre) is a different soil flow",
+   "contained_source": "Matthee, The History of Firearms in Persia, https://www.kavehfarrokh.com/iranian-studies/initiatives/iranian-militaria-initiative/professor-rudi-matthee-the-history-of-firearms-in-persia/ (no quantity)"
   },
   {
    "id": "shanxi_saltpetre",
@@ -661,7 +715,10 @@
    "deposit_type": "nitre_efflorescence",
    "status": "historic",
    "conf": "D",
-   "source": "Chinese xiao shi was gathered from nitre earths in north China (Shanxi, Shaanxi) and Sichuan; Needham, Science and Civilisation in China vol 5, part 7. Position approximate."
+   "source": "Chinese xiao shi was gathered from nitre earths in north China (Shanxi, Shaanxi) and Sichuan; Needham, Science and Civilisation in China vol 5, part 7. Position approximate.",
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN, regenerating soil flow. tried: (1) flow times years, no Chinese saltpetre output in any page opened (Andrade, The Gunpowder Age, and Needham not reached in full text); (2) nitre-bed yield times area, only 1 kg of saltpeter per 100 kg of earth for ancient cave workings (People's Daily, 2003, http://en.people.cn/200312/10/eng20031210_130093.shtml) and no Shanxi earth mass; (3) stand-in, Bengal exports (see bengal_saltpetre) are a different soil flow",
+   "contained_source": "People's Daily, http://en.people.cn/200312/10/eng20031210_130093.shtml : \"could have extracted one kg of saltpeter from 100 kg of earth\" (yield only)"
   }
  ]
 }
