@@ -893,6 +893,10 @@ What still fails, and the evidence:
   staple, sited ores, money against wear and wage over floor checks, which main passed in its last rebuild, Complaint 970). On main
   the leak suppressed that demand. Nothing grows cacao in any spin-up year although the recipe exists, Mexica knows its node and
   about half its tiles have the climate: being traced (placement or entry).
+- Mexica after the tool and melt fixes: money against wear passes, but its crops run by hand because a new wooden-tool crew
+  never covers its unpractised hours (`practice.recipe_for`), so it never runs and never learns; entry counts nominal idle capacity
+  (`entry.gap_beyond_spare`, `entry_margin.gap_at_entry_price`). On main the same crops had no producers at all, so main's Mexica
+  checks read cost estimates of goods nobody made. Owner question 6.
 - Silver now trades at parity far above its making cost (`price_over_cost_coin_metal`), Complaint 519's question in another form.
 - Hunger sits on fertility-0 tiles whose people have no plot and whose markets sell out (`household_hours_year.usable_plot_hours`).
 

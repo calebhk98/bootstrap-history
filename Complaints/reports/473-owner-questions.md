@@ -93,6 +93,23 @@ before and the five civilisations' opening checks took about half an hour togeth
 does not install `requirements.txt`, it should (`pip install -r requirements.txt`). `sim/jit.py` says its settings keep a
 game reproducible with or without numba; that was not checked here.
 
+## 6. A new trade's crew that never runs never learns (Mexica's tools)
+
+**What was found** (Mexica at d77138668, scratch probes; no committed command prints a producer's practice by year).
+On main, Mexica had no maize, millet or cacao producers at all: every recipe with an iron tool was uncostable, and its
+staple and coin-metal checks read cost estimates of goods nobody made. On the branch those producers exist and run,
+but by hand, because almost no wooden tools are made. A new wooden-tool crew starts unpractised and
+`practice.recipe_for` (sim/economy/practice.py) multiplies its hours several-fold; at that cost its plan's
+`share_working` is nil, so it never runs, so it never practises, so the penalty never clears. Entry does not break the
+trap: it subtracts the trade's nominal idle capacity (`entry.gap_beyond_spare`, `entry_margin.gap_at_entry_price`)
+and sizes newcomers to last year's tiny traded volume (`entry_sizing.sized_runs`), and newcomers join the same crew.
+
+**Question.** How should an unpractised crew decide to work? Options: (a) it plans at its practised hours and pays the
+unpractised ones while it learns (an investment in practice, as an apprentice's first year is); (b) an entrant crew
+starts at the practice of the trade's pool in the population when peers exist elsewhere; (c) leave the learning rule
+and fix only entry, so it counts capacity that can actually be staffed. `Complaints/reports/research-how-a-brand-new-trade-forms.md`
+is the background. The branch makes no change here.
+
 ## Where it stands (branch spin-up-settles)
 
 Merged, each with a rule test: the own-plot floors met before the budget is sized; unmet need read against the
@@ -105,9 +122,11 @@ has the mechanism and evidence for each, and the branches tried and not merged.
 - Norse, England, Han, Rome: the price-over-cost checks pass for all four; Rome now passes money against wear (it
   failed on main); Han's coin metal now trades. Still failing: spin_up_settled for all four; money against wear just
   under its bound for Norse and Han; the wage over its floor for Rome.
-- Mexica is worse than on main on every check but the rate: its money is cacao, which is also a food, and once
-  households can afford their food they eat the money's backing (Update 24). Being traced; not fixed.
+- Mexica fails more checks than on main, but main's passes were cost estimates of goods nobody made (question 6). On
+  the branch the money no longer drains (money against wear passes); food stays dear because the crops run by hand
+  while the tool makers' crew is caught in the learning trap.
 
-So 473 is not closed. What I would do next, in order: Mexica's money drain (it is a regression of this branch); the
+So 473 is not closed. What I would do next, in order: decide question 1 and build the stationarity test on the ensemble
+(`spin-up-trace --stages --ensemble N` exists), since single runs cannot judge a rule; question 6; the
 measure of the rate (Norse's whole gap is one year's step of a rate that is otherwise flat, question 1); then the
 remaining movers that `spin-up-trace --stages` names for each civilisation.
