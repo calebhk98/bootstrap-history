@@ -26,9 +26,8 @@ from .producer_rows_read import fields_of
 from .household_work_year import cohort_basket
 from .goods_market_rows import bids_only_quote, wanted_at_rows
 from .market_memory import market_key
-from .market_memory_asks import memory_reference_volume, price_after_resumed_trade, wanted_at
+from .market_memory_asks import wanted_at
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE
-from .market_memory_offers import price_after_thin_trade, price_toward_quote
 from .notional import making_costs
 from .protocols import AgentOrders
 from .recipes import input_depth_order
@@ -210,27 +209,6 @@ def _received_price(setup, record, good, market, ledger: YearLedger) -> Optional
         return math.fsum([result.quantity * result.price for result in traded] + [units * price for units, price in later]) / quantity
     return math.fsum([result.quantity * mint_price.received_price(mint_price.paid_price(spec), result, ledger.settled_to_mint(result))
                       for result in traded] + [units * price for units, price in later]) / quantity
-
-
-def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):
-    """The price a market remembers after a year in which it traded. Against a remembered quote (a bid ceiling, an ask, a cost:
-    no one paid it) the trade is weighed by its share of the reference volume, in either direction: a rounding-sized trade
-    moves the quote a rounding-sized step, and a representative one replaces it. Against a price that was paid, `remembered_price`
-    and the resumed-trade rule."""
-    if old_was_quote and old is not None:
-        return remembered_price(old, cleared, quantity, reference_volume)
-    return price_after_resumed_trade(old, remembered_price(old, cleared, quantity, reference_volume), quiet_years)
-
-
-def remembered_price(old, cleared, quantity, usual_volume):
-    """The price a market remembers after trading `quantity` at `cleared`: moved from the old price in
-    proportion to the trade against `usual_volume` (the caller passes the larger of the market's usual
-    volume and what buyers wanted at the old price), so a sliver of trade cleared at a price nobody
-    normally pays does not become the price everyone plans from. An `old` that is None (nothing remembered, or only a
-    quote no one paid) is replaced by the trade whole."""
-    if old is None or usual_volume <= 0.0:
-        return cleared
-    return old + min(1.0, quantity / usual_volume) * (cleared - old)
 
 
 def _turn_on_columns(setup, record, view, world, positions, in_kind, order_book, ledger, home=None) -> None:

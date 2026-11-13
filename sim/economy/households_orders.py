@@ -20,7 +20,7 @@ from sim.world.need_basket import (Basket, PricedNeed, need_units, price_ceiling
 from . import durable_stock, household_grown_floors, households_buffer_stock, households_store, lender_ask, opening_resting
 from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
 from .households_basket import need_prices
-from .opening_demand_kernel import flexible_budget_left
+from .opening_demand_kernel import flexible_budget_left, store_pot
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
@@ -231,7 +231,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
         above_buffer = cash + claims + store_value - target
         store_bids, store_spend = households_store.store_bids(
             cohort, view, specs, basket, weights, store_prices, held, above_buffer, real_rate,
-            min(savings, usable - budget_total))
+            store_pot(savings, usable, budget_total, spending, floor_wanted, floor_scale, flexible_scale))
         bids.extend(store_bids)
         savings -= store_spend
         offers = tuple(households_store.store_offers(cohort, view, specs, weights, store_prices, held,
