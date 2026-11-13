@@ -69,12 +69,24 @@ def target_rate(requests, offers, able, constants):
 
 
 @njit
-def settled_rate(last_rate, has_last_rate, target, constants):
+def settled_rate(last_rate, has_last_rate, target, lowest_ask, highest_ceiling, constants):
     """The base rate after the sticky move from the last one toward `target`: a declared share of the gap closed in a year.
-    Borrowers turned away, or funds idle, at the settled rate are what slow repricing costs."""
+    A rate below every ask is one no one lends at, so where a borrower's ceiling reaches the lowest ask the rate is at least it."""
     if not has_last_rate:
         return target
-    return last_rate + max(0.0, min(1.0, constants[ADJUSTMENT_SHARE])) * (target - last_rate)
+    rate = last_rate + max(0.0, min(1.0, constants[ADJUSTMENT_SHARE])) * (target - last_rate)
+    if rate < lowest_ask <= highest_ceiling:
+        return lowest_ask
+    return rate
+
+
+@njit
+def highest_ceiling_of(requests):
+    """The highest rate any request would pay (negative infinity with no requests)."""
+    highest = -numpy.inf
+    for row in range(requests.row_count[0]):
+        highest = max(highest, requests.ceiling[row])
+    return highest
 
 
 @njit
@@ -238,7 +250,7 @@ def clear_loans(requests, offers, constants, last_rate, has_last_rate, rate_ceil
     price_requests(requests, offers, lowest_ask, constants)
     able = able_to_borrow(requests, max(0.0, lowest_ask))
     _found, target = target_rate(requests, offers, able, constants)
-    base_rate = settled_rate(last_rate, has_last_rate, target, constants)
+    base_rate = settled_rate(last_rate, has_last_rate, target, lowest_ask, highest_ceiling_of(requests), constants)
     if not able.any():       # lenders alone are not a price: the rate still drifts toward the lowest ask
         scalars[0], scalars[1] = max(0.0, base_rate), 1.0
         return NO_BORROWER_AT_ASK

@@ -36,15 +36,9 @@ class GlutTests(unittest.TestCase):
     def test_a_glut_of_funds_leaves_the_rate_at_the_lenders_floor_not_zero(self):
         floor = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, 0.0)
         offers = [FundsOffer("saver:%d" % index, "coin", 1000.0, floor) for index in range(5)]
-        _loans, rate, _unmet = credit.clear([_request(10.0)], offers, "coin", floor, {})
+        _loans, rate, _unmet = credit.clear([_request(10.0)], offers, "coin", 0.0, {})
         self.assertAlmostEqual(rate, floor)
         self.assertGreater(rate, 0.0)
-
-    def test_a_glut_of_funds_moves_a_rate_below_the_floor_up_by_the_declared_share(self):
-        floor = lender_ask.lowest_ask(HOUSEHOLD_TIME_PREFERENCE, 0.0)
-        offers = [FundsOffer("saver:%d" % index, "coin", 1000.0, floor) for index in range(5)]
-        _loans, rate, _unmet = credit.clear([_request(10.0)], offers, "coin", 0.0, {})
-        self.assertAlmostEqual(rate, credit.RATE_ADJUSTMENT_SHARE_PER_YEAR * floor)
 
     def test_a_glut_does_not_pull_the_rate_below_a_scarred_lender_either(self):
         scarred = lender_ask.lowest_ask(0.05, 0.0, expected_loss_rate=0.1)

@@ -62,13 +62,13 @@ class RateAtCeilingCandidateTests(unittest.TestCase):
         self.assertEqual(result.loans, [])
         self.assertAlmostEqual(sum(left.amount for left in result.unmet), 100.0)
 
-    def test_a_sticky_rate_still_under_the_ask_lends_nothing_while_it_moves_the_declared_share_toward_it(self):
+    def test_a_sticky_rate_under_the_ask_comes_up_to_the_ask_and_lends_at_it(self):
         offers = [funds("lender", 1000.0, 0.60)]
         result = credit.clear_with_cause([request("plant_a", 100.0, 1.5)], offers, "coin", 0.12, {},
                                          rate_ceiling=1.0)
-        self.assertAlmostEqual(result.rate, 0.12 + credit.RATE_ADJUSTMENT_SHARE_PER_YEAR * (0.60 - 0.12))
-        self.assertEqual(result.loans, [])
-        self.assertAlmostEqual(sum(left.amount for left in result.unmet), 100.0)
+        self.assertAlmostEqual(result.rate, 0.60)
+        self.assertAlmostEqual(sum(loan.principal for loan in result.loans), 100.0)
+        self.assertEqual(result.unmet, [])
 
     def test_the_bound_is_on_the_real_rate_so_expected_inflation_lets_the_ask_clear(self):
         # asks of 0.60 are time preference plus 0.55 expected inflation: real 0.05, under a real bound of 0.48
