@@ -9,6 +9,8 @@ import numpy
 from sim.book_tables import FREE
 from sim.jit import njit
 
+from .stock_residue import STOCK_RESIDUE_UNITS
+
 
 @njit
 def loss_moves(agent_order, agent_first_slot, stocks, share_lost, takes_part, good_rank, tile_rank):
@@ -50,6 +52,8 @@ def loss_moves(agent_order, agent_first_slot, stocks, share_lost, takes_part, go
             quantity = stocks.quantity[slot]
             if quantity > 0.0:
                 loss = quantity * share_lost[stocks.good[slot]]
+                if loss > 0.0 and quantity - loss < STOCK_RESIDUE_UNITS:
+                    loss = quantity             # what would remain is rounding residue
                 if loss > 0.0:
                     keys[entries] = good_rank[stocks.good[slot]] * tiles + tile_rank[stocks.tile[slot]]
                     chain_slots[entries] = slot

@@ -9,6 +9,7 @@ import numpy
 
 from sim.jit import njit
 
+from .stock_residue import STOCK_RESIDUE_UNITS
 from .types import (QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK, ClearingResult, Quote)
 
 
@@ -25,7 +26,7 @@ def untraded_figures(bid_ptr, offer_ptr, budget, maximum_price, reservation, qua
     best_bid = numpy.full(markets, numpy.nan)
     for market in range(markets):
         for offer in range(offer_ptr[market], offer_ptr[market + 1]):
-            if quantity[offer] > 0.0:
+            if quantity[offer] >= STOCK_RESIDUE_UNITS:
                 supply[market] += quantity[offer]
                 asked = max(reservation[offer], minimum[market]) if has_minimum[market] else reservation[offer]
                 if not asked >= lowest_clamped[market]:
