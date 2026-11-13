@@ -72,12 +72,29 @@ gold.
 **Question.** Should `price_over_cost_coin_metal` keep its band for a metal paid at parity, or test that parity covers
 cost? The branch does not change the check.
 
-## Findings so far (for context)
+## 5. The environment was missing numba
 
-- The drift in every civilisation is a contraction of the money flow, not of the money stock: coin moves from
-  producers to households, households' spending tracks their income, and income falls as producers shrink.
-- The main leak found: a household's budget is sized as if it bought its whole food floor, and only afterwards are the
-  floors its own plot grew removed from its bids. The money this frees is neither spent nor offered to lenders
-  (sim/economy/households_orders_kernel.py, the cut "the floors the own plot grew are not bought"). Being fixed.
-- The interest rate jumps because the declared partial adjustment toward the clearing rate is overridden by three
-  snaps in nearly every year (sim/loans/clearing_kernel.py `settled_rate`). Being fixed.
+`requirements.txt` lists numba, and `sim/jit.py` runs the kernels as plain Python without it ("much slower"). This
+session's cloud environment did not have it until an agent installed it mid-session; a Rome opening took about an hour
+before and the five civilisations' opening checks took about half an hour together after. If the environment's setup
+does not install `requirements.txt`, it should (`pip install -r requirements.txt`). `sim/jit.py` says its settings keep a
+game reproducible with or without numba; that was not checked here.
+
+## Where it stands (branch spin-up-settles)
+
+Merged, each with a rule test: the own-plot floors met before the budget is sized; unmet need read against the
+economy's food need; the mint bids where its metal trades and weighed metal is paid at parity; a residue left by decay is
+removed and is not an offer; an unpriced tool is costed by its fallback chain; and `spin-up-trace --stages`, a committed
+command that prints both spin-up stages year by year with the settle gap of each quantity. Complaint 473's Update 24
+has the mechanism and evidence for each, and the branches tried and not merged.
+
+`python3 sim/simulator.py opening-checks --civs <civ>` on the head, against main's last rebuild (Complaint 970):
+- Norse, England, Han, Rome: the price-over-cost checks pass for all four; Rome now passes money against wear (it
+  failed on main); Han's coin metal now trades. Still failing: spin_up_settled for all four; money against wear just
+  under its bound for Norse and Han; the wage over its floor for Rome.
+- Mexica is worse than on main on every check but the rate: its money is cacao, which is also a food, and once
+  households can afford their food they eat the money's backing (Update 24). Being traced; not fixed.
+
+So 473 is not closed. What I would do next, in order: Mexica's money drain (it is a regression of this branch); the
+measure of the rate (Norse's whole gap is one year's step of a rate that is otherwise flat, question 1); then the
+remaining movers that `spin-up-trace --stages` names for each civilisation.
