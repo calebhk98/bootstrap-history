@@ -67,8 +67,8 @@ DEBT_RATE_REPUTATION_SCALE = declare(
         "is a heuristic layered on a heuristic.")
 
 CREDIT_FREEZE_YEARS_AFTER_HALT = declare(
-    "CREDIT_FREEZE_YEARS_AFTER_HALT", 5, kind="temporary_heuristic",
-    unit="years", source=None, confidence="D",
+    "CREDIT_FREEZE_YEARS_AFTER_HALT", 5, kind="engineering_estimate",
+    unit="years", source="Modern analogue, not Roman: Wikipedia 'Fair Credit Reporting Act' (https://en.wikipedia.org/wiki/Fair_Credit_Reporting_Act): negative items removed 'seven years after the date of first delinquency'.", confidence="C",
     why="How long nobody will fund new work after projects are halted "
         "for exhausted credit. A real figure needs a model of how "
         "quickly a specific lending community forgives a specific "
@@ -103,8 +103,8 @@ HOUSEHOLD_DISPERSAL_ARTISANS_FLOOR = declare(
         "ever recover. Chosen so recovery stays possible, not measured.")
 
 DEBT_BONDAGE_DEFAULT_TERM_YEARS = declare(
-    "DEBT_BONDAGE_DEFAULT_TERM_YEARS", 10.0, kind="temporary_heuristic",
-    unit="years", source=None, confidence="D",
+    "DEBT_BONDAGE_DEFAULT_TERM_YEARS", 10.0, kind="engineering_estimate",
+    unit="years", source="Code of Hammurabi law 117 (Yale Avalon Project, https://avalon.law.yale.edu/ancient/hamcode.asp): bonded family 'shall work for three years ... in the fourth year they shall be set free'; Exodus 21:2 (Bible Gateway, NIV): 'he is to serve you for six years. But in the seventh year, he shall go free'. This fallback is within about 3x of both.", confidence="C",
     why="Fallback term of debt bondage/service for a civilisation whose "
         "own data does not specify one (civ.get('bondage_years', ...)). "
         "Historical debt-service terms across the systems this method's "
@@ -131,8 +131,8 @@ SETTLEMENT_REPUTATION_HIT = declare(
         "further tuned penalty on top of it.")
 
 SETTLEMENT_CREDIT_FREEZE_YEARS = declare(
-    "SETTLEMENT_CREDIT_FREEZE_YEARS", 12, kind="temporary_heuristic",
-    unit="years", source=None, confidence="D",
+    "SETTLEMENT_CREDIT_FREEZE_YEARS", 12, kind="engineering_estimate",
+    unit="years", source="Modern analogue, not Roman: Wikipedia 'Chapter 7, Title 11, United States Code' (https://en.wikipedia.org/wiki/Chapter_7,_Title_11,_United_States_Code): a Chapter 7 bankruptcy 'stays on an individual's credit report for ten years'; Wikipedia 'Fair Credit Reporting Act': bankruptcies about ten years.", confidence="C",
     why="How long nobody extends fresh credit after a write-off - "
         "longer than CREDIT_FREEZE_YEARS_AFTER_HALT because an actual "
         "default is worse than a temporary halt, but the specific "
@@ -172,8 +172,8 @@ LIVING_COST_APPEARANCES_SHARE_OF_ROOM = declare(
         "study.")
 
 DEBT_SERVICE_SHARE_OF_SURPLUS = declare(
-    "DEBT_SERVICE_SHARE_OF_SURPLUS", 0.5, kind="temporary_heuristic",
-    unit="fraction of the recurring surplus", source=None, confidence="D",
+    "DEBT_SERVICE_SHARE_OF_SURPLUS", 0.5, kind="engineering_estimate",
+    unit="fraction of the recurring surplus", source="Modern analogue, not Roman: Wikipedia 'Debt-to-income ratio' (https://en.wikipedia.org/wiki/Debt-to-income_ratio): Fannie Mae 'generally permits a total DTI of up to 36%', up to 45% with strong credit; FHA 31/43. Measured against gross income, not surplus, so the share here is a looser analogue.", confidence="C",
     why="How much of the yearly surplus may go on arrears interest before "
         "a debt is called unsustainable, leaving the rest to pay the "
         "principal down. A tuned prudence level, not a lender's rule.")
