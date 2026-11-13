@@ -66,19 +66,19 @@ class BorrowersAgainstFundsTests(unittest.TestCase):
         self.assertLess(clearing.rate, START_RATE)      # the queue is rationed by quantity: the rate moves to the lender's ask, not up
         self.assertGreaterEqual(clearing.rate, 0.02)
 
-    def test_a_glut_of_funds_does_not_hold_the_rate_above_the_lowest_ask(self):
+    def test_a_glut_of_funds_moves_the_rate_toward_the_lowest_ask_by_the_declared_share(self):
         funds = [offer(amount=1_000_000.0, minimum_rate=0.02)]
         borrowing = [request(amount=100.0, maximum_rate=0.5)]
         _loans, rate, _unmet = credit.clear(borrowing, funds, COIN, 0.45, {})
-        self.assertAlmostEqual(rate, 0.02)
+        self.assertAlmostEqual(rate, 0.45 + credit.RATE_ADJUSTMENT_SHARE_PER_YEAR * (0.02 - 0.45))
 
-    def test_a_rate_held_high_does_not_turn_away_a_borrower_who_would_pay_the_clearing_rate(self):
+    def test_a_rate_still_above_a_borrowers_ceiling_turns_that_borrower_away_while_lenders_reprice(self):
         funds = [offer(amount=1_000_000.0, minimum_rate=0.02)]
         borrowing = [request(amount=100.0, maximum_rate=0.5), request(amount=100.0, maximum_rate=0.1, borrower="borrower:b")]
         loans, rate, unmet = credit.clear(borrowing, funds, COIN, 0.45, {})
-        self.assertEqual(unmet, [])
-        self.assertAlmostEqual(sum(loan.principal for loan in loans), 200.0)
-        self.assertLess(rate, 0.1)
+        self.assertGreater(rate, 0.1)      # the slow move leaves the rate above the second borrower's ceiling
+        self.assertAlmostEqual(sum(loan.principal for loan in loans), 100.0)
+        self.assertAlmostEqual(sum(item.amount for item in unmet), 100.0)
 
     def test_scarce_funds_still_let_the_rate_fall_only_by_a_share_of_the_gap(self):
         funds = [offer(amount=50.0, minimum_rate=0.02)]

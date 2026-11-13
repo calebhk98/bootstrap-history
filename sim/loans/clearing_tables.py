@@ -46,7 +46,7 @@ NewLoans = NEW_LOANS.make_type(__name__)
 
 # the kernel's constants, in this order (the declared numbers of the rules it runs)
 CONSTANT_NAMES = ("default_probability_sensitivity", "bank_lambda", "markup_reference_rate", "arrears_premium", "rate_adjustment_share",
-                  "material_lender_share", "bisection_steps")
+                  "bisection_steps")
 
 # the causes a clearing reports (0: it cleared)
 CLEARED, NO_BORROWER_AT_ASK, NO_OFFER_AT_RATE = 0, 1, 2
