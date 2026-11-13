@@ -88,7 +88,10 @@
    "surveyed_lat": 40.73,
    "surveyed_lon": -1.5,
    "surveyed_source": "Ojos Negros, Teruel, Wikipedia",
-   "order": 4
+   "order": 4,
+   "contained_tonnes": 145200000,
+   "contained_basis": "Stand-in is the Vizcaya (Bilbao) iron district: 264 Mt of iron ore mined from 1818 to 1993 (mixed siderite, hematite and limonite), times 55% Fe (assumption: between the page's siderite 48% and hematite 70%, near its limonite 55%) = 145.2 Mt iron; production only, no remaining reserve added, so a lower bound",
+   "contained_source": "Boletin Geologico y Minero 111(2-3), 2000, History of the iron mining of Vizcaya (1818 to 1993), https://info.igme.es/media/boletin/2000/111_2-3/Articulo_8.pdf (read as pdftotext): \"En total se han extraido de Vizcaya 264.000.000 t de minerales de hierro\"; Basque Government geology page, https://www.euskadi.eus/web01-a2inghez/es/contenidos/informacion/pnegras_geologia/es_def/index.shtml : siderite about 48% Fe, hematite about 70%, limonite about 55%, goethite 60% to 70%"
   },
   {
    "id": "north_africa_iron_generic",
@@ -105,7 +108,10 @@
    "source": "Wikipedia, Iron ore (opened, https://en.wikipedia.org/wiki/Iron_ore): hematite 69.9% Fe, siderite 48.2% Fe, magnetite ore \"becomes economic\" at \"roughly 25% iron\"; 300 kg/t (30% Fe) sits between that threshold and the pure-mineral grades. Original note: No specific ancient North African iron mine identified by this file's author; a generic mid-range ore-grade placeholder standing in for geography.json's 0.1 regional share so the region is not silently dropped from the supply curve.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 5
+   "order": 5,
+   "contained_tonnes": 67650000,
+   "contained_basis": "Stand-in is Ouenza and Bou-Khadra (Algeria), the best-documented North African iron ores: Ouenza over 100 Mt of red hematite plus Bou-Khadra at least 23 Mt of ore, times 55% Fe (page gives 50% to 60%, midpoint taken as assumption) = 67.65 Mt iron; reserve figures as first reported, production to 1951 not added, so a lower bound",
+   "contained_source": "Wikipedia, Societe de l'Ouenza, https://en.wikipedia.org/wiki/Soci%C3%A9t%C3%A9_de_l%27Ouenza : Djebel Ouenza \"over 100 million tons of red hematite\" with iron at 50% to 60%; Djebel Bou-Khadra \"at least 23 million tons of ore\""
   },
   {
    "id": "anatolian_iron",
@@ -122,7 +128,10 @@
    "source": "Anatolia is the traditional heartland of early iron metallurgy (Hittite ironworking predates Rome by over a thousand years), so a working iron-ore tradition there by the Roman period is well attested even without a single named mine; 350 kg/t is a round mid-range figure.",
    "deposit_type": "iron_oxide_unspecified",
    "status": "historic",
-   "order": 6
+   "order": 6,
+   "contained_tonnes": 82500000,
+   "contained_basis": "Stand-in is the Divrigi district (Sivas): A-Kafa 55 Mt iron metal plus B-Kafa 27.5 Mt iron metal (each page gives the iron metal in its estimated reserves); production before the reserve estimates is not added, so a lower bound",
+   "contained_source": "Wikipedia, Divrigi A-Kafa mine, https://en.wikipedia.org/wiki/Divri%C4%9Fi_A-Kafa_mine : \"estimated reserves of 100 million tonnes of ore grading 55% iron\", \"contains 55 million tonnes of iron metal\"; Wikipedia, Divrigi B-Kafa mine, https://en.wikipedia.org/wiki/Divri%C4%9Fi_B-Kafa_mine : \"estimated reserves of 50 million tonnes of ore grading 55% iron\", \"contains 27.5 million tonnes of iron metal\""
   },
   {
    "id": "levant_iron_generic",
@@ -139,7 +148,10 @@
    "source": "Wikipedia, Iron ore (opened, https://en.wikipedia.org/wiki/Iron_ore): hematite 69.9% Fe, siderite 48.2% Fe, magnetite ore \"becomes economic\" at \"roughly 25% iron\"; 300 kg/t (30% Fe) sits between that threshold and the pure-mineral grades. Original note: No specific ancient Levantine/Mesopotamian iron mine identified; generic placeholder for geography.json's 0.05 regional share, same reasoning as north_africa_iron_generic.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 7
+   "order": 7,
+   "contained_tonnes": 265000,
+   "contained_basis": "Stand-in is the Warda deposit near Ajloun (Jordan), the only iron deposit in Jordan extensively mined historically: the 1962 borehole survey (15 boreholes, 205 samples averaging 47.5% Fe) calculated 265,000 t of iron in the body; historical removal from the Warda cave is only about 1,100 t of iron, which is included in the body figure, not added",
+   "contained_source": "Acta Carsologica 37(2-3), 2008, The Possibly Hypogene Karstic Iron Ore Deposit of Warda near Ajloun (Northern Jordan), https://ojs.zrc-sazu.si/carsologica/article/download/149/139 (read as pdftotext): \"It was calculated that the deposit contains 265 000 t Fe.\""
   },
   {
    "id": "italia_copper_generic",
@@ -156,7 +168,10 @@
    "source": "Bracket, both opened: Birmingham Univ., Great Orme assessment (https://research.birmingham.ac.uk/portal/en/publications/an-assessment-of-copper-mineralization-from-the-great-orme-mine-llandudno-north-wales-as-ore-in-the-bronze-age(0458886e-e943-4be0-94f0-a80e67dd6d39).html): \"estimated copper grade of 10%\" for the Bronze Age veins; Wikipedia, Copper mining (opened): \"average grade of copper ores in the 21st century is below 0.6% copper\". The geometric mean of 100 and 6 kg/t is 24 kg/t. Assumption: a generic regional ore sits between a rich ancient vein and a modern bulk ore. Original note: Minor Etruscan-era copper working in Tuscany/Campania is attested but not at Rio Tinto's scale; generic 3% ore-grade placeholder for geography.json's small 0.02 share.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 8
+   "order": 8,
+   "contained_tonnes": 50000,
+   "contained_basis": "Stand-in is Montecatini Val di Cecina (Tuscany), the largest Tuscan copper deposit: about 50,000 t of refined copper produced; Le Cetine under 1,000 t and a few thousand t more from all other Tuscan occurrences are not added, so a lower bound",
+   "contained_source": "Dini, Rielli, Di Giuseppe, Ruggieri and Boschi, The Ophiolite-Hosted Cu-Zn VMS Deposits of Tuscany (Italy), Minerals 2024, 14(3), 273, https://mdpi.com/2075-163X/14/3/273 (read as the PDF copy at https://iris.cnr.it/retrieve/20548d81-e6cb-41e4-a21e-df4dd6a54ece/minerals-14-00273-v2.pdf): \"Montecatini Val di Cecina ... produced around 50,000 tonnes of refined copper\""
   },
   {
    "id": "gaul_germania_copper_generic",
@@ -240,7 +255,10 @@
    "source": "Bracket, both opened: Birmingham Univ., Great Orme assessment (https://research.birmingham.ac.uk/portal/en/publications/an-assessment-of-copper-mineralization-from-the-great-orme-mine-llandudno-north-wales-as-ore-in-the-bronze-age(0458886e-e943-4be0-94f0-a80e67dd6d39).html): \"estimated copper grade of 10%\" for the Bronze Age veins; Wikipedia, Copper mining (opened): \"average grade of copper ores in the 21st century is below 0.6% copper\". The geometric mean of 100 and 6 kg/t is 24 kg/t. Assumption: a generic regional ore sits between a rich ancient vein and a modern bulk ore. Original note: Generic placeholder for geography.json's 0.05 share.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 12
+   "order": 12,
+   "contained_tonnes": 164367,
+   "contained_basis": "Flow times years, with a stand-in mine: Guelb Moghrein at Akjoujt (Mauritania, the only documented copper mine in the western Sahara belt), copper in concentrate 2015 to 2019 summed (45,001 + 32,818 + 28,791 + 28,137 + 29,620 t) = 164,367 t. Production in five years only, no reserve added (page's reserve table is locked), so a lower bound; the deposit is iron-oxide copper-gold, not the vein copper of the Roman Maghreb, so the geological match is loose. tried: Algerian copper pages (none found), Wikipedia Guelb Moghrein (no figures), stand-in Akjoujt",
+   "contained_source": "Mining Intelligence and News, Guelb Moghrein Mine, https://miningdataonline.com/property/575/Guelb-Moghrein-Mine.aspx : copper in copper concentrate 29,620 t (2019), 28,137 t (2018), 28,791 t (2017), 32,818 t (2016), 45,001 t (2015)"
   },
   {
    "id": "anatolian_copper",
@@ -368,7 +386,10 @@
    "surveyed_lat": 51.3,
    "surveyed_lon": -2.73,
    "surveyed_source": "Mendip Hills, Wikipedia",
-   "order": 17
+   "order": 17,
+   "contained_tonnes": 100000,
+   "contained_basis": "About 100,000 tons of lead estimated from the Mendip orefield (Roman and later; tons taken as metric, a long ton would be 1.6% more); other British fields (Pennines, Derbyshire, Flintshire, Alston Moor) are not counted, so a lower bound for the row",
+   "contained_source": "British Geological Survey, Mendip Hills, Minerals and mines, https://www2.bgs.ac.uk/Mendips/Minerals/Mins_Mines_1.htm : \"It has been estimated that about 100 000 tons of lead have been obtained from the Mendips.\" (attributed to Green 1958 in the JNCC Geological Conservation Review, not opened)"
   },
   {
    "id": "hispania_lead",
@@ -472,7 +493,10 @@
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
    "order": 21,
-   "working_unknown": "UNKNOWN (D): a generic placeholder for silver in British argentiferous lead ore, not a located working; no source gives a date or size. Listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): a generic placeholder for silver in British argentiferous lead ore, not a located working; no source gives a date or size. Listed as unworked in the opening stores.",
+   "contained_tonnes": 231,
+   "contained_basis": "Derived: silver recovered with British lead = lead tonnes times this file's silver by-product ratio. 100,000 t of Mendip lead (see britannia_lead) times 2.31 kg of silver per tonne of lead (Wood 2022, as entered in britannia_lead's byproducts) = 231 t silver; a lower bound because only Mendip lead is counted and silver left in slag or litharge is ignored",
+   "contained_source": "BGS Mendip Hills, https://www2.bgs.ac.uk/Mendips/Minerals/Mins_Mines_1.htm : about 100 000 tons of lead obtained from the Mendips; silver ratio from the byproducts entry of britannia_lead in this file (Wood 2022, Archaeometry)"
   },
   {
    "id": "hispania_silver",
@@ -807,7 +831,10 @@
    "conf": "D",
    "source": "Hanshu ch. 28 (zh.wikisource.org/wiki/漢書/卷028上, opened) says of the Wu region 豫章出黃金，然菫菫物之所有，取之不足以更費: Yuzhang commandery (Jiangxi) produced gold, but so little that taking it did not cover the cost. The Poyang county entry in the same chapter, as opened, lists the county name only and carries no gold passage, so the county placement is not confirmed by a text read; it is a representative point inside the commandery. Placer working in the Yangtze basin is the usual reading. Position is the county seat's modern coordinate, so a representative point, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
-   "order": 36
+   "order": 36,
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, Hanshu ch. 28 and Wikipedia Economy of the Han dynasty give the place and trade goods but no weight of gold from Yuzhang; (2) comparable, Wikipedia Han dynasty gives a single hoard of 219 gold discs of 227.6 to 254.4 g each (about 53 kg), a stock not a mine output, so unusable; (3) stand-in, the Antiquity 2022 article on Western Han gold (a search result reading about 2,000,000 jin, about 445 t, of gold in Western Han records) was fetched but its full text is behind a paywall, so the figure is not citable here and is for the whole empire, not Jiangxi",
+   "contained_source": "none opened that gives Jiangxi gold: Wikipedia, Economy of the Han dynasty, https://en.wikipedia.org/wiki/Economy_of_the_Han_dynasty (Jiangnan listed as a gold-producing region, no quantity)"
   },
   {
    "id": "han_wanshan_cinnabar",
@@ -820,7 +847,10 @@
    "conf": "D",
    "source": "Sima Qian, Shiji ch. 129 (Huozhi liezhuan), tells of Qing, a widow of Ba commandery whose family worked a cinnabar mine for generations and who was honoured by the First Emperor: cinnabar mining in the Ba-Qianzhong (Chongqing-Guizhou) region is attested for the Qin-Han period. Wanshan (Guizhou) is that region's mercury district and stands here as the representative position; where Qing's own mine lay is not pinned down in what was read. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
-   "order": 37
+   "order": 37,
+   "contained_tonnes": 28450,
+   "contained_basis": "Flow times years, lower bound: the Wanshan mercury mine site produced 33,000 tons of mercury and vermilion from 1950 to 2001. If all of it was vermilion (HgS, 200.59 / 232.66 = 86.2% mercury) the mercury is 28,450 t; if all metallic mercury, 33,000 t. The lower value is entered. Output before 1950 (the site has been worked since the Tang, per McMaster Univ. archaeological survey) and remaining reserves are not added, and Wanshan is the stand-in for the whole Ba and Qianzhong cinnabar belt",
+   "contained_source": "China Daily, Wanshan mercury mine site, https://global.chinadaily.com.cn/a/201910/31/WS5dba7bc0a310cf3e35574b42.html : \"produced 33,000 tons of mercury and vermilion from 1950 to 2001, accounting for more than 80 percent of the nation's total output then\""
   },
   {
    "id": "mexica_tlapa_placer_gold",
@@ -833,7 +863,10 @@
    "conf": "C",
    "source": "The Codex Mendoza tribute lists record gold paid to Tenochtitlan by the provinces of Tlapa and of the Oaxaca highlands and coast (Berdan and Anawalt, The Essential Codex Mendoza, 1997), washed from river gravels; opened this pass: the Codex Mendoza (uknowledge.uky.edu/world_mexico_codices/11) lists 39 provinces paying semi-annual tribute and, among its gold, Tochtepec in northern Oaxaca paying a gold diadem, headband and bead necklaces a year; the abstract at cambridge.org/core/services/aop-cambridge-core/content/view/S095653611500022X says the gold dust and bullion recorded as tribute 'was sufficient to produce 22,000-27,000 small and medium-sized ornaments annually'. Neither page names Tlapa, so the Oaxaca gold is sourced and the Tlapa placement is not; the entry stays a place of unknown size. Position is Tlapa (Guerrero), a representative point for the placer districts. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
-   "order": 38
+   "order": 38,
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, the Codex Mendoza gold tribute is recorded as counts of items (diadems, beads, lip plugs), and King's Ancient Mesoamerica article (Cambridge) says the recorded weight was enough for 22,000 to 27,000 small and medium ornaments a year but its weight and the Tlapa share are behind a paywall; (2) comparable, Met Museum 'Golden kingdoms' pages not opened for weights; (3) stand-in, no placer gold output for another Mesoamerican district found",
+   "contained_source": "none: Cambridge, Ancient Mesoamerica, https://www.cambridge.org/core/services/aop-cambridge-core/content/view/S095653611500022X (abstract only opened)"
   },
   {
    "id": "mexica_sierra_gorda_cinnabar",
@@ -846,7 +879,10 @@
    "conf": "D",
    "source": "Mejia Perez Campos and Herrera Munoz 2013, Chungara 45(1):161-176 (redalyc.org/articulo.oa?id=32626321004, opened): the Sierra Gorda is the first region in Mexico where prehistoric underground cinnabar mining was recorded in modern times, its deposits were known and worked in prehispanic times, and cinnabar was used in Maya and Teotihuacan burials (Pakal, the Red Queen); whether the Mexica drew on them directly or through tribute is not established here. Position is the range's rough centre, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
-   "order": 39
+   "order": 39,
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, no Mexica or Sierra Gorda cinnabar tribute weight found; (2) comparable, Wanshan (see han_wanshan_cinnabar) is a different scale by orders of magnitude and a different district, not applicable; (3) stand-in, the Chungara 2013 article on the Sierra Gorda (already cited in the row) gives dates, not tonnes",
+   "contained_source": "none"
   }
  ]
 }
