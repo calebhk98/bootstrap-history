@@ -5,7 +5,6 @@ and sell it the same year (cycles in the recipes draw on stock). Producers make 
 first of their goods comes up, the state takes its tax in kind from what was grown, and then each
 market area of the good clears and settles.
 """
-import dataclasses
 import math
 from typing import Dict, List, Optional, Tuple
 
@@ -53,37 +52,6 @@ def add_orders(order_book, orders: AgentOrders) -> None:
         order_book.setdefault((bid.good, bid.area), ([], []))[0].append(bid)
     for offer in orders.offers:
         order_book.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
-
-
-def with_floor_and_budget(bid: Bid, floor_quantity: float, budget: float) -> Bid:
-    """`bid` with a new floor and budget: the bid `dataclasses.replace` makes, built directly, since the opening's
-    income search makes millions of them."""
-    return Bid(bid.buyer, bid.good, bid.area, bid.tile, floor_quantity, bid.flexible_quantity, bid.reference_price,
-               bid.elasticity, budget, bid.priority, bid.maximum_price)
-
-
-def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> AgentOrders:
-    """Floors already met from the household's own plot are not bought: each floor bid of a need is
-    cut by the share of that need's floor the cohort grew."""
-    if not grown_units:
-        return orders
-    need_of_good = {}
-    floor_of_need = {}
-    for need in basket.needs:
-        floor_of_need[need.need_id] = need.subsistence_per_person * cohort.people
-        for good, _effect in need.goods:
-            need_of_good.setdefault(good, need.need_id)
-    bids = []
-    for bid in orders.bids:
-        need_id = need_of_good.get(bid.good)
-        floor_units = floor_of_need.get(need_id, 0.0)
-        met = min(1.0, grown_units.get(need_id, 0.0) / floor_units) if floor_units > 0.0 else 0.0
-        if met > 0.0 and bid.floor_quantity > 0.0:
-            cut = bid.floor_quantity * met
-            share_kept = 1.0 - cut / (bid.floor_quantity + bid.flexible_quantity)
-            bid = with_floor_and_budget(bid, bid.floor_quantity - cut, bid.budget * max(0.0, share_kept))
-        bids.append(bid)
-    return dataclasses.replace(orders, bids=tuple(bids))
 
 
 def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLedger,

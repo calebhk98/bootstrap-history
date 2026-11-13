@@ -5,9 +5,8 @@ QUICK_TOPIC = True
 import types
 import unittest
 
-from sim.economy import household_hours_year, households_buffer_stock, opening_own, opening_resting, opening_runs, year_goods
-from sim.economy.protocols import AgentOrders
-from sim.economy.types import Bid, Recipe
+from sim.economy import household_hours_year, opening_own, opening_resting, opening_runs
+from sim.economy.types import Recipe
 
 
 def recipes():
@@ -50,26 +49,10 @@ class SoldHoursTests(unittest.TestCase):
         self.assertEqual(opening_own.sold_hours_per_worker(0.0, 0.0, 2000.0), 2000.0)
 
 
-class LessWhatItGrewTests(unittest.TestCase):
-    def test_a_floor_half_grown_is_half_bought_and_its_budget_cut_to_match(self):
-        basket = types.SimpleNamespace(needs=(types.SimpleNamespace(
-            need_id="food", subsistence_per_person=1.0, goods=(("flour", 1.0),)),))
-        cohort = types.SimpleNamespace(people=10.0)
-        bid = Bid("household", "flour", "area", "tile", 10.0, 10.0, 1.0, 1.0, 100.0)
-        cut = year_goods.less_what_it_grew(AgentOrders(bids=(bid,)), cohort, basket, {"food": 5.0}).bids[0]
-        self.assertEqual((cut.floor_quantity, cut.flexible_quantity, cut.budget), (5.0, 10.0, 75.0))
-
-
 class RestingInputStockTests(unittest.TestCase):
     def test_an_input_bought_in_the_year_is_not_held_at_its_start_and_one_not_bought_is_held_for_the_runs(self):
         held = opening_resting.resting_input_stock(10.0, {"ore": 100.0, "coal": 5.0}, {"ore"})
         self.assertEqual(held, {"coal": 50.0})
-
-
-class RestingPurseExtraSpendingTests(unittest.TestCase):
-    def test_a_purse_for_spending_beyond_income_lets_the_rule_spend_exactly_that_much(self):
-        purse = opening_resting.resting_household_purse(100.0, 0.0, extra_spending=30.0)
-        self.assertAlmostEqual(households_buffer_stock.spending_budget(100.0, 100.0 + purse, 0.0), 130.0)
 
 
 def mill_and_feeder():

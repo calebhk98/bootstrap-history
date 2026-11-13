@@ -2,8 +2,7 @@
 
 The rules are `households_orders.goods_orders` (the cohort's budget, its needs' units, the goods' affordability, the
 durables' replacement, the surplus scaled to the spending, the store's bids), `opening_own.OwnPlots.resting_orders`
-(the purse that matches the budget the plot frees), `year_goods.less_what_it_grew` (the floors the plot grew are not
-bought) and `goods_market.quantity_at` (what a bid takes at the opening price), each written once over the packed
+(the floors the plot grew are met first, as in `households_orders.goods_orders`) and `goods_market.quantity_at` (what a bid takes at the opening price), each written once over the packed
 cohorts, needs, goods and store goods. The packed columns are named by the constants below; a cohort's needs, goods
 and store goods are contiguous slices of the arrays. A bid exists when its budget is above nothing, and a cohort whose
 spending only just covers its floors has a budget left for the rest of a few ulps or none, so the sums the old code made
@@ -24,8 +23,7 @@ K_STORE_SHARE = 7
 K_TIME_PREFERENCE = 8
 K_BAND = 9
 K_HOUSEHOLD_SIZE = 10
-K_PURSE_TOLERANCE = 11
-K_COUNT = 12
+K_COUNT = 11
 
 # cohort floats
 CF_PEOPLE = 0
@@ -35,10 +33,9 @@ CF_INFLATION = 3
 CF_CASH_TARGET = 4
 CF_OWNED = 5
 CF_CLAIMS = 6
-CF_FLOOR_COST = 7
-CF_RATE = 8
-CF_SUBSTITUTION = 9
-CF_COUNT = 10
+CF_RATE = 7
+CF_SUBSTITUTION = 8
+CF_COUNT = 9
 # cohort ints
 CI_NEED0 = 0
 CI_NEED1 = 1
@@ -85,7 +82,6 @@ SF_GPRICE = 3
 SF_LIFE = 4
 SF_COUNT = 5
 
-PURSE_PASSES = 3
 PARTIALS = 64        # room for the partial sums of an exact sum (an exact sum of doubles keeps a few dozen at most)
 
 
@@ -256,15 +252,20 @@ def _affordable(r0, r1, household_budget, has_floor, pidx_of_need, row_floats, s
 
 
 @njit
-def _resting_purse(mean_income, share_wealth, claims, extra, constants):
-    """opening_resting.resting_household_purse."""
-    extra = max(0.0, extra)
-    if share_wealth <= 0.0 and extra <= 0.0:
+def _met(unit, unit_floor, unit_grown):
+    """The share of a floor unit the cohort's own plot grew (none for a row with no unit)."""
+    if unit < 0 or unit_floor[unit] <= 0.0:
         return 0.0
-    share_term = 0.0
-    if share_wealth > 0.0:
-        share_term = constants[K_CASH_SHARE] * (share_wealth - constants[K_WEALTH_TARGET] * mean_income)
-    cash = max(mean_income + extra, (extra - share_term) / constants[K_CASH_SHARE] - claims)
+    return min(1.0, unit_grown[unit] / unit_floor[unit])
+
+
+@njit
+def _resting_purse(mean_income, share_wealth, claims, constants):
+    """opening_resting.resting_household_purse."""
+    if share_wealth <= 0.0:
+        return 0.0
+    share_term = constants[K_CASH_SHARE] * (share_wealth - constants[K_WEALTH_TARGET] * mean_income)
+    cash = max(mean_income, -share_term / constants[K_CASH_SHARE] - claims)
     return cash - mean_income
 
 
@@ -329,9 +330,10 @@ def _store_value_target(savings, inflation, real_rate, constants):
 
 
 @njit
-def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, partials):
+def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, unit_floor, unit_grown, partials):
     """households_orders.goods_orders for cohort c holding `cash`, as arrays: per need-good row the floor and flexible
-    quantity, the price cap and the budget (W_ON says a bid is made), and per store good the budget and flexible quantity."""
+    quantity, the price cap and the budget (W_ON says a bid is made), and per store good the budget and flexible quantity.
+    `unit_grown` over `unit_floor` is the share of each floor unit the own plot grew: met before the budget is sized."""
     n0 = cohort_ints[c, CI_NEED0]
     n1 = cohort_ints[c, CI_NEED1]
     r0 = cohort_ints[c, CI_ROW0]
@@ -348,7 +350,13 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
     cash = max(0.0, cash)
     if n1 == n0 or people <= 0.0:
         return
-    floor_cost = cohort_floats[c, CF_FLOOR_COST]
+    count = 0
+    for n in range(n0, n1):
+        met = 0.0
+        if need_ints[n, NI_ROW1] > need_ints[n, NI_ROW0]:
+            met = _met(row_ints[need_ints[n, NI_ROW0], RI_UNIT], unit_floor, unit_grown)
+        count = _add(partials[0], count, need_floats[n, NF_PIDX] * need_floats[n, NF_SUB] * people * (1.0 - met))
+    floor_cost = _total(partials[0], count)
     claims = cohort_floats[c, CF_CLAIMS]
     owned = cohort_floats[c, CF_OWNED]
     expected = cohort_floats[c, CF_EXPECTED_SPENDING]
@@ -364,7 +372,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
     budget = max(0.0, min(cash, budget))
     target = cohort_floats[c, CF_CASH_TARGET]
     if target == 0.0:
-        target = _resting_purse(mean_income, owned, claims, 0.0, constants)
+        target = _resting_purse(mean_income, owned, claims, constants)
     drawdown = min(budget - income, constants[K_DRAWDOWN] * max(0.0, max(income, last_income)))
     spending = max(0.0, min(cash, income + drawdown))
     if expected > 0.0:
@@ -428,7 +436,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
                         spoilage = min(1.0, max(0.0, row_floats[r, RF_SPOIL]))
                         ratio = (serving - max(0.0, serving * (1.0 - wear - spoilage))) / flow
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
-                row_scratch[r, W_FLOOR] = floor_quantity * ratio
+                row_scratch[r, W_FLOOR] = floor_quantity * (1.0 - _met(row_ints[r, RI_UNIT], unit_floor, unit_grown)) * ratio
                 row_scratch[r, W_FLEX] = flexible_quantity * ratio
                 row_scratch[r, W_CAP] = min(ceil[r], household_cap)
                 row_scratch[r, W_ON] = 1.0
@@ -484,11 +492,10 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
 
 @njit
 def demand(incomes, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, unit_floor, unit_grown,
-           memo, final, stamp, extra, freed_out, partials):
-    """The opening's final demand at `incomes` (one per cohort): what each cohort buys after its plot, summed by tile and
-    good into `final`, with the order each (tile, good) first appeared in `stamp`. `memo[c]` is (has, income, purse): the
-    purse the cohort's orders were last made with, from which the purse search starts again at the same income. `extra[c]`
-    is the spending beyond income its plot allows and `freed_out[c]` the budget the plot freed."""
+           memo, final, stamp, partials):
+    """The opening's final demand at `incomes` (one per cohort): what each cohort buys holding its income, the floors its
+    plot grew met first, summed by tile and good into `final`, with the order each (tile, good) first appeared in `stamp`.
+    `memo[c]` is (has, income) of the cohort's last ask."""
     counter = 0
     for c in range(cohort_ints.shape[0]):
         income = incomes[c]
@@ -496,46 +503,9 @@ def demand(incomes, stationary, constants, cohort_floats, cohort_ints, need_floa
         r1 = cohort_ints[c, CI_ROW1]
         s0 = cohort_ints[c, CI_STORE0]
         s1 = cohort_ints[c, CI_STORE1]
-        purse = 0.0
-        if memo[c, 0] > 0.0 and memo[c, 1] == income:
-            purse = memo[c, 2]
-        freed = 0.0
-        extra_spending = 0.0
-        for _pass in range(PURSE_PASSES):
-            if not (memo[c, 0] > 0.0 and memo[c, 1] == income and memo[c, 2] == purse):
-                memo[c, 0] = 1.0
-                memo[c, 1] = income
-                memo[c, 2] = purse
-            _orders(c, income + purse, income, income, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, partials)
-            before = 0
-            after = 0
-            for r in range(r0, r1):
-                if row_scratch[r, W_ON] <= 0.0:
-                    continue
-                before = _add(partials[2], before, row_scratch[r, W_BUDGET])
-                unit = row_ints[r, RI_UNIT]
-                met = 0.0
-                if unit >= 0:
-                    if unit_floor[unit] > 0.0:
-                        met = min(1.0, unit_grown[unit] / unit_floor[unit])
-                if met > 0.0 and row_scratch[r, W_FLOOR] > 0.0:
-                    cut = row_scratch[r, W_FLOOR] * met
-                    kept = 1.0 - cut / (row_scratch[r, W_FLOOR] + row_scratch[r, W_FLEX])
-                    new_budget = row_scratch[r, W_BUDGET] * max(0.0, kept)
-                    row_scratch[r, W_FLOOR] = row_scratch[r, W_FLOOR] - cut
-                    row_scratch[r, W_BUDGET] = new_budget
-                after = _add(partials[3], after, row_scratch[r, W_BUDGET])
-            for s in range(s0, s1):      # the store's bids are in both sums, as in the old path
-                before = _add(partials[2], before, store_scratch[s, T_BUDGET])
-                after = _add(partials[3], after, store_scratch[s, T_BUDGET])
-            freed = _total(partials[2], before) - _total(partials[3], after)
-            extra_spending = min(freed, constants[K_DRAWDOWN] * income)
-            wanted = _resting_purse(income, 0.0, 0.0, extra_spending, constants)
-            if abs(wanted - purse) <= constants[K_PURSE_TOLERANCE] * max(income, 1e-9):
-                break
-            purse = wanted
-        extra[c] = extra_spending
-        freed_out[c] = freed
+        memo[c, 0] = 1.0
+        memo[c, 1] = income
+        _orders(c, income, income, income, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, unit_floor, unit_grown, partials)
         tile = cohort_ints[c, CI_TILE]
         elasticity = cohort_floats[c, CF_SUBSTITUTION]
         for index in range(r0, r1):
@@ -571,13 +541,13 @@ def demand(incomes, stationary, constants, cohort_floats, cohort_ints, need_floa
 
 @njit
 def uncut(incomes, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats,
-          store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, row_quantity, partials):
+          store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, unit_floor, unit_grown, row_quantity, partials):
     """The quantity (floor plus flexible) of each need-good bid every cohort makes holding exactly its income, before any
     plot cut, into `row_quantity` (zero where no bid is made)."""
     for c in range(cohort_ints.shape[0]):
         _orders(c, incomes[c], incomes[c], incomes[c], stationary, constants, cohort_floats, cohort_ints, need_floats,
                 need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order,
-                store_scratch, partials)
+                store_scratch, unit_floor, unit_grown, partials)
         for r in range(cohort_ints[c, CI_ROW0], cohort_ints[c, CI_ROW1]):
             row_quantity[r] = 0.0
             if row_scratch[r, W_ON] > 0.0:

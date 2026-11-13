@@ -13,7 +13,7 @@ import numpy as np
 from sim.world import need_basket
 from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
 
-from . import households_buffer_stock, households_orders, households_store, opening_demand_kernel as kernel, opening_own
+from . import household_grown_floors, households_buffer_stock, households_orders, households_store, opening_demand_kernel as kernel, opening_own
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 
 
@@ -31,7 +31,6 @@ def constants() -> np.ndarray:
     values[kernel.K_TIME_PREFERENCE] = HOUSEHOLD_TIME_PREFERENCE
     values[kernel.K_BAND] = households_store.STORE_REBALANCE_BAND
     values[kernel.K_HOUSEHOLD_SIZE] = PERSONS_PER_HOUSEHOLD
-    values[kernel.K_PURSE_TOLERANCE] = opening_own.PURSE_TOLERANCE
     return values
 
 
@@ -95,7 +94,7 @@ class OpeningDemand:
             self.unit_slots.append(slots)
             need0, row0, store0 = len(need_floats), len(row_floats), len(store_floats)
             tile = tiles.setdefault(cohort.tile, len(tiles))
-            claims = floor_cost = owned = rate = 0.0
+            claims = owned = rate = 0.0
             has_rate = 0
             if priced and cohort.people > 0.0:
                 if any(need.spec.share_limits for need in priced):
@@ -104,7 +103,6 @@ class OpeningDemand:
                 area_currency = view.currency_of(view.area_of(first_good, cohort.tile))
                 claims = view.claims(cohort.agent_id, area_currency)
                 owned = households_buffer_stock.share_wealth_carried(cohort.share_wealth, view.equity(cohort.agent_id))
-                floor_cost = math.fsum(need.price_index * need.spec.subsistence_per_person * cohort.people for need in priced)
                 weights, store_prices, held = households_store.store_holding(cohort, view, specs, priced, shared)
                 interest = view.interest_rate(area_currency)
                 has_rate = 0 if interest is None else 1
@@ -139,7 +137,7 @@ class OpeningDemand:
             rows = range(row0, len(row_floats))
             order.extend(sorted(rows, key=lambda row: (names[row_ints[row][0]], row)))
             cohort_floats.append([cohort.people, cohort.expected_spending, cohort.expected_floor_cost, cohort.expected_inflation,
-                       cohort.cash_target, owned, claims, floor_cost, rate, basket.substitution])
+                       cohort.cash_target, owned, claims, rate, basket.substitution])
             cohort_ints.append([need0, len(need_floats), row0, len(row_floats), store0, len(store_floats), tile, has_rate])
         if self.replacement > 0.0:
             good_index(self.backing_good)       # the metal the mint buys is part of the demand
@@ -160,7 +158,7 @@ class OpeningDemand:
         self.need_scratch = np.zeros((len(need_floats), kernel.V_COUNT))
         self.good_scratch = np.zeros((len(goods), kernel.G_COUNT))
         self.store_scratch = np.zeros((len(store_floats), kernel.T_COUNT))
-        self.memo = np.zeros((len(self.cohorts), 3))
+        self.memo = np.zeros((len(self.cohorts), 2))
         self.partials = np.zeros((4, kernel.PARTIALS))
         self.constants = constants()
 
@@ -182,21 +180,20 @@ class OpeningDemand:
         self._grown_for = own.share_hired
 
     def _buy(self, record) -> None:
-        """Fill `final` (tile by good) with what the cohorts buy at their incomes now, and note on `own` what the plots
-        grew, the spending beyond income each allows and the budget it could not spend."""
+        """Fill `final` (tile by good) with what the cohorts buy at their incomes now, and note on `own` the value of the floors
+        their plots grew (spending in kind)."""
         own = self.own
         self._units_at_share(record)
         incomes = self.incomes_now(record)
         self.final[:] = 0.0
         self.stamp[:] = -1
-        extra = np.zeros(len(self.cohorts))
-        freed = np.zeros(len(self.cohorts))
         kernel.demand(incomes, self.stationary, self.constants, self.cohort_floats, self.cohort_ints, self.need_floats, self.need_ints, self.row_floats, self.row_ints,
                       self.store_floats, self.store_ints, self.row_scratch, self.need_scratch, self.good_scratch, self.order, self.store_scratch, self.unit_floor, self.unit_grown,
-                      self.memo, self.final, self.stamp, extra, freed, self.partials)
+                      self.memo, self.final, self.stamp, self.partials)
         for position, cohort in enumerate(self.cohorts):
-            own.extra[cohort.agent_id] = float(extra[position])
-            own.in_kind += float(freed[position]) - float(extra[position])
+            grown = {need_id: float(self.unit_grown[slot]) for need_id, slot in self.unit_slots[position].items()}
+            met_by_need, _met_by_good = household_grown_floors.met_shares(self.baskets[position], cohort.people, grown)
+            own.in_kind += household_grown_floors.floor_cost_met(self.priced[position], cohort.people, met_by_need)
 
     def final_demand(self, record) -> Dict[str, Dict[str, float]]:
         """What `opening._final_demand` gives for the cohorts' incomes now, without the metal the mint buys: {tile: {good: quantity}}."""
@@ -252,7 +249,7 @@ class OpeningDemand:
         return np.array([record.cohorts[cohort.agent_id].last_year_income for cohort in self.cohorts])
 
     def asked_at_incomes_now(self, record) -> bool:
-        """Whether the last ask was made at the incomes the cohorts hold now (so the purse search would start from it)."""
+        """Whether the last ask was made at the incomes the cohorts hold now."""
         return bool(np.all(self.memo[:, 0] > 0.0) and np.all(self.memo[:, 1] == self.incomes_now(record)))
 
     def durable_bids(self, record, stationary: bool = False) -> List[tuple]:
@@ -261,7 +258,8 @@ class OpeningDemand:
         quantity = np.zeros(len(self.row_floats))
         kernel.uncut(self.incomes_now(record), stationary, self.constants, self.cohort_floats, self.cohort_ints,
                      self.need_floats, self.need_ints, self.row_floats, self.row_ints, self.store_floats, self.store_ints,
-                     self.row_scratch, self.need_scratch, self.good_scratch, self.order, self.store_scratch, quantity, self.partials)
+                     self.row_scratch, self.need_scratch, self.good_scratch, self.order, self.store_scratch,
+                     np.zeros(len(self.unit_floor)), np.zeros(len(self.unit_floor)), quantity, self.partials)
         found = []
         for position, cohort in enumerate(self.cohorts):
             for index in range(self.cohort_ints[position, kernel.CI_ROW0], self.cohort_ints[position, kernel.CI_ROW1]):
@@ -272,17 +270,9 @@ class OpeningDemand:
         return found
 
     def repacked(self) -> "OpeningDemand":
-        """The same cohorts packed again from the stock they hold now, asking from the purse the last ask ended at."""
+        """The same cohorts packed again from the stock they hold now, keeping the incomes the last ask was made at."""
         fresh = OpeningDemand(list(zip(self.cohorts, self.baskets, self.priced, self.stores)), self.view, self.specs, self.own,
                               self.replacement, self.backing_good, self.capital_tile, self.stationary)
         fresh.memo[:] = self.memo
         fresh._own_work = self._own_work
         return fresh
-
-    def remember_orders(self, record) -> None:
-        """Leave in `own` the purse of the last ask (`OwnPlots.uncut`) for the old path to search from, without the orders
-        made at it: they are made again from the stock the cohorts hold when they are asked."""
-        for position, cohort in enumerate(self.cohorts):
-            has, income, purse = self.memo[position]
-            if has > 0.0:
-                self.own.uncut[cohort.agent_id] = (float(income), None, float(purse))

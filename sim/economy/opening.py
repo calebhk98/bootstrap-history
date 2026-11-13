@@ -164,14 +164,10 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     packed = _settle_income(setup, record, view, priced_goods, replacement, own, start)
     start.share_hired = own.share_hired
     # the households hold their serving stock when the demand after the settle is asked (a durable in use is not wealth to
-    # store), so the packed cohorts are packed again once the seed has moved stock; their last purse is kept, their orders
-    # (made without the stock) are not
+    # store), so the packed cohorts are packed again once the seed has moved stock
     if _seed_durable_stocks(setup, record, view, packed):
-        own.forget_orders()
         packed = packed.repacked() if packed is not None else None
     after_settle = packed if packed is not None and packed.supported and packed.asked_at_incomes_now(record) else None
-    if packed is not None:
-        packed.remember_orders(record)
     final_by_tile = (_final_demand_packed(setup, record, replacement, after_settle) if after_settle is not None
                      else _final_demand(setup, record, view, replacement, own=own))
     for country in setup.countries():
@@ -191,7 +187,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     _stock_producers_with_inputs(setup, record)
     _open_merchants(setup, record, priced_goods, final_by_tile)
     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
-    _strike_opening_cash(setup, record, view, own.extra)
+    _strike_opening_cash(setup, record, view)
     sold_per_worker = opening_own.sold_hours_per_worker(
         own.sold_total(), math.fsum(cohort.working_people for cohort in record.cohorts.values()), setup.working_hours_per_year)
     sold_by_area = opening_placement.sold_hours_per_worker_by_area(
@@ -331,10 +327,10 @@ def _opening_bids(setup, record, view, memory=None, stationary_durables=True, ow
         basket = memory.basket(setup, record, cohort)
         priced = memory.priced(setup, record, view, cohort, basket)
         income = cohort.last_year_income
-        def make(cash=income):
+        def make(cash=income, grown_units=None):
             return households.goods_orders(cohort, view, cash, income, basket, setup.specs,
                                            priced, shared_store=memory.stores(record, cohort),
-                                           stationary_durables=stationary_durables)
+                                           stationary_durables=stationary_durables, grown_units=grown_units)
         orders = make() if own is None else own.resting_orders(record, cohort, income, basket, priced, make)
         for bid in orders.bids:
             price = view.price(bid.good, bid.area)
@@ -605,13 +601,12 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
                                                           capital_base=capital), record.memory.tables)
 
 
-def _strike_opening_cash(setup, record, view, extra_spending) -> None:
+def _strike_opening_cash(setup, record, view) -> None:
     """Each agent's opening purse is struck at the mint. A producer's is the year's variable cost of its expected sales
     (the cash `producers_close.working_capital_target` keeps), a merchant's its capital. A household's follows from
     what it owns of those producers (`equity.holdings`, what the spending rule reads as share wealth): the cash that
     brings cash plus share wealth to the wealth target, at which the rule spends exactly its income
-    (opening_resting.resting_household_purse; Eurace manual 10.1.3), plus what a household whose plot frees part of its
-    budget needs to spend (opening_own.py)."""
+    (opening_resting.resting_household_purse; Eurace manual 10.1.3)."""
     money = setup.currency_id
     transfers: List[Transfer] = []
     for producer in record.producers.values():
@@ -624,8 +619,7 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
     owned = equity.holdings(setup, record, view)
     transfers = []
     for cohort in record.cohorts.values():
-        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0),
-                                                       extra_spending=extra_spending.get(cohort.agent_id, 0.0))
+        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0))
         transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, opening_resting.purse_with_property_income(
             purse, record.capital_markets.property_income.get(cohort.agent_id, 0.0)), "opening coin"))
         households_cohort.change_cohort(record.cohorts, cohort.agent_id, share_wealth=owned.get(cohort.agent_id, 0.0))

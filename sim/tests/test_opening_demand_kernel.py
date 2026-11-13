@@ -125,7 +125,7 @@ def random_units(rng, cohorts, basket):
 def plots_of(units):
     """An `OwnPlots` whose plots grow the given units (the plot rules have their own tests)."""
     own = OwnPlots.__new__(OwnPlots)
-    own.uncut, own.extra, own.in_kind, own.share_hired = {}, {}, 0.0, 0.0
+    own.in_kind, own.share_hired = 0.0, 0.0
     own.grown, own.hectares, own.sold = {}, {}, {}
     own.grow = lambda record, cohort, priced, own_work=None: units[cohort.agent_id]
     own.own_work_hours = lambda record, cohort, priced: 0.0
@@ -138,9 +138,9 @@ def reference_final_demand(parts, view, own):
     for cohort, basket, priced, shared in sorted(parts, key=lambda part: part[0].agent_id):
         income = cohort.last_year_income
 
-        def make(cash=income, cohort=cohort, basket=basket, priced=priced, shared=shared, income=income):
+        def make(cash=income, grown_units=None, cohort=cohort, basket=basket, priced=priced, shared=shared, income=income):
             return households.goods_orders(cohort, view, cash, income, basket, SPECS, priced, shared_store=shared,
-                                           stationary_durables=True)
+                                           stationary_durables=True, grown_units=grown_units)
         for bid in own.resting_orders(None, cohort, income, basket, priced, make).bids:
             price = view.price(bid.good, bid.area)
             if price:
@@ -195,7 +195,7 @@ class FinalDemandAgreesTests(unittest.TestCase):
             compared += 1
         self.assertGreaterEqual(compared, 40, "most cases are compared (%d skipped)" % skipped)
 
-    def test_the_extra_spending_and_the_budget_not_spent_agree(self):
+    def test_the_spending_in_kind_agrees(self):
         rng = random.Random(11)
         checked = 0
         for _case in range(30):
@@ -210,9 +210,7 @@ class FinalDemandAgreesTests(unittest.TestCase):
             packed, _got = kernel_final_demand(parts_of(basket, view, cohorts), view, own, cohorts)
             if not packed.supported:
                 continue
-            for cohort in cohorts:
-                self.assertAlmostEqual(own.extra[cohort.agent_id], reference_own.extra[cohort.agent_id],
-                                       delta=TOLERANCE * max(1.0, abs(reference_own.extra[cohort.agent_id])))
+            self.assertAlmostEqual(own.in_kind, reference_own.in_kind, delta=TOLERANCE * max(1.0, abs(reference_own.in_kind)))
             checked += 1
         self.assertGreaterEqual(checked, 15)
 
@@ -247,12 +245,6 @@ class DurableBidsAgreeTests(unittest.TestCase):
                 self.assertAlmostEqual(found, wanted, delta=TOLERANCE * max(abs(wanted), 1.0))
             compared += 1
         self.assertGreaterEqual(compared, 20)
-
-
-class ConstantsTests(unittest.TestCase):
-    def test_the_kernel_runs_the_purse_passes_the_old_path_runs(self):
-        from sim.economy import opening_demand_kernel
-        self.assertEqual(opening_demand_kernel.PURSE_PASSES, opening_own.PURSE_PASSES)
 
 
 if __name__ == "__main__":

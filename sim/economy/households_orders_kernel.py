@@ -246,7 +246,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
     budget = max(0.0, min(cash, budget))
     target = cohort_floats[c, CO_CASH_TARGET]
     if target == 0.0:
-        target = _resting_purse(mean_income, owned, claims, 0.0, constants)
+        target = _resting_purse(mean_income, owned, claims, constants)
     drawdown = min(budget - income, constants[K_DRAWDOWN] * max(0.0, max(income, last_income)))
     spending = max(0.0, min(cash, income + drawdown))
     if expected > 0.0:
