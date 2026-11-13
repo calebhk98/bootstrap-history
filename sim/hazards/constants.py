@@ -49,9 +49,9 @@ SACK_TAKE_STRENGTH = declare(
         "and visibility, with the state's order failed. Tuned, not "
         "measured against any attested sacking's proceeds.")
 SACK_STAFF_RETENTION = declare(
-    "SACK_STAFF_RETENTION", 0.55, kind="temporary_heuristic",
+    "SACK_STAFF_RETENTION", 0.55, kind="engineering_estimate",
     unit="dimensionless (fraction of artisans/scholars/hired staff "
-         "kept)", source=None, confidence="D",
+         "kept)", source="Wikipedia 'Sack of Rome (1527)': population over 55,000 before, 10,000 after (0.18 kept). 'Sack of Magdeburg': about 5,000 of 25,000 survived (0.2). 'Sack of Constantinople': about 2,000 civilians killed in 1204 (nearly all kept). Outcomes span 0.2 to near 1; 0.55 sits inside that span, within 3x of every case but the extremes. Ratios are our arithmetic.", confidence="C",
     why="Fraction of artisans, scholars and every hired trade kept "
         "after a sack - applied uniformly across every trade so a "
         "sack is not gentler to hired staff than the plague family is "
@@ -75,9 +75,9 @@ SACK_DIRECTORS_RETENTION = declare(
         "producing deputies are more resilient than ordinary staff on "
         "the ground. Tuned, not measured.")
 PATRON_DEATH_ANNUAL_CHANCE = declare(
-    "PATRON_DEATH_ANNUAL_CHANCE", 0.05, kind="temporary_heuristic",
+    "PATRON_DEATH_ANNUAL_CHANCE", 0.05, kind="engineering_estimate",
     unit="dimensionless (yearly probability, local patron only)",
-    source=None, confidence="D",
+    source="Wikipedia 'Life expectancy' (https://en.wikipedia.org/wiki/Life_expectancy), Ancient Rome: about 20 more years at age 40, 14 to 18 at 50, 10 to 12 at 60. Taking yearly death chance as the reciprocal of remaining years (a constant-hazard approximation, our assumption) gives 0.05 at 40, 0.055 to 0.07 at 50, 0.08 to 0.1 at 60; the page says its data is lacking and model-based.", confidence="C",
     why="Yearly chance a local patron dies, prompting the need to "
         "court an heir - invented frequency, not fitted to any "
         "attested mortality rate for a Roman patronal relationship.")
@@ -143,9 +143,9 @@ BANDITRY_TAKE_STRENGTH = declare(
         "portability of each kind of holding, guarding, visibility and "
         "the state's order. Tuned, not measured.")
 OUTPUT_RECOVERY_RATE = declare(
-    "OUTPUT_RECOVERY_RATE", 0.006, kind="temporary_heuristic",
+    "OUTPUT_RECOVERY_RATE", 0.006, kind="engineering_estimate",
     unit="dimensionless per year (base recovery toward output_factor "
-         "1.0)", source=None, confidence="D",
+         "1.0)", source="Wikipedia 'Sack of Rome (1527)': population fell from over 55,000 to 10,000 and regained its pre-sack level around 1560, about 33 years, a gap of 0.8 closed at about 0.025 a year (population used as a proxy for output, our arithmetic and assumption). Model rate 0.006, or 0.012 at full military leverage, is 2 to 4x slower; a Roman sack recovery is fast because refugees return.", confidence="C",
     why="Base yearly recovery rate of output_factor after a war or "
         "other output shock, doubled at full military leverage (see "
         "comment above) - an armed empire recovers roughly twice as "
