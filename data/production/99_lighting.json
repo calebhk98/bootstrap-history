@@ -49,13 +49,13 @@
    "inputs": {},
    "electrical_mj": 1.33,
    "labour_hours": {
-    "electrician": 0.01
+    "electrician": 0.0026
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from carbon-filament electric lamps",
-   "yield_basis": "A carbon-filament lamp gave 201 lumens for about 75 watts, 2.7 lumens a watt, with a rated life of about 800 hours (lamptech.co.uk, Edison New Type 1893-1899 spec sheet, https://lamptech.co.uk/Spec Sheets/IN C Edison New Type.htm, opened), so a thousand lumen-hours takes 1000 / 2.7 = 370 watt-hours, 1.33 megajoules. A thousand lumen-hours is 5 lamp-hours of that lamp, so 0.006 of an 800-hour life; the electrician's 0.01 hours covers filament replacement and keeping the wiring, and that maintenance time has no source found, so it stays confidence D.",
+   "yield_basis": "A carbon-filament lamp gave 201 lumens for about 75 watts, 2.7 lumens a watt, with a rated life of about 800 hours (lamptech.co.uk, Edison New Type 1893-1899 spec sheet, https://lamptech.co.uk/Spec Sheets/IN C Edison New Type.htm, opened), so a thousand lumen-hours takes 1000 / 2.7 = 370 watt-hours, 1.33 megajoules. A thousand lumen-hours is 5 lamp-hours of that lamp, so 0.006 of an 800-hour life; so a thousand lumen-hours uses 5 / 800 = 0.00625 of a lamp change. Round 2 (Pass 12): Oklahoma State University Extension, fact sheet L-423 'Group Relamping for Cost Savings and Better Lighting Quality' (https://pods.okstate.edu/fact-sheets/L-423.pdf, opened, a modern fluorescent analogue): spot replacement, 'access, replace, clean', 25 minutes a lamp (group relamping 6.2 minutes). The 25 minutes is taken for one change of a lamp, so 0.00625 x 25 / 60 = 0.0026 hours (was 0.01, 3.8 times as much, which had folded in wiring upkeep with no source). Wiring upkeep is left out of this row by choice (labelled assumption: it belongs to the line, not to a lamp).",
    "requires_node": "hom_electric_lighting",
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
