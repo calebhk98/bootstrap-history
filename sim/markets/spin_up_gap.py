@@ -1,8 +1,10 @@
 """How far the agent economy moved between hidden spin-up years: pure arithmetic over per-year states.
 
-A state is {"price_level", "rate", "prices": {good: price}, plus the quantities of `QUANTITY_FLOORS`}. A
-change is relative to the earlier value, with the earlier value no smaller than a floor where the quantity
-can sit near zero (a rate, unmet need), so such a quantity shrinking toward zero can still count as settled.
+A state is {"price_level", "rate", "prices": {good: price}, plus the quantities of `QUANTITY_FLOORS`, and
+"food_need"}. A change is relative to the earlier value, with the earlier value no smaller than a floor where the
+quantity can sit near zero: the rate against a declared floor, unmet need against the economy's whole food need
+(the food floor units its people need, sim/economy/spin_up_state.py `food_floor_units`), so a shortfall on one tile is read as the share of
+the economy's food it is.
 """
 from sim.constants import declare
 
@@ -12,16 +14,10 @@ SPIN_UP_RATE_FLOOR = declare(
     source=None, confidence="D", retire="Complaints/473: a spin-up that settles needs no floor on its measure",
     why="A rate shrinking by a fixed share toward zero would otherwise show that share as its yearly change "
         "for ever; below this rate the change is read as an absolute one.")
-SPIN_UP_UNMET_FLOOR = declare(
-    "SPIN_UP_UNMET_FLOOR", 1.0, kind="temporary_heuristic",
-    unit="food floor units short below which a change in unmet need is measured against this instead",
-    source=None, confidence="D", retire="Complaints/473: a spin-up that settles needs no floor on its measure",
-    why="Unmet need is zero in a fed economy; a change from nothing to a fraction of one floor unit is not "
-        "an economy that has stopped settling.")
-
-# the state's scalar quantities and the floor each is measured against (zero: purely relative)
+# the state's scalar quantities and the floor each is measured against (zero: purely relative; unmet need's is the
+# earlier state's food need, `state_gaps`)
 QUANTITY_FLOORS = {"price_level": 0.0, "rate": SPIN_UP_RATE_FLOOR, "real_output": 0.0, "hired_hours": 0.0,
-                   "inventory_value": 0.0, "unmet_need": SPIN_UP_UNMET_FLOOR}
+                   "inventory_value": 0.0, "unmet_need": 0.0}
 
 
 def change_gap(new, old, floor=0.0):
@@ -46,6 +42,8 @@ def state_gaps(before, after):
     for name, floor in QUANTITY_FLOORS.items():
         if before.get(name) is None:
             continue
+        if name == "unmet_need":
+            floor = before.get("food_need") or 0.0
         gaps[name] = 1.0 if after.get(name) is None else change_gap(after[name], before[name], floor)
     gaps["prices"] = price_gap(after["prices"], before["prices"])
     return gaps
@@ -60,3 +58,4 @@ def window_gaps(states):
         for name, gap in state_gaps(before, after).items():
             worst[name] = max(gap, worst.get(name, 0.0))
     return worst
+

@@ -10,7 +10,7 @@ from unittest import mock
 from sim.markets import spin_up, spin_up_gap, spin_up_run
 from sim.book import Book, GoodsMove
 from sim.economy import year_close
-from sim.economy.spin_up_state import spin_up_state as year_state_of   # a pure read of a record, not a builder
+from sim.economy.spin_up_state import food_floor_units, spin_up_state as year_state_of   # a pure read of a record, not a builder
 from sim.economy.households_cohort import Cohort
 from sim.economy.goods_record import GoodsRecord
 from sim.economy.market_memory import MarketMemory
@@ -42,8 +42,23 @@ class ChangeGapTests(unittest.TestCase):
         self.assertEqual(spin_up_gap.change_gap(0.0, 0.0), 0.0)
         self.assertEqual(spin_up_gap.change_gap(3.0, 0.0), 1.0)
 
-    def test_unmet_need_of_a_fraction_of_a_unit_is_not_measured_as_a_swing(self):
-        self.assertLess(spin_up_gap.change_gap(0.004, 0.002, spin_up_gap.SPIN_UP_UNMET_FLOOR), TOLERANCE)
+    def test_a_shortfall_that_is_a_sliver_of_the_food_need_is_not_measured_as_a_swing(self):
+        gaps = spin_up_gap.state_gaps(_state(unmet_need=0.0, food_need=1.0e6), _state(unmet_need=300.0, food_need=1.0e6))
+        self.assertLess(gaps["unmet_need"], TOLERANCE)
+
+    def test_a_shortfall_that_is_a_real_share_of_the_food_need_still_fails(self):
+        gaps = spin_up_gap.state_gaps(_state(unmet_need=0.0, food_need=1.0e6), _state(unmet_need=1.0e5, food_need=1.0e6))
+        self.assertAlmostEqual(gaps["unmet_need"], 0.1)
+
+    def test_a_shortfall_larger_than_the_food_need_is_measured_against_itself(self):
+        gaps = spin_up_gap.state_gaps(_state(unmet_need=2.0e6, food_need=1.0e6), _state(unmet_need=3.0e6, food_need=1.0e6))
+        self.assertAlmostEqual(gaps["unmet_need"], 0.5)
+
+
+class FoodNeedTests(unittest.TestCase):
+    def test_the_food_need_is_each_tiles_people_times_its_food_floor(self):
+        floors = {"farms": 200.0, "town": 250.0}
+        self.assertAlmostEqual(food_floor_units({"farms": 10.0, "town": 4.0, "empty": 0.0}, floors.get), 3000.0)
 
 
 def _state(**changes):
