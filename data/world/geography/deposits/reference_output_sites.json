@@ -28,7 +28,10 @@
    "deposit_type": "banded_iron_and_skarn",
    "status": "historic",
    "conf": "C",
-   "source": "Bergslagen (Dalarna, Vastmanland, Orebro), the central Swedish ore district whose bloomery iron was smelted from the Iron Age and exported as osmund iron in the Middle Ages."
+   "source": "Bergslagen (Dalarna, Vastmanland, Orebro), the central Swedish ore district whose bloomery iron was smelted from the Iron Age and exported as osmund iron in the Middle Ages.",
+   "contained_tonnes": 86450000,
+   "contained_basis": "Stand-in is Grangesberg: more than 150 Mt of iron ore produced to the 1989 closure plus 82.4 Mt reserves at 37.2% Fe; the mined ore is assumed to have the same 37.2% Fe (assumption), so (150 + 82.4) Mt x 0.372 = 86.45 Mt iron",
+   "contained_source": "Mining Technology, Grangesberg Iron Ore Project, https://www.mining-technology.com/projects/grangesberg-iron-ore-project-sweden/ : the mine \"was closed in December 1989 ... after producing more than 150Mt of iron ore\"; reserves 82.4Mt (37.2% Fe, July 2022)"
   },
   {
    "id": "sala_lead",
@@ -99,7 +102,10 @@
    "deposit_type": "banded_iron_formation",
    "status": "historic",
    "conf": "D",
-   "source": "Wadi Sawawin banded iron formation, Midyan terrane of northwest Saudi Arabia, about 60 km from the Red Sea port of Duba; the one large iron body of the peninsula. No ancient working is attested, so this share is a placeholder for the peninsula's small iron output. Position approximate (no published coordinate found)."
+   "source": "Wadi Sawawin banded iron formation, Midyan terrane of northwest Saudi Arabia, about 60 km from the Red Sea port of Duba; the one large iron body of the peninsula. No ancient working is attested, so this share is a placeholder for the peninsula's small iron output. Position approximate (no published coordinate found).",
+   "contained_tonnes": 153200000,
+   "contained_basis": "Reserve of 383 Mt of ore at 40% iron = 153.2 Mt iron; London Mining figure of 2013 as quoted by Wikipedia, no production before it",
+   "contained_source": "Wikipedia, Wadi Sawawin mine, https://en.wikipedia.org/wiki/Wadi_Sawawin_mine : \"an estimated reserve of 383 million tonnes of ore grading 40% iron\""
   },
   {
    "id": "konasamudram_iron",
@@ -123,7 +129,10 @@
    "deposit_type": "metamorphosed_copper_sulphide",
    "status": "historic",
    "conf": "C",
-   "source": "Khetri-Singhana belt, Rajasthan, copper worked since the Ganeshwar-Jodhpura culture (Ganeshwar site, Wikipedia); Willies, Ancient and post-medieval mining sites in the Khetri copper belt and the Kolar gold field, India, Bulletin of the Peak District Mines Historical Society 11(6), 1992, 285-295, listed in the Heritage of Metals and Societies review of Indian metallurgy but not read here. No joint Hegde and Craddock work on Khetri was found."
+   "source": "Khetri-Singhana belt, Rajasthan, copper worked since the Ganeshwar-Jodhpura culture (Ganeshwar site, Wikipedia); Willies, Ancient and post-medieval mining sites in the Khetri copper belt and the Kolar gold field, India, Bulletin of the Peak District Mines Historical Society 11(6), 1992, 285-295, listed in the Heritage of Metals and Societies review of Indian metallurgy but not read here. No joint Hegde and Craddock work on Khetri was found.",
+   "contained_tonnes": 1120000,
+   "contained_basis": "Sum of four ore-reserve blocks (reserves including resources) of the Khetri belt: Khetri 26 Mt at 1.13% Cu, Kolihan 20.64 Mt at 1.35%, Banwas 25.02 Mt at 1.69%, Chandmari-Kolihan 12.10 Mt at 1.03% = 0.294 + 0.279 + 0.423 + 0.125 = 1.12 Mt copper; no past production added and other belt deposits (Madan Kudhan) not counted, so a lower bound",
+   "contained_source": "Hindustan Copper Limited, Khetri Copper Complex, https://www.hindustancopper.com/Page/KCCPlant : \"Khetri Mine 26 million tonnes @ 1.13 % Cu; Kolihan Mine 20.64 million tonnes @ 1.35 % Cu; Banwas Block 25.02 million tonnes @ 1.69 % Cu; Chandmari-Kolihan Intervening block 12.10 million tonnes @ 1.03 % Cu\""
   },
   {
    "id": "hazaribagh_tin",
@@ -172,7 +181,10 @@
    "deposit_type": "iron_oxide_apatite",
    "status": "historic",
    "conf": "D",
-   "source": "Choghart iron oxide deposit, Bafq district (Yazd), about 12 km northeast of Bafq, with Chadormalu 80 km to the north; a large Precambrian iron body. Medieval working is not independently verified."
+   "source": "Choghart iron oxide deposit, Bafq district (Yazd), about 12 km northeast of Bafq, with Chadormalu 80 km to the north; a large Precambrian iron body. Medieval working is not independently verified.",
+   "contained_tonnes": 120000000,
+   "contained_basis": "Choghart only (the neighbour of Chadormalu in the Bafq district): proven resources of 200 Mt at more than 60% Fe = at least 120 Mt iron; Chadormalu itself not counted, so a lower bound for the row",
+   "contained_source": "JpGU 2008 abstract, Choghart deposit, Bafq, Iran, https://www2.jpgu.org/meeting/2008/program/pdf/K130/K130-017_e.pdf : \"The deposit has proven resources of 200 million tons with more than 60 % Fe on average.\""
   },
   {
    "id": "anarak_copper",
@@ -208,7 +220,10 @@
    "deposit_type": "carbonate_hosted_galena",
    "status": "historic",
    "conf": "C",
-   "source": "Karamazar range (Kan-i-Mansur), Tajikistan and Uzbekistan: mining and smelting of the ninth to eleventh centuries is attested at the Mansura mine (Wikipedia, Mining in Tajikistan); the geographers' accounts of it were not checked. Position approximate."
+   "source": "Karamazar range (Kan-i-Mansur), Tajikistan and Uzbekistan: mining and smelting of the ninth to eleventh centuries is attested at the Mansura mine (Wikipedia, Mining in Tajikistan); the geographers' accounts of it were not checked. Position approximate.",
+   "contained_tonnes": 4900000,
+   "contained_basis": "Stand-in is Konimansuri Kalon in the Kan-i-Mansur (Karamazar) range: about 1 billion tons of ore at 0.49% lead = 4.9 Mt lead; an estimated possible resource, historic Samanid workings not counted",
+   "contained_source": "Asia-Plus, Technical issues impede completion of tender for development of Konimansuri Kalon deposit, https://asiaplustj.info/en/news/tajikistan/economic/20120111/technical-issues-impede-completion-tender-development-konimansuri-kalon-deposit : \"estimated to contain around 1 billion tons of ore ... around 49 grams of silver, with 0.38 percent zinc and 0.49 percent lead\""
   },
   {
    "id": "karamazar_silver",
@@ -221,7 +236,10 @@
    "status": "historic",
    "conf": "C",
    "source": "Karamazar range (Kan-i-Mansur): silver mines of the Samanid period, as the lead entry; Transoxianan silver feeding Samanid dirhams is argued in the Journal of Historical Research (jhr.usb.ac.ir/article_9357). Position approximate.",
-   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "contained_tonnes": 70000,
+   "contained_basis": "Stand-in is Konimansuri Kalon in the Kan-i-Mansur (Karamazar) range: possible silver reserves of about 70,000 tons (Micon survey, raised from 57,000 tons); tons taken as metric; historic Samanid output not counted",
+   "contained_source": "Asia-Plus, Technical issues impede completion of tender for development of Konimansuri Kalon deposit, 11 January 2012, https://asiaplustj.info/en/news/tajikistan/economic/20120111/technical-issues-impede-completion-tender-development-konimansuri-kalon-deposit : \"raised its possible silver reserves to some 70,000 tons\""
   },
   {
    "id": "wuan_iron",
@@ -233,7 +251,10 @@
    "deposit_type": "skarn_iron",
    "status": "historic",
    "conf": "D",
-   "source": "Handan-Wu'an (Hebei) skarn iron district; Han state ironworks such as Tieshenggou (Henan, about 200 km southwest) are described in Wagner, Iron and Steel in Ancient China (Brill, 1993), which does not itself source the Handan ore. Ore source is not independently verified."
+   "source": "Handan-Wu'an (Hebei) skarn iron district; Han state ironworks such as Tieshenggou (Henan, about 200 km southwest) are described in Wagner, Iron and Steel in Ancient China (Brill, 1993), which does not itself source the Handan ore. Ore source is not independently verified.",
+   "contained_tonnes": 400000000,
+   "contained_basis": "Handan-Xingtai (Han-Xing) skarn district: more than 100 deposits with proven reserves of about 1 billion tons (ore); iron grade not given by the page, so 40% Fe is assumed (assumption, typical lean skarn magnetite, not sourced) = 400 Mt iron; district-wide stand-in for Wu'an",
+   "contained_source": "Jin et al., Han-Xing-type skarn iron deposits: insights from trace elements in magmatic magnetite, Frontiers in Earth Science 2025, https://www.frontiersin.org/journals/earth-science/articles/10.3389/feart.2025.1567728/pdf : \"more than 100 deposits have been discovered, with proven reserves of approximately 1 billion tons\""
   },
   {
    "id": "tonglushan_copper",
@@ -245,7 +266,10 @@
    "deposit_type": "skarn_copper",
    "status": "historic",
    "conf": "A",
-   "source": "Tonglushan, Daye (Hubei), the best-excavated ancient copper mine in China, worked from the Shang-Zhou period for over a millennium; Hubei Provincial Museum excavation reports."
+   "source": "Tonglushan, Daye (Hubei), the best-excavated ancient copper mine in China, worked from the Shang-Zhou period for over a millennium; Hubei Provincial Museum excavation reports.",
+   "contained_tonnes": 100000,
+   "contained_basis": "Ancient slag of about 400,000 metric tons yielding 80,000 to 120,000 t of crude copper; midpoint 100,000 t; production only, so a lower bound",
+   "contained_source": "China Daily, Buried mine rewrites the past (Tonglushan), 16 June 2026, https://www.chinadaily.com.cn/a/202606/16/WS6a3083cfa310986e2b4601cf_2.html : \"produced about 400,000 metric tons of ancient slag, yielding between 80,000 and 120,000 tons of crude copper\""
   },
   {
    "id": "gejiu_tin",
@@ -309,7 +333,10 @@
    "deposit_type": "vein_copper",
    "status": "historic",
    "conf": "C",
-   "source": "Akjoujt (Mauritania), copper mined and smelted in the first millennium BC at the Grotte aux Chauves-souris mine (radiocarbon dates reported by Courcier and colleagues, CUPRUM project, citing Lambert 1965 and 1975; Killick 1988 cites Lambert 1971 and 1983 for mid first millennium BC smelting). The title and journal of Lambert 1971 (Les industries sur cuivre dans l'Ouest saharien) were not verified. Medieval working not verified."
+   "source": "Akjoujt (Mauritania), copper mined and smelted in the first millennium BC at the Grotte aux Chauves-souris mine (radiocarbon dates reported by Courcier and colleagues, CUPRUM project, citing Lambert 1965 and 1975; Killick 1988 cites Lambert 1971 and 1983 for mid first millennium BC smelting). The title and journal of Lambert 1971 (Les industries sur cuivre dans l'Ouest saharien) were not verified. Medieval working not verified.",
+   "contained_tonnes": 364021,
+   "contained_basis": "Stand-in is the Guelb Moghrein mine at Akjoujt: measured and indicated resource of 43.57 Mt at 0.84% Cu = 364,021 t copper at 31 December 2015; the ancient first-millennium BC workings are not counted and recent production is not added",
+   "contained_source": "First Quantum Minerals, Guelb Moghrein NI 43-101 technical report, March 2016, https://minedocs.com/12/GuelbMoghrein_Technical_032016.pdf : \"Total Measured & Indicated 43.57 0.84 0.69 0.09 364,021 967,184\" (Mt, Cu %, Au g/t, As %, Cu t, Au oz)"
   },
   {
    "id": "thai_nguyen_iron",
@@ -370,7 +397,10 @@
    "deposit_type": "skarn_copper",
    "status": "historic",
    "conf": "C",
-   "source": "Gumeshevskoye (Gumyoshevsky) mine, Polevskoy, Urals: copper in use from the mid second millennium BC (Wikipedia, Gumyoshevsky mine) and a source of Final Bronze Age copper for Itkul and Sarmatian cultures (Ankusheva and colleagues); deposit found 1702, Polevskoy copper smelter 1724 to 1930. Chud and Demidov attributions are not sourced."
+   "source": "Gumeshevskoye (Gumyoshevsky) mine, Polevskoy, Urals: copper in use from the mid second millennium BC (Wikipedia, Gumyoshevsky mine) and a source of Final Bronze Age copper for Itkul and Sarmatian cultures (Ankusheva and colleagues); deposit found 1702, Polevskoy copper smelter 1724 to 1930. Chud and Demidov attributions are not sourced.",
+   "contained_tonnes": 494700,
+   "contained_basis": "Estimated reserves of 48.5 Mt of ore at 1.02% Cu = 494,700 t copper; reserve only (undated), no past production added, so a lower bound",
+   "contained_source": "Wikipedia, Gumyoshevsky mine, https://en.wikipedia.org/wiki/Gumyoshevsky_mine : \"estimated reserves of 48.5 million tonnes of ore grading 1.02% copper\""
   },
   {
    "id": "zmeinogorsk_lead",
@@ -382,7 +412,10 @@
    "deposit_type": "volcanogenic_massive_sulphide",
    "status": "historic",
    "conf": "C",
-   "source": "Zmeinogorsk and the Rudny Altai polymetallic ores, with ancient workings and the Demidov-founded Kolyvan-Voskresensk works (1727); silver ore discovered in winter 1743."
+   "source": "Zmeinogorsk and the Rudny Altai polymetallic ores, with ancient workings and the Demidov-founded Kolyvan-Voskresensk works (1727); silver ore discovered in winter 1743.",
+   "contained_tonnes": 492450,
+   "contained_basis": "Stand-in is Korbalikhinskoye in the Zmeinogorsky district: reserves of 24.5 Mt of ore at 2.01% lead = 492,450 t lead; reserve only, the Zmeinogorsk mine itself has no figure in any page opened",
+   "contained_source": "Wikipedia, Korbalikhinskoye mine, https://en.wikipedia.org/wiki/Korbalikhinskoye_mine : \"reserves amounting to 24.5 million tonnes of ore grading 2.01% lead, 9.8% zinc and 43.5 million oz of silver\""
   },
   {
    "id": "zmeinogorsk_silver",
@@ -395,7 +428,10 @@
    "status": "historic",
    "conf": "C",
    "source": "Zmeinogorsk Altai silver, the same ore as the lead entry; first Altai silver was presented in 1744 and the works passed to the Crown for it.",
-   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): this entry's source note gives the place and a share of reference output, not a working date or a total endowment. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
+   "contained_tonnes": 1353,
+   "contained_basis": "Stand-in is Korbalikhinskoye in the Zmeinogorsky district: 43.5 million oz of silver x 31.1035 g/oz = 1,353 t silver; reserve only, the Zmeinogorsk mine itself has no figure in any page opened",
+   "contained_source": "Wikipedia, Korbalikhinskoye mine, https://en.wikipedia.org/wiki/Korbalikhinskoye_mine : \"reserves amounting to 24.5 million tonnes of ore grading 2.01% lead, 9.8% zinc and 43.5 million oz of silver\""
   },
   {
    "id": "durango_iron",
@@ -407,7 +443,10 @@
    "deposit_type": "iron_oxide_apatite",
    "status": "historic",
    "conf": "D",
-   "source": "Cerro de Mercado (Durango), a large hematite-magnetite hill; the pre-Hispanic Americas used iron ore for mirrors and pigment but did not smelt it. The share stands for that small output."
+   "source": "Cerro de Mercado (Durango), a large hematite-magnetite hill; the pre-Hispanic Americas used iron ore for mirrors and pigment but did not smelt it. The share stands for that small output.",
+   "contained_tonnes": 65000000,
+   "contained_basis": "Ore reserve of Cerro Mercado estimated at about 100,000,000 tons (Monterrey steel company estimate, 1920s) times the 65 to 68 per cent iron of the ore as mined (65% used) = 65 Mt iron; tons taken as written; production before 1926 not added",
+   "contained_source": "William F. Foshag, Mineralogy and geology of Cerro Mercado, Durango, Mexico, Proceedings of the US National Museum (1927), https://archive.org/download/biostor-79733/biostor-79733.pdf : \"the ore reserved of Cerro Mercado was approximately 100,000,000 tons\"; \"The ores as mined contain 65 to 68 per cent of iron\""
   },
   {
    "id": "inguaran_copper",
@@ -526,7 +565,10 @@
    "deposit_type": "mississippi_valley_type_galena",
    "status": "historic",
    "conf": "A",
-   "source": "Galena-Dubuque lead-zinc district, worked by Native Americans for galena and by Euro-Americans from the 1820s; US Geological Survey."
+   "source": "Galena-Dubuque lead-zinc district, worked by Native Americans for galena and by Euro-Americans from the 1820s; US Geological Survey.",
+   "contained_tonnes": 738770,
+   "contained_basis": "Total recorded lead production 1798 to 1947 of 814,339 short tons x 0.9072 = 738,770 t lead (the report notes the true total may be nearer 1,000,000 tons); production only",
+   "contained_source": "USGS Professional Paper 309, The geology of the Upper Mississippi Valley zinc-lead district, 1959, https://pubs.usgs.gov/pp/0309/report.pdf : \"The total lead production from 1798 to 1947 was 814,339 short tons of lead metal.\""
   },
   {
    "id": "cobalt_silver",
