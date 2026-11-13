@@ -7,16 +7,16 @@
    },
    "inputs": {
     "papyrus_sheet": 1.0,
-    "ink_kg": 0.0015
+    "ink_kg": 0.0001
    },
    "labour_hours": {
     "scribe": 3.0
    },
    "unit_dimension": "count",
    "basis": "per written page of a letter, account or copied text on papyrus",
-   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting; the ink mass is still an estimate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. Pass 11: ink per page still has no source for millilitres a dip; Straight Dope Message Board, 'How much can you write with a quill pen on a single ink-dip?' (https://boards.straightdope.com/t/how-much-can-you-write-with-a-quill-pen-on-a-single-ink-dip/749494, opened) gives 'a couple of words per dip' (a secondhand claim of three to six), so a page of a few hundred words is some fifty to a hundred dips, and 1.5 g a page then needs 15 to 30 mg a dip, which is not a sourced figure. Hobbyist forum evidence only; ink mass stays confidence D.",
+   "yield_basis": "A page takes one sheet of the writing surface and about a tenth of a gram of ink (see the ink figure below). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. Pass 11 ink: onepenshow.com, ink economy (https://hn.jakechampion.name/reader/https://onepenshow.com/ink/economy, opened) measured fountain pens at 0.016 ml a page (fine nib), 0.04 (medium) and 0.05 (broad), from one test of three pens, so about 0.05 g a page at 1 g/ml; a folio in a dense book hand carries about twice a notebook page's writing (our assumption), so 0.1 g, taken as 0.0001 kg (was 0.0015 kg, fifteen times the sourced figure, so changed; a fountain pen is the modern analogue of a quill, and a quill's dip loss is not counted). Every figure in this row now has an opened source or one stated arithmetic step, confidence C.",
    "requires_node": "prn_carbon_ink",
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "writing": 1.0
    }
@@ -27,16 +27,16 @@
    },
    "inputs": {
     "parchment_sheet": 1.0,
-    "ink_kg": 0.0015
+    "ink_kg": 0.0001
    },
    "labour_hours": {
     "scribe": 3.0
    },
    "unit_dimension": "count",
    "basis": "per written page of a letter, account or copied text on parchment",
-   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting; the ink mass is still an estimate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. Pass 11: ink per page still has no source for millilitres a dip; Straight Dope Message Board, 'How much can you write with a quill pen on a single ink-dip?' (https://boards.straightdope.com/t/how-much-can-you-write-with-a-quill-pen-on-a-single-ink-dip/749494, opened) gives 'a couple of words per dip' (a secondhand claim of three to six), so a page of a few hundred words is some fifty to a hundred dips, and 1.5 g a page then needs 15 to 30 mg a dip, which is not a sourced figure. Hobbyist forum evidence only; ink mass stays confidence D.",
+   "yield_basis": "A page takes one sheet of the writing surface and about a tenth of a gram of ink (see the ink figure below). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. Pass 11 ink: onepenshow.com, ink economy (https://hn.jakechampion.name/reader/https://onepenshow.com/ink/economy, opened) measured fountain pens at 0.016 ml a page (fine nib), 0.04 (medium) and 0.05 (broad), from one test of three pens, so about 0.05 g a page at 1 g/ml; a folio in a dense book hand carries about twice a notebook page's writing (our assumption), so 0.1 g, taken as 0.0001 kg (was 0.0015 kg, fifteen times the sourced figure, so changed; a fountain pen is the modern analogue of a quill, and a quill's dip loss is not counted). Every figure in this row now has an opened source or one stated arithmetic step, confidence C.",
    "requires_node": "prn_parchment_sheets",
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "writing": 1.0
    }
@@ -47,14 +47,14 @@
    },
    "inputs": {
     "paper_kg": 0.005,
-    "ink_kg": 0.0015
+    "ink_kg": 0.0001
    },
    "labour_hours": {
     "scribe": 3.0
    },
    "unit_dimension": "count",
    "basis": "per written page of a letter, account or copied text on paper",
-   "yield_basis": "A page takes one sheet of the writing surface and about a gram or two of ink (1.5 g a page is an estimate). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting; the ink mass is still an estimate, confidence D); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. A sheet of paper is about five grams. Pass 11: ink per page still has no source for millilitres a dip; Straight Dope Message Board, 'How much can you write with a quill pen on a single ink-dip?' (https://boards.straightdope.com/t/how-much-can-you-write-with-a-quill-pen-on-a-single-ink-dip/749494, opened) gives 'a couple of words per dip' (a secondhand claim of three to six), so a page of a few hundred words is some fifty to a hundred dips, and 1.5 g a page then needs 15 to 30 mg a dip, which is not a sourced figure. Hobbyist forum evidence only; ink mass stays confidence D. Paper sheet mass: papersizes.org, Weight of sheets (https://www.papersizes.org/weight-of-sheets.htm, opened) gives an A4 sheet at 80 gsm as 5 g, which is where the 0.005 kg comes from (modern machine paper as the analogue for a hand-made sheet). The desk and tools (timber, iron, carpenter hours, life) have no source found, so the row stays D.",
+   "yield_basis": "A page takes one sheet of the writing surface and about a tenth of a gram of ink (see the ink figure below). A scribe in a book hand wrote a few pages a day: Lithub, 'Writing as spiritual practice: inside the world of medieval scribes' (https://lithub.com/writing-as-spiritual-practice-inside-the-world-of-medieval-scribes/, opened): 'A professional scribe could complete about three to four pages per day', which in an eight-hour day is two to 2.7 hours a page; taken here as three hours (a little slow, allowing for ruling and quill cutting); document hands were quicker. Services that turn materials into what households use are recipes on the trades that do the work, as the laid walls are. A sheet of paper is about five grams. Pass 11 ink: onepenshow.com, ink economy (https://hn.jakechampion.name/reader/https://onepenshow.com/ink/economy, opened) measured fountain pens at 0.016 ml a page (fine nib), 0.04 (medium) and 0.05 (broad), from one test of three pens, so about 0.05 g a page at 1 g/ml; a folio in a dense book hand carries about twice a notebook page's writing (our assumption), so 0.1 g, taken as 0.0001 kg (was 0.0015 kg, fifteen times the sourced figure, so changed; a fountain pen is the modern analogue of a quill, and a quill's dip loss is not counted). Paper sheet mass: papersizes.org, Weight of sheets (https://www.papersizes.org/weight-of-sheets.htm, opened) gives an A4 sheet at 80 gsm as 5 g, which is where the 0.005 kg comes from (modern machine paper as the analogue for a hand-made sheet). The desk and tools (timber, iron, carpenter hours, life) have no source found, so the row stays D.",
    "requires_node": "prn_hand_papermaking",
    "capital": [
     {

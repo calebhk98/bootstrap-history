@@ -14,7 +14,7 @@
    },
    "unit_dimension": "count",
    "basis": "per player's hour at a gaming table",
-   "yield_basis": "A dealer runs a table of about six players, so about a sixth of an hour of the dealer's time for each player's hour; the door takes a labourer a twentieth of an hour for each. One candle of about a candela lights a table of six, so each player's hour uses about two lumen-hours of it, 0.002 of the thousand lumen-hours the light goods are counted in. The table size is an estimate, confidence D. The stakes themselves are not the price: they pass between the players and the house, and what the house is paid is for the table and the company, which is what this entry prices.",
+   "yield_basis": "A dealer runs a table of about six players, so about a sixth of an hour of the dealer's time for each player's hour; the door takes a labourer a twentieth of an hour for each. One candle of about a candela lights a table of six, so each player's hour uses about two lumen-hours of it, 0.002 of the thousand lumen-hours the light goods are counted in. The table size is an estimate, confidence D. The stakes themselves are not the price: they pass between the players and the house, and what the house is paid is for the table and the company, which is what this entry prices. Pass 11: table of about six players: Haunted Game Cafe, table reservation (https://www.hauntedgamecafe.com/products/table-reservation-1-hour, opened) lists its tables as 'Up to 7' or '6' seats, charged per table, so a dealer's sixth of an hour a player-hour stands (modern analogue of a hosted table). Hall size: arcedior.com, Coffee shop seating layout tips (https://arcedior.com/blog/coffee-shop-seating-layout-tips, opened) gives 'balanced cafe: 1.5 to 2.0 m2 per seat', so sixty seats are 90 to 120 m2; a 11 m square with walls 3 m high and 0.45 m thick at about 2200 kg/m3 is 44 x 3 x 0.45 x 2200 = 130 t of stone, 2 times the 60 t here (wall height, thickness and stone density are our assumptions, not read). Still unsourced: the door labourer's 0.05 h, the candle share, the timber roof, the 40-year life and the 150000 player-hours a year; the row stays D.",
    "requires_node": "fin_gambling_house",
    "operated_by": [
     "fin_gambling_house"
@@ -55,7 +55,7 @@
    },
    "unit_dimension": "count",
    "basis": "per numbered chance sold in a public lottery",
-   "yield_basis": "A numbered ticket is a small slip, a hundredth of a parchment sheet. A scribe writes and registers it and a merchant sells and pays out, a few minutes each. The sizes are estimates, confidence D. A chance is worth about an hour of play, so it is counted as one unit of amusement.",
+   "yield_basis": "A numbered ticket is a small slip, a hundredth of a parchment sheet. A scribe writes and registers it and a merchant sells and pays out, a few minutes each. The sizes are estimates, confidence D. A chance is worth about an hour of play, so it is counted as one unit of amusement. Pass 11: no source found for the 0.01 parchment sheet a ticket, the scribe and merchant minutes, or the office and strongroom bill. The National Archives and Norwegian University of Science and Technology lottery-history pages found by search describe the scale of 16th-century draws (a Leiden draw of 1504 of over 40,000 lots) but give no per-ticket labour or material figures, and were only seen as search snippets. Stays D.",
    "requires_node": "fin_lottery",
    "operated_by": [
     "fin_lottery"
