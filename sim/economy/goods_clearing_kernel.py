@@ -9,6 +9,8 @@ import numpy
 
 from sim.jit import njit
 
+from .stock_residue import STOCK_RESIDUE_UNITS
+
 TABLE_TRADED, TABLE_UNTRADED, ON_OBJECTS = 0, 1, 2
 NO_QUOTE, BID_QUOTE, ASK_QUOTE = 0, 1, 2
 
@@ -61,7 +63,7 @@ def clearing_columns(flags, has_units, last_price, batch_traded, batch_mean, bat
             elif ask_quote:
                 quote_price[place], quote_kind[place] = asked, ASK_QUOTE
             for each in range(offer_ptr[place], offer_ptr[place + 1]):
-                if offer_quantity[offer_grouped[each]] > 0.0:
+                if offer_quantity[offer_grouped[each]] >= STOCK_RESIDUE_UNITS:
                     left_count[place] += 1
         else:
             way[place] = ON_OBJECTS
@@ -85,7 +87,7 @@ def clearing_columns(flags, has_units, last_price, batch_traded, batch_mean, bat
                     found += 1
         elif way[place] == TABLE_UNTRADED:
             for each in range(offer_ptr[place], offer_ptr[place + 1]):
-                if offer_quantity[offer_grouped[each]] > 0.0:
+                if offer_quantity[offer_grouped[each]] >= STOCK_RESIDUE_UNITS:
                     left_grouped[found] = offer_grouped[each]
                     found += 1
     return slots, way, quantity, price, demand, offered, wanted, quote_price, quote_kind, left_grouped, left_ptr, left_count

@@ -180,6 +180,12 @@ class UntradedMarketsHaveTheListsQuotes(unittest.TestCase):
         _ask, clamped, supply, _funded, _bid = self.figures([], offers, minimum=0.1, has_minimum=True)
         self.assertEqual((clamped[0], supply[0]), (0.1, 5.0))
 
+    def test_an_offer_of_residue_is_not_supply_and_sets_no_lowest_ask(self):
+        offers = [offer("s", reservation=0.5, quantity=1e-17)]
+        lowest_ask, clamped, supply, _funded, _bid = self.figures([], offers)
+        self.assertTrue(math.isnan(lowest_ask[0]) and math.isnan(clamped[0]))
+        self.assertEqual(supply[0], 0.0)
+
     def test_the_price_held_is_the_last_price_unless_the_lowest_ask_is_above_it(self):
         self.assertEqual(goods_table_quotes.held_price(4.0, 3.0), 4.0)
         self.assertEqual(goods_table_quotes.held_price(4.0, 6.0), 6.0)
