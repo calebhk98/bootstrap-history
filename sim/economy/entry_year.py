@@ -250,7 +250,7 @@ def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -
         columns.recipe_row, columns.tile_row, shortfall, columns.land_rent_per_run, columns.expected_prices, owner_of, owner_cash,
         matrices.slot_goods, matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.plant_goods, matrices.labour_hours,
         matrices.plant_labour_hours, matrices.plant_life_years, memory.price, memory.offered, memory.wage,
-        arrays.area_index.of_good_tile, float(rate), ENTRANT_OWNER_STAKE_SHARE)
+        arrays.area_index.of_good_tile, float(rate), ENTRANT_OWNER_STAKE_SHARE, arrays.tools)
     post_in_order(record.book, [([Transfer(owner_names[row], ids[row], money, float(amounts[row]), "owner's stake")], ())
                                 for row in np.nonzero(amounts > 0.0)[0]], RULE_SINGLE)
     return True
