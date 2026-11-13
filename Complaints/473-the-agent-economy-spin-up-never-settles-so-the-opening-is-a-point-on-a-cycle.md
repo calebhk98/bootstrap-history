@@ -836,6 +836,16 @@ Fixed here:
   `paid_price`; test `test_mint_bid_split`). The bid was split by tile count, so part of it sat in an area with no metal; and a weighed-metal
   economy paid sellers their ask while its own design (`currency.has_mint`, `mint.py` docstrings) says the metal is exchanged at parity. Norse
   now strikes about what wears away (`opening-checks --civs norse_900ad`: `money_against_wear` passes).
+- **A holding decayed to residue is removed, and a residue is not an offer** (`stock_residue.STOCK_RESIDUE_UNITS`, `wear_kernels.loss_moves`,
+  `inventory._moves`, the on-offer tests in `goods_table_quotes` and `goods_clearing_kernel`). A share-based loss never reaches zero, and a market
+  whose only offer was that residue quoted a phantom low ask; households bid on it, the unfilled bid hid the quote, and the next year it
+  returned: a period-2 cycle through the food floor cost and the wage floor (`labour_ask_floor.ask_floor_by_tile`). Without it households see
+  the real food prices, so measured hunger is higher and honest.
+- **An unpriced tool is costed by its fallback chain in placement and entry** (`tool_fallback.wear_cost_per_run`, `unit_cost.input_cost_per_run`,
+  `entry_wear_kernel`; test `test_tool_wear_cost`). A tool with no price made every cost rule infinite, so a recipe was never placed or entered,
+  though producers' own planning already covers a missing tool by the next tool or by hand (`tool_fallback.draws`). In Mexica, with no iron,
+  that kept cacao (the money's backing good) and the other recipes using iron tools from ever being made. On Norse it took the trimmed stage
+  from a falling price level to a steady one, and every settle gap but the rate's below its earlier value (`spin-up-trace --civ norse_900ad --stages`).
 
 Tried and not merged (branches pushed for reference):
 - `smooth-base-rate`: the rate's declared partial adjustment (`RATE_ADJUSTMENT_SHARE_PER_YEAR`) is overridden in nearly every year by three
@@ -845,10 +855,8 @@ Tried and not merged (branches pushed for reference):
 - `opening-grown-floor-budget`: the same own-plot rule in the opening. The opening's silver and ore demand rested on a purse equal to the
   money the old late cut freed; without it households' store-of-value bids collapse and the ore and silver markets stop trading at the
   opening. Needs a derived opening cash and saving (Complaints 545, 607); see `Complaints/reports/473-owner-questions.md`.
-- `no-dust-offers`: holdings decayed by a share never reach zero, and a market whose only offer is a residue of about 1e-17 kg quotes a
-  phantom low ask, households bid on it, the unfilled bid hides the quote, and the cycle repeats every second year (Norse cheese, canvas,
-  cooked meal; it drives a period-2 swing in the wage floor, `labour_ask_floor.ask_floor_by_tile`). Removing the residue and not counting it
-  as an offer shrank the sawtooth but the run drifted faster and went hungrier; the cause of that is not traced.
+- `no-dust-offers` (first version, before the mint fix): measured worse on one Norse run; re-measured on the head with the mint fix it
+  removed the alternation in every good and tile checked, and it is merged above.
 
 What still fails, and the evidence:
 - The run is path-sensitive: a small rule change moves the whole trajectory (the dust branch's trimmed-stage wage starts at about twice the
