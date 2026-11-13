@@ -101,6 +101,16 @@ def flexible_budget_left(usable, spending, floor_wanted, floor_scale):
 
 
 @njit
+def store_pot(savings, usable, budget_total, spending, floor_wanted, floor_scale, flexible_scale):
+    """The cash a household may put into stores after its bids: the savings, within the usable cash its bids leave. When the bids were scaled
+    to the usable cash (the floors took it, or the flexible budgets were cut under a spending that reaches it) what is left of it is
+    rounding, and the pot is exactly zero."""
+    if (floor_wanted > 0.0 and floor_scale < 1.0) or (flexible_scale < 1.0 and spending >= usable):
+        return 0.0
+    return min(savings, usable - budget_total)
+
+
+@njit
 def _add(partials, count, term):
     """One more term into the exact sum held in `partials[:count]` (the algorithm of `math.fsum`); returns the new count."""
     x = term
@@ -471,7 +481,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
         budget_total += bid_budget
     savings = cash - budget_total - target
     if s1 > s0 and cohort_ints[c, CI_HAS_RATE] > 0:
-        pot = min(savings, usable - budget_total)
+        pot = store_pot(savings, usable, budget_total, spending, floor_wanted, floor_scale, flexible_scale)
         if pot > 0.0:
             real_rate = cohort_floats[c, CF_RATE] - inflation
             above_buffer = cash + claims + store_value - target

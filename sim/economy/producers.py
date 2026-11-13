@@ -38,7 +38,7 @@ EXPECTATION_ADJUSTMENT_SHARE = declare(
     why="A producer expects next year's price from its own past, moving part of the way to what it "
         "last saw; a share of one is the naive cobweb. Real producers use forward prices, stocks and "
         "reports that the economy does not model. The share is a placeholder for that information. This is the one "
-        "smoothing in time of the planning price: the memory price it reads (`year_goods.remembered_price`) moves in "
+        "smoothing in time of the planning price: the memory price it reads (`market_memory_blend.blended_price`) moves in "
         "proportion to the trade's share of the market's usual volume, which is a guard against a sliver of trade and "
         "equals the clearing price when the market trades its usual volume.")
 REGRESSIVE_EXPECTATION_WEIGHT = declare(

@@ -16,7 +16,7 @@ from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_F
                                     RF_SHARE, RI_GOOD, RI_UNIT, SF_LIFE, SF_PRICE, SF_WEIGHT, V_FLOORS, V_PIDX, V_SFLOORS, V_STOTALS, V_TOTALS, W_AFF,
                                     W_BUDGET, W_CAP, W_CEIL, W_COUNT, W_FLEX, W_FLOOR, W_ON, W_QTY, W_SHARE, _add, _affordable, _need_units,
                                     _resting_purse, _store_value_target, _total)
-from .opening_demand_kernel import flexible_budget_left, RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
+from .opening_demand_kernel import flexible_budget_left, store_pot, RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
 from .satiated_demand import is_satiated
 from .priced_need_kernel import limit_shares, price_ceilings, units_per_money
 
@@ -336,7 +336,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
     savings = cash - budget_total - target
     if s1 > s0 and template_ints[template, TM_HAS_RATE] > 0:
         cohort_out[c, CA_PLAN] = 1.0
-        pot = min(savings, usable - budget_total)
+        pot = store_pot(savings, usable, budget_total, spending, floor_wanted, floor_scale, flexible_scale)
         real_rate = template_floats[template, TF_RATE] - inflation
         above_buffer = cash + claims + store_value - target
         count = 0

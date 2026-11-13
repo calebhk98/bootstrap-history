@@ -1,7 +1,7 @@
 """What the market memory learns from a year's goods markets, over whole columns (`year_goods._remember_markets`): the price the sellers
 got, what the market's own buyers would have taken at the remembered price, and the signal each market's memory moves toward.
 
-The rules are those of `market_memory_asks`, `market_memory_offers`, `year_goods.price_after_trade`, `goods_market._quantity` and
+The rules are those of `market_memory_asks`, `market_memory_offers`, `market_memory_blend.blended_price`, `goods_market._quantity` and
 `goods_market_rows.wanted_at_rows`, bit for bit: where the Python adds with `math.fsum` the kernels add with `exact_sum`, and a power the
 Python raises on, or a quantity that is not finite, sets `flags[0]` (`FALLBACK`) and the caller runs the Python rules. NaN stands for
 "none" in every column. The plain Python these replace is `sim/tests/remember_plain.py`."""
@@ -108,24 +108,34 @@ def bid_figures(bid_ptr, budget, maximum):
 
 
 @njit(**KERNEL)
-def remembered(old, cleared, quantity, usual):
-    """`year_goods.remembered_price`."""
-    if numpy.isnan(old) or usual <= 0.0:
-        return cleared
-    share = quantity / usual
-    return old + (share if share < 1.0 else 1.0) * (cleared - old)
+def reference_volume(usual, wanted_at_old, good_scale, representative_share, volume_floor):
+    """`market_memory_blend.reference_volume`."""
+    return max(max(usual, representative_share * wanted_at_old), max(representative_share * good_scale, volume_floor))
 
 
 @njit(**KERNEL)
-def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years, resumed_share):
-    """`year_goods.price_after_trade` (the resumed-trade rule included)."""
-    if old_was_quote and not numpy.isnan(old):
-        return remembered(old, cleared, quantity, reference_volume)
-    paid = numpy.nan if old_was_quote else old
-    volume_rule = remembered(paid, cleared, quantity, reference_volume)
-    if numpy.isnan(paid) or quiet_years <= 0:
-        return volume_rule
-    return paid + resumed_share * (volume_rule - paid)
+def blended(old, was_quote, quiet_years, reference, total, cleared, wanted, demand_led, target, cost, resumed_share, drift_share,
+            representative_share, thin_trade_share):
+    """`market_memory_blend.blended_price`; NaN stands for None."""
+    if numpy.isnan(cleared) and numpy.isnan(target):
+        return numpy.nan
+    base = old
+    if numpy.isnan(base):
+        base = target if not numpy.isnan(target) else cleared
+    if numpy.isnan(base):
+        return numpy.nan
+    paid = base if numpy.isnan(cleared) else cleared
+    traded_share = min(1.0, total / reference)
+    step = traded_share * (paid - base)
+    if not numpy.isnan(old) and not was_quote and quiet_years > 0:
+        step = resumed_share * step
+    price = base + step
+    if not numpy.isnan(old):
+        price = price_after_thin_trade(price, cost, total, reference, representative_share, thin_trade_share)
+    if numpy.isnan(target):
+        return price
+    demand_share = min(1.0, wanted / reference) if demand_led else 1.0
+    return price + (1.0 - traded_share) * demand_share * drift_share * (target - price)
 
 
 @njit(**KERNEL)
@@ -138,28 +148,20 @@ def price_after_thin_trade(price, cost, quantity, usual, representative_share, t
 
 
 @njit(**KERNEL)
-def signals(old, was_quote, usual, quiet_years, total, received, wanted_at_old, quote_price, quote_kind, has_bids, offers_left, cost,
-            bid_funded, bid_best, representative_share, resumed_share, no_offer_share, thin_trade_share):
-    """Per market: (the signal its memory moves toward (NaN: none), the kind of the quote it rests on (`NO_QUOTE` when it rests on trade or
-    on nothing), whether it came from trade). A market that traded is weighed against its usual volume or a share of what buyers wanted
-    at the old price; one that did not moves toward its quote, which for a market with bids and no offers left is what a maker would
-    have to ask to cover its cost, else the best bid unfilled. A market with nothing to quote plans from the cost of making the good,
-    taken whole (kind COST_COVERING); with no cost either its signal is NaN and the caller forgets its planning price."""
+def signals(old, was_quote, usual, good_scale, quiet_years, total, received, wanted_at_old, quote_price, quote_kind, has_bids, offers_left,
+            cost, bid_funded, bid_best, representative_share, resumed_share, no_offer_share, thin_trade_share, volume_floor):
+    """Per market: (the signal its memory moves toward (NaN: none), the kind of the quote it rests on (`NO_QUOTE` when it points to no
+    quote), whether it came from trade). Every market is weighed by `blended`: against a reference volume (its usual volume, a share of
+    what buyers wanted at the old price, a share of the good's mean usual volume, a floor), its trade moves the price to the price paid and
+    the untraded rest drifts it toward the market's target, which for a market with bids and no offers left is what a maker would have to ask
+    to cover its cost, else the best bid unfilled; else the quote; else the making cost. A market with nothing to point to and no trade has
+    a NaN signal and the caller forgets its planning price."""
     markets = len(old)
     signal = numpy.full(markets, numpy.nan)
     kind = numpy.zeros(markets, dtype=numpy.int64)
     from_trade = numpy.zeros(markets, dtype=numpy.bool_)
     for market in range(markets):
-        if total[market] > 0.0 and not numpy.isnan(received[market]):
-            from_trade[market] = True
-            wanted_share = representative_share * wanted_at_old[market]
-            reference = wanted_share if wanted_share > usual[market] else usual[market]
-            figure = price_after_trade(old[market], was_quote[market], received[market], total[market], reference, quiet_years[market],
-                                       resumed_share)
-            if total[market] < representative_share * usual[market]:
-                figure = price_after_thin_trade(figure, cost[market], total[market], usual[market], representative_share, thin_trade_share)
-            signal[market] = figure
-            continue
+        traded = total[market] > 0.0 and not numpy.isnan(received[market])
         price, code = quote_price[market], quote_kind[market]
         if has_bids[market] and offers_left[market] == 0:
             if not numpy.isnan(cost[market]) and cost[market] > 0.0 and bid_funded[market]:
@@ -168,11 +170,17 @@ def signals(old, was_quote, usual, quiet_years, total, received, wanted_at_old, 
                 price, code = bid_best[market], BEST_UNFILLED_BID
             else:
                 price, code = numpy.nan, NO_QUOTE
-        if code == NO_QUOTE and not numpy.isnan(cost[market]) and cost[market] > 0.0:      # nothing traded and nothing to quote: plan from the making cost
-            kind[market] = COST_COVERING
-            signal[market] = cost[market]
-            continue
-        if code != NO_QUOTE:
+        if code == NO_QUOTE and not numpy.isnan(cost[market]) and cost[market] > 0.0:      # nothing to quote: plan from the making cost
+            price, code = cost[market], COST_COVERING
+        if code == NO_QUOTE:
+            price = numpy.nan
+        reference = reference_volume(usual[market], wanted_at_old[market], good_scale[market], representative_share, volume_floor)
+        if traded:
+            from_trade[market] = True
+        else:
             kind[market] = code
-            signal[market] = price if numpy.isnan(old[market]) else old[market] + no_offer_share * (price - old[market])
+        signal[market] = blended(old[market], was_quote[market], quiet_years[market], reference, total[market] if traded else 0.0,
+                                 received[market] if traded else numpy.nan, wanted_at_old[market], offers_left[market] == 0, price,
+                                 cost[market] if cost[market] > 0.0 else numpy.nan, resumed_share, no_offer_share, representative_share,
+                                 thin_trade_share)
     return signal, kind, from_trade

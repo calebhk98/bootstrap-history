@@ -11,9 +11,9 @@ import numpy
 
 from . import goods_memory_notes, goods_remember_kernel as kernel
 from .goods_good_clear import QUOTE_KINDS
-from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE, memory_reference_volume
-from .market_memory_asks import RESUMED_TRADE_MEMORY_SHARE
-from .market_memory_offers import NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE, price_after_thin_trade, price_toward_quote
+from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE
+from .market_memory_blend import MEMORY_VOLUME_FLOOR, blended_price, reference_volume
+from .market_memory_offers import NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE
 from .notional import making_costs
 from .setup import opening_price_today
 from .market_memory import market_key
@@ -33,28 +33,24 @@ class Costs:
         return self._found.get(good)
 
 
-def remember_one(setup, record, good, area, market, old, total, usual, was_quote, idle_years, ledger, orders, costs: Costs):
-    """The Python rules for one market: (the signal or None, the quote kind or None, whether it came from trade)."""
+def remember_one(setup, record, good, area, market, old, total, usual, scale, was_quote, idle_years, ledger, orders, costs: Costs):
+    """The Python rules for one market: (the signal or None, the quote kind or None, whether it came from trade). `scale` is the mean usual
+    volume of the good over its areas."""
     from . import year_goods
-    quote_kind = None
+    cost = costs.get(good)
     received = year_goods._received_price(setup, record, good, market, ledger) if total > 0.0 else None
-    if received is not None:
-        reference = memory_reference_volume(usual, year_goods._wanted_at(market, old, orders))
-        signal = year_goods.price_after_trade(old, was_quote, received, total, reference, idle_years)
-        if total < REPRESENTATIVE_TRADE_SHARE * usual:
-            signal = price_after_thin_trade(signal, costs.get(good), total, usual)
-        return signal, None, True
+    wanted = year_goods._wanted_at(market, old, orders)
+    reference = reference_volume(usual, wanted, scale, REPRESENTATIVE_TRADE_SHARE)
     quote = market.result.quote
     if market.bids and not market.offers:
         from .goods_market_rows import bids_only_quote
         from . import market_quote
-        quote = (bids_only_quote(orders.bid_lists(), market.rows.bid_rows, costs.get(good)) if market.rows is not None else
-                 market_quote.no_trade_quote(market.bids, market.offers, costs.get(good)))
-    signal = price_toward_quote(old, quote.price) if quote is not None else None
-    if signal is not None:
-        quote_kind = quote.kind
-        return signal, quote_kind, False
-    return plan_from_cost(costs.get(good))
+        quote = (bids_only_quote(orders.bid_lists(), market.rows.bid_rows, cost) if market.rows is not None else
+                 market_quote.no_trade_quote(market.bids, market.offers, cost))
+    target, quote_kind, _from_trade = (quote.price, quote.kind, False) if quote is not None else plan_from_cost(cost)
+    signal = blended_price(old, was_quote, idle_years, reference, 0.0 if received is None else total, received, wanted, not market.offers,
+                           target, cost)
+    return signal, (None if received is not None else quote_kind), received is not None
 
 
 def plan_from_cost(cost: Optional[float]):
@@ -118,22 +114,33 @@ def remember_markets(setup, record, keys, left_markets, rows, year_markets, cell
     wanted_old = kernel.wanted_at_markets(old, pointers, floor, flexible, reference, elasticity, budget, maximum, counted, *added, flags)
     funded, best = kernel.bid_figures(pointers, budget, maximum)
     has_bids, offers_left = table.bid_count[cells] > 0, table.left_count[cells]
+    scale = _good_scale(goods, usual)
+    reference = numpy.maximum(numpy.maximum(usual, REPRESENTATIVE_TRADE_SHARE * wanted_old),
+                              numpy.maximum(REPRESENTATIVE_TRADE_SHARE * scale, MEMORY_VOLUME_FLOOR))
     traded = (total > 0.0) & ~numpy.isnan(received)
-    needs_cost = (traded & (total < REPRESENTATIVE_TRADE_SHARE * usual)) | ~traded
+    needs_cost = ~(traded & (total >= reference))      # a trade of the whole reference volume neither relaxes toward the cost nor drifts
     cost = numpy.array([numpy.nan if each is None else each for each in (costs.get(good) for good in goods)]) if needs_cost.any() \
         else numpy.full(len(rows), numpy.nan)
-    signal, kind, from_trade = kernel.signals(old, was_quote, usual, idle, total, received, wanted_old, table.quote_price[cells],
+    signal, kind, from_trade = kernel.signals(old, was_quote, usual, scale, idle, total, received, wanted_old, table.quote_price[cells],
                                               table.quote_kind[cells], has_bids, offers_left, cost, funded, best, REPRESENTATIVE_TRADE_SHARE,
-                                              RESUMED_TRADE_MEMORY_SHARE, NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE)
+                                              RESUMED_TRADE_MEMORY_SHARE, NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE, MEMORY_VOLUME_FLOOR)
     if flags[0] != kernel.FALLBACK and not plain.any():
         return _write(setup, memory, rows, keys, signal, kind, from_trade, cleared, table.delivered[cells])
     every = numpy.ones(len(rows), dtype=numpy.bool_) if flags[0] == kernel.FALLBACK else plain
     for place in numpy.flatnonzero(every).tolist():
         good, area = keys[place]
         found, name, trade = remember_one(setup, record, good, area, left_markets[keys[place]], None if old[place] != old[place] else float(old[place]),
-                                          float(total[place]), float(usual[place]), bool(was_quote[place]), int(idle[place]), ledger, orders, costs)
+                                          float(total[place]), float(usual[place]), float(scale[place]), bool(was_quote[place]), int(idle[place]), ledger, orders, costs)
         signal[place], kind[place], from_trade[place] = numpy.nan if found is None else found, QUOTE_KINDS.index(name), trade
     return _write(setup, memory, rows, keys, signal, kind, from_trade, cleared, table.delivered[cells])
+
+
+def _good_scale(goods, usual) -> numpy.ndarray:
+    """Per market, the mean usual volume of its good over the markets given (its areas)."""
+    names, inverse = numpy.unique(numpy.array(goods, dtype=object).astype(str), return_inverse=True)
+    sums = numpy.zeros(len(names))
+    numpy.add.at(sums, inverse, usual)
+    return (sums / numpy.bincount(inverse, minlength=len(names)))[inverse]
 
 
 def _write(setup, memory, rows, keys, signal, kind, from_trade, cleared, delivered) -> None:
