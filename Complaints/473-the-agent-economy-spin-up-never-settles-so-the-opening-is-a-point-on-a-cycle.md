@@ -903,3 +903,38 @@ What still fails, and the evidence:
 Measure: `python3 sim/simulator.py spin-up-trace --civ <civ> --stages` prints both stages year by year (settle quantities, money by
 holder, watched prices) and the gap by quantity over the measured years, with the watched good that moves most;
 `python3 sim/simulator.py opening-checks --civs <civ>` reads the opening's own saved `spin_up_result`.
+
+## Update 25: the economy amplified rounding noise; the amplifiers found and made continuous (branch spin-up-settles)
+
+The owner's requirement: a small nudge (iron made dearer) should move each price by its cost share and leave the rest
+of the economy close to where it was. Measured with scratch probes (no committed command prints a phase-by-phase
+comparison of two economies):
+- **The cost calculator meets it.** Halving the bloom recipe's output moves every good's making cost by its iron share
+  and nothing else (`notional_kernel.cost_estimates`).
+- **The opening solver does not.** The same change applied before the opening re-solves the opening and moves most
+  recipes' capacity; the bloom producers' capacity changes many-fold (not traced; `opening.open_economy`).
+- **Applied after the opening, the agent economy's first years respond in proportion** (goods with no iron share stay
+  within a fraction of a per cent for several years), but two spin-ups whose households' cash differs at the rounding
+  level drift apart within a few years: the economy is chaotic.
+
+Amplifiers found by stepping two such spin-ups phase by phase, each replaced by a rule continuous in its inputs:
+- **Wage clearing on a step demand** (`sim/labour/market/clearing.py`, `clearing_kernel._supply_target`): each bid's
+  tranches wanted all their hours up to their cap, so with supply nearly fixed a sliver of excess demand lifted the
+  wage from the reservation to the lowest cap. Each tranche's hours now spread between the caps (the continuous limit
+  of `BID_TRANCHES`); the core's wage memory is seeded from the opening wages (`labour_state.seed_opening_wages`), so
+  the first year takes the damped move.
+- **Entry from residue demand** (`entry.py`, `entry_unmet.py`, the entry kernels): a rounding-sized bid opened a
+  producer of rounding-sized capacity that never closed. Entry now needs demand above `STOCK_RESIDUE_UNITS`, and a
+  producer below it closes.
+- **Trade switching on a threshold** (`sim/labour/market/switching_kernel.band_shares`, `plan_area`): an established
+  worker weighed only trades scoring above staying. Every destination now enters one logit with staying; the
+  negligible-share redirect is a continuous trim; `PLAN_REUSE_TOLERANCE` is gone. One assertion was loosened:
+  `test_labour_core_year`'s steadiness bound on a trade's workforce went from 60 to 80, because under the continuous
+  rule the count holds flat near 70 against a target of 30 (steady, but over its target: not traced).
+- **Residue bids and a binary "traded" memory** (`opening_demand_kernel.flexible_budget_left`, `year_goods.price_after_trade`,
+  `goods_remember_kernel`): a household whose floors took all its cash posted rounding-noise bids, and any trade at
+  all replaced a market's remembered quote with the dearest seller's ask. The leftover is now exactly zero, and a
+  trade moves the remembered quote by its weight against the market's usual volume.
+
+Measure: `python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble N` (the spread of each end gap across
+members that differ at the rounding level). An ensemble with only the first two fixes still spread widely.
