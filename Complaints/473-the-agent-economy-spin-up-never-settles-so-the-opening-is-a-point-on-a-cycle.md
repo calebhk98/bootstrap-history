@@ -981,3 +981,16 @@ either memory rule. Where household work's hours should come from is owner quest
 
 Still open after this: inventory value and the rate move by more than the tolerance in every civilisation measured, and
 unmet need in Han.
+
+## Update 28: the rate follows the year's price noise; a continuous inflation reading does not calm it (branch spin-up-settles)
+
+A probe of one England spin-up (scratch scripts) shows the rate is the cheapest lender's ask in every year
+(`sim/loans/clearing_kernel.settled_rate` returns `lowest_ask` whenever the sticky move would fall below it, and with
+funds far above requests it always does), and that ask is time preference plus the cohorts' expected inflation
+(`lender_ask.lowest_ask`), which adapts toward the year's observed inflation (`currency.price_inflation`, a weighted
+median of the goods' price ratios). The rate zigzags with observed inflation while the price level falls steadily.
+Replacing the median with a weighted trimmed mean, continuous in every ratio and weight (branch `inflation-trimmed-mean`,
+not merged), left the rate's late-stage moves as large on England and larger on Han in eight-member ensembles
+(`python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble 8 --jobs 2`): the noise is in the middle goods'
+prices themselves, so the rate should settle when they do. A four-member Rome ensemble on the head shows the same
+pattern as England (inventory value and the rate move most) with larger moves of hired hours and real output.
