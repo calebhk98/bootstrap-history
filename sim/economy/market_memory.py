@@ -433,7 +433,7 @@ class YearView:
 
     def price(self, good: GoodId, area: AreaId) -> Optional[float]:
         """The planning price: the remembered price, last year's trade blended with the older price in proportion to
-        the trade's share of the market's usual volume (`market_memory_blend.blended_price`), or, where nothing traded,
+        the trade's share of the market's usual volume (`year_goods.remembered_price`), or, where nothing traded,
         the quote (`price_kind` says which); None where the market has no price. A reader that needs the price
         both sides agreed to last year uses `cleared_price`."""
         return self._memory.prices.get(good + KEY_SEPARATOR + area)

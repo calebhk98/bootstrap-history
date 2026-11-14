@@ -15,10 +15,10 @@ from sim.economy import goods_remember_kernel as kernel
 from sim.economy.goods_added_bids import AddedBids
 from sim.economy.goods_market_rows import bids_only_quote
 from sim.economy.goods_market import quantity_at
-from sim.economy.market_memory_asks import REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE
-from sim.economy.market_memory_blend import MEMORY_VOLUME_FLOOR, blended_price, reference_volume
-from sim.economy.market_memory_offers import NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE
+from sim.economy.market_memory_asks import REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE, memory_reference_volume
+from sim.economy.market_memory_offers import NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE, price_after_thin_trade, price_toward_quote
 from sim.economy.types import EDGE_EXTERNAL, QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, Bid
+from sim.economy.year_goods import price_after_trade
 
 
 def random_bid(rng, buyer):
@@ -107,12 +107,11 @@ class SignalTests(unittest.TestCase):
         none = math.nan
         old = np.array([rng.choice((none, rng.uniform(0.2, 30.0))) for _each in range(count)])
         was_quote = np.array([rng.random() < 0.4 for _each in range(count)])
-        usual = np.array([rng.choice((0.0, 0.0, rng.uniform(0.5, 80.0))) for _each in range(count)])
+        usual = np.array([rng.choice((0.0, rng.uniform(0.5, 80.0))) for _each in range(count)])
         quiet = np.array([rng.choice((0, 0, 1, 3)) for _each in range(count)], dtype=np.int64)
-        total = np.array([rng.choice((0.0, 2.5e-16, rng.uniform(0.01, 90.0))) for _each in range(count)])
+        total = np.array([rng.choice((0.0, rng.uniform(0.01, 90.0))) for _each in range(count)])
         received = np.array([rng.choice((none, rng.uniform(0.2, 30.0))) for _each in range(count)])
-        wanted = np.array([rng.choice((0.0, 1e-16, rng.uniform(0.0, 120.0))) for _each in range(count)])
-        scale = np.array([rng.choice((0.0, rng.uniform(0.5, 80.0))) for _each in range(count)])
+        wanted = np.array([rng.uniform(0.0, 120.0) for _each in range(count)])
         quote_price = np.array([rng.choice((none, rng.uniform(0.2, 30.0))) for _each in range(count)])
         quote_kind = np.where(np.isnan(quote_price), 0, 1).astype(np.int64)
         has_bids = np.array([rng.random() < 0.6 for _each in range(count)])
@@ -120,24 +119,35 @@ class SignalTests(unittest.TestCase):
         cost = np.array([rng.choice((none, 0.0, rng.uniform(0.2, 30.0))) for _each in range(count)])
         funded = np.array([rng.random() < 0.6 for _each in range(count)])
         best = np.array([rng.choice((none, rng.uniform(0.2, 30.0))) for _each in range(count)])
-        signal, kind, from_trade = kernel.signals(old, was_quote, usual, scale, quiet, total, received, wanted, quote_price, quote_kind, has_bids,
+        signal, kind, from_trade = kernel.signals(old, was_quote, usual, quiet, total, received, wanted, quote_price, quote_kind, has_bids,
                                                   offers_left, cost, funded, best, REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE,
-                                                  NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE, MEMORY_VOLUME_FLOOR)
+                                                  NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE)
         for place in range(count):
             previous = None if math.isnan(old[place]) else float(old[place])
-            traded = total[place] > 0.0 and not math.isnan(received[place])
-            self.assertEqual(from_trade[place], traded)
+            if total[place] > 0.0 and not math.isnan(received[place]):
+                reference = memory_reference_volume(float(usual[place]), float(wanted[place]))
+                expected = price_after_trade(previous, bool(was_quote[place]), float(received[place]), float(total[place]), reference,
+                                             int(quiet[place]))
+                if total[place] < REPRESENTATIVE_TRADE_SHARE * usual[place]:
+                    expected = price_after_thin_trade(expected, None if math.isnan(cost[place]) else float(cost[place]), float(total[place]),
+                                                      float(usual[place]))
+                self.assertEqual(signal[place], expected, place)
+                self.assertTrue(from_trade[place])
+                continue
+            self.assertFalse(from_trade[place])
             price = None if math.isnan(quote_price[place]) else float(quote_price[place])
             if has_bids[place] and offers_left[place] == 0:
                 if not math.isnan(cost[place]) and cost[place] > 0.0 and funded[place]:
                     price = float(cost[place])
                 else:
                     price = None if math.isnan(best[place]) else float(best[place])
-            made = None if math.isnan(cost[place]) or cost[place] <= 0.0 else float(cost[place])
-            if price is None and made is not None:     # nothing to quote: the making cost
-                price = made
-            reference = reference_volume(float(usual[place]), float(wanted[place]), float(scale[place]), REPRESENTATIVE_TRADE_SHARE)
-            expected = blended_price(previous, bool(was_quote[place]), int(quiet[place]), reference, float(total[place]) if traded else 0.0,
-                                     float(received[place]) if traded else None, float(wanted[place]), offers_left[place] == 0, price, made)
+            expected = None if price is None else price_toward_quote(previous, price)
+            if price is None and not math.isnan(cost[place]) and cost[place] > 0.0:     # nothing to quote: the making cost, whole
+                self.assertEqual((signal[place], kind[place]), (cost[place], 3), place)
+                continue
             self.assertEqual(None if math.isnan(signal[place]) else signal[place], expected, place)
-            self.assertEqual(kind[place] != 0, price is not None and not traded)
+            self.assertEqual(kind[place] != 0, expected is not None)
+
+
+if __name__ == "__main__":
+    unittest.main()
