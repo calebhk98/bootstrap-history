@@ -149,21 +149,21 @@ The branch makes no change to the data or the time budget until you answer; Nors
 
 ## Where it stands (branch spin-up-settles)
 
-Merged, each with a rule test: the own-plot floors met before the budget is sized; unmet need read against the
-economy's food need; the mint bids where its metal trades and weighed metal is paid at parity; a residue left by decay is
-removed and is not an offer; an unpriced tool is costed by its fallback chain; and `spin-up-trace --stages`, a committed
-command that prints both spin-up stages year by year with the settle gap of each quantity. Complaint 473's Update 24
-has the mechanism and evidence for each, and the branches tried and not merged.
+Judged on eight-member ensembles (`python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble 8 --jobs 2`;
+four members are too few, Complaint 473 Update 26), the late spin-up's median year-to-year move of each quantity:
+- England and Han: hired hours, real output and the price level move by a little more than the tolerance; inventory
+  value and the rate move by many times it. Rome (four members) is similar with larger moves of output and hours.
+- Norse: every quantity moves by many times the tolerance, because household work leaves its people a small remainder
+  of hours to sell (question 7).
 
-`python3 sim/simulator.py opening-checks --civs <civ>` on the head, against main's last rebuild (Complaint 970):
-- Norse, England, Han, Rome: the price-over-cost checks pass for all four; Rome now passes money against wear (it
-  failed on main); Han's coin metal now trades. Still failing: spin_up_settled for all four; money against wear just
-  under its bound for Norse and Han; the wage over its floor for Rome.
-- Mexica fails more checks than on main, but main's passes were cost estimates of goods nobody made (question 6). On
-  the branch the money no longer drains (money against wear passes); food stays dear because the crops run by hand
-  while the tool makers' crew is caught in the learning trap.
+What was merged since the last version of this note: a market-memory rule that drifted thin markets toward their making
+cost was found and then the whole continuous memory blend reverted, since the rule before it measured better on Han
+and England (Updates 26-27). Five further rules were made continuous on their own branches and measured; none is merged,
+because none calmed the quantity it fed (Updates 27-29): `grinding-share-continuous`, `inflation-trimmed-mean`,
+`stock-offered-in-tranches`, `durable-demand-continuous` (and the reverted blend).
 
-So 473 is not closed. What I would do next, in order: decide question 1 and build the stationarity test on the ensemble
-(`spin-up-trace --stages --ensemble N` exists), since single runs cannot judge a rule; question 6; the
-measure of the rate (Norse's whole gap is one year's step of a rate that is otherwise flat, question 1); then the
-remaining movers that `spin-up-trace --stages` names for each civilisation.
+So 473 is blocked on two answers: question 1 (what "settled" means: on England the remaining moves look like
+stationary noise around a level, which a fixed-point test of every quantity cannot pass), and question 7 (household
+work's time budget, without which Norse cannot settle). With those answered, the next steps are: build the
+stationarity test on the ensemble if question 1 says so, change the time budget as question 7 says, then re-measure all
+five civilisations; then questions 6 (Mexica's learning trap), 3 and 4.

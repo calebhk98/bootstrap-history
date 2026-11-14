@@ -994,3 +994,23 @@ not merged), left the rate's late-stage moves as large on England and larger on 
 (`python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble 8 --jobs 2`): the noise is in the middle goods'
 prices themselves, so the rate should settle when they do. A four-member Rome ensemble on the head shows the same
 pattern as England (inventory value and the rate move most) with larger moves of hired hours and real output.
+
+## Update 29: three traced lumps made continuous; none calmed the quantity it fed (branch spin-up-settles)
+
+Each traced on England with a scratch probe of one spin-up, each made continuous on its own branch (not merged), each
+judged on eight-member ensembles of England and Han (`python3 sim/simulator.py spin-up-trace --civ <civ> --stages
+--ensemble 8 --jobs 2`) against the head:
+- `inflation-trimmed-mean`: observed inflation a weighted trimmed mean, not a weighted median (Update 28). The rate moved
+  as much or more.
+- `stock-offered-in-tranches`: held stock offered as a staircase of lots of a year's sales, not one lot at one
+  reservation. Producers' inventory value moved as much. A probe of the lumpiest producer (a mule maker) showed why:
+  its output and asks were smooth, and in many years no household bid at all.
+- `durable-demand-continuous`: households' durable bids replace wear and close a declared share of the gap to the
+  stock wanted, and a good's affordability falls smoothly with its price (a durable against its service life's budget),
+  instead of the whole gap at once and a yes/no gate on one year's budget. Inventory value moved as much on both, and
+  Han's hired hours and rate moved far more.
+
+So removing one traced lump moves the year-to-year noise elsewhere rather than removing it; on England, hired hours,
+real output and the price level already move by little more than the tolerance while inventory value and the rate move
+by many times it. This is evidence for owner question 1 (a stationarity test over an ensemble, rather than a fixed
+point of every quantity), not a reason to change the check without the owner.
