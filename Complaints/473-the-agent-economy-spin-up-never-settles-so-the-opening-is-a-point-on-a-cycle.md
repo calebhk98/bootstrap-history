@@ -958,3 +958,26 @@ traded (`test_market_memory_blend`); the ensemble on that rule matched the drift
 
 Still open: late in the trimmed stage real output and hired hours move by large shares a year in every member, before
 and after this fix; that swing, not the trend, is now what keeps `spin_up_settled` failing on Norse.
+
+## Update 27: the continuous memory blend is reverted; Norse's swing is household work (branch spin-up-settles)
+
+**Correction to Update 26.** Its fix (the cost drift fading with the trade) helped Norse but not Han: Han's late-stage
+year-to-year moves of hired hours, real output and the price level stayed far above those before the blend. Eight-member
+ensembles (`python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble 8 --jobs 2`) on scratch copies of
+the head, each with one part changed: reverting the allocation merge, dropping the per-good scale, measuring the
+thin-trade rule against the usual volume, a full drift for untraded markets, reverting the store pot, or treating traded
+markets as the old rule did each left Han well above the old rule; only the memory files put back whole brought Han
+and England near or under the tolerance for those three quantities. The memory is back to the trade-weighted rule (its
+remaining step at a sliver of trade stands); the store pot of the blend's merge is kept.
+
+**Norse's swing.** Probes of one spin-up logging every cohort's year (scratch scripts; no committed command splits a
+cohort's year into household work, plot, plan and sold hours) show that in Norse's swinging Swedish area household work
+takes most of the cohorts' year, and the hours they sell are the small remainder, which reaches zero in several late
+years; the fishers' and farmers' output there falls with it. Making the grind-or-buy-milled choice continuous (branch
+`grinding-share-continuous`, not merged) did not remove the swing: a smooth move of a large term still wipes out a small
+remainder. Halving household work in a scratch copy roughly halved Norse's swing in hired hours and real output, on
+either memory rule. Where household work's hours should come from is owner question 7
+(`Complaints/reports/473-owner-questions.md`); Norse will not settle without it.
+
+Still open after this: inventory value and the rate move by more than the tolerance in every civilisation measured, and
+unmet need in Han.
