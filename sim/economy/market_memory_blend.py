@@ -1,12 +1,13 @@
 """The price a market remembers after a year, one continuous rule for every market (`goods_remember_kernel.blended` does the same over
 columns, bit for bit): the old price moves toward what was paid in proportion to the trade, relaxes toward the making cost when the trade
-was thin, and drifts toward the year's quote or cost in proportion to what buyers wanted. No branch on whether a market traded or had a
+was thin, and drifts toward the year's quote or cost in proportion to what buyers wanted and to how far the trade fell short of a
+representative one (`REPRESENTATIVE_TRADE_SHARE` of the reference volume): a market trading representatively plans from what was paid. No branch on whether a market traded or had a
 bid, so a rounding-sized trade or bid moves the price a rounding-sized step."""
 from typing import Optional
 
 from sim.constants import declare
 
-from .market_memory_asks import RESUMED_TRADE_MEMORY_SHARE
+from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE
 from .market_memory_offers import NO_OFFER_MEMORY_SHARE, price_after_thin_trade
 
 MEMORY_VOLUME_FLOOR = declare(
@@ -49,4 +50,5 @@ def blended_price(old: Optional[float], was_quote: bool, quiet_years: int, refer
     if target is None:
         return price
     demand_share = min(1.0, wanted / reference) if demand_led else 1.0
-    return price + (1.0 - traded_share) * demand_share * NO_OFFER_MEMORY_SHARE * (target - price)
+    shortfall = max(0.0, 1.0 - total / (REPRESENTATIVE_TRADE_SHARE * reference))
+    return price + shortfall * demand_share * NO_OFFER_MEMORY_SHARE * (target - price)
