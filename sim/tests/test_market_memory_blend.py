@@ -47,6 +47,17 @@ class BlendedPriceTests(unittest.TestCase):
         self.assertEqual(steps, sorted(steps, reverse=True))
         self.assertAlmostEqual(steps[-1], 100.0 + 0.3 * (60.0 - 100.0))
 
+    def test_a_representative_trade_is_not_pulled_toward_the_cost(self):
+        reference = reference_volume(30.0, 0.0, 0.0, 0.25)
+        self.assertEqual(price(100.0, 0.25 * reference, 100.0, 0.0, 60.0, reference, demand_led=False), 100.0)
+
+    def test_the_pull_toward_the_cost_fades_as_trade_nears_a_representative_share(self):
+        reference = reference_volume(30.0, 0.0, 0.0, 0.25)
+        pulled = [price(100.0, share * 0.25 * reference, 100.0, 0.0, 60.0, reference, demand_led=False) for share in (0.0, 0.5, 1.0)]
+        self.assertAlmostEqual(pulled[0], 100.0 + 0.3 * (60.0 - 100.0))
+        self.assertAlmostEqual(pulled[1], 100.0 + 0.5 * 0.3 * (60.0 - 100.0))
+        self.assertEqual(pulled[2], 100.0)
+
     def test_a_market_with_nothing_remembered_takes_its_target_or_its_trade(self):
         reference = reference_volume(30.0, 0.0, 0.0, 0.25)
         self.assertEqual(price(None, 0.0, None, 0.0, 60.0, reference), 60.0)

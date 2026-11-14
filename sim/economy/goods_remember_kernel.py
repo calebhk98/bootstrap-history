@@ -135,7 +135,8 @@ def blended(old, was_quote, quiet_years, reference, total, cleared, wanted, dema
     if numpy.isnan(target):
         return price
     demand_share = min(1.0, wanted / reference) if demand_led else 1.0
-    return price + (1.0 - traded_share) * demand_share * drift_share * (target - price)
+    shortfall = max(0.0, 1.0 - total / (representative_share * reference))
+    return price + shortfall * demand_share * drift_share * (target - price)
 
 
 @njit(**KERNEL)
