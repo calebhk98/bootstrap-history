@@ -162,8 +162,9 @@ and England (Updates 26-27). Five further rules were made continuous on their ow
 because none calmed the quantity it fed (Updates 27-29): `grinding-share-continuous`, `inflation-trimmed-mean`,
 `stock-offered-in-tranches`, `durable-demand-continuous` (and the reverted blend).
 
-So 473 is blocked on two answers: question 1 (what "settled" means: on England the remaining moves look like
-stationary noise around a level, which a fixed-point test of every quantity cannot pass), and question 7 (household
+So 473 is blocked on two answers: question 1 (what "settled" means: on England most remaining moves look like noise
+around a level, which a fixed-point test of every quantity cannot pass, though producers' inventory value also trends
+down over the trimmed stage, which a stationarity test would still fail), and question 7 (household
 work's time budget, without which Norse cannot settle). With those answered, the next steps are: build the
 stationarity test on the ensemble if question 1 says so, change the time budget as question 7 says, then re-measure all
 five civilisations; then questions 6 (Mexica's learning trap), 3 and 4.
