@@ -21,14 +21,14 @@ def signal_of(cost, old=7.0):
     """The kernel's signal and kind for one market: no trade, no bids, no quote, the given making cost."""
     one = lambda value, kind=np.float64: np.array([value], dtype=kind)
     signal, kind, from_trade = kernel.signals(
-        one(old), one(False, np.bool_), one(10.0), one(10.0), one(0, np.int64), one(0.0), one(NAN), one(0.0), one(NAN), one(0, np.int64),
-        one(False, np.bool_), one(0, np.int64), one(cost), one(False, np.bool_), one(NAN), 0.5, 0.5, 0.3, 0.3, 1.0)
+        one(old), one(False, np.bool_), one(10.0), one(0, np.int64), one(0.0), one(NAN), one(0.0), one(NAN), one(0, np.int64),
+        one(False, np.bool_), one(0, np.int64), one(cost), one(False, np.bool_), one(NAN), 0.5, 0.5, 0.3, 0.3)
     return signal[0], kind[0], from_trade[0]
 
 
 class KernelSignalTests(unittest.TestCase):
     def test_nothing_to_quote_plans_from_the_making_cost_whole(self):
-        signal, kind, from_trade = signal_of(2.5, old=NAN)
+        signal, kind, from_trade = signal_of(2.5)
         self.assertEqual((signal, kind, from_trade), (2.5, kernel.COST_COVERING, False))
 
     def test_no_cost_either_gives_no_signal_and_no_kind(self):

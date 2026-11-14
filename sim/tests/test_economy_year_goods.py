@@ -14,8 +14,7 @@ from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
 from sim.economy.year_close import held_only, learned_prices, national_prices
 from sim.economy import market_quote
 from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING
-from sim.economy.market_memory_blend import blended_price
-from sim.economy.year_goods import price_floor, PRICE_MEMORY_FLOOR_SHARE
+from sim.economy.year_goods import price_after_trade, price_floor, remembered_price, PRICE_MEMORY_FLOOR_SHARE
 
 
 def bid(maximum_price):
@@ -37,20 +36,16 @@ class UnsoldQuoteTests(unittest.TestCase):
         self.assertEqual((quote.kind, quote.price), (QUOTE_COST_COVERING, 2.0))
 
 
-def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):
-    return blended_price(old, old_was_quote, quiet_years, reference_volume, quantity, cleared, 0.0, True, None, None)
-
-
 class RememberedPriceTests(unittest.TestCase):
     def test_a_sliver_of_trade_moves_the_remembered_price_a_sliver(self):
         # a few grams sold against demand for tonnes clears at a price nobody normally pays
-        self.assertAlmostEqual(price_after_trade(1.0, False, 1000.0, 1.0, 100.0, 0), 1.0 + 0.01 * 999.0)
+        self.assertAlmostEqual(remembered_price(1.0, 1000.0, 1.0, 100.0), 1.0 + 0.01 * 999.0)
 
     def test_a_normal_years_trade_sets_the_price(self):
-        self.assertEqual(price_after_trade(1.0, False, 2.0, 150.0, 100.0, 0), 2.0)
+        self.assertEqual(remembered_price(1.0, 2.0, 150.0, 100.0), 2.0)
 
     def test_a_market_with_no_history_takes_the_price(self):
-        self.assertEqual(price_after_trade(None, False, 2.0, 1.0, 100.0, 0), 2.0)
+        self.assertEqual(remembered_price(None, 2.0, 1.0, 0.0), 2.0)
 
 
 class PriceAfterTradeTests(unittest.TestCase):
