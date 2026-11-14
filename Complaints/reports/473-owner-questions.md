@@ -119,6 +119,34 @@ starts at the practice of the trade's pool in the population when peers exist el
 and fix only entry, so it counts capacity that can actually be staffed. `Complaints/reports/research-how-a-brand-new-trade-forms.md`
 is the background. The branch makes no change here.
 
+## 7. Household work takes most of the labour year, so the hours a household sells are a small remainder
+
+**What was found** (Norse, scratch probes logging one spin-up year by year; no committed command splits a cohort's year
+into household work, plot, plan and sold hours). In the fertile Swedish area that swings most, household work
+(`data/world/household_work.json`: cooking, water and fuel, cleaning and childcare, grinding) takes most of the cohorts'
+whole year of hours, and the hours offered on the labour market are what is left (`labour_supply.hours_kept_at_home`:
+the plot or plan hours plus household work, capped at the year). A remainder of two large numbers swings with any small
+change in either: in several late spin-up years it reached zero, the fishers and farmers of that area sold almost no
+hours, their output collapsed, and that is most of the year-to-year swing of real output and hired hours that keeps
+`spin_up_settled` failing on Norse. Making the grind-or-buy-milled choice continuous (branch `grinding-share-continuous`,
+not merged) did not help: the choice moves smoothly, but a small move in it still wipes out the remainder. Halving every
+household-work task in a scratch copy roughly halved the year-to-year swings of real output and hired hours in an
+eight-member ensemble (`python3 sim/simulator.py spin-up-trace --civ norse_900ad --stages --ensemble 8 --jobs 2`).
+
+**Why it needs a decision.** The task hours come from time-use surveys of adult women (hours a day, 365 days a year, a
+quarter of a household's people taken as adult women), and the model draws all of them from the same labour year
+(a ten-hour day over the working days of `HOURS_PER_PERSON_YEAR`) that market work comes from. In those surveys the
+housework is done on top of field and market work, over a longer day and every day of the year; so the model may count
+it against a year that does not hold it. Which time budget household work comes out of is a modelling choice, not a
+number to tune.
+
+**Question.** Where should household work's hours come from? Options: (a) a person's whole waking year (every day,
+a longer day), with market hours and household work competing for it, so the labour year is what is left after both;
+(b) keep one labour year but count only the household members who do the work against it (the adult women's own hours,
+not a quarter-person share of everyone's); (c) keep the rule and make household work respond to the worth of the hours
+(the household cuts water, cleaning and grinding when the hours would sell dear), so the remainder cannot reach zero.
+The branch makes no change to the data or the time budget until you answer; Norse will not settle without one of these.
+
 ## Where it stands (branch spin-up-settles)
 
 Merged, each with a rule test: the own-plot floors met before the budget is sized; unmet need read against the
