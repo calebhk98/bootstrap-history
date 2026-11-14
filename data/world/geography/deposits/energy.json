@@ -13,7 +13,10 @@
    "status": "modern",
    "first_worked": 1951,
    "source": "Coordinate from Wikipedia. Ultimately recoverable oil, production plus reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 19100000000,
+   "contained_basis": "IEA World Energy Outlook 2008: 66 Gb produced by 2007 + 74 Gb remaining = 140 Gb x 0.1364 t/bbl (1/7.33 barrels per tonne of oil equivalent, Wikipedia Tonne of oil equivalent https://en.wikipedia.org/wiki/Tonne_of_oil_equivalent) = 19.1 Gt; Aramco's 2010 statement was over 100 Gb originally",
+   "contained_source": "Wikipedia, Ghawar Field, https://en.wikipedia.org/wiki/Ghawar_Field : \"the oil production from Ghawar reached 66 Bbo in 2007, and that the remaining reserves are 74 Bbo\" (IEA 2008)"
   },
   {
    "id": "burgan_oil",
@@ -27,7 +30,10 @@
    "status": "modern",
    "first_worked": 1938,
    "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 9620000000,
+   "contained_basis": "Total potential recoverable oil estimated 66 to 75 Gb; midpoint 70.5 Gb x 0.1364 t/bbl (1/7.33 barrels per toe, Wikipedia Tonne of oil equivalent) = 9.62 Gt",
+   "contained_source": "Wikipedia, Greater Burgan, https://en.wikipedia.org/wiki/Greater_Burgan : \"total potential production of recoverable oil has been estimated as between 66 and 75 billion barrels\""
   },
   {
    "id": "safaniya_oil",
@@ -41,7 +47,10 @@
    "status": "modern",
    "first_worked": 1951,
    "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 5050000000,
+   "contained_basis": "Reserves around 37 Gb (the infobox labels the same number oil in place; undated) x 0.1364 t/bbl = 5.05 Gt",
+   "contained_source": "Wikipedia, Safaniya Field, https://en.wikipedia.org/wiki/Safaniya_Field : \"Its reserves amount to around 37 billion barrels\""
   },
   {
    "id": "ahvaz_oil",
@@ -55,7 +64,10 @@
    "status": "modern",
    "first_worked": 1958,
    "source": "Coordinate: Ahvaz city per Wikipedia. Ultimately recoverable, order of magnitude from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 5050000000,
+   "contained_basis": "Recoverable oil 37 Gb (infobox; 65.5 Gb in place) x 0.1364 t/bbl = 5.05 Gt",
+   "contained_source": "Wikipedia, Ahvaz Field, https://en.wikipedia.org/wiki/Ahvaz_Field : \"Recoverable oil 37,000 million barrels\""
   },
   {
    "id": "gachsaran_oil",
@@ -69,7 +81,10 @@
    "status": "modern",
    "first_worked": 1928,
    "source": "Coordinate from Wikipedia. Wikipedia quotes 52.9 billion barrels, which is closer to oil in place; recoverable is a fraction of it, order of magnitude from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 3230000000,
+   "contained_basis": "Recoverable oil 23.7 Gb (infobox; 52.9 Gb in place) x 0.1364 t/bbl = 3.23 Gt",
+   "contained_source": "Wikipedia, Gachsaran oil field, https://en.wikipedia.org/wiki/Gachsaran_oil_field : \"Recoverable oil 23,700 million barrels\""
   },
   {
    "id": "prudhoe_bay_oil",
@@ -83,7 +98,10 @@
    "status": "modern",
    "first_worked": 1967,
    "source": "Coordinate from Wikipedia. Wikipedia: about 25 billion barrels originally in place; recoverable about half, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 2180000000,
+   "contained_basis": "Total recoverable 16 Gb (produced 12 Gb as of 28 March 2013 + remaining 4 Gb) x 0.1364 t/bbl = 2.18 Gt",
+   "contained_source": "Wikipedia, Prudhoe Bay Oil Field, https://en.wikipedia.org/wiki/Prudhoe_Bay_Oil_Field : \"Produced: 12 billion barrels ... as of March 28, 2013 Total recoverable: 16 billion barrels\""
   },
   {
    "id": "daqing_oil",
@@ -97,7 +115,10 @@
    "status": "modern",
    "first_worked": 1959,
    "source": "Coordinate from Wikipedia. Cumulative production plus reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1364000000,
+   "contained_basis": "Produced over 10 Gb since 1960 x 0.1364 t/bbl = 1.36 Gt; reserves not given (infobox recoverable 3.6 Gb is below the production), so a lower bound",
+   "contained_source": "Wikipedia, Daqing Oil Field, https://en.wikipedia.org/wiki/Daqing_Oil_Field : \"has produced over 10 billion barrels (1.6 x 10^9 m3) of oil since\""
   },
   {
    "id": "cantarell_oil",
@@ -111,7 +132,10 @@
    "status": "modern",
    "first_worked": 1976,
    "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1664000000,
+   "contained_basis": "Pemex reported about 12.2 billion barrels produced to October 2009 x 0.1364 t/bbl (1/7.33 barrels per tonne of oil equivalent, Wikipedia Tonne of oil equivalent) = 1.66 Gt; original oil in place about 35 Gbbl and recoverable reserves are not given, so production only is a lower bound",
+   "contained_source": "Oil & Gas Journal, SPE: Pemex aspires for 60% oil recovery from Cantarell, https://www.ogj.com/home/article/17277366/spe-pemex-aspires-for-60-oil-recovery-from-cantarell : \"originally contained about 35 billion bbl of oil in place\"; \"To date, Pemex has produced about 12.2 billion bbl\" (7 October 2009)"
   },
   {
    "id": "bolivar_coastal_oil",
@@ -125,7 +149,10 @@
    "status": "modern",
    "first_worked": 1917,
    "source": "Coordinate from Wikipedia. Lake Maracaibo east shore; ultimately recoverable, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 4230000000,
+   "contained_basis": "Recoverable oil, past and future, 30 to 32 Gb; midpoint 31 Gb x 0.1364 t/bbl = 4.23 Gt",
+   "contained_source": "Wikipedia, Bolivar Coastal Fields, https://en.wikipedia.org/wiki/Bolivar_Coastal_Fields : \"ranked #5 in the world in recoverable oil, past and future at 30-32 billion barrels\""
   },
   {
    "id": "kirkuk_oil",
@@ -139,7 +166,10 @@
    "status": "modern",
    "first_worked": 1927,
    "source": "Coordinate from memory (Kirkuk city is 35.47N 44.39E). Ultimately recoverable, order of magnitude from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 1364000000,
+   "contained_basis": "Recoverable oil 10 Gb (infobox; the page also gives over 10 Gb proven remaining in 1998, so production is not included) x 0.1364 t/bbl = 1.36 Gt; a lower bound",
+   "contained_source": "Wikipedia, Kirkuk Field, https://en.wikipedia.org/wiki/Kirkuk_Field : \"Recoverable oil 10,000 million barrels\"; \"over 10 billion barrels ... of proven remaining oil reserves in 1998\""
   },
   {
    "id": "east_texas_oil",
@@ -153,7 +183,10 @@
    "status": "modern",
    "first_worked": 1930,
    "source": "Coordinate from Wikipedia. Wikipedia: over 5.42 billion barrels produced to date; remaining reserves small.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 739000000,
+   "contained_basis": "Produced over 5.42 Gb x 0.1364 t/bbl = 0.739 Gt; remaining reserves not given, so a lower bound",
+   "contained_source": "Wikipedia, East Texas Oil Field, https://en.wikipedia.org/wiki/East_Texas_Oil_Field : \"Over 5.42 billion barrels ... of oil have been produced from it to-date\""
   },
   {
    "id": "samotlor_oil",
@@ -167,7 +200,10 @@
    "status": "modern",
    "first_worked": 1965,
    "source": "Coordinate from Wikipedia. Ultimately recoverable, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 3250000000,
+   "contained_basis": "About 2.6 Gt produced and the field 80% depleted: 2.6 / 0.8 = 3.25 Gt (derived)",
+   "contained_source": "Wikipedia, Samotlor Field, https://en.wikipedia.org/wiki/Samotlor_Field : \"about 2.6 billion tons of oil has been produced\"; \"The field is 80% depleted\""
   },
   {
    "id": "romashkino_oil",
@@ -181,7 +217,10 @@
    "status": "modern",
    "first_worked": 1948,
    "source": "Coordinate from memory (Almetyevsk area, Tatarstan); ultimately recoverable order of magnitude from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 3500000000,
+   "contained_basis": "Some 3.5 Gt of oil extracted by July 2025 as stated; remaining not given, so a lower bound (the page's statistical depletion estimate of 16.5-17.2 Gb is lower and is not used)",
+   "contained_source": "Wikipedia, Romashkino Field, https://en.wikipedia.org/wiki/Romashkino_Field : \"some 3.5 billion tonnes of oil had been extracted by July 2025\""
   },
   {
    "id": "hassi_messaoud_oil",
@@ -195,7 +234,10 @@
    "status": "modern",
    "first_worked": 1956,
    "source": "Coordinate from Wikipedia. Renamed from hassi_messaoud_gas: it is an oil field. Ultimately recoverable, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 870000000,
+   "contained_basis": "Total proven reserves 870 Mt (6.4 Gb; the infobox calls it oil in place), undated; production not added",
+   "contained_source": "Wikipedia, Hassi Messaoud oil field, https://en.wikipedia.org/wiki/Hassi_Messaoud_oil_field : \"total proven reserves of the Hassi Messaoud oil field are around 6.4 billion barrels (870 million tonnes)\""
   },
   {
    "id": "tengiz_oil",
@@ -209,7 +251,10 @@
    "status": "modern",
    "first_worked": 1979,
    "source": "Coordinate from Wikipedia. Wikipedia: recoverable 6-9 billion barrels. The earlier entry was in the wrong place (43.2N 69.2E, near Taraz).",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1020000000,
+   "contained_basis": "Recoverable reserves estimated 6 to 9 Gb; midpoint 7.5 Gb x 0.1364 t/bbl = 1.02 Gt",
+   "contained_source": "Wikipedia, Tengiz field, https://en.wikipedia.org/wiki/Tengiz_field : \"recoverable reserves estimated at between six billion and nine billion barrels\""
   },
   {
    "id": "kashagan_oil",
@@ -223,7 +268,10 @@
    "status": "modern",
    "first_worked": 2000,
    "source": "Coordinate from Wikipedia. Wikipedia: recoverable about 13 billion barrels. The earlier entry was 18 degrees of longitude off.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1770000000,
+   "contained_basis": "Recoverable 13 Gb x 0.1364 t/bbl = 1.77 Gt",
+   "contained_source": "Wikipedia, Kashagan Field, https://en.wikipedia.org/wiki/Kashagan_Field : \"recoverable reserves of about 13 billion barrels\""
   },
   {
    "id": "baku_absheron_oil",
@@ -237,7 +285,10 @@
    "status": "historic",
    "first_worked": -1000,
    "source": "Coordinate from Wikipedia. Seeps worked since antiquity; cumulative output of the Absheron fields, order of magnitude from memory. Replaces baku_oil_seeps.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 1000000000,
+   "contained_basis": "SOCAR history gives over one billion tons of Azerbaijani oil produced by 1949, when almost all output came from the Absheron peninsula (the offshore Oil Rocks field started that year); production only, a lower bound. National cumulative to 2024 is 2.22 Gt but includes Caspian offshore fields",
+   "contained_source": "SOCAR, Oil history of Azerbaijan, https://socar.jobs/en/page/oil-history-of-azerbaijan : \"1949 ... Azerbaijan reached over one billion tons of oil production\"; Trend, https://www.trend.az/business/energy/3893965.html : \"Azerbaijan has produced 2.22 billion tons of oil\" in the history of field development"
   },
   {
    "id": "hit_bitumen_seeps",
@@ -249,7 +300,8 @@
    "status": "historic",
    "first_worked": -3000,
    "source": "Coordinate from Wikipedia. Seeps worked since the Bronze Age; no defensible endowment figure, omitted. hit_iraq_seeps and hit_seeps_bitumen merged here.",
-   "conf": "C"
+   "conf": "C",
+   "contained_basis": "No tonnage: tried: Wikipedia Hit Iraq, Bitumen and Asphalt (no flow or tonnage), Aramco World 1984 Bitumen: a History (only 'thousands of tons of bitumen' for ziggurats, undated), Herodotus summary; a British 1924 Military Report on Iraq via Qatar Digital Library (a search snippet says 150 to 300 tons a month) returned 403 and was not opened; needs that report's passage, then x years worked"
   },
   {
    "id": "trinidad_pitch_lake",
@@ -265,7 +317,10 @@
    "status": "modern",
    "first_worked": 1595,
    "source": "Coordinate from Wikipedia. Order ten million tonnes of asphalt in production plus remaining, from memory; grade is kilograms of bitumen per tonne of lake asphalt. pitch_lake_bitumen merged here.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 10000000,
+   "contained_basis": "Pitch Lake estimated to contain 10 million tons of bitumen (tons taken as metric)",
+   "contained_source": "Wikipedia, Pitch Lake, https://en.wikipedia.org/wiki/Pitch_Lake : \"the largest natural deposit of bitumen in the world, estimated to contain 10 million tons\""
   },
   {
    "id": "athabasca_bitumen",
@@ -279,7 +334,10 @@
    "status": "modern",
    "first_worked": 1967,
    "source": "Coordinate from Wikipedia. Recoverable bitumen, production plus reserves; in-place figure is about an order larger. From memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 18140000000,
+   "contained_basis": "Alberta estimate for Athabasca: 35 Gb surface-mineable + 98 Gb recoverable in situ = 133 Gb x 0.1364 t/bbl (crude factor; bitumen is denser so this understates) = 18.1 Gt; production not added",
+   "contained_source": "Wikipedia, Athabasca oil sands, https://en.wikipedia.org/wiki/Athabasca_oil_sands : \"the Athabasca deposits alone contain 35 billion barrels of surface mineable bitumen and 98 billion barrels of bitumen recoverable by in-situ methods\""
   },
   {
    "id": "orinoco_bitumen",
@@ -293,7 +351,10 @@
    "status": "modern",
    "first_worked": 1990,
    "source": "Coordinate approximate (belt centre); certified reserves of order two hundred billion barrels, USGS technically recoverable estimate is larger. From memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 32000000000,
+   "contained_basis": "Producible reserves of the Orinoco Belt up to 235 Gb (PDVSA estimate) x 0.1364 t/bbl (crude factor; extra-heavy crude is denser so this understates tonnes) = 32.1 Gt",
+   "contained_source": "Wikipedia, Orinoco Belt, https://en.wikipedia.org/wiki/Orinoco_Belt : \"the producible reserves of the Orinoco Belt are up to 235 billion barrels\""
   },
   {
    "id": "south_pars_gas",
@@ -307,7 +368,10 @@
    "status": "modern",
    "first_worked": 1990,
    "source": "Coordinate from Wikipedia. Iranian share of the shared field, order of magnitude from memory; the whole field is about three times larger.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 25800000000,
+   "contained_basis": "Whole South Pars/North Dome field recoverable gas 36,000e9 m3 x 0.717 kg/m3 (Wikipedia Methane) = 25.8 Gt; the Iranian share is not given on the page, so this is the whole shared field",
+   "contained_source": "Wikipedia, South Pars Gas Field, https://en.wikipedia.org/wiki/South_Pars_Gas_Field : \"Recoverable gas 1,260,000 x 10^9 cu ft (36,000 x 10^9 m3)\""
   },
   {
    "id": "urengoy_gas",
@@ -321,7 +385,10 @@
    "status": "modern",
    "first_worked": 1966,
    "source": "Coordinate from Wikipedia. Initial reserves of order ten trillion cubic metres, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 7170000000,
+   "contained_basis": "Over 10 trillion m3 (1e13) in total deposits x 0.717 kg/m3 (methane gas at 0 C, Wikipedia Methane, https://en.wikipedia.org/wiki/Methane) = 7.17 Gt gas",
+   "contained_source": "Wikipedia, Urengoy gas field, https://en.wikipedia.org/wiki/Urengoy_gas_field : \"over ten trillion cubic meters (10^13 m3) in total deposits\""
   },
   {
    "id": "groningen_gas",
@@ -335,7 +402,10 @@
    "status": "modern",
    "first_worked": 1959,
    "source": "Coordinate from Wikipedia. Wikipedia: estimated 2,740 billion cubic metres recoverable.",
-   "conf": "A"
+   "conf": "A",
+   "contained_tonnes": 1960000000,
+   "contained_basis": "2,740 billion m3 recoverable methane x 0.717 kg/m3 (Wikipedia Methane) = 1.96 Gt",
+   "contained_source": "Wikipedia, Groningen gas field, https://en.wikipedia.org/wiki/Groningen_gas_field : \"estimated 2,740 billion cubic metres of recoverable methane\"; 2,057 billion m3 extracted by 2013"
   },
   {
    "id": "troll_gas",
@@ -349,7 +419,10 @@
    "status": "modern",
    "first_worked": 1979,
    "source": "Coordinate from Wikipedia. Recoverable gas, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 954100000,
+   "contained_basis": "Troll East total recoverable reserves 1,330.7 billion Sm3 gas x 0.717 kg/m3 = 954 Mt; Troll West gas not added, so a lower bound for the field",
+   "contained_source": "Norwegian Petroleum Museum, The Troll area, https://www.norskolje.museum.no/wp-content/uploads/2016/02/3467_321daaaf2b0644d897762f3bb73224cc.pdf : \"Troll East: Total recoverable reserves 1 330.7 bn scm gas\" (remaining 995 bn scm at 31 Dec 2008)"
   },
   {
    "id": "lacq_gas",
@@ -363,7 +436,10 @@
    "status": "modern",
    "first_worked": 1951,
    "source": "Coordinate from Wikipedia. Initial reserves about a quarter of a trillion cubic metres, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 180000000,
+   "contained_basis": "Estimated gas in place 251 billion m3 x 0.717 kg/m3 (Wikipedia Methane) = 0.18 Gt; in place, not recoverable, and the gas is sour",
+   "contained_source": "Wikipedia, Lacq gas field, https://en.wikipedia.org/wiki/Lacq_gas_field : \"Estimated gas in place 251 x 10^9 m3\""
   },
   {
    "id": "bayu_undan_gas",
@@ -377,7 +453,10 @@
    "status": "modern",
    "first_worked": 1995,
    "source": "Timor Sea; coordinate and recoverable gas (about three to four trillion cubic feet) from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 77200000,
+   "contained_basis": "Gross 2P sales gas and ethane 3.8 tcf at end 2003 (before first production in 2004) x 28.317 billion m3 per tcf = 107.6 billion m3 x 0.717 kg/m3 = 77.2 Mt; the 530 million barrels of condensate and LPG are not added",
+   "contained_source": "Santos, Bayu-Undan Liquids (page of 6 October 2005, mirrored by La'o Hamutuk), https://www.laohamutuk.org/OilWeb/Company/Santos/SantosBU.htm : \"2003 Year End Reserves (Gross 2P) ... Sales gas and ethane (TCF) 3.8\""
   },
   {
    "id": "powder_river_coal",
@@ -391,7 +470,10 @@
    "status": "modern",
    "first_worked": 1970,
    "source": "Coordinate from Wikipedia. Production plus recoverable reserves, order of magnitude from memory; in-place resource is far larger.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1052000000000,
+   "contained_basis": "USGS original coal resource 1.16 trillion short tons x 0.9072 = 1,052 Gt (a resource estimate for 47 beds; recoverable coal reserve base 162 Bst = 147 Gt; reserves 25 Bst = 22.7 Gt)",
+   "contained_source": "USGS Professional Paper 1809, Luppens and others, 2015, https://pubs.usgs.gov/publication/pp1809 : \"an original coal resource of about 1.16 trillion short tons for 47 coal beds in the Powder River Basin\"; \"162 billion short tons of recoverable coal resources\"; \"25 billion short tons ... met the definition of reserves\" (2015)"
   },
   {
    "id": "appalachian_coal",
@@ -406,7 +488,10 @@
    "first_worked": 1750,
    "source": "Production plus reserves across the region, order of magnitude from memory; coordinate approximate.",
    "conf": "C",
-   "share_of_reference_output": 0.1
+   "share_of_reference_output": 0.1,
+   "contained_tonnes": 91200000000,
+   "contained_basis": "Cumulative production 34.5 Bst (to about 2000) + 66 Bst remaining in five selected beds (Pittsburgh, Upper Freeport, Fire Clay, Pond Creek, Pocahontas No. 3) = 100.5 Bst x 0.9072 = 91.2 Gt; other beds not counted, so a lower bound",
+   "contained_source": "USGS Fact Sheet 004-02, Coal Resources of Selected Coal Beds and Zones in the Northern and Central Appalachian Basin, https://pubs.usgs.gov/fs/fs004-02/fs004-02.html : \"the cumulative production is estimated at 34.5 billion short tons\"; \"Of the 93 billion short tons of original coal in these units, about 66 billion short tons remain\" (2002)"
   },
   {
    "id": "illinois_coal",
@@ -420,7 +505,10 @@
    "status": "modern",
    "first_worked": 1810,
    "source": "Coordinate from Wikipedia. Production plus recoverable reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 57150000000,
+   "contained_basis": "About 11 Bst produced to 2005 + almost 52 Bst potential coal reserve = 63 Bst x 0.9072 = 57.2 Gt",
+   "contained_source": "USGS Professional Paper 1625-F Chapter H, Milici and others, 2005, https://pubs.usgs.gov/pp/1625f/downloads/ChapterH.pdf : \"About 11 billion tons of coal has been produced from the Illinois Basin\"; \"the basin contains almost 52 billion tons of coal as a potential coal reserve\" (2005)"
   },
   {
    "id": "kuznetsk_coal",
@@ -435,7 +523,10 @@
    "first_worked": 1851,
    "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory.",
    "conf": "B",
-   "share_of_reference_output": 0.05
+   "share_of_reference_output": 0.05,
+   "contained_tonnes": 725000000000,
+   "contained_basis": "Resource estimate for the whole basin, 725 Gt; how much is reserve and how much past production is not stated, and it is far above the mineable fraction",
+   "contained_source": "Wikipedia, Kuznetsk Basin, https://en.wikipedia.org/wiki/Kuznetsk_Basin : \"Overall coal deposits are estimated at 725 billion tonnes\""
   },
   {
    "id": "ordos_coal",
@@ -450,7 +541,10 @@
    "first_worked": 1900,
    "source": "Shaanxi-Shanxi-Inner Mongolia coal; reserves plus production, order of magnitude from memory; coordinate approximate.",
    "conf": "C",
-   "share_of_reference_output": 1.2
+   "share_of_reference_output": 1.2,
+   "contained_tonnes": 210200000000,
+   "contained_basis": "Proven coal reserves of Ordos city 210.2 Gt (2021); assumes the city's proven reserves stand for the Ordos Basin coalfield (the city covers the basin's main coal area, assumption); production not added",
+   "contained_source": "China Daily, Coal industry hits development milestone in Ordos, https://regional.chinadaily.com.cn/ordosen/en/2021-12/06/c_692839.htm : \"The city has proven coal reserves of 210.2 billion metric tons\""
   },
   {
    "id": "donbas_coal",
@@ -464,7 +558,10 @@
    "status": "modern",
    "first_worked": 1790,
    "source": "Resources plus production, order of magnitude from memory; coordinate approximate.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 60000000000,
+   "contained_basis": "Estimated reserves 60 Gt (year not stated); production since the 1800s not added, so a lower bound",
+   "contained_source": "Wikipedia, Donets Basin, https://en.wikipedia.org/wiki/Donets_Basin : \"with estimated reserves of 60 billion tonnes of coal\""
   },
   {
    "id": "bowen_coal",
@@ -478,7 +575,10 @@
    "status": "modern",
    "first_worked": 1860,
    "source": "Coordinate from Wikipedia. Resource plus production, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 47000000000,
+   "contained_basis": "Known black coal resources of the north Bowen Basin about 47 Gt (a resource, not reserves; production not added; south Bowen not included)",
+   "contained_source": "Geoscience Australia, North Bowen Basin region: Discovered resources data guide, https://ecat.ga.gov.au/geonetwork/srv/api/records/da865371-31dd-484a-b4db-0997060d0719 : \"known black coal resources of approximately 47 billion tonnes\""
   },
   {
    "id": "sydney_coal",
@@ -493,7 +593,10 @@
    "first_worked": 1797,
    "source": "Wikipedia gives the basin centre at 33.95S 150.76E, but the working coalfields (Newcastle, Hunter, Illawarra) lie across the whole basin; production plus resource, order of magnitude from memory.",
    "conf": "C",
-   "share_of_reference_output": 0.02
+   "share_of_reference_output": 0.02,
+   "contained_tonnes": 26477000000,
+   "contained_basis": "Remaining black coal at end 2022 in the Sydney Basin: economic demonstrated 15,757 Mt + subeconomic demonstrated 509 Mt + inferred 10,211 Mt = 26,477 Mt; production since 1797 is not added, so a lower bound",
+   "contained_source": "Geoscience Australia, Australia's Energy Commodity Resources 2024, Coal, Table 4.1, https://www.ga.gov.au/aecr2024/coal : Sydney Basin row, EDR 15,757 Mt, SDR 509 Mt, Inferred 10,211 Mt (end 2022)"
   },
   {
    "id": "newcastle_coal",
@@ -508,7 +611,10 @@
    "first_worked": 1200,
    "source": "Cumulative production, order of magnitude from memory; coordinate approximate.",
    "conf": "C",
-   "share_of_reference_output": 0.45
+   "share_of_reference_output": 0.45,
+   "contained_tonnes": 10780741987,
+   "contained_basis": "Estimated tons of coal in the Durham and Northumberland coalfield at depths down to 4,000 feet, as tabulated in a 1920s book that cites the 1925 Royal Commission on the Coal Industry; the book's unit is tons (treated as tonnes, within 2%); past production not added",
+   "contained_source": "The Basic Industries of Great Britain, ch. 1, https://digi.econbiz.de/viewer/fulltext/1747397008/20/ : \"Durham and Northumberland . 10,780,741,987\" (estimated tons)"
   },
   {
    "id": "ruhr_coal",
@@ -523,7 +629,10 @@
    "first_worked": 1750,
    "source": "Coordinate from Wikipedia. Cumulative production, order of magnitude from memory.",
    "conf": "B",
-   "share_of_reference_output": 0.55
+   "share_of_reference_output": 0.55,
+   "contained_tonnes": 42000000000,
+   "contained_basis": "Estimated reserves 42 Gt (BGR 2012 as cited); cumulative production since the 1800s is not on the page, so a lower bound",
+   "contained_source": "Wikipedia, Ruhr coalfield, https://en.wikipedia.org/wiki/Ruhr_coalfield : \"estimated reserves of 42 billion tonnes of coal\" (citing a 2012 BGR report)"
   },
   {
    "id": "jharia_coal",
@@ -537,7 +646,10 @@
    "status": "modern",
    "first_worked": 1894,
    "source": "Coordinate from Wikipedia. Resource of the order of twenty billion tonnes, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 19400000000,
+   "contained_basis": "Estimated reserves 19.4 Gt coking coal (year not stated); production not added, so a lower bound",
+   "contained_source": "Wikipedia, Jharia Coalfield, https://en.wikipedia.org/wiki/Jharia_Coalfield : \"having estimated reserves of 19.4 billion tonnes of coking coal\""
   },
   {
    "id": "witbank_coal",
@@ -551,7 +663,10 @@
    "status": "modern",
    "first_worked": 1890,
    "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 12461000000,
+   "contained_basis": "Council for Geoscience reserves for Witbank in 1982 = 12,461 Mt; 3,952 Mt was produced from 1982 to 2009 and 8,509 Mt remained in 2009; production before 1982 is not added, so a lower bound",
+   "contained_source": "McGill, The Coal Value Chain (CSIR, 2015), Table 1.1, https://researchspace.csir.co.za/bitstream/handle/10204/8153/McGill_2015.pdf : Witbank, Reserves 1982 12 461.0 Mt, ROM production 1982-2009 3 951.7 Mt, remaining 2009 8 509.3 Mt"
   },
   {
    "id": "silesia_coal",
@@ -565,7 +680,10 @@
    "status": "modern",
    "first_worked": 1780,
    "source": "Coordinate from Wikipedia. Production plus resource, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 70000000000,
+   "contained_basis": "Page says the basin 'contains about 70 billion tons' (year and ton type not stated; taken as metric); production not added",
+   "contained_source": "Wikipedia, Upper Silesian Coal Basin, https://en.wikipedia.org/wiki/Upper_Silesian_Coal_Basin : \"contains about 70 billion tons, with good extraction potential\""
   }
  ]
 }

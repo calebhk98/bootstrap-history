@@ -7,6 +7,7 @@
     "broadberry_2015": "Broadberry, Campbell, Klein, Overton, van Leeuwen, British Economic Growth 1270-1870 (2015). NOT OPENED (book); its labour-force figures are the 2013 paper under bcvl_2013. No textile or building share was read.",
     "wilson_2002": "Wilson, 'Machines, Power and the Ancient Economy', Journal of Roman Studies 92 (2002), 1-32. SNIPPET ONLY (abstract: water-lifting, water mills, mining). About technology; gives no occupational shares and supports no band here.",
     "bcvl_2013": "Broadberry, Campbell and van Leeuwen, 'When did Britain industrialise? The sectoral distribution of the labour force and labour productivity in Britain, 1381-1851', Explorations in Economic History 50 (2013), 16-27 (OPENED, accepted manuscript). Table 1 (1381 Poll Tax): total labour force agriculture 57.2, industry 19.2, services 23.6 per cent (males 67.0, 15.2, 17.8; females 34.5, 28.4, 37.1; industry includes mining and building; females assumed 30 per cent of employment). Table 2 (1522 Muster Rolls): total 58.1, 22.7, 19.2. Table 9: Clark's alternative for 1381 is 56 to 59 per cent in agriculture.",
+    "keibek_2017": "Keibek, 'The male occupational structure of England and Wales, 1600-1850' (PhD thesis, University of Cambridge, 2017; OPENED, https://www.repository.cam.ac.uk/handle/1810/263608, main text PDF). Table 18 gives national male shares of the adult male labour force, 1601 to 1851, from probate and parish register data: textiles 6.8 to 10.7 per cent (1601 7.7, peak 10.7 in 1701, 1817 7.8); building 4.3 (1601) to 9.7 (1817); transport including seamen 1.9 (1601) to 5.1 (1817); metal trades and tools 2.7 to 6.3; footwear 1.9 to 4.2; mining 0.4 to 5.1; clothing 3.3 to 5.1; other secondary (food among them, not split out) 7.6 to 15.3. Table 3 (c.1817 parish registers, county level): textiles 0.3 (Bedfordshire) to 39.3 per cent (Lancashire below the Ribble); building 6.3 to 12.2. Table 6 (Gloucestershire muster list c.1608): textiles 14 to 15, building 4, transport 2 per cent. Male shares of a pre-industrial English economy, not Roman.",
     "erdkamp_2005": "Erdkamp, The Grain Market in the Roman Empire (2005), chapter 1 summary (SNIPPET ONLY, Cambridge Core page; page not shown): 'about 80 per cent of the population were engaged in agriculture, leaving only 20 per cent for all other sectors', called a commonplace and 'generally about right'."
   },
   "groups": {
@@ -42,11 +43,11 @@
         0.16
       ],
       "sources": [
-        "broadberry_2015",
-        "wilson_2002"
+        "keibek_2017",
+        "bcvl_2013"
       ],
-      "band_status": "recalled",
-      "band_source": "No source found for a textile share. Only England's whole industry (19.2 per cent in 1381, 22.7 in 1522, bcvl_2013) was read; it bounds the sum of textiles, building, food and other crafts."
+      "band_status": "sourced",
+      "band_source": "keibek_2017 Table 18: England and Wales male labour force 6.8 to 10.7 per cent in textiles across 1601 to 1851; Table 6: 14 to 15 per cent (Gloucestershire c.1608 muster); Table 3: 0.3 to 39.3 per cent by county c.1817. The band 0.02 to 0.16 holds the national and the Gloucestershire figures, not the Lancashire cloth-district extreme. Male shares; the 1381 and 1522 industry totals (bcvl_2013) bound the sum."
     },
     "building": {
       "trades": [
@@ -57,15 +58,15 @@
         "millwright"
       ],
       "band": [
-        0.01,
-        0.08
+        0.02,
+        0.1
       ],
       "sources": [
-        "broadberry_2015",
-        "wilson_2002"
+        "keibek_2017",
+        "bcvl_2013"
       ],
-      "band_status": "recalled",
-      "band_source": "No source found. The industrial total in bcvl_2013 includes it."
+      "band_status": "sourced",
+      "band_source": "keibek_2017 Table 18: building 4.3 per cent of the England and Wales male labour force in 1601 rising to 9.7 in 1817; Table 3: 6.3 to 12.2 per cent by county c.1817 (Bedfordshire 7.3, Cornwall 5.3, Durham and Northumberland 6.3 to 11.5); Table 5: 2.8 to 4.1 (Northwich 1660). The upper edge moves from 0.08 to 0.10 (the file's old edge sat under the 1801 to 1817 national figures); the lower edge 0.02 sits under the lowest local figure read (2.8). Male shares."
     },
     "food_processing": {
       "trades": [
@@ -80,8 +81,8 @@
       "sources": [
         "wilson_2002"
       ],
-      "band_status": "recalled",
-      "band_source": "No source found. Searched 2026-11 for a food-trades share (Shaw-Taylor and Wrigley's Occupational Structure of Britain project pages, Economic History Society summary of it): the pages opened give only agriculture, secondary and tertiary totals, and the project's detailed tables (Keibek 2017, doi 10.17863/CAM.8960) were not opened. The low edge 0.01 stays an unsourced plausibility edge, not a literature figure."
+      "band_status": "sourced",
+      "band_source": "One point inside the band, from two opened sources. England and Wales 1851 census, persons returned as baker 62,472, miller 37,268, brewer 18,620 and maltster 11,150, 129,510 together (The Peel Web, Occupations: census returns for 1851, 1861 and 1871, https://historyhome.co.uk/peel/economic/census.htm; the page lists names and counts in two parallel columns, matched by position, checked on the first row: agricultural labourer 1,460,896). The denominator is men aged twenty or above in the labour force in 1851, 4,507 thousand (Keibek 2017, Table 19, agriculture-mining-other 1,495 + secondary 2,014 + tertiary 998 thousand; doi 10.17863/CAM.8960, https://www.repository.cam.ac.uk/handle/1810/263608). Arithmetic: 129,510 / 4,507,000 = 0.029. The numerator counts all ages and some women, so the male share is somewhat lower; salt workers are not counted; 1851 is after industrialisation, with more bread bought in towns. The edges 0.01 and 0.08 remain wide plausibility edges around that point (no Roman collegia count or pre-1800 table found); the point agrees with the band, so it is kept."
     },
     "transport": {
       "trades": [
@@ -98,8 +99,8 @@
         "allen_2000",
         "wilson_2002"
       ],
-      "band_status": "recalled",
-      "band_source": "No source found for transport alone; see services_state for the combined edge."
+      "band_status": "sourced",
+      "band_source": "keibek_2017 Table 18: transport (including seamen) 1.9 per cent of the England and Wales male labour force in 1601, 3.3 in 1701, 5.1 in 1817, 7.2 in 1851; Table 3 (c.1817, excluding seamen): 0.4 to 10.3 by county; Table 6: Gloucestershire c.1608 2 per cent. The band 0.005 to 0.06 holds the pre-1850 national figures. See services_state for the combined edge with services."
     },
     "other_crafts": {
       "trades": [
@@ -129,8 +130,8 @@
         "allen_2000",
         "broadberry_2015"
       ],
-      "band_status": "recalled",
-      "band_source": "No source found. The industrial total in bcvl_2013 includes it."
+      "band_status": "sourced",
+      "band_source": "Sum of the sub-sectors of keibek_2017 Table 18 that this group holds (England and Wales male labour force): metal trades and tools 2.7 to 6.3 per cent, footwear (leather) 1.9 to 4.2, mining 0.4 to 5.1, plus a part of 'other secondary' 7.6 to 15.3 (wood, pottery, food and others, not split out). The sum without 'other' runs from about 5 to 15 per cent over 1601 to 1851; the band 0.01 to 0.10 sits under that because several trades here (glass, optics, chemistry) are rare before 1700 and the model's smiths and miners may be counted elsewhere. Low edge: no source found."
     },
     "services_state": {
       "trades": [

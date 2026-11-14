@@ -28,39 +28,53 @@ GENERIC_MINE_HARDNESS_CLASS = declare(
         "replace with per-material deposit data.")
 
 MINE_CEILING_BASE_IMPERIAL = declare(
-    "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="temporary_heuristic",
-    retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
+    "MINE_CEILING_BASE_IMPERIAL", 20000.0, kind="engineering_estimate",
     unit="tonnes/year (base, before state reach and revenue scale)",
-    source=None, confidence="D",
-    why="Base standing-mine ceiling for an imperial patron before "
-        "state reach, geology and mining technology are applied. "
-        "No fiscal or organisational-capacity data backs this figure; "
-        "it is a tuned starting point for the four patronage tiers "
-        "this method distinguishes.")
+    source="Wikipedia 'Roman metallurgy' (https://en.wikipedia.org/wiki/Roman_metallurgy, opened 2026-11): lead 80,000 t a "
+    "year across the Roman Empire ('largest preindustrial producer'), copper 15,000 t, iron 82,500 t; Wikipedia 'Mining in "
+    "Roman Britain' (https://en.wikipedia.org/wiki/Mining_in_Roman_Britain): about 100,000 tons of lead and 15,000 tons of "
+    "copper in the imperial territory (citing Fleming 2012). Both pages mark these as extrapolations. Only the sum "
+    "of base and state scale is sourced; the split between them is not.",
+    confidence="C",
+    why="Base standing-mine ceiling for an imperial patron before state reach, geology and mining technology are applied. "
+        "Base plus state scale at full reach is 20,000 + 60,000 = 80,000 t a year, the whole-empire lead output "
+        "above, the mineral scale then sizing other materials; the base is a quarter of it (a state that inspects nobody). "
+        "The quarter is unsourced.")
 
 MINE_CEILING_STATE_SCALE_IMPERIAL = declare(
-    "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="temporary_heuristic",
-    retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
-    unit="tonnes/year per unit of inspection reach (share of people whose claims its inspectors check)", source=None,
-    confidence="D",
-    why="How much further a more capable state extends the imperial-"
-        "tier ceiling. Tuned, not derived from any state-capacity "
-        "output relationship.")
+    "MINE_CEILING_STATE_SCALE_IMPERIAL", 60000.0, kind="engineering_estimate",
+    unit="tonnes/year per unit of inspection reach (share of people whose claims its inspectors check)",
+    source="As MINE_CEILING_BASE_IMPERIAL: Wikipedia 'Roman metallurgy' (lead 80,000 t a year empire-wide) and 'Mining in "
+    "Roman Britain' (about 100,000 tons of lead); base 20,000 + scale 60,000 at reach 1 = 80,000 t.",
+    confidence="C",
+    why="How much further a more capable state extends the imperial-tier ceiling, to the whole-empire lead output at full "
+        "reach. The reach is a share of people, so a state inspecting everyone is the empire-wide case; the split of the "
+        "80,000 between base and scale is unsourced, and no source separates what a state ran from what private "
+        "lessees ran.")
+
+_STRANGER_SOURCE = (
+    "Derived. A private lessee held about a twentieth of a district's miners: Xenophon, Poroi 4.14-4.15 "
+    "(https://stuff.mit.edu/afs/athena/course/21/21h.401/www/local/xenophon_poroi.html) has Nicias lease out 'a thousand "
+    "men in the mines', Hipponicus six hundred, Philemonides three hundred; Wikipedia 'Mines of Laurion' "
+    "(https://en.wikipedia.org/wiki/Mines_of_Laurion) has 'almost 20,000 slaves' at work there, so the largest named "
+    "operator was 1,000 / 20,000 = 5 percent of the workforce. ASSUMED: output is proportional to miners, and that share "
+    "of the empire-wide lead output (80,000 t, MINE_CEILING_BASE_IMPERIAL) is the ceiling of an operator with no patron: "
+    "0.05 * 80,000 = 4,000 t a year at full reach, against 3,000 + 4,000 = 7,000 here, within 3x. Not found: tonnes per "
+    "lessee (the Vipasca and Laurion Wikipedia pages and Wikipedia 'Mining in ancient Rome' give no tonnages). The split "
+    "between base and scale is unsourced.")
 
 MINE_CEILING_BASE_STRANGER = declare(
-    "MINE_CEILING_BASE_STRANGER", 3000.0, kind="temporary_heuristic",
-    retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
-    unit="tonnes/year (base)", source=None, confidence="D",
+    "MINE_CEILING_BASE_STRANGER", 3000.0, kind="engineering_estimate",
+    unit="tonnes/year (base)", source=_STRANGER_SOURCE, confidence="C",
     why="As MINE_CEILING_BASE_IMPERIAL, for a stranger with no "
         "citizenship or patron - still a real production ceiling, per "
         "this method's own docstring, so an unpatronised founder is "
         "never simply shut out of mining.")
 
 MINE_CEILING_STATE_SCALE_STRANGER = declare(
-    "MINE_CEILING_STATE_SCALE_STRANGER", 4000.0, kind="temporary_heuristic",
-    retire="Complaint 660 follow-up: ceiling from tonnes an inspector can keep registered",
-    unit="tonnes/year per unit of inspection reach", source=None,
-    confidence="D",
+    "MINE_CEILING_STATE_SCALE_STRANGER", 4000.0, kind="engineering_estimate",
+    unit="tonnes/year per unit of inspection reach", source=_STRANGER_SOURCE,
+    confidence="C",
     why="As MINE_CEILING_STATE_SCALE_IMPERIAL, for the stranger tier.")
 
 REVENUE_SCALE_CAP_MULTIPLE = declare(
@@ -170,15 +184,24 @@ FOREST_HA_PER_MILLION_KM2_BASE = declare(
         "many labels that area happens to be filed under.")
 
 FOREST_HA_PER_MILLION_KM2_PER_SC = declare(
-    "FOREST_HA_PER_MILLION_KM2_PER_SC", 2575.0, kind="engineering_estimate",
+    "FOREST_HA_PER_MILLION_KM2_PER_SC", 69000.0, kind="engineering_estimate",
     unit="hectares/(million km2 of home land) per unit of forest reach (share of people whose woodland tenure its foresters keep)",
-    source="Same empire-wide charcoal anchor and Rome-area calibration "
-    "as FOREST_HA_PER_MILLION_KM2_BASE.",
+    source="Derived. Empire-wide coppice at full reach is about 667,000 ha over Rome's 9.5175 million km2, which is "
+    "70,100 ha per million km2; base 1,100 plus this term at reach 1 is 70,100. Check of the 667,000 ha against opened "
+    "figures: iron 82,500 t a year (Wikipedia 'Roman metallurgy', https://en.wikipedia.org/wiki/Roman_metallurgy); "
+    "'at least two parts of charcoal would be needed for every part of metal' (Henry Cleere, thesis, "
+    "https://www.wealdeniron.org.uk/wp-content/uploads/2019/08/HCleereThesis.pdf, section on deforestation), so at least "
+    "165,000 t of charcoal for iron alone; charcoal is 25 percent of wood by weight (Wikipedia 'Charcoal', "
+    "https://en.wikipedia.org/wiki/Charcoal); ash and hazel coppice yield about 2.5 dry tonnes per hectare per year "
+    "(conservationhandbooks.com, Species and growth, https://conservationhandbooks.com/?p=379, citing Evans 1984), so "
+    "0.625 t of charcoal per hectare and at least 264,000 ha for iron alone, before lead, copper, glass and baths. "
+    "The 667,000 ha (500,000 t of charcoal at 0.75 t per hectare) is within 3x of that floor; the old value of 2,575 "
+    "gave 35,000 ha empire-wide, 7.5x under the iron-only floor. The 500,000 t empire-wide charcoal figure itself was "
+    "not opened. ASSUMED: iron's charcoal ratio is Cleere's lower bound and the empire's iron is wood-fired throughout.",
     confidence="C",
     why="How much a more capable state (able to hold woodland tenure "
-        "at scale) extends the per-area woodland ceiling - checked "
-        "against the same empire-wide total as the base figure, not "
-        "independently measured.")
+        "at scale) extends the per-area woodland ceiling, set so that base plus this term at full reach "
+        "is the empire-wide managed coppice the charcoal anchor needs.")
 
 PROSPECT_HOURS_PER_PERSON_DAY = declare(
     "PROSPECT_HOURS_PER_PERSON_DAY", 10.0, kind="temporary_heuristic",

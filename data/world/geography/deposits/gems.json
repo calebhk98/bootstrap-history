@@ -13,7 +13,10 @@
    "status": "historic",
    "first_worked": 1871,
    "source": "Coordinate from Wikipedia. Wikipedia: the Kimberley mine yielded three tons of diamonds, about fifteen million carats.",
-   "conf": "A"
+   "conf": "A",
+   "contained_tonnes": 3,
+   "contained_basis": "Big Hole yielded 3,000 kg of diamonds (14.5 million carats) by 1914; carat 0.2 g; production only",
+   "contained_source": "Wikipedia, Kimberley Mine, https://en.wikipedia.org/wiki/Kimberley_Mine : \"yielding 3,000 kilograms (14,504,566 carats) of diamonds\" (1914)"
   },
   {
    "id": "argyle_diamonds",
@@ -27,7 +30,10 @@
    "status": "modern",
    "first_worked": 1983,
    "source": "Coordinate from Wikipedia. Wikipedia: more than 865 million carats of rough produced 1983-2020; mine closed, remaining resource small.",
-   "conf": "A"
+   "conf": "A",
+   "contained_tonnes": 173,
+   "contained_basis": "More than 865 million carats of rough produced 1983 to 2020 x 0.2 g per carat = 173 t; mine closed 2020",
+   "contained_source": "Wikipedia, Argyle diamond mine, https://en.wikipedia.org/wiki/Argyle_diamond_mine : \"producing more than 865 million carats of rough diamonds\" (closed November 2020)"
   },
   {
    "id": "mir_diamond",
@@ -41,7 +47,10 @@
    "status": "modern",
    "first_worked": 1957,
    "source": "Coordinate from Wikipedia. Wikipedia: about ten million carats a year in the 1960s falling to about two million; total of order a hundred million carats is an estimate from that, C.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 40,
+   "contained_basis": "Mir has produced over 200 million carats x 0.2 g per carat = 40 t; production only, a lower bound (another site gives about 360 million carats but was not opened to a source)",
+   "contained_source": "ShowCaves, Mir diamond mine, https://showcaves.com/english/ru/mines/Mir.html : \"Mir has produced over 200 million carats of diamonds\""
   },
   {
    "id": "jwaneng_diamonds",
@@ -55,7 +64,10 @@
    "status": "modern",
    "first_worked": 1982,
    "source": "Coordinate from memory; annual output times mine life, order of magnitude.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 89.7,
+   "contained_basis": "Derived: reserves 88.3 Mct at December 2012 plus production 1982 to 2012 of 30 years x 12 Mct per year (the lower end of the stated 12 to 15 Mct per year average, assumed constant) = 448 Mct x 0.2 g per carat = 89.7 t",
+   "contained_source": "Mining Technology, Jwaneng Diamond Mine, https://www.mining-technology.com/projects/jwaneng-diamond-mine/ : \"estimated reserves of 88.3 million carats or 70.1 million tonnes ... as of December 2012\"; \"The mine has an average production rate of 12 to 15 million carats per year\""
   },
   {
    "id": "murowa_diamonds",
@@ -69,7 +81,10 @@
    "status": "modern",
    "first_worked": 2004,
    "source": "Coordinate from Wikipedia. Production plus resource, order of magnitude from memory. The earlier entry was nearly two degrees west.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 3.4,
+   "contained_basis": "Reserves 19 Mt ore x 0.9 carats per tonne = 17.1 million carats x 0.2 g = 3.4 t; production not added (page undated)",
+   "contained_source": "Wikipedia, Murowa diamond mine, https://en.wikipedia.org/wiki/Murowa_diamond_mine : \"mine reserves are 19 million tonnes of ore, with an ore grade of 0.9 carats (180 mg) per tonne\""
   },
   {
    "id": "finsch_diamonds",
@@ -83,7 +98,10 @@
    "status": "modern",
    "first_worked": 1967,
    "source": "Coordinate from Wikipedia. Production plus resource, order of magnitude from memory. The earlier entry was 1.4 degrees north and 2 degrees east of the mine.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 25.2,
+   "contained_basis": "Finsch has supplied over 126 million carats in its 40-plus-year life (undated, about 2011 to 2015) x 0.2 g per carat = 25.2 t; production only, a lower bound",
+   "contained_source": "Wikipedia, Petra Diamonds, https://en.wikipedia.org/wiki/Petra_Diamonds : \"Finsch is a major producer, having supplied over 126 million carats in its 40 plus year life to date\""
   },
   {
    "id": "muzo_emerald",
@@ -95,7 +113,10 @@
    "status": "historic",
    "first_worked": 1559,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 0.0304,
+   "contained_basis": "Only one recovery was found: the operator MTC recovered 152,000 carats from one area in May 2015 x 0.2 g per carat = 30 kg, a very small lower bound; five centuries of output are not quantified (World Mining Report 2005 puts Colombian output at 5 to 6 million carats a year in the 1990s with Muzo about 10% of it, which would be on the order of a tonne, not used because the shares are for 2005)",
+   "contained_source": "Earth Wonders, Beryl from Muzo mine, https://earthwonders.com/wiki/beryl_from_muzo-mine_colombia_174952 : \"a dramatic MTC recovery in May 2015, when one area yielded 152,000 carats\"; World Mining Report 2005, Central and South America, https://www.ganoksin.com/borisat/nenam/wmr-05-csamerica.htm"
   },
   {
    "id": "chivor_emerald",
@@ -107,7 +128,10 @@
    "status": "historic",
    "first_worked": 1537,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted. The earlier entry was 0.4 degrees north of Chivor.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 0.0647,
+   "contained_basis": "Recorded yields only: 137,000 carats 1925 to 1929, 5,400 in 1947, 82,370 in 1948, 91,656 in 1949 and 7,177 in 1950 = 323,603 carats x 0.2 g per carat = 64.7 kg; other years are not given, so a small lower bound",
+   "contained_source": "Schmetzer, Martayan and Blake, History of the Chivor Emerald Mine, Part II (1924-1970), Gems & Gemology, Summer 2020, https://www.gia.edu/gems-gemology/summer-2020-history-of-the-chivor-emerald-mine-part-2 : \"In the period from 1925 to 1929, the mine yielded 137,000 carats in total\"; \"5,400 carats in 1947 ... 82,370 carats in 1948 and 91,656 carats in 1949\"; \"Reported yield for 1950 amounted only to 7,177 carats\""
   },
   {
    "id": "mogok_ruby",
@@ -119,7 +143,10 @@
    "status": "historic",
    "first_worked": 1597,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 1.34,
+   "contained_basis": "Ruby exports from the Mogok area to Britain 334,535 carats in 1907 x 0.2 g per carat = 66.9 kg a year, x 20 years (assumption: the peak-trade years of the 1890s-1900s, taken at the 1907 rate) = 1.3 t; export figure not total output, and years beyond that window not counted, so a lower bound",
+   "contained_source": "GIA, Historical Reading List: Ruby Mines of Burma, https://www.gia.edu/ruby-mines-burma-reading-list : \"The author reports that 334,535 carats of rubies were exported from the Mogok area to Great Britain in 1907\" (Journal of the Royal Society of Arts, 1909)"
   },
   {
    "id": "mong_hsu_ruby",
@@ -131,7 +158,8 @@
    "status": "modern",
    "first_worked": 1991,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted. The earlier entry was one degree west.",
-   "conf": "C"
+   "conf": "C",
+   "contained_basis": "No tonnage: tried: GIA Gems & Gemology Winter 2009 'Ruby and Sapphire Production and Distribution' (says only that Mong Hsu was the world's largest corundum supplier in the early and mid 1990s and has dwindled since 2004, no quantity), Wikipedia Mong Hsu (no figures), a comparable-mine stand-in (no Mong Hsu-scale rate found); needs a kg-per-year figure for the 1990s peak from Peretti et al. 1995, Gems & Gemology, which did not open"
   },
   {
    "id": "ratnapura_gems",
@@ -143,7 +171,10 @@
    "status": "historic",
    "first_worked": -500,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 6.3,
+   "contained_basis": "Sri Lankan blue sapphire production 472,961 carats (2006) and 156,486 carats (2007), mean 314,724 carats x 0.2 g = 62.9 kg a year, x 100 years (assumption: only a century counted at the modern rate, because earlier output is undocumented) = 6.3 t; sapphire only, so a lower bound",
+   "contained_source": "Shor and Weldon, Ruby and Sapphire Production and Distribution, Gems & Gemology Winter 2009, https://www.gia.edu/doc/Ruby-and-Sapphire-Production-and-Distribution.pdf : \"Production of blue sapphires ... declined 66.9% between 2006 and 2007, from 472,961 carats to 156,486 carats\""
   },
   {
    "id": "panna_diamond",
@@ -155,7 +186,10 @@
    "status": "historic",
    "first_worked": -400,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 5.72,
+   "contained_basis": "Madhya Pradesh reserves plus resources 28,597,036 carats as on 1 April 2020 x 0.2 g per carat = 5.72 t; assumes the state's diamond estimate stands for the Panna belt (Majhgawan is the producing mine); production not added",
+   "contained_source": "Indian Bureau of Mines, Indian Minerals Yearbook 2021, Diamond, https://ibm.gov.in/writereaddata/files/01312023164827Diamond_2021.pdf : Table 1, Madhya Pradesh total 28,597,036 carats (reserves and resources, 1.4.2020)"
   },
   {
    "id": "golconda_diamond",
@@ -167,7 +201,10 @@
    "status": "historic",
    "first_worked": -400,
    "source": "Historic Golconda-trade alluvial diamond mines on the Krishna river; coordinate from memory (Golconda fort itself is 17.38N 78.40E per Wikipedia). No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 2.0,
+   "contained_basis": "Estimated total output of all Golconda mines about 10,000,000 carats (2.0 t); mines worked about two and a half centuries, most active until 1830; production only",
+   "contained_source": "Wikipedia, Golconda diamonds, https://en.wikipedia.org/wiki/Golconda_diamonds : \"The output from all of the mines in Golconda is estimated to be around 10,000,000 carats (2.0 t)\""
   },
   {
    "id": "sar_i_sang_lapis",
@@ -179,7 +216,10 @@
    "status": "historic",
    "first_worked": -7000,
    "source": "Coordinate from Wikipedia. Lapis lazuli worked since the Neolithic; no endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 2200,
+   "contained_basis": "1981 reserve estimate 1,300 t plus modern output 9,000 kg a year (2015) x 100 years (assumption: a century at the modern rate, because the 6,000-year working span has no output record; at an assumed 1 t a year over 6,000 years the produced part would be 6,000 t instead of 900 t) = 900 t; total 2,200 t, a lower bound",
+   "contained_source": "Guinness World Records, Largest lapis lazuli mine, https://www.guinnessworldrecords.com/world-records/383472-largest-lapis-lazuli-mine : \"An estimated 9,000 kg per year is recovered from this mine\" (2015); GIA, A Status Report on Gemstones from Afghanistan, Gems & Gemology Winter 1985, https://cms.gia.edu/dam/jcr:fc69091c-e76f-4d18-9001-cf4679c4da75/A-Status-Report-on-Gemstones-from-Afghanistan.pdf : \"In 1981, reserves of 1,300 tons were estimated\"; Wikipedia, Lapis lazuli: deposits \"worked for more than 6,000 years\""
   },
   {
    "id": "sleeping_beauty_turquoise",
@@ -191,7 +231,10 @@
    "status": "modern",
    "first_worked": 1900,
    "source": "Coordinate is Globe, Arizona per Wikipedia; mine nearby. No endowment figure. Renamed from sleep_canyon_turquoise.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 47,
+   "contained_basis": "Stand-in rate: Kingman gem-grade turquoise 4,344 lb (1.97 t) in 1973, x 24 years of Sleeping Beauty working (1988 to 2012) = 47 t; gem grade only and one year's rate used for all years, so a rough lower bound. tried: direct Sleeping Beauty output (no page gives one), Wikipedia Turquoise (none)",
+   "contained_source": "Turquoise Traders, Kingman Turquoise, https://turquoisetraders.com/blogs/perry-null-trading/kingman-turquoise : \"4,344 pound of gem grade turquoise\" (1973, L.W. Hardy); Turquoise Skies, Sleeping Beauty field guide, https://tskies.com/pages/guide-mine-sleeping-beauty : operator tenure 1988 to 2012"
   },
   {
    "id": "kingman_turquoise",
@@ -203,7 +246,10 @@
    "status": "historic",
    "first_worked": 1000,
    "source": "Coordinate from Wikipedia. No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 197,
+   "contained_basis": "Gem-grade turquoise 4,344 lb = 1.97 t in 1973 x 100 years (the page says many thousands of pounds produced 'over the last one hundred years'; modern working from the 1880s) = 197 t; gem grade only (chalk grades 23,878 + 54,818 lb a year excluded), so a lower bound",
+   "contained_source": "Turquoise Traders, Kingman Turquoise, https://turquoisetraders.com/blogs/perry-null-trading/kingman-turquoise : \"23,878 pounds of green chalk\", \"54,818 pounds of blue chalk\", \"4,344 pound of gem grade turquoise\" (1973, estimated by L.W. Hardy)"
   },
   {
    "id": "nishapur_turquoise",
@@ -215,7 +261,10 @@
    "status": "historic",
    "first_worked": -1000,
    "source": "Coordinate is Nishapur city per Wikipedia; the mines lie tens of kilometres away. No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 4100,
+   "contained_basis": "Annual output about 40 to 42 t of rough turquoise (2020 field report), mid 41 t x 100 years (assumption: a century counted at the modern rate; the page says only 'more than a millennium', with no earlier output) = 4,100 t; rough including low grades, lower bound on years",
+   "contained_source": "EarthWonders, Iran guide, https://earthwonders.com/guides/iran_79 : annual production \"around 40 to 42 tons\" of rough turquoise; mined \"for more than a millennium\""
   },
   {
    "id": "hotan_nephrite_jade",
@@ -227,7 +276,8 @@
    "status": "historic",
    "first_worked": -5000,
    "source": "Coordinate from Wikipedia. Alluvial nephrite of the Yurungkash and Karakash rivers. No endowment figure. Replaces nephrite_jade, which sat in Qinghai.",
-   "conf": "C"
+   "conf": "C",
+   "contained_basis": "No tonnage: tried: Wikipedia Nephrite and Jade (no quantities, only Khotan tribute to the Chinese court), Frontiers in Earth Science 2023 Hetian nephrite paper (PDF text unreadable), China Daily 2011 and a Minerals Yearbook China entry (both failed to open; a search snippet attributes 40 t a year and a 220,000 to 280,000 t reserve to them, not usable); needs an opened output or reserve figure"
   },
   {
    "id": "hpakant_jadeite",
@@ -239,7 +289,10 @@
    "status": "modern",
    "first_worked": 1800,
    "source": "Coordinate from Wikipedia. No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 430000,
+   "contained_basis": "Myanmar produced more than 43 million kg (43,000 t) of jade in fiscal 2011/12, nearly all of it from Hpakant, x 10 years (assumption: roughly 2005 to 2015 at that rate, after the early-1990s ceasefire opened the field) = 430,000 t of jade rock including low grades; a lower bound",
+   "contained_source": "International Business Times, Half Of Myanmar's Jade ... Is Smuggled To China Without Taxes, https://www.ibtimes.com/half-myanmars-jade-worth-billions-dollars-each-year-smuggled-china-without-taxes-1412960 : \"the nation produced more than 43 million kilograms (94.80 million pounds) of jade\" (2011/12); Wikipedia, Jade: Myanmar produces upward of 70 percent of the world's high-quality jadeite"
   },
   {
    "id": "merelani_tanzanite",
@@ -251,7 +304,10 @@
    "status": "modern",
    "first_worked": 1967,
    "source": "Coordinate from memory (Mererani, Manyara Region). Replaces tanzanite_deposit, which was mislabelled sapphire and placed near Arusha. No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 22.2,
+   "contained_basis": "Reserves 109 million carats (2018 national report) + about 2 million carats mined 1967 to 1971 = 111 Mct x 0.2 g per carat = 22.2 t; production after 1971 (2.4 Mct in 2011 alone) is not added",
+   "contained_source": "Wikipedia, Tanzanite, https://en.wikipedia.org/wiki/Tanzanite : \"an estimated two million carats of tanzanite were mined\" from 1967 until 1971; \"Total reserves of tanzanite are estimated at 109,000,000 carats, according to a report published in 2018\""
   },
   {
    "id": "yogo_sapphire",
@@ -263,7 +319,10 @@
    "status": "historic",
    "first_worked": 1895,
    "source": "Coordinate from memory (Judith Basin County, Montana). Replaces sapphire_montana, whose coordinate was 2.4 degrees west. No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 8.8,
+   "contained_basis": "English Mine recovered over 16 million carats of rough sapphire 1899 to 1929 plus at least 28 million carats still in the ground = 44 Mct x 0.2 g per carat = 8.8 t",
+   "contained_source": "Wikipedia, Yogo sapphire, https://en.wikipedia.org/wiki/Yogo_sapphire : \"recovered more than 16 million carats (3.2 t) of rough sapphires\"; \"at least 28 million carats (5.6 t ...) of Yogo sapphires are still in the ground\""
   },
   {
    "id": "san_carlos_peridot",
@@ -275,7 +334,10 @@
    "status": "modern",
    "first_worked": 1900,
    "source": "Coordinate from memory (San Carlos Apache Reservation, Arizona). No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 20,
+   "contained_basis": "At least 1,000,000 carats a year x 0.2 g = 200 kg a year, x 100 years (assumption: a century at the modern rate) = 20 t; lower bound",
+   "contained_source": "Modern Jeweler, San Carlos peridot profile (republished 2023, data from 1992), https://modernjeweler.com/?p=28508 : \"at least 1 million carats of it are mined on the San Carlos reservation annually\"; 80 to 95 percent of world supply (U.S. Bureau of Mines)"
   },
   {
    "id": "coober_pedy_opal",
@@ -287,7 +349,8 @@
    "status": "modern",
    "first_worked": 1915,
    "source": "Coordinate from Wikipedia. No endowment figure. The earlier entry was three degrees north.",
-   "conf": "C"
+   "conf": "C",
+   "contained_basis": "No tonnage: tried: Wikipedia Coober Pedy (no output; discovered 1915), Geoscience Australia opal page (95 percent of world opal; no quantity), South Australia opal page (value only: about 40 million dollars a year in the 1990s), Gem Society article (largest producer by mass, no figure), World Mining Report 2005 Australia (no figure); a Farmonaut page gives 2,700 kg a year but cites no source; needs a kg or carat figure from a Geological Survey of South Australia report"
   }
  ]
 }

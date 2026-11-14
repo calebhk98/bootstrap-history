@@ -19,7 +19,10 @@
    "surveyed_lat": 42.81,
    "surveyed_lon": 10.43,
    "surveyed_source": "Rio Marina, Elba (Wikipedia names the island 42.8N 10.4E)",
-   "order": 1
+   "order": 1,
+   "contained_tonnes": 30000000,
+   "contained_basis": "Elba stand-in is the whole island: not less than 60 Mt of iron ore won in about three thousand years, times 50% Fe (assumption: this row's own 500 kg/t grade, itself a round figure) = 30 Mt iron; production only, so a lower bound",
+   "contained_source": "Tanelli et al. 2001, The iron mineral deposits of Elba Island: state of the art (abstract, University of Florence repository), https://flore.unifi.it/handle/2158/313118 : \"In the course of almost three thousand years of exploitation, not less than 60 million tons of Fe ore have been won.\""
   },
   {
    "id": "noricum_siderite",
@@ -39,7 +42,10 @@
    "surveyed_lat": 46.94,
    "surveyed_lon": 14.55,
    "surveyed_source": "Huttenberg, Carinthia, Wikipedia",
-   "order": 2
+   "order": 2,
+   "contained_tonnes": 49350000,
+   "contained_basis": "Stand-in for the Alpine siderite: the Styrian Erzberg, reserves of 235 Mt ore at the page's average 21% Fe = 49.35 Mt iron; remaining reserves only, no production added (the Huttenberg siderite of Carinthia has no cumulative figure in any page opened), so a lower bound",
+   "contained_source": "Wikipedia, Erzberg mine, https://en.wikipedia.org/wiki/Erzberg_mine : estimated reserves of \"235 million tonnes of ore\"; average iron content 21%"
   },
   {
    "id": "wealden_bog_iron",
@@ -59,7 +65,10 @@
    "surveyed_lat": 51.0,
    "surveyed_lon": 0.3,
    "surveyed_source": "The Weald, Sussex and Kent; approximate, from memory",
-   "order": 3
+   "order": 3,
+   "contained_tonnes": 89500,
+   "contained_basis": "Cleere's 1976 estimate of Roman iron production from six of the most important Weald sites, about 89,500 t, quoted by Crew; Crew argues a more conservative figure near 40,000 t of smithed bloom for the same sites. Production from six sites only, so a lower bound for the row",
+   "contained_source": "Peter Crew, The iron and copper slags at Baratti, Populonia, Italy, Journal of the Historical Metallurgy Society 25(2), 1991, https://www.hmsjournal.org/index.php/home/article/download/544/523/523 : \"Cleere (1976) has estimated the Roman iron production from six of the most important sites in the Weald to be about 89,500 tonnes.\""
   },
   {
    "id": "hispania_hematite",
@@ -79,7 +88,10 @@
    "surveyed_lat": 40.73,
    "surveyed_lon": -1.5,
    "surveyed_source": "Ojos Negros, Teruel, Wikipedia",
-   "order": 4
+   "order": 4,
+   "contained_tonnes": 145200000,
+   "contained_basis": "Stand-in is the Vizcaya (Bilbao) iron district: 264 Mt of iron ore mined from 1818 to 1993 (mixed siderite, hematite and limonite), times 55% Fe (assumption: between the page's siderite 48% and hematite 70%, near its limonite 55%) = 145.2 Mt iron; production only, no remaining reserve added, so a lower bound",
+   "contained_source": "Boletin Geologico y Minero 111(2-3), 2000, History of the iron mining of Vizcaya (1818 to 1993), https://info.igme.es/media/boletin/2000/111_2-3/Articulo_8.pdf (read as pdftotext): \"En total se han extraido de Vizcaya 264.000.000 t de minerales de hierro\"; Basque Government geology page, https://www.euskadi.eus/web01-a2inghez/es/contenidos/informacion/pnegras_geologia/es_def/index.shtml : siderite about 48% Fe, hematite about 70%, limonite about 55%, goethite 60% to 70%"
   },
   {
    "id": "north_africa_iron_generic",
@@ -92,11 +104,14 @@
    "ore_grade_kg_per_tonne": 300.0,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "No specific ancient North African iron mine identified by this file's author; a generic mid-range ore-grade placeholder standing in for geography.json's 0.1 regional share so the region is not silently dropped from the supply curve.",
+   "conf": "C",
+   "source": "Wikipedia, Iron ore (opened, https://en.wikipedia.org/wiki/Iron_ore): hematite 69.9% Fe, siderite 48.2% Fe, magnetite ore \"becomes economic\" at \"roughly 25% iron\"; 300 kg/t (30% Fe) sits between that threshold and the pure-mineral grades. Original note: No specific ancient North African iron mine identified by this file's author; a generic mid-range ore-grade placeholder standing in for geography.json's 0.1 regional share so the region is not silently dropped from the supply curve.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 5
+   "order": 5,
+   "contained_tonnes": 67650000,
+   "contained_basis": "Stand-in is Ouenza and Bou-Khadra (Algeria), the best-documented North African iron ores: Ouenza over 100 Mt of red hematite plus Bou-Khadra at least 23 Mt of ore, times 55% Fe (page gives 50% to 60%, midpoint taken as assumption) = 67.65 Mt iron; reserve figures as first reported, production to 1951 not added, so a lower bound",
+   "contained_source": "Wikipedia, Societe de l'Ouenza, https://en.wikipedia.org/wiki/Soci%C3%A9t%C3%A9_de_l%27Ouenza : Djebel Ouenza \"over 100 million tons of red hematite\" with iron at 50% to 60%; Djebel Bou-Khadra \"at least 23 million tons of ore\""
   },
   {
    "id": "anatolian_iron",
@@ -113,7 +128,10 @@
    "source": "Anatolia is the traditional heartland of early iron metallurgy (Hittite ironworking predates Rome by over a thousand years), so a working iron-ore tradition there by the Roman period is well attested even without a single named mine; 350 kg/t is a round mid-range figure.",
    "deposit_type": "iron_oxide_unspecified",
    "status": "historic",
-   "order": 6
+   "order": 6,
+   "contained_tonnes": 82500000,
+   "contained_basis": "Stand-in is the Divrigi district (Sivas): A-Kafa 55 Mt iron metal plus B-Kafa 27.5 Mt iron metal (each page gives the iron metal in its estimated reserves); production before the reserve estimates is not added, so a lower bound",
+   "contained_source": "Wikipedia, Divrigi A-Kafa mine, https://en.wikipedia.org/wiki/Divri%C4%9Fi_A-Kafa_mine : \"estimated reserves of 100 million tonnes of ore grading 55% iron\", \"contains 55 million tonnes of iron metal\"; Wikipedia, Divrigi B-Kafa mine, https://en.wikipedia.org/wiki/Divri%C4%9Fi_B-Kafa_mine : \"estimated reserves of 50 million tonnes of ore grading 55% iron\", \"contains 27.5 million tonnes of iron metal\""
   },
   {
    "id": "levant_iron_generic",
@@ -126,11 +144,14 @@
    "ore_grade_kg_per_tonne": 300.0,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "No specific ancient Levantine/Mesopotamian iron mine identified; generic placeholder for geography.json's 0.05 regional share, same reasoning as north_africa_iron_generic.",
+   "conf": "C",
+   "source": "Wikipedia, Iron ore (opened, https://en.wikipedia.org/wiki/Iron_ore): hematite 69.9% Fe, siderite 48.2% Fe, magnetite ore \"becomes economic\" at \"roughly 25% iron\"; 300 kg/t (30% Fe) sits between that threshold and the pure-mineral grades. Original note: No specific ancient Levantine/Mesopotamian iron mine identified; generic placeholder for geography.json's 0.05 regional share, same reasoning as north_africa_iron_generic.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 7
+   "order": 7,
+   "contained_tonnes": 265000,
+   "contained_basis": "Stand-in is the Warda deposit near Ajloun (Jordan), the only iron deposit in Jordan extensively mined historically: the 1962 borehole survey (15 boreholes, 205 samples averaging 47.5% Fe) calculated 265,000 t of iron in the body; historical removal from the Warda cave is only about 1,100 t of iron, which is included in the body figure, not added",
+   "contained_source": "Acta Carsologica 37(2-3), 2008, The Possibly Hypogene Karstic Iron Ore Deposit of Warda near Ajloun (Northern Jordan), https://ojs.zrc-sazu.si/carsologica/article/download/149/139 (read as pdftotext): \"It was calculated that the deposit contains 265 000 t Fe.\""
   },
   {
    "id": "italia_copper_generic",
@@ -143,11 +164,14 @@
    "ore_grade_kg_per_tonne": 30.0,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Minor Etruscan-era copper working in Tuscany/Campania is attested but not at Rio Tinto's scale; generic 3% ore-grade placeholder for geography.json's small 0.02 share.",
+   "conf": "C",
+   "source": "Bracket, both opened: Birmingham Univ., Great Orme assessment (https://research.birmingham.ac.uk/portal/en/publications/an-assessment-of-copper-mineralization-from-the-great-orme-mine-llandudno-north-wales-as-ore-in-the-bronze-age(0458886e-e943-4be0-94f0-a80e67dd6d39).html): \"estimated copper grade of 10%\" for the Bronze Age veins; Wikipedia, Copper mining (opened): \"average grade of copper ores in the 21st century is below 0.6% copper\". The geometric mean of 100 and 6 kg/t is 24 kg/t. Assumption: a generic regional ore sits between a rich ancient vein and a modern bulk ore. Original note: Minor Etruscan-era copper working in Tuscany/Campania is attested but not at Rio Tinto's scale; generic 3% ore-grade placeholder for geography.json's small 0.02 share.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 8
+   "order": 8,
+   "contained_tonnes": 50000,
+   "contained_basis": "Stand-in is Montecatini Val di Cecina (Tuscany), the largest Tuscan copper deposit: about 50,000 t of refined copper produced; Le Cetine under 1,000 t and a few thousand t more from all other Tuscan occurrences are not added, so a lower bound",
+   "contained_source": "Dini, Rielli, Di Giuseppe, Ruggieri and Boschi, The Ophiolite-Hosted Cu-Zn VMS Deposits of Tuscany (Italy), Minerals 2024, 14(3), 273, https://mdpi.com/2075-163X/14/3/273 (read as the PDF copy at https://iris.cnr.it/retrieve/20548d81-e6cb-41e4-a21e-df4dd6a54ece/minerals-14-00273-v2.pdf): \"Montecatini Val di Cecina ... produced around 50,000 tonnes of refined copper\""
   },
   {
    "id": "gaul_germania_copper_generic",
@@ -160,11 +184,14 @@
    "ore_grade_kg_per_tonne": 25.0,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Generic placeholder; pre-Roman Alpine/Rhineland copper working existed but no single dominant ancient mine identified by this file's author.",
+   "conf": "C",
+   "source": "Bracket, both opened: Birmingham Univ., Great Orme assessment (https://research.birmingham.ac.uk/portal/en/publications/an-assessment-of-copper-mineralization-from-the-great-orme-mine-llandudno-north-wales-as-ore-in-the-bronze-age(0458886e-e943-4be0-94f0-a80e67dd6d39).html): \"estimated copper grade of 10%\" for the Bronze Age veins; Wikipedia, Copper mining (opened): \"average grade of copper ores in the 21st century is below 0.6% copper\". The geometric mean of 100 and 6 kg/t is 24 kg/t. Assumption: a generic regional ore sits between a rich ancient vein and a modern bulk ore. Original note: Generic placeholder; pre-Roman Alpine/Rhineland copper working existed but no single dominant ancient mine identified by this file's author.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 9
+   "order": 9,
+   "contained_tonnes": 2600000,
+   "contained_basis": "Stand-in is the Kupferschiefer of east-central Germany (Mansfeld and neighbours): copper produced in 800 years of mining; the same page says less than 1 Mt of discovered copper remains in identified deposits, not added. Production only, so a lower bound",
+   "contained_source": "USGS, New Kupferschiefer copper assessment available, https://www.usgs.gov/news/new-kupferschiefer-copper-assessment-available : \"In 800 years of mining, about 2.6 million metric tons of copper were produced\""
   },
   {
    "id": "britannia_copper_generic",
@@ -177,11 +204,14 @@
    "ore_grade_kg_per_tonne": 30.0,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Generic placeholder for geography.json's 0.05 British copper share.",
+   "conf": "C",
+   "source": "Bracket, both opened: Birmingham Univ., Great Orme assessment (https://research.birmingham.ac.uk/portal/en/publications/an-assessment-of-copper-mineralization-from-the-great-orme-mine-llandudno-north-wales-as-ore-in-the-bronze-age(0458886e-e943-4be0-94f0-a80e67dd6d39).html): \"estimated copper grade of 10%\" for the Bronze Age veins; Wikipedia, Copper mining (opened): \"average grade of copper ores in the 21st century is below 0.6% copper\". The geometric mean of 100 and 6 kg/t is 24 kg/t. Assumption: a generic regional ore sits between a rich ancient vein and a modern bulk ore. Original note: Generic placeholder for geography.json's 0.05 British copper share.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 10
+   "order": 10,
+   "contained_tonnes": 1760,
+   "contained_basis": "Only the Great Orme (Wales) is counted: up to 1,760 t of copper mined in the Bronze Age; other British copper (Parys Mountain, Mid Wales) not counted, so a lower bound for the row",
+   "contained_source": "Wikipedia, Great Orme, https://en.wikipedia.org/wiki/Great_Orme : \"It is estimated that up to 1,760 tonnes of copper was mined during the period.\""
   },
   {
    "id": "rio_tinto_copper",
@@ -205,7 +235,10 @@
    "surveyed_lat": 37.7,
    "surveyed_lon": -6.6,
    "surveyed_source": "Riotinto, Huelva; from memory (coordinate known to Wikipedia only for the river)",
-   "order": 11
+   "order": 11,
+   "contained_tonnes": 4290000,
+   "contained_basis": "Derived: the Riotinto complex hosts 500 Mt of ore (all metals); copper grade not given for Riotinto itself, so the Iberian Pyrite Belt average is used (assumption): 14.6 Mt Cu in more than 1,700 Mt of ore = 0.86% Cu, times 500 Mt = 4.29 Mt copper. Cross-check: the miner Atalaya's chief executive puts the original Rio Tinto mine at more than 3 Mt of contained copper plus zinc",
+   "contained_source": "Wikipedia, Riotinto-Nerva mining basin, https://en.wikipedia.org/wiki/Riotinto-Nerva_mining_basin : \"hosting a total of 500 Mt (megatonnes) of ore\"; Springer chapter on the Iberian Pyrite Belt, https://rd.springer.com/chapter/10.1007/978-3-319-17428-0_9 : \"estimated before erosion at >1700 Million tonnes (Mt), with 14.6 Mt Cu, 34.9 Mt Zn, 13.0 Mt Pb, 46,100 t Ag, 880 t Au\"; MiningSEE, https://www.miningsee.eu/?p=2826 : \"the original Rio Tinto mine with contained copper and zinc metal of more than 3 million tonnes\""
   },
   {
    "id": "north_africa_copper_generic",
@@ -218,11 +251,14 @@
    "ore_grade_kg_per_tonne": 20.0,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Generic placeholder for geography.json's 0.05 share.",
+   "conf": "C",
+   "source": "Bracket, both opened: Birmingham Univ., Great Orme assessment (https://research.birmingham.ac.uk/portal/en/publications/an-assessment-of-copper-mineralization-from-the-great-orme-mine-llandudno-north-wales-as-ore-in-the-bronze-age(0458886e-e943-4be0-94f0-a80e67dd6d39).html): \"estimated copper grade of 10%\" for the Bronze Age veins; Wikipedia, Copper mining (opened): \"average grade of copper ores in the 21st century is below 0.6% copper\". The geometric mean of 100 and 6 kg/t is 24 kg/t. Assumption: a generic regional ore sits between a rich ancient vein and a modern bulk ore. Original note: Generic placeholder for geography.json's 0.05 share.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 12
+   "order": 12,
+   "contained_tonnes": 164367,
+   "contained_basis": "Flow times years, with a stand-in mine: Guelb Moghrein at Akjoujt (Mauritania, the only documented copper mine in the western Sahara belt), copper in concentrate 2015 to 2019 summed (45,001 + 32,818 + 28,791 + 28,137 + 29,620 t) = 164,367 t. Production in five years only, no reserve added (page's reserve table is locked), so a lower bound; the deposit is iron-oxide copper-gold, not the vein copper of the Roman Maghreb, so the geological match is loose. tried: Algerian copper pages (none found), Wikipedia Guelb Moghrein (no figures), stand-in Akjoujt",
+   "contained_source": "Mining Intelligence and News, Guelb Moghrein Mine, https://miningdataonline.com/property/575/Guelb-Moghrein-Mine.aspx : copper in copper concentrate 29,620 t (2019), 28,137 t (2018), 28,791 t (2017), 32,818 t (2016), 45,001 t (2015)"
   },
   {
    "id": "anatolian_copper",
@@ -242,7 +278,10 @@
    "surveyed_lat": 38.27,
    "surveyed_lon": 39.76,
    "surveyed_source": "Ergani Maden, Wikipedia (Ergani)",
-   "order": 13
+   "order": 13,
+   "contained_tonnes": 649950,
+   "contained_basis": "Stand-in is Ergani Maden (Diyarbakir): 6.1 Mt of massive sulphide ore mined 1939 to 1968 at 6.5% Cu = 396,500 t; plus 19,450 t of copper produced 1892 to 1911; plus a reserve of 12 Mt of ore at 2.38% Cu = 234,000 t at Mihrapdag (undated Etibank report, mid 20th century). Sum 649,950 t; mixes production and an old reserve, ancient output not counted",
+   "contained_source": "T. Bamba, Ophiolite and related copper deposits of the Ergani mining district, southeastern Turkey, Bulletin of the Mineral Research and Exploration Institute of Turkey, https://dergipark.org.tr/en/download/article-file/44440 : \"6.1 million metric tons of massive sulphide ores with the average grade 6.5 % Cu, were mined\"; Mining activities in Turkey: mines operated by Etibank, https://dergipark.org.tr/en/download/article-file/44134 : \"From 1892 till 1911 a total of 19,450 tons of copper was produced\"; \"a deposit of 12 million tons of ore containing 2.38 % (or 234,000 tons) copper\""
   },
   {
    "id": "cyprus_copper",
@@ -266,7 +305,10 @@
    "surveyed_lat": 35.09,
    "surveyed_lon": 32.88,
    "surveyed_source": "Skouriotissa, Wikipedia",
-   "order": 14
+   "order": 14,
+   "contained_tonnes": 72000,
+   "contained_basis": "Derived lower bound: about 4 Mt of ancient copper slag, all produced in antiquity, times (copper in the ore less copper lost in slag). Assumptions, labelled: one tonne of ore per tonne of slag; ore at 2.5% Cu (midpoint of the 0.5 to 4.5% range given for the ore bodies); slag at 0.7% Cu (the Tonglushan figure used as a stand-in, no Cyprus slag assay was opened) gives 4 Mt x (0.025 - 0.007) = 72,000 t. Oxidised enriched ore up to 20% Cu would raise this",
+   "contained_source": "Kassianidou 2013, Cyprus copper, https://www.ancientportsantiques.com/wp-content/uploads/Documents/PLACES/Crete-Cyprus/CyprusCopper-Kassianidou2013.pdf : \"4 million tons of copper slag in 40 different locations ... All 4 million tons of slag, therefore, had been produced in Antiquity\"; Cyprus Copper Itinerary, https://www.visitcyprus.com/files/cultural_routes/Cyprus_copper_itinerary_2015.pdf : \"Their average copper content ranges from 0.5 to 4.5 per cent\"; China Daily, Tonglushan, https://www.chinadaily.com.cn/a/202606/16/WS6a3083cfa310986e2b4601cf_2.html : slag \"contained only 0.7 percent copper\""
   },
   {
    "id": "italia_lead_generic",
@@ -279,20 +321,23 @@
    "ore_grade_kg_per_tonne": 60.0,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Generic placeholder for geography.json's small 0.02 Italian lead share.",
+   "conf": "C",
+   "source": "derbyshireheritage.co.uk (opened, https://derbyshireheritage.co.uk/?p=4204): \"few veins consisted of more than 10% galena\", \"average galena content was 5% or less\"; galena is 86.6% Pb (PbS), so 5% galena is 43 kg Pb/t and 10% is 87 kg/t. Modern analogue of a vein-galena orefield. Original note: Generic placeholder for geography.json's small 0.02 Italian lead share.",
    "byproducts": [
     {
      "metal": "silver",
      "material_key": "silver_kg",
      "kg_per_tonne_of_primary_metal": 2.31,
-     "conf": "D",
-     "source": "Wood 2022 (Archaeometry, read): argentiferous galena carries about 0.2 wt% silver, so 0.002 / 0.866 (lead fraction of PbS) = 2.31 kg of silver per tonne of lead contained. Generic galena of no assayed working, so the generic Wood figure; confidence D. Complaints/291."
+     "conf": "C",
+     "source": "Wikipedia, Galena (opened, https://en.wikipedia.org/wiki/Galena): \"In some deposits, the galena contains up to 0.5% silver\"; 0.5% / 0.866 = 5.8 kg Ag per tonne of lead is the ceiling, and 2.31 is 0.4 of it. Wood 2022 (Archaeometry, read): argentiferous galena carries about 0.2 wt% silver, so 0.002 / 0.866 (lead fraction of PbS) = 2.31 kg of silver per tonne of lead contained. Generic galena of no assayed working, so the generic Wood figure; confidence D. Complaints/291."
     }
    ],
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 15
+   "order": 15,
+   "contained_tonnes": 600000,
+   "contained_basis": "Stand-in is Sardinia under Roman rule: lead produced over the whole period of Roman rule, about 600,000 tons (tons taken as metric); production only, so a lower bound",
+   "contained_source": "Wikipedia, History of mining in Sardinia, https://en.wikipedia.org/wiki/History_of_mining_in_Sardinia : \"Mining production during the whole period of Roman rule was assessed at about six hundred thousand tons of lead and one thousand tons of silver.\""
   },
   {
    "id": "gaul_germania_lead_generic",
@@ -305,11 +350,14 @@
    "ore_grade_kg_per_tonne": 100.0,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Generic placeholder; pre-Roman central European galena working existed but no single dominant ancient mine identified.",
+   "conf": "C",
+   "source": "derbyshireheritage.co.uk (opened, https://derbyshireheritage.co.uk/?p=4204): \"few veins consisted of more than 10% galena\", \"average galena content was 5% or less\"; galena is 86.6% Pb (PbS), so 5% galena is 43 kg Pb/t and 10% is 87 kg/t. Modern analogue of a vein-galena orefield. Original note: Generic placeholder; pre-Roman central European galena working existed but no single dominant ancient mine identified.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 16
+   "order": 16,
+   "contained_tonnes": 1800000,
+   "contained_basis": "Stand-in is the Rammelsberg (Harz) polymetallic deposit: almost 30 Mt of ore extracted over more than 1,000 years at an average 6% lead = 1.8 Mt lead in the ore mined; remaining reserves are nil (mine exhausted, closed 1988), so this is the total",
+   "contained_source": "Wikipedia, Rammelsberg, https://en.wikipedia.org/wiki/Rammelsberg : \"almost 30 million tonnes of ore were extracted\"; \"The ore contained an average of 14% of zinc, 6% lead, 2% copper, 1 g/t gold and 140 g/t silver.\""
   },
   {
    "id": "britannia_lead",
@@ -338,7 +386,10 @@
    "surveyed_lat": 51.3,
    "surveyed_lon": -2.73,
    "surveyed_source": "Mendip Hills, Wikipedia",
-   "order": 17
+   "order": 17,
+   "contained_tonnes": 100000,
+   "contained_basis": "About 100,000 tons of lead estimated from the Mendip orefield (Roman and later; tons taken as metric, a long ton would be 1.6% more); other British fields (Pennines, Derbyshire, Flintshire, Alston Moor) are not counted, so a lower bound for the row",
+   "contained_source": "British Geological Survey, Mendip Hills, Minerals and mines, https://www2.bgs.ac.uk/Mendips/Minerals/Mins_Mines_1.htm : \"It has been estimated that about 100 000 tons of lead have been obtained from the Mendips.\" (attributed to Green 1958 in the JNCC Geological Conservation Review, not opened)"
   },
   {
    "id": "hispania_lead",
@@ -367,7 +418,10 @@
    "surveyed_lat": 38.08,
    "surveyed_lon": -3.63,
    "surveyed_source": "Linares, Jaen, Wikipedia",
-   "order": 18
+   "order": 18,
+   "contained_tonnes": 4666667,
+   "contained_basis": "Derived from the Cartagena silver above (35 t a year x 308 years = 10,780 t Ag) divided by the 2.31 kg of silver per tonne of lead used in this repository's own hispania_silver row (Wood 2022, not re-opened this pass) = 4.67 Mt lead. Assumes all that silver came from argentiferous galena at that ratio; a rough upper-middle value, not a count of lead pigs",
+   "contained_source": "Geochemical Perspectives Letters, Albarede et al., https://www.geochemicalperspectivesletters.org/article1613 : \"produced 35 tons of silver each year\"; Wikipedia, Sierra Minera de Cartagena-La Union, https://en.wikipedia.org/wiki/Sierra_Minera_de_Cartagena-La_Uni%C3%B3n : in Roman times silver in argentiferous galena, \"along with it, enormous quantities of lead were extracted\""
   },
   {
    "id": "laurion_lead",
@@ -397,7 +451,10 @@
    "surveyed_lat": 37.72,
    "surveyed_lon": 24.05,
    "surveyed_source": "Laurion, Wikipedia (37.70N 24.05E for Lavrio)",
-   "order": 19
+   "order": 19,
+   "contained_tonnes": 2300000,
+   "contained_basis": "Ancient 1.4 Mt lead + 1865 to 1982 0.9 Mt lead = 2.3 Mt; production only, so a lower bound",
+   "contained_source": "Maxwell K. Boots, Silver Production in City/State of Ancient Athens (notes for SMEDG meeting, 24 April 2019), https://smedg.org.au/wp-content/uploads/2020/07/Max%20Boots%20190424%20Greece%20in%20Silver%20Notes.pdf : \"about 1.4 Mt of lead\" (ancient); \"approximately 0.9 Mt of lead\" (1865 to 1982)"
   },
   {
    "id": "italia_silver_generic",
@@ -410,12 +467,15 @@
    "ore_grade_kg_per_tonne": 0.3,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Generic placeholder for geography.json's small 0.02 Italian silver share; silver is a trace constituent of argentiferous galena, not its own separate ore.",
+   "conf": "C",
+   "source": "Derived: italia_lead_generic grade 60 kg Pb/t x 2.31 kg Ag per tonne Pb (Wood 2022, as cited in that entry) / 1000 = 0.14 kg Ag/t ore; 0.3 is 2.2x that. Wikipedia, Galena (opened): galena contains \"up to 0.5% silver\" in some deposits. Original note: Generic placeholder for geography.json's small 0.02 Italian silver share; silver is a trace constituent of argentiferous galena, not its own separate ore.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
    "order": 20,
-   "working_unknown": "UNKNOWN (D): a generic placeholder for a small Italian silver share, not a located working; no source gives a date or size. Listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): a generic placeholder for a small Italian silver share, not a located working; no source gives a date or size. Listed as unworked in the opening stores.",
+   "contained_tonnes": 1000,
+   "contained_basis": "Stand-in is Sardinia under Roman rule: silver produced over the whole period of Roman rule, about 1,000 tons (tons taken as metric); production only, so a lower bound",
+   "contained_source": "Wikipedia, History of mining in Sardinia, https://en.wikipedia.org/wiki/History_of_mining_in_Sardinia : \"Mining production during the whole period of Roman rule was assessed at about six hundred thousand tons of lead and one thousand tons of silver.\""
   },
   {
    "id": "britannia_silver_generic",
@@ -425,15 +485,18 @@
    "lon": -1.4847,
    "share_of_empire_output": 0.05,
    "material_moved": "ore",
-   "ore_grade_kg_per_tonne": 0.5,
+   "ore_grade_kg_per_tonne": 0.1,
    "depth_class": "shallow_vein",
    "hardness_class": "medium",
-   "conf": "D",
-   "source": "Silver content of British argentiferous lead ore (see britannia_lead); generic figure, no assay.",
+   "conf": "C",
+   "source": "Wikipedia, Mining in Roman Britain (opened, https://en.wikipedia.org/wiki/Mining_in_Roman_Britain): ore from a first-century smelting site \"3 oz. (5 dwt) per ton\" (silver; 3 oz 5 dwt x 31.1 g per troy ounce / 1016 kg per long ton = 0.10 kg per tonne). Changed from 0.5, which was 5x higher. Original note: Silver content of British argentiferous lead ore (see britannia_lead); generic figure, no assay.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
    "order": 21,
-   "working_unknown": "UNKNOWN (D): a generic placeholder for silver in British argentiferous lead ore, not a located working; no source gives a date or size. Listed as unworked in the opening stores."
+   "working_unknown": "UNKNOWN (D): a generic placeholder for silver in British argentiferous lead ore, not a located working; no source gives a date or size. Listed as unworked in the opening stores.",
+   "contained_tonnes": 231,
+   "contained_basis": "Derived: silver recovered with British lead = lead tonnes times this file's silver by-product ratio. 100,000 t of Mendip lead (see britannia_lead) times 2.31 kg of silver per tonne of lead (Wood 2022, as entered in britannia_lead's byproducts) = 231 t silver; a lower bound because only Mendip lead is counted and silver left in slag or litharge is ignored",
+   "contained_source": "BGS Mendip Hills, https://www2.bgs.ac.uk/Mendips/Minerals/Mins_Mines_1.htm : about 100 000 tons of lead obtained from the Mendips; silver ratio from the byproducts entry of britannia_lead in this file (Wood 2022, Archaeometry)"
   },
   {
    "id": "hispania_silver",
@@ -446,15 +509,18 @@
    "ore_grade_kg_per_tonne": 1.0,
    "depth_class": "deep_vein",
    "hardness_class": "hard",
-   "conf": "D",
-   "source": "Strabo, Geography 3.2.10 (Perseus, read), citing Polybius, on the silver mines near New Carthage: 40,000 men regularly engaged and a daily revenue to the Roman people of 25,000 drachmae. Strabo gives no grade. The 1.0 kg per tonne (0.1% Ag) is an unsourced assumption, confidence D, not an assay. Searched for an assay and found none: Domergue 1990 and 2008, Davies 1935, Healy 1978 could not be opened (no open copy; bot-walled or paywalled); web searches for Cartagena and Sierra Morena ore grade returned only popular pages (3 kg of silver per tonne of lead, unsourced). Bounds that are sourced: a Roman extraction floor of 0.6 kg per tonne (Tylecote 1987 p. 40, in Willies 1997, read) for Rio Tinto jarosite; if all the silver were in the lead, hispania_lead's 180 kg of lead times 2.31 kg of silver per tonne of lead would be 0.42 kg per tonne. Plausible range 0.15 to 2. Complaints/349.",
+   "conf": "C",
+   "source": "Derived: hispania_lead 180 kg Pb/t x 2.31 kg Ag per tonne Pb / 1000 = 0.42 kg Ag/t ore; sourced extraction floor 0.6 kg/t (Tylecote 1987 in Willies 1997, below); 1.0 is 2.4x and 1.7x those. Original note: Strabo, Geography 3.2.10 (Perseus, read), citing Polybius, on the silver mines near New Carthage: 40,000 men regularly engaged and a daily revenue to the Roman people of 25,000 drachmae. Strabo gives no grade. The 1.0 kg per tonne (0.1% Ag) is an unsourced assumption, confidence D, not an assay. Searched for an assay and found none: Domergue 1990 and 2008, Davies 1935, Healy 1978 could not be opened (no open copy; bot-walled or paywalled); web searches for Cartagena and Sierra Morena ore grade returned only popular pages (3 kg of silver per tonne of lead, unsourced). Bounds that are sourced: a Roman extraction floor of 0.6 kg per tonne (Tylecote 1987 p. 40, in Willies 1997, read) for Rio Tinto jarosite; if all the silver were in the lead, hispania_lead's 180 kg of lead times 2.31 kg of silver per tonne of lead would be 0.42 kg per tonne. Plausible range 0.15 to 2. Complaints/349.",
    "deposit_type": "galena_vein",
    "status": "historic",
    "surveyed_lat": 37.6,
    "surveyed_lon": -0.98,
    "surveyed_source": "Cartagena (Carthago Nova) silver district, Wikipedia",
    "order": 22,
-   "working_unknown": "UNKNOWN (C): no source read gives a working date or a total endowment. Strabo 3.2.10 citing Polybius attests working on a large scale by the second century BCE (about 40,000 workers); Kay 2014, reported in an OUP chapter and a Geochemical Perspectives Letters article, infers about 35 t of silver a year from the 25,000 drachmae a day, a yearly rate at one date, not a total. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. Primary to obtain: Domergue 1990."
+   "working_unknown": "UNKNOWN (C): no source read gives a working date or a total endowment. Strabo 3.2.10 citing Polybius attests working on a large scale by the second century BCE (about 40,000 workers); Kay 2014, reported in an OUP chapter and a Geochemical Perspectives Letters article, infers about 35 t of silver a year from the 25,000 drachmae a day, a yearly rate at one date, not a total. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. Primary to obtain: Domergue 1990.",
+   "contained_tonnes": 10780,
+   "contained_basis": "Rate times working years: 35 t of silver a year from the Carthago Nova region (Strabo quoting Polybius) x 308 years from the Roman capture of Cartagena in 209 BC to the end of the 1st century AD, when the Roman mines were abandoned = 10,780 t. Assumptions: the Polybius-era rate held for the whole period; Rio Tinto and the rest of Hispania are not counted",
+   "contained_source": "Geochemical Perspectives Letters, Albarede et al., https://www.geochemicalperspectivesletters.org/article1613 : ore deposits near Carthago Nova \"produced 35 tons of silver each year\" (Strabo 3.2.10, Kay 2014); Wikipedia, Sierra Minera de Cartagena-La Union, https://en.wikipedia.org/wiki/Sierra_Minera_de_Cartagena-La_Uni%C3%B3n : capture of Cartagena in 209 BC; mining \"abandoned\" at \"the end of the 1st century\""
   },
   {
    "id": "laurion_silver",
@@ -478,7 +544,10 @@
    "surveyed_lat": 37.72,
    "surveyed_lon": 24.05,
    "surveyed_source": "Laurion, Wikipedia",
-   "order": 23
+   "order": 23,
+   "contained_tonnes": 7700,
+   "contained_basis": "Ancient Greek mining (7th to 1st century BCE) about 13 Mt ore at 20% Pb and 400 g/t Ag: 3,500 t silver; French and Greek companies 1865 to 1982: about 30 Mt ore at 3% Pb and 140 g/t Ag: 4,200 t silver; total 3,500 + 4,200 = 7,700 t. The existing 3,500 t is the ancient part only. Production only; remaining reserves not given, so a lower bound",
+   "contained_source": "Maxwell K. Boots, Silver Production in City/State of Ancient Athens (notes for SMEDG meeting, 24 April 2019), https://smedg.org.au/wp-content/uploads/2020/07/Max%20Boots%20190424%20Greece%20in%20Silver%20Notes.pdf : \"extracted metal was estimated to be about 1.4 Mt of lead and 3500 tonnes (112 M ounces) of silver\"; \"from 1865 to 1982 AD, mined about 30 Mt of ore ... approximately 0.9 Mt of lead and 4,200 tonnes (134 M ounces) of silver\" (a secondary compilation that says much of it was sourced from the internet)"
   },
   {
    "id": "rio_tinto_jarosite",
@@ -500,7 +569,10 @@
    "surveyed_lon": -6.6,
    "surveyed_source": "Riotinto, Huelva; from memory",
    "order": 24,
-   "working_unknown": "UNKNOWN (D): no source read gives a working date or a total endowment. Delgado et al. 2021 (Onoba 9, citing Salkield 1970) give more than 20 million tonnes of slag, a ceiling on the smelted charge and not an endowment of silver. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. Primary to obtain: Anguilano et al. 2010 and 2012, Domergue 1990."
+   "working_unknown": "UNKNOWN (D): no source read gives a working date or a total endowment. Delgado et al. 2021 (Onoba 9, citing Salkield 1970) give more than 20 million tonnes of slag, a ceiling on the smelted charge and not an endowment of silver. Not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores. Primary to obtain: Anguilano et al. 2010 and 2012, Domergue 1990.",
+   "contained_tonnes": 13560,
+   "contained_basis": "Derived: Riotinto complex 500 Mt of ore times the Iberian Pyrite Belt average silver content (assumption: belt average used for Riotinto itself) 46,100 t Ag in more than 1,700 Mt of ore = 27.1 g/t, giving 13,560 t silver; includes all Riotinto silver, not only the jarosite and gossan part",
+   "contained_source": "Wikipedia, Riotinto-Nerva mining basin, https://en.wikipedia.org/wiki/Riotinto-Nerva_mining_basin : \"hosting a total of 500 Mt (megatonnes) of ore\"; Springer chapter on the Iberian Pyrite Belt, https://rd.springer.com/chapter/10.1007/978-3-319-17428-0_9 : \"estimated before erosion at >1700 Million tonnes (Mt), with 14.6 Mt Cu, 34.9 Mt Zn, 13.0 Mt Pb, 46,100 t Ag\""
   },
   {
    "id": "gaul_germania_tin_generic",
@@ -513,11 +585,14 @@
    "ore_grade_kg_per_tonne": 1.5,
    "depth_class": "alluvial",
    "hardness_class": null,
-   "conf": "D",
-   "source": "Generic placeholder for geography.json's small 0.1 share; alluvial cassiterite in Rhine-system gravels, no specific ancient working identified.",
+   "conf": "C",
+   "source": "USGS Open-File Report 95-0649, Preliminary Grade and Volume Model of Alluvial Sn-Au Placers (pdf opened, https://pubs.usgs.gov/of/1995/0649/report.pdf): \"80 percent of the deposits have Sn grades between 0.15 and 2.5 kg/m^3\". Assumption: gravel bulk density near 1.6 to 2 t/m^3 turns that into 0.08 to 1.6 kg/t, so the value sits at the rich end, within 2x. Original note: Generic placeholder for geography.json's small 0.1 share; alluvial cassiterite in Rhine-system gravels, no specific ancient working identified.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 25
+   "order": 25,
+   "contained_tonnes": 310000,
+   "contained_basis": "Erzgebirge (German-Czech border) 0.3 Mt + Brittany and Massif Central 0.01 Mt = 0.31 Mt historical tin-metal production",
+   "contained_source": "Antiquity, From Land's End to the Levant, https://www.cambridge.org/core/journals/antiquity/article/from-lands-end-to-the-levant-did-britains-tin-sources-transform-the-bronze-age-in-europe-and-the-mediterranean/2330F3B6498B210DA61B89026A1F38EA : \"Erzgebirge, German-Czech border (0.3 Mt), Iberia (0.15 Mt) and Brittany and the Massif Central, France (0.01 Mt)\""
   },
   {
    "id": "cornish_tin_streaming",
@@ -540,7 +615,10 @@
    "surveyed_lat": 50.4,
    "surveyed_lon": -4.9,
    "surveyed_source": "Cornwall tin district, approximate",
-   "order": 26
+   "order": 26,
+   "contained_tonnes": 2500000,
+   "contained_basis": "Estimated historical tin-metal production of the Cornwall and Devon province 2.5 Mt (all methods, not streaming alone)",
+   "contained_source": "Antiquity, From Land's End to the Levant: did Britain's tin sources transform the Bronze Age in Europe and the Mediterranean?, https://www.cambridge.org/core/journals/antiquity/article/from-lands-end-to-the-levant-did-britains-tin-sources-transform-the-bronze-age-in-europe-and-the-mediterranean/2330F3B6498B210DA61B89026A1F38EA : \"an estimated historical tin-metal production totalling 2.5 million tonnes (Mt)\" (citing Lehmann)"
   },
   {
    "id": "hispania_tin_generic",
@@ -553,11 +631,14 @@
    "ore_grade_kg_per_tonne": 2.0,
    "depth_class": "alluvial",
    "hardness_class": null,
-   "conf": "D",
-   "source": "Iberian alluvial cassiterite is attested (geography.json's own located_materials lists hispania among tin's regions) but without a single named ancient working; generic mid-range placer grade.",
+   "conf": "C",
+   "source": "USGS Open-File Report 95-0649, Preliminary Grade and Volume Model of Alluvial Sn-Au Placers (pdf opened, https://pubs.usgs.gov/of/1995/0649/report.pdf): \"80 percent of the deposits have Sn grades between 0.15 and 2.5 kg/m^3\". Assumption: gravel bulk density near 1.6 to 2 t/m^3 turns that into 0.08 to 1.6 kg/t, so the value sits at the rich end, within 2x. Original note: Iberian alluvial cassiterite is attested (geography.json's own located_materials lists hispania among tin's regions) but without a single named ancient working; generic mid-range placer grade.",
    "deposit_type": "unspecified_placeholder",
    "status": "historic",
-   "order": 27
+   "order": 27,
+   "contained_tonnes": 150000,
+   "contained_basis": "Iberia historical tin-metal production 0.15 Mt",
+   "contained_source": "Antiquity, From Land's End to the Levant, https://www.cambridge.org/core/journals/antiquity/article/from-lands-end-to-the-levant-did-britains-tin-sources-transform-the-bronze-age-in-europe-and-the-mediterranean/2330F3B6498B210DA61B89026A1F38EA : \"Iberia (0.15 Mt)\""
   },
   {
    "id": "las_medulas_alluvial",
@@ -581,7 +662,10 @@
    "surveyed_lat": 42.46,
    "surveyed_lon": -6.77,
    "surveyed_source": "Las Medulas, Wikipedia",
-   "order": 28
+   "order": 28,
+   "contained_tonnes": 1640,
+   "contained_basis": "Pliny's account as given by Wikipedia: 5 million Roman pounds = 1.64 million kg = 1,640 t gold over the Roman exploitation (an ancient literary figure)",
+   "contained_source": "Wikipedia, Las Medulas, https://en.wikipedia.org/wiki/Las_M%C3%A9dulas : \"The exploitation, involving 60,000 free workers, brought 5 million Roman pounds (1.64 million kg)\""
   },
   {
    "id": "dacia_vein_gold",
@@ -606,7 +690,10 @@
    "surveyed_source": "Rosia Montana, Wikipedia",
    "order": 29,
    "first_worked": 106,
-   "first_worked_source": "Roman exploitation after the conquest of 106 CE (data/world/resources.json gold note); UNESCO inscription for Rosia Montana, seen as a search summary only, gives about 500 t of gold over 166 years from 106 CE, which agrees with the endowment already here (precious-metal-mining-sources.md). Confidence D: a snippet."
+   "first_worked_source": "Roman exploitation after the conquest of 106 CE (data/world/resources.json gold note); UNESCO inscription for Rosia Montana, seen as a search summary only, gives about 500 t of gold over 166 years from 106 CE, which agrees with the endowment already here (precious-metal-mining-sources.md). Confidence D: a snippet.",
+   "contained_tonnes": 580,
+   "contained_basis": "Rosia Montana only: about 250 t gold obtained in the Bronze and Iron Ages (historians' estimate) plus the 330 t of gold estimated in the four mountains by a 2000 survey (a modern in-ground estimate, which counts gold the Romans may have left); Roman-period output not opened, so a lower bound",
+   "contained_source": "Borcos and Udubasa, Mining in Romania, Romanian Journal of Geology vol. 86 (2012), https://igr.ro/wp-content/uploads/2023/02/Vol-86-2012-Borcos-Udubasa-Mining-in-Romania.pdf : \"during the Bronze and Iron Age periods, ca. 250 t of gold and 370 t of silver have been obtained\"; Wikipedia, Rosia Montana Project, https://en.wikipedia.org/wiki/Ro%C8%99ia_Montan%C4%83_Project : a 2000 survey \"gave an estimation of 330 tons of gold and 1600 tons of silver in the four mountains surrounding the town\""
   },
   {
    "id": "almaden_cinnabar",
@@ -630,7 +717,10 @@
    "surveyed_lat": 38.77,
    "surveyed_lon": -4.84,
    "surveyed_source": "Almaden, Wikipedia",
-   "order": 30
+   "order": 30,
+   "contained_tonnes": 250000,
+   "contained_basis": "Production since historical times estimated at approximately 250,000 t of mercury (about one third of all mercury used by mankind); remaining reserves not given, so a lower bound",
+   "contained_source": "Almaden mercury mining district paper, PubMed Central PMC2078521, https://pmc.ncbi.nlm.nih.gov/articles/PMC2078521/ : \"Its production since historical times has been estimated in approximately 250 000 MT of metal\""
   },
   {
    "id": "monte_amiata_cinnabar",
@@ -653,7 +743,10 @@
    "surveyed_lat": 42.9,
    "surveyed_lon": 11.63,
    "surveyed_source": "Monte Amiata, Wikipedia",
-   "order": 31
+   "order": 31,
+   "contained_tonnes": 100000,
+   "contained_basis": "Cumulative production of the whole Mt. Amiata district, mostly 1870 to 1980, more than 100,000 t of mercury (Hg metal, not cinnabar); production only, so a lower bound",
+   "contained_source": "Rimondi et al. 2015, Metallogeny, exploitation and environmental impact of the Mt. Amiata mercury ore district, Italian Journal of Geosciences 134(2):323-336, https://pubs.usgs.gov/publication/70154922 : \"a world class Hg district, with a cumulate production of more than 100,000 tonnes of Hg, mostly occurring between 1870 and 1980\""
   },
   {
    "id": "timna_copper",
@@ -665,7 +758,10 @@
    "status": "historic",
    "source": "Wikipedia coordinate; one of the oldest copper workings; no endowment figure.",
    "conf": "B",
-   "order": 32
+   "order": 32,
+   "contained_tonnes": 19000,
+   "contained_basis": "Two modern production figures of the Timna copper works added: 5,000 tons (pure copper equivalent) in 1962 and 14,000 tons in 1968 (tons taken as metric); the other years of 1955 to 1976, and the ancient output, are unrecorded here, so a lower bound",
+   "contained_source": "Encyclopaedia Judaica via Encyclopedia.com, Timna, https://www.encyclopedia.com/religion/encyclopedias-almanacs-transcripts-and-maps/timna : the works \"increased its production from 5,000 tons (equivalent of pure copper) in 1962 to 14,000 tons in 1968\""
   },
   {
    "id": "falun_copper",
@@ -678,7 +774,10 @@
    "source": "Wikipedia coordinate; no endowment figure.",
    "conf": "B",
    "order": 33,
-   "share_of_reference_output": 0.05
+   "share_of_reference_output": 0.05,
+   "contained_tonnes": 500000,
+   "contained_basis": "Total copper production of the Falun mines from the middle of the 13th century up to the book's date, estimated at over 500,000 tons (tons taken as metric); production only, so a lower bound",
+   "contained_source": "Sweden: Its People and its Industry, Project Runeberg, https://runeberg.org/sverig01en/0778.html : \"The total copper production at the said mines from the middle of the 13th century up to our time is estimated at over 500,000 tons\""
   },
   {
    "id": "rammelsberg",
@@ -690,7 +789,10 @@
    "status": "historic",
    "source": "Wikipedia coordinate; no endowment figure.",
    "conf": "B",
-   "order": 34
+   "order": 34,
+   "contained_tonnes": 1800000,
+   "contained_basis": "Almost 30 Mt of ore extracted over more than 1,000 years at an average 6% lead = 1.8 Mt lead in the ore; mine exhausted and closed 1988, so no reserves added. Ore tonnage times grade, not recovered metal",
+   "contained_source": "Wikipedia, Rammelsberg, https://en.wikipedia.org/wiki/Rammelsberg : \"almost 30 million tonnes of ore were extracted\"; \"The ore contained an average of 14% of zinc, 6% lead, 2% copper, 1 g/t gold and 140 g/t silver.\""
   },
   {
    "id": "eastern_desert_nubian_gold",
@@ -713,7 +815,10 @@
    "surveyed_lat": 22.8,
    "surveyed_lon": 33.3,
    "surveyed_source": "Wadi Allaqi, between the two Wikidata Q2575777 positions (22.97 N 32.90 E and 22.5 N 34.0 E)",
-   "order": 35
+   "order": 35,
+   "contained_tonnes": 18,
+   "contained_basis": "Maximum total ancient production, Predynastic times to about 1350 AD, taken from Klemm et al. p. 658 as read when the row was first written (the PDF could not be re-fetched this session); a ceiling on production, no remaining resource given",
+   "contained_source": "Klemm, Klemm and Murr 2001, Gold of the Pharaohs, Journal of African Earth Sciences 33:643-659, p. 658 (read in an earlier pass, not re-opened in this one); the popular article Rock and Gem, Egyptian Gold, https://www.rockngem.com/egyptian-gold-ancient-treasure/ reports a different Klemm estimate of 7.1 t, so the 18 t figure is the upper end"
   },
   {
    "id": "han_poyang_placer_gold",
@@ -726,7 +831,10 @@
    "conf": "D",
    "source": "Hanshu ch. 28 (zh.wikisource.org/wiki/漢書/卷028上, opened) says of the Wu region 豫章出黃金，然菫菫物之所有，取之不足以更費: Yuzhang commandery (Jiangxi) produced gold, but so little that taking it did not cover the cost. The Poyang county entry in the same chapter, as opened, lists the county name only and carries no gold passage, so the county placement is not confirmed by a text read; it is a representative point inside the commandery. Placer working in the Yangtze basin is the usual reading. Position is the county seat's modern coordinate, so a representative point, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
-   "order": 36
+   "order": 36,
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, Hanshu ch. 28 and Wikipedia Economy of the Han dynasty give the place and trade goods but no weight of gold from Yuzhang; (2) comparable, Wikipedia Han dynasty gives a single hoard of 219 gold discs of 227.6 to 254.4 g each (about 53 kg), a stock not a mine output, so unusable; (3) stand-in, the Antiquity 2022 article on Western Han gold (a search result reading about 2,000,000 jin, about 445 t, of gold in Western Han records) was fetched but its full text is behind a paywall, so the figure is not citable here and is for the whole empire, not Jiangxi",
+   "contained_source": "none opened that gives Jiangxi gold: Wikipedia, Economy of the Han dynasty, https://en.wikipedia.org/wiki/Economy_of_the_Han_dynasty (Jiangnan listed as a gold-producing region, no quantity)"
   },
   {
    "id": "han_wanshan_cinnabar",
@@ -739,7 +847,10 @@
    "conf": "D",
    "source": "Sima Qian, Shiji ch. 129 (Huozhi liezhuan), tells of Qing, a widow of Ba commandery whose family worked a cinnabar mine for generations and who was honoured by the First Emperor: cinnabar mining in the Ba-Qianzhong (Chongqing-Guizhou) region is attested for the Qin-Han period. Wanshan (Guizhou) is that region's mercury district and stands here as the representative position; where Qing's own mine lay is not pinned down in what was read. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
-   "order": 37
+   "order": 37,
+   "contained_tonnes": 28450,
+   "contained_basis": "Flow times years, lower bound: the Wanshan mercury mine site produced 33,000 tons of mercury and vermilion from 1950 to 2001. If all of it was vermilion (HgS, 200.59 / 232.66 = 86.2% mercury) the mercury is 28,450 t; if all metallic mercury, 33,000 t. The lower value is entered. Output before 1950 (the site has been worked since the Tang, per McMaster Univ. archaeological survey) and remaining reserves are not added, and Wanshan is the stand-in for the whole Ba and Qianzhong cinnabar belt",
+   "contained_source": "China Daily, Wanshan mercury mine site, https://global.chinadaily.com.cn/a/201910/31/WS5dba7bc0a310cf3e35574b42.html : \"produced 33,000 tons of mercury and vermilion from 1950 to 2001, accounting for more than 80 percent of the nation's total output then\""
   },
   {
    "id": "mexica_tlapa_placer_gold",
@@ -752,7 +863,10 @@
    "conf": "C",
    "source": "The Codex Mendoza tribute lists record gold paid to Tenochtitlan by the provinces of Tlapa and of the Oaxaca highlands and coast (Berdan and Anawalt, The Essential Codex Mendoza, 1997), washed from river gravels; opened this pass: the Codex Mendoza (uknowledge.uky.edu/world_mexico_codices/11) lists 39 provinces paying semi-annual tribute and, among its gold, Tochtepec in northern Oaxaca paying a gold diadem, headband and bead necklaces a year; the abstract at cambridge.org/core/services/aop-cambridge-core/content/view/S095653611500022X says the gold dust and bullion recorded as tribute 'was sufficient to produce 22,000-27,000 small and medium-sized ornaments annually'. Neither page names Tlapa, so the Oaxaca gold is sourced and the Tlapa placement is not; the entry stays a place of unknown size. Position is Tlapa (Guerrero), a representative point for the placer districts. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
-   "order": 38
+   "order": 38,
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, the Codex Mendoza gold tribute is recorded as counts of items (diadems, beads, lip plugs), and King's Ancient Mesoamerica article (Cambridge) says the recorded weight was enough for 22,000 to 27,000 small and medium ornaments a year but its weight and the Tlapa share are behind a paywall; (2) comparable, Met Museum 'Golden kingdoms' pages not opened for weights; (3) stand-in, no placer gold output for another Mesoamerican district found",
+   "contained_source": "none: Cambridge, Ancient Mesoamerica, https://www.cambridge.org/core/services/aop-cambridge-core/content/view/S095653611500022X (abstract only opened)"
   },
   {
    "id": "mexica_sierra_gorda_cinnabar",
@@ -765,7 +879,10 @@
    "conf": "D",
    "source": "Mejia Perez Campos and Herrera Munoz 2013, Chungara 45(1):161-176 (redalyc.org/articulo.oa?id=32626321004, opened): the Sierra Gorda is the first region in Mexico where prehistoric underground cinnabar mining was recorded in modern times, its deposits were known and worked in prehispanic times, and cinnabar was used in Maya and Teotihuacan burials (Pakal, the Red Queen); whether the Mexica drew on them directly or through tribute is not established here. Position is the range's rough centre, not a mine. No endowment and no grade: no source read gives either, so the entry is a known location of unknown size (working_unknown) and moves no modelled output.",
    "working_unknown": "UNKNOWN (D): the sources named give the place, not a working date or a total endowment; not entered as first_worked or endowment, so the deposit is listed as unworked in the opening stores.",
-   "order": 39
+   "order": 39,
+   "contained_tonnes": null,
+   "contained_basis": "UNKNOWN. tried: (1) flow times years, no Mexica or Sierra Gorda cinnabar tribute weight found; (2) comparable, Wanshan (see han_wanshan_cinnabar) is a different scale by orders of magnitude and a different district, not applicable; (3) stand-in, the Chungara 2013 article on the Sierra Gorda (already cited in the row) gives dates, not tonnes",
+   "contained_source": "none"
   }
  ]
 }
