@@ -938,3 +938,23 @@ Amplifiers found by stepping two such spin-ups phase by phase, each replaced by 
 
 Measure: `python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble N` (the spread of each end gap across
 members that differ at the rounding level). An ensemble with only the first two fixes still spread widely.
+
+## Update 26: one market memory rule pulled every thin market toward its making cost (branch spin-up-settles)
+
+An eight-member Norse ensemble (`python3 sim/simulator.py spin-up-trace --civ norse_900ad --stages --ensemble 8 --jobs 2`)
+on each merge since the residue-bid fix showed the price level and the watched prices trending down over the trimmed
+stage from the memory-blend merge on; the allocation merge after it changed the trends little. A four-member ensemble
+had suggested an output collapse at the head: two of its members collapsed, the eight-member medians do not, so four
+members are too few to judge a rule. Memory per replay limits the machine to two replays at a time.
+
+The cause: `market_memory_blend.blended_price` drifted every market toward its target in proportion to the untraded
+share of the whole reference volume. A market that traded has no quote, so its target is its making cost, and almost
+every market that traded was pulled toward its making cost each year besides the thin-trade rule; costs are read from
+the remembered prices of the inputs, so the pull fed on itself. Ensembles on scratch copies of the head: with the drift
+off for markets that traded, most of the trend went; without the per-good scale in the reference volume, little of it
+went; with the allocation merge reverted, none of it went. The drift now fades as the trade nears
+`REPRESENTATIVE_TRADE_SHARE` of the reference volume, as the thin-trade rule does, and stays continuous in the quantity
+traded (`test_market_memory_blend`); the ensemble on that rule matched the drift-off one.
+
+Still open: late in the trimmed stage real output and hired hours move by large shares a year in every member, before
+and after this fix; that swing, not the trend, is now what keeps `spin_up_settled` failing on Norse.
