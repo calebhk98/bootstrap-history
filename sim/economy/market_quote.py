@@ -9,6 +9,7 @@ nobody offered.
 import math
 from typing import Optional, Sequence
 
+from .stock_residue import STOCK_RESIDUE_UNITS
 from .types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, QUOTE_LOWEST_UNFILLED_ASK, Bid, Offer, Quote
 
 
@@ -20,7 +21,7 @@ def best_unfilled_bid(bids: Sequence[Bid]) -> Optional[float]:
 
 
 def lowest_unfilled_ask(offers: Sequence[Offer]) -> Optional[float]:
-    asks = [offer.reservation_price for offer in offers if offer.quantity > 0.0 and offer.reservation_price > 0.0]
+    asks = [offer.reservation_price for offer in offers if offer.quantity >= STOCK_RESIDUE_UNITS and offer.reservation_price > 0.0]
     return min(asks) if asks else None
 
 

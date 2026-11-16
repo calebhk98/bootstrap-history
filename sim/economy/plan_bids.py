@@ -22,7 +22,7 @@ def needs_of_row(row, recipe, runs, stock, market, slot_goods, inputs, tools, wa
         good = slot_goods[recipe, slot]
         if good < 0:
             break
-        if inputs[recipe, good] > 0.0:
+        if inputs[recipe, good] > 0.0 and not np.isnan(market[slot]):         # a tool with no price is covered by its fallback
             short = runs * inputs[recipe, good] - stock[row, slot]
             if short > 0.0:
                 placed[slot], order_place[count], wanted_at[slot] = count, slot, short

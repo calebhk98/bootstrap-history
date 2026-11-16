@@ -23,6 +23,7 @@ from .entry_sizing import ENTRY_SHARE_OF_UNTRADED_DEMAND
 from .producers import Producer, live_input_prices_at, live_wages_at
 from .types import AreaId, Bid, GoodId, Recipe
 from .rates import own_rate
+from .stock_residue import STOCK_RESIDUE_UNITS
 
 ENTRY_PRICE_MARGIN_SHARE = declare(
     "ENTRY_PRICE_MARGIN_SHARE", 0.25, kind="temporary_heuristic",
@@ -123,7 +124,7 @@ def trial_entry_plans(setup, record, view, area_map, bids_by_market, planned: Se
                 if picked is None:
                     continue
                 tile, runs = picked
-            if runs > 0.0 and math.isfinite(runs):
+            if runs * setup.recipes[recipe_id].outputs[each.good] >= STOCK_RESIDUE_UNITS and math.isfinite(runs):      # residue size is no entrant
                 plans.append(EntryPlan(recipe_id, tile, each.good, runs, ENTRY_PRICE_MARGIN_SHARE))
                 built += runs * setup.recipes[recipe_id].outputs[each.good]
     return plans

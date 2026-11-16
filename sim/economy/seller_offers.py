@@ -63,7 +63,7 @@ def cost_figures(setup, record, view, offer: Offer) -> Tuple[Optional[float], fl
         recipe, offer.good, expected_output_prices(producer, recipe, view), inputs, wages, own_rate(view, setup.currency_id),
         producer.land_rent_per_run, producer.yield_factor)
     variable = run_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
-    share = run_cost.input_cost_per_run(recipe, inputs) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
+    share = run_cost.input_cost_per_run(recipe, inputs, wages) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
     return cost, share
 
 
@@ -75,8 +75,9 @@ def input_share_of_cost(setup, record, view, offer: Offer) -> float:
         return 0.0
     recipe = setup.recipes[producer.recipe_id]
     inputs = live_input_prices(producer, recipe, view)
-    variable = run_cost.variable_cost_per_run(recipe, inputs, live_wages(producer, recipe, view), producer.land_rent_per_run)
-    return run_cost.input_cost_per_run(recipe, inputs) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
+    wages = live_wages(producer, recipe, view)
+    variable = run_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run)
+    return run_cost.input_cost_per_run(recipe, inputs, wages) / variable if math.isfinite(variable) and variable > 0.0 else 0.0
 
 
 def opened_ask(reservation: float, cost: Optional[float], expected_price: Optional[float], limit: float) -> Optional[float]:

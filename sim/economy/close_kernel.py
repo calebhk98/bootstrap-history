@@ -13,6 +13,7 @@ import numpy as np
 from sim.jit import njit
 
 from . import close_kernel_cost as cost
+from .plan_wear import covered_input_bill
 
 K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_CLOSED, K_WORKING_YEARS = range(9)
 K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(9, 18)
@@ -69,6 +70,15 @@ def market_capacity_of(slot_goods, outputs, area_of, recipe_row, tile_row, capac
 
 
 @njit
+def fallback_prices(recipe, tile, width, tools, price, area_of, prices):
+    """Fills the places of `prices` after the recipe's `width` slots with the price on `tile` of the goods a tool's wear may be covered
+    with that the recipe does not use (NaN: none), as `plan_wear.covered_input_bill` reads them."""
+    for place in range(width, prices.shape[0]):
+        fallback = tools.bid_goods[recipe, place]
+        prices[place] = cost.price_at(price, area_of, fallback, tile) if fallback >= 0 else np.nan
+
+
+@njit
 def close_rows(rows, constants,
                slot_goods, slot_trades, slot_is_input, slot_is_output, slot_is_plant, inputs, outputs, revenue_outputs, plant_goods, labour,
                plant_labour, plant_life, idle_wear,
@@ -80,13 +90,15 @@ def close_rows(rows, constants,
                new_capacity, new_losses, new_target, new_expected, written, exited, dividend, request_kind, request_amount,
                request_rate, request_term, request_collateral, expansion_runs, replacement_runs, new_earnings, new_revenues,
                new_count, state, write_off, new_idle, new_expected_sales, new_last_runs, new_staffed, demand_runs,
-               needs_share, added):
+               needs_share, added, tools):
     width = slot_goods.shape[1]
+    places = tools.bid_goods.shape[1]       # the recipe's slots, then the fallback goods that are not inputs (year_arrays_tools.py)
+    unscaled = np.ones((1, labour.shape[1]))
     trade_width = slot_trades.shape[1]
     q_in, q_out, q_plant = np.zeros(width), np.zeros(width), np.zeros(width)
     q_val = np.zeros(width)      # q_out as it fetches after the state's harvest share: what the runs are valued at
-    live, exp, old_exp, latest = np.zeros(width), np.zeros(width), np.zeros(width), np.zeros(width)
-    inputs_be, cover, prices, scratch = np.zeros(width), np.zeros(width), np.zeros(width), np.zeros(width)
+    live, exp, old_exp, latest = np.zeros(places), np.zeros(width), np.zeros(width), np.zeros(width)
+    inputs_be, cover, prices, scratch = np.zeros(places), np.zeros(width), np.zeros(width), np.zeros(width)
     here = np.zeros(width)
     q_lab, q_pl, wages = np.zeros(trade_width), np.zeros(trade_width), np.zeros(trade_width)
     has_latest = np.zeros(width, dtype=np.bool_)
@@ -113,6 +125,8 @@ def close_rows(rows, constants,
             exp[slot] = expected[row, slot]
             has_latest[slot] = False
             written[row, slot] = False
+        fallback_prices(recipe, tile, width, tools, price, area_of, live)
+        inputs_be[width:] = live[width:]
         trades = 0
         for slot in range(trade_width):
             trade = slot_trades[recipe, slot]
@@ -163,12 +177,13 @@ def close_rows(rows, constants,
         input_share = 0.0
         if not no_rate:
             expected_revenue = cost.revenue_per_run(q_val, exp, count) * yield_
-            variable = cost.bill(q_in, inputs_be, count) + cost.bill(q_lab, wages, trades) + rent
+            input_bill = covered_input_bill(recipe, 0, tile, slot_goods, inputs, tools, labour, unscaled, wage, inputs_be)
+            variable = input_bill + cost.bill(q_lab, wages, trades) + rent
             plant_value = cost.bill(q_plant, inputs_be, count) + cost.bill(q_pl, wages, trades)
             full = variable + cost.capital_charge(plant_value, life, rate)
             if expected_revenue > 0.0 and math.isfinite(full) and full > 0.0:
                 break_even = full / expected_revenue
-                input_share = cost.bill(q_in, inputs_be, count) / full
+                input_share = input_bill / full
         worked_last = last_runs[row] > 0.0
         if not np.isnan(break_even):
             for slot in range(count):
@@ -244,7 +259,8 @@ def close_rows(rows, constants,
             sold_runs = seen_value / run_value if run_value > 0.0 else best_ratio
         demand_runs[row] = sold_runs
 
-        variable_now = cost.bill(q_in, live, count) + cost.bill(q_lab, wages, trades)
+        input_now = covered_input_bill(recipe, 0, tile, slot_goods, inputs, tools, labour, unscaled, wage, live)
+        variable_now = input_now + cost.bill(q_lab, wages, trades)
         plant_now = cost.bill(q_plant, live, count) + cost.bill(q_pl, wages, trades)
         charge = np.nan if no_rate else cost.capital_charge(plant_now, life, rate) * worked
         loss = worked <= 0.0 or revenue[row] < running_costs[row] + (charge if not np.isnan(charge) and math.isfinite(charge) else 0.0)
@@ -339,15 +355,15 @@ def close_rows(rows, constants,
                         continue
                     kept_price = old_exp[slot]
                     scratch[slot] = kept_price if not np.isnan(kept_price) else cost.price_at(offered, area_of, slot_goods[recipe, slot], tile)
-                before = return_after_recovery(q_val, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages, life, rate)
+                before = return_after_recovery(q_val, scratch, count, input_now, q_lab, trades, q_plant, q_pl, live, wages, life, rate)
                 if not np.isnan(before) and before > rate:
                     for slot in range(count):
                         added[row, slot] = growth * q_out[slot] * yield_
                         if not np.isnan(scratch[slot]):
                             scratch[slot] = scratch[slot] * share[row, slot]
                     needs_share[row] = True
-                    after = return_after_recovery(q_val, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages, life, rate)
-                    yearly = return_on_capital(q_val, scratch, count, q_in, q_lab, trades, q_plant, q_pl, live, wages)
+                    after = return_after_recovery(q_val, scratch, count, input_now, q_lab, trades, q_plant, q_pl, live, wages, life, rate)
+                    yearly = return_on_capital(q_val, scratch, count, input_now, q_lab, trades, q_plant, q_pl, live, wages)
                     if not (np.isnan(yearly) or np.isnan(after) or after <= rate):
                         kind = REQUEST_EXPAND
                         amount = growth * value
@@ -518,9 +534,10 @@ def plan_runs(q_out, q_val, output_price, stock, row, count, sales, yield_, run_
 
 
 @njit
-def return_on_capital(q_out, output_price, count, q_in, q_lab, trades, q_plant, q_pl, live, wages):
-    """unit_cost.return_on_capital (rent not charged); NaN is None. Revenue is the per-run figure, as there."""
-    variable = cost.bill(q_in, live, count) + cost.bill(q_lab, wages, trades)
+def return_on_capital(q_out, output_price, count, input_bill, q_lab, trades, q_plant, q_pl, live, wages):
+    """unit_cost.return_on_capital (rent not charged); NaN is None. Revenue is the per-run figure, as there. `input_bill` is the
+    inputs with the tools covered the cheapest way (plan_wear.covered_input_bill)."""
+    variable = input_bill + cost.bill(q_lab, wages, trades)
     employed = cost.bill(q_plant, live, count) + cost.bill(q_pl, wages, trades) + variable
     if not math.isfinite(employed) or employed <= 0.0:
         return np.nan
@@ -528,12 +545,12 @@ def return_on_capital(q_out, output_price, count, q_in, q_lab, trades, q_plant, 
 
 
 @njit
-def return_after_recovery(q_out, output_price, count, q_in, q_lab, trades, q_plant, q_pl, live, wages, life, rate):
+def return_after_recovery(q_out, output_price, count, input_bill, q_lab, trades, q_plant, q_pl, live, wages, life, rate):
     """unit_cost.return_after_recovery."""
-    gross = return_on_capital(q_out, output_price, count, q_in, q_lab, trades, q_plant, q_pl, live, wages)
+    gross = return_on_capital(q_out, output_price, count, input_bill, q_lab, trades, q_plant, q_pl, live, wages)
     if np.isnan(gross):
         return np.nan
     plant = cost.bill(q_plant, live, count) + cost.bill(q_pl, wages, trades)
-    employed = plant + cost.bill(q_in, live, count) + cost.bill(q_lab, wages, trades)
+    employed = plant + input_bill + cost.bill(q_lab, wages, trades)
     wear = cost.capital_charge(plant, life, rate) - rate * plant
     return gross - wear / employed

@@ -49,9 +49,17 @@ class RememberedPriceTests(unittest.TestCase):
 
 
 class PriceAfterTradeTests(unittest.TestCase):
-    def test_a_sliver_of_trade_replaces_a_remembered_quote_whole(self):
-        # a bid ceiling of 130 was remembered where nothing traded; a few units then clear at 13: the ceiling was never paid
-        self.assertEqual(price_after_trade(130.0, True, 13.0, 1.0, 1000.0, 0), 13.0)
+    def test_a_sliver_of_trade_moves_a_remembered_quote_a_sliver_in_either_direction(self):
+        # a bid ceiling of 130 was remembered where nothing traded; a few units then clear at 13: the trade weighs in by its
+        # share of the usual volume, so a rounding-sized trade cannot swap the quote for its price
+        self.assertAlmostEqual(price_after_trade(130.0, True, 13.0, 1.0, 1000.0, 0), 130.0 + 0.001 * (13.0 - 130.0))
+        self.assertAlmostEqual(price_after_trade(130.0, True, 13.0, 1e-15, 1000.0, 0), 130.0, places=9)
+        self.assertAlmostEqual(price_after_trade(13.0, True, 130.0, 1e-15, 1000.0, 0), 13.0, places=9)
+
+    def test_the_remembered_price_is_continuous_in_the_quantity_traded(self):
+        tiny = price_after_trade(130.0, True, 13.0, 1e-12, 1000.0, 0)
+        none_at_all = 130.0
+        self.assertLess(abs(tiny - none_at_all) / none_at_all, 1e-9)
 
     def test_a_sliver_of_trade_still_moves_a_remembered_traded_price_a_sliver(self):
         self.assertAlmostEqual(price_after_trade(130.0, False, 13.0, 10.0, 1000.0, 0), 130.0 + 0.01 * (13.0 - 130.0))
@@ -64,8 +72,8 @@ class PriceAfterTradeTests(unittest.TestCase):
     def test_a_representative_trade_above_a_remembered_quote_replaces_it_whole(self):
         self.assertEqual(price_after_trade(3.0, True, 5.0, 100.0, 100.0, 0), 5.0)
 
-    def test_a_trade_after_quiet_years_replaces_a_quote_too(self):
-        self.assertEqual(price_after_trade(130.0, True, 13.0, 1.0, 1000.0, 2), 13.0)
+    def test_a_representative_trade_after_quiet_years_replaces_a_quote_too(self):
+        self.assertEqual(price_after_trade(130.0, True, 13.0, 1000.0, 1000.0, 2), 13.0)
 
 
 class NationalPriceTests(unittest.TestCase):

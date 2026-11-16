@@ -24,8 +24,8 @@ STRETCHED_CREW = {"labourer": 2.0, "smith": 9.0}
 def tool_recipe(rng, name):
     """Inputs good0 and good1 (good1 is the tool that wears), outputs good2 (and sometimes good3), two trades; good1 is replaced by good4
     (drawn at 0.5 to 2 units a run, 1.4 times the smith's hours), then by hand (2.5 times)."""
-    return Recipe(name, {"good0": rng.uniform(1, 4), "good1": rng.uniform(0.2, 1.0)},
-                  {"good2": rng.uniform(1, 3), **({"good3": rng.uniform(0.2, 1.0)} if rng.random() < 0.5 else {})},
+    return Recipe(name, {"good2": rng.uniform(1, 3), **({"good3": rng.uniform(0.2, 1.0)} if rng.random() < 0.5 else {})},
+                  {"good0": rng.uniform(1, 4), "good1": rng.uniform(0.2, 1.0)},
                   {"labourer": rng.uniform(0.5, 3), "smith": rng.uniform(0.5, 3)}, tool_wear={"good1": 0.4},
                   tool_fallbacks={"good1": (ToolFallback("good4", rng.uniform(0.5, 2.0), 1.4, ("smith",)),
                                             ToolFallback("", 0.0, 2.5, ("smith", "labourer")))})
@@ -34,7 +34,7 @@ def tool_recipe(rng, name):
 def cheap_substitute_recipe(rng, name):
     """A tool whose substitute is nearly free (a few hundredths of a unit of good4 a run, 1.05 times the smith's hours): the substitute caps the
     most the tool is bid, below its price."""
-    return Recipe(name, {"good0": rng.uniform(1, 4), "good1": 0.4}, {"good2": rng.uniform(4, 9)},
+    return Recipe(name, {"good2": rng.uniform(4, 9)}, {"good0": rng.uniform(1, 4), "good1": 0.4},
                   {"labourer": rng.uniform(0.5, 3), "smith": rng.uniform(0.5, 3)}, tool_wear={"good1": 0.4},
                   tool_fallbacks={"good1": (ToolFallback("good4", rng.uniform(0.02, 0.06), 1.05, ("smith", "labourer")),
                                             ToolFallback("", 0.0, 1.2, ("smith",)))})
@@ -42,23 +42,26 @@ def cheap_substitute_recipe(rng, name):
 
 def zero_entry_recipe(rng, name):
     """A recipe that lists an input, an output and an hours entry at zero."""
-    return Recipe(name, {"good0": rng.uniform(1, 4), "good5": 0.0}, {"good2": rng.uniform(1, 3), "good3": 0.0},
+    return Recipe(name, {"good2": rng.uniform(1, 3), "good3": 0.0}, {"good0": rng.uniform(1, 4), "good5": 0.0},
                   {"labourer": rng.uniform(0.5, 3), "smith": 0.0})
 
 
 def wear_without_fallback_recipe(rng, name):
-    return Recipe(name, {"good0": rng.uniform(1, 4), "good1": 0.3}, {"good2": rng.uniform(1, 3)}, {"smith": rng.uniform(0.5, 3)},
+    return Recipe(name, {"good2": rng.uniform(1, 3)}, {"good0": rng.uniform(1, 4), "good1": 0.3}, {"smith": rng.uniform(0.5, 3)},
                   tool_wear={"good1": 0.3})
 
 
-def economy_with(seed, builders, producer_count=70):
+def economy_with(seed, builders, producer_count=70, unpriced=()):
     """The random economy of `seed` with recipe0 to recipe3 replaced by the written-out kinds in `builders`, and a third of the producers
-    given a crew whose practice stretches the hours."""
+    given a crew whose practice stretches the hours; the goods in `unpriced` have no price anywhere."""
     setup, record, view, _ledger, area_map = economy_of(seed, producer_count=producer_count)
     rng = random.Random(seed)
     for good in GOODS:      # a zero input still has to be priced for the plain plan to price its paying prices
         for area in AREAS:
             record.memory.prices.setdefault(good + KEY_SEPARATOR + area, 2.0)
+    for good in unpriced:
+        for area in AREAS:
+            record.memory.prices.pop(good + KEY_SEPARATOR + area, None)
     for index, build in enumerate(builders):
         setup.recipes["recipe%d" % index] = build(rng, "recipe%d" % index)
     for number, producer_id in enumerate(sorted(record.producers)):
@@ -103,6 +106,14 @@ class KernelPlansAreThePlainPlans(unittest.TestCase):
         compared = running = bids = 0
         for seed in range(6):
             found = self.compare(*economy_with(seed, [tool_recipe, tool_recipe, tool_recipe, tool_recipe]))
+            compared, running = compared + found[0], running + found[1]
+        self.assertGreater(compared, 200)
+        self.assertGreater(running, 60)
+
+    def test_a_tool_with_no_price_is_covered_by_its_fallback(self):
+        compared = running = 0
+        for seed in range(6):
+            found = self.compare(*economy_with(seed, [tool_recipe] * 4, unpriced=("good1",)))
             compared, running = compared + found[0], running + found[1]
         self.assertGreater(compared, 200)
         self.assertGreater(running, 60)

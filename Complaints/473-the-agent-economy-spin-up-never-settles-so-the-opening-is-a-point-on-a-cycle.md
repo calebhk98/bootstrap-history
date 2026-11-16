@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the shipped openings fail `spin_up_settled` for every civilisation (Complaint 970); one-year closure test and stationary quantities exist (Update 6); the mint is served first and money is sustained (Updates 4, 8); producers, rent, credit, goods and labour rules reworked (Update 22); the fixtures still drift in price level, wage and money and Rome is not re-measured
+**Status:** partly - the money flow no longer leaks through households' own-plot floors and the mint replaces wear (Update 24); `spin_up_settled` still fails on Norse at the branch head (the other civilisations are being re-measured): watched prices and inventories cycle and the wage drifts where the floor binds; Update 24 lists what was tried and not merged
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -812,3 +812,205 @@ choice gave that offer a share of the ornament buyers, and the mint's sales wash
 Now `mint_price.pay_top_ups` adds, after the markets, the gap between the mint price and the settled price on what the mint bought, shared among the
 metal's sellers by what they sold (seigniorage is then the mint's charge only), and the mint offers its metal only while bullion's remembered price is at least parity
 (`mint_price.melting_pays`). Measure: `simulator.py spin-up-trace --fixture stationary --years 60` with the money columns `wear`, `struck`.
+
+## Update 24: the money flow, not the money stock, contracts; the own-plot leak and the mint (branch spin-up-settles)
+
+Measured with a scratch probe that replays `spin_up_run.spin_up` without its early stop and writes each year's settle
+quantities, money by holder and watched prices (no committed command prints them by spin-up year; the shipped
+`openings/opening_traces/` hold the first stage's money by holder for each civilisation).
+
+What drove the drift, in every base civilisation: the money stock stays roughly constant while coin moves from producers to
+households year after year; producers plan runs from their cash, so they shrink, hire less and price lower, and households'
+spending follows their falling income. Two ablations on Norse changed nothing: households spending far more of their cash
+(`CARROL_CONSUMPTION_PARAMETER`), and producers keeping their excess cash (`firm_finance.payout`). The budget was not what
+bound: money reached households and did not come back as bids.
+
+Fixed here:
+- **Floors the own plot grew are met before the budget is sized** (`households_orders_kernel._met`, `households_orders.goods_orders(grown_units=)`,
+  `household_grown_floors.met_shares`; test `test_household_grown_floor_budget`). The budget was sized as if the household bought its whole
+  food floor, and only afterwards were the floors its plot grew cut from its bids; the money that cut freed was neither bid nor offered to
+  lenders. On Norse this took the run from collapsing output to output that holds.
+- **A change in unmet need is read against the economy's food need** (`spin_up_state.food_floor_units`, `spin_up_gap.state_gaps`;
+  `SPIN_UP_UNMET_FLOOR` retired). A shortfall appearing on one tile read as a swing of many thousand times against a floor of one food unit.
+- **The mint bids where its metal trades, and weighed metal is paid at parity** (`mint_bid_split.split_bid`, `mint_price.paid_in_metal`,
+  `paid_price`; test `test_mint_bid_split`). The bid was split by tile count, so part of it sat in an area with no metal; and a weighed-metal
+  economy paid sellers their ask while its own design (`currency.has_mint`, `mint.py` docstrings) says the metal is exchanged at parity. Norse
+  now strikes about what wears away (`opening-checks --civs norse_900ad`: `money_against_wear` passes).
+- **A holding decayed to residue is removed, and a residue is not an offer** (`stock_residue.STOCK_RESIDUE_UNITS`, `wear_kernels.loss_moves`,
+  `inventory._moves`, the on-offer tests in `goods_table_quotes` and `goods_clearing_kernel`). A share-based loss never reaches zero, and a market
+  whose only offer was that residue quoted a phantom low ask; households bid on it, the unfilled bid hid the quote, and the next year it
+  returned: a period-2 cycle through the food floor cost and the wage floor (`labour_ask_floor.ask_floor_by_tile`). Without it households see
+  the real food prices, so measured hunger is higher and honest.
+- **The mint sells only the backing above the cash holders want** (`mint.cash_wanted`, `mint.meltable_metal`): striking was already
+  limited to what holders want to add; selling (melting) offered the whole stock at parity, so in Mexica, whose money is cacao,
+  households ate the money's backing.
+- **Producers plan, close and price an unpriced tool at its fallback cost** (`plan_wear.covered_input_bill`, `close_kernel`,
+  `grid_wear`, `entry_kernels.pays_after_recovery`): placement and entry alone were not enough, since placed producers then
+  planned zero runs and the close counted them at an infinite cost.
+- **An unpriced tool is costed by its fallback chain in placement and entry** (`tool_fallback.wear_cost_per_run`, `unit_cost.input_cost_per_run`,
+  `entry_wear_kernel`; test `test_tool_wear_cost`). A tool with no price made every cost rule infinite, so a recipe was never placed or entered,
+  though producers' own planning already covers a missing tool by the next tool or by hand (`tool_fallback.draws`). In Mexica, with no iron,
+  that kept cacao (the money's backing good) and the other recipes using iron tools from ever being made. One Norse run after it showed a steady price level and smaller gaps; the ensemble below shows that was one calm draw.
+
+Tried and not merged (branches pushed for reference):
+- `smooth-base-rate`: the rate's declared partial adjustment (`RATE_ADJUSTMENT_SHARE_PER_YEAR`) is overridden in nearly every year by three
+  snaps in `clearing_kernel.settled_rate`, and the target is one marginal lender's ask (`MATERIAL_LENDER_SHARE`). Removing the snaps and
+  taking the supply and demand crossing smooths the rate but, in a deflating economy, walks it toward a near-zero lowest ask and lends
+  nothing while it sits below every ask. Re-try once the economy no longer deflates.
+- `opening-grown-floor-budget`: the same own-plot rule in the opening. The opening's silver and ore demand rested on a purse equal to the
+  money the old late cut freed; without it households' store-of-value bids collapse and the ore and silver markets stop trading at the
+  opening. Needs a derived opening cash and saving (Complaints 545, 607); see `Complaints/reports/473-owner-questions.md`.
+- `no-dust-offers` (first version, before the mint fix): measured worse on one Norse run; re-measured on the head with the mint fix it
+  removed the alternation in every good and tile checked, and it is merged above.
+- `fleet-wanted-follows-routes`: merchants' wanted carrier fleet followed last year's route wear whole; smoothed over a service
+  life. Not the mover: the buyers of mules and oxen are households, and one England run moved the worst gap to the rate.
+- `durable-replacement-steady`: mules and oxen are bought for households' stores of wealth (`households_store.store_bids`, and its
+  copies in `households_orders_kernel` and `opening_demand_kernel`), an (S,s) rule that buys nothing while the store holds most of
+  its target and the whole gap once it falls below, so the stock drifts for years and one catch-up purchase lands on the producers.
+  Buying back each year's wear and closing a shortfall over years settled England's inventories but made one Norse run hungrier;
+  not judged on single runs (see the chaos note below).
+
+**Correction on the measurements above.** The before-and-after figures in this update are single trajectories. A four-member
+ensemble of the head on Norse (`spin-up-trace --civ norse_900ad --stages --ensemble 4`; members differ only in households' cash at
+the rounding level) shows the end gaps spread over large factors between members, the unperturbed member among the calmest, and the
+price level still falling over the trimmed stage in every member. So the fixes above stand on their mechanisms and rule tests; what
+each did to settling is not established by one run, and the spin-up does not settle on the head.
+
+What still fails, and the evidence:
+- The run is chaotic, not only path-sensitive: changing the summation order of the close's input bill (last-digit
+  differences in about one in seventy bills, every other bill identical; merge d77138668) moved Norse's inventory and price
+  gaps by factors of about three. A single trajectory's last-years gap is therefore mostly noise at this tolerance; see
+  `Complaints/reports/473-owner-questions.md` question 1 for a stationarity test over perturbed runs.
+- The run is path-sensitive: a small rule change moves the whole trajectory (the dust branch's trimmed-stage wage starts at about twice the
+  base's). One run per change is weak evidence; compare several civilisations before merging a rule.
+- The remaining movers on Norse are watched goods' prices and inventories with a period-2 or a four-year cycle (fish and steel follow the
+  wage floor's swing; mules and oxen follow lumpy merchant fleet buying, `carriage_fleet_book.to_buy`), and a slow fall of the wage while
+  idle hours stay above hired hours where the floor binds (`sim/labour/market/asks.py`, `clearing_kernel.py` reservation at the floor).
+- **Mexica is worse on this branch than on main**, through the own-plot fix: once households can afford their flexible food,
+  part of it goes to cacao (a food and the money's backing good); cacao's price rises above the mint's parity, the mint sells its
+  cacao at parity whenever the remembered price is at least parity (`mint_price.melting_pays`, `mint.mint_orders`), households eat
+  the money's backing and the money stock falls by most of itself within a decade (`opening-checks --civs mexica_1500` fails the
+  staple, sited ores, money against wear and wage over floor checks, which main passed in its last rebuild, Complaint 970). On main
+  the leak suppressed that demand. Nothing grows cacao in any spin-up year although the recipe exists, Mexica knows its node and
+  about half its tiles have the climate: being traced (placement or entry).
+- Mexica after the tool and melt fixes: money against wear passes, but its crops run by hand because a new wooden-tool crew
+  never covers its unpractised hours (`practice.recipe_for`), so it never runs and never learns; entry counts nominal idle capacity
+  (`entry.gap_beyond_spare`, `entry_margin.gap_at_entry_price`). On main the same crops had no producers at all, so main's Mexica
+  checks read cost estimates of goods nobody made. Owner question 6.
+- Silver now trades at parity far above its making cost (`price_over_cost_coin_metal`), Complaint 519's question in another form.
+- Hunger sits on fertility-0 tiles whose people have no plot and whose markets sell out (`household_hours_year.usable_plot_hours`).
+
+Measure: `python3 sim/simulator.py spin-up-trace --civ <civ> --stages` prints both stages year by year (settle quantities, money by
+holder, watched prices) and the gap by quantity over the measured years, with the watched good that moves most;
+`python3 sim/simulator.py opening-checks --civs <civ>` reads the opening's own saved `spin_up_result`.
+
+## Update 25: the economy amplified rounding noise; the amplifiers found and made continuous (branch spin-up-settles)
+
+The owner's requirement: a small nudge (iron made dearer) should move each price by its cost share and leave the rest
+of the economy close to where it was. Measured with scratch probes (no committed command prints a phase-by-phase
+comparison of two economies):
+- **The cost calculator meets it.** Halving the bloom recipe's output moves every good's making cost by its iron share
+  and nothing else (`notional_kernel.cost_estimates`).
+- **The opening solver does not.** The same change applied before the opening re-solves the opening and moves most
+  recipes' capacity; the bloom producers' capacity changes many-fold (not traced; `opening.open_economy`).
+- **Applied after the opening, the agent economy's first years respond in proportion** (goods with no iron share stay
+  within a fraction of a per cent for several years), but two spin-ups whose households' cash differs at the rounding
+  level drift apart within a few years: the economy is chaotic.
+
+Amplifiers found by stepping two such spin-ups phase by phase, each replaced by a rule continuous in its inputs:
+- **Wage clearing on a step demand** (`sim/labour/market/clearing.py`, `clearing_kernel._supply_target`): each bid's
+  tranches wanted all their hours up to their cap, so with supply nearly fixed a sliver of excess demand lifted the
+  wage from the reservation to the lowest cap. Each tranche's hours now spread between the caps (the continuous limit
+  of `BID_TRANCHES`); the core's wage memory is seeded from the opening wages (`labour_state.seed_opening_wages`), so
+  the first year takes the damped move.
+- **Entry from residue demand** (`entry.py`, `entry_unmet.py`, the entry kernels): a rounding-sized bid opened a
+  producer of rounding-sized capacity that never closed. Entry now needs demand above `STOCK_RESIDUE_UNITS`, and a
+  producer below it closes.
+- **Trade switching on a threshold** (`sim/labour/market/switching_kernel.band_shares`, `plan_area`): an established
+  worker weighed only trades scoring above staying. Every destination now enters one logit with staying; the
+  negligible-share redirect is a continuous trim; `PLAN_REUSE_TOLERANCE` is gone. One assertion was loosened:
+  `test_labour_core_year`'s steadiness bound on a trade's workforce went from 60 to 80, because under the continuous
+  rule the count holds flat near 70 against a target of 30 (steady, but over its target: not traced).
+- **Residue bids and a binary "traded" memory** (`opening_demand_kernel.flexible_budget_left`, `year_goods.price_after_trade`,
+  `goods_remember_kernel`): a household whose floors took all its cash posted rounding-noise bids, and any trade at
+  all replaced a market's remembered quote with the dearest seller's ask. The leftover is now exactly zero, and a
+  trade moves the remembered quote by its weight against the market's usual volume.
+
+Measure: `python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble N` (the spread of each end gap across
+members that differ at the rounding level). An ensemble with only the first two fixes still spread widely.
+
+## Update 26: one market memory rule pulled every thin market toward its making cost (branch spin-up-settles)
+
+An eight-member Norse ensemble (`python3 sim/simulator.py spin-up-trace --civ norse_900ad --stages --ensemble 8 --jobs 2`)
+on each merge since the residue-bid fix showed the price level and the watched prices trending down over the trimmed
+stage from the memory-blend merge on; the allocation merge after it changed the trends little. A four-member ensemble
+had suggested an output collapse at the head: two of its members collapsed, the eight-member medians do not, so four
+members are too few to judge a rule. Memory per replay limits the machine to two replays at a time.
+
+The cause: `market_memory_blend.blended_price` drifted every market toward its target in proportion to the untraded
+share of the whole reference volume. A market that traded has no quote, so its target is its making cost, and almost
+every market that traded was pulled toward its making cost each year besides the thin-trade rule; costs are read from
+the remembered prices of the inputs, so the pull fed on itself. Ensembles on scratch copies of the head: with the drift
+off for markets that traded, most of the trend went; without the per-good scale in the reference volume, little of it
+went; with the allocation merge reverted, none of it went. The drift now fades as the trade nears
+`REPRESENTATIVE_TRADE_SHARE` of the reference volume, as the thin-trade rule does, and stays continuous in the quantity
+traded (`test_market_memory_blend`); the ensemble on that rule matched the drift-off one.
+
+Still open: late in the trimmed stage real output and hired hours move by large shares a year in every member, before
+and after this fix; that swing, not the trend, is now what keeps `spin_up_settled` failing on Norse.
+
+## Update 27: the continuous memory blend is reverted; Norse's swing is household work (branch spin-up-settles)
+
+**Correction to Update 26.** Its fix (the cost drift fading with the trade) helped Norse but not Han: Han's late-stage
+year-to-year moves of hired hours, real output and the price level stayed far above those before the blend. Eight-member
+ensembles (`python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble 8 --jobs 2`) on scratch copies of
+the head, each with one part changed: reverting the allocation merge, dropping the per-good scale, measuring the
+thin-trade rule against the usual volume, a full drift for untraded markets, reverting the store pot, or treating traded
+markets as the old rule did each left Han well above the old rule; only the memory files put back whole brought Han
+and England near or under the tolerance for those three quantities. The memory is back to the trade-weighted rule (its
+remaining step at a sliver of trade stands); the store pot of the blend's merge is kept.
+
+**Norse's swing.** Probes of one spin-up logging every cohort's year (scratch scripts; no committed command splits a
+cohort's year into household work, plot, plan and sold hours) show that in Norse's swinging Swedish area household work
+takes most of the cohorts' year, and the hours they sell are the small remainder, which reaches zero in several late
+years; the fishers' and farmers' output there falls with it. Making the grind-or-buy-milled choice continuous (branch
+`grinding-share-continuous`, not merged) did not remove the swing: a smooth move of a large term still wipes out a small
+remainder. Halving household work in a scratch copy roughly halved Norse's swing in hired hours and real output, on
+either memory rule. Where household work's hours should come from is owner question 7
+(`Complaints/reports/473-owner-questions.md`); Norse will not settle without it.
+
+Still open after this: inventory value and the rate move by more than the tolerance in every civilisation measured, and
+unmet need in Han.
+
+## Update 28: the rate follows the year's price noise; a continuous inflation reading does not calm it (branch spin-up-settles)
+
+A probe of one England spin-up (scratch scripts) shows the rate is the cheapest lender's ask in every year
+(`sim/loans/clearing_kernel.settled_rate` returns `lowest_ask` whenever the sticky move would fall below it, and with
+funds far above requests it always does), and that ask is time preference plus the cohorts' expected inflation
+(`lender_ask.lowest_ask`), which adapts toward the year's observed inflation (`currency.price_inflation`, a weighted
+median of the goods' price ratios). The rate zigzags with observed inflation while the price level falls steadily.
+Replacing the median with a weighted trimmed mean, continuous in every ratio and weight (branch `inflation-trimmed-mean`,
+not merged), left the rate's late-stage moves as large on England and larger on Han in eight-member ensembles
+(`python3 sim/simulator.py spin-up-trace --civ <civ> --stages --ensemble 8 --jobs 2`): the noise is in the middle goods'
+prices themselves, so the rate should settle when they do. A four-member Rome ensemble on the head shows the same
+pattern as England (inventory value and the rate move most) with larger moves of hired hours and real output.
+
+## Update 29: three traced lumps made continuous; none calmed the quantity it fed (branch spin-up-settles)
+
+Each traced on England with a scratch probe of one spin-up, each made continuous on its own branch (not merged), each
+judged on eight-member ensembles of England and Han (`python3 sim/simulator.py spin-up-trace --civ <civ> --stages
+--ensemble 8 --jobs 2`) against the head:
+- `inflation-trimmed-mean`: observed inflation a weighted trimmed mean, not a weighted median (Update 28). The rate moved
+  as much or more.
+- `stock-offered-in-tranches`: held stock offered as a staircase of lots of a year's sales, not one lot at one
+  reservation. Producers' inventory value moved as much. A probe of the lumpiest producer (a mule maker) showed why:
+  its output and asks were smooth, and in many years no household bid at all.
+- `durable-demand-continuous`: households' durable bids replace wear and close a declared share of the gap to the
+  stock wanted, and a good's affordability falls smoothly with its price (a durable against its service life's budget),
+  instead of the whole gap at once and a yes/no gate on one year's budget. Inventory value moved as much on both, and
+  Han's hired hours and rate moved far more.
+
+So removing one traced lump moves the year-to-year noise elsewhere rather than removing it; on England, hired hours,
+real output and the price level already move by little more than the tolerance while inventory value and the rate move
+by many times it. This is evidence for owner question 1 (a stationarity test over an ensemble, rather than a fixed
+point of every quantity), not a reason to change the check without the owner.

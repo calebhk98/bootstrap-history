@@ -56,7 +56,7 @@ def solve(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], recipes: Mappi
     if unpaid:
         raise ValueError(f"the stationary flows need a wage for every trade the runs use; none for {unpaid}")
     wage_bill = math.fsum(hours[trade] * wages[trade] for trade in hours)
-    input_cost = math.fsum(count * (unit_cost.input_cost_per_run(recipes[recipe_id], prices)
+    input_cost = math.fsum(count * (unit_cost.bought_input_cost_per_run(recipes[recipe_id], prices)
                                     + _plant_wear_cost(recipes[recipe_id], prices))
                            for recipe_id, count in runs.items())
     sales_value = math.fsum(count * yields.get(recipe_id, 1.0) * unit_cost.revenue_per_run(recipes[recipe_id], prices)

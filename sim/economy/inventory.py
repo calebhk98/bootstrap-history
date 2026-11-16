@@ -7,6 +7,7 @@ from typing import Collection, Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
+from .stock_residue import STOCK_RESIDUE_UNITS
 from .types import EDGE_CONSUMPTION, EDGE_SPOILAGE, GoodId, GoodsMove, GoodSpec, TileId, is_edge
 
 DEFAULT_MONTHS_OF_COVER = declare(
@@ -36,6 +37,8 @@ def _moves(holdings: Holdings, rate_of_good, receiver: str, purpose: str,
         if is_edge(agent) or quantity <= 0.0 or (users is not None and agent not in users):
             continue
         lost = quantity * min(1.0, max(0.0, rate_of_good(good)))
+        if lost > 0.0 and quantity - lost < STOCK_RESIDUE_UNITS:
+            lost = quantity             # what would remain is rounding residue
         if lost > 0.0:
             moves.append(GoodsMove(agent, receiver, good, tile, lost, purpose))
     return moves

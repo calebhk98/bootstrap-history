@@ -54,7 +54,7 @@ def year_plans(setup, record, view, area_map, unmet_by_market: Dict[Tuple[str, s
             if area is None:
                 continue
             gap = gap_beyond_spare(quantity, spare.get((good, area_id), 0.0))
-            if gap > 0.0:
+            if gap > 0.0:      # `gap_beyond_spare` is zero below the residue
                 unmet[(good, area_id)] = UnmetDemand(good, area_id, area.anchor_tile, gap)
         siting = location.entry_siting(setup, record, view, area_map, carriage or _carriage(setup), None)
         traded = _traded_volume(record, view, area_map)
@@ -250,7 +250,7 @@ def _restake_over_arrays(setup, record, view, arrays, money: str, rate: float) -
         columns.recipe_row, columns.tile_row, shortfall, columns.land_rent_per_run, columns.expected_prices, owner_of, owner_cash,
         matrices.slot_goods, matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.plant_goods, matrices.labour_hours,
         matrices.plant_labour_hours, matrices.plant_life_years, memory.price, memory.offered, memory.wage,
-        arrays.area_index.of_good_tile, float(rate), ENTRANT_OWNER_STAKE_SHARE)
+        arrays.area_index.of_good_tile, float(rate), ENTRANT_OWNER_STAKE_SHARE, arrays.tools)
     post_in_order(record.book, [([Transfer(owner_names[row], ids[row], money, float(amounts[row]), "owner's stake")], ())
                                 for row in np.nonzero(amounts > 0.0)[0]], RULE_SINGLE)
     return True

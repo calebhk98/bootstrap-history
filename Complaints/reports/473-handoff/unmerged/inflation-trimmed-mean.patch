@@ -1,0 +1,158 @@
+diff --git a/sim/economy/currency.py b/sim/economy/currency.py
+index bae30fd0f..541e93722 100644
+--- a/sim/economy/currency.py
++++ b/sim/economy/currency.py
+@@ -18,6 +18,12 @@ EXPECTATION_ADJUSTMENT_SPEED = declare(
+     why="adaptive expectations: share of last year's forecast error taken up this year; standard "
+         "modelling convention, no historical source for any period.")
+ 
++INFLATION_TRIM_SHARE = declare(
++    "INFLATION_TRIM_SHARE", 0.25, kind="temporary_heuristic", unit="share of spending weight per tail", source=None,
++    retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
++    why="how much of the spending weight at each end of the price-change ordering is ignored when reading the year's "
++        "inflation, so thin goods with runaway prices do not set expectations; no source for the share.")
++
+ 
+ def currency_from_coin_standard(civ_id: str, coin_standard: Mapping, currency_name: str,
+                                 issuer: Optional[AgentId] = None) -> CurrencySpec:
+@@ -108,21 +114,31 @@ def update_expected_inflation(previous_expectation: float, observed_inflation: f
+ 
+ def price_inflation(prices_now: Mapping[GoodId, float], prices_before: Mapping[GoodId, float],
+                     weights: Mapping[GoodId, float]) -> Optional[float]:
+-    """The yearly rise in prices as the weighted median of the goods' price changes, so a few thin goods whose prices
+-    run away do not set what households and lenders expect (a fixed-basket index follows them). `weights` are the
+-    goods' shares of spending; a good without a price in both years or without weight is left out. None when no
+-    good is left to compare."""
++    """The yearly rise in prices as the weighted trimmed mean of the goods' price ratios: the goods are ordered by
++    ratio, a share of the total weight (INFLATION_TRIM_SHARE) is dropped from each tail, and the ratios of the middle
++    weight are averaged. A few thin goods whose prices run away sit in the tails and do not set what households and
++    lenders expect (a fixed-basket index follows them). The good straddling a cut counts for the part of its weight
++    inside it, so the result moves continuously with every ratio and weight (a median jumps between goods). The mean
++    is of the ratios themselves: a weighted average of the price relatives, the form of a spending-weighted index.
++    `weights` are the goods' shares of spending; a good without a price in both years or without weight is left out.
++    None when no good is left to compare."""
+     rows = sorted((prices_now[good] / prices_before[good], weight) for good, weight in weights.items()
+                   if weight > 0.0 and prices_now.get(good, 0.0) > 0.0 and prices_before.get(good, 0.0) > 0.0)
+     if not rows:
+         return None
+-    half = sum(weight for _relative, weight in rows) / 2.0
+-    reached = 0.0
++    total = sum(weight for _relative, weight in rows)
++    lower_cut = total * INFLATION_TRIM_SHARE
++    upper_cut = total - lower_cut
++    kept_weight = kept_sum = 0.0
++    start = 0.0
+     for relative, weight in rows:
+-        reached += weight
+-        if reached >= half:
+-            return relative - 1.0
+-    return rows[-1][0] - 1.0
++        end = start + weight
++        inside = min(end, upper_cut) - max(start, lower_cut)
++        if inside > 0.0:
++            kept_weight += inside
++            kept_sum += inside * relative
++        start = end
++    return kept_sum / kept_weight - 1.0
+ 
+ 
+ def basket_price_level(prices_now: Mapping[GoodId, float], prices_base: Mapping[GoodId, float],
+diff --git a/sim/economy/year_close.py b/sim/economy/year_close.py
+index 25190e620..2d560946b 100644
+--- a/sim/economy/year_close.py
++++ b/sim/economy/year_close.py
+@@ -223,7 +223,7 @@ def remember_basket_price_level(setup, record) -> float:
+     prices = {good: price for good, price in national_prices(record).items() if good in recent}
+     base = record.goods.index_base_prices or setup.opening_prices
+     level = currency.basket_price_level(prices, base, record.goods.opening_basket)
+-    # the median's weights are what the goods traded for last year; the opening basket's value stands in until they trade
++    # the inflation's weights are what the goods traded for last year; the opening basket's value stands in until they trade
+     spending = traded_spending_weights(usual_volumes(record),
+                                        record.memory.last_year_prices or prices, set(record.goods.opening_basket)) \
+         or {good: quantity * base[good] for good, quantity in record.goods.opening_basket.items() if good in base}
+diff --git a/sim/tests/test_economy_price_inflation.py b/sim/tests/test_economy_price_inflation.py
+index cdbaba7fe..864fbe553 100644
+--- a/sim/tests/test_economy_price_inflation.py
++++ b/sim/tests/test_economy_price_inflation.py
+@@ -1,4 +1,4 @@
+-"""Complaints 473 and 641: observed inflation is the weighted median of the goods' price changes, so one thin good whose
++"""Complaints 473 and 641: observed inflation is the weighted trimmed mean of the goods' price changes, so one thin good whose
+ price runs away does not drive what households and lenders expect (`currency.price_inflation`)."""
+ 
+ QUICK_TOPIC = True
+@@ -17,7 +17,7 @@ def goods(count, price):
+     return {"good%d" % index: price for index in range(count)}
+ 
+ 
+-class WeightedMedianInflationTests(unittest.TestCase):
++class TrimmedMeanInflationTests(unittest.TestCase):
+     def test_one_good_at_fifty_times_its_price_among_steady_ones_is_no_inflation(self):
+         before = goods(9, 1.0) | {"thin": 1.0}
+         now = goods(9, 1.0) | {"thin": 50.0}
+@@ -34,7 +34,34 @@ class WeightedMedianInflationTests(unittest.TestCase):
+         before = goods(5, 1.0) | {"bread": 1.0}
+         now = goods(5, 1.0) | {"bread": 2.0}
+         weights = {good: 1.0 for good in before} | {"bread": 10.0}
+-        self.assertAlmostEqual(currency.price_inflation(now, before, weights), 1.0)
++        # total weight 15, a quarter (3.75) dropped from each tail: 1.25 of the steady goods, 6.25 of bread remain
++        self.assertAlmostEqual(currency.price_inflation(now, before, weights), (1.25 * 1.0 + 6.25 * 2.0) / 7.5 - 1.0)
++
++    def test_equal_ratios_give_that_ratio_less_one(self):
++        before = {"a": 2.0, "b": 5.0, "c": 1.0}
++        now = {"a": 2.6, "b": 6.5, "c": 1.3}
++        self.assertAlmostEqual(currency.price_inflation(now, before, {"a": 1.0, "b": 3.0, "c": 0.7}), 0.3)
++
++    def test_a_tiny_change_in_a_goods_weight_at_the_halfway_point_moves_the_result_a_tiny_step(self):
++        before = {"a": 1.0, "b": 1.0}
++        now = {"a": 1.0, "b": 2.0}
++        even = currency.price_inflation(now, before, {"a": 1.0, "b": 1.0})
++        nudged = currency.price_inflation(now, before, {"a": 1.0, "b": 1.0 + 1e-9})
++        self.assertLess(abs(nudged - even), 1e-6)
++
++    def test_a_tiny_change_in_a_ratio_that_swaps_two_goods_moves_the_result_a_tiny_step(self):
++        before = {"a": 1.0, "b": 1.0, "c": 1.0, "d": 1.0}
++        weights = {"a": 1.0, "b": 1.0, "c": 1.0, "d": 1.0}
++        below = currency.price_inflation({"a": 1.0, "b": 1.5 - 1e-9, "c": 1.5, "d": 2.0}, before, weights)
++        above = currency.price_inflation({"a": 1.0, "b": 1.5 + 1e-9, "c": 1.5, "d": 2.0}, before, weights)
++        self.assertLess(abs(above - below), 1e-6)
++
++    def test_a_thin_good_whose_price_runs_away_moves_the_result_only_a_little_wherever_it_ranks(self):
++        before = goods(9, 1.0) | {"thin": 1.0}
++        weights = {good: 1.0 for good in before} | {"thin": 0.01}
++        steady = currency.price_inflation(goods(9, 1.1) | {"thin": 1.1}, before, weights)
++        runaway = currency.price_inflation(goods(9, 1.1) | {"thin": 1000.0}, before, weights)
++        self.assertAlmostEqual(runaway, steady)
+ 
+     def test_a_good_without_a_price_in_both_years_or_a_weight_is_left_out(self):
+         before = {"a": 1.0, "b": 1.0, "c": 1.0}
+diff --git a/sim/tests/test_opening_stationary_rules.py b/sim/tests/test_opening_stationary_rules.py
+index b512f3ba4..75a53a13a 100644
+--- a/sim/tests/test_opening_stationary_rules.py
++++ b/sim/tests/test_opening_stationary_rules.py
+@@ -1,6 +1,6 @@
+ """Complaints 473, 526, 545 (GitHub issue 61): the rules that make the opening a fixed point of the yearly rules, each called
+ on figures written out here. `opening_stationary.solve` works the stationary quantities out of a final demand (the runs that meet
+-it, the hours they hire, the income they pay), and `currency.price_inflation` reads a year's inflation as a median of the goods' changes. Whether
++it, the hours they hire, the income they pay), and `currency.price_inflation` reads a year's inflation as a trimmed mean of the goods' changes. Whether
+ a stepped economy then stays within the settling bounds is measured by `python3 sim/simulator.py spin-up-trace`
+ (Complaint 473)."""
+ import dataclasses
+@@ -39,7 +39,7 @@ class ObservedInflationTests(unittest.TestCase):
+         observed = currency.price_inflation(now, before, {"a": 1.0, "b": 1.0, "c": 1.0})
+         self.assertGreaterEqual(observed, -0.1 - 1e-9)
+         self.assertLessEqual(observed, 0.2 + 1e-9)
+-        self.assertAlmostEqual(observed, 0.0)
++        self.assertAlmostEqual(observed, (0.25 * 0.9 + 1.0 + 0.25 * 1.2) / 1.5 - 1.0)
+ 
+ 
+ class SetupTests(unittest.TestCase):
+diff --git a/sim/tests/test_price_inflation_weights.py b/sim/tests/test_price_inflation_weights.py
+index 086fd6264..692a9d74f 100644
+--- a/sim/tests/test_price_inflation_weights.py
++++ b/sim/tests/test_price_inflation_weights.py
+@@ -1,4 +1,4 @@
+-"""Complaint 526: the weights of the observed-inflation median are what the goods traded for the year before (volume
++"""Complaint 526: the weights of the observed-inflation trimmed mean are what the goods traded for the year before (volume
+ times price), not the opening basket's quantities at base prices: an opening quantity a market never realises (a good
+ whose opening price is a cost estimate and which barely trades) must not decide what the economy's prices did."""
+ 

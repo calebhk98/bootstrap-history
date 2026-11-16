@@ -1,10 +1,11 @@
 """The choice odds of workers weighing a change of trade, for every ability band at once (the kernel behind
 `switching._odds`).
 
-A band scores each target trade by its chance of finishing the training times the gain, less the cost of the training;
-an established worker considers only targets scoring above staying, the young consider all. Scores become logit weights
-against staying; targets under a negligible share of the total are dropped and their weight goes to the leading target.
-Sums run left to right."""
+A band scores each target trade by its chance of finishing the training times the gain, less the cost of the training. Every
+target, young or established, enters one logit with staying, so a target scoring a hair under another weighs a hair less. A
+target's share is trimmed by the negligible share (a destination that few would pick is not trained for) and the trimmed
+people are spread over the other targets in proportion, the more fully the more the others hold; the shares are continuous in
+the scores. Sums run left to right."""
 import numpy as np
 
 from sim.jit import njit
@@ -13,59 +14,41 @@ from .switching_discounts import FULL, RETRAINED, YOUNG, annuity, career_gain
 
 
 @njit
-def band_shares(scores, picked, count, stay_score, young, scale, negligible, shares, moves, weights):
+def band_shares(scores, picked, count, stay_score, scale, negligible, shares, moves, weights):
     """The choice odds of the bands over `count` targets. `scores[band, slot]` is the score of the target in `picked[slot]` (its
     column in `shares`), in units of the area's subsistence (`stay_score` is already in them). Fills `shares[band, picked[slot]]`
-    (the caller has zeroed them: a target not picked or dropped stays zero) and `moves[band]`, whether the band moves at all
+    (the caller has zeroed them: a target trimmed away stays zero) and `moves[band]`, whether the band moves at all
     (the caller has cleared it). `weights` is a work array `count` long."""
     for band in range(scores.shape[0]):
-        picked_count = 0
         top = stay_score
         for slot in range(count):
-            score = scores[band, slot]
-            if score > 0.0 or young:
-                picked_count += 1
-                if score > top:
-                    top = score
-        if picked_count == 0:
-            continue
-        total = 0.0
-        heaviest = -1.0
-        leader = -1
+            if scores[band, slot] > top:
+                top = scores[band, slot]
+        total = np.exp((stay_score - top) / scale)
         for slot in range(count):
-            score = scores[band, slot]
-            if score > 0.0 or young:
-                weights[slot] = np.exp((score - top) / scale) if scale != 1.0 else np.exp(score - top)
-                total += weights[slot]
-                if weights[slot] > heaviest:
-                    heaviest = weights[slot]
-                    leader = slot
-            else:
-                weights[slot] = -1.0
-        total += np.exp((stay_score - top) / scale) if scale != 1.0 else np.exp(stay_score - top)
-        cutoff = total * negligible
-        dropped = 0.0
+            weights[slot] = np.exp((scores[band, slot] - top) / scale)
+            total += weights[slot]
+        moved = 0.0
+        kept = 0.0
         for slot in range(count):
-            if weights[slot] >= 0.0:
-                if weights[slot] >= cutoff:
-                    shares[band, picked[slot]] = weights[slot] / total
-                else:
-                    dropped += weights[slot]
-        shares[band, picked[leader]] += dropped / total
-        if shares[band, picked[leader]] < negligible:
-            for slot in range(count):
-                shares[band, picked[slot]] = 0.0
+            share = weights[slot] / total
+            moved += share
+            weights[slot] = share - negligible if share > negligible else 0.0
+            kept += weights[slot]
+        if kept <= 0.0:
             continue
+        spread = 1.0 + (moved - kept) / (kept + negligible)
+        for slot in range(count):
+            shares[band, picked[slot]] = weights[slot] * spread
         moves[band] = True
 
 
 @njit
-def _plan_holds(then, later, own, targets, vacancies, tolerance):
-    """`switching._plan_still_holds`: no destination's income after training has moved enough to change the odds."""
+def _plan_holds(then, later):
+    """`switching._plan_still_holds`: no destination's income after training has changed at all, so the odds worked out before are
+    the odds now (a cache; any change, however small, is worked out afresh, so the odds are continuous in the incomes)."""
     for destination in range(later.shape[0]):
-        if abs(later[destination] - then[destination]) <= tolerance:
-            continue
-        if targets[destination] or later[destination] > own or vacancies[destination]:
+        if later[destination] != then[destination]:
             return False
     return True
 
@@ -80,11 +63,11 @@ def _career_scores(chances, gain, lost, unit, destination, scores, slot):
 @njit
 def plan_area(counts, income, idle, baseline, later, vacancies, chances, discounts, retrained, source_position,
               source_is_fallback, fallback_position, subsistence, rate, career_years, consideration_floor, remaining_share,
-              plan_tolerance, taste, negligible, planned_valid, planned_then, planned_targets, planned_shares, planned_moves,
+              taste, negligible, planned_valid, planned_then, planned_targets, planned_shares, planned_moves,
               active, considering):
     """The choice odds of every (source trade, young or established) group of an area for one round of switching
     (`switching._planned_moves`). A group keeps the odds it planned on while no destination's income after training has
-    moved past the tolerance; otherwise they are worked out afresh and kept. `planned_*` carry the odds from round to round:
+    changed; otherwise they are worked out afresh and kept. `planned_*` carry the odds from round to round:
     `planned_shares[source, young, band, destination]` and `planned_moves[source, young, band]` are the answer to read.
     `active[source, young]` is whether the group weighs a switch at all, `considering` the share of the source's people who do.
     `discounts` are the year's tables (`switching_discounts.discount_tables`); `retrained[source, destination]` says a
@@ -92,7 +75,6 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, discoun
     count_sources = counts.shape[0]
     count_bands = counts.shape[1]
     count_destinations = later.shape[0]
-    tolerance = plan_tolerance * subsistence
     young_share = 1.0 / career_years if career_years > 0.0 else 0.0
     picked = np.empty(count_destinations, np.int64)
     scores_room, weights_room = np.empty((count_bands, count_destinations)), np.empty(count_destinations)
@@ -108,8 +90,7 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, discoun
                 continue
             young = young_flag == 1
             own = baseline if young else income[source]
-            if planned_valid[source, young_flag] and _plan_holds(planned_then[source, young_flag], later, own,
-                                                                 planned_targets[source, young_flag], vacancies, tolerance):
+            if planned_valid[source, young_flag] and _plan_holds(planned_then[source, young_flag], later):
                 continue
             planned_valid[source, young_flag] = True
             for destination in range(count_destinations):      # forget the odds planned before
@@ -121,16 +102,8 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, discoun
             for band in range(count_bands):
                 planned_moves[source, young_flag, band] = False
             count = 0
-            leaves_for_unskilled = young and income[source] < own and not source_is_fallback[source]
-            for destination in range(count_destinations):
-                if destination == source_position[source]:
-                    continue
-                if young:
-                    worthwhile = later[destination] > own + plan_tolerance * subsistence or (
-                        leaves_for_unskilled and destination == fallback_position)
-                else:
-                    worthwhile = later[destination] > own or vacancies[destination]
-                if worthwhile:
+            for destination in range(count_destinations):      # every other trade is weighed against staying
+                if destination != source_position[source]:
                     picked[count] = destination
                     count += 1
             if count == 0:
@@ -145,7 +118,7 @@ def plan_area(counts, income, idle, baseline, later, vacancies, chances, discoun
             stay_score = 0.0
             if young:
                 stay_score = career_gain(income[source] - own, stay_start, stay_after, career_years > 0.0) / subsistence
-            band_shares(scores_room, picked, count, stay_score, young, taste, negligible, planned_shares[source, young_flag],
+            band_shares(scores_room, picked, count, stay_score, taste, negligible, planned_shares[source, young_flag],
                         planned_moves[source, young_flag], weights_room)
 
 

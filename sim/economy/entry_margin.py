@@ -27,6 +27,7 @@ from .entry_trial import ENTRY_PRICE_MARGIN_SHARE, demand_at, reachable_capacity
 from .market_memory import market_key
 from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR
 from .producers_close import LOSS_YEARS_BEFORE_EXIT
+from .stock_residue import STOCK_RESIDUE_UNITS
 from .types import AreaId, Bid, GoodId
 
 MARGIN_ENTRY_SHARE_OF_GAP = declare(
@@ -137,7 +138,7 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market, planned: S
                 if picked is None:
                     continue
                 tile, runs = picked
-            if runs > 0.0 and math.isfinite(runs):
+            if runs * setup.recipes[recipe_id].outputs[each.good] >= STOCK_RESIDUE_UNITS and math.isfinite(runs):      # residue size is no entrant
                 plans.append(EntryPlan(recipe_id, tile, each.good, runs, (expected - cost) / cost))
                 room -= runs * setup.recipes[recipe_id].outputs[each.good]
                 capacity += runs * setup.recipes[recipe_id].outputs[each.good]

@@ -20,7 +20,7 @@ EVERYONE, WANTED, MOST, WAGE, FIRST, LAST, JOBS, CELL_FIELDS = range(8)
 STATUS, HEAD_WAGE, HEAD_TARGET, HEAD_GOAL, HEAD_OFFERED, HEAD_RESERVATION, HEAD_BASE, HEAD_LOWEST, HEAD_CEILING, \
     HEAD_FULL, HEAD_FIELDS = range(11)
 FETCH_BISECTION_STEPS = 40      # a numerical bound: the search for the wage at which fetched hands fill a shortage
-SUPPLY_SOLVE_STEPS = 60         # a numerical bound: the bisection for the wage a rising supply meets a step of demand at
+SUPPLY_SOLVE_STEPS = 60         # a numerical bound: the bisection for the wage a rising supply meets the falling demand at
 
 
 @njit
@@ -225,12 +225,27 @@ def _pressure(last, reservation, offered, caps, bid_hours, first, last_bid):
 
 
 @njit
-def _supply_target(reservation, caps, bid_hours, first, last, cells, offers, exponent, area, trade, live_caps):
+def _continuous_wanted_at(wage, reservation, live_caps, live_hours, count):
+    """`clearing.hours_wanted_at` over the `count` distinct caps in `live_caps` (lowest first) with their hours."""
+    total = 0.0
+    lower = reservation
+    for index in range(count):
+        cap = live_caps[index]
+        if wage <= lower:
+            total += live_hours[index]
+        elif wage < cap:
+            total += live_hours[index] * ((cap - wage) / (cap - lower))
+        lower = cap
+    return total
+
+
+@njit
+def _supply_target(reservation, caps, bid_hours, first, last, cells, offers, exponent, area, trade, live_caps, live_hours):
     """`clearing.supply_target` for a market whose hours sold are its offers' (`sold_hours_range`)."""
     first_offer = int(cells[FIRST, area, trade])
     last_offer = int(cells[LAST, area, trade])
     count = 0
-    for index in range(first, last):      # the distinct maximum wages the reservation can pay, lowest first
+    for index in range(first, last):      # the distinct maximum wages the reservation can pay, lowest first, with their hours
         cap = caps[index]
         if cap < reservation:
             continue
@@ -238,29 +253,30 @@ def _supply_target(reservation, caps, bid_hours, first, last, cells, offers, exp
         while position > 0 and live_caps[position - 1] > cap:
             position -= 1
         if position > 0 and live_caps[position - 1] == cap:
+            live_hours[position - 1] += bid_hours[index]
             continue
         for later in range(count, position, -1):
             live_caps[later] = live_caps[later - 1]
+            live_hours[later] = live_hours[later - 1]
         live_caps[position] = cap
+        live_hours[position] = bid_hours[index]
         count += 1
-    for index in range(count + 1):
-        low = reservation if index == 0 else live_caps[index - 1]
-        if index == count:
-            return low
+    low = reservation
+    for index in range(count):
         high = live_caps[index]
-        wanted = _hours_wanted_at(high, caps, bid_hours, first, last)
-        if sold_hours_range(high, offers, exponent, first_offer, last_offer) < wanted:
+        if sold_hours_range(high, offers, exponent, first_offer, last_offer) < _continuous_wanted_at(high, reservation, live_caps, live_hours, count):
+            low = high
             continue
-        if sold_hours_range(low, offers, exponent, first_offer, last_offer) >= wanted:
+        if sold_hours_range(low, offers, exponent, first_offer, last_offer) >= _continuous_wanted_at(low, reservation, live_caps, live_hours, count):
             return low
         for _step in range(SUPPLY_SOLVE_STEPS):
             middle = (low + high) / 2.0
-            if sold_hours_range(middle, offers, exponent, first_offer, last_offer) >= wanted:
+            if sold_hours_range(middle, offers, exponent, first_offer, last_offer) >= _continuous_wanted_at(middle, reservation, live_caps, live_hours, count):
                 high = middle
             else:
                 low = middle
         return high
-    return reservation
+    return low
 
 
 @njit
@@ -399,7 +415,7 @@ def market_heads(cells, offers, exponent, constant, subsistence, ask_floor, scal
                 target = np.nan
                 goal = wage
             else:
-                goal = _supply_target(reservation, caps, bid_hours, first, last_bid, cells, offers, exponent, area, trade, live_caps)
+                goal = _supply_target(reservation, caps, bid_hours, first, last_bid, cells, offers, exponent, area, trade, live_caps, live_hours)
                 if math.isnan(last):
                     wage = goal
                 else:

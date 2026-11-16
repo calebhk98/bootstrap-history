@@ -47,10 +47,14 @@ class AgentOutcomeViews(AgentViewPart):
 		parts = self._answering()
 		return None if parts is None else parts.prices.stale_goods()
 
-	def agent_traded_staple(self):
-		"""The staple good households buy most of whose market cleared lately; None when none did or while the economy opens."""
-		stale = self.agent_stale_goods()
-		return None if stale is None else staple_good(self._economy().agent, stale)
+	def agent_staple(self):
+		"""The civilisation's staple: the hunger good with the largest opening quantity, traded or not; None while the economy opens."""
+		return None if self._answering() is None else staple_good(self._economy().agent)
+
+	def agent_price_kinds(self):
+		"""What each shown price is, by good (economy_api.shown_price_kinds_of); None while the economy opens."""
+		parts = self._answering()
+		return None if parts is None else parts.prices.price_kinds()
 
 	def agent_opening_setup(self):
 		"""The setup of the opening this game saved; None while the economy opens."""

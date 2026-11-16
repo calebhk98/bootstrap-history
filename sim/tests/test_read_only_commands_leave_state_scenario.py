@@ -75,8 +75,8 @@ def changers():
         before = dump()
         try:
             _agent_dispatch(game, game.nodes, request)
-        except Exception:
-            continue
+        except Exception:  # a command that cannot run may still have changed the game first
+            pass
         if dump() != before:
             found.append(name)
     return found

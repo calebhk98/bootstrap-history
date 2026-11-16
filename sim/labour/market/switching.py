@@ -5,11 +5,12 @@ as any trainee; those not admitted stay in their old trade. The fallback trade t
 
 Of the people who consider a change in a year, one career's worth in a lifetime of them (`1 / career_years` of
 a trade's people) are the young who have just come of working age: they hold no trade yet, so their baseline is the
-unskilled income, their horizon is a whole career and they weigh a trade with no stay threshold, since the training
-premium (premium.py) leaves exactly such a person indifferent at the long-run wage. Their own trade is one of their
+unskilled income and their horizon is a whole career (the training premium, premium.py, leaves exactly such a person
+indifferent at the long-run wage). Their own trade is one of their
 options, scored at what it pays now over a career against the unskilled income with no training to pay, so a trade that
 pays best keeps its young. The rest are established workers:
-half a career ahead, the old trade's income to give up, and only a move worth more than staying. The economy keeps
+half a career ahead and the old trade's income to give up. Both weigh every other trade against staying in one logit, so the
+odds are continuous in the incomes; a trade scoring under staying weighs little, not nothing. The economy keeps
 the core's people equal to demography's by scaling every worker and trainee of a tile by one factor
 (`scale_people` in sim/economy/labour_state.py), so trainees in a cohort are not lost or created by it.
 """
@@ -53,16 +54,9 @@ NEGLIGIBLE_MOVE_SHARE = declare(
     "NEGLIGIBLE_MOVE_SHARE", 1e-3, kind="temporary_heuristic", unit="share of the workers weighing a switch",
     source=None, confidence="D",
     why="A destination that fewer than this share of the workers weighing a switch would pick is not trained "
-        "for; its few go to the destination most of them pick. Every destination has some logit weight, and "
-        "training a few for each costs a cohort record apiece. Not fitted.")
-
-PLAN_REUSE_TOLERANCE = declare(
-    "PLAN_REUSE_TOLERANCE", 0.01, kind="temporary_heuristic",
-    unit="years of an area's subsistence income", source=None, confidence="D",
-    why="A later round of switching keeps the choice odds of the round before when no destination's "
-        "income after training has moved by more than this; saves re-weighing every trade for a change "
-        "too small to alter anyone's choice. Not fitted.")
-
+        "for; that share is trimmed off each destination's odds and the trimmed people are spread over the "
+        "others. Every destination has some logit weight, and training a few for each costs a cohort record "
+        "apiece. Not fitted.")
 
 
 def _families(inputs: YearInputs, trade_names) -> np.ndarray:
@@ -110,7 +104,7 @@ def switch_trades(state: MarketState, inputs: YearInputs, clearings, report: Yea
     state.admit((), list(inputs.trades))
     grid = grid_of(state, clearings.values() if isinstance(clearings, Mapping) else clearings)
     destinations = _destinations(state, inputs)
-    rules = SwitchRules(SWITCHING_CONSIDERATION_SHARE_PER_YEAR, REMAINING_CAREER_SHARE, PLAN_REUSE_TOLERANCE, SWITCHING_TASTE_SCALE,
+    rules = SwitchRules(SWITCHING_CONSIDERATION_SHARE_PER_YEAR, REMAINING_CAREER_SHARE, SWITCHING_TASTE_SCALE,
                         NEGLIGIBLE_MOVE_SHARE, RETRAINING_SHARE_WITHIN_FAMILY, int(expectations.DECISION_ROUNDS_PER_YEAR),
                         training.APPRENTICES_PER_MASTER)
     rows = len(state.workers_table.present)

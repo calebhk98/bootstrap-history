@@ -115,7 +115,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
     left_markets = LeftMarkets(year_markets)
     in_kind = [form for form in setup.tax_forms if form.paid_in]
     home_outputs = year_tax_in_kind.home_outputs(setup, record.producers, year_tax_in_kind.taxed_goods(in_kind)) if in_kind else None
-    metal = record.currency.backing_good if currency.has_mint(record.currency) else None        # the good whose markets the mint reads
+    metal = record.currency.backing_good if mint_price.paid_in_metal(record.currency) else None        # the good whose markets the mint reads
     plant_makers: Dict[str, list] = {}       # a good -> the producers whose plant is built from it
     store = record.producers
     plant_goods_of = [list(setup.recipes[name].plant_goods) if name in setup.recipes else [] for name in store.names["recipes"].name_list]       # by the store's recipe number
@@ -206,21 +206,20 @@ def _received_price(setup, record, good, market, ledger: YearLedger) -> Optional
     quantity = math.fsum([result.quantity for result in traded] + [units for units, _price in later])
     if quantity <= 0.0:
         return None
-    if not currency.has_mint(spec) or good != spec.backing_good:
+    if not mint_price.paid_in_metal(spec) or good != spec.backing_good:
         return math.fsum([result.quantity * result.price for result in traded] + [units * price for units, price in later]) / quantity
-    return math.fsum([result.quantity * mint_price.received_price(currency.mint_price(spec), result, ledger.settled_to_mint(result))
+    return math.fsum([result.quantity * mint_price.received_price(mint_price.paid_price(spec), result, ledger.settled_to_mint(result))
                       for result in traded] + [units * price for units, price in later]) / quantity
 
 
 def price_after_trade(old, old_was_quote, cleared, quantity, reference_volume, quiet_years):
-    """The price a market remembers after a year in which it traded: `remembered_price` and the resumed-trade rule
-    against the old price, unless the old price was a quote (a bid ceiling, an ask, a cost): no one paid it, so the
-    trade replaces it whole rather than being weighed against it. A sliver cleared above a quote is the exception: thin
-    supply meets the highest bid, so a sliver can only overstate the price and moves the quote in proportion to its share."""
-    if old_was_quote and old is not None and cleared > old:
+    """The price a market remembers after a year in which it traded. Against a remembered quote (a bid ceiling, an ask, a cost:
+    no one paid it) the trade is weighed by its share of the reference volume, in either direction: a rounding-sized trade
+    moves the quote a rounding-sized step, and a representative one replaces it. Against a price that was paid, `remembered_price`
+    and the resumed-trade rule."""
+    if old_was_quote and old is not None:
         return remembered_price(old, cleared, quantity, reference_volume)
-    paid = None if old_was_quote else old
-    return price_after_resumed_trade(paid, remembered_price(paid, cleared, quantity, reference_volume), quiet_years)
+    return price_after_resumed_trade(old, remembered_price(old, cleared, quantity, reference_volume), quiet_years)
 
 
 def remembered_price(old, cleared, quantity, usual_volume):

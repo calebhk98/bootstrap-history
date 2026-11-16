@@ -80,6 +80,8 @@ class ReadsMatchTheObjects(unittest.TestCase):
         store.written()
         populated_tiles(store), poorest_by_tile(store), tiles_by_first_id(store), figures_in_id_order(store), figures_of(store, "household:x:a")
         tile_of(store, "household:x:a")
+        self.assertGreater(len(store), 0)
+        self.assertEqual(len(store._objects), len(store))
         self.assertTrue(all(kept is None for kept in store._objects))
 
 
@@ -106,6 +108,8 @@ class LeaseMargins(unittest.TestCase):
         found = land_lease_year._margins(setup, record, view, options)
         self.assertEqual(list(found.items()), list(expected.items()))
         self.assertEqual(list(found), [TILE, "u"])     # household:t:0 sorts before household:u:0
+        self.assertGreater(len(record.cohorts), 0)
+        self.assertEqual(len(record.cohorts._objects), len(record.cohorts))
         self.assertTrue(all(kept is None for kept in record.cohorts._objects))
 
     def test_the_margin_depends_on_the_tile_id_alone(self):
@@ -124,6 +128,8 @@ class LeaseMargins(unittest.TestCase):
         record.cohorts.written()
         leases = land_lease_year.lease_in_market(setup, record, View(0.2, tools=100.0), options)
         self.assertEqual(leases, plain_leases)
+        self.assertGreater(len(record.cohorts), 0)
+        self.assertEqual(len(record.cohorts._objects), len(record.cohorts))
         self.assertTrue(all(kept is None for kept in record.cohorts._objects))
 
     def test_own_hectares_are_the_same_from_a_cohort_and_its_figures(self):
@@ -162,6 +168,8 @@ class ExposureOfTheHarvest(unittest.TestCase):
         exposed, asked = self._run(store)
         self.assertEqual(exposed, {"household:x:a": {HARVEST: 24.0}})      # 6 grain at 2.0 over a harvest factor of 0.5; salt is unpriced
         self.assertIn(("grain", "tile:x"), asked)
+        self.assertGreater(len(store), 0)
+        self.assertEqual(len(store._objects), len(store))
         self.assertTrue(all(kept is None for kept in store._objects))
         self.assertEqual(self._run(plain)[0], exposed)
 
@@ -182,6 +190,8 @@ class CarriersAreBidForWhereThePeopleAre(unittest.TestCase):
         self.assertEqual(by_store, self._bids(plain)[0])
         self.assertEqual(sorted(figure[2] for figure in by_store), ["work@farms", "work@town"])      # the hills have nobody: hired at home
         self.assertEqual(populated_tiles(record.cohorts), set(tiles))
+        self.assertGreater(len(store), 0)
+        self.assertEqual(len(store._objects), len(store))
         self.assertTrue(all(kept is None for kept in store._objects))
 
 

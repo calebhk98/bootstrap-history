@@ -7,10 +7,10 @@ import types
 import unittest
 from unittest import mock
 
-from sim.markets import spin_up, spin_up_gap, spin_up_run
+from sim.markets import spin_up, spin_up_gap, spin_up_run, spin_up_year
 from sim.book import Book, GoodsMove
 from sim.economy import year_close
-from sim.economy.spin_up_state import spin_up_state as year_state_of   # a pure read of a record, not a builder
+from sim.economy.spin_up_state import food_floor_units, spin_up_state as year_state_of   # a pure read of a record, not a builder
 from sim.economy.households_cohort import Cohort
 from sim.economy.goods_record import GoodsRecord
 from sim.economy.market_memory import MarketMemory
@@ -42,8 +42,23 @@ class ChangeGapTests(unittest.TestCase):
         self.assertEqual(spin_up_gap.change_gap(0.0, 0.0), 0.0)
         self.assertEqual(spin_up_gap.change_gap(3.0, 0.0), 1.0)
 
-    def test_unmet_need_of_a_fraction_of_a_unit_is_not_measured_as_a_swing(self):
-        self.assertLess(spin_up_gap.change_gap(0.004, 0.002, spin_up_gap.SPIN_UP_UNMET_FLOOR), TOLERANCE)
+    def test_a_shortfall_that_is_a_sliver_of_the_food_need_is_not_measured_as_a_swing(self):
+        gaps = spin_up_gap.state_gaps(_state(unmet_need=0.0, food_need=1.0e6), _state(unmet_need=300.0, food_need=1.0e6))
+        self.assertLess(gaps["unmet_need"], TOLERANCE)
+
+    def test_a_shortfall_that_is_a_real_share_of_the_food_need_still_fails(self):
+        gaps = spin_up_gap.state_gaps(_state(unmet_need=0.0, food_need=1.0e6), _state(unmet_need=1.0e5, food_need=1.0e6))
+        self.assertAlmostEqual(gaps["unmet_need"], 0.1)
+
+    def test_a_shortfall_larger_than_the_food_need_is_measured_against_itself(self):
+        gaps = spin_up_gap.state_gaps(_state(unmet_need=2.0e6, food_need=1.0e6), _state(unmet_need=3.0e6, food_need=1.0e6))
+        self.assertAlmostEqual(gaps["unmet_need"], 0.5)
+
+
+class FoodNeedTests(unittest.TestCase):
+    def test_the_food_need_is_each_tiles_people_times_its_food_floor(self):
+        floors = {"farms": 200.0, "town": 250.0}
+        self.assertAlmostEqual(food_floor_units({"farms": 10.0, "town": 4.0, "empty": 0.0}, floors.get), 3000.0)
 
 
 def _state(**changes):
@@ -92,6 +107,41 @@ class FinalResultTests(unittest.TestCase):
         self.assertEqual(result["measured_years"], 1)
 
 
+class UnsettledCauseTests(unittest.TestCase):
+    def test_a_window_with_nothing_to_compare_names_why(self):
+        self.assertEqual(spin_up_gap.unsettled_cause([_state()]), "too_few_years")
+
+    def test_no_watched_good_priced_in_both_of_two_years_is_a_cause(self):
+        states = [_state(prices={"wheat_kg": 1.0}), _state(prices={"salt": 1.0})]
+        self.assertEqual(spin_up_gap.unsettled_cause(states), "no_price_in_two_years")
+        self.assertEqual(spin_up_gap.unsettled_cause([_state(prices={}), _state(prices={})]), "no_price_in_two_years")
+
+    def test_no_output_or_no_hired_hours_in_the_last_year_is_a_cause(self):
+        self.assertEqual(spin_up_gap.unsettled_cause([_state(real_output=0.0), _state(real_output=0.0)]), "zero_real_output")
+        self.assertEqual(spin_up_gap.unsettled_cause([_state(), _state(hired_hours=0.0)]), "zero_hired_hours")
+        self.assertEqual(spin_up_gap.unsettled_cause([_state(), {**_state(), "real_output": None}]), "real_output_not_measured")
+
+    def test_a_window_with_prices_output_and_hours_has_no_cause(self):
+        self.assertIsNone(spin_up_gap.unsettled_cause([_state(), _state()]))
+
+
+class FinalResultCauseTests(unittest.TestCase):
+    first = {"settled": True, "years": 7, "gap": 0.01}
+
+    def test_an_economy_with_no_output_does_not_settle_though_nothing_moves(self):
+        dead = [_state(real_output=0.0, hired_hours=0.0) for _year in range(4)]
+        result = spin_up_run.final_result(self.first, dead, 22)
+        self.assertFalse(result["settled"])
+        self.assertEqual(result["gap"], 0.0)
+        self.assertEqual(result["cause"], "zero_real_output")
+
+    def test_a_settled_result_has_no_cause_and_carries_the_unmeasured_prices(self):
+        result = spin_up_run.final_result(self.first, [{**_state(), "unmeasured": {"salt": "price_not_a_trade"}} for _year in range(4)], 22)
+        self.assertTrue(result["settled"])
+        self.assertIsNone(result["cause"])
+        self.assertEqual(result["unmeasured"], {"salt": "price_not_a_trade"})
+
+
 class StopRuleTests(unittest.TestCase):
     def test_the_first_stage_stops_when_a_rate_shrinking_toward_zero_has_constant_prices(self):
         economy = types.SimpleNamespace(setup=types.SimpleNamespace(currency_id="coin"),
@@ -115,7 +165,7 @@ class OrderTests(unittest.TestCase):
         api = spin_up_run.economy_api
         first = {"settled": True, "years": 3, "gap": 0.0}
         with mock.patch.object(api, "opening_quantities", lambda economy: {}), \
-                mock.patch.object(spin_up_run.port_sites, "crop_yields", lambda economy: {}), \
+                mock.patch.object(spin_up_year.port_sites, "crop_yields", lambda economy: {}), \
                 mock.patch.object(api, "trim_workforce_to_expected_hours", lambda economy: calls.append("trim")), \
                 mock.patch.object(api, "finish_spin_up", lambda economy: calls.append("finish")), \
                 mock.patch.object(api, "note_spin_up_result",

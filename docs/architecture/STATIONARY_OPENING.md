@@ -136,6 +136,11 @@ python3 sim/simulator.py spin-up-trace --civ england_1300 --years 60
 python3 sim/simulator.py spin-up-trace --civ mexica_1500 --years 60
 ```
 
+`spin-up-trace --civ <id> --stages [--csv file]` replays the hidden spin-up as the run takes it (first stage for its
+full years without the early stop, the workforce trim, the trimmed stage) and prints each year's settle quantities,
+rate, wage, money, struck and wear and the watched goods' prices, then the settle gaps the opening reports; it takes
+minutes and ignores `--years`.
+
 Read the price level, wage, money supply and rate in each complete trace for
 whether each settles (flat over the closing window, neither trending nor
 cycling); no module judges it. The results and full-suite failures belong in the issue

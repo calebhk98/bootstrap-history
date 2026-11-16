@@ -27,20 +27,6 @@ def revenue_per_run(recipe, slot_goods, outputs, expected, terms):
 
 
 @njit(**KERNEL)
-def input_bill(recipe, slot_goods, inputs, input_order, unit_price):
-    """`unit_cost.input_cost_per_run`: the inputs at `unit_price` by good slot, added in the recipe's dict order."""
-    total = 0.0
-    for place in range(input_order.shape[1]):
-        slot = input_order[recipe, place]
-        if slot < 0:
-            break
-        quantity = inputs[recipe, slot_goods[recipe, slot]]
-        if quantity > 0.0:
-            total += quantity * unit_price[slot]
-    return total
-
-
-@njit(**KERNEL)
 def held_value_of(row, recipe, slot_goods, inputs, input_order, capacity, stock, market, terms):
     """The value at market prices of what is held of each input, up to a full year's use at capacity, added as the plan adds it."""
     used = 0
@@ -49,7 +35,7 @@ def held_value_of(row, recipe, slot_goods, inputs, input_order, capacity, stock,
         if slot < 0:
             break
         quantity = inputs[recipe, slot_goods[recipe, slot]]
-        if quantity > 0.0:
+        if quantity > 0.0 and not np.isnan(market[slot]):          # a tool with no price holds no value to count
             terms[used] = min(stock[row, slot], quantity * capacity) * market[slot]
             used += 1
     return python_sum(terms, used)

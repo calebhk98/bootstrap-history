@@ -69,7 +69,7 @@ def switch_area(rates, rules, results, caps, hours, workers, totals, counted, ar
             counts[source] = workers.people[area * trade_count + sources[source]]
         plan_area(counts, income, idle, baseline, later, vacancies, destinations.chances, discounts, retrained, source_position,
                   source_is_fallback, destinations.fallback_position, rates.subsistence[area], rates.discount_rate, rates.career_years,
-                  rules.consideration_floor, rules.remaining_share, rules.plan_tolerance, rules.taste, rules.negligible, valid, then, targets,
+                  rules.consideration_floor, rules.remaining_share, rules.taste, rules.negligible, valid, then, targets,
                   shares, moving, active, considering)
         found = collect_moves(counts, considering, active, moving, targets, shares, training_share, rules.rounds, moves_source, moves_destination,
                               moves_share, moves_rows)

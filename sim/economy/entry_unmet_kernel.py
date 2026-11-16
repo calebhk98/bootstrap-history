@@ -15,6 +15,7 @@ from .bid_columns import sum_taken_at_columns
 from .entry import ENTRY_SHARE_OF_UNMET_DEMAND
 from .entry_kernels import full_cost_one
 from .entry_plan_steps import NO_TILE, site_newcomer, sized_runs_at
+from .stock_residue import STOCK_RESIDUE_UNITS
 from .year_arrays_costs import KERNEL
 
 
@@ -47,7 +48,7 @@ def unmet_plans(market_good, market_anchor, market_quantity, market_place, rank_
         remaining = market_quantity[market]
         for position in range(rank_first[market], rank_first[market] + rank_count[market]):
             recipe = rank_recipe[position]
-            if remaining <= 0.0:
+            if remaining < STOCK_RESIDUE_UNITS:
                 break
             made = outputs[recipe, good]
             whole_gap_runs = remaining / made
@@ -63,7 +64,7 @@ def unmet_plans(market_good, market_anchor, market_quantity, market_place, rank_
                     continue
                 runs = sized_runs_at(recipe, good, taken, whole_gap_runs, anchor, picked, backed, traded, outputs, plant_goods, sizing)
                 tile = picked
-            if runs > 0.0 and numpy.isfinite(runs):
+            if runs * made >= STOCK_RESIDUE_UNITS and numpy.isfinite(runs):      # an entrant of residue size is no entrant
                 row = claim_row(plans)
                 if row == NO_ROOM:
                     return -1

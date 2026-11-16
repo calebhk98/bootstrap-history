@@ -2,8 +2,7 @@
 plain per-band loop it replaced, on random scores; no game.
 
 The kernel sums the logit weights left to right where the plain loop used `math.fsum`, so shares agree to a relative
-tolerance. A band whose leading destination sits on the negligible-share cutoff could go either way on a last-digit
-difference, so cases are drawn from scores far from it."""
+tolerance. The shares are continuous in the scores, so a last-digit difference stays a last-digit difference."""
 
 QUICK_TOPIC = True
 
@@ -19,30 +18,23 @@ TOLERANCE = 1e-12
 NEGLIGIBLE = 1e-3
 
 
-def plain_band_odds(chances, gain, lost, subsistence, stay_score, young, scale, negligible):
-    """Per band: None (it stays) or [(target position, share)]: the loop `switching._odds` ran before the kernel."""
+def plain_band_odds(chances, gain, lost, subsistence, stay_score, scale, negligible):
+    """Per band: None (it stays) or [(target position, share)]: every target weighed against staying, each share trimmed by
+    `negligible` and the trimmed people spread over the others in proportion (`switching_kernel.band_shares`)."""
     bands = []
     for band in range(len(chances[0])):
-        scores, picked = [], []
-        for index in range(len(gain)):
-            score = (chances[index][band] * gain[index] - lost[index]) / subsistence
-            if score > 0.0 or young:
-                scores.append(score)
-                picked.append(index)
-        if not scores:
-            bands.append(None)
-            continue
+        scores = [(chances[index][band] * gain[index] - lost[index]) / subsistence for index in range(len(gain))]
         top = max(scores + [stay_score])
         weights = [math.exp((score - top) / scale) for score in scores]
         total = math.fsum(weights + [math.exp((stay_score - top) / scale)])
-        cutoff = total * negligible
-        leader = weights.index(max(weights))
-        shares = [weight / total if weight >= cutoff else 0.0 for weight in weights]
-        shares[leader] += math.fsum(weight for weight in weights if weight < cutoff) / total
-        if shares[leader] < negligible:
+        raw = [weight / total for weight in weights]
+        trimmed = [share - negligible if share > negligible else 0.0 for share in raw]
+        kept = math.fsum(trimmed)
+        if kept <= 0.0:
             bands.append(None)
             continue
-        bands.append([(index, share) for index, share in zip(picked, shares) if share > 0.0])
+        spread = 1.0 + (math.fsum(raw) - kept) / (kept + negligible)
+        bands.append([(index, share * spread) for index, share in enumerate(trimmed) if share > 0.0])
     return bands
 
 
@@ -56,9 +48,9 @@ class BandSharesAgreeWithThePlainLoop(unittest.TestCase):
             gain = [rng.uniform(-2.0, 30.0) for _target in range(targets)]
             lost = [rng.uniform(0.0, 12.0) for _target in range(targets)]
             subsistence, stay_score = rng.uniform(0.5, 3.0), rng.choice([0.0, rng.uniform(-3.0, 3.0)])
-            young, scale = rng.random() < 0.5, rng.choice([1.0, rng.uniform(0.3, 2.0)])
-            expected = plain_band_odds(chances, gain, lost, subsistence, stay_score, young, scale, NEGLIGIBLE)
-            shares, moves = band_odds(chances, gain, lost, subsistence, stay_score, young, scale, NEGLIGIBLE)
+            scale = rng.choice([1.0, rng.uniform(0.3, 2.0)])
+            expected = plain_band_odds(chances, gain, lost, subsistence, stay_score, scale, NEGLIGIBLE)
+            shares, moves = band_odds(chances, gain, lost, subsistence, stay_score, scale, NEGLIGIBLE)
             for band, plain in enumerate(expected):
                 self.assertEqual(bool(moves[band]), plain is not None)
                 if plain is None:

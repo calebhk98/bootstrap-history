@@ -47,5 +47,19 @@ class EconomyCheckRendering(unittest.TestCase):
         self.assertIn("diagnostic only", output.getvalue())
 
 
+class StapleMeasuredTests(unittest.TestCase):
+    def test_a_staple_whose_price_is_not_a_trade_is_unmeasured_with_its_cause(self):
+        from sim.ui.cli_economy_check import staple_figure_cause
+        self.assertEqual(staple_figure_cause("grain", {"grain": "thin_trade_blend"}), "price_not_a_trade")
+        self.assertEqual(staple_figure_cause("grain", {}), "price_not_a_trade")
+        self.assertIsNone(staple_figure_cause("grain", {"grain": "smoothed_trade"}))
+        self.assertEqual(staple_figure_cause(None, {}), "no_good")
+
+    def test_an_unmeasured_figure_prints_its_cause_not_a_number(self):
+        from sim.ui.cli_economy_check import figure_text
+        self.assertEqual(figure_text(0.0, "price_not_a_trade"), "unmeasured: price_not_a_trade")
+        self.assertEqual(figure_text(0.125, None), "0.125")
+
+
 if __name__ == "__main__":
     unittest.main()

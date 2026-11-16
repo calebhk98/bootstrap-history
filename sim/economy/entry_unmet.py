@@ -8,6 +8,7 @@ import numpy as np
 from . import entry_kernels, entry_plan_pack, entry_plan_table
 from .entry import ENTRY_SHARE_OF_UNMET_DEMAND
 from .entry_unmet_kernel import unmet_plans
+from .stock_residue import STOCK_RESIDUE_UNITS
 from .market_table_specs import KEY_SEPARATOR
 from .year_arrays_memory import market_cells
 
@@ -20,7 +21,7 @@ def _gaps_by_column(costs, unmet_by_market):
     if member_columns is None or getattr(getattr(unmet_by_market, "_tables", None), "markets", None) is not tables:
         return None
     rows, asked = member_columns()
-    rows, asked = rows[asked > 0.0], asked[asked > 0.0]       # a market with nothing unmet draws no one
+    rows, asked = rows[asked >= STOCK_RESIDUE_UNITS], asked[asked >= STOCK_RESIDUE_UNITS]       # a market with nothing unmet (or residue) draws no one
     names = tables.goods_markets.name_list
     ranked = sorted(range(len(rows)), key=lambda place: names[rows[place]].replace(KEY_SEPARATOR, "\x00"))
     rows, asked = rows[ranked], asked[ranked]
@@ -38,7 +39,7 @@ def markets_of(costs, unmet_by_market: Dict[Tuple[str, str], float]):
     else:
         asked = np.fromiter(unmet_by_market.values(), dtype=np.float64, count=len(unmet_by_market))
         every = list(unmet_by_market)
-        keys = sorted(every[position] for position in np.flatnonzero(asked > 0.0).tolist())
+        keys = sorted(every[position] for position in np.flatnonzero(asked >= STOCK_RESIDUE_UNITS).tolist())
         goods = np.array([costs.goods.row.get(good, -1) for good, _area in keys], dtype=np.int64)
         areas = np.array([costs.arrays.area_index.areas.row.get(area, -1) for _good, area in keys], dtype=np.int64)
         quantity = np.array([unmet_by_market[key] for key in keys], dtype=np.float64)
@@ -48,7 +49,7 @@ def markets_of(costs, unmet_by_market: Dict[Tuple[str, str], float]):
     spare = np.zeros(len(goods))
     spare[known] = costs.spare_output()[goods[known], areas[known]]
     gap = np.maximum(0.0, quantity - np.maximum(0.0, spare))
-    wanted = known & (gap > 0.0)
+    wanted = known & (gap >= STOCK_RESIDUE_UNITS)
     return goods[wanted], areas[wanted], gap[wanted]
 
 

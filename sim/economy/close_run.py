@@ -71,7 +71,7 @@ def _kernel_arguments(rows, arrays: YearArrays, pack: ClosePack, market_capacity
             answer.dividend, answer.request_kind, answer.request_amount, answer.request_rate, answer.request_term,
             answer.request_collateral, answer.expansion_runs, answer.replacement_runs, answer.new_earnings,
             answer.new_revenues, answer.new_count, answer.state, answer.write_off, answer.new_idle, answer.new_expected_sales,
-            answer.new_last_runs, answer.new_staffed, answer.demand_runs, answer.needs_share, answer.added)
+            answer.new_last_runs, answer.new_staffed, answer.demand_runs, answer.needs_share, answer.added, arrays.tools)
 
 
 def close_producers(arrays: YearArrays, pack: ClosePack, price_shares_of=None) -> CloseAnswer:

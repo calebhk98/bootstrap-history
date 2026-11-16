@@ -1,5 +1,5 @@
 """Numba port, the year's cohort orders: `households_orders_pack.kernel_orders` (every cohort ordered in one kernel call) agrees with
-the old per-cohort path (`households.goods_orders`, then `year_goods.less_what_it_grew`, which stays the path for a basket the kernel does
+the old per-cohort path (`households.goods_orders`, which stays the path for a basket the kernel does
 not cover) on random cohorts, baskets, prices, holdings, claims, plots and cash; no game.
 
 The kernel sums exactly where the old code used `math.fsum`, so which bids exist agrees; what is left is the order of a few plain sums and
@@ -21,7 +21,6 @@ from sim.economy.goods_order_tables import HOUSEHOLD
 from sim.economy.market_tables import MarketTables
 from sim.economy.types import EDGE_PRODUCTION
 from sim.economy.households_cohort import Cohort
-from sim.economy.year_goods import less_what_it_grew
 from sim.tests.test_opening_demand_kernel import SPECS, View, random_units, random_world
 from sim.world import need_basket
 
@@ -67,8 +66,7 @@ def year_world(rng, need_data=None):
 
 
 def reference(cohort, basket, priced, view, cash, income, grown, smooth_rise):
-    orders = households.goods_orders(cohort, view, cash, income, basket, SPECS, priced, smooth_rise=smooth_rise, shared_store={})
-    return less_what_it_grew(orders, cohort, basket, grown)
+    return households.goods_orders(cohort, view, cash, income, basket, SPECS, priced, smooth_rise=smooth_rise, shared_store={}, grown_units=grown)
 
 
 def kernel(cohorts, baskets, priceds, view, cashes, incomes, grown, smooth_rise):

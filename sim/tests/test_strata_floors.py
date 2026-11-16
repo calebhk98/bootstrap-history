@@ -51,12 +51,18 @@ class StratumFloorsTest(unittest.TestCase):
 
     def test_shortfall_never_rises_with_money(self):
         previous = None
+        totals = []
         for money in (0.0, 2000.0, 8000.0, 12000.0, 15000.0, 40000.0):
             shortfall = run_one_year(money, FLOORS).shortfall
+            self.assertEqual(set(shortfall), set(FLOORS))
             if previous is not None:
                 for need_id, unmet in shortfall.items():
                     self.assertLessEqual(unmet, previous[need_id] + 1e-12)
             previous = shortfall
+            totals.append(sum(shortfall.values()))
+        self.assertGreater(totals[0], 0.0)
+        self.assertGreater(totals[0], totals[3])
+        self.assertEqual(totals[-1], 0.0)
 
     def test_food_is_paid_before_the_other_floors(self):
         record = run_one_year(100.0 * FLOORS["food"], FLOORS)

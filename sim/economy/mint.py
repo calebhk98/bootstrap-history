@@ -9,7 +9,7 @@ money are exchanged at parity both ways with no issuer. Fiat has no metal and no
 import math
 from typing import Dict
 
-from . import currency, mint_labour, mint_price, mint_staffing
+from . import currency, mint_bid_split, mint_labour, mint_price, mint_staffing
 from .cohort_store import table_of
 from .goods_order_tables import MINT
 from .market_memory import market_key
@@ -76,6 +76,20 @@ def _lose_worn_metal(record) -> None:
                            for tile, quantity in sorted(held.items())])
 
 
+def cash_wanted(record) -> float:
+    """Money holders want in their cash balances: cohorts' and producers' cash targets and merchants' capital base."""
+    return (table_of(record.cohorts).exact_total("cash_target")
+            + record.producers.exact_total("cash_target")
+            + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
+
+
+def meltable_metal(record) -> float:
+    """Metal of the money above what holders want to keep, the most the mint may offer for sale (the counterpart of
+    `yearly_monetisation`): selling more would retire money holders still want. None when holders want it all."""
+    spec = record.currency
+    return max(0.0, record.book.money_supply(spec.currency_id) - cash_wanted(record)) * spec.backing_per_unit
+
+
 def yearly_monetisation(setup, record) -> float:
     """Most money the mint turns metal or a commodity into in a year: what holders want to add to their cash
     balances, plus what the money loses (wear of coin, loss of weighed metal, spoilage of a commodity) over the
@@ -85,9 +99,7 @@ def yearly_monetisation(setup, record) -> float:
     (Complaints/reports/economy-research-commodity-money.md)."""
     spec = record.currency
     supply = record.book.money_supply(spec.currency_id)
-    wanted = (table_of(record.cohorts).exact_total("cash_target")
-              + record.producers.exact_total("cash_target")
-              + math.fsum(merchant.capital_base for merchant in record.merchants.values()))
+    wanted = cash_wanted(record)
     loss = loss_share(setup, spec)
     return (max(0.0, wanted - supply) + loss * supply) / (1.0 - loss)       # the money struck wears too, before the year ends
 
@@ -127,6 +139,7 @@ def staff(setup, record, view, labour_bids) -> None:
 
 def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[str, float]:
     """Post the mint's bids and offers; returns the metal it holds by tile, for `settle_mint`.
+    The offer is the backing of the money above what holders want to keep, and only where `melting_pays`.
     `hours_hired` is what the mint's staff were hired for this year, by trade; it limits the metal struck
     where the coin standard names a minting recipe."""
     spec = record.currency
@@ -136,16 +149,26 @@ def mint_orders(setup, record, area_map, order_book, hours_hired=None) -> Dict[s
     _lose_worn_metal(record)
     held = stock_by_tile(record.book, metal)
     rows = OrderRows(order_book, MINT)
+    meltable = meltable_metal(record)
     for tile, quantity in sorted(held.items()):
-        if not mint_price.melting_pays(record.memory.prices.get(market_key(metal, area_map.area_of(metal, tile))),
-                                       currency.mint_parity(spec)):
+        area = area_map.area_of(metal, tile)
+        offered = min(quantity, meltable)       # the metal of money holders still want stays in the mint
+        if offered <= 0.0 or not mint_price.melting_pays(record.memory.prices.get(market_key(metal, area)),
+                                                         currency.mint_parity(spec)):
             continue
-        rows.offer(EDGE_MINT, metal, area_map.area_of(metal, tile), tile, quantity, currency.mint_parity(spec))
+        meltable -= offered
+        rows.offer(EDGE_MINT, metal, area, tile, offered, currency.mint_parity(spec))
     strike_price = currency.mint_price(spec)
     coin_metal = min(yearly_monetisation(setup, record) * spec.backing_per_unit,
                      mint_labour.strike_limit_fine_kilograms(setup, spec, hours_hired or {}))
-    for area in area_map.areas(metal):
-        capacity = coin_metal * len(area.tiles) / max(1, len(setup.tiles))
+    areas = area_map.areas(metal)
+    volumes = record.memory.volume_weights
+    bids = mint_bid_split.split_bid(coin_metal, {area.area_id: volumes.get(market_key(metal, area.area_id), 0.0) for area in areas},
+                                    {area.area_id: len(area.tiles) / max(1, len(setup.tiles)) for area in areas})
+    for area in areas:
+        capacity = bids[area.area_id]
+        if capacity <= 0.0 < coin_metal:      # an area with no metal on record gets no share of a bid
+            continue
         rows.bid(EDGE_MINT, metal, area.area_id, area.anchor_tile, 0.0, capacity, strike_price, 0.0, math.inf, MINT_PRIORITY,
                  maximum_price=strike_price)
     rows.write()
@@ -158,8 +181,8 @@ def settle_mint(record, held_before: Dict[str, float], ledger=None) -> None:
     spec = record.currency
     if not spec.backing_good or spec.backing_per_unit <= 0.0:
         return
-    if ledger is not None and currency.has_mint(spec):
-        mint_price.pay_top_ups(record.book, ledger, spec.currency_id, spec.backing_good, currency.mint_price(spec))
+    if ledger is not None and mint_price.paid_in_metal(spec):
+        mint_price.pay_top_ups(record.book, ledger, spec.currency_id, spec.backing_good, mint_price.paid_price(spec))
     if currency.has_mint(spec) and spec.issuer is not None:
         taken_in = (math.fsum(stock_by_tile(record.book, spec.backing_good).values())
                     - math.fsum(held_before.values()))

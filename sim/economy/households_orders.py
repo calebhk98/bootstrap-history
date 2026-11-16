@@ -17,9 +17,10 @@ from sim.constants import declare
 from sim.world.need_basket import (Basket, PricedNeed, need_units, price_ceilings, quality_reach, satiation_limit,
                                    with_quality_reach)
 
-from . import durable_stock, households_buffer_stock, households_store, lender_ask, opening_resting
+from . import durable_stock, household_grown_floors, households_buffer_stock, households_store, lender_ask, opening_resting
 from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
 from .households_basket import need_prices
+from .opening_demand_kernel import flexible_budget_left, store_pot
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .households_cohort import Cohort
 from .protocols import AgentOrders, MarketView
@@ -123,19 +124,23 @@ def _store_value_outside_use(cohort: Cohort, priced: List[PricedNeed], basket: B
 def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year: float,
                  basket: Basket, specs: Mapping[GoodId, GoodSpec],
                  priced: Optional[List[PricedNeed]] = None, smooth_rise: bool = True,
-                 shared_store: Optional[dict] = None, stationary_durables: bool = False) -> AgentOrders:
+                 shared_store: Optional[dict] = None, stationary_durables: bool = False,
+                 grown_units: Optional[Mapping[str, float]] = None) -> AgentOrders:
     """`priced` may be passed (from `need_prices`) to share the price work among a tile's classes.
     `smooth_rise` False lifts the bound on a rise in spending: an economy finding its level from an opening
     that holds more money than its households want to keep would otherwise approach it over years.
     `shared_store` (empty to begin with) lets the cohorts of one pass share each tile's store prices.
-    `stationary_durables` sizes opening demand at replacement of the solved stock, before that stock is seeded."""
+    `stationary_durables` sizes opening demand at replacement of the solved stock, before that stock is seeded.
+    `grown_units` (need id -> units the household's own plot grew) are floors already met: they are not bought and not charged
+    against the spending, so the money they free goes to the flexible needs and to savings."""
     priced = need_prices(basket, view, cohort.tile) if priced is None else priced
     cash = max(0.0, cash)
     if not priced or cohort.people <= 0.0:
         return AgentOrders()
     first_good = priced[0].goods[0][0]
     area_currency = view.currency_of(view.area_of(first_good, cohort.tile))
-    floor_cost = math.fsum(need.price_index * need.spec.subsistence_per_person * cohort.people
+    met_by_need, met_by_good = household_grown_floors.met_shares(basket, cohort.people, grown_units or {})
+    floor_cost = math.fsum(need.price_index * need.spec.subsistence_per_person * cohort.people * (1.0 - met_by_need.get(need.spec.need_id, 0.0))
                            for need in priced)
     # what it has lent counts toward the wealth it spends from, so a loss to default cuts its spending;
     # spending follows Eurace's consumption budget (households_buffer_stock): mean net income, cash, shares
@@ -192,14 +197,14 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
                 ratio = durable_stock.replacement_for_flow(stock_flow, specs[good]) / flow
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 rows.append((need.spec.subsistence_per_person > 0.0, good, price,
-                             floor_quantity * ratio, flexible_quantity * ratio, ceiling, satiated))
+                             floor_quantity * (1.0 - met_by_good.get(good, 0.0)) * ratio, flexible_quantity * ratio, ceiling, satiated))
     floor_spend = math.fsum(row[2] * row[3] for row in rows)
     flexible_spend = math.fsum(row[2] * row[4] for row in rows)
     floor_wanted = floor_spend * (1.0 + FLOOR_BUDGET_PRICE_MARGIN)
     usable = cash * (1.0 - BUDGET_SAFETY_SHARE)
     floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
     # surplus goes on only what the year's spending allows, so stocking up a durable is paid from income
-    left = min(usable, max(spending, floor_wanted * floor_scale)) - floor_wanted * floor_scale
+    left = flexible_budget_left(usable, spending, floor_wanted, floor_scale)
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     bids = []
     budget_total = 0.0
@@ -226,7 +231,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
         above_buffer = cash + claims + store_value - target
         store_bids, store_spend = households_store.store_bids(
             cohort, view, specs, basket, weights, store_prices, held, above_buffer, real_rate,
-            min(savings, usable - budget_total))
+            store_pot(savings, usable, budget_total, spending, floor_wanted, floor_scale, flexible_scale))
         bids.extend(store_bids)
         savings -= store_spend
         offers = tuple(households_store.store_offers(cohort, view, specs, weights, store_prices, held,

@@ -41,7 +41,7 @@ def setup_and_record(regime, cash_target=40.0):
     spec = CurrencySpec("coin", regime, METAL, 0.01, issuer, 0.05 if regime == "struck_coin" else 0.0)
     setup = types.SimpleNamespace(specs={METAL: GoodSpec(METAL, 1.0, SPOILAGE, 0.0, "metal")}, tiles={"town": None}, currency_id="coin", mint_recipe=None)
     record = types.SimpleNamespace(
-        currency=spec, book=StandInBook(),
+        currency=spec, book=StandInBook(), memory=types.SimpleNamespace(volume_weights={}),
         cohorts=CohortStore({name: Cohort(name, "town", 0, 1.0, 1.0, 1.0, cash_target=cash_target) for name in ("a", "b")}),
         producers=ProducerStore({"p": Producer("p", "owner", "recipe", "tile", 1.0, cash_target=cash_target)}),
         merchants={"m": types.SimpleNamespace(capital_base=cash_target)})
@@ -78,6 +78,20 @@ class MonetisationTests(unittest.TestCase):
     def test_weighed_metal_whose_holders_want_no_more_takes_in_only_what_is_lost(self):
         setup, record = setup_and_record("weighed_metal", cash_target=10.0)
         self.assertAlmostEqual(mint.yearly_monetisation(setup, record), METAL_GOODS_LOSS_PER_YEAR * SUPPLY / (1.0 - METAL_GOODS_LOSS_PER_YEAR))
+
+
+class MeltableMetalTests(unittest.TestCase):
+    def test_metal_for_the_money_above_what_holders_want_may_be_melted(self):
+        setup, record = setup_and_record("commodity", cash_target=100.0)
+        self.assertAlmostEqual(mint.meltable_metal(record), (SUPPLY - 4 * 100.0) * record.currency.backing_per_unit)
+
+    def test_no_metal_may_be_melted_when_holders_want_exactly_the_supply(self):
+        setup, record = setup_and_record("commodity", cash_target=SUPPLY / 4)
+        self.assertEqual(mint.meltable_metal(record), 0.0)
+
+    def test_no_metal_may_be_melted_when_holders_want_more_than_the_supply(self):
+        setup, record = setup_and_record("commodity", cash_target=400.0)
+        self.assertEqual(mint.meltable_metal(record), 0.0)
 
 
 class MintOrderTests(unittest.TestCase):

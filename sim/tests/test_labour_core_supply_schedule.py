@@ -41,15 +41,15 @@ class SupplyTargetTests(unittest.TestCase):
         supply = lambda wage: 1000.0 * min(1.0, 0.5 * wage ** 2)      # 500 hours at wage one, rising
         bid = EmployerHoursBid("a", "digger", "vale", 800.0, 2.0)
         target = clearing.supply_target(1.0, supply, [bid])
-        self.assertAlmostEqual(supply(target), 800.0, places=3)
+        self.assertAlmostEqual(supply(target), clearing.hours_wanted_at(target, clearing.demand_intervals(1.0, [bid])), places=3)   # demand falls in a line below the cap, so the meeting is not at the bid's full hours
 
     def test_where_supply_covers_demand_at_the_reservation_wage_the_target_is_the_reservation_wage(self):
         bid = EmployerHoursBid("a", "digger", "vale", 400.0, 2.0)
         self.assertEqual(clearing.supply_target(1.0, lambda wage: 500.0, [bid]), 1.0)
 
-    def test_a_demand_the_supply_never_meets_ends_at_the_highest_maximum_wage(self):
+    def test_a_demand_the_supply_never_meets_at_the_reservation_ends_where_the_falling_demand_reaches_the_supply(self):
         bid = EmployerHoursBid("a", "digger", "vale", 5000.0, 2.0)
-        self.assertEqual(clearing.supply_target(1.0, lambda wage: 500.0, [bid]), 2.0)
+        self.assertAlmostEqual(clearing.supply_target(1.0, lambda wage: 500.0, [bid]), 1.9)      # 5000 hours at one, none at two, a line between: 500 at 1.9
 
     def test_the_target_never_falls_as_demand_grows(self):
         supply = lambda wage: 1000.0 * min(1.0, 0.5 * wage ** 2)
@@ -66,9 +66,12 @@ class ClearingWithSupplyTests(unittest.TestCase):
         schedule = cleared(demand, supply_through(1.5, 0.5))
         self.assertAlmostEqual(flat.target_wage, 1.5 + (1.0 - 1.5) * 0.03 / 1.03, places=2)   # the pull toward the reservation wage, by the imbalance
         self.assertAlmostEqual(clearing.supply_target(1.0, lambda wage_now: 500.0, bids(demand)), 1.0)   # and its target is the ask itself
-        self.assertGreater(clearing.supply_target(1.0, lambda wage_now: 1000.0 * supply_through(1.5, 0.5)(wage_now), bids(demand)), 1.5 * 0.97)   # a rising supply: a few per cent
-        self.assertLess(clearing.supply_target(1.0, lambda wage_now: 1000.0 * supply_through(1.5, 0.5)(wage_now), bids(demand)), 1.5)
-        self.assertGreater(schedule.target_wage, 1.5 * 0.97)
+        rising = lambda wage_now: 1000.0 * supply_through(1.5, 0.5)(wage_now)
+        rising_target = clearing.supply_target(1.0, rising, bids(demand))
+        self.assertAlmostEqual(rising(rising_target), clearing.hours_wanted_at(rising_target, clearing.demand_intervals(1.0, bids(demand))), places=3)   # the demand slopes down to its cap, so the meeting is where the lines cross
+        self.assertLess(rising_target, 1.5)
+        self.assertGreater(schedule.target_wage, 1.0)
+        self.assertLess(schedule.target_wage, 1.5)
 
     def test_the_hours_offered_are_those_sold_at_the_wage_the_market_cleared_at(self):
         supply = supply_through(1.5, 0.5)

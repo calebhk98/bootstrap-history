@@ -2,6 +2,7 @@
 import math
 import random
 
+from sim.economy.api import PRICE_SMOOTHED_TRADE
 from sim.production.api import node_payback_diagnostic
 from sim.engine.ui_port import (Sim, civilization_ids, default_civilisation_id, format_occupational_report,
                                 load, load_civ, occupational_report)
@@ -23,8 +24,24 @@ def _split(text):
     return [part.strip() for part in (text or "").split(",") if part.strip()]
 
 
+STAPLE_FIGURES = ("staple_volatility", "staple_over_labour")
+
+
 def _format(value):
     return "n/a" if value is None or math.isnan(value) else "%.4g" % value
+
+
+def staple_figure_cause(staple, kinds):
+    """Why the staple's figures are not measured, or None: no staple, or its shown price (`kinds`, by good) is not a trade,
+    so a flat or cost-following price would read as a calm market."""
+    if not staple:
+        return "no_good"
+    return None if kinds.get(staple) == PRICE_SMOOTHED_TRADE else "price_not_a_trade"
+
+
+def figure_text(value, cause):
+    """A figure as printed: "unmeasured: <cause>" where it has a cause, else the number."""
+    return "unmeasured: " + cause if cause else _format(value)
 
 
 def occupation_lines(game):
@@ -45,7 +62,10 @@ def check_one(nodes, civ_id, seed, years, metals, staple=None, occupations=None)
         game.step()
     if occupations is not None:
         occupations.extend(occupation_lines(game))
-    return game.view("agent_health")(metals, staple)
+    report = game.view("agent_health")(metals, staple)
+    if report is None:
+        return None
+    return {**report, "staple_cause": staple_figure_cause(report["staple"], game.view("agent_price_kinds")())}
 
 
 def cmd_economy_check(args):
@@ -75,5 +95,6 @@ def cmd_economy_check(args):
                 continue
             print("  staple %s, metals %s" % (report["staple"], ", ".join(report["metals"]) or "none"))
             for key, meaning in FIGURE_LABELS:
-                print("  %-20s %8s  %s" % (key, _format(report["figures"].get(key)), meaning))
+                cause = report.get("staple_cause") if key in STAPLE_FIGURES else None
+                print("  %-20s %8s  %s" % (key, figure_text(report["figures"].get(key), cause), meaning))
     return 0

@@ -45,6 +45,11 @@ class PriceReads:
             figures.kinds = (answers, economy_api.shown_price_kinds_of(self._agent.economy()))
         return figures.kinds[1].get(good)
 
+    def price_kinds(self):
+        """The kind of every shown price, by good; see `price_kind`."""
+        self.price_kind(None)
+        return dict(self._agent.figures.kinds[1])
+
     def stale_goods(self):
         """Goods whose shown price is not a market's: not cleared within notional.RECENT_TRADE_YEARS."""
         self.answers()

@@ -81,13 +81,20 @@ def site_arrays(tiles, runs_anywhere, sited=False, order=()):
     return sites
 
 
+def no_fallbacks():
+    """The tool-fallback tables (entry_wear_kernel) of one recipe with no tool wear."""
+    none = numpy.full((1, 1), -1, dtype=numpy.int64)
+    return (none, none, none, numpy.zeros((1, 1)), numpy.zeros((1, 1)), numpy.full((1, 1, 1), -1, dtype=numpy.int64), none, numpy.zeros((1, 1)))
+
+
 class SitingTests(unittest.TestCase):
     def test_a_recipe_that_runs_anywhere_is_sited_on_the_anchor_and_books_its_runs_and_hours(self):
         capacity, committed = numpy.zeros((1, 3)), numpy.zeros(3)
         state = (numpy.zeros((1, 1)), numpy.zeros((1, 3)), numpy.zeros((1, 3), dtype=bool), numpy.zeros((3, 3)), numpy.full((1, 3), numpy.nan),
                  numpy.ones((1, 3)), numpy.full((1, 3), numpy.inf), numpy.zeros(3, dtype=bool), numpy.full(3, 1e9), capacity, committed)
         tables = (numpy.zeros((3, 1, 1)), numpy.zeros((2, 1, 1)), numpy.full((1, 1), -1, dtype=numpy.int64), numpy.full((1, 1), -1, dtype=numpy.int64),
-                  numpy.zeros((2, 3, 1)), numpy.zeros((3, 1)), numpy.zeros((1, 2)), numpy.zeros((3, 2)), numpy.zeros((1, 1)), numpy.zeros(3))
+                  numpy.zeros((2, 3, 1)), numpy.zeros((3, 1)), numpy.zeros((1, 2)), numpy.zeros((3, 2)), numpy.zeros((1, 1)), numpy.zeros(3),
+                  no_fallbacks())
         tile, runs = site_newcomer(0, 0, 1, 4.0, tables, state, site_arrays(3, True), numpy.zeros((1, 3), dtype=numpy.int64), False)
         self.assertEqual((tile, runs), (1, 4.0))
         self.assertEqual((capacity[0, 1], committed[1]), (4.0, 8.0))

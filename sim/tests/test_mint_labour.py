@@ -74,7 +74,7 @@ def world(spec, recipe="default"):
         opening_wages={}, specs={}, mint_recipe=_recipe() if recipe == "default" else recipe)
     setup.trades = {trade: None for trade in setup.mint_recipe.labour_hours} if recipe == "default" else {}   # the trades the recipe hires
     setup.unskilled_trade = min(setup.trades, default=None)
-    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()),
+    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity(), volume_weights={}),
                                      cohorts={}, producers=ProducerStore(), merchants={})
     mint.seed_opening_metal(setup, record)
     return setup, record

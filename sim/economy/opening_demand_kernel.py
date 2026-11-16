@@ -90,6 +90,27 @@ PARTIALS = 64        # room for the partial sums of an exact sum (an exact sum o
 
 
 @njit
+def flexible_budget_left(usable, spending, floor_wanted, floor_scale):
+    """The cash left for flexible spending once the floors are paid: the spending beyond the floors, within the usable cash.
+    When the floors take all the usable cash (wanted floors, `floor_scale` below one) nothing is left, exactly: the scaled floors
+    differ from the usable cash by rounding, and that residue must not become bids. No floors wanted leaves the whole spending."""
+    if floor_wanted > 0.0 and floor_scale < 1.0:
+        return 0.0
+    scaled = floor_wanted * floor_scale
+    return min(usable, max(spending, scaled)) - scaled
+
+
+@njit
+def store_pot(savings, usable, budget_total, spending, floor_wanted, floor_scale, flexible_scale):
+    """The cash a household may put into stores after its bids: the savings, within the usable cash its bids leave. When the bids were scaled
+    to the usable cash (the floors took it, or the flexible budgets were cut under a spending that reaches it) what is left of it is
+    rounding, and the pot is exactly zero."""
+    if (floor_wanted > 0.0 and floor_scale < 1.0) or (flexible_scale < 1.0 and spending >= usable):
+        return 0.0
+    return min(savings, usable - budget_total)
+
+
+@njit
 def _add(partials, count, term):
     """One more term into the exact sum held in `partials[:count]` (the algorithm of `math.fsum`); returns the new count."""
     x = term
@@ -443,7 +464,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
     floor_wanted = floor_spend * (1.0 + constants[K_FLOOR_MARGIN])
     usable = cash * (1.0 - constants[K_SAFETY])
     floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
-    left = min(usable, max(spending, floor_wanted * floor_scale)) - floor_wanted * floor_scale
+    left = flexible_budget_left(usable, spending, floor_wanted, floor_scale)
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     budget_total = 0.0
     for index in range(r0, r1):
@@ -460,7 +481,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
         budget_total += bid_budget
     savings = cash - budget_total - target
     if s1 > s0 and cohort_ints[c, CI_HAS_RATE] > 0:
-        pot = min(savings, usable - budget_total)
+        pot = store_pot(savings, usable, budget_total, spending, floor_wanted, floor_scale, flexible_scale)
         if pot > 0.0:
             real_rate = cohort_floats[c, CF_RATE] - inflation
             above_buffer = cash + claims + store_value - target

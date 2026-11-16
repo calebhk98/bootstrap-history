@@ -8,6 +8,7 @@ when other prices fall, metal at the mint is worth more than it costs to make, s
 """
 from typing import Dict, List, Optional, Tuple
 
+from . import currency
 from .goods_year_results import ArrayClearing
 from .types import ClearingResult, Transfer, EDGE_MINT, is_edge
 
@@ -75,6 +76,17 @@ def pay_top_ups(book, ledger, currency_id: str, metal: str, mint_price: float) -
     if transfers:
         book.post(transfers, [])
         ledger.note_postings(transfers, "sales")
+
+
+def paid_in_metal(spec) -> bool:
+    """Whether the money is a metal its issuer or the market pays in at a stated price: a struck coin (the mint price) and
+    weighed metal (its parity, no charge). Commodity money is not: its good is bought by its ordinary demand."""
+    return spec.regime in ("struck_coin", "weighed_metal") and bool(spec.backing_good) and spec.backing_per_unit > 0.0
+
+
+def paid_price(spec) -> float:
+    """What the regime pays per unit of its metal: parity less the regime's own charge (none for weighed metal)."""
+    return currency.mint_price(spec)
 
 
 def melting_pays(remembered_price: Optional[float], parity: float) -> bool:

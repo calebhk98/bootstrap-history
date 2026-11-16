@@ -45,23 +45,32 @@ def opening_trace(game) -> List[dict]:
                                    cache_dir=TRACE_CACHE_DIRECTORY)
 
 
-def sited_ore_ratios(game, prices, costs, stale) -> Dict[str, float]:
-    """{ore: price over making cost} of the ores of resources the seat has found a deposit of whose markets cleared lately."""
-    return {ore: prices[ore] / costs[ore]
-            for resource, ores in geography.ore_goods().items() if game.view("found_deposits")[resource]
-            for ore in ores if prices.get(ore) and costs.get(ore) and ore not in stale}
+def sited_ores(game) -> List[str]:
+    """The ores of the resources the seat has found a deposit of."""
+    found = game.view("found_deposits")
+    return [ore for resource, ores in geography.ore_goods().items() if found[resource] for ore in ores]
+
+
+def sited_ore_ratios(ores, prices, costs, stale, kinds, output) -> Tuple[Dict[str, float], Dict[str, str]]:
+    """({ore: price over making cost}, {ore: cause}) of the `ores`: those made last year whose price is a trade; every
+    other ore is named with its cause (`opening_checks.unmeasured_cause`)."""
+    causes = {ore: opening_checks.unmeasured_cause(ore, prices, costs, stale, kinds, output) for ore in ores}
+    return ({ore: prices[ore] / costs[ore] for ore, cause in causes.items() if cause is None},
+            {ore: cause for ore, cause in causes.items() if cause is not None})
 
 
 def price_ratios(game) -> Dict[str, Dict[str, Dict[str, object]]]:
     """{group: {"ratios": {good: price over making cost}, "unmeasured": {good: cause}}} for the sited ores, the staple
-    and the coin metal, after one step; only goods whose markets cleared lately (a stale good's shown price is its
-    cost, not a trade). A named good left out says why (`opening_checks.unmeasured_cause`)."""
+    and the coin metal, after one step; only goods made last year whose price is a trade (a stale good's shown price is
+    its cost, a thin market's is blended toward it). A good left out says why (`opening_checks.unmeasured_cause`)."""
     opened = game.view("agent_opening_figures")()
     prices, costs, stale = game.view("agent_prices")(), game.view("material_prices")(), game.view("agent_stale_goods")()
-    named = {"staple": game.view("agent_traded_staple")(), "coin_metal": opened["backing_good"]}
-    groups = {"sited_ores": {"ratios": sited_ore_ratios(game, prices, costs, stale), "unmeasured": {}}}
+    kinds, output = game.view("agent_price_kinds")(), game.view("agent_last_outcome")().output
+    ratios, unmeasured = sited_ore_ratios(sited_ores(game), prices, costs, stale, kinds, output)
+    named = {"staple": game.view("agent_staple")(), "coin_metal": opened["backing_good"]}
+    groups = {"sited_ores": {"ratios": ratios, "unmeasured": unmeasured}}
     for group, good in named.items():
-        cause = opening_checks.unmeasured_cause(good, prices, costs, stale)
+        cause = opening_checks.unmeasured_cause(good, prices, costs, stale, kinds, output)
         groups[group] = {"ratios": {good: prices[good] / costs[good]} if cause is None else {},
                          "unmeasured": {} if cause is None else {good or group: cause}}
     return groups

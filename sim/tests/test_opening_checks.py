@@ -3,12 +3,13 @@ refuses an opening that fails them unless a reason is given."""
 QUICK_TOPIC = True
 
 import io
+import math
 import unittest
 from contextlib import redirect_stdout
 from unittest import mock
 
 from sim.economy.metal_stock import COIN_WEAR_PER_YEAR
-from sim.engine import opening_checks, opening_checks_gate, opening_checks_table, shipped_openings_build
+from sim.engine import opening_checks, opening_checks_run, opening_checks_gate, opening_checks_table, shipped_openings_build
 
 spin_up_settled_check = opening_checks.spin_up_settled
 
@@ -25,22 +26,69 @@ def _trace(first, last, years=30):
 class UnmeasuredCauseTests(unittest.TestCase):
     prices = {"bronze_kg": 3.0, "free_kg": 0.0}
     costs = {"bronze_kg": 2.0, "tin_kg": 1.0}
+    kinds = {name: "smoothed_trade" for name in ("bronze_kg", "tin_kg", "free_kg", "copper_kg")}
+    output = {name: 1.0 for name in kinds}
 
     def test_each_reason_a_good_has_no_ratio_is_named(self):
-        cause = lambda good, stale=(): opening_checks.unmeasured_cause(good, self.prices, self.costs, stale)
+        cause = lambda good, stale=(): opening_checks.unmeasured_cause(good, self.prices, self.costs, stale, self.kinds, self.output)
         self.assertEqual(cause(None), "no_good")
         self.assertEqual(cause("bronze_kg", {"bronze_kg"}), "market_did_not_clear")
         self.assertEqual(cause("tin_kg"), "no_price")
         self.assertEqual(cause("free_kg"), "no_price")
-        self.assertEqual(opening_checks.unmeasured_cause("copper_kg", {"copper_kg": 1.0}, {}, ()), "no_making_cost")
+        self.assertEqual(opening_checks.unmeasured_cause("copper_kg", {"copper_kg": 1.0}, {}, (), self.kinds, self.output), "no_making_cost")
 
     def test_a_good_with_price_and_cost_that_traded_has_no_cause(self):
-        self.assertIsNone(opening_checks.unmeasured_cause("bronze_kg", self.prices, self.costs, ()))
+        self.assertIsNone(opening_checks.unmeasured_cause("bronze_kg", self.prices, self.costs, (), self.kinds, self.output))
 
     def test_the_cause_is_kept_in_the_check_detail(self):
         result = opening_checks.price_over_cost("coin", {}, unmeasured={"bronze_kg": "market_did_not_clear"})
         self.assertFalse(result.passed)
         self.assertEqual(result.detail["unmeasured"], {"bronze_kg": "market_did_not_clear"})
+
+
+class VacuousPassTests(unittest.TestCase):
+    prices = {"wheat_kg": 3.0}
+    costs = {"wheat_kg": 2.0}
+
+    def cause(self, kind, output):
+        return opening_checks.unmeasured_cause("wheat_kg", self.prices, self.costs, (), kinds={"wheat_kg": kind}, output=output)
+
+    def test_a_price_that_is_not_a_trade_is_unmeasured(self):
+        self.assertEqual(self.cause("thin_trade_blend", {"wheat_kg": 5.0}), "price_not_a_trade")
+        self.assertEqual(self.cause("making_cost_estimate", {"wheat_kg": 5.0}), "price_not_a_trade")
+
+    def test_a_good_nobody_made_last_year_is_unmeasured(self):
+        self.assertEqual(self.cause("smoothed_trade", {}), "not_made")
+        self.assertEqual(self.cause("smoothed_trade", {"wheat_kg": 0.0}), "not_made")
+
+    def test_a_made_good_with_a_trade_price_has_no_cause(self):
+        self.assertIsNone(self.cause("smoothed_trade", {"wheat_kg": 5.0}))
+
+    def test_sited_ores_name_every_ore_left_out_and_why(self):
+        prices = {"copper_ore": 3.0, "tin_ore": 4.0, "lead_ore": 2.0}
+        costs = {"copper_ore": 2.0, "tin_ore": 2.0, "lead_ore": 2.0}
+        kinds = {"copper_ore": "smoothed_trade", "tin_ore": "thin_trade_blend", "lead_ore": "smoothed_trade"}
+        ratios, unmeasured = opening_checks_run.sited_ore_ratios(
+            ["copper_ore", "tin_ore", "lead_ore", "iron_ore"], prices, costs, {"lead_ore"}, kinds, {"copper_ore": 1.0, "tin_ore": 1.0})
+        self.assertEqual(ratios, {"copper_ore": 1.5})
+        self.assertEqual(unmeasured, {"lead_ore": "market_did_not_clear", "tin_ore": "price_not_a_trade", "iron_ore": "no_price"})
+
+    def test_a_ratio_that_is_not_finite_is_unmeasured_with_a_cause(self):
+        result = opening_checks.price_over_cost("ore", {"a": 2.0, "b": math.inf, "c": math.nan, "d": 0.0})
+        self.assertEqual(result.detail["unmeasured"], {"b": "ratio_not_usable", "c": "ratio_not_usable", "d": "ratio_not_usable"})
+        self.assertEqual(sorted(result.detail["ratios"]), ["a"])
+
+    def test_only_unmeasurable_ratios_do_not_pass(self):
+        result = opening_checks.price_over_cost("ore", {"a": math.inf})
+        self.assertFalse(result.passed)
+        self.assertIsNone(result.value)
+        self.assertEqual(result.detail["unmeasured"], {"a": "ratio_not_usable"})
+
+    def test_a_settled_result_with_a_cause_is_kept_in_the_detail_and_not_passed(self):
+        result = spin_up_settled_check({"settled": False, "years": 9, "gap": 0.0, "cause": "zero_real_output", "unmeasured": {"wheat": "price_not_a_trade"}}, 0.02)
+        self.assertFalse(result.passed)
+        self.assertEqual(result.detail["cause"], "zero_real_output")
+        self.assertEqual(result.detail["unmeasured"], {"wheat": "price_not_a_trade"})
 
 
 class PriceOverCostTests(unittest.TestCase):

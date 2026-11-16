@@ -2,7 +2,7 @@
 
 The rules are `households_orders.goods_orders` (the cohort's budget, its needs' units, the goods' affordability, the
 durables' replacement, the surplus scaled to the spending, the store's bids and the store value outside the durables kept in
-use) and `year_goods.less_what_it_grew` (the floors the own plot grew are not bought), written once over the packed cohorts.
+use; the floors the own plot grew are met first: not bought, not charged to the spending), written once over the packed cohorts.
 The needs, goods and store goods of a basket are packed once per basket (a template); a cohort names its template and
 carries its own holdings, plot units and cash. The helpers are the opening kernel's (`opening_demand_kernel`), which makes the
 same orders at the opening's incomes; this one adds the held durables in use, the year's incomes and cash, the smoothing flag and the
@@ -16,7 +16,7 @@ from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_F
                                     RF_SHARE, RI_GOOD, RI_UNIT, SF_LIFE, SF_PRICE, SF_WEIGHT, V_FLOORS, V_PIDX, V_SFLOORS, V_STOTALS, V_TOTALS, W_AFF,
                                     W_BUDGET, W_CAP, W_CEIL, W_COUNT, W_FLEX, W_FLOOR, W_ON, W_QTY, W_SHARE, _add, _affordable, _need_units,
                                     _resting_purse, _store_value_target, _total)
-from .opening_demand_kernel import RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
+from .opening_demand_kernel import flexible_budget_left, store_pot, RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
 from .satiated_demand import is_satiated
 from .priced_need_kernel import limit_shares, price_ceilings, units_per_money
 
@@ -145,6 +145,17 @@ def _reset_mix(n0, n1, r0, r1, need_floats, row_floats, row_ints, row_scratch, n
 
 
 @njit
+def _met(unit, unit0, grown0, people, unit_floor_per_person, grown):
+    """The share of a floor unit the cohort's own plot grew (none for a row with no unit)."""
+    if unit < 0:
+        return 0.0
+    unit_floor = unit_floor_per_person[unit0 + unit] * people
+    if unit_floor <= 0.0:
+        return 0.0
+    return min(1.0, grown[grown0 + unit] / unit_floor)
+
+
+@njit
 def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints, template_floats, need_floats, need_ints, row_floats, row_ints,
             store_floats, store_ints, unit_floor_per_person, order, held_rows, held_stores, grown, row_scratch, need_scratch, good_scratch, partials,
             row_out, store_out, cohort_out):
@@ -183,7 +194,10 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
     exponent = 1.0 - template_floats[template, TF_SUBSTITUTION]
     count = 0
     for n in range(n0, n1):
-        count = _add(partials[0], count, need_floats[n, NF_PIDX] * need_floats[n, NF_SUB] * people)
+        met = 0.0
+        if need_ints[n, NI_ROW1] > need_ints[n, NI_ROW0]:
+            met = _met(row_ints[need_ints[n, NI_ROW0], RI_UNIT], unit0, grown0, people, unit_floor_per_person, grown)
+        count = _add(partials[0], count, need_floats[n, NF_PIDX] * need_floats[n, NF_SUB] * people * (1.0 - met))
     floor_cost = _total(partials[0], count)
     cohort_out[c, CA_FLOOR_COST] = floor_cost
     mean_income = income if last_income <= 0.0 else 0.5 * (income + last_income)
@@ -288,7 +302,8 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
                 else:
                     ratio = max(0.0, flow * (stock_flow / flow) * life - held_rows[row_base + r]) / flow
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
-                row_scratch[r, W_FLOOR] = floor_quantity * ratio
+                met = _met(row_ints[r, RI_UNIT], unit0, grown0, people, unit_floor_per_person, grown)
+                row_scratch[r, W_FLOOR] = floor_quantity * (1.0 - met) * ratio
                 row_scratch[r, W_FLEX] = flexible_quantity * ratio
                 row_scratch[r, W_CAP] = min(ceil[r], household_cap)
                 row_scratch[r, W_ON] = 1.0
@@ -303,7 +318,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
     floor_wanted = floor_spend * (1.0 + constants[K_FLOOR_MARGIN])
     usable = cash * (1.0 - constants[K_SAFETY])
     floor_scale = min(1.0, usable / floor_wanted) if floor_wanted > 0.0 else 0.0
-    left = min(usable, max(spending, floor_wanted * floor_scale)) - floor_wanted * floor_scale
+    left = flexible_budget_left(usable, spending, floor_wanted, floor_scale)
     flexible_scale = min(1.0, left / flexible_spend) if flexible_spend > 0.0 else 0.0
     budget_total = 0.0
     for index in range(r0, r1):
@@ -321,7 +336,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
     savings = cash - budget_total - target
     if s1 > s0 and template_ints[template, TM_HAS_RATE] > 0:
         cohort_out[c, CA_PLAN] = 1.0
-        pot = min(savings, usable - budget_total)
+        pot = store_pot(savings, usable, budget_total, spending, floor_wanted, floor_scale, flexible_scale)
         real_rate = template_floats[template, TF_RATE] - inflation
         above_buffer = cash + claims + store_value - target
         count = 0
@@ -349,26 +364,13 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
                     count = _add(partials[0], count, store_budget)
             savings -= _total(partials[0], count)
     cohort_out[c, CA_SAVINGS] = savings
-    for r in range(r0, r1):          # the floors the own plot grew are not bought
+    for r in range(r0, r1):
         if row_scratch[r, W_ON] <= 0.0:
             continue
-        floor_quantity = row_scratch[r, W_FLOOR]
-        bid_budget = row_scratch[r, W_BUDGET]
-        unit = row_ints[r, RI_UNIT]
-        met = 0.0
-        if unit >= 0:
-            unit_floor = unit_floor_per_person[unit0 + unit] * people
-            if unit_floor > 0.0:
-                met = min(1.0, grown[grown0 + unit] / unit_floor)
-        if met > 0.0 and floor_quantity > 0.0:
-            cut = floor_quantity * met
-            kept = 1.0 - cut / (floor_quantity + row_scratch[r, W_FLEX])
-            bid_budget = bid_budget * max(0.0, kept)
-            floor_quantity = floor_quantity - cut
         row_out[row_base + r, RO_ON] = 1.0
-        row_out[row_base + r, RO_FLOOR] = floor_quantity
+        row_out[row_base + r, RO_FLOOR] = row_scratch[r, W_FLOOR]
         row_out[row_base + r, RO_FLEX] = row_scratch[r, W_FLEX]
-        row_out[row_base + r, RO_BUDGET] = bid_budget
+        row_out[row_base + r, RO_BUDGET] = row_scratch[r, W_BUDGET]
         row_out[row_base + r, RO_CAP] = row_scratch[r, W_CAP]
 
 

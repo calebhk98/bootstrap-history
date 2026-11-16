@@ -7,6 +7,8 @@ QUICK_TOPIC = True
 import types as pytypes
 import unittest
 
+from sim.economy.cohort_store import CohortStore
+from sim.economy.households_cohort import Cohort
 from sim.economy.producer_store import ProducerStore
 from sim.economy import currency, mint
 from sim.book import Book
@@ -50,7 +52,7 @@ def economy_of(spec, coin_by_tile=None):
     book.transfer(Transfer(EDGE_ISSUE, "b", "coin", 400.0, "opening"))
     setup = pytypes.SimpleNamespace(opening_population_by_tile={"t1": 3.0, "t2": 1.0}, tiles={"t1": 0, "t2": 0},
                                     specs={}, mint_recipe=None)
-    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity()),
+    record = pytypes.SimpleNamespace(book=book, currency=spec, memory=pytypes.SimpleNamespace(prices=BullionAtParity(), volume_weights={}),
                                      cohorts={}, producers=ProducerStore(), merchants={})
     mint.seed_opening_metal(setup, record)
     return setup, record
@@ -82,6 +84,20 @@ class OrderTests(unittest.TestCase):
         _held, _bids, offers = self.orders(spec)
         self.assertAlmostEqual(sum(offer.quantity for offer in offers), 10.0)
         self.assertTrue(all(offer.reservation_price == currency.mint_parity(spec) for offer in offers))
+
+    def test_it_offers_only_the_money_above_what_holders_want_in_metal(self):
+        spec = spec_of("commodity")
+        setup, record = economy_of(spec)
+        record.cohorts = CohortStore({"a": Cohort("a", "t1", 0, 1.0, 1.0, 1.0, cash_target=700.0)})
+        _held, _bids, offers = self.orders(spec, record, setup)
+        self.assertAlmostEqual(sum(offer.quantity for offer in offers), (1000.0 - 700.0) * PER_UNIT)
+
+    def test_it_offers_nothing_when_holders_want_more_money_than_there_is(self):
+        spec = spec_of("commodity")
+        setup, record = economy_of(spec)
+        record.cohorts = CohortStore({"a": Cohort("a", "t1", 0, 1.0, 1.0, 1.0, cash_target=1500.0)})
+        _held, _bids, offers = self.orders(spec, record, setup)
+        self.assertEqual(offers, [])
 
     def test_an_empty_mint_sells_nothing(self):
         spec = spec_of("struck_coin")

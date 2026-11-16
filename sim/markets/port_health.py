@@ -33,12 +33,12 @@ def note_year(stored, outcome):
     del rows[:-OUTCOMES_KEPT]
 
 
-def staple_good(agent, stale=()):
-    """The good of the hunger need with the largest opening basket quantity, leaving out the `stale` goods (those whose markets
-    have not cleared lately: a good nobody trades shows what it would cost to make, not a price); None when none is left."""
+def staple_good(agent):
+    """The good of the hunger need with the largest opening basket quantity: the civilisation's staple, whether or not
+    its market cleared lately; None when the need has no goods."""
     economy = agent.economy()
     opening = opening_quantities(economy)
-    goods = [good for good in hunger_goods(economy) if good not in stale]
+    goods = hunger_goods(economy)
     return max(goods, key=lambda good: opening.get(good, 0.0), default=None)
 
 

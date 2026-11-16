@@ -5,7 +5,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 import numpy as np
 
 from sim.labour.market import aptitude, expectations, switching_kernel, training
-from sim.labour.market.switching import (NEGLIGIBLE_MOVE_SHARE, PLAN_REUSE_TOLERANCE, REMAINING_CAREER_SHARE,
+from sim.labour.market.switching import (NEGLIGIBLE_MOVE_SHARE, REMAINING_CAREER_SHARE,
                                          RETRAINING_SHARE_WITHIN_FAMILY, SWITCHING_CONSIDERATION_SHARE_PER_YEAR,
                                          SWITCHING_TASTE_SCALE)
 from sim.labour.market.switching_discounts import discount_tables
@@ -109,7 +109,7 @@ def _planned_moves(inputs, workers, plan: _AreaPlan, later_income) -> Optional[_
         counts, plan.income, plan.idle, plan.baseline, later_income, plan.vacancies, plan.fixed.chances, discounts,
         plan.retrained, plan.source_position, plan.source_is_fallback, plan.fixed.fallback_position, plan.subsistence,
         inputs.discount_rate, inputs.career_years, SWITCHING_CONSIDERATION_SHARE_PER_YEAR, REMAINING_CAREER_SHARE,
-        PLAN_REUSE_TOLERANCE, SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, plan.valid, plan.then, plan.targets, plan.shares,
+        SWITCHING_TASTE_SCALE, NEGLIGIBLE_MOVE_SHARE, plan.valid, plan.then, plan.targets, plan.shares,
         plan.moving, plan.active, plan.considering)
     possible = counts.shape[0] * 2 * len(plan.destinations)
     moves_source, moves_destination = np.empty(possible, np.int64), np.empty(possible, np.int64)

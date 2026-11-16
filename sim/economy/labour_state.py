@@ -166,6 +166,20 @@ def scale_people(state: MarketState, area: str, factor: float) -> None:
     scale_people_in_area(state, area, factor)
 
 
+def seed_opening_wages(workforce: MarketState, opening_wages: Dict[str, float]) -> int:
+    """Each market the workforce holds people in starts with its trade's opening wage as the wage paid last, so the first
+    year's clearing moves from it by the declared share (`WAGE_SHARE_CLOSED_PER_YEAR`) instead of jumping to its target.
+    Returns how many markets have no opening wage for their trade and keep no last wage."""
+    without = 0
+    for area, by_trade in workforce.workers.items():
+        for trade in by_trade:
+            if trade in opening_wages:
+                workforce.wages.setdefault(area, {})[trade] = opening_wages[trade]
+            else:
+                without += 1
+    return without
+
+
 def mirror_wages(wages: Dict[str, float], state: MarketState) -> None:
     """Rebuild whole the remembered wages from the core's wages (`state.wages`, area -> trade -> wage) under the economy's
     market keys, for whoever reads a wage: a market the core holds no wage for is not quoted one. The only writer of

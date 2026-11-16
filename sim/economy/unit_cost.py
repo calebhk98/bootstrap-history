@@ -10,6 +10,7 @@ from typing import Mapping, Optional
 
 from sim.world import capital_market
 
+from . import tool_fallback
 from .types import GoodId, Recipe, TradeId
 
 Prices = Mapping[GoodId, float]
@@ -28,8 +29,19 @@ def _bill(quantities: Mapping[str, float], rates: Mapping[str, float]) -> float:
     return total
 
 
-def input_cost_per_run(recipe: Recipe, input_prices: Prices) -> float:
-    return _bill(recipe.inputs, input_prices)
+def input_cost_per_run(recipe: Recipe, input_prices: Prices, wages: Optional[Wages] = None) -> float:
+    """The inputs at their prices. With `wages`, the tools' wear is billed as `tool_fallback.wear_cost_per_run` (the cheapest
+    way to cover it) and the rest of the inputs as a bill; without, every input must have a price."""
+    if wages is None:
+        return _bill(recipe.inputs, input_prices)
+    return _bill(recipe.hard_inputs, input_prices) + tool_fallback.wear_cost_per_run(recipe, input_prices, wages)
+
+
+def bought_input_cost_per_run(recipe: Recipe, input_prices: Prices) -> float:
+    """What a run pays out for goods: the inputs at their prices, a tool with no price left out (its wear is met by the
+    fallback hours, not bought)."""
+    return _bill({good: quantity for good, quantity in recipe.inputs.items()
+                  if good not in recipe.tool_wear or input_prices.get(good) is not None}, input_prices)
 
 
 def labour_cost_per_run(recipe: Recipe, wages: Wages) -> float:
@@ -38,7 +50,7 @@ def labour_cost_per_run(recipe: Recipe, wages: Wages) -> float:
 
 def variable_cost_per_run(recipe: Recipe, input_prices: Prices, wages: Wages, rent: float = 0.0) -> float:
     """Inputs and labour, plus the rent on the land a run works (zero where land is not charged for)."""
-    return input_cost_per_run(recipe, input_prices) + labour_cost_per_run(recipe, wages) + rent
+    return input_cost_per_run(recipe, input_prices, wages) + labour_cost_per_run(recipe, wages) + rent
 
 
 def plant_value_per_run(recipe: Recipe, input_prices: Prices, wages: Wages) -> float:

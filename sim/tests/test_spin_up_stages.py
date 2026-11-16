@@ -28,6 +28,7 @@ class TrimmedStageTests(unittest.TestCase):
         economy = _CountingEconomy()
         with mock.patch.dict(os.environ, FULL_GAME, clear=True), \
                 mock.patch.object(spin_up_run.economy_api, "spin_up_state", lambda economy, outcome: {}), \
+                mock.patch.object(spin_up_run.economy_api, "traded_price_goods", lambda economy: set()), \
                 mock.patch.object(spin_up_run.economy_api, "interest_rate", lambda economy: 0.05):
             states = spin_up_run.settle_trimmed(economy, object(), [])
         self.assertEqual(economy.years, int(spin_up_run.SPIN_UP_TRIMMED_YEARS))

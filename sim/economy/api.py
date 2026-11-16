@@ -47,7 +47,7 @@ from .record import EconomyRecord
 from .setup import EconomySetup, SetupTrade, goods_specs, recipe_tile_key
 from .setup import area_tile, labour_area, opening_price_today
 from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
-from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
+from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_ISSUE, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, LabourBid, LabourOffer, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
 from . import spin_up_sensitivity
@@ -58,6 +58,7 @@ from .titles_moves import holdings as record_title_holdings
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
+from .market_memory import PRICE_SMOOTHED_TRADE
 from .trade_wages import premium_for_training_years, trade_premium
 from sim.world import capital_market
 
@@ -68,7 +69,7 @@ __all__ = [
     "price_response", "prices_at", "offered_units", "watch_tiles",
     "shown_prices", "Producer", "expected_output_prices", "live_input_prices", "live_wages", "AgentOrders",
     "EconomyYearInputs", "recipe_tile_key", "recipes_from_production_data", "plant_builds", "with_tool_wear", "EconomyRecord", "EconomySetup", "SetupTrade", "SiteLimit",
-    "goods_specs", "EDGE_EXTERNAL", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "WAGE_CEILING_MULTIPLE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
+    "goods_specs", "EDGE_EXTERNAL", "EDGE_ISSUE", "household_cohort_ids", "EDGE_LEGACY", "EDGE_CARGO", "EDGE_CONSUMPTION", "EDGE_PRODUCTION", "EDGE_EXCHANGE", "WAGE_CEILING_MULTIPLE", "external_edge", "Bid", "GoodsMove", "LabourBid", "LabourOffer", "Offer", "Transfer",
     "variable_cost_per_run", "rebase_basket_price_level", "trade_premium", "premium_for_training_years", "HOUSEHOLD_TIME_PREFERENCE", "title_wealth",
     "traded_volumes", "country_traded_volumes", "country_opening_basket", "market_record", "opening_quantities", "opening_prices_in_hours", "opening_price_in_current_money", "wages_by_trade_weighted", "interest_rate", "market_rate", "producers_of",
     "account_balance", "account_holdings",
@@ -82,7 +83,7 @@ __all__ = [
     "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
     "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
-    "trade_wage_at", "hunger_goods", "health_figures", "crop_site_inputs", "crop_suitability_inputs",
+    "trade_wage_at", "hunger_goods", "health_figures", "PRICE_SMOOTHED_TRADE", "traded_price_goods", "crop_site_inputs", "crop_suitability_inputs",
 ]
 
 
@@ -354,6 +355,11 @@ def economy_from_record(setup, saved):
     return Economy(setup, EconomyRecord.from_record(saved))
 
 
+def household_cohort_ids(economy):
+    """The agent ids of every household cohort, in id order."""
+    return [cohort.agent_id for cohort in figures_in_id_order(economy.record.cohorts)]
+
+
 def blank_economy(setup):
     """An Economy at its opening, before any year has run."""
     return Economy(setup)
@@ -459,6 +465,11 @@ def shown_price_kinds_of(economy, country=None):
     """What each shown price is, by good: PRICE_SMOOTHED_TRADE, a quote kind (QUOTE_*) or an estimate (`notional.KIND_*`).
     Same scope as `shown_prices_of`."""
     return dict(_shown(economy, country)[2])
+
+
+def traded_price_goods(economy):
+    """The goods whose price in the year just stepped is a trade (PRICE_SMOOTHED_TRADE in some market), not a quote or an estimate."""
+    return {good for good, kind in economy.record.memory.price_kinds_by_good().items() if kind == PRICE_SMOOTHED_TRADE}
 
 
 def _shown(economy, country):

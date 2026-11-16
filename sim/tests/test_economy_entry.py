@@ -6,6 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy import entry
+from sim.economy.stock_residue import STOCK_RESIDUE_UNITS
 from sim.economy.types import Bid, ClearingResult, Offer, Recipe
 from sim.tests.test_economy_producers import View
 
@@ -43,6 +44,13 @@ class EntryTests(unittest.TestCase):
         # newcomer for the rest, even where a maker of the same recipe already works the tile
         self.assertEqual(entry.gap_beyond_spare(100.0, 120.0), 0.0)
         self.assertEqual(entry.gap_beyond_spare(100.0, 30.0), 70.0)
+
+    def test_a_gap_below_the_rounding_residue_is_no_gap(self):
+        self.assertEqual(entry.gap_beyond_spare(STOCK_RESIDUE_UNITS / 2.0, 0.0), 0.0)
+        self.assertEqual(entry.gap_beyond_spare(STOCK_RESIDUE_UNITS * 2.0, 0.0), STOCK_RESIDUE_UNITS * 2.0)
+
+    def test_unmet_demand_below_the_rounding_residue_brings_no_maker(self):
+        self.assertEqual(plans({"boil_salt": SALT}, self.view(1.0), market(unmet=1e-12)), [])
 
     def test_a_large_gap_draws_every_recipe_that_pays_not_just_the_best(self):
         # no per-year cap of one newcomer a market: the part of the gap the best recipe's newcomer leaves
@@ -103,6 +111,10 @@ class RetireTests(unittest.TestCase):
                      "waiting": self.producer("waiting", 0.0), "owing": self.producer("owing", 0.0)}
         closing = entry.producers_to_close(producers, pending={"waiting"}, debtors={"owing"})
         self.assertEqual(closing, ["idle"])
+
+    def test_a_producer_whose_capacity_is_rounding_residue_closes_though_it_never_worked(self):
+        producers = {"dust": self.producer("dust", STOCK_RESIDUE_UNITS / 2.0), "small": self.producer("small", 1e-3)}
+        self.assertEqual(entry.producers_to_close(producers, pending=set(), debtors=set()), ["dust"])
 
 
 class RestakeTests(unittest.TestCase):
