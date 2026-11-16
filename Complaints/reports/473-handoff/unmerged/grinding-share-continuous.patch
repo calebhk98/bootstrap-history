@@ -1,0 +1,1048 @@
+diff --git a/docs/architecture/COMPILED_YEAR.md b/docs/architecture/COMPILED_YEAR.md
+index cf852d262..e9080f649 100644
+--- a/docs/architecture/COMPILED_YEAR.md
++++ b/docs/architecture/COMPILED_YEAR.md
+@@ -575,7 +575,7 @@ row is written. The writers: `households_cohort.put_cohort`, `change_cohort`, `s
+ `rebase_price_level` (a plain mapping, a test's, still works through them); the close writes every figure in one block
+ (`cohort_close_write.write_close`); `cohort_people.follow_population` rescales every tile's cohorts to demography's people in one block and
+ `apply_work_plans` stores the household-work plans that differ. Block reads: `store.column(name)`, `floats` (Python floats), `order`,
+-`rows_on_tile`, `tiles_present`, `ids_on_tiles`, `exact_total`, `unmet_of(need)`, `milled_of`, `pairs_of`, and `figures(rows)`, the
++`rows_on_tile`, `tiles_present`, `ids_on_tiles`, `exact_total`, `unmet_of(need)`, `ground_of`, `pairs_of`, and `figures(rows)`, the
+ `CohortFigures` (id, tile, people, working people, last year's income, hired work, grains milled, optionally the own plan) that rules written over
+ a cohort read without a `Cohort` being built. Totals by tile in table order (`cohort_people.total_by_tile`) use `sum_in_order_by_group`,
+ which adds left to right from zero as the loops did. Converted to columns: the year's close (`year_close_households`: only the market-view
+@@ -598,7 +598,7 @@ and `lending.bid_household_loans`. `cohort_orders` reads `cohort_order_figures.o
+ and tool bids and the basket key read, a cohort-like tuple with the scalar types a `Cohort` hands back) and orders every cohort through
+ `households_orders_pack.kernel_orders` (the per-cohort `households.goods_orders` branch for a basket the kernel does not cover was never reached
+ and is gone); `plans` and `bid_household_loans` pass `CohortFigures` to the rules written over a cohort (`work_terms_at`, `grinding_plan`,
+-`households_credit.floor_bids`, which only read id, tile and people). `CohortStore.milled_of` keeps the tuple of each row until the row's grains
++`households_credit.floor_bids`, which only read id, tile and people). `CohortStore.ground_of` keeps the tuple of each row until the row's grains
+ are written. The basket keys of all cohorts come from one pass (`household_work_year.signatures_of_figures`, `signatures_of`), whose hearths come from
+ `titles_worked.worked_shares`: the tenancies of a tile are read once for all its holders instead of once for each.
+ 
+diff --git a/sim/economy/cohort_order_figures.py b/sim/economy/cohort_order_figures.py
+index e214c9cca..e4aea8dc1 100644
+--- a/sim/economy/cohort_order_figures.py
++++ b/sim/economy/cohort_order_figures.py
+@@ -15,7 +15,7 @@ class OrderFigures(NamedTuple):
+     tile: str
+     people: float
+     hired_work_per_person: float
+-    milled_grains: tuple
++    ground_by_hand: tuple
+     expected_spending: float
+     expected_floor_cost: float
+     expected_inflation: float
+@@ -29,6 +29,6 @@ def order_figures(store: CohortStore, rows: np.ndarray) -> List[OrderFigures]:
+     names = ("people", "hired_work_per_person", "expected_spending", "expected_floor_cost", "expected_inflation", "cash_target",
+              "share_wealth", "last_year_income")
+     people, hired, spending, floor_cost, inflation, target, wealth, income = (store.floats(name, rows) for name in names)
+-    return [OrderFigures(store.ids[row], tile, people[place], hired[place], store.milled_of(row), spending[place], floor_cost[place],
++    return [OrderFigures(store.ids[row], tile, people[place], hired[place], store.ground_of(row), spending[place], floor_cost[place],
+                          inflation[place], target[place], None if wealth[place] != wealth[place] else wealth[place], income[place])
+             for place, (row, tile) in enumerate(zip(rows.tolist(), store.tile_names(rows)))]
+diff --git a/sim/economy/cohort_people.py b/sim/economy/cohort_people.py
+index d52004e12..3ba1a8143 100644
+--- a/sim/economy/cohort_people.py
++++ b/sim/economy/cohort_people.py
+@@ -71,19 +71,19 @@ def hunger_by_tile(store: CohortStore, hunger_need: str) -> Dict[str, float]:
+ 
+ 
+ def apply_work_plans(store: CohortStore, plans: Mapping[str, tuple]) -> None:
+-    """Each cohort's household-work plan (`plans`: id -> (hired hours a person, own hours, grains bought milled)) is stored where it
+-    differs from what the cohort holds: its hired hours a person and its grains bought milled (the own hours are not stored)."""
++    """Each cohort's household-work plan (`plans`: id -> (hired hours a person, own hours, per grain the share ground by hand)) is stored where it
++    differs from what the cohort holds: its hired hours a person and its grains ground by hand with their shares (the own hours are not stored)."""
+     ids = list(plans)
+     rows = store.rows_of(ids)
+     hired = [plans[each][0] for each in ids]
+-    milled = [tuple(plans[each][2]) for each in ids]
++    milled = [tuple(tuple(pair) for pair in plans[each][2]) for each in ids]
+     changed = np.array(hired, dtype=np.float64) != store.column("hired_work_per_person")[rows]
+     counts = np.fromiter(map(len, milled), dtype=np.int64, count=len(milled))
+-    for place in np.nonzero((counts != store.table.milled_count[rows]) | (counts > 0))[0].tolist():     # only a cohort that mills is compared
+-        changed[place] |= milled[place] != store.milled_of(int(rows[place]))
++    for place in np.nonzero((counts != store.table.ground_count[rows]) | (counts > 0))[0].tolist():     # only a cohort that mills is compared
++        changed[place] |= milled[place] != store.ground_of(int(rows[place]))
+     places = np.nonzero(changed)[0]
+     if not len(places):
+         return
+     store.set_rows("hired_work_per_person", rows[places], np.array([hired[each] for each in places.tolist()], dtype=np.float64))
+-    store.write_milled(rows[places], [milled[each] for each in places.tolist()])
++    store.write_ground(rows[places], [milled[each] for each in places.tolist()])
+ 
+diff --git a/sim/economy/cohort_reads.py b/sim/economy/cohort_reads.py
+index 631d147a4..991bc149f 100644
+--- a/sim/economy/cohort_reads.py
++++ b/sim/economy/cohort_reads.py
+@@ -54,7 +54,7 @@ def figures_in_id_order(cohorts) -> List[CohortFigures]:
+     if isinstance(cohorts, CohortStore):
+         return cohorts.figures(cohorts.order())
+     return [CohortFigures(each.agent_id, each.tile, each.people, getattr(each, "working_people", 0.0), getattr(each, "last_year_income", 0.0),
+-                          getattr(each, "hired_work_per_person", 0.0), getattr(each, "milled_grains", ()), None)
++                          getattr(each, "hired_work_per_person", 0.0), getattr(each, "ground_by_hand", ()), None)
+             for each in sorted(cohorts.values(), key=lambda each: each.agent_id)]
+ 
+ 
+diff --git a/sim/economy/cohort_rows.py b/sim/economy/cohort_rows.py
+index 0e9d8a40f..c2de6ccde 100644
+--- a/sim/economy/cohort_rows.py
++++ b/sim/economy/cohort_rows.py
+@@ -24,12 +24,13 @@ COHORT_ROWS_SPEC = TableSpec("CohortRows", [
+     Column("hired_work_per_person", np.float64, "hours of household work a person's share hires this year", "hours per person"),
+     Column("unmet_count", np.int64, "places of the unmet-floor columns in use", "count"),
+     Column("plan_count", np.int64, "places of the own-plan columns in use", "count"),
+-    Column("milled_count", np.int64, "places of the milled-grain column in use", "count"),
++    Column("ground_count", np.int64, "places of the ground-by-hand columns in use", "count"),
+     Column("unmet_need", np.int64, "the need each unmet figure is for, in the order written", "number", ids="needs", width=0),
+     Column("unmet_units", np.float64, "need units short of the floor", "need units", width=0),
+     Column("plan_need", np.int64, "the need each own-plan figure is for, in the order written", "number", ids="needs", width=0),
+     Column("plan_units", np.float64, "need units it grows with hours kept back", "need units", width=0),
+-    Column("milled_good", np.int64, "the grains it buys milled, in the order written", "number", ids="goods", width=0),
++    Column("ground_good", np.int64, "the grains it can have milled, in the order written", "number", ids="goods", width=0),
++    Column("ground_units", np.float64, "share of the food units it grinds of that grain by hand", "ratio", width=0),
+ ])
+ 
+ CohortRows = COHORT_ROWS_SPEC.make_type(__name__)
+@@ -41,5 +42,5 @@ OPTIONAL_FLOATS = ("share_wealth",)
+ SCALAR_FLOATS = tuple(name for name in FLOAT_FIELDS if name not in OPTIONAL_FLOATS)
+ # the columns of one wide group grow together
+ WIDE_GROUPS = {"unmet": ("unmet_need", "unmet_units"), "plan": ("plan_need", "plan_units"),
+-               "milled": ("milled_good",)}
++               "ground": ("ground_good", "ground_units")}
+ WIDE_COLUMNS = tuple(name for group in WIDE_GROUPS.values() for name in group)
+diff --git a/sim/economy/cohort_store.py b/sim/economy/cohort_store.py
+index 3025ab3cc..ed16b41ea 100644
+--- a/sim/economy/cohort_store.py
++++ b/sim/economy/cohort_store.py
+@@ -24,7 +24,7 @@ from .households_cohort import Cohort
+ _FIRST_CAPACITY = 64
+ _FIELDS = ("agent_id", "tile", "income_class", "people", "working_people", "ownership_share", "expected_inflation", "cash_target",
+            "last_basket_price_level", "last_year_income", "share_wealth", "planned_spending", "expected_spending",
+-           "expected_floor_cost", "unmet_floor_by_need", "own_plan_by_need", "hired_work_per_person", "milled_grains")
++           "expected_floor_cost", "unmet_floor_by_need", "own_plan_by_need", "hired_work_per_person", "ground_by_hand")
+ _DICTS = {"unmet": "unmet_floor_by_need", "plan": "own_plan_by_need"}
+ 
+ 
+@@ -37,7 +37,7 @@ class CohortFigures(NamedTuple):
+     working_people: float
+     last_year_income: float
+     hired_work_per_person: float
+-    milled_grains: tuple
++    ground_by_hand: tuple
+     own_plan_by_need: Optional[Dict[str, float]]
+ 
+ 
+@@ -56,7 +56,7 @@ class CohortStore(MutableMapping):
+         self.row_of: Dict[str, int] = {}
+         self.version = 0                            # rises on every write
+         self._objects: List[Optional[Cohort]] = []
+-        self._milled: List[Optional[tuple]] = []    # by row: the grains bought milled as names, until the row's grains are written
++        self._ground: List[Optional[tuple]] = []    # by row: (grain name, share ground by hand) pairs, until the row's grains are written
+         self._order: Optional[np.ndarray] = None
+         self._order_members = -1
+         self._members = 0                           # rises when a cohort enters or its tile or class is written
+@@ -151,7 +151,7 @@ class CohortStore(MutableMapping):
+         self.table.row_count[0] = row + 1
+         self.ids.append(cohort_id)
+         self._objects.append(None)
+-        self._milled.append(None)
++        self._ground.append(None)
+         self.row_of[cohort_id] = row
+         self._members += 1
+         return row
+@@ -182,7 +182,7 @@ class CohortStore(MutableMapping):
+         table.share_wealth[row] = np.nan if cohort.share_wealth is None else cohort.share_wealth
+         self._write_pairs(row, "unmet", cohort.unmet_floor_by_need)
+         self._write_pairs(row, "plan", cohort.own_plan_by_need)
+-        self._write_milled(row, cohort.milled_grains)
++        self._write_ground(row, cohort.ground_by_hand)
+ 
+     def _write_pairs(self, row: int, group: str, held: Mapping[str, float]) -> None:
+         if len(held) > getattr(self.table, WIDE_GROUPS[group][0]).shape[1]:
+@@ -194,25 +194,26 @@ class CohortStore(MutableMapping):
+             value_column[row, place] = value
+         getattr(self.table, group + "_count")[row] = len(held)
+ 
+-    def _write_milled(self, row: int, grains) -> None:
+-        if len(grains) > self.table.milled_good.shape[1]:
+-            self._widen("milled", len(grains))
+-        self.table.milled_good[row, :] = 0
+-        for place, name in enumerate(grains):
+-            self.table.milled_good[row, place] = self._name("goods", name)
+-        self.table.milled_count[row] = len(grains)
+-        self._milled[row] = tuple(grains)
++    def _write_ground(self, row: int, grains) -> None:
++        if len(grains) > self.table.ground_good.shape[1]:
++            self._widen("ground", len(grains))
++        self.table.ground_good[row, :], self.table.ground_units[row, :] = 0, 0.0
++        for place, (name, share) in enumerate(grains):
++            self.table.ground_good[row, place] = self._name("goods", name)
++            self.table.ground_units[row, place] = share
++        self.table.ground_count[row] = len(grains)
++        self._ground[row] = tuple((name, share) for name, share in grains)
+ 
+     def set_fields(self, cohort_id: str, **changes) -> None:
+-        """The fields named of one cohort take the values (the scalar fields, the two mappings, `milled_grains`, `tile`, `income_class`)."""
++        """The fields named of one cohort take the values (the scalar fields, the two mappings, `ground_by_hand`, `tile`, `income_class`)."""
+         row = self.row_of[cohort_id]
+         for name, value in changes.items():
+             if name == "unmet_floor_by_need":
+                 self._write_pairs(row, "unmet", value)
+             elif name == "own_plan_by_need":
+                 self._write_pairs(row, "plan", value)
+-            elif name == "milled_grains":
+-                self._write_milled(row, value)
++            elif name == "ground_by_hand":
++                self._write_ground(row, value)
+             elif name == "tile":
+                 self.table.tile[row] = self._name("tiles", value)
+                 self._members += 1
+@@ -251,22 +252,24 @@ class CohortStore(MutableMapping):
+             value_column[entry_rows, place] = values
+         self.written(rows)
+ 
+-    def milled_of(self, row: int) -> tuple:
+-        """The grains the cohort in `row` buys milled (kept until the row's grains are written)."""
+-        kept = self._milled[row]
++    def ground_of(self, row: int) -> tuple:
++        """The (grain, share ground by hand) pairs of the cohort in `row` (kept until the row's grains are written)."""
++        kept = self._ground[row]
+         if kept is None:
+             goods = self.names["goods"].name_list
+-            kept = self._milled[row] = tuple(goods[number] for number in self.table.milled_good[row, :int(self.table.milled_count[row])].tolist())
++            count = int(self.table.ground_count[row])
++            kept = self._ground[row] = tuple(zip((goods[number] for number in self.table.ground_good[row, :count].tolist()),
++                                                 self.table.ground_units[row, :count].tolist()))
+         return kept
+ 
+     def pairs_of(self, group: str, row: int) -> Dict[str, float]:
+         """The mapping field of `group` ("unmet" or "plan") of the cohort in `row`, as `Cohort` holds it."""
+         return self._pairs(row, group)
+ 
+-    def write_milled(self, rows: np.ndarray, grains: List[tuple]) -> None:
+-        """The grains bought milled of each row are the matching tuple of `grains`."""
++    def write_ground(self, rows: np.ndarray, grains: List[tuple]) -> None:
++        """The (grain, share ground by hand) pairs of each row are the matching tuple of `grains`."""
+         for row, each in zip(rows.tolist(), grains):
+-            self._write_milled(row, each)
++            self._write_ground(row, each)
+         self.written(rows)
+ 
+     def written(self, rows: Optional[np.ndarray] = None) -> None:
+@@ -324,7 +327,7 @@ class CohortStore(MutableMapping):
+         people, working, income = self.floats("people", rows), self.floats("working_people", rows), self.floats("last_year_income", rows)
+         hired = self.floats("hired_work_per_person", rows)
+         plans = [self._pairs(row, "plan") for row in rows.tolist()] if with_plan else [None] * len(rows)
+-        return [CohortFigures(self.ids[row], tile, people[place], working[place], income[place], hired[place], self.milled_of(row), plans[place])
++        return [CohortFigures(self.ids[row], tile, people[place], working[place], income[place], hired[place], self.ground_of(row), plans[place])
+                 for place, (row, tile) in enumerate(zip(rows.tolist(), self.tile_names(rows)))]
+ 
+     def tile_of(self, cohort_id: str) -> Optional[str]:
+@@ -399,7 +402,7 @@ class CohortStore(MutableMapping):
+         fields = {
+             "agent_id": self.ids[row], "tile": self.names["tiles"].name_list[table.tile[row]], "income_class": int(table.income_class[row]),
+             "unmet_floor_by_need": self._pairs(row, "unmet"), "own_plan_by_need": self._pairs(row, "plan"),
+-            "milled_grains": self.milled_of(row),
++            "ground_by_hand": self.ground_of(row),
+         }
+         for name in SCALAR_FLOATS:
+             fields[name] = getattr(table, name)[row].item()
+diff --git a/sim/economy/household_grinding.py b/sim/economy/household_grinding.py
+index 1a16352e4..937b1af2f 100644
+--- a/sim/economy/household_grinding.py
++++ b/sim/economy/household_grinding.py
+@@ -1,11 +1,17 @@
+ """Grinding grain is a way of making flour, so a household weighs it as it weighs cooking (Complaint 645): it grinds
+-a grain by hand when its hours cost less than the milling is worth to it, and buys the milled good otherwise. Hours
+-fall only on the food it grinds itself. Plain functions of the priced food need."""
++a grain by hand when its hours cost less than the milling is worth to it, and buys the milled good otherwise. A
++cohort is many households, so the share of a grain bought milled is a logit on the two costs per need unit, and moves
++a small step for a small change in a price or in the worth of an hour. Hours fall only on the food it grinds itself.
++Plain functions of the priced food need."""
+ import dataclasses
+-from typing import Any, Dict, Iterable, Mapping, Sequence, Tuple
++from typing import Any, Dict, Mapping, Sequence, Tuple
+ 
+ from sim.world.need_basket import Basket
+ 
++from .households_work import WORK_CHOICE_INTENSITY
++from .price_setting import choice_shares
++
++HandGround = Tuple[Tuple[str, float], ...]       # (grain, share of the need's units it still meets by hand), sorted by grain
+ PricedRow = Tuple[str, float, float, float]    # (good, price, need units one unit gives, share of spending)
+ 
+ 
+@@ -22,40 +28,50 @@ def unit_shares(rows: Sequence[PricedRow]) -> Dict[str, float]:
+     return {good: value / total for good, value in units.items()} if total > 0.0 else {}
+ 
+ 
+-def bought_milled(rows: Sequence[PricedRow], milled_as: Mapping[str, str], hours_per_unit: float,
+-                  hour_value: float) -> Tuple[str, ...]:
+-    """The grains the household buys milled: those whose milled good costs less per need unit than the grain plus
+-    the worth of the hours of grinding it. A grain with no priced milled good (no mill in reach) is ground by hand."""
++def bought_shares(rows: Sequence[PricedRow], milled_as: Mapping[str, str], hours_per_unit: float,
++                  hour_value: float) -> Dict[str, float]:
++    """Per grain with a priced milled good, the share of it the households buy milled: a logit on the milled good's cost
++    per need unit against the grain's plus the worth of the hours of grinding it. A grain with no priced milled good
++    (no mill in reach) is absent: it is ground by hand."""
+     priced = {good: (price, effect) for good, price, effect, _share in rows if price > 0.0 and effect > 0.0}
+-    bought = []
++    bought = {}
+     for grain, milled in sorted(milled_as.items()):
+         if grain in priced and milled in priced:
+             grind_cost = priced[grain][0] / priced[grain][1] + max(0.0, hours_per_unit) * max(0.0, hour_value)
+-            if priced[milled][0] / priced[milled][1] < grind_cost:
+-                bought.append(grain)
+-    return tuple(bought)
++            bought[grain] = choice_shares([priced[milled][0] / priced[milled][1], grind_cost], WORK_CHOICE_INTENSITY)[0]
++    return bought
++
++
++def ground_by_hand(rows: Sequence[PricedRow], milled_as: Mapping[str, str],
++                   bought: Mapping[str, float]) -> HandGround:
++    """Per grain with a bought share, (grain, share of the need's units it still meets by hand): its share of the units
++    less what is bought milled. This is what a cohort holds and what its basket caps the grain at."""
++    shares = unit_shares(rows)
++    return tuple((grain, shares[grain] * (1.0 - share)) for grain, share in sorted(bought.items()) if grain in shares)
+ 
+ 
+-def ground_share(rows: Sequence[PricedRow], milled_as: Mapping[str, str], bought: Iterable[str]) -> float:
+-    """The share of the need's units met by grain the household grinds itself."""
+-    skipped = set(bought)
++def ground_share(rows: Sequence[PricedRow], milled_as: Mapping[str, str], ground: HandGround) -> float:
++    """The share of the need's units met by grain the household grinds itself: each grain's share of the units, or the
++    part of it the household holds as ground by hand when that is less."""
++    held = dict(ground)
+     shares = unit_shares(rows)
+-    return sum(share for good, share in shares.items() if good in milled_as and good not in skipped)
++    return sum(min(share, held.get(good, share)) for good, share in shares.items() if good in milled_as)
+ 
+ 
+-def without_goods(basket: Basket, goods: Iterable[str], food_need: str) -> Basket:
+-    """The basket with the named goods dropped from the food need. The need keeps its goods when dropping
+-    them would leave it with nothing to buy."""
+-    dropped = set(goods)
+-    if not dropped:
++def with_hand_ground(basket: Basket, ground: HandGround, food_need: str) -> Basket:
++    """The basket with each grain in `ground` capped, in the food need, at the share of the need's units the household
++    grinds of it by hand (below any limit it had); the milled good takes up what the grain no longer meets. A grain
++    wholly bought milled is capped at nothing. The need is left whole when every one of its goods would be capped at nothing."""
++    caps = {grain: max(0.0, share) for grain, share in ground}
++    if not caps:
+         return basket
+     needs = []
+     for need in basket.needs:
+-        if need.need_id == food_need:
+-            kept = tuple((good, effect) for good, effect in need.goods if good not in dropped)
+-            if kept:
+-                need = dataclasses.replace(
+-                    need, goods=kept, share_limits=tuple(row for row in need.share_limits if row[0] not in dropped),
+-                    qualities=tuple(row for row in need.qualities if row[0] not in dropped))
++        if need.need_id == food_need and any(good not in caps or caps[good] > 0.0 for good, _effect in need.goods):
++            limits = dict(need.share_limits)
++            for grain, cap in caps.items():
++                if any(good == grain for good, _effect in need.goods):
++                    limits[grain] = min(cap, limits.get(grain, cap))
++            need = dataclasses.replace(need, share_limits=tuple(sorted(limits.items())))
+         needs.append(need)
+     return dataclasses.replace(basket, needs=tuple(needs))
+diff --git a/sim/economy/household_offers_year.py b/sim/economy/household_offers_year.py
+index d19d2a718..88a3f403b 100644
+--- a/sim/economy/household_offers_year.py
++++ b/sim/economy/household_offers_year.py
+@@ -10,6 +10,7 @@ from .household_offer_reads import OfferReads
+ from .labour_ask_floor import hectares_per_hour_by_recipe
+ from .labour_offer_rows import LabourOfferRows
+ from .labour_offers_table import PlotParameters
++from .household_grinding import HandGround
+ from .market_memory import market_key
+ from .types import AgentId
+ 
+@@ -36,13 +37,13 @@ def hour_values(setup, record, view, reads: OfferReads, expected: Mapping[Tuple[
+     return {name: values[number] for number, name in enumerate(reads.rows.workers.names)}
+ 
+ 
+-def plans(setup, record, view, reads: OfferReads) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
++def plans(setup, record, view, reads: OfferReads) -> Dict[AgentId, Tuple[float, float, HandGround]]:
+     """`household_work_year.plans` with no service-price floors: each cohort's (hours hired a person, hours done itself, grains
+     bought milled) for the year; changes nothing."""
+     expected = expected_shares(setup, record, reads) if setup.household_work and lacks_history(record, reads) else {}
+     cohort_prime.prime_food_baskets(setup, record, view)
+     values = hour_values(setup, record, view, reads, expected) if setup.household_work else {}
+-    result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
++    result: Dict[AgentId, Tuple[float, float, HandGround]] = {}
+     store = table_of(record.cohorts)
+     for cohort in store.figures(store.order()):
+         cohort_id = cohort.agent_id
+diff --git a/sim/economy/household_work_year.py b/sim/economy/household_work_year.py
+index 2f6f99108..de0708179 100644
+--- a/sim/economy/household_work_year.py
++++ b/sim/economy/household_work_year.py
+@@ -6,6 +6,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
+ 
+ from . import household_grinding, household_servants, household_urban, households_work, labour_state, titles_worked, trade_wages
+ from . import households_cohort
++from .household_grinding import HandGround
+ from .households_cohort import Cohort
+ from .market_memory import market_key
+ from .households_basket import cohort_need_prices
+@@ -47,10 +48,11 @@ def tile_food_basket(setup, tile, hearth: bool):
+     return basket
+ 
+ 
+-def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tuple[Tuple[str, ...], float]:
+-    """(grains the cohort buys milled, share of its food it grinds by hand): a grain is bought milled when the
+-    milled good costs less per need unit than the grain plus the worth of its hours of grinding. With no grain
+-    marked as milled, or no priced food, the whole sourced load is its own."""
++def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tuple[HandGround, float]:
++    """(per grain, the share of the food units it still grinds by hand; the share of its food it grinds by hand in all): the
++    share of a grain bought milled is a logit of the milled good's cost per need unit against the grain's plus the worth of
++    its hours of grinding (`household_grinding.bought_shares`). With no grain marked as milled, or no priced food, the
++    whole sourced load is its own."""
+     if not setup.milled_as:
+         return (), 1.0
+     hearth = has_hearth(record, cohort)
+@@ -59,8 +61,8 @@ def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tup
+         return (), 1.0
+     floor, rows = found
+     hours_per_unit = households_work.hours_per_person_per_year(setup.household_work, True, 1.0, True) / floor if floor > 0.0 else 0.0
+-    bought = household_grinding.bought_milled(rows, setup.milled_as, hours_per_unit, hour_value)
+-    return bought, household_grinding.ground_share(rows, setup.milled_as, bought)
++    ground = household_grinding.ground_by_hand(rows, setup.milled_as, household_grinding.bought_shares(rows, setup.milled_as, hours_per_unit, hour_value))
++    return ground, household_grinding.ground_share(rows, setup.milled_as, ground)
+ 
+ 
+ def _food_rows(setup, view, tile, hearth: bool):
+@@ -82,8 +84,8 @@ def basket_of_signature(setup, signature: tuple):
+ 
+ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
+     """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth (else cooking fuel on its warmth floor), and
+-    this year's hired household work as the floor of that need. `buying` leaves out the grains it buys milled, which
+-    it does not bid for; the basket that counts what it ate (`buying` False) keeps them, since a grain it grew on
++    this year's hired household work as the floor of that need. `buying` caps the grains it grinds by hand at their share, which
++    it does not bid for beyond; the basket that counts what it ate (`buying` False) keeps them, since a grain it grew on
+     its own plot is eaten whatever it buys. Cohorts of one `basket_key` share one basket object (frozen, never changed)."""
+     return kept_basket(setup, basket_signature(record, cohort, buying))
+ 
+@@ -91,18 +93,18 @@ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
+ def basket_signature(record, cohort: Cohort, buying: bool = True) -> tuple:
+     """(tile, hearth, hired household work, grains left out of the food need): what `cohort_basket` is built from, so two
+     cohorts, or the two uses of one, with an equal signature have the very same basket."""
+-    return signature_of(record, cohort.tile, cohort.agent_id, cohort.hired_work_per_person, cohort.milled_grains, buying)
++    return signature_of(record, cohort.tile, cohort.agent_id, cohort.hired_work_per_person, cohort.ground_by_hand, buying)
+ 
+ 
+-def signature_of(record, tile: str, agent_id: str, hired_work_per_person: float, milled_grains, buying: bool = True) -> tuple:
++def signature_of(record, tile: str, agent_id: str, hired_work_per_person: float, ground_by_hand, buying: bool = True) -> tuple:
+     """`basket_signature` from the cohort's fields, for a caller reading them from the cohort table's columns."""
+-    return (tile, hearth_of(record, tile, agent_id), hired_work_per_person, tuple(milled_grains) if buying else ())
++    return (tile, hearth_of(record, tile, agent_id), hired_work_per_person, tuple(ground_by_hand) if buying else ())
+ 
+ 
+ def eaten_signature(signature: tuple) -> tuple:
+     """The signature of the cohort a `buying` signature is of, as it is when it eats what it has milled itself (`buying` False): the same
+     tile, hearth and hired work, no grains left out of the food need."""
+-    tile, hearth, hired_work_per_person, _milled_grains = signature
++    tile, hearth, hired_work_per_person, _ground_by_hand = signature
+     return tile, hearth, hired_work_per_person, ()
+ 
+ 
+@@ -123,20 +125,20 @@ def kept_basket(setup, key: tuple):
+     if found is None:
+         if len(_kept_baskets) >= KEPT_BASKETS_LIMIT:
+             _kept_baskets.clear()
+-        tile, hearth, hired_work_per_person, milled_grains = key
+-        base_key = (tile, hearth, milled_grains)
++        tile, hearth, hired_work_per_person, ground_by_hand = key
++        base_key = (tile, hearth, ground_by_hand)
+         base = _kept_bases.get(base_key)
+         if base is None:
+-            base = _kept_bases[base_key] = base_basket(setup, tile, hearth, milled_grains)
++            base = _kept_bases[base_key] = base_basket(setup, tile, hearth, ground_by_hand)
+         found = _kept_baskets[key] = with_hired_work(setup, base, hired_work_per_person)
+     return found
+ 
+ 
+-def base_basket(setup, tile, hearth: bool, milled_grains: Tuple[str, ...]):
+-    """The basket of a cohort on `tile` with or without a hearth, with `milled_grains` left out of the food need and no hired household work."""
++def base_basket(setup, tile, hearth: bool, ground_by_hand: HandGround):
++    """The basket of a cohort on `tile` with or without a hearth, with the grains in `ground_by_hand` capped in the food need at the share ground by hand and no hired household work."""
+     basket = tile_food_basket(setup, tile, hearth)
+-    if milled_grains:
+-        basket = household_grinding.without_goods(basket, milled_grains, setup.hunger_need)
++    if ground_by_hand:
++        basket = household_grinding.with_hand_ground(basket, ground_by_hand, setup.hunger_need)
+     if hearth:
+         basket = households_work.with_cooking_fuel(
+             basket, households_work.cooking_fuel_per_person_per_year(setup.household_work), setup.fuel_need)
+@@ -152,10 +154,10 @@ def with_hired_work(setup, basket, hired_work_per_person: float):
+     return basket
+ 
+ 
+-def built_basket(setup, tile, hearth: bool, hired_work_per_person: float, milled_grains: Tuple[str, ...]):
++def built_basket(setup, tile, hearth: bool, hired_work_per_person: float, ground_by_hand: HandGround):
+     """The basket of a cohort on `tile` with or without a hearth, with `hired_work_per_person` as the household-work floor
+-    and `milled_grains` left out of the food need (what `cohort_basket` shares by key)."""
+-    return with_hired_work(setup, base_basket(setup, tile, hearth, milled_grains), hired_work_per_person)
++    and the grains of `ground_by_hand` capped in the food need (what `cohort_basket` shares by key)."""
++    return with_hired_work(setup, base_basket(setup, tile, hearth, ground_by_hand), hired_work_per_person)
+ 
+ 
+ def priced_basket(setup, record, view, cohort: Cohort):
+@@ -169,7 +171,7 @@ def signatures_of(record, store, rows, buying: bool = True) -> list:
+     """`basket_signature` of the cohorts in the `rows` of the cohort table `store`, read from the columns (no cohort is built)."""
+     ids = [store.ids[row] for row in rows.tolist()]
+     return signatures_from_fields(record, store.tile_names(rows), ids, store.floats("hired_work_per_person", rows),
+-                                  [store.milled_of(row) for row in rows.tolist()], buying)
++                                  [store.ground_of(row) for row in rows.tolist()], buying)
+ 
+ 
+ def signatures_from_fields(record, tiles: Sequence[str], agent_ids: Sequence[str], hired: Sequence[float], milled: Sequence[tuple],
+@@ -182,7 +184,7 @@ def signatures_from_fields(record, tiles: Sequence[str], agent_ids: Sequence[str
+ def signatures_of_figures(record, figures: Sequence, buying: bool = True) -> list:
+     """`basket_signature` of each of `figures` (`CohortFigures` or `OrderFigures`)."""
+     return signatures_from_fields(record, [each.tile for each in figures], [each.agent_id for each in figures],
+-                                  [each.hired_work_per_person for each in figures], [each.milled_grains for each in figures], buying)
++                                  [each.hired_work_per_person for each in figures], [each.ground_by_hand for each in figures], buying)
+ 
+ 
+ def priced_basket_of(setup, view, tile: str, signature: tuple):
+@@ -236,7 +238,7 @@ def sold_share_at(record, trade, area, expected: float = 1.0) -> float:
+ 
+ def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
+                expected: Mapping[Tuple[str, str], float] = None, mine: Sequence[LabourOffer] = None
+-               ) -> Tuple[float, float, float, Tuple[str, ...]]:
++               ) -> Tuple[float, float, float, HandGround]:
+     """(worth to the cohort of an hour hired, hours of household work it needs, price of an hour hired, grains bought
+     milled): what its choice between hiring and doing the work is read from. The worth of an hour is the wage its
+     offers face, counted only for the share of hours expected to sell (smoothed over the years; before any year, the
+@@ -254,18 +256,18 @@ def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer
+     return work_terms_at(setup, record, view, cohort, value)
+ 
+ 
+-def work_terms_at(setup, record, view, cohort: Cohort, value: float) -> Tuple[float, float, float, Tuple[str, ...]]:
++def work_terms_at(setup, record, view, cohort: Cohort, value: float) -> Tuple[float, float, float, HandGround]:
+     """`work_terms` for a cohort whose own hour is worth `value` (`households_work.hour_value` over its offers)."""
+-    milled, ground = grinding_plan(setup, record, view, cohort, value)
++    by_hand, ground = grinding_plan(setup, record, view, cohort, value)
+     needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
+     wage_price = trade_wages.wage_in_view(setup, view, setup.servant_trade, labour_area(cohort.tile))    # a buyer of servants pays what an employer is billed
+     return (households_work.net_hour_value(value, households_work.supervision_share(setup.household_work)), needed,
+-            service_price_per_hour(setup, view, cohort.tile, wage_price), milled)
++            service_price_per_hour(setup, view, cohort.tile, wage_price), by_hand)
+ 
+ 
+ def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer], service_price_floor: float = 0.0,
+                 expected: Mapping[Tuple[str, str], float] = None, mine: Sequence[LabourOffer] = None
+-                ) -> Tuple[float, float, Tuple[str, ...]]:
++                ) -> Tuple[float, float, HandGround]:
+     """(hours hired, hours done itself, grains bought milled) for one cohort. `service_price_floor` is a price an hour
+     hired is not below (the opening's, where servants are scarce)."""
+     if not setup.household_work:
+@@ -274,9 +276,9 @@ def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffe
+     return planned_hours(needed, value, price, service_price_floor, milled, whole_servant_terms(setup, cohort))
+ 
+ 
+-def planned_hours(needed: float, value: float, price: float, service_price_floor: float, milled: Tuple[str, ...],
++def planned_hours(needed: float, value: float, price: float, service_price_floor: float, ground: HandGround,
+                   whole: Optional[Tuple[float, Optional[float], float]] = None):
+-    """(hours hired, hours done itself, grains bought milled) from the terms of `work_terms`. With `whole` given
++    """(hours hired, hours done itself, grains ground by hand) from the terms of `work_terms`. With `whole` given
+     (`whole_servant_terms`), each household hires a whole servant or none (`household_servants.hired_hours_whole`),
+     none above its budget; else the hiring is divisible."""
+     cost = max(price, service_price_floor)
+@@ -285,7 +287,7 @@ def planned_hours(needed: float, value: float, price: float, service_price_floor
+         hired = household_servants.hired_hours_whole(needed, households, value, cost, budget_per_household, servant_year_hours)
+     else:
+         hired = households_work.hired_hours(needed, value, cost)
+-    return hired, households_work.own_hours(needed, hired), milled
++    return hired, households_work.own_hours(needed, hired), ground
+ 
+ 
+ def whole_servant_terms(setup, cohort: Cohort) -> Optional[Tuple[float, Optional[float], float]]:
+@@ -304,13 +306,13 @@ def whole_servant_terms(setup, cohort: Cohort) -> Optional[Tuple[float, Optional
+ 
+ def plans(setup, record, view, offers: Sequence[LabourOffer],
+           service_price_floor_by_tile: Mapping[str, float] = None,
+-          expected: Mapping[Tuple[str, str], float] = None) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
++          expected: Mapping[Tuple[str, str], float] = None) -> Dict[AgentId, Tuple[float, float, HandGround]]:
+     """Each cohort's (hours hired a person, hours done itself, grains bought milled) for the year; changes nothing.
+     `expected` is the share of hours its producers hire by market when the caller has worked it out already."""
+     floors = service_price_floor_by_tile or {}
+     if expected is None:
+         expected = expected_shares(setup, record, offers) if setup.household_work and lacks_history(record, offers) else {}
+-    result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
++    result: Dict[AgentId, Tuple[float, float, HandGround]] = {}
+     by_worker: Dict[AgentId, list] = {}
+     for offer in offers:
+         by_worker.setdefault(offer.worker, []).append(offer)
+diff --git a/sim/economy/households_cohort.py b/sim/economy/households_cohort.py
+index c64332b67..b79f11eb9 100644
+--- a/sim/economy/households_cohort.py
++++ b/sim/economy/households_cohort.py
+@@ -52,10 +52,10 @@ class Cohort:
+     unmet_floor_by_need: Dict[str, float] = field(default_factory=dict)   # need units short of the floor
+     own_plan_by_need: Dict[str, float] = field(default_factory=dict)      # need units it grows with hours kept back
+     hired_work_per_person: float = 0.0  # hours of household work a person's share hires this year (household_work_year.py)
+-    milled_grains: Tuple[str, ...] = ()  # grains it buys milled rather than grinds by hand this year (household_grinding.py)
++    ground_by_hand: Tuple[Tuple[str, float], ...] = ()  # per grain it can have milled, (grain, share of its food units it grinds by hand this year) (household_grinding.py)
+ 
+     def __post_init__(self) -> None:
+-        self.milled_grains = tuple(self.milled_grains)  # a saved tuple reads back from JSON as a list
++        self.ground_by_hand = tuple((grain, share) for grain, share in self.ground_by_hand)  # a saved pair reads back from JSON as a list
+ 
+ 
+ def cohort_id(tile: TileId, income_class: int) -> AgentId:
+@@ -162,12 +162,12 @@ def set_column(cohorts: Dict[AgentId, Cohort], name: str, values: Mapping[AgentI
+ 
+ 
+ def set_work_plans(cohorts: Dict[AgentId, Cohort], plans: Mapping[AgentId, tuple]) -> None:
+-    """Each cohort's (hired hours a person, own hours, grains bought milled) is stored where it differs from what the cohort holds."""
++    """Each cohort's (hired hours a person, own hours, shares of grains ground by hand) is stored where it differs from what the cohort holds."""
+     if hasattr(cohorts, "set_rows"):
+         from .cohort_people import apply_work_plans      # the table's module imports this one
+         apply_work_plans(cohorts, plans)
+         return
+     for cohort_id, (per_person, _own, milled) in plans.items():
+         cohort = cohorts[cohort_id]
+-        if per_person != cohort.hired_work_per_person or tuple(milled) != tuple(cohort.milled_grains):
+-            change_cohort(cohorts, cohort_id, hired_work_per_person=per_person, milled_grains=milled)
++        if per_person != cohort.hired_work_per_person or tuple(tuple(each) for each in milled) != tuple(cohort.ground_by_hand):
++            change_cohort(cohorts, cohort_id, hired_work_per_person=per_person, ground_by_hand=milled)
+diff --git a/sim/economy/opening.py b/sim/economy/opening.py
+index 2db9e00f6..80afa8db1 100644
+--- a/sim/economy/opening.py
++++ b/sim/economy/opening.py
+@@ -109,7 +109,7 @@ def _with_covering_prices(setup):
+     start = opening_income.OpeningStart()
+     settled, floors = _solve_opening(setup, start)
+     plans = opening_plans.HouseholdPlans(
+-        {agent_id: (cohort.hired_work_per_person, 0.0, cohort.milled_grains) for agent_id, cohort in settled[0].cohorts.items()},
++        {agent_id: (cohort.hired_work_per_person, 0.0, cohort.ground_by_hand) for agent_id, cohort in settled[0].cohorts.items()},
+         floors)
+     current = setup
+     for _pass in range(COVERING_PRICE_PASSES):
+diff --git a/sim/economy/opening_own.py b/sim/economy/opening_own.py
+index 36d14339b..8e878acc4 100644
+--- a/sim/economy/opening_own.py
++++ b/sim/economy/opening_own.py
+@@ -77,7 +77,7 @@ class OwnPlots:
+         if not setup.household_work:
+             return 0.0
+         food = next((need for need in priced if need.spec.need_id == setup.hunger_need), None)
+-        ground = household_grinding.ground_share(food.goods, setup.milled_as, cohort.milled_grains) if food is not None and setup.milled_as else 1.0
++        ground = household_grinding.ground_share(food.goods, setup.milled_as, cohort.ground_by_hand) if food is not None and setup.milled_as else 1.0
+         needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
+         return households_work.own_hours(needed, cohort.hired_work_per_person * cohort.people)
+ 
+diff --git a/sim/economy/opening_plans.py b/sim/economy/opening_plans.py
+index e8ee534c9..df0ab5413 100644
+--- a/sim/economy/opening_plans.py
++++ b/sim/economy/opening_plans.py
+@@ -12,13 +12,14 @@ import math
+ from typing import Callable, Dict, Mapping, Optional, Tuple
+ 
+ from . import household_work_year, households_work, labour_state, year_labour
++from .household_grinding import HandGround
+ from .households_cohort import Cohort
+ from .opening_placement import hours_per_worker_in
+ from .market_memory import MarketMemory, YearView, market_key
+ from .setup import labour_area
+ from .types import AgentId, TileId
+ 
+-CohortPlan = Tuple[float, float, Tuple[str, ...]]   # (hours hired a person, hours done itself, grains bought milled)
++CohortPlan = Tuple[float, float, HandGround]   # (hours hired a person, hours done itself, grains ground by hand with their shares)
+ PLAN_TOLERANCE = 1e-6   # a numerical bound: hours hired a person are a share of the work, so a plan agrees within it
+ PLAN_FLOOR_HOURS = 1e-3 # a numerical floor under that tolerance (hours a person) so a plan of nothing can agree
+ PLAN_PASSES = 6          # a numerical bound on solving the opening against the plans it implies (a cycle of the choice ends here)
+@@ -94,14 +95,21 @@ def post_service_prices(memory: MarketMemory, area_map, setup, floors: Mapping[T
+ def with_plans(cohorts: Mapping[AgentId, Cohort], plans: HouseholdPlans) -> Dict[AgentId, Cohort]:
+     """The cohorts holding what they plan to hire and buy milled; a cohort with no plan is left as it is."""
+     return {cohort_id: (dataclasses.replace(cohort, hired_work_per_person=plans.by_cohort[cohort_id][0],
+-                                            milled_grains=plans.by_cohort[cohort_id][2])
++                                            ground_by_hand=plans.by_cohort[cohort_id][2])
+                         if cohort_id in plans.by_cohort and _differs(cohort, plans.by_cohort[cohort_id]) else cohort)
+             for cohort_id, cohort in cohorts.items()}
+ 
+ 
+ def _differs(cohort: Cohort, plan: CohortPlan) -> bool:
+     return (abs(cohort.hired_work_per_person - plan[0]) > PLAN_TOLERANCE * max(abs(plan[0]), PLAN_FLOOR_HOURS)
+-            or tuple(cohort.milled_grains) != tuple(plan[2]))
++            or not _same_shares(cohort.ground_by_hand, plan[2]))
++
++
++def _same_shares(held: HandGround, planned: HandGround) -> bool:
++    """Whether two ground-by-hand holdings name the same grains and agree on each share within PLAN_TOLERANCE."""
++    return (len(held) == len(planned)
++            and all(grain == other and abs(share - planned_share) <= PLAN_TOLERANCE
++                    for (grain, share), (other, planned_share) in zip(held, planned)))
+ 
+ 
+ def agree(cohorts: Mapping[AgentId, Cohort], plans: HouseholdPlans) -> bool:
+diff --git a/sim/economy/year_close_households.py b/sim/economy/year_close_households.py
+index 5da036c78..faa994dcc 100644
+--- a/sim/economy/year_close_households.py
++++ b/sim/economy/year_close_households.py
+@@ -102,7 +102,7 @@ def close_households(setup, record, view, ledger, property_income: Dict[str, flo
+     offered_prices: Dict = {}      # the prices households are closed on do not change while they close
+     baskets: Dict = {}
+     packed = households_close_pack.PackedBaskets(book, setup.specs)
+-    hired, milled = store.floats("hired_work_per_person", order), [store.milled_of(row) for row in order.tolist()]
++    hired, milled = store.floats("hired_work_per_person", order), [store.ground_of(row) for row in order.tolist()]
+     numbers, floor_costs = [], []
+     cohort_prime.prime_cohort_baskets(setup, record, view, False)
+     keys = household_work_year.signatures_from_fields(record, tiles_of, cohort_ids, hired, milled)       # the hearths of every cohort in one pass
+diff --git a/sim/tests/test_bid_memory_stores.py b/sim/tests/test_bid_memory_stores.py
+index d7c1ae7f5..2f1af33e1 100644
+--- a/sim/tests/test_bid_memory_stores.py
++++ b/sim/tests/test_bid_memory_stores.py
+@@ -11,7 +11,7 @@ from sim.economy.opening_bid_memory import BidMemory
+ 
+ 
+ def cohort(hired_work_per_person, agent_id):
+-    return types.SimpleNamespace(agent_id=agent_id, tile="t", hired_work_per_person=hired_work_per_person, milled_grains=())
++    return types.SimpleNamespace(agent_id=agent_id, tile="t", hired_work_per_person=hired_work_per_person, ground_by_hand=())
+ 
+ 
+ class StoresPerBasket(unittest.TestCase):
+diff --git a/sim/tests/test_cohort_order_figures.py b/sim/tests/test_cohort_order_figures.py
+index dac0bdde4..72b2a2fa3 100644
+--- a/sim/tests/test_cohort_order_figures.py
++++ b/sim/tests/test_cohort_order_figures.py
+@@ -1,5 +1,5 @@
+ """The rules the year's goods orders, the household work plans and the household loans run on a cohort's figures read from the columns
+-(`cohort_order_figures.order_figures`, `CohortStore.milled_of`, `CohortStore.figures`) give what the same rules gave over a `Cohort`."""
++(`cohort_order_figures.order_figures`, `CohortStore.ground_of`, `CohortStore.figures`) give what the same rules gave over a `Cohort`."""
+ 
+ QUICK_TOPIC = True
+ 
+@@ -18,7 +18,7 @@ from sim.economy.setup import labour_area
+ 
+ def _cohorts():
+     return [Cohort("household:b", "tile:x", 1, 30.0, 12.0, 0.6, expected_inflation=0.02, cash_target=7.0, last_year_income=5.0,
+-                   expected_spending=3.0, expected_floor_cost=2.0, hired_work_per_person=4.0, milled_grains=("wheat_kg", "barley_kg")),
++                   expected_spending=3.0, expected_floor_cost=2.0, hired_work_per_person=4.0, ground_by_hand=(("wheat_kg", 0.25), ("barley_kg", 0.5))),
+             Cohort("household:a", "tile:y", 0, 20.0, 8.0, 0.5, expected_inflation=np.float64(0.03), cash_target=np.float64(1.5),
+                    share_wealth=np.float64(9.0), last_year_income=3.0)]
+ 
+@@ -49,29 +49,29 @@ class OrderFiguresTests(unittest.TestCase):
+ class MilledOfTests(unittest.TestCase):
+     def test_the_grains_are_read_back_in_the_order_written(self):
+         store = _store()
+-        self.assertEqual(store.milled_of(store.row_of["household:b"]), ("wheat_kg", "barley_kg"))
+-        self.assertEqual(store.milled_of(store.row_of["household:a"]), ())
++        self.assertEqual(store.ground_of(store.row_of["household:b"]), (("wheat_kg", 0.25), ("barley_kg", 0.5)))
++        self.assertEqual(store.ground_of(store.row_of["household:a"]), ())
+ 
+     def test_a_block_write_of_grains_replaces_what_was_read_before(self):
+         store = _store()
+         row = store.row_of["household:b"]
+-        store.milled_of(row)
+-        store.write_milled(np.array([row], dtype=np.int64), [("rye_kg",)])
+-        self.assertEqual(store.milled_of(row), ("rye_kg",))
++        store.ground_of(row)
++        store.write_ground(np.array([row], dtype=np.int64), [(("rye_kg", 0.125),)])
++        self.assertEqual(store.ground_of(row), (("rye_kg", 0.125),))
+ 
+     def test_a_single_field_write_of_grains_replaces_what_was_read_before(self):
+         store = _store()
+         row = store.row_of["household:a"]
+-        store.milled_of(row)
+-        store.set_fields("household:a", milled_grains=("rye_kg", "wheat_kg"))
+-        self.assertEqual(store.milled_of(row), ("rye_kg", "wheat_kg"))
++        store.ground_of(row)
++        store.set_fields("household:a", ground_by_hand=(("rye_kg", 0.75), ("wheat_kg", 0.0625)))
++        self.assertEqual(store.ground_of(row), (("rye_kg", 0.75), ("wheat_kg", 0.0625)))
+ 
+     def test_a_record_put_over_a_row_replaces_its_grains(self):
+         store = _store()
+         row = store.row_of["household:b"]
+-        store.milled_of(row)
+-        store.put(Cohort("household:b", "tile:x", 1, 30.0, 12.0, 0.6, milled_grains=()))
+-        self.assertEqual(store.milled_of(row), ())
++        store.ground_of(row)
++        store.put(Cohort("household:b", "tile:x", 1, 30.0, 12.0, 0.6, ground_by_hand=()))
++        self.assertEqual(store.ground_of(row), ())
+ 
+ 
+ class WorkTermsTests(unittest.TestCase):
+diff --git a/sim/tests/test_cohort_people.py b/sim/tests/test_cohort_people.py
+index cc766c70c..30392baf1 100644
+--- a/sim/tests/test_cohort_people.py
++++ b/sim/tests/test_cohort_people.py
+@@ -77,16 +77,22 @@ class FollowingPopulation(unittest.TestCase):
+ class WorkPlans(unittest.TestCase):
+     def test_a_plan_that_differs_is_stored_and_one_that_does_not_is_not(self):
+         store = _store()
+-        cohort_people.apply_work_plans(store, {"household:t1:0": (2.0, 5.0, ("wheat",)), "household:t1:1": (0.0, 1.0, ()),
++        cohort_people.apply_work_plans(store, {"household:t1:0": (2.0, 5.0, (("wheat", 0.375),)), "household:t1:1": (0.0, 1.0, ()),
+                                                "household:t2:0": (0.0, 0.0, ())})
+         self.assertEqual(store["household:t1:0"].hired_work_per_person, 2.0)
+-        self.assertEqual(store["household:t1:0"].milled_grains, ("wheat",))
++        self.assertEqual(store["household:t1:0"].ground_by_hand, (("wheat", 0.375),))
+         self.assertEqual(store["household:t1:1"].hired_work_per_person, 0.0)
+ 
+     def test_a_plan_that_only_changes_the_grains_is_stored(self):
+         store = _store()
+-        cohort_people.apply_work_plans(store, {"household:t2:0": (0.0, 0.0, ("rye",))})
+-        self.assertEqual(store["household:t2:0"].milled_grains, ("rye",))
++        cohort_people.apply_work_plans(store, {"household:t2:0": (0.0, 0.0, (("rye", 0.875),))})
++        self.assertEqual(store["household:t2:0"].ground_by_hand, (("rye", 0.875),))
++
++    def test_a_plan_that_only_changes_a_share_is_stored(self):
++        store = _store()
++        cohort_people.apply_work_plans(store, {"household:t1:0": (0.0, 0.0, (("wheat", 0.375),))})
++        cohort_people.apply_work_plans(store, {"household:t1:0": (0.0, 0.0, (("wheat", 0.4),))})
++        self.assertEqual(store["household:t1:0"].ground_by_hand, (("wheat", 0.4),))
+ 
+ 
+ class CloseWrite(unittest.TestCase):
+diff --git a/sim/tests/test_cohort_store.py b/sim/tests/test_cohort_store.py
+index 6a1d17934..49ed53b0b 100644
+--- a/sim/tests/test_cohort_store.py
++++ b/sim/tests/test_cohort_store.py
+@@ -12,7 +12,7 @@ QUICK_TOPIC = True
+ 
+ def _cohorts():
+     first = Cohort("household:b:1", "tile:b", 1, 30.0, 12.0, 0.6, expected_inflation=0.02, cash_target=5.0, share_wealth=7.5,
+-                   unmet_floor_by_need={"hunger": 2.0, "warmth": 0.5}, own_plan_by_need={"hunger": 1.0}, milled_grains=("wheat", "rye"))
++                   unmet_floor_by_need={"hunger": 2.0, "warmth": 0.5}, own_plan_by_need={"hunger": 1.0}, ground_by_hand=(("wheat", 0.25), ("rye", 0.5)))
+     second = Cohort("household:a:0", "tile:a", 0, 10.0, 4.0, 0.4, hired_work_per_person=3.0)
+     return first, second
+ 
+@@ -61,7 +61,7 @@ class StoreIsAMappingOfRecords(unittest.TestCase):
+         store = CohortStore({first.agent_id: first})
+         record = store[first.agent_id]
+         self.assertEqual(list(record.unmet_floor_by_need), ["hunger", "warmth"])
+-        self.assertEqual(record.milled_grains, ("wheat", "rye"))
++        self.assertEqual(record.ground_by_hand, (("wheat", 0.25), ("rye", 0.5)))
+ 
+     def test_a_long_mapping_widens_the_columns(self):
+         first, _second = _cohorts()
+@@ -118,9 +118,9 @@ class BlockReadsAndWrites(unittest.TestCase):
+     def test_write_milled_gives_each_row_its_grains(self):
+         first, second = _cohorts()
+         store = CohortStore({first.agent_id: first, second.agent_id: second})
+-        store.write_milled(np.array([0, 1]), [(), ("barley",)])
+-        self.assertEqual(store[first.agent_id].milled_grains, ())
+-        self.assertEqual(store[second.agent_id].milled_grains, ("barley",))
++        store.write_ground(np.array([0, 1]), [(), (("barley", 0.375),)])
++        self.assertEqual(store[first.agent_id].ground_by_hand, ())
++        self.assertEqual(store[second.agent_id].ground_by_hand, (("barley", 0.375),))
+ 
+     def test_unmet_of_reads_one_need_for_every_row(self):
+         store = CohortStore({each.agent_id: each for each in _cohorts()})
+diff --git a/sim/tests/test_economy_cohort_round_trip.py b/sim/tests/test_economy_cohort_round_trip.py
+index 2b0164b95..1ef9ef0ff 100644
+--- a/sim/tests/test_economy_cohort_round_trip.py
++++ b/sim/tests/test_economy_cohort_round_trip.py
+@@ -9,10 +9,10 @@ from sim.economy.record_plain import plain
+ 
+ class CohortRoundTripTest(unittest.TestCase):
+     def test_a_cohort_read_back_from_json_equals_the_cohort_saved(self):
+-        cohort = Cohort("household:a:0", "a", 0, 10.0, 6.0, 0.2, milled_grains=("barley_kg", "wheat_kg"))
++        cohort = Cohort("household:a:0", "a", 0, 10.0, 6.0, 0.2, ground_by_hand=(("barley_kg", 0.25), ("wheat_kg", 0.5)))
+         loaded = Cohort(**json.loads(json.dumps(plain(cohort))))
+         self.assertEqual(loaded, cohort)
+-        self.assertEqual(loaded.milled_grains, ("barley_kg", "wheat_kg"))
++        self.assertEqual(loaded.ground_by_hand, (("barley_kg", 0.25), ("wheat_kg", 0.5)))
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/sim/tests/test_economy_household_grinding.py b/sim/tests/test_economy_household_grinding.py
+index 9fd320b5f..8e59a5b9f 100644
+--- a/sim/tests/test_economy_household_grinding.py
++++ b/sim/tests/test_economy_household_grinding.py
+@@ -3,12 +3,13 @@ than the milled good, and water and fuel are a fixed load either way."""
+ 
+ QUICK_TOPIC = True
+ 
++import dataclasses
+ import types
+ import unittest
+ 
+ from sim.tests.economy_view_defaults import ViewDefaults
+ from sim.economy import household_grinding, household_work_year, households, households_work
+-from sim.world.need_basket import make_basket
++from sim.world.need_basket import make_basket, priced_need
+ from sim.economy.households_cohort import Cohort
+ from sim.economy.market_memory import market_key
+ from sim.economy.setup import SetupTrade, labour_area
+@@ -61,21 +62,23 @@ def plan(prices, wage_per_hour):
+ class GrindingChoiceTests(unittest.TestCase):
+     def test_a_household_that_can_buy_flour_cheaper_than_its_hours_are_worth_grinds_nothing(self):
+         # by hand: wheat 1.0 plus 5 hours at 1.0 each per unit, 6.0; flour 2.0 is cheaper
+-        hired, own, milled = plan({"wheat_kg": 1.0, "flour_kg": 2.0}, 1.0)
+-        self.assertEqual(milled, ("wheat_kg",))
++        # (the choice is a logit, so the share ground by hand is small rather than nothing)
++        hired, own, ground = plan({"wheat_kg": 1.0, "flour_kg": 2.0}, 1.0)
++        self.assertLess(dict(ground)["wheat_kg"], 0.01)
+         self.assertAlmostEqual(hired, 0.0)
+-        self.assertAlmostEqual(own, 100.0 * WATER_AND_FUEL_HOURS)
++        self.assertAlmostEqual(own, 100.0 * WATER_AND_FUEL_HOURS, delta=0.01 * 100.0 * GRINDING_HOURS)
+ 
+     def test_a_household_whose_hours_are_cheaper_than_the_milling_grinds_by_hand(self):
+-        _hired, own, milled = plan({"wheat_kg": 1.0, "flour_kg": 9.0}, 1.0)
+-        self.assertEqual(milled, ())
++        _hired, own, ground = plan({"wheat_kg": 1.0, "flour_kg": 9.0}, 1.0)
++        unit_share = household_grinding.unit_shares([("wheat_kg", 1.0, 1.0, 0.5), ("flour_kg", 9.0, 1.0, 0.5)])["wheat_kg"]
++        self.assertGreater(dict(ground)["wheat_kg"], 0.99 * unit_share)
+         # it still buys a little flour in its mix, so it grinds the rest: most of the load, not all of it
+         self.assertGreater(own, 100.0 * (WATER_AND_FUEL_HOURS + 0.9 * GRINDING_HOURS))
+         self.assertLess(own, 100.0 * (WATER_AND_FUEL_HOURS + GRINDING_HOURS))
+ 
+     def test_a_household_with_no_mill_in_reach_grinds_by_hand_at_the_sourced_load(self):
+-        _hired, own, milled = plan({"wheat_kg": 1.0}, 1000.0)
+-        self.assertEqual(milled, ())
++        _hired, own, ground = plan({"wheat_kg": 1.0}, 1000.0)
++        self.assertEqual(ground, ())
+         self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA))
+         self.assertAlmostEqual(own, 100.0 * (WATER_AND_FUEL_HOURS + GRINDING_HOURS))
+ 
+@@ -83,34 +86,106 @@ class GrindingChoiceTests(unittest.TestCase):
+         _hired, buys, _milled = plan({"wheat_kg": 1.0, "flour_kg": 2.0}, 1.0)
+         _hired, grinds, _milled = plan({"wheat_kg": 1.0}, 1.0)
+         self.assertGreater(buys, 0.0)
+-        self.assertAlmostEqual(grinds - buys, 100.0 * GRINDING_HOURS)
++        self.assertAlmostEqual(grinds - buys, 100.0 * GRINDING_HOURS, delta=0.01 * 100.0 * GRINDING_HOURS)
+ 
+     def test_hours_scale_with_the_share_of_the_food_ground_by_hand(self):
+         self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, True, 0.4),
+                                WATER_AND_FUEL_HOURS + 0.4 * GRINDING_HOURS)
+         self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, True, 0.0), WATER_AND_FUEL_HOURS)
+ 
+-    def test_the_milled_grain_leaves_the_food_need_so_the_household_buys_the_milled_good(self):
++    def test_a_grain_ground_by_none_is_capped_at_nothing_so_the_household_buys_the_milled_good(self):
+         basket = make_basket(NEED_DATA, {})
+-        food = next(need for need in household_grinding.without_goods(basket, ("wheat_kg",), "food").needs if need.need_id == "food")
+-        self.assertEqual([good for good, _effect in food.goods], ["flour_kg"])
++        food = next(need for need in household_grinding.with_hand_ground(basket, (("wheat_kg", 0.0),), "food").needs if need.need_id == "food")
++        self.assertEqual(dict(food.share_limits), {"wheat_kg": 0.0})
++        priced = priced_need(food, 1.0 - basket.substitution, {"wheat_kg": 1.0, "flour_kg": 1.5}.get)
++        self.assertEqual({good: share for good, _price, _effect, share in priced.goods}["wheat_kg"], 0.0)
+ 
+-    def test_the_basket_keeps_a_grain_when_nothing_else_would_serve(self):
++    def test_the_cap_is_the_tighter_of_the_share_ground_and_the_grain_s_own_limit(self):
++        basket = make_basket(NEED_DATA, {})
++        limited = dataclasses.replace(basket, needs=tuple(
++            dataclasses.replace(need, share_limits=(("wheat_kg", 0.3),)) if need.need_id == "food" else need for need in basket.needs))
++        food = next(need for need in household_grinding.with_hand_ground(limited, (("wheat_kg", 0.5),), "food").needs if need.need_id == "food")
++        self.assertEqual(dict(food.share_limits), {"wheat_kg": 0.3})
++
++    def test_the_basket_is_left_whole_when_nothing_else_would_serve(self):
+         basket = make_basket({"needs": NEED_DATA["needs"], "goods": {"wheat_kg": NEED_DATA["goods"]["wheat_kg"]}}, {})
+-        food = next(need for need in household_grinding.without_goods(basket, ("wheat_kg",), "food").needs if need.need_id == "food")
+-        self.assertEqual([good for good, _effect in food.goods], ["wheat_kg"])
++        food = next(need for need in household_grinding.with_hand_ground(basket, (("wheat_kg", 0.0),), "food").needs if need.need_id == "food")
++        self.assertEqual(food.share_limits, ())
++
++    def test_the_grain_bought_is_continuous_in_the_share_ground_by_hand(self):
++        basket = make_basket(NEED_DATA, {})
++        previous = None
++        for step in range(0, 101):
++            capped = household_grinding.with_hand_ground(basket, (("wheat_kg", 0.5 * (1.0 - step / 100.0)),), "food")
++            food = next(need for need in capped.needs if need.need_id == "food")
++            priced = priced_need(food, 1.0 - basket.substitution, {"wheat_kg": 1.0, "flour_kg": 1.5}.get)
++            wheat = {good: share for good, _price, _effect, share in priced.goods}["wheat_kg"]
++            if previous is not None:
++                self.assertLess(abs(wheat - previous), 0.02)
++            previous = wheat
++        self.assertEqual(previous, 0.0)
+ 
+     def test_grain_a_household_grew_and_ate_counts_toward_its_floor_though_it_buys_that_grain_milled(self):
+         # Complaint 640: the bids leave the grain out, but what the household ate of it from its own plot is food
+         worker = Cohort(agent_id="c", tile="t1", income_class=0, people=100.0, working_people=50.0, ownership_share=0.0,
+-                        milled_grains=("wheat_kg",))
++                        ground_by_hand=(("wheat_kg", 0.0),))
+         rec = types.SimpleNamespace(cohorts={"c": worker}, labour=types.SimpleNamespace(sold_share_expected={market_key("labourer", labour_area("t1")): 1.0}), land=types.SimpleNamespace(titles={"t1": {"c": 1.0}}, tenancies={}))
+         bidding = household_work_year.cohort_basket(setup(), rec, worker)
+         eating = household_work_year.cohort_basket(setup(), rec, worker, buying=False)
+-        self.assertEqual([good for need in bidding.needs if need.need_id == "food" for good, _effect in need.goods], ["flour_kg"])
++        self.assertEqual([dict(need.share_limits) for need in bidding.needs if need.need_id == "food"], [{"wheat_kg": 0.0}])
++        self.assertEqual([dict(need.share_limits) for need in eating.needs if need.need_id == "food"], [{}])
+         grown = {"wheat_kg": 1000.0}
+         self.assertEqual(households.unmet_floor_by_need(worker, grown, View({}, {}), {}, eating).get("food", 0.0), 0.0)
+-        self.assertGreater(households.unmet_floor_by_need(worker, grown, View({}, {}), {}, bidding)["food"], 0.0)
++
++
++ROWS = [("wheat_kg", 1.0, 1.0, 0.5), ("flour_kg", 2.0, 1.0, 0.5)]   # (good, price, need units a unit gives, spending share)
++MILLED_AS = {"wheat_kg": "flour_kg"}
++
++
++class ContinuousChoiceTests(unittest.TestCase):
++    def test_the_bought_share_falls_smoothly_and_monotonically_as_the_hour_value_falls_through_the_crossing(self):
++        # by hand a unit costs 1.0 + 5 * hour_value, flour 2.0: they are equal at 0.2
++        values = [0.4 - 0.0005 * step for step in range(0, 801)]
++        shares = [household_grinding.bought_shares(ROWS, MILLED_AS, 5.0, value)["wheat_kg"] for value in values]
++        for before, after in zip(shares, shares[1:]):
++            self.assertLessEqual(after, before + 1e-15)
++            self.assertLess(before - after, 0.01)
++        self.assertGreater(shares[0], 0.9)
++        self.assertLess(shares[-1], 0.1)
++
++    def test_the_bought_share_is_a_half_where_the_two_costs_meet(self):
++        self.assertAlmostEqual(household_grinding.bought_shares(ROWS, MILLED_AS, 5.0, 0.2)["wheat_kg"], 0.5)
++
++    def test_a_grain_with_no_priced_milled_good_is_not_bought_milled(self):
++        self.assertEqual(household_grinding.bought_shares(ROWS[:1], MILLED_AS, 5.0, 0.0), {})
++
++    def test_the_share_ground_by_hand_moves_in_small_steps_with_the_hour_value(self):
++        kept = None
++        for step in range(0, 801):
++            value = 0.4 - 0.0005 * step
++            bought = household_grinding.bought_shares(ROWS, MILLED_AS, 5.0, value)
++            ground = household_grinding.ground_share(ROWS, MILLED_AS, household_grinding.ground_by_hand(ROWS, MILLED_AS, bought))
++            if kept is not None:
++                self.assertLess(abs(ground - kept), 0.01)
++            kept = ground
++
++    def test_the_share_ground_by_hand_is_the_grain_share_less_what_is_bought_milled(self):
++        grain_share = household_grinding.unit_shares(ROWS)["wheat_kg"]
++        ground = household_grinding.ground_by_hand(ROWS, MILLED_AS, {"wheat_kg": 0.25})
++        self.assertAlmostEqual(household_grinding.ground_share(ROWS, MILLED_AS, ground), 0.75 * grain_share)
++
++    def test_the_food_need_moves_in_small_steps_with_the_share_ground_by_hand(self):
++        basket = make_basket(NEED_DATA, {})
++        previous = None
++        for step in range(0, 101):
++            capped = household_grinding.with_hand_ground(basket, (("wheat_kg", 0.4 * (1.0 - step / 100.0)),), "food")
++            food = next(need for need in capped.needs if need.need_id == "food")
++            self.assertEqual({good for good, _effect in food.goods}, {"wheat_kg", "flour_kg"})
++            limit = dict(food.share_limits)["wheat_kg"]
++            if previous is not None:
++                self.assertLess(abs(limit - previous), 0.01)
++            previous = limit
++        self.assertAlmostEqual(previous, 0.0)
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/sim/tests/test_year_speed_household_baskets.py b/sim/tests/test_year_speed_household_baskets.py
+index b47820b16..e3f59c672 100644
+--- a/sim/tests/test_year_speed_household_baskets.py
++++ b/sim/tests/test_year_speed_household_baskets.py
+@@ -85,12 +85,12 @@ class KeptNeedPrices(unittest.TestCase):
+ 
+ class BuiltBaskets(unittest.TestCase):
+ 
+-    def test_a_cohort_basket_has_the_hired_work_the_fuel_and_not_the_milled_grain(self):
+-        basket = household_work_year.built_basket(SETUP, "t", True, 3.0, ("wheat_kg",))
++    def test_a_cohort_basket_has_the_hired_work_the_fuel_and_the_grain_capped_at_what_is_ground(self):
++        basket = household_work_year.built_basket(SETUP, "t", True, 3.0, (("wheat_kg", 0.0),))
+         needs = {need.need_id: need for need in basket.needs}
+         self.assertEqual(needs["household_work"].subsistence_per_person, 3.0)
+         self.assertGreater(needs["warmth"].subsistence_per_person, 300.0)
+-        self.assertNotIn("wheat_kg", [good for good, _effect in needs["food"].goods])
++        self.assertEqual(dict(needs["food"].share_limits), {"wheat_kg": 0.0})
+         self.assertIn("barley_kg", [good for good, _effect in needs["food"].goods])
+ 
+     def test_a_cohort_with_no_hearth_buys_only_food_that_is_ready_to_eat(self):
+@@ -111,7 +111,7 @@ class BaseBasket(unittest.TestCase):
+ 
+     def test_a_basket_for_any_hired_work_equals_the_base_with_the_floor_put_on(self):
+         for hearth in (True, False):
+-            for milled in ((), ("wheat_kg",)):
++            for milled in ((), (("wheat_kg", 0.2),)):
+                 base = household_work_year.base_basket(SETUP, "t", hearth, milled)
+                 for hired in (0.0, 0.5, 3.0):
+                     self.assertEqual(household_work_year.with_hired_work(SETUP, base, hired),

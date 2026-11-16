@@ -1,0 +1,295 @@
+diff --git a/sim/economy/goods_turn.py b/sim/economy/goods_turn.py
+index b91e1ed78..675d749a8 100644
+--- a/sim/economy/goods_turn.py
++++ b/sim/economy/goods_turn.py
+@@ -17,7 +17,8 @@ from . import goods_turn_spec, year_goods_offers
+ from .goods_order_tables import PRODUCER_OUTPUT
+ from .goods_turn_kernel import produce_turn
+ from .goods_turn_offer_kernel import offer_turn
+-from .inventory import DISTRESS_CURVE_EXPONENT
++from .inventory import DISTRESS_CURVE_EXPONENT, STOCK_TRANCHES
++from .stock_tranches import tranche_rows
+ from .producers import OUTPUT_CHANGE_SHARE_PER_YEAR
+ from .types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodsMove
+ from .year_arrays_memory import markets_by_good_tile
+@@ -63,6 +64,7 @@ class TurnWorld:
+         self.runs = _runs_column(plans, producers)
+         self.done = numpy.zeros(len(producers.ids), dtype=bool)
+         self.markets = markets_by_good_tile(record.memory, matrices.goods, arrays.area_index)
++        self._per_run: Optional[numpy.ndarray] = None
+         self._makers: Dict[int, numpy.ndarray] = {}        # a good's column -> the positions of the producers whose recipe makes it
+ 
+     @classmethod
+@@ -184,6 +186,8 @@ class TurnWorld:
+             self.costs.slot_of, stock.table.key, stock.table.quantity, stock.index, cash, self.ledger.running_costs_at(agents),
+             columns.cash_target, columns.last_runs, columns.expected_sales, self.costs.pays, float(rate),
+             OUTPUT_CHANGE_SHARE_PER_YEAR, DISTRESS_CURVE_EXPONENT)
++        quick_place, pair_good, pair_units, reservation = self._in_tranches(
++            positions, rate, quick_place, pair_good, pair_units, reservation)
+         pairs = (pair_good, pair_units, reservation)
+         written = 0
+         for each in numpy.flatnonzero(slow).tolist() + [len(positions)]:
+@@ -193,6 +197,27 @@ class TurnWorld:
+             if each < len(positions):
+                 slow_offers(int(positions[each]), float(shortfall[each]))
+ 
++    def _in_tranches(self, positions, rate, place, good_row, units, reservation):
++        """The pairs with each held stock split into the lots `inventory.stock_tranches` gives (`stock_tranches.tranche_rows`), in pair order."""
++        if not len(place):
++            return place, good_row, units, reservation
++        columns, spec = self.arrays.producers, self.spec
++        owners = positions[place]
++        sales = columns.expected_sales[owners] * columns.yield_factor[owners] * self._output_per_run()[columns.recipe_row[owners], good_row]
++        source, lot_units, lot_reservation = tranche_rows(units, reservation, sales, float(rate), spec.spoilage[good_row], STOCK_TRANCHES)
++        return place[source], good_row[source], lot_units, lot_reservation
++
++    def _output_per_run(self) -> numpy.ndarray:
++        """Units of each good (column) a run of each recipe (row) makes."""
++        if self._per_run is None:
++            spec = self.spec
++            made = numpy.zeros(spec.has_output.shape)
++            for row in range(len(spec.output_ptr) - 1):
++                for entry in range(spec.output_ptr[row], spec.output_ptr[row + 1]):
++                    made[row, spec.output_good[entry]] = spec.output_per_run[entry]
++            self._per_run = made
++        return self._per_run
++
+     def _write(self, orders, owners, good_rows, units, reservation) -> None:
+         """Offer rows of the pairs: the sellers, goods and tiles numbered (a name the book has not met is numbered now, in name order),
+         the markets from the grid (one the memory has not numbered is numbered through `orders.market_ids`)."""
+diff --git a/sim/economy/inventory.py b/sim/economy/inventory.py
+index a3e492e40..839959f71 100644
+--- a/sim/economy/inventory.py
++++ b/sim/economy/inventory.py
+@@ -27,6 +27,15 @@ DISTRESS_CURVE_EXPONENT = declare(
+         "endpoints are argued for; the straight line between them is a placeholder for a bargaining "
+         "or fire-sale model.")
+ 
++STOCK_TRANCHES = declare(
++    "STOCK_TRANCHES", 4, kind="temporary_heuristic",
++    unit="offers per held good (a year of expected sales each; the last takes the rest)",
++    source=None, confidence="D",
++    retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
++    why="Held stock is offered as a staircase of lots, each a year of expected sales deeper in the holder's queue and at the "
++        "reservation its last unit is worth held, so the quantity offered rises with the price instead of flipping whole. A "
++        "continuous supply curve in the order tables would replace the staircase; the count only bounds the rows.")
++
+ Holdings = Mapping[Tuple[str, GoodId, TileId], float]   # (agent, good, tile) -> quantity held
+ 
+ 
+@@ -96,6 +105,27 @@ def queued_holding_value(one_year_reservation: float, stock: float, expected_yea
+     return one_year_reservation * carried ** years_waited
+ 
+ 
++def stock_tranches(reservation: float, stock: float, expected_yearly_sales: float, interest_rate: float,
++                   spoilage_per_year: float, limit: int = STOCK_TRANCHES) -> List[Tuple[float, float]]:
++    """Held `stock` as (quantity, reservation) lots in queue order: each lot is a year of expected sales, worth held what its
++    last unit fetches (`queued_holding_value`), so the units that would sell next year ask the full reservation and those
++    that would wait years ask less. The last of `limit` lots takes the rest of the stock. Stock within a year of sales, a
++    reservation of nothing or less, or no expected sales is one lot at the reservation."""
++    if stock <= 0.0:
++        return []
++    surviving = 1.0 - min(1.0, max(0.0, spoilage_per_year))
++    if expected_yearly_sales <= 0.0 or reservation <= 0.0 or surviving <= 0.0 or limit < 2 or stock <= expected_yearly_sales:
++        return [(stock, reservation)]
++    carried = surviving / (1.0 + max(interest_rate, -0.99))
++    lots = []
++    taken = 0.0
++    while len(lots) < limit - 1 and stock - taken > expected_yearly_sales:
++        lots.append((expected_yearly_sales, reservation * carried ** float(len(lots))))
++        taken += expected_yearly_sales
++    lots.append((stock - taken, queued_holding_value(reservation, stock, expected_yearly_sales, interest_rate, spoilage_per_year)))
++    return lots
++
++
+ def distressed_reservation(normal_reservation: float, cash_shortfall: float,
+                            stock_value_at_normal: float) -> float:
+     """A reservation lowered as the cash the holder must raise grows against its stock's value; at
+diff --git a/sim/economy/producers.py b/sim/economy/producers.py
+index d24d7aa90..df75281fc 100644
+--- a/sim/economy/producers.py
++++ b/sim/economy/producers.py
+@@ -603,9 +603,15 @@ def offers(producer: Producer, recipe: Recipe, view: MarketView, stock_by_good:
+         rows.append((good, quantity, reservation))
+     stock_value = sum(quantity * max(reservation, 0.0) for _good, quantity, reservation in rows)
+     cash_shortfall = shortfall_at_working_scale(producer, recipe, view, cash_shortfall, expected)
+-    return [Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, quantity,
+-                  inventory.distressed_reservation(reservation, cash_shortfall, stock_value))
+-            for good, quantity, reservation in rows]
++    offered = []
++    for good, quantity, reservation in rows:
++        distressed = inventory.distressed_reservation(reservation, cash_shortfall, stock_value)
++        spec = specs.get(good)
++        sales = producer.expected_sales * producer.yield_factor * recipe.outputs.get(good, 0.0)
++        for lot, lot_reservation in inventory.stock_tranches(distressed, quantity, sales, interest_rate,
++                                                              spec.spoilage_per_year if spec is not None else 0.0):
++            offered.append(Offer(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile, lot, lot_reservation))
++    return offered
+ 
+ 
+ def _variable_cost_per_unit(producer: Producer, recipe: Recipe, view: MarketView) -> Optional[float]:
+diff --git a/sim/economy/stock_tranches.py b/sim/economy/stock_tranches.py
+new file mode 100644
+index 000000000..87ceec042
+--- /dev/null
++++ b/sim/economy/stock_tranches.py
+@@ -0,0 +1,38 @@
++"""`inventory.stock_tranches` over the arrays of a turn's offer pairs: every pair's lots as rows, in pair order."""
++import numpy
++
++from sim.jit import njit
++
++KERNEL = {"error_model": "numpy"}
++
++
++@njit(**KERNEL)
++def tranche_rows(stock, reservation, yearly_sales, rate, spoilage, limit):
++    """(source, quantity, reservation): the lots of each pair (`source` is the pair's place), the rule of `inventory.stock_tranches`."""
++    pairs = len(stock)
++    room = pairs * max(limit, 1)
++    source = numpy.empty(room, dtype=numpy.int64)
++    quantity = numpy.empty(room)
++    price = numpy.empty(room)
++    found = 0
++    for pair in range(pairs):
++        if stock[pair] <= 0.0:
++            continue
++        surviving = 1.0 - min(1.0, max(0.0, spoilage[pair]))
++        sales = yearly_sales[pair]
++        if sales <= 0.0 or reservation[pair] <= 0.0 or surviving <= 0.0 or limit < 2 or stock[pair] <= sales:
++            source[found], quantity[found], price[found] = pair, stock[pair], reservation[pair]
++            found += 1
++            continue
++        carried = surviving / (1.0 + max(rate, -0.99))
++        taken = 0.0
++        lots = 0
++        while lots < limit - 1 and stock[pair] - taken > sales:
++            source[found], quantity[found], price[found] = pair, sales, reservation[pair] * carried ** float(lots)
++            found += 1
++            lots += 1
++            taken += sales
++        years_waited = max(0.0, stock[pair] / sales - 1.0)
++        source[found], quantity[found], price[found] = pair, stock[pair] - taken, reservation[pair] * carried ** years_waited
++        found += 1
++    return source[:found], quantity[:found], price[:found]
+diff --git a/sim/economy/year_goods.py b/sim/economy/year_goods.py
+index d457c72a1..ef33b95b1 100644
+--- a/sim/economy/year_goods.py
++++ b/sim/economy/year_goods.py
+@@ -11,7 +11,7 @@ from typing import Dict, List, Optional, Tuple
+ 
+ import numpy
+ 
+-from . import currency, mint_price, market_curves, market_curves_rows, market_quote, producers, seller_cash, taxes
++from . import currency, inventory, mint_price, market_curves, market_curves_rows, market_quote, producers, seller_cash, taxes
+ from . import goods_turn, year_bids, year_remember
+ from .year_bids_by_market import BidsByMarket
+ from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
+@@ -288,8 +288,11 @@ def _produce_and_offer(setup, record, view, producer_ids, plans, in_kind, order_
+     taken = 0
+     for producer, offers, held in pending:
+         if held is not None:
+-            for good, quantity, _price, _loss in held:
+-                offer_rows.add(producer, good, quantity, reservations[taken])
++            outputs = setup.recipes[producer.recipe_id].outputs
++            for good, quantity, _price, loss in held:
++                sales = producer.expected_sales * producer.yield_factor * outputs.get(good, 0.0)
++                for lot, lot_reservation in inventory.stock_tranches(reservations[taken], quantity, sales, rate, loss):
++                    offer_rows.add(producer, good, lot, lot_reservation)
+                 taken += 1
+             continue
+         offer_rows.write()               # keep the producers' offers in the order they were made
+diff --git a/sim/tests/test_economy_stock_tranches.py b/sim/tests/test_economy_stock_tranches.py
+new file mode 100644
+index 000000000..9f34820d5
+--- /dev/null
++++ b/sim/tests/test_economy_stock_tranches.py
+@@ -0,0 +1,88 @@
++"""Held stock is offered as a supply curve: the units that would wait years behind the year's expected sales are offered at lower
++reservations than the units that would sell next year, so the quantity offered rises with the price instead of flipping whole."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++import numpy
++
++from sim.economy import inventory, producers, stock_tranches
++from sim.economy.types import Recipe
++from sim.tests.test_economy_idle_producer_holds_stock import View, smelter
++
++SMELT = Recipe("smelt", {"metal": 10.0}, {"ore": 4.0}, {"smith": 1.0})
++
++
++def quantity_offered_at(rows, price):
++    return sum(quantity for quantity, reservation in rows if reservation <= price)
++
++
++class StockTranchesTests(unittest.TestCase):
++    def test_stock_within_a_year_of_sales_is_one_offer_at_the_reservation(self):
++        self.assertEqual(inventory.stock_tranches(2.0, 5.0, 10.0, 0.05, 0.0), [(5.0, 2.0)])
++
++    def test_no_expected_sales_or_no_reservation_leaves_one_offer(self):
++        self.assertEqual(inventory.stock_tranches(2.0, 50.0, 0.0, 0.05, 0.0), [(50.0, 2.0)])
++        self.assertEqual(inventory.stock_tranches(0.0, 50.0, 10.0, 0.05, 0.0), [(50.0, 0.0)])
++        self.assertEqual(inventory.stock_tranches(-1.0, 50.0, 10.0, 0.05, 0.0), [(50.0, -1.0)])
++
++    def test_the_tranches_add_up_to_the_stock_and_the_reservation_falls_down_the_queue(self):
++        rows = inventory.stock_tranches(2.0, 35.0, 10.0, 0.05, 0.1)
++        self.assertAlmostEqual(sum(quantity for quantity, _ in rows), 35.0)
++        self.assertEqual(len(rows), 4)
++        prices = [reservation for _, reservation in rows]
++        self.assertEqual(prices[0], 2.0)
++        self.assertEqual(prices, sorted(prices, reverse=True))
++        self.assertAlmostEqual(prices[-1], inventory.queued_holding_value(2.0, 35.0, 10.0, 0.05, 0.1))
++
++    def test_the_number_of_rows_is_bounded(self):
++        rows = inventory.stock_tranches(2.0, 1.0e6, 10.0, 0.05, 0.0)
++        self.assertEqual(len(rows), inventory.STOCK_TRANCHES)
++        self.assertAlmostEqual(sum(quantity for quantity, _ in rows), 1.0e6)
++
++    def test_the_quantity_offered_never_falls_as_the_price_rises_and_no_step_exceeds_a_year_of_sales(self):
++        rows = inventory.stock_tranches(2.0, 30.0, 10.0, 0.2, 0.0)
++        prices = [0.5 + 0.01 * step for step in range(300)]
++        offered = [quantity_offered_at(rows, price) for price in prices]
++        self.assertEqual(offered, sorted(offered))
++        self.assertEqual(offered[-1], 30.0)
++        self.assertEqual(offered[0], 0.0)
++        steps = [later - earlier for earlier, later in zip(offered, offered[1:])]
++        self.assertLessEqual(max(steps), 10.0 + 1e-9)
++
++    def test_a_price_just_under_the_old_single_reservation_sells_part_of_the_lot(self):
++        rows = inventory.stock_tranches(2.0, 30.0, 10.0, 0.2, 0.0)
++        offered = quantity_offered_at(rows, 2.0 * (1.0 - 1e-6))
++        self.assertGreater(offered, 0.0)
++        self.assertLess(offered, 30.0)
++
++    def test_the_kernel_gives_the_rule_bit_for_bit(self):
++        cases = [(2.0, 35.0, 10.0, 0.05, 0.1), (2.0, 5.0, 10.0, 0.05, 0.0), (0.0, 9.0, 3.0, 0.05, 0.0), (3.5, 1000.0, 7.0, 0.05, 0.2),
++                 (1.0, 40.0, 10.0, 0.05, 0.0), (1.0, 20.0, 0.0, 0.05, 0.0)]
++        reservation, stock, sales, _rate, spoilage = (numpy.array(column) for column in zip(*cases))
++        source, quantity, price = stock_tranches.tranche_rows(stock, reservation, sales, 0.05, spoilage, inventory.STOCK_TRANCHES)
++        for position, case in enumerate(cases):
++            mine = [(float(quantity[row]), float(price[row])) for row in range(len(source)) if source[row] == position]
++            self.assertEqual(mine, inventory.stock_tranches(*case))
++
++
++class ProducerOffersTests(unittest.TestCase):
++    def rows(self, stock):
++        view = View({"metal": 1.0, "ore": 0.01}, {"smith": 0.1})
++        producer = smelter(expected_sales=10.0, expected_prices={"metal": 1.0, "ore": 0.01})
++        return producers.offers(producer, SMELT, view, {"metal": stock}, 0.0, 0.05, {})
++
++    def test_stock_beyond_a_years_sales_is_offered_in_tranches_that_add_up_to_the_stock(self):
++        rows = self.rows(250.0)       # a run makes 10 units and sales are 10 runs a year: 100 units a year
++        self.assertGreater(len(rows), 1)
++        self.assertAlmostEqual(sum(each.quantity for each in rows), 250.0)
++        prices = [each.reservation_price for each in rows]
++        self.assertEqual(prices, sorted(prices, reverse=True))
++
++    def test_stock_within_a_years_sales_is_one_offer(self):
++        self.assertEqual(len(self.rows(50.0)), 1)
++
++
++if __name__ == "__main__":
++    unittest.main()

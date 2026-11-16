@@ -1,0 +1,862 @@
+diff --git a/sim/economy/household_grown_floors.py b/sim/economy/household_grown_floors.py
+index 4159d0b95..5ab9ee489 100644
+--- a/sim/economy/household_grown_floors.py
++++ b/sim/economy/household_grown_floors.py
+@@ -1,4 +1,5 @@
+ """The share of each floor the household's own plot grew: that share is met before the year's budget is sized."""
++import math
+ from typing import Dict, Mapping, Tuple
+ 
+ 
+@@ -13,3 +14,9 @@ def met_shares(basket, people: float, grown_units: Mapping[str, float]) -> Tuple
+         for good, _effect in need.goods:
+             by_good.setdefault(good, met)
+     return by_need, by_good
++
++
++def floor_cost_met(priced, people: float, met_by_need: Mapping[str, float]) -> float:
++    """What the floors the plot grew would have cost at the needs' price indexes: the spending the household makes in kind."""
++    return math.fsum(need.price_index * need.spec.subsistence_per_person * people * met_by_need.get(need.spec.need_id, 0.0)
++                     for need in priced)
+diff --git a/sim/economy/households_close_figures_kernel.py b/sim/economy/households_close_figures_kernel.py
+index 1ef26f428..248e62e5d 100644
+--- a/sim/economy/households_close_figures_kernel.py
++++ b/sim/economy/households_close_figures_kernel.py
+@@ -20,7 +20,7 @@ def _expected_spending(expected, spent, planned, speed):
+ 
+ @njit
+ def _resting_purse(mean_income, share_wealth, claims, share, target_years):
+-    """`opening_resting.resting_household_purse` with no extra spending."""
++    """`opening_resting.resting_household_purse`."""
+     if share_wealth <= 0.0:
+         return 0.0
+     share_term = share * (share_wealth - target_years * mean_income)
+diff --git a/sim/economy/households_orders_kernel.py b/sim/economy/households_orders_kernel.py
+index a005470c5..db65b69ac 100644
+--- a/sim/economy/households_orders_kernel.py
++++ b/sim/economy/households_orders_kernel.py
+@@ -246,7 +246,7 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
+     budget = max(0.0, min(cash, budget))
+     target = cohort_floats[c, CO_CASH_TARGET]
+     if target == 0.0:
+-        target = _resting_purse(mean_income, owned, claims, 0.0, constants)
++        target = _resting_purse(mean_income, owned, claims, constants)
+     drawdown = min(budget - income, constants[K_DRAWDOWN] * max(0.0, max(income, last_income)))
+     spending = max(0.0, min(cash, income + drawdown))
+     if expected > 0.0:
+diff --git a/sim/economy/households_orders_pack.py b/sim/economy/households_orders_pack.py
+index 30a2ff8bc..4265015ad 100644
+--- a/sim/economy/households_orders_pack.py
++++ b/sim/economy/households_orders_pack.py
+@@ -1,7 +1,7 @@
+ """The year's cohort orders over arrays: baskets packed once each, every cohort ordered in one kernel call, the answer unpacked into bids.
+ 
+-`households_orders_kernel.year_orders` makes the orders `households_orders.goods_orders` and `year_goods.less_what_it_grew` make
+-(`cohort_orders` calls this for every cohort; the old functions stay for the opening and the tests).
++`households_orders_kernel.year_orders` makes the orders `households_orders.goods_orders` makes
++(`cohort_orders` calls this for every cohort; the old function stays for the opening's fallback path and the tests).
+ A basket's needs, goods and store goods are the same for every cohort that shares a basket key (tile, hearth, hired work, milled
+ grains), so they are packed once per key (a template); each cohort adds its holdings, its plot's units and its cash and income."""
+ from typing import Dict, List
+diff --git a/sim/economy/opening.py b/sim/economy/opening.py
+index c523d2db7..776074718 100644
+--- a/sim/economy/opening.py
++++ b/sim/economy/opening.py
+@@ -164,14 +164,10 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
+     packed = _settle_income(setup, record, view, priced_goods, replacement, own, start)
+     start.share_hired = own.share_hired
+     # the households hold their serving stock when the demand after the settle is asked (a durable in use is not wealth to
+-    # store), so the packed cohorts are packed again once the seed has moved stock; their last purse is kept, their orders
+-    # (made without the stock) are not
++    # store), so the packed cohorts are packed again once the seed has moved stock
+     if _seed_durable_stocks(setup, record, view, packed):
+-        own.forget_orders()
+         packed = packed.repacked() if packed is not None else None
+     after_settle = packed if packed is not None and packed.supported and packed.asked_at_incomes_now(record) else None
+-    if packed is not None:
+-        packed.remember_orders(record)
+     final_by_tile = (_final_demand_packed(setup, record, replacement, after_settle) if after_settle is not None
+                      else _final_demand(setup, record, view, replacement, own=own))
+     for country in setup.countries():
+@@ -191,7 +187,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
+     _stock_producers_with_inputs(setup, record)
+     _open_merchants(setup, record, priced_goods, final_by_tile)
+     carriage_fleet_book.endow(setup, record, carriage, priced_goods, final_by_tile)
+-    _strike_opening_cash(setup, record, view, own.extra)
++    _strike_opening_cash(setup, record, view)
+     sold_per_worker = opening_own.sold_hours_per_worker(
+         own.sold_total(), math.fsum(cohort.working_people for cohort in record.cohorts.values()), setup.working_hours_per_year)
+     sold_by_area = opening_placement.sold_hours_per_worker_by_area(
+@@ -331,10 +327,10 @@ def _opening_bids(setup, record, view, memory=None, stationary_durables=True, ow
+         basket = memory.basket(setup, record, cohort)
+         priced = memory.priced(setup, record, view, cohort, basket)
+         income = cohort.last_year_income
+-        def make(cash=income):
++        def make(cash=income, grown_units=None):
+             return households.goods_orders(cohort, view, cash, income, basket, setup.specs,
+                                            priced, shared_store=memory.stores(record, cohort),
+-                                           stationary_durables=stationary_durables)
++                                           stationary_durables=stationary_durables, grown_units=grown_units)
+         orders = make() if own is None else own.resting_orders(record, cohort, income, basket, priced, make)
+         for bid in orders.bids:
+             price = view.price(bid.good, bid.area)
+@@ -605,13 +601,12 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
+                                                           capital_base=capital), record.memory.tables)
+ 
+ 
+-def _strike_opening_cash(setup, record, view, extra_spending) -> None:
++def _strike_opening_cash(setup, record, view) -> None:
+     """Each agent's opening purse is struck at the mint. A producer's is the year's variable cost of its expected sales
+     (the cash `producers_close.working_capital_target` keeps), a merchant's its capital. A household's follows from
+     what it owns of those producers (`equity.holdings`, what the spending rule reads as share wealth): the cash that
+     brings cash plus share wealth to the wealth target, at which the rule spends exactly its income
+-    (opening_resting.resting_household_purse; Eurace manual 10.1.3), plus what a household whose plot frees part of its
+-    budget needs to spend (opening_own.py)."""
++    (opening_resting.resting_household_purse; Eurace manual 10.1.3)."""
+     money = setup.currency_id
+     transfers: List[Transfer] = []
+     for producer in record.producers.values():
+@@ -624,8 +619,7 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
+     owned = equity.holdings(setup, record, view)
+     transfers = []
+     for cohort in record.cohorts.values():
+-        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0),
+-                                                       extra_spending=extra_spending.get(cohort.agent_id, 0.0))
++        purse = opening_resting.resting_household_purse(cohort.last_year_income, owned.get(cohort.agent_id, 0.0))
+         transfers.append(Transfer(EDGE_MINT, cohort.agent_id, money, opening_resting.purse_with_property_income(
+             purse, record.capital_markets.property_income.get(cohort.agent_id, 0.0)), "opening coin"))
+         households_cohort.change_cohort(record.cohorts, cohort.agent_id, share_wealth=owned.get(cohort.agent_id, 0.0))
+diff --git a/sim/economy/opening_demand.py b/sim/economy/opening_demand.py
+index f2700f2b0..32c85ab84 100644
+--- a/sim/economy/opening_demand.py
++++ b/sim/economy/opening_demand.py
+@@ -13,7 +13,7 @@ import numpy as np
+ from sim.world import need_basket
+ from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
+ 
+-from . import households_buffer_stock, households_orders, households_store, opening_demand_kernel as kernel, opening_own
++from . import household_grown_floors, households_buffer_stock, households_orders, households_store, opening_demand_kernel as kernel, opening_own
+ from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
+ 
+ 
+@@ -31,7 +31,6 @@ def constants() -> np.ndarray:
+     values[kernel.K_TIME_PREFERENCE] = HOUSEHOLD_TIME_PREFERENCE
+     values[kernel.K_BAND] = households_store.STORE_REBALANCE_BAND
+     values[kernel.K_HOUSEHOLD_SIZE] = PERSONS_PER_HOUSEHOLD
+-    values[kernel.K_PURSE_TOLERANCE] = opening_own.PURSE_TOLERANCE
+     return values
+ 
+ 
+@@ -95,7 +94,7 @@ class OpeningDemand:
+             self.unit_slots.append(slots)
+             need0, row0, store0 = len(need_floats), len(row_floats), len(store_floats)
+             tile = tiles.setdefault(cohort.tile, len(tiles))
+-            claims = floor_cost = owned = rate = 0.0
++            claims = owned = rate = 0.0
+             has_rate = 0
+             if priced and cohort.people > 0.0:
+                 if any(need.spec.share_limits for need in priced):
+@@ -104,7 +103,6 @@ class OpeningDemand:
+                 area_currency = view.currency_of(view.area_of(first_good, cohort.tile))
+                 claims = view.claims(cohort.agent_id, area_currency)
+                 owned = households_buffer_stock.share_wealth_carried(cohort.share_wealth, view.equity(cohort.agent_id))
+-                floor_cost = math.fsum(need.price_index * need.spec.subsistence_per_person * cohort.people for need in priced)
+                 weights, store_prices, held = households_store.store_holding(cohort, view, specs, priced, shared)
+                 interest = view.interest_rate(area_currency)
+                 has_rate = 0 if interest is None else 1
+@@ -139,7 +137,7 @@ class OpeningDemand:
+             rows = range(row0, len(row_floats))
+             order.extend(sorted(rows, key=lambda row: (names[row_ints[row][0]], row)))
+             cohort_floats.append([cohort.people, cohort.expected_spending, cohort.expected_floor_cost, cohort.expected_inflation,
+-                       cohort.cash_target, owned, claims, floor_cost, rate, basket.substitution])
++                       cohort.cash_target, owned, claims, rate, basket.substitution])
+             cohort_ints.append([need0, len(need_floats), row0, len(row_floats), store0, len(store_floats), tile, has_rate])
+         if self.replacement > 0.0:
+             good_index(self.backing_good)       # the metal the mint buys is part of the demand
+@@ -160,7 +158,7 @@ class OpeningDemand:
+         self.need_scratch = np.zeros((len(need_floats), kernel.V_COUNT))
+         self.good_scratch = np.zeros((len(goods), kernel.G_COUNT))
+         self.store_scratch = np.zeros((len(store_floats), kernel.T_COUNT))
+-        self.memo = np.zeros((len(self.cohorts), 3))
++        self.memo = np.zeros((len(self.cohorts), 2))
+         self.partials = np.zeros((4, kernel.PARTIALS))
+         self.constants = constants()
+ 
+@@ -182,21 +180,20 @@ class OpeningDemand:
+         self._grown_for = own.share_hired
+ 
+     def _buy(self, record) -> None:
+-        """Fill `final` (tile by good) with what the cohorts buy at their incomes now, and note on `own` what the plots
+-        grew, the spending beyond income each allows and the budget it could not spend."""
++        """Fill `final` (tile by good) with what the cohorts buy at their incomes now, and note on `own` the value of the floors
++        their plots grew (spending in kind)."""
+         own = self.own
+         self._units_at_share(record)
+         incomes = self.incomes_now(record)
+         self.final[:] = 0.0
+         self.stamp[:] = -1
+-        extra = np.zeros(len(self.cohorts))
+-        freed = np.zeros(len(self.cohorts))
+         kernel.demand(incomes, self.stationary, self.constants, self.cohort_floats, self.cohort_ints, self.need_floats, self.need_ints, self.row_floats, self.row_ints,
+                       self.store_floats, self.store_ints, self.row_scratch, self.need_scratch, self.good_scratch, self.order, self.store_scratch, self.unit_floor, self.unit_grown,
+-                      self.memo, self.final, self.stamp, extra, freed, self.partials)
++                      self.memo, self.final, self.stamp, self.partials)
+         for position, cohort in enumerate(self.cohorts):
+-            own.extra[cohort.agent_id] = float(extra[position])
+-            own.in_kind += float(freed[position]) - float(extra[position])
++            grown = {need_id: float(self.unit_grown[slot]) for need_id, slot in self.unit_slots[position].items()}
++            met_by_need, _met_by_good = household_grown_floors.met_shares(self.baskets[position], cohort.people, grown)
++            own.in_kind += household_grown_floors.floor_cost_met(self.priced[position], cohort.people, met_by_need)
+ 
+     def final_demand(self, record) -> Dict[str, Dict[str, float]]:
+         """What `opening._final_demand` gives for the cohorts' incomes now, without the metal the mint buys: {tile: {good: quantity}}."""
+@@ -252,7 +249,7 @@ class OpeningDemand:
+         return np.array([record.cohorts[cohort.agent_id].last_year_income for cohort in self.cohorts])
+ 
+     def asked_at_incomes_now(self, record) -> bool:
+-        """Whether the last ask was made at the incomes the cohorts hold now (so the purse search would start from it)."""
++        """Whether the last ask was made at the incomes the cohorts hold now."""
+         return bool(np.all(self.memo[:, 0] > 0.0) and np.all(self.memo[:, 1] == self.incomes_now(record)))
+ 
+     def durable_bids(self, record, stationary: bool = False) -> List[tuple]:
+@@ -261,7 +258,8 @@ class OpeningDemand:
+         quantity = np.zeros(len(self.row_floats))
+         kernel.uncut(self.incomes_now(record), stationary, self.constants, self.cohort_floats, self.cohort_ints,
+                      self.need_floats, self.need_ints, self.row_floats, self.row_ints, self.store_floats, self.store_ints,
+-                     self.row_scratch, self.need_scratch, self.good_scratch, self.order, self.store_scratch, quantity, self.partials)
++                     self.row_scratch, self.need_scratch, self.good_scratch, self.order, self.store_scratch,
++                     np.zeros(len(self.unit_floor)), np.zeros(len(self.unit_floor)), quantity, self.partials)
+         found = []
+         for position, cohort in enumerate(self.cohorts):
+             for index in range(self.cohort_ints[position, kernel.CI_ROW0], self.cohort_ints[position, kernel.CI_ROW1]):
+@@ -272,17 +270,9 @@ class OpeningDemand:
+         return found
+ 
+     def repacked(self) -> "OpeningDemand":
+-        """The same cohorts packed again from the stock they hold now, asking from the purse the last ask ended at."""
++        """The same cohorts packed again from the stock they hold now, keeping the incomes the last ask was made at."""
+         fresh = OpeningDemand(list(zip(self.cohorts, self.baskets, self.priced, self.stores)), self.view, self.specs, self.own,
+                               self.replacement, self.backing_good, self.capital_tile, self.stationary)
+         fresh.memo[:] = self.memo
+         fresh._own_work = self._own_work
+         return fresh
+-
+-    def remember_orders(self, record) -> None:
+-        """Leave in `own` the purse of the last ask (`OwnPlots.uncut`) for the old path to search from, without the orders
+-        made at it: they are made again from the stock the cohorts hold when they are asked."""
+-        for position, cohort in enumerate(self.cohorts):
+-            has, income, purse = self.memo[position]
+-            if has > 0.0:
+-                self.own.uncut[cohort.agent_id] = (float(income), None, float(purse))
+diff --git a/sim/economy/opening_demand_kernel.py b/sim/economy/opening_demand_kernel.py
+index 253b8a666..7c4e5893e 100644
+--- a/sim/economy/opening_demand_kernel.py
++++ b/sim/economy/opening_demand_kernel.py
+@@ -2,8 +2,7 @@
+ 
+ The rules are `households_orders.goods_orders` (the cohort's budget, its needs' units, the goods' affordability, the
+ durables' replacement, the surplus scaled to the spending, the store's bids), `opening_own.OwnPlots.resting_orders`
+-(the purse that matches the budget the plot frees), `year_goods.less_what_it_grew` (the floors the plot grew are not
+-bought) and `goods_market.quantity_at` (what a bid takes at the opening price), each written once over the packed
++(the floors the plot grew are met first, as in `households_orders.goods_orders`) and `goods_market.quantity_at` (what a bid takes at the opening price), each written once over the packed
+ cohorts, needs, goods and store goods. The packed columns are named by the constants below; a cohort's needs, goods
+ and store goods are contiguous slices of the arrays. A bid exists when its budget is above nothing, and a cohort whose
+ spending only just covers its floors has a budget left for the rest of a few ulps or none, so the sums the old code made
+@@ -24,8 +23,7 @@ K_STORE_SHARE = 7
+ K_TIME_PREFERENCE = 8
+ K_BAND = 9
+ K_HOUSEHOLD_SIZE = 10
+-K_PURSE_TOLERANCE = 11
+-K_COUNT = 12
++K_COUNT = 11
+ 
+ # cohort floats
+ CF_PEOPLE = 0
+@@ -35,10 +33,9 @@ CF_INFLATION = 3
+ CF_CASH_TARGET = 4
+ CF_OWNED = 5
+ CF_CLAIMS = 6
+-CF_FLOOR_COST = 7
+-CF_RATE = 8
+-CF_SUBSTITUTION = 9
+-CF_COUNT = 10
++CF_RATE = 7
++CF_SUBSTITUTION = 8
++CF_COUNT = 9
+ # cohort ints
+ CI_NEED0 = 0
+ CI_NEED1 = 1
+@@ -85,7 +82,6 @@ SF_GPRICE = 3
+ SF_LIFE = 4
+ SF_COUNT = 5
+ 
+-PURSE_PASSES = 3
+ PARTIALS = 64        # room for the partial sums of an exact sum (an exact sum of doubles keeps a few dozen at most)
+ 
+ 
+@@ -256,15 +252,20 @@ def _affordable(r0, r1, household_budget, has_floor, pidx_of_need, row_floats, s
+ 
+ 
+ @njit
+-def _resting_purse(mean_income, share_wealth, claims, extra, constants):
++def _met(unit, unit_floor, unit_grown):
++    """The share of a floor unit the cohort's own plot grew (none for a row with no unit)."""
++    if unit < 0 or unit_floor[unit] <= 0.0:
++        return 0.0
++    return min(1.0, unit_grown[unit] / unit_floor[unit])
++
++
++@njit
++def _resting_purse(mean_income, share_wealth, claims, constants):
+     """opening_resting.resting_household_purse."""
+-    extra = max(0.0, extra)
+-    if share_wealth <= 0.0 and extra <= 0.0:
++    if share_wealth <= 0.0:
+         return 0.0
+-    share_term = 0.0
+-    if share_wealth > 0.0:
+-        share_term = constants[K_CASH_SHARE] * (share_wealth - constants[K_WEALTH_TARGET] * mean_income)
+-    cash = max(mean_income + extra, (extra - share_term) / constants[K_CASH_SHARE] - claims)
++    share_term = constants[K_CASH_SHARE] * (share_wealth - constants[K_WEALTH_TARGET] * mean_income)
++    cash = max(mean_income, -share_term / constants[K_CASH_SHARE] - claims)
+     return cash - mean_income
+ 
+ 
+@@ -329,9 +330,10 @@ def _store_value_target(savings, inflation, real_rate, constants):
+ 
+ 
+ @njit
+-def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, partials):
++def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, unit_floor, unit_grown, partials):
+     """households_orders.goods_orders for cohort c holding `cash`, as arrays: per need-good row the floor and flexible
+-    quantity, the price cap and the budget (W_ON says a bid is made), and per store good the budget and flexible quantity."""
++    quantity, the price cap and the budget (W_ON says a bid is made), and per store good the budget and flexible quantity.
++    `unit_grown` over `unit_floor` is the share of each floor unit the own plot grew: met before the budget is sized."""
+     n0 = cohort_ints[c, CI_NEED0]
+     n1 = cohort_ints[c, CI_NEED1]
+     r0 = cohort_ints[c, CI_ROW0]
+@@ -348,7 +350,13 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats,
+     cash = max(0.0, cash)
+     if n1 == n0 or people <= 0.0:
+         return
+-    floor_cost = cohort_floats[c, CF_FLOOR_COST]
++    count = 0
++    for n in range(n0, n1):
++        met = 0.0
++        if need_ints[n, NI_ROW1] > need_ints[n, NI_ROW0]:
++            met = _met(row_ints[need_ints[n, NI_ROW0], RI_UNIT], unit_floor, unit_grown)
++        count = _add(partials[0], count, need_floats[n, NF_PIDX] * need_floats[n, NF_SUB] * people * (1.0 - met))
++    floor_cost = _total(partials[0], count)
+     claims = cohort_floats[c, CF_CLAIMS]
+     owned = cohort_floats[c, CF_OWNED]
+     expected = cohort_floats[c, CF_EXPECTED_SPENDING]
+@@ -364,7 +372,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats,
+     budget = max(0.0, min(cash, budget))
+     target = cohort_floats[c, CF_CASH_TARGET]
+     if target == 0.0:
+-        target = _resting_purse(mean_income, owned, claims, 0.0, constants)
++        target = _resting_purse(mean_income, owned, claims, constants)
+     drawdown = min(budget - income, constants[K_DRAWDOWN] * max(0.0, max(income, last_income)))
+     spending = max(0.0, min(cash, income + drawdown))
+     if expected > 0.0:
+@@ -428,7 +436,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats,
+                         spoilage = min(1.0, max(0.0, row_floats[r, RF_SPOIL]))
+                         ratio = (serving - max(0.0, serving * (1.0 - wear - spoilage))) / flow
+             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
+-                row_scratch[r, W_FLOOR] = floor_quantity * ratio
++                row_scratch[r, W_FLOOR] = floor_quantity * (1.0 - _met(row_ints[r, RI_UNIT], unit_floor, unit_grown)) * ratio
+                 row_scratch[r, W_FLEX] = flexible_quantity * ratio
+                 row_scratch[r, W_CAP] = min(ceil[r], household_cap)
+                 row_scratch[r, W_ON] = 1.0
+@@ -484,11 +492,10 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats,
+ 
+ @njit
+ def demand(incomes, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, unit_floor, unit_grown,
+-           memo, final, stamp, extra, freed_out, partials):
+-    """The opening's final demand at `incomes` (one per cohort): what each cohort buys after its plot, summed by tile and
+-    good into `final`, with the order each (tile, good) first appeared in `stamp`. `memo[c]` is (has, income, purse): the
+-    purse the cohort's orders were last made with, from which the purse search starts again at the same income. `extra[c]`
+-    is the spending beyond income its plot allows and `freed_out[c]` the budget the plot freed."""
++           memo, final, stamp, partials):
++    """The opening's final demand at `incomes` (one per cohort): what each cohort buys holding its income, the floors its
++    plot grew met first, summed by tile and good into `final`, with the order each (tile, good) first appeared in `stamp`.
++    `memo[c]` is (has, income) of the cohort's last ask."""
+     counter = 0
+     for c in range(cohort_ints.shape[0]):
+         income = incomes[c]
+@@ -496,46 +503,9 @@ def demand(incomes, stationary, constants, cohort_floats, cohort_ints, need_floa
+         r1 = cohort_ints[c, CI_ROW1]
+         s0 = cohort_ints[c, CI_STORE0]
+         s1 = cohort_ints[c, CI_STORE1]
+-        purse = 0.0
+-        if memo[c, 0] > 0.0 and memo[c, 1] == income:
+-            purse = memo[c, 2]
+-        freed = 0.0
+-        extra_spending = 0.0
+-        for _pass in range(PURSE_PASSES):
+-            if not (memo[c, 0] > 0.0 and memo[c, 1] == income and memo[c, 2] == purse):
+-                memo[c, 0] = 1.0
+-                memo[c, 1] = income
+-                memo[c, 2] = purse
+-            _orders(c, income + purse, income, income, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, partials)
+-            before = 0
+-            after = 0
+-            for r in range(r0, r1):
+-                if row_scratch[r, W_ON] <= 0.0:
+-                    continue
+-                before = _add(partials[2], before, row_scratch[r, W_BUDGET])
+-                unit = row_ints[r, RI_UNIT]
+-                met = 0.0
+-                if unit >= 0:
+-                    if unit_floor[unit] > 0.0:
+-                        met = min(1.0, unit_grown[unit] / unit_floor[unit])
+-                if met > 0.0 and row_scratch[r, W_FLOOR] > 0.0:
+-                    cut = row_scratch[r, W_FLOOR] * met
+-                    kept = 1.0 - cut / (row_scratch[r, W_FLOOR] + row_scratch[r, W_FLEX])
+-                    new_budget = row_scratch[r, W_BUDGET] * max(0.0, kept)
+-                    row_scratch[r, W_FLOOR] = row_scratch[r, W_FLOOR] - cut
+-                    row_scratch[r, W_BUDGET] = new_budget
+-                after = _add(partials[3], after, row_scratch[r, W_BUDGET])
+-            for s in range(s0, s1):      # the store's bids are in both sums, as in the old path
+-                before = _add(partials[2], before, store_scratch[s, T_BUDGET])
+-                after = _add(partials[3], after, store_scratch[s, T_BUDGET])
+-            freed = _total(partials[2], before) - _total(partials[3], after)
+-            extra_spending = min(freed, constants[K_DRAWDOWN] * income)
+-            wanted = _resting_purse(income, 0.0, 0.0, extra_spending, constants)
+-            if abs(wanted - purse) <= constants[K_PURSE_TOLERANCE] * max(income, 1e-9):
+-                break
+-            purse = wanted
+-        extra[c] = extra_spending
+-        freed_out[c] = freed
++        memo[c, 0] = 1.0
++        memo[c, 1] = income
++        _orders(c, income, income, income, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, unit_floor, unit_grown, partials)
+         tile = cohort_ints[c, CI_TILE]
+         elasticity = cohort_floats[c, CF_SUBSTITUTION]
+         for index in range(r0, r1):
+@@ -571,13 +541,13 @@ def demand(incomes, stationary, constants, cohort_floats, cohort_ints, need_floa
+ 
+ @njit
+ def uncut(incomes, stationary, constants, cohort_floats, cohort_ints, need_floats, need_ints, row_floats, row_ints, store_floats,
+-          store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, row_quantity, partials):
++          store_ints, row_scratch, need_scratch, good_scratch, order, store_scratch, unit_floor, unit_grown, row_quantity, partials):
+     """The quantity (floor plus flexible) of each need-good bid every cohort makes holding exactly its income, before any
+     plot cut, into `row_quantity` (zero where no bid is made)."""
+     for c in range(cohort_ints.shape[0]):
+         _orders(c, incomes[c], incomes[c], incomes[c], stationary, constants, cohort_floats, cohort_ints, need_floats,
+                 need_ints, row_floats, row_ints, store_floats, store_ints, row_scratch, need_scratch, good_scratch, order,
+-                store_scratch, partials)
++                store_scratch, unit_floor, unit_grown, partials)
+         for r in range(cohort_ints[c, CI_ROW0], cohort_ints[c, CI_ROW1]):
+             row_quantity[r] = 0.0
+             if row_scratch[r, W_ON] > 0.0:
+diff --git a/sim/economy/opening_own.py b/sim/economy/opening_own.py
+index 36d14339b..752eddfd7 100644
+--- a/sim/economy/opening_own.py
++++ b/sim/economy/opening_own.py
+@@ -1,20 +1,17 @@
+ """What the opening's households grow on their own plots, so the demand producers are sized to is what they buy.
+ 
+ A year's households put the hours nobody hired into their plots (`Economy._grow_own`, `households_own.own_production`)
+-and cut each floor bid by the share of the floor they grew (`year_goods.less_what_it_grew`). The opening runs the same
++and meet the share of each floor they grew before the budget is sized (`households_orders.goods_orders`, `grown_units`). The opening runs the same
+ two functions: the hours a cohort has left are its working hours less the share the producers hire and the household
+ work it does itself, and the bids it then makes are the year's. The share the producers hire follows from the runs
+ sized to that demand, so the opening iterates it (`_settle_income` in opening.py) until it stops moving (Complaint 545)."""
+ import math
+ from typing import Dict, Mapping, Tuple
+ 
+-from . import household_grinding, household_hours_year, households_orders, households_own, households_work, labour_ask_floor, labour_supply, opening_resting, titles_plots, year_goods
++from . import household_grinding, household_grown_floors, household_hours_year, households_own, households_work, labour_ask_floor, labour_supply, titles_plots
+ from .household_work_year import has_hearth
+ from .types import GoodId
+ 
+-PURSE_PASSES = 3            # numerical bound on the purse that matches the budget its plot frees
+-PURSE_TOLERANCE = 1e-6      # relative to income
+-
+ 
+ def hired_share(runs: Mapping[str, float], recipes: Mapping[str, object], hands_hours: float) -> float:
+     """The share of the working hours a year that producers of `runs` hire: one when they need all of them or more."""
+@@ -52,9 +49,7 @@ class OwnPlots:
+         self.held = titles_plots.hectares_held(setup, record)
+         self.share_hired = 0.0
+         self.grown: Dict[str, Dict[GoodId, float]] = {}     # cohort -> goods grown at the last ask
+-        self.uncut: Dict[str, Tuple[float, object, float]] = {}   # cohort -> (income, orders before the cut or None, purse): the asks of one income share them
+-        self.extra: Dict[str, float] = {}   # cohort -> spending beyond its income that its purse allows (what its plot frees)
+-        self.in_kind = 0.0      # budget the cuts freed that the rule cannot spend on the market, since it was last zeroed
++        self.in_kind = 0.0      # value of the floors the plots grew (spending in kind), since it was last zeroed
+         self.hectares: Dict[str, float] = {}    # cohort -> hectare-years its plot takes, at the last ask
+         self.sold: Dict[str, float] = {}    # cohort -> hours it sells at the opening wage, at the last ask
+         self.kept_at_home: Dict[str, Tuple[float, float]] = {}   # cohort -> (plan hours, plot hours at the opening wage): neither moves with income
+@@ -81,37 +76,14 @@ class OwnPlots:
+         needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
+         return households_work.own_hours(needed, cohort.hired_work_per_person * cohort.people)
+ 
+-    def forget_orders(self) -> None:
+-        """Drop the orders held for each income (their purse stays): they were made without the stock the cohorts hold now."""
+-        for agent_id, (income, _orders, purse) in list(self.uncut.items()):
+-            self.uncut[agent_id] = (income, None, purse)
+-
+     def resting_orders(self, record, cohort, income, basket, priced, make):
+-        """The cohort's orders as a year-one household with this income would make them, after its plot: `make(cash)` gives
+-        its orders (before the cut) holding `cash`. The floors its plot grows are cut after the budget is set, so the
+-        cohort holds the purse that makes the budget that much larger than its income (opening_resting): it spends on
+-        the market what it earns and the plot's share of the budget is not saved. The rule lets it spend beyond its income
+-        only up to WEALTH_DRAWDOWN_LIMIT of the income; what that does not cover is spent in kind (`in_kind`)."""
+-        held = self.uncut.get(cohort.agent_id)
+-        purse = held[2] if held is not None and held[0] == income else 0.0
+-        for _pass in range(PURSE_PASSES):
+-            if held is None or held[1] is None or held[0] != income or held[2] != purse:
+-                held = self.uncut[cohort.agent_id] = (income, make(income + purse), purse)
+-            cut, freed = self._cut(record, cohort, held[1], basket, priced)
+-            extra = min(freed, households_orders.WEALTH_DRAWDOWN_LIMIT * income)
+-            wanted = opening_resting.resting_household_purse(income, 0.0, 0.0, extra)
+-            self.extra[cohort.agent_id] = extra
+-            if abs(wanted - purse) <= PURSE_TOLERANCE * max(income, 1e-9):
+-                break
+-            purse = wanted
+-        self.in_kind += freed - extra
+-        return cut
+-
+-    def _cut(self, record, cohort, orders, basket, priced):
+-        """(the orders with each floor cut by the share of it the cohort's plot grows, the budget that frees)."""
++        """The cohort's orders as a year-one household with this income makes them: `make(cash, grown_units)` gives its orders
++        holding `cash`, with the floors its plot grows (`grown_units`) met before the budget is sized (households_orders.goods_orders).
++        It holds its income, spends it on the market and meets the floors it grew in kind; the value of those is noted in `in_kind`."""
+         units = self.grow(record, cohort, priced)
+-        cut = year_goods.less_what_it_grew(orders, cohort, basket, units)
+-        return cut, math.fsum(bid.budget for bid in orders.bids) - math.fsum(bid.budget for bid in cut.bids)
++        met_by_need, _met_by_good = household_grown_floors.met_shares(basket, cohort.people, units)
++        self.in_kind += household_grown_floors.floor_cost_met(priced, cohort.people, met_by_need)
++        return make(income, units)
+ 
+     def grow(self, record, cohort, priced, own_work=None):
+         """The need units the cohort's plot grows at the current share of hours hired; notes what it grew, the land it
+diff --git a/sim/economy/opening_resting.py b/sim/economy/opening_resting.py
+index 9dcc3b103..1affe56bf 100644
+--- a/sim/economy/opening_resting.py
++++ b/sim/economy/opening_resting.py
+@@ -16,30 +16,22 @@ from typing import Dict, Mapping
+ from . import households_buffer_stock, inventory
+ 
+ 
+-def resting_household_purse(mean_income: float, share_wealth: float, claims: float = 0.0,
+-                            extra_spending: float = 0.0) -> float:
++def resting_household_purse(mean_income: float, share_wealth: float, claims: float = 0.0) -> float:
+     """The cash a household holds before the year's income arrives so that `households_buffer_stock.spending_budget`,
+-    taken after the income is in (cash = purse + income, as the year's orders see it), spends its income plus
+-    `extra_spending` (what its own plot frees from the budget: the floors it grows are cut from its bids after the
+-    budget is set, so the budget must be that much larger for the money it spends on the market to equal its income).
++    taken after the income is in (cash = purse + income, as the year's orders see it), spends its income.
+     Follows the manual's household initialisation (section 10.1.3: payment account from the consumption constants).
+-    Without shares and without extra spending the rule's budget is income plus a share of the account held, capped at
+-    cash, so spending equals income only when cash is the income: the purse is zero. With shares the budget is
+-    income plus the yearly share of (cash + claims + share wealth - target wealth), which is zero at the target
+-    (WEALTH_INCOME_RATIO_TARGET months of income): the purse brings cash up to the target wealth beyond the income,
+-    never below zero. The extra spending is the yearly share of the account held: the purse is that much larger
+-    (and never less than the extra itself, which the cap at cash needs). A post-warm-up Eurace state holds wealth at
+-    that target, and the manual's initial household holds a payment account and wealth in the same relation to its
+-    income (user manual section 10.1.3)."""
+-    extra_spending = max(0.0, extra_spending)
+-    if share_wealth <= 0.0 and extra_spending <= 0.0:
++    Without shares the rule's budget is income plus a share of the account held, capped at cash, so spending equals
++    income only when cash is the income: the purse is zero. With shares the budget is income plus the yearly share of
++    (cash + claims + share wealth - target wealth), which is zero at the target (WEALTH_INCOME_RATIO_TARGET months of
++    income): the purse brings cash up to the target wealth beyond the income, never below zero. A post-warm-up Eurace
++    state holds wealth at that target, and the manual's initial household holds a payment account and wealth in the
++    same relation to its income (user manual section 10.1.3)."""
++    if share_wealth <= 0.0:
+         return 0.0
+     share = households_buffer_stock.yearly_cash_share()
+-    share_term = 0.0
+-    if share_wealth > 0.0:
+-        target = households_buffer_stock.WEALTH_INCOME_RATIO_TARGET / households_buffer_stock.MONTHS_PER_YEAR * mean_income
+-        share_term = share * (share_wealth - target)
+-    cash = max(mean_income + extra_spending, (extra_spending - share_term) / share - claims)
++    target = households_buffer_stock.WEALTH_INCOME_RATIO_TARGET / households_buffer_stock.MONTHS_PER_YEAR * mean_income
++    share_term = share * (share_wealth - target)
++    cash = max(mean_income, -share_term / share - claims)
+     return cash - mean_income
+ 
+ 
+diff --git a/sim/economy/year_goods.py b/sim/economy/year_goods.py
+index 62ba1b7fc..854460c8f 100644
+--- a/sim/economy/year_goods.py
++++ b/sim/economy/year_goods.py
+@@ -5,7 +5,6 @@ and sell it the same year (cycles in the recipes draw on stock). Producers make
+ first of their goods comes up, the state takes its tax in kind from what was grown, and then each
+ market area of the good clears and settles.
+ """
+-import dataclasses
+ import math
+ from typing import Dict, List, Optional, Tuple
+ 
+@@ -55,37 +54,6 @@ def add_orders(order_book, orders: AgentOrders) -> None:
+         order_book.setdefault((offer.good, offer.area), ([], []))[1].append(offer)
+ 
+ 
+-def with_floor_and_budget(bid: Bid, floor_quantity: float, budget: float) -> Bid:
+-    """`bid` with a new floor and budget: the bid `dataclasses.replace` makes, built directly, since the opening's
+-    income search makes millions of them."""
+-    return Bid(bid.buyer, bid.good, bid.area, bid.tile, floor_quantity, bid.flexible_quantity, bid.reference_price,
+-               bid.elasticity, budget, bid.priority, bid.maximum_price)
+-
+-
+-def less_what_it_grew(orders: AgentOrders, cohort, basket, grown_units) -> AgentOrders:
+-    """Floors already met from the household's own plot are not bought: each floor bid of a need is
+-    cut by the share of that need's floor the cohort grew."""
+-    if not grown_units:
+-        return orders
+-    need_of_good = {}
+-    floor_of_need = {}
+-    for need in basket.needs:
+-        floor_of_need[need.need_id] = need.subsistence_per_person * cohort.people
+-        for good, _effect in need.goods:
+-            need_of_good.setdefault(good, need.need_id)
+-    bids = []
+-    for bid in orders.bids:
+-        need_id = need_of_good.get(bid.good)
+-        floor_units = floor_of_need.get(need_id, 0.0)
+-        met = min(1.0, grown_units.get(need_id, 0.0) / floor_units) if floor_units > 0.0 else 0.0
+-        if met > 0.0 and bid.floor_quantity > 0.0:
+-            cut = bid.floor_quantity * met
+-            share_kept = 1.0 - cut / (bid.floor_quantity + bid.flexible_quantity)
+-            bid = with_floor_and_budget(bid, bid.floor_quantity - cut, bid.budget * max(0.0, share_kept))
+-        bids.append(bid)
+-    return dataclasses.replace(orders, bids=tuple(bids))
+-
+-
+ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLedger,
+                 watched_tiles=(), arrays=None) -> None:
+     """Produce and clear every good in input-depth order. The book of each market area that holds the port, the
+diff --git a/sim/tests/test_opening_demand_kernel.py b/sim/tests/test_opening_demand_kernel.py
+index 1bb2c1489..dd8ca7b31 100644
+--- a/sim/tests/test_opening_demand_kernel.py
++++ b/sim/tests/test_opening_demand_kernel.py
+@@ -125,7 +125,7 @@ def random_units(rng, cohorts, basket):
+ def plots_of(units):
+     """An `OwnPlots` whose plots grow the given units (the plot rules have their own tests)."""
+     own = OwnPlots.__new__(OwnPlots)
+-    own.uncut, own.extra, own.in_kind, own.share_hired = {}, {}, 0.0, 0.0
++    own.in_kind, own.share_hired = 0.0, 0.0
+     own.grown, own.hectares, own.sold = {}, {}, {}
+     own.grow = lambda record, cohort, priced, own_work=None: units[cohort.agent_id]
+     own.own_work_hours = lambda record, cohort, priced: 0.0
+@@ -138,9 +138,9 @@ def reference_final_demand(parts, view, own):
+     for cohort, basket, priced, shared in sorted(parts, key=lambda part: part[0].agent_id):
+         income = cohort.last_year_income
+ 
+-        def make(cash=income, cohort=cohort, basket=basket, priced=priced, shared=shared, income=income):
++        def make(cash=income, grown_units=None, cohort=cohort, basket=basket, priced=priced, shared=shared, income=income):
+             return households.goods_orders(cohort, view, cash, income, basket, SPECS, priced, shared_store=shared,
+-                                           stationary_durables=True)
++                                           stationary_durables=True, grown_units=grown_units)
+         for bid in own.resting_orders(None, cohort, income, basket, priced, make).bids:
+             price = view.price(bid.good, bid.area)
+             if price:
+@@ -195,7 +195,7 @@ class FinalDemandAgreesTests(unittest.TestCase):
+             compared += 1
+         self.assertGreaterEqual(compared, 40, "most cases are compared (%d skipped)" % skipped)
+ 
+-    def test_the_extra_spending_and_the_budget_not_spent_agree(self):
++    def test_the_spending_in_kind_agrees(self):
+         rng = random.Random(11)
+         checked = 0
+         for _case in range(30):
+@@ -210,9 +210,7 @@ class FinalDemandAgreesTests(unittest.TestCase):
+             packed, _got = kernel_final_demand(parts_of(basket, view, cohorts), view, own, cohorts)
+             if not packed.supported:
+                 continue
+-            for cohort in cohorts:
+-                self.assertAlmostEqual(own.extra[cohort.agent_id], reference_own.extra[cohort.agent_id],
+-                                       delta=TOLERANCE * max(1.0, abs(reference_own.extra[cohort.agent_id])))
++            self.assertAlmostEqual(own.in_kind, reference_own.in_kind, delta=TOLERANCE * max(1.0, abs(reference_own.in_kind)))
+             checked += 1
+         self.assertGreaterEqual(checked, 15)
+ 
+@@ -249,11 +247,5 @@ class DurableBidsAgreeTests(unittest.TestCase):
+         self.assertGreaterEqual(compared, 20)
+ 
+ 
+-class ConstantsTests(unittest.TestCase):
+-    def test_the_kernel_runs_the_purse_passes_the_old_path_runs(self):
+-        from sim.economy import opening_demand_kernel
+-        self.assertEqual(opening_demand_kernel.PURSE_PASSES, opening_own.PURSE_PASSES)
+-
+-
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/sim/tests/test_opening_own_plots.py b/sim/tests/test_opening_own_plots.py
+index e39c25c13..26125e0e3 100644
+--- a/sim/tests/test_opening_own_plots.py
++++ b/sim/tests/test_opening_own_plots.py
+@@ -5,9 +5,8 @@ QUICK_TOPIC = True
+ import types
+ import unittest
+ 
+-from sim.economy import household_hours_year, households_buffer_stock, opening_own, opening_resting, opening_runs, year_goods
+-from sim.economy.protocols import AgentOrders
+-from sim.economy.types import Bid, Recipe
++from sim.economy import household_hours_year, opening_own, opening_resting, opening_runs
++from sim.economy.types import Recipe
+ 
+ 
+ def recipes():
+@@ -50,28 +49,12 @@ class SoldHoursTests(unittest.TestCase):
+         self.assertEqual(opening_own.sold_hours_per_worker(0.0, 0.0, 2000.0), 2000.0)
+ 
+ 
+-class LessWhatItGrewTests(unittest.TestCase):
+-    def test_a_floor_half_grown_is_half_bought_and_its_budget_cut_to_match(self):
+-        basket = types.SimpleNamespace(needs=(types.SimpleNamespace(
+-            need_id="food", subsistence_per_person=1.0, goods=(("flour", 1.0),)),))
+-        cohort = types.SimpleNamespace(people=10.0)
+-        bid = Bid("household", "flour", "area", "tile", 10.0, 10.0, 1.0, 1.0, 100.0)
+-        cut = year_goods.less_what_it_grew(AgentOrders(bids=(bid,)), cohort, basket, {"food": 5.0}).bids[0]
+-        self.assertEqual((cut.floor_quantity, cut.flexible_quantity, cut.budget), (5.0, 10.0, 75.0))
+-
+-
+ class RestingInputStockTests(unittest.TestCase):
+     def test_an_input_bought_in_the_year_is_not_held_at_its_start_and_one_not_bought_is_held_for_the_runs(self):
+         held = opening_resting.resting_input_stock(10.0, {"ore": 100.0, "coal": 5.0}, {"ore"})
+         self.assertEqual(held, {"coal": 50.0})
+ 
+ 
+-class RestingPurseExtraSpendingTests(unittest.TestCase):
+-    def test_a_purse_for_spending_beyond_income_lets_the_rule_spend_exactly_that_much(self):
+-        purse = opening_resting.resting_household_purse(100.0, 0.0, extra_spending=30.0)
+-        self.assertAlmostEqual(households_buffer_stock.spending_budget(100.0, 100.0 + purse, 0.0), 130.0)
+-
+-
+ def mill_and_feeder():
+     return {"mill": Recipe("mill", {"flour": 1000.0, "bran": 150.0}, {}, {"miller": 5.0}),
+             "feed": Recipe("feed", {"lard": 10.0}, {"bran": 600.0}, {"herder": 1.0})}
+diff --git a/sim/tests/test_opening_resting_orders.py b/sim/tests/test_opening_resting_orders.py
+new file mode 100644
+index 000000000..420004615
+--- /dev/null
++++ b/sim/tests/test_opening_resting_orders.py
+@@ -0,0 +1,39 @@
++"""The opening's household orders are the year's: a floor the own plot grew is met before the budget is sized, the opening holds the
++household's income as cash (no purse for a late cut), and the value of the floor it met is spending in kind
++(`OwnPlots.resting_orders`). The test calls that one function against `households.goods_orders` with the same inputs."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.economy import households
++from sim.economy.opening_own import OwnPlots
++from sim.tests.test_economy_households import BASKET, SPECS, View, cohort
++
++PEOPLE = 100.0
++INCOME = 50000.0
++FOOD_FLOOR_UNITS = 200.0 * PEOPLE
++
++
++def plot_that_grows(units):
++    own = OwnPlots.__new__(OwnPlots)
++    own.in_kind = 0.0
++    own.grow = lambda record, household, priced, own_work=None: units
++    return own
++
++
++class RestingOrdersTests(unittest.TestCase):
++    def test_a_cohort_with_a_grown_food_floor_makes_the_orders_a_year_makes(self):
++        household = cohort(people=PEOPLE, cash_target=1000.0, last_year_income=INCOME)
++        priced = households.need_prices(BASKET, View(), household.tile)
++        grown = {"food": 0.5 * FOOD_FLOOR_UNITS}
++
++        def make(cash, grown_units=None):
++            return households.goods_orders(household, View(), cash, INCOME, BASKET, SPECS, priced, grown_units=grown_units)
++
++        opening = plot_that_grows(grown).resting_orders(None, household, INCOME, BASKET, priced, make)
++        self.assertEqual(opening, make(INCOME, grown))
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/sim/tests/test_opening_seed_repack.py b/sim/tests/test_opening_seed_repack.py
+index a3ceb458f..c987120b0 100644
+--- a/sim/tests/test_opening_seed_repack.py
++++ b/sim/tests/test_opening_seed_repack.py
+@@ -1,6 +1,5 @@
+-"""The opening's demand after the durable stock is seeded is asked of households holding that stock: the orders held for an
+-income from before the seed are dropped (`OwnPlots.forget_orders`, the held purse kept), orders dropped are made again
+-(`OwnPlots.resting_orders`), and the packed cohorts read the stock again (`OpeningDemand.repacked`). Each test calls one function."""
++"""The opening's demand after the durable stock is seeded is asked of households holding that stock: the packed cohorts read the
++stock again (`OpeningDemand.repacked`). Each test calls one function."""
+ 
+ QUICK_TOPIC = True
+ 
+@@ -8,37 +7,11 @@ import random
+ import unittest
+ 
+ from sim.economy import opening_demand, opening_demand_kernel as kernel
+-from sim.economy.opening_own import OwnPlots
+ from sim.tests.test_opening_demand_kernel import SPECS, parts_of, plots_of, random_world
+ 
+ 
+-class ForgetOrdersTests(unittest.TestCase):
+-    def test_the_orders_are_dropped_and_the_income_and_purse_kept(self):
+-        own = OwnPlots.__new__(OwnPlots)
+-        own.uncut = {"household:a:0": (100.0, "orders made before the seed", 7.0)}
+-        own.forget_orders()
+-        self.assertEqual(own.uncut, {"household:a:0": (100.0, None, 7.0)})
+-
+-
+-class RestingOrdersTests(unittest.TestCase):
+-    def ask(self, held):
+-        own = OwnPlots.__new__(OwnPlots)
+-        own.uncut, own.extra, own.in_kind = {"household:a:0": held}, {}, 0.0
+-        own._cut = lambda record, cohort, orders, basket, priced: (orders, 0.0)
+-        made = []
+-        cohort = type("Cohort", (), {"agent_id": "household:a:0"})()
+-        own.resting_orders(None, cohort, 100.0, None, None, lambda cash: made.append(cash) or "fresh orders")
+-        return made
+-
+-    def test_orders_dropped_for_the_income_are_made_again_from_the_held_purse(self):
+-        self.assertEqual(self.ask((100.0, None, 0.0)), [100.0])
+-
+-    def test_orders_held_for_the_income_and_purse_are_not_made_again(self):
+-        self.assertEqual(self.ask((100.0, "held orders", 0.0)), [])
+-
+-
+ class RepackedTests(unittest.TestCase):
+-    def test_the_stock_held_now_is_read_and_the_last_purse_kept(self):
++    def test_the_stock_held_now_is_read_and_the_last_incomes_kept(self):
+         rng = random.Random(4)
+         basket, view, cohorts = random_world(rng)
+         packed = opening_demand.OpeningDemand(parts_of(basket, view, cohorts), view, SPECS, plots_of({}))
+diff --git a/sim/tests/test_year_goods_cut_bid.py b/sim/tests/test_year_goods_cut_bid.py
+deleted file mode 100644
+index 4b34b9a25..000000000
+--- a/sim/tests/test_year_goods_cut_bid.py
++++ /dev/null
+@@ -1,26 +0,0 @@
+-"""`year_goods.with_floor_and_budget` builds the bid `dataclasses.replace` would, on random bids."""
+-QUICK_TOPIC = True
+-
+-import dataclasses
+-import random
+-import unittest
+-
+-from sim.economy.types import Bid
+-from sim.economy.year_goods import with_floor_and_budget
+-
+-
+-class WithFloorAndBudgetTests(unittest.TestCase):
+-    def test_equals_replace_on_random_bids(self):
+-        draw = random.Random(7)
+-        for _case in range(200):
+-            bid = Bid("h%d" % draw.randrange(5), "grain", "area", "tile", draw.uniform(0, 9), draw.uniform(0, 9),
+-                      draw.uniform(0.1, 3), draw.uniform(0, 2), draw.uniform(0, 50), draw.randrange(3),
+-                      draw.choice([float("inf"), draw.uniform(1, 5)]))
+-            floor, budget = draw.uniform(0, 9), draw.uniform(0, 50)
+-            made = with_floor_and_budget(bid, floor, budget)
+-            self.assertEqual(made, dataclasses.replace(bid, floor_quantity=floor, budget=budget))
+-            self.assertEqual(dataclasses.astuple(made), dataclasses.astuple(dataclasses.replace(bid, floor_quantity=floor, budget=budget)))
+-
+-
+-if __name__ == "__main__":
+-    unittest.main()
