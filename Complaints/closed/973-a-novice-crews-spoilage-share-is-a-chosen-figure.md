@@ -37,3 +37,10 @@ Scrap: ifactoryapp.com/industries/automotive-manufacturing/gigafactory-cell-yiel
 routinely open with scrap rates between 15 and 30 percent", "still sit near 10 percent five years into operation". Effort per good unit
 1 / (1 - scrap): 1 / 0.775 - 1 / 0.90 = 0.179 extra; 0.179 / 0.82 = 0.22. Unlike industries (battery cells, a productivity target), so
 a ballpark only; a craft-specific split would replace it.
+
+## Pass (2026-11, any-source bar)
+
+Value kept at 0.2, extra sources added to the `source` text in `sim/economy/practice.py`. Opened: Hoskins, "Rethinking Conventional Labor Hour Benchmarking" (Portland State EMGT 510 student project, 1992,
+content.library.pdx.edu/files/PDXScholar/ETM/1992/1992-F-510-05-1.pdf): "Rework accounts for 25-35% of total manufacturing hours on typical production parts, and is often much higher on development parts". TWI, "Repair statistics of manufacturing and
+fabrication welding" (twi-global.com): average weld repair rates "range from 1-3%", peaks up to 25%, exceptionally 55%; welder skill is a named cause, not quantified. The chosen 0.2 of the extra effort is 0.16 of practised hours, within a factor of 2 of the
+25-35% rework share. Neither page separates a novice's scrap from slowness. Also tried, nothing usable: Bernard Tregaskiss welding article, onlineclothingstudy learning-curve page (no rates), a PCB "proficiency gap" paper (40-60% proficiency, no scrap split), and searches for potters' and glassblowers' failure rates (forum guesses only). Confidence stays C.

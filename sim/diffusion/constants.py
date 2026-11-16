@@ -4,9 +4,15 @@ from sim.constants import declare
 # ---- literacy: what limits it and how fast schooling closes the gap ----
 
 UNABLE_TO_READ_SHARE = declare(
-    "UNABLE_TO_READ_SHARE", 0.01, kind="temporary_heuristic",
-    unit="dimensionless (share of any class, 0..1)", source=None,
-    confidence="D",
+    "UNABLE_TO_READ_SHARE", 0.01, kind="engineering_estimate",
+    unit="dimensionless (share of any class, 0..1)",
+    source="Wikipedia 'Intellectual disability' (en.wikipedia.org/wiki/"
+           "Intellectual_disability): about 2-3% of the general population; "
+           "severe 3.5% and profound 1.5% of those. Severe and profound "
+           "alone give about 0.1-0.15% of everyone; adding moderate "
+           "(assumed about 10% of cases) gives about 0.3-0.4%, so 1% "
+           "is within 3x and also covers blindness and deafness.",
+    confidence="C",
     why="Share of people who cannot learn to read at all (severe "
         "cognitive or sensory impairment), so no ceiling reaches 1.0. "
         "A small round figure, not taken from a survey.")
@@ -18,15 +24,27 @@ FARM_CHILDREN_KEPT_FROM_SCHOOL = declare(
         "needs, so they cannot be spared for a classroom. Multiplied by "
         "the farm share of hours; a round figure, not measured.")
 GENERATION_YEARS = declare(
-    "GENERATION_YEARS", 25, kind="temporary_heuristic", unit="years",
-    source=None, confidence="C",
+    "GENERATION_YEARS", 25, kind="engineering_estimate", unit="years",
+    source="Wikipedia 'Generation' (en.wikipedia.org/wiki/Generation): "
+           "'generally considered to be about 20-30 years'; high 20s in "
+           "developed nations, low 20s in less developed ones.",
+    confidence="C",
     why="Length of a human generation; spaces literacy census messages "
         "and decides when schooling has run for a generation.")
 # per unit of schooling flow, per year; the flow comes from the schools and academies running
 LITERACY_GROWTH_RATE_GENERAL = declare(
-    "LITERACY_GROWTH_RATE_GENERAL", 0.006, kind="temporary_heuristic",
+    "LITERACY_GROWTH_RATE_GENERAL", 0.006, kind="engineering_estimate",
     unit="dimensionless per unit of schooling flow, per year",
-    source=None, confidence="D",
+    source="Wikipedia 'Literacy' (en.wikipedia.org/wiki/Literacy), Allen's "
+           "estimates: England 6% (1500) to 53% (1800), Netherlands 10% to "
+           "68%; world 12% (1820) to 87% (2022); UNESCO world 55.7% (1950) "
+           "to 86.2% (2015). Assuming a 99% ceiling, the gap-closing rate "
+           "is ln(0.93/0.46)/300 = 0.0023 per year for England, 0.0035 for "
+           "the Netherlands, 0.0098 for the world 1820-2022 and 0.018 for "
+           "1950-2015; 0.006 per unit of flow sits inside that span "
+           "(flow is not observable, so only the order of magnitude is "
+           "sourced).",
+    confidence="C",
     why="How fast general literacy closes the gap to its ceiling per "
         "unit of schooling flow: at flow 1.0 "
         "this is a ~167-year time constant, requiring sustained "
@@ -154,8 +172,16 @@ DIFFUSION_HALF_LIFE_MEDICAL_YEARS = declare(
         "a vaccine depends on publishing and on somebody literate "
         "enough to read it. Tuned, not measured.")
 DIFFUSION_HALF_LIFE_INFORMATION_YEARS = declare(
-    "DIFFUSION_HALF_LIFE_INFORMATION_YEARS", 30.0, kind="temporary_heuristic",
-    unit="years", source=None, confidence="D",
+    "DIFFUSION_HALF_LIFE_INFORMATION_YEARS", 30.0, kind="engineering_estimate",
+    unit="years",
+    source="Wikipedia 'Spread of the printing press' (en.wikipedia.org/wiki/"
+           "Spread_of_the_printing_press): Bible printed 1452-1454; 21 "
+           "Dutch towns and about 40 each in Italy and Germany by 1481; "
+           "236 European towns with presses by 1500. Reaching most of "
+           "that in under 50 years implies a half-life of roughly 15-30 "
+           "years; windmills (Wikipedia 'Windmill') took from 1185 to the "
+           "14th century, about 150 years, so 30 sits between.",
+    confidence="C",
     why="Years for half of a newly-completed information technology "
         "(printing and the like) to spread through society. Tuned, "
         "not measured.")

@@ -117,12 +117,10 @@ class AreaNotRegionCountTests(unittest.TestCase):
 class RomeCalibrationTests(unittest.TestCase):
     """A validation: Rome is the one territory the area constants were calibrated against."""
 
-    def test_rome_before_revenue_is_near_the_figure_the_old_region_count_formula_gave(self):
-        old_formula_ceiling = 31325.0
-        rome = load_civ("rome_100ad")
-        ceiling = ceiling_of(rome, 0.85)   # the reach the old calibration took for Rome
-        self.assertLess(abs(ceiling - old_formula_ceiling) / old_formula_ceiling, 0.10, ceiling)
-
+    def test_rome_at_full_reach_is_near_the_empire_wide_coppice_the_charcoal_anchor_needs(self):
+        empire_wide_coppice_hectares = 667000.0   # constants.py FOREST_HA_PER_MILLION_KM2_PER_SC source: 500,000 t of charcoal at 0.75 t/ha
+        ceiling = ceiling_of(load_civ("rome_100ad"), 1.0)
+        self.assertLess(abs(ceiling - empire_wide_coppice_hectares) / empire_wide_coppice_hectares, 0.10, ceiling)
 
 if __name__ == "__main__":
     unittest.main()

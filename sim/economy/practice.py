@@ -51,7 +51,7 @@ SCRAPPED_SHARE_OF_EXTRA_EFFORT = declare(
         "manufacturing/gigafactory-cell-yield-improvement-ai (opened): 'New gigafactories routinely open with scrap rates "
         "between 15 and 30 percent' and 'still sit near 10 percent five years into operation'; midpoint 22.5% against "
         "10%. Effort per good unit is 1 / (1 - scrap): 1 / 0.775 - 1 / 0.90 = 1.290 - 1.111 = 0.179 extra. Share "
-        "0.179 / 0.82 = 0.22, rounded to 0.2."),
+        "0.179 / 0.82 = 0.22, rounded to 0.2. Further opened pages (2026-11), none splitting a novice's extra effort: Hoskins, 'Rethinking Conventional Labor Hour Benchmarking', Portland State EMGT 510 student project, 1992 (content.library.pdx.edu/files/PDXScholar/ETM/1992/1992-F-510-05-1.pdf): in one manufacturer 'Rework accounts for 25-35% of total manufacturing hours on typical production parts, and is often much higher on development parts'; TWI, 'Repair statistics of manufacturing and fabrication welding' (twi-global.com/media-and-events/insights/repair-statistics-of-manufacturing-and-fabrication-welding): average weld repair rates 'range from 1-3%', peaks up to 25% and exceptionally 55%, with the welder's skill named among the main causes but not quantified. Both show rework is a large share of hours where work is new; a scrap share of 0.2 of the 0.82 extra effort is 0.16 of practised hours, below the 25-35% rework share, so within a factor of 2 of it. No study of novices alone found; a ballpark."),
     confidence="C",
     why="A novice run takes more hours than a competent one (the learning curve); part of the extra effort is slower "
         "work and part is work redone or thrown away, which lowers what a run yields. The share is the extra effort "

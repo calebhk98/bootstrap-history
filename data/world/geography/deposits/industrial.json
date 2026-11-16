@@ -14,7 +14,10 @@
    "status": "modern",
    "first_worked": -500,
    "source": "Lake volume about 120 cubic kilometres at roughly 340 kg dissolved salts per cubic metre gives of order forty billion tonnes, a derivation not a source figure; coordinate approximate.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 44000000000,
+   "contained_basis": "Dissolved salts in the Dead Sea estimated at 44 billion tons by the Dead Sea Works; a popular-science source gives 37 billion tonnes, within 20%",
+   "contained_source": "Dead Sea Works description, https://wysinfo.com/?p=4603 : \"The quantity of dissolved salts in the lake today is estimated at 44 billion tons\"; BBC Science Focus, https://www.sciencefocus.com/planet-earth/how-much-salt-is-there-in-the-dead-sea : \"about 37 billion tonnes\""
   },
   {
    "id": "wieliczka_salt",
@@ -27,7 +30,10 @@
    "status": "historic",
    "first_worked": 1044,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 25000000,
+   "contained_basis": "About 25 million tonnes mined over the last 1,000 years; production only, a lower bound",
+   "contained_source": "Exciting Poland, Wieliczka, https://excitingpoland.com/?p=376 : \"25 million tones of salt have been mined over the last 1,000 years\""
   },
   {
    "id": "hallstatt_salt",
@@ -40,7 +46,10 @@
    "status": "historic",
    "first_worked": -1500,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 465000,
+   "contained_basis": "Daily output about 1.5 t of salt (near-industrial scale from about 1200 BC) x 365 days x 850 years (assumption: working span from the German Wikipedia: Bronze Age mining from about 1500 BC to the 13th century BC debris flow, about 250 years, and Hallstatt-period mining from about 300 years later to the mid 4th century BC, about 600 years) = 465,000 t; medieval to modern working from 1311 not added, so a lower bound",
+   "contained_source": "news.at, Hallstatt: Forscher stossen auf Komplex eisenzeitlicher Abbaukammern, https://www.news.at/technik/hallstatt-forscher-stossen-auf-komplex-eisenzeitlicher-abbaukammern : \"Tagesproduktionen von etwa 1,5 Tonnen Salz\"; German Wikipedia, Salzbergwerk Hallstatt, https://de.wikipedia.org/wiki/Salzbergwerk_Hallstatt : first salt mining about 1500 BC, buried in the 13th century BC, resumed about 300 years later, stopped in the mid 4th century BC, first certain document 1311"
   },
   {
    "id": "khewra_salt",
@@ -55,7 +64,10 @@
    "status": "modern",
    "first_worked": 1872,
    "source": "Coordinate from Wikipedia. Wikipedia: reserve estimates range from 82 to over 600 million tons; geometric midpoint used.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 600000000,
+   "contained_basis": "Wikipedia gives estimates of total reserves from 82 million tons to over 600 million tons; the upper figure is used, the lower is about 7 times less",
+   "contained_source": "Wikipedia, Khewra Salt Mine, https://en.wikipedia.org/wiki/Khewra_Salt_Mine : \"Estimates of the total reserves of salt in the mines range from 82 million tons ... to over 600 million tons\""
   },
   {
    "id": "stassfurt_salt",
@@ -68,7 +80,8 @@
    "status": "modern",
    "first_worked": 1852,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_basis": "No separate rock-salt tonnage: the only opened series, 'The Stassfurt Industry' (German Kali Works), gives crude salts (potash-bearing salts together) with no rock-salt split; tried: that series, German and English Wikipedia Stassfurt (dates only: systematic salt exploitation from 1856, no tonnage), a German Kalibergbau article (no Stassfurt tonnage); needs a rock-salt output table, for example Slotta, 150 Jahre Kaliproduktion in Deutschland, Kali und Steinsalz 3/2011, which did not open"
   },
   {
    "id": "great_salt_lake",
@@ -83,7 +96,10 @@
    "status": "modern",
    "first_worked": 1850,
    "source": "Coordinate from Wikipedia. Dissolved salts of order five billion tonnes, from memory. The earlier entry was half a degree south of the lake centre.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 4500000000,
+   "contained_basis": "The lake holds over 4.5 billion tons of dissolved salt (Utah Geological Survey); industry removes about 2.5 Mt a year, not added",
+   "contained_source": "Utah Geological Survey, The Great Salt Lake (Public Information Series 8), https://ugspub.nr.utah.gov/publications/public_information/pi-8.pdf : \"over 4.5 billion tons of salt\""
   },
   {
    "id": "salar_uyuni_salt",
@@ -98,7 +114,10 @@
    "status": "modern",
    "first_worked": 1900,
    "source": "Coordinate from Wikipedia. Halite crust, order of magnitude from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 10000000000,
+   "contained_basis": "Salar de Uyuni estimated to contain 10 billion tonnes of salt, of which under 25,000 t a year is extracted",
+   "contained_source": "Wikipedia, Salar de Uyuni, https://en.wikipedia.org/wiki/Salar_de_Uyuni : \"estimated to contain 10 billion tonnes ... of salt\""
   },
   {
    "id": "salar_uyuni_lithium",
@@ -113,7 +132,10 @@
    "status": "modern",
    "first_worked": 2010,
    "source": "Coordinate from Wikipedia. Bolivian lithium resource of about 21 million tonnes (USGS), most of it at Uyuni; from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 23000000,
+   "contained_basis": "USGS lists Bolivian lithium resources at 23 Mt (2024); the row stands for the Uyuni salar, which holds most of the Bolivian resource (assumption); a resource figure with no production",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Lithium, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-lithium.pdf : \"Resources are distributed as follows: Bolivia, 23 million tons\" (2024)"
   },
   {
    "id": "qarhan_salt",
@@ -128,7 +150,10 @@
    "status": "modern",
    "first_worked": 1950,
    "source": "Coordinate from memory (the earlier entry at 37.5N 93.5E was about 1.5 degrees off); halite reserve of order fifty billion tonnes from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 50000000000,
+   "contained_basis": "Qarhan Playa contains over 50 billion metric tons of salt (CNPC, per Wikipedia); a press report gives 55.5 billion tons of sodium chloride, an official-data report about 60 billion",
+   "contained_source": "Wikipedia, Qaidam Basin, https://en.wikipedia.org/wiki/Qaidam_Basin : \"Qarhan Playa ... contains over 50 billion metric tons (55 billion short tons) of salt\""
   },
   {
    "id": "lake_assal_salt",
@@ -141,7 +166,10 @@
    "status": "modern",
    "first_worked": 1000,
    "source": "Djibouti; coordinate from memory; no defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 6000000,
+   "contained_basis": "Potential reserves assessed at 4 to 8 million tonnes; midpoint 6 Mt used",
+   "contained_source": "Wikipedia, Lake Assal (Djibouti), https://en.wikipedia.org/wiki/Lake_Assal_(Djibouti) : \"assessed with varying potential reserves of 4 to 8 million tonnes\""
   },
   {
    "id": "saskatchewan_potash",
@@ -156,7 +184,10 @@
    "status": "modern",
    "first_worked": 1951,
    "source": "Region centre approximate; reserves plus production of the order of twenty billion tonnes of ore, from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 1100000000,
+   "contained_basis": "Canadian potash reserves 1,100 Mt K2O equivalent (2023); assumes Saskatchewan holds nearly all of them (Prairie Evaporite, assumption); K2O basis, not KCl or ore; cumulative production since 1951 not added",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Potash, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-potash.pdf : reserves, Canada 1,100,000 thousand metric tons K2O equivalent"
   },
   {
    "id": "solikamsk_potash",
@@ -171,7 +202,10 @@
    "status": "modern",
    "first_worked": 1925,
    "source": "Coordinate from Wikipedia. Reserves of order ten billion tonnes of ore, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 650000000,
+   "contained_basis": "Russian potash reserves 650 Mt K2O equivalent (2023); assumes the Verkhnekamsk deposit holds most of them (assumption); K2O basis; production not added",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Potash, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-potash.pdf : reserves, Russia 650,000 thousand metric tons K2O equivalent"
   },
   {
    "id": "stassfurt_potash",
@@ -184,7 +218,10 @@
    "status": "historic",
    "first_worked": 1861,
    "source": "Coordinate from Wikipedia. First industrial potash mine; no defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 61500000,
+   "contained_basis": "Crude salts (potash-bearing salts, kainit and carnallite and the like, with associated salt; not K2O) raised by the Stassfurt industry 1861 to 1906, summed from the year-by-year table: 61.5 million t (2,293 t in 1861, 3,037,035 t in 1900, 5,311,903 t in 1906); production only, crude-salt tonnes not K2O, and the table does not split Stassfurt proper from the district's 45 mines, so the row stands for the district",
+   "contained_source": "The Stassfurt Industry, German Kali Works (New York, undated, data to 1906), https://distantreader.org/stacks/trust/uma/uma_ark+=13960=t0wq0q361.txt : table of crude salts production 1861 to 1906 in metric tons"
   },
   {
    "id": "boulby_potash",
@@ -197,7 +234,10 @@
    "status": "modern",
    "first_worked": 1973,
    "source": "Coordinate from Wikipedia. No defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 1000000000,
+   "contained_basis": "Offshore polyhalite (a potassium-bearing mineral, not sylvinite) resources estimated at over a billion tonnes; potash production since 1973 not added",
+   "contained_source": "Wikipedia, Boulby Mine, https://en.wikipedia.org/wiki/Boulby_Mine : \"total resources estimated at over a billion tonnes\" of polyhalite lying offshore"
   },
   {
    "id": "chilean_nitrate",
@@ -212,7 +252,10 @@
    "status": "historic",
    "first_worked": 1830,
    "source": "Coordinate from memory (Maria Elena, Antofagasta region); sodium nitrate produced 1830-1930 of order seventy million tonnes, from memory. Replaces atacama_nitrate; tunupa_nitrate removed as unidentifiable.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 82106749,
+   "contained_basis": "Sum of the 100 annual nitrate export figures 1830 to 1929 (860 t in 1830 to 2,898,141 t in 1929) = 82.1 Mt sodium nitrate exported; production only, so a lower bound (NaNO3 basis, not nitrogen basis)",
+   "contained_source": "Asociacion de Productores de Salitre en Chile, El Salitre: Historical Resume (Roberto Hernandez C., Valparaiso, 1930) as tabulated by Album del Desierto, Exports of Nitrate 1830 to 1929, https://albumdesierto.cl/ingles/2estadis.htm : annual 'Tons' table, e.g. 1830 860, 1890 1.065,277, 1929 2.898,141 (summed by script over all 100 rows)"
   },
   {
    "id": "sicily_sulfur",
@@ -225,7 +268,10 @@
    "status": "historic",
    "first_worked": 1700,
    "source": "Coordinate is Caltanissetta per Wikipedia; no defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 10780000,
+   "contained_basis": "Sum of Italian sulfur output for each year 1900 to 1928 from the Bureau of Mines table = 10,614,296 long tons x 1.016 = 10.78 Mt; assumes Italian output was Sicilian (nearly all of it); 1700 to 1899 and after 1928 not added, so a lower bound",
+   "contained_source": "Wikipedia, Frasch process, World Production of Sulphur 1900-1929 (US Bureau of Mines Information Circular 6329, 1930, p. 22), https://en.wikipedia.org/wiki/Frasch_process : Italy column, e.g. 1900 535,525; 1901 554,203; 1928 291,430 long tons"
   },
   {
    "id": "ijen_sulfur",
@@ -238,7 +284,10 @@
    "status": "modern",
    "first_worked": 1968,
    "source": "Coordinate from Wikipedia. Latitude sign corrected (the earlier entry was in the northern hemisphere, in the Pacific). No endowment figure.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 296000,
+   "contained_basis": "Miners extract 14 t a day x 365 days x 58 years (assumption: the row's first_worked of 1968 to 2026, taken from the existing row, not from the page) = 296,000 t; production only, and the page says this is about 20 percent of the continuous daily deposit",
+   "contained_source": "Wikipedia, Kawah Ijen, https://en.wikipedia.org/wiki/Kawah_Ijen : miners \"extract 14 tons per day\""
   },
   {
    "id": "gulf_coast_sulfur",
@@ -251,7 +300,10 @@
    "status": "historic",
    "first_worked": 1903,
    "source": "Coordinate from memory (Boling dome, Texas); no defensible endowment figure, omitted.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 62700000,
+   "contained_basis": "Boling dome Frasch sulfur: Texas Gulf more than 61,118,065 long tons + Duval 571,123 + Union 9,164 + Baker-Williams 1,435 = 61.70 million long tons x 1.016 t per long ton = 62.7 Mt; production only, a lower bound",
+   "contained_source": "Wikipedia, Frasch process, table of Frasch mines, https://en.wikipedia.org/wiki/Frasch_process : Boling, Texas Gulf, \">61,118,065\" long tons; Duval 571,123; Union 9,164; Baker-Williams 1,435"
   },
   {
    "id": "florida_phosphate",
@@ -266,7 +318,10 @@
    "status": "modern",
    "first_worked": 1888,
    "source": "Coordinate from memory (Polk County); production plus reserves of order two billion tonnes of rock, from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 1000000000,
+   "contained_basis": "United States phosphate rock reserves 1,000 Mt (2023, USGS); the Florida Bone Valley supplies the majority of US output, so this stands for it only roughly (assumption; Idaho, North Carolina and Utah are included); cumulative production since 1888 is not added",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Phosphate Rock, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-phosphate.pdf : reserves, United States 1,000,000 thousand metric tons; \"Phosphate rock was produced in Florida, Idaho, North Carolina, and Utah\""
   },
   {
    "id": "khouribga_phosphate",
@@ -281,7 +336,10 @@
    "status": "modern",
    "first_worked": 1921,
    "source": "Coordinate from Wikipedia. Morocco holds the largest reserves in the world (USGS); Ouled Abdoun share of order twenty billion tonnes, from memory. Replaces morocco_phosphate (0.9 degrees too far north).",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 26000000000,
+   "contained_basis": "Ouled Abdoun basin, the Khouribga mine's basin, holds more than 26 billion tons (44% of Moroccan reserves); production since 1921 not added",
+   "contained_source": "Business Excellence / OCP, Phosphate forward sustainably: future-proofing Khouribga mine, https://bus-ex.com/article/phosphate-forward-sustainably-future-proofing-khouribga-mine : \"Oulad Abdoun Basin, which comprises 44% of Morocco's phosphate reserves, more than 26 billion tons\""
   },
   {
    "id": "nauru_phosphate",
@@ -296,7 +354,10 @@
    "status": "historic",
    "first_worked": 1906,
    "source": "Coordinate from Wikipedia. Exhausted island deposit, order a hundred million tonnes produced, from memory. nauru_second_phosphate removed as a duplicate.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 43000000,
+   "contained_basis": "About 43 million tons produced since independence in 1968; mining from 1906 to 1968 is not added, so a lower bound; the island's phosphate was largely exhausted in the 1990s",
+   "contained_source": "WorldAtlas, How Has Phosphate Mining in Nauru Led to an Environmental Catastrophe, https://www.worldatlas.com/articles/how-phosphate-mining-in-nauru-has-led-to-an-environmental-catastrophe.html : \"Since independence, the country has produced approximately 43 million tons of phosphate\""
   }
  ]
 }

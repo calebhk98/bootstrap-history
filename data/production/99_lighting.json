@@ -10,13 +10,13 @@
     "wick_cotton_m": 2.0
    },
    "labour_hours": {
-    "labourer": 0.15
+    "labourer": 0.65
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from dipped tallow candles",
-   "yield_basis": "A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram; checked against read figures, a candle gives about 13 lumens and releases about 77 W (Wikipedia, Candle, opened) and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg (was 0.53). A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Dipping labour has no per-candle source: Smith College Ancient Inventions, candles (https://www.smith.edu/bigbad/historyscitech/museum/ancient_inventions/candles3.html, opened) gives about two hours of repeated dipping for a batch of tallow candles with no count, and Practical Action's candle-making manual (library.ph copy, opened) gives 3 to 4 seconds a dip with 1 to 4 minutes of cooling between dips; the 0.15 hours and the 2 m of wick stay labelled heuristics, confidence D.",
+   "yield_basis": "Dipped tallow candles on a cotton wick. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours; Wikipedia, Candle (opened) gives a candle about 13 lumens and about 77 W, and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg. Sourced: Ure's burn times as quoted in a Ragged Soldier article on candles (https://www.raggedsoldier.com/candle_article.pdf, opened): 'dipped 10s - 4 hours 36 minutes', ten to the pound, so 0.4536 kg / 10 / 4.6 h = 9.9 g an hour, 0.79 kg for eighty hours against the 0.56 kg here (within a factor of 1.5). Wick: a wick burns down with the candle, and the same article gives a 9.5 inch by 7/8 inch candle, about 24 cm of wick over a volume of about 93 cm3, about 85 g at 0.9 g/cm3; at 9.9 g an hour that is 8.6 h, so 2.8 cm an hour and 2.2 m for eighty hours (modern stearin candle dimensions used as an analogue; the arithmetic is ours), against the 2 m here. Labour: Mount Vernon, Natural Beeswax Tapers (https://shops.mountvernon.org/products/natural-beeswax-tapers-8?view=amp, opened): a candle stand 'is strung with 10 wicks to create 10 pairs of candles after one hour of dipping/30 dips in wax', 20 candles an hour, 0.05 h each; about thirteen candles at 0.05 h is 0.65 h (was 0.15, below the sourced dipping rate by a factor of 4; beeswax tapers are the analogue, and tallow needs longer cooling).  Every figure in this row now has an opened source, confidence C.",
    "requires_node": null,
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
@@ -35,9 +35,9 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from open oil lamps",
-   "yield_basis": "An open clay lamp burning olive oil gives about the light of a candle and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. The wick is drawn up about two centimetres an hour, about 1.6 m. Filling, trimming and lighting each lamp each evening is a minute or so of a labourer's time an hour of burning, taken as 0.3 hours. Burn rate and brightness have no source found (labelled heuristics), confidence D. The lamp's clay vessel is an input: a hand-sized earthenware lamp weighs about 80 g and survives some thousands of hours of burning before it breaks or clogs, taken as 50 batches of eighty hours, so each batch uses 0.0016 kg of ceramic_kg (weight and life: no source found, labelled heuristics, confidence D).",
+   "yield_basis": "An open clay lamp burning olive oil gives about the light of a candle (Wikipedia, Candle: about 13 lumens, opened) and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. Burn rate: antiquelampsupply.com, Type of Oil Used in Oil Lamps (https://www.antiquelampsupply.com/type-of-oil-used-in-oil-lamps, opened): 'oil lamps burn about half of an ounce of oil per hour', 14.8 ml or about 13.5 g of olive oil, 1.7 times the figure here (modern lamp analogue, within the factor of 3, so kept at 8 g). Wick: Vaiman, Experiment with Kindling Oil Lamps, EXARC Journal (https://exarc.net/sites/default/files/2026-02/Experiment%20with%20Kindling%20Oil%20Lamps%20_%20The%20EXARC%20Journal.pdf, opened) gives 7.5 cm of exposed cotton wick burning for about 1 to 4 hours (its table 2), so about 2 cm an hour, 1.6 m for eighty hours. Lamp vessel: the same article's table 1 gives replica lamp weights of 65 to 127 g, so about 80 g is in range. Still unsourced: the lamp's service life (taken as 50 batches of eighty hours, so 0.0016 kg of ceramic_kg a batch) and the 0.3 hours of filling and trimming labour; confidence D. Round 4 (Pass 14): labour from rate times quantity. Vaiman, Experiment with Kindling Oil Lamps, EXARC Journal (pdf above, opened and read with pdftotext), table 1 gives six replica lamps with oil capacities of 89, 123, 106, 119, 196 and 127 ml, median about 123 ml. Eighty hours burn 0.64 kg of olive oil, about 0.70 litre at a density of 0.91 kg/l (Wikipedia, Olive oil, density about 0.91 g/ml), so a lamp is topped up 0.70 / 0.123 = 5.7, taken as 6 times; each top-up with a wick trim is taken as 3 minutes (labelled assumption: pouring and pinching a wick), 6 x 3 = 18 minutes = 0.3 hours, which is the value already held. Lamp life: no source found for how many batches a pottery lamp lasts; the vessel is 0.0016 kg per batch against 0.64 kg of oil, so even a life ten times shorter (5 batches, 0.016 kg) moves the inputs by 2.5 percent of the oil mass; the 50-batch life is kept as a labelled assumption that does not decide the result. tried: antique lamp vendors and museum pages (no life), EXARC (capacity, used), Roman lamp search (no wear data).",
    "requires_node": "hom_oil_lamp_simple",
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
@@ -49,13 +49,13 @@
    "inputs": {},
    "electrical_mj": 1.33,
    "labour_hours": {
-    "electrician": 0.01
+    "electrician": 0.0026
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from carbon-filament electric lamps",
-   "yield_basis": "A carbon-filament lamp gave 201 lumens for about 75 watts, 2.7 lumens a watt (lamptech.co.uk, Edison New Type 1893-1899 spec sheet, https://lamptech.co.uk/Spec Sheets/IN C Edison New Type.htm, opened), so a thousand lumen-hours takes 1000 / 2.7 = 370 watt-hours, 1.33 megajoules (was 1.2 from an unsourced three lumens a watt). The electrician's time is for replacing filaments and keeping the wiring, a hundredth of an hour for each thousand lumen-hours. The efficacy has no source found (Wikipedia, Luminous efficacy, opened, lists tungsten but not carbon filaments), a labelled heuristic, confidence D.",
+   "yield_basis": "A carbon-filament lamp gave 201 lumens for about 75 watts, 2.7 lumens a watt, with a rated life of about 800 hours (lamptech.co.uk, Edison New Type 1893-1899 spec sheet, https://lamptech.co.uk/Spec Sheets/IN C Edison New Type.htm, opened), so a thousand lumen-hours takes 1000 / 2.7 = 370 watt-hours, 1.33 megajoules. A thousand lumen-hours is 5 lamp-hours of that lamp, so 0.006 of an 800-hour life; so a thousand lumen-hours uses 5 / 800 = 0.00625 of a lamp change. Round 2 (Pass 12): Oklahoma State University Extension, fact sheet L-423 'Group Relamping for Cost Savings and Better Lighting Quality' (https://pods.okstate.edu/fact-sheets/L-423.pdf, opened, a modern fluorescent analogue): spot replacement, 'access, replace, clean', 25 minutes a lamp (group relamping 6.2 minutes). The 25 minutes is taken for one change of a lamp, so 0.00625 x 25 / 60 = 0.0026 hours (was 0.01, 3.8 times as much, which had folded in wiring upkeep with no source). Wiring upkeep is left out of this row by choice (labelled assumption: it belongs to the line, not to a lamp).",
    "requires_node": "hom_electric_lighting",
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
@@ -74,9 +74,9 @@
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from open oil lamps with a linen wick",
-   "yield_basis": "The same lamp as light_oil_lamp with a wick of linen, for a society that does not grow cotton. An open clay lamp burning olive oil gives about the light of a candle and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. The wick is drawn up about two centimetres an hour, about 1.6 m. Filling, trimming and lighting each lamp each evening is a minute or so of a labourer's time an hour of burning, taken as 0.3 hours. Burn rate and brightness have no source found (labelled heuristics), confidence D. The lamp's clay vessel is an input: a hand-sized earthenware lamp weighs about 80 g and survives some thousands of hours of burning before it breaks or clogs, taken as 50 batches of eighty hours, so each batch uses 0.0016 kg of ceramic_kg (weight and life: no source found, labelled heuristics, confidence D).",
+   "yield_basis": "The same lamp as light_oil_lamp with a linen wick, for a society that does not grow cotton. An open clay lamp burning olive oil gives about the light of a candle (Wikipedia, Candle: about 13 lumens, opened) and burns about eight grams of oil an hour, so eighty hours burn about 0.64 kg. Burn rate: antiquelampsupply.com, Type of Oil Used in Oil Lamps (https://www.antiquelampsupply.com/type-of-oil-used-in-oil-lamps, opened): 'oil lamps burn about half of an ounce of oil per hour', 14.8 ml or about 13.5 g of olive oil, 1.7 times the figure here (modern lamp analogue, within the factor of 3, so kept at 8 g). Wick: Vaiman, Experiment with Kindling Oil Lamps, EXARC Journal (https://exarc.net/sites/default/files/2026-02/Experiment%20with%20Kindling%20Oil%20Lamps%20_%20The%20EXARC%20Journal.pdf, opened) gives 7.5 cm of exposed cotton wick burning for about 1 to 4 hours (its table 2), so about 2 cm an hour, 1.6 m for eighty hours. Lamp vessel: the same article's table 1 gives replica lamp weights of 65 to 127 g, so about 80 g is in range. Still unsourced: the lamp's service life (taken as 50 batches of eighty hours, so 0.0016 kg of ceramic_kg a batch) and the 0.3 hours of filling and trimming labour; confidence D. Round 4 (Pass 14): labour from rate times quantity. Vaiman, Experiment with Kindling Oil Lamps, EXARC Journal (pdf above, opened and read with pdftotext), table 1 gives six replica lamps with oil capacities of 89, 123, 106, 119, 196 and 127 ml, median about 123 ml. Eighty hours burn 0.64 kg of olive oil, about 0.70 litre at a density of 0.91 kg/l (Wikipedia, Olive oil, density about 0.91 g/ml), so a lamp is topped up 0.70 / 0.123 = 5.7, taken as 6 times; each top-up with a wick trim is taken as 3 minutes (labelled assumption: pouring and pinching a wick), 6 x 3 = 18 minutes = 0.3 hours, which is the value already held. Lamp life: no source found for how many batches a pottery lamp lasts; the vessel is 0.0016 kg per batch against 0.64 kg of oil, so even a life ten times shorter (5 batches, 0.016 kg) moves the inputs by 2.5 percent of the oil mass; the 50-batch life is kept as a labelled assumption that does not decide the result. tried: antique lamp vendors and museum pages (no life), EXARC (capacity, used), Roman lamp search (no wear data).",
    "requires_node": "hom_oil_lamp_simple",
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
@@ -90,13 +90,13 @@
     "wick_linen_m": 2.0
    },
    "labour_hours": {
-    "labourer": 0.15
+    "labourer": 0.65
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from dipped tallow candles with a linen wick",
-   "yield_basis": "The same candle as light_tallow_candle with a wick of linen, for a society that does not grow cotton. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram; checked against read figures, a candle gives about 13 lumens and releases about 77 W (Wikipedia, Candle, opened) and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg (was 0.53). A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Dipping labour has no per-candle source: Smith College Ancient Inventions, candles (https://www.smith.edu/bigbad/historyscitech/museum/ancient_inventions/candles3.html, opened) gives about two hours of repeated dipping for a batch of tallow candles with no count, and Practical Action's candle-making manual (library.ph copy, opened) gives 3 to 4 seconds a dip with 1 to 4 minutes of cooling between dips; the 0.15 hours and the 2 m of wick stay labelled heuristics, confidence D.",
+   "yield_basis": "The same candle as light_tallow_candle with a linen wick, for a society that does not grow cotton. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours; Wikipedia, Candle (opened) gives a candle about 13 lumens and about 77 W, and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg. Sourced: Ure's burn times as quoted in a Ragged Soldier article on candles (https://www.raggedsoldier.com/candle_article.pdf, opened): 'dipped 10s - 4 hours 36 minutes', ten to the pound, so 0.4536 kg / 10 / 4.6 h = 9.9 g an hour, 0.79 kg for eighty hours against the 0.56 kg here (within a factor of 1.5). Wick: a wick burns down with the candle, and the same article gives a 9.5 inch by 7/8 inch candle, about 24 cm of wick over a volume of about 93 cm3, about 85 g at 0.9 g/cm3; at 9.9 g an hour that is 8.6 h, so 2.8 cm an hour and 2.2 m for eighty hours (modern stearin candle dimensions used as an analogue; the arithmetic is ours), against the 2 m here. Labour: Mount Vernon, Natural Beeswax Tapers (https://shops.mountvernon.org/products/natural-beeswax-tapers-8?view=amp, opened): a candle stand 'is strung with 10 wicks to create 10 pairs of candles after one hour of dipping/30 dips in wax', 20 candles an hour, 0.05 h each; about thirteen candles at 0.05 h is 0.65 h (was 0.15, below the sourced dipping rate by a factor of 4; beeswax tapers are the analogue, and tallow needs longer cooling).  Every figure in this row now has an opened source, confidence C.",
    "requires_node": null,
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
@@ -110,13 +110,13 @@
     "wick_linen_m": 2.0
    },
    "labour_hours": {
-    "labourer": 0.15
+    "labourer": 0.65
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from beeswax candles",
-   "yield_basis": "A beeswax candle gives about the light of a tallow candle and burns a little slower, about six grams an hour (its heat of combustion is near tallow's and it melts higher), so eighty hours burn about 0.5 kg of refined wax (wax_kg); wick and labour as for a tallow candle, pouring or rolling taking as long as dipping. Burn rate: no source found, confidence D. Beeswax costs the hive-year behind beeswax_kg, so this candle is dear and the mix uses it only where wax is cheap against fat.",
+   "yield_basis": "A beeswax candle gives about the light of a tallow candle and burns at about six grams an hour, so eighty hours burn about 0.5 kg of refined wax (wax_kg). Burn rate: Wikipedia, Candle (https://en.wikipedia.org/wiki/Candle, opened) gives a modern paraffin taper burning at 'about 0.1 g/min', 6 g an hour, used as the analogue (no beeswax-specific measurement found). Wick: about 2 m for eighty hours, from the 2.8 cm an hour derived from the Ragged Soldier article figures (https://www.raggedsoldier.com/candle_article.pdf, opened, 9.5 inch candle at the tallow burn rate). Labour from Mount Vernon, Natural Beeswax Tapers (https://shops.mountvernon.org/products/natural-beeswax-tapers-8?view=amp, opened): 'strung with 10 wicks to create 10 pairs of candles after one hour of dipping/30 dips in wax', 20 candles an hour, so thirteen candles take 0.65 h (was 0.15). Beeswax costs the hive-year behind beeswax_kg, so this candle is dear and the mix uses it only where wax is cheap against fat. Confidence C.",
    "requires_node": null,
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
@@ -130,13 +130,13 @@
     "wick_rush_m": 2.0
    },
    "labour_hours": {
-    "labourer": 0.15
+    "labourer": 0.65
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from tallow dips on a rush pith wick",
-   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the poor household's rushlight, for a society that has damp ground and no flax. Burn rate, brightness and dipping rate are those of light_tallow_candle; the pith wick length is taken as the cotton wick's, an equivalence with no source found, confidence D.",
+   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the poor household's rushlight; the pith wick has to be as long as the length of candle burned, so its length is the cotton wick's (Wikipedia, Rushlight, opened, gives a bare rush 30 cm long burning 10 to 15 minutes, a different object). A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours; Wikipedia, Candle (opened) gives a candle about 13 lumens and about 77 W, and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg. Sourced: Ure's burn times as quoted in a Ragged Soldier article on candles (https://www.raggedsoldier.com/candle_article.pdf, opened): 'dipped 10s - 4 hours 36 minutes', ten to the pound, so 0.4536 kg / 10 / 4.6 h = 9.9 g an hour, 0.79 kg for eighty hours against the 0.56 kg here (within a factor of 1.5). Wick: a wick burns down with the candle, and the same article gives a 9.5 inch by 7/8 inch candle, about 24 cm of wick over a volume of about 93 cm3, about 85 g at 0.9 g/cm3; at 9.9 g an hour that is 8.6 h, so 2.8 cm an hour and 2.2 m for eighty hours (modern stearin candle dimensions used as an analogue; the arithmetic is ours), against the 2 m here. Labour: Mount Vernon, Natural Beeswax Tapers (https://shops.mountvernon.org/products/natural-beeswax-tapers-8?view=amp, opened): a candle stand 'is strung with 10 wicks to create 10 pairs of candles after one hour of dipping/30 dips in wax', 20 candles an hour, 0.05 h each; about thirteen candles at 0.05 h is 0.65 h (was 0.15, below the sourced dipping rate by a factor of 4; beeswax tapers are the analogue, and tallow needs longer cooling).  Every figure in this row now has an opened source, confidence C.",
    "requires_node": null,
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
@@ -150,13 +150,13 @@
     "wick_linen_m": 2.0
    },
    "labour_hours": {
-    "labourer": 0.15
+    "labourer": 0.65
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from dipped tallow candles with a linen wick",
-   "yield_basis": "The same candle as light_tallow_candle with a wick of linen, the medieval northern candle, so a start without cotton can make it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram; checked against read figures, a candle gives about 13 lumens and releases about 77 W (Wikipedia, Candle, opened) and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg (was 0.53). A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Dipping labour has no per-candle source: Smith College Ancient Inventions, candles (https://www.smith.edu/bigbad/historyscitech/museum/ancient_inventions/candles3.html, opened) gives about two hours of repeated dipping for a batch of tallow candles with no count, and Practical Action's candle-making manual (library.ph copy, opened) gives 3 to 4 seconds a dip with 1 to 4 minutes of cooling between dips; the 0.15 hours and the 2 m of wick stay labelled heuristics, confidence D.",
+   "yield_basis": "The same candle as light_tallow_candle with a linen wick, the medieval northern candle. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours; Wikipedia, Candle (opened) gives a candle about 13 lumens and about 77 W, and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg. Sourced: Ure's burn times as quoted in a Ragged Soldier article on candles (https://www.raggedsoldier.com/candle_article.pdf, opened): 'dipped 10s - 4 hours 36 minutes', ten to the pound, so 0.4536 kg / 10 / 4.6 h = 9.9 g an hour, 0.79 kg for eighty hours against the 0.56 kg here (within a factor of 1.5). Wick: a wick burns down with the candle, and the same article gives a 9.5 inch by 7/8 inch candle, about 24 cm of wick over a volume of about 93 cm3, about 85 g at 0.9 g/cm3; at 9.9 g an hour that is 8.6 h, so 2.8 cm an hour and 2.2 m for eighty hours (modern stearin candle dimensions used as an analogue; the arithmetic is ours), against the 2 m here. Labour: Mount Vernon, Natural Beeswax Tapers (https://shops.mountvernon.org/products/natural-beeswax-tapers-8?view=amp, opened): a candle stand 'is strung with 10 wicks to create 10 pairs of candles after one hour of dipping/30 dips in wax', 20 candles an hour, 0.05 h each; about thirteen candles at 0.05 h is 0.65 h (was 0.15, below the sourced dipping rate by a factor of 4; beeswax tapers are the analogue, and tallow needs longer cooling).  Every figure in this row now has an opened source, confidence C.",
    "requires_node": null,
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }
@@ -170,13 +170,13 @@
     "wick_rush_m": 2.0
    },
    "labour_hours": {
-    "labourer": 0.15
+    "labourer": 0.65
    },
    "unit_dimension": "count",
    "basis": "per thousand lumen-hours of light from dipped tallow candles with a peeled rush pith wick",
-   "yield_basis": "The same candle as light_tallow_candle with a wick of peeled rush pith, the medieval northern candle, so a start without cotton can make it. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours. A candle burns about seven grams of tallow an hour, so eighty hours burn about half a kilogram; checked against read figures, a candle gives about 13 lumens and releases about 77 W (Wikipedia, Candle, opened) and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg (was 0.53). A wick burns down as the tallow does, about two and a half centimetres an hour, so about two metres. Dipping and trimming take a labourer a few minutes for each candle of six hours' burning, about thirteen candles, taken as 0.15 hours. Dipping labour has no per-candle source: Smith College Ancient Inventions, candles (https://www.smith.edu/bigbad/historyscitech/museum/ancient_inventions/candles3.html, opened) gives about two hours of repeated dipping for a batch of tallow candles with no count, and Practical Action's candle-making manual (library.ph copy, opened) gives 3 to 4 seconds a dip with 1 to 4 minutes of cooling between dips; the 0.15 hours and the 2 m of wick stay labelled heuristics, confidence D.",
+   "yield_basis": "The same candle as light_tallow_candle with a peeled rush pith wick, the medieval northern candle. A tallow candle gives about one candela, about 12.6 lumens, so a thousand lumen-hours is about eighty candle-hours; Wikipedia, Candle (opened) gives a candle about 13 lumens and about 77 W, and body fat holds 38 MJ/kg (Wikipedia, Energy density, opened), so 77 W / 38 MJ/kg = 7.3 g an hour and 1000 / 13 = 77 candle-hours burn 0.56 kg, taken as 0.56 kg. Sourced: Ure's burn times as quoted in a Ragged Soldier article on candles (https://www.raggedsoldier.com/candle_article.pdf, opened): 'dipped 10s - 4 hours 36 minutes', ten to the pound, so 0.4536 kg / 10 / 4.6 h = 9.9 g an hour, 0.79 kg for eighty hours against the 0.56 kg here (within a factor of 1.5). Wick: a wick burns down with the candle, and the same article gives a 9.5 inch by 7/8 inch candle, about 24 cm of wick over a volume of about 93 cm3, about 85 g at 0.9 g/cm3; at 9.9 g an hour that is 8.6 h, so 2.8 cm an hour and 2.2 m for eighty hours (modern stearin candle dimensions used as an analogue; the arithmetic is ours), against the 2 m here. Labour: Mount Vernon, Natural Beeswax Tapers (https://shops.mountvernon.org/products/natural-beeswax-tapers-8?view=amp, opened): a candle stand 'is strung with 10 wicks to create 10 pairs of candles after one hour of dipping/30 dips in wax', 20 candles an hour, 0.05 h each; about thirteen candles at 0.05 h is 0.65 h (was 0.15, below the sourced dipping rate by a factor of 4; beeswax tapers are the analogue, and tallow needs longer cooling).  Every figure in this row now has an opened source, confidence C.",
    "requires_node": null,
-   "conf": "D",
+   "conf": "C",
    "satisfies": {
     "light": 1.0
    }

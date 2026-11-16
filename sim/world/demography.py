@@ -299,10 +299,10 @@ ANNUAL_FERTILITY_RATE_PER_WOMAN = TOTAL_FERTILITY_RATE / WORKING_AGE_BAND_WIDTH_
 
 FEMALE_SHARE_OF_WORKING_AGE_POPULATION = declare(
     "FEMALE_SHARE_OF_WORKING_AGE_POPULATION", 0.5,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="fraction",
-    source=None,
-    confidence="D",
+    source="Wikipedia 'Sex ratio' (https://en.wikipedia.org/wiki/Sex_ratio): global sex ratio at birth 105 boys to 100 girls (about 48.8% female) and 101 males per 100 females over all ages (about 49.8% female); no working-age figure on the page, so 0.5 is within about 2.5% of both opened figures.",
+    confidence="C",
     why="This model has no sex dimension at all - one working-age count, "
         "not a male and a female one - so an even split stands in for "
         "tracking women separately, which is what the fertility side "
@@ -386,10 +386,10 @@ STARVATION_FLOOR_CALORIES_PER_ADULT_EQUIVALENT_DAY = declare(
 
 STARVATION_MORTALITY_CEILING_MULTIPLIER = declare(
     "STARVATION_MORTALITY_CEILING_MULTIPLIER", 4.0,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="multiple of baseline mortality",
-    source=None,
-    confidence="D",
+    source="Peak crude death rate in Finland 1868 about 78 per 1000 against a pre-crisis baseline about 28 per 1000, a 2.8x multiple (arXiv 1807.05100 'The physics of large-scale food crises', https://ar5iv.labs.arxiv.org/html/1807.05100, opened; ratio is our arithmetic). Gode, Ethiopia 1999-2000 crude mortality about sixfold baseline (ENN, https://ennonline.net/fex/14/improved). Wikipedia 'Famine': Karamoja 1980, 21% of the population died in a year. The ceiling of 4x sits between the national-peak ratio and the local ones.",
+    confidence="C",
     why="How much a band's baseline mortality is multiplied by once "
         "calories per head fall to the starvation floor. The real "
         "relationship between sustained caloric deficit and excess "
@@ -412,10 +412,10 @@ STARVATION_MORTALITY_CEILING_MULTIPLIER = declare(
 
 STARVATION_VULNERABILITY_CHILD = declare(
     "STARVATION_VULNERABILITY_CHILD", 1.6,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="ratio to working-age vulnerability",
-    source=None,
-    confidence="D",
+    source="CDC MMWR on Somalia 1992 (https://www.cdc.gov/MMWR/preview/mmwrhtml/00018099.htm): under-5 mortality 30.1 against all-age 16.9 deaths per 10,000 per day in Baidoa (1.8x), 9.4 against 4.0 in Afgoi (2.35x). PMC10927613 (Hunger Winter 1944-45, Table 1): famine mortality relative to pre-war 2.1 to 4.3x for ages under 15. Under-5 over all-age is 1.8 to 2.4, so over working-age it is at least that; 1.6 is within 3x of it. Ratios are our arithmetic.",
+    confidence="C",
     why="Famine demography (e.g. Watkins & Menken 1985 on age patterns of "
         "famine mortality) documents that a given caloric shortfall kills a "
         "larger share of children than of working-age adults - lower "
@@ -440,19 +440,10 @@ STARVATION_VULNERABILITY_ELDERLY = declare(
 
 FERTILITY_SURPLUS_CEILING_MULTIPLIER = declare(
     "FERTILITY_SURPLUS_CEILING_MULTIPLIER", 1.8,
-    kind="temporary_heuristic",
+    kind="engineering_estimate",
     unit="multiple of baseline fertility",
-    source="Eaton & Mayer 1953's study of Hutterite colonies is the "
-           "standard demographic reference for the highest total fertility "
-           "rate documented for any human population with no deliberate "
-           "birth control: roughly 9 to 11 births per woman, lifetime, "
-           "against this module's own TOTAL_FERTILITY_RATE baseline of "
-           "5.0. 1.8x sits at the low end of that ratio (9/5.0 = 1.8; "
-           "11/5.0 = 2.2) rather than its middle or high end - chosen "
-           "conservatively, the same direction every other point-within-"
-           "range choice in this module leans (see the paragraph above "
-           "SURVIVAL_TO_WORKING_AGE).",
-    confidence="D",
+    source="Wikipedia 'Hutterites' (https://en.wikipedia.org/wiki/Hutterites): fertility 10.57 children per woman in 1940 and 9.83 in 1950. Against this module's TOTAL_FERTILITY_RATE of 5.0 that is 2.0 to 2.1x; 1.8 is within 15% of it. Wikipedia 'Total fertility rate': before 1800 rates of 4.5 to 7.5 were common, Roman Egypt 7.4.",
+    confidence="C",
     why="The ceiling _fertility_multiplier ramps up to as nutrition rises "
         "above subsistence, mirroring _excess_mortality_multiplier's "
         "ramp down to STARVATION_MORTALITY_CEILING_MULTIPLIER below it. "

@@ -15,7 +15,10 @@
    "status": "modern",
    "first_worked": 1990,
    "source": "Coordinate from Wikipedia. Contained copper in production plus reserves plus resources, order of magnitude from memory of company reports; not ore tonnage.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 57600000,
+   "contained_basis": "Total resources including reserves at mid-2007 = 57.6 Mt copper (reserves 34.7 Mt); production 1990 to 2007 is not stated on the page and is not added, so a lower bound",
+   "contained_source": "Wikipedia, Escondida mine, https://en.wikipedia.org/wiki/Escondida_mine : \"At mid 2007, Escondida had total proven and probable reserves of 34.7 million tonnes of copper\"; \"Total resources (including reserves) were 57.6 million tonnes of copper\" (2007)"
   },
   {
    "id": "grasberg_copper",
@@ -31,7 +34,10 @@
    "status": "modern",
    "first_worked": 1990,
    "source": "Coordinate from Wikipedia. Contained copper, production plus reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 14000000,
+   "contained_basis": "Proven and probable reserves 14.0 Mt copper at 31 December 2022; cumulative production to date not given on the page, so a lower bound",
+   "contained_source": "Wikipedia, Grasberg mine, https://en.wikipedia.org/wiki/Grasberg_mine : \"proven and probable mineral reserves of 30.8 billion pounds (14.0 million tonnes) of copper\" (31 December 2022)"
   },
   {
    "id": "grasberg_gold",
@@ -47,7 +53,10 @@
    "status": "modern",
    "first_worked": 1990,
    "source": "Coordinate from Wikipedia. Gold co-product of the Grasberg porphyry; contained gold, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 808,
+   "contained_basis": "Reserves 26.3 million ounces gold stated as 808 t (26.3e6 x 31.1035 g = 818 t; page gives 808 t) at 31 December 2022; cumulative production not given, so a lower bound",
+   "contained_source": "Wikipedia, Grasberg mine, https://en.wikipedia.org/wiki/Grasberg_mine : \"26.3 million ounces (808 tonnes) of gold\" (31 December 2022)"
   },
   {
    "id": "bingham_copper",
@@ -63,7 +72,10 @@
    "status": "modern",
    "first_worked": 1863,
    "source": "Coordinate from Wikipedia. Cumulative copper production is in the high teens of millions of tonnes, plus reserves; from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 17240000,
+   "contained_basis": "Cumulative production \"more than 19,000,000 short tons\" x 0.9072 = 17.24 Mt copper; page also says \"more than 17 million tons\" as of 2004. No reserves on the page, so a lower bound",
+   "contained_source": "Wikipedia, Bingham Canyon Mine, https://en.wikipedia.org/wiki/Bingham_Canyon_Mine : \"more than 19,000,000 short tons\" of copper; \"As of 2004, its ore had yielded more than 17 million tons of copper, 715 tons of gold\" (2004)"
   },
   {
    "id": "collahuasi_copper",
@@ -79,7 +91,10 @@
    "status": "modern",
    "first_worked": 1999,
    "source": "Coordinate from Wikipedia. Contained copper resource, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 25940000,
+   "contained_basis": "Reserves 3.93 Gt ore x 0.66% Cu = 25.94 Mt copper (year not stated on page); production not added (2018 output 0.56 Mt), so a lower bound",
+   "contained_source": "Wikipedia, Collahuasi, https://en.wikipedia.org/wiki/Collahuasi : \"estimated reserves of 3.93 billion tonnes of ore grading 0.66% copper\"; \"produced 560,000 tonnes of copper in 2018\""
   },
   {
    "id": "las_bambas_copper",
@@ -95,7 +110,10 @@
    "status": "modern",
    "first_worked": 2016,
    "source": "Coordinate (Apurimac, southern Peru) and contained copper from memory; the earlier entry placed it at 70.5W, wrong by about two degrees.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 7710000,
+   "contained_basis": "Proven and probable reserves 1,086 Mt at 0.71% Cu = 7.71 Mt copper (June 2016); the page's infobox gives a different 952 Mt; production not added, so a lower bound",
+   "contained_source": "Mining Technology, Las Bambas copper project, https://www.mining-technology.com/projects/las-bambas/ : \"proven and probable ore reserves of 1,086Mt\" at 0.71% Cu, 7.71 Mt contained copper (June 2016)"
   },
   {
    "id": "chuquicamata_copper",
@@ -112,7 +130,10 @@
    "first_worked": 1915,
    "source": "Coordinate from Wikipedia. Production since 1915 plus remaining resource, order of magnitude from memory.",
    "conf": "B",
-   "share_of_reference_output": 0.2
+   "share_of_reference_output": 0.2,
+   "contained_tonnes": 29000000,
+   "contained_basis": "Cumulative production approximately 29 Mt copper to the end of 2007; no current reserve figure on the page (1911 estimate 690 Mt at 2.58% = 17.8 Mt is smaller than the production), so a lower bound",
+   "contained_source": "Wikipedia, Chuquicamata, https://en.wikipedia.org/wiki/Chuquicamata : \"the mine with the largest total production (approximately 29 million tonnes) of copper until the end of 2007\" (2007)"
   },
   {
    "id": "antamina_copper",
@@ -128,7 +149,10 @@
    "status": "modern",
    "first_worked": 2001,
    "source": "Coordinate from Wikipedia. Contained copper, order of magnitude from memory; the earlier entry was about two degrees south of the mine.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 7887000,
+   "contained_basis": "January 2010 proven plus probable ore: 100 Mt x 1.14% + 42 Mt x 0.99% + 454 Mt x 1.05% + 149 Mt x 1.05% = 1.140 + 0.416 + 4.767 + 1.565 = 7.887 Mt copper; production not added, so a lower bound",
+   "contained_source": "Mining Technology, Antamina copper-zinc project, https://www.mining-technology.com/projects/antamina/ : \"As of January 2010, proven reserves at Antamina stand at 100Mt graded at 1.14% copper\"; probable 454Mt at 1.05% Cu; proven Cu-Zn 42Mt at 0.99%; probable Zn 149Mt at 1.05% Cu (January 2010)"
   },
   {
    "id": "cerro_verde_copper",
@@ -144,7 +168,10 @@
    "status": "modern",
    "first_worked": 1972,
    "source": "Coordinate (Arequipa, Peru) and contained copper from memory; unverified this session.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 18520000,
+   "contained_basis": "Reserves 4.63 Gt ore x 0.4% Cu = 18.52 Mt copper (year not stated); production not given, so a lower bound",
+   "contained_source": "Wikipedia, Cerro Verde mine, https://en.wikipedia.org/wiki/Cerro_Verde_mine : \"estimated reserves of 4.63 billion tonnes of ore grading 0.4% copper\""
   },
   {
    "id": "palabora_copper",
@@ -161,7 +188,10 @@
    "first_worked": 1964,
    "source": "Phalaborwa, South Africa; coordinate and contained copper from memory.",
    "conf": "C",
-   "share_of_reference_output": 0.05
+   "share_of_reference_output": 0.05,
+   "contained_tonnes": 627000,
+   "contained_basis": "End-2005 proven and probable reserves 112 Mt at 0.56% Cu = 0.627 Mt copper (underground block cave); production since 1966 (2006 output alone 61,500 t) not added, so a lower bound",
+   "contained_source": "Mining Technology, Palabora copper mine, https://www.mining-technology.com/projects/palabora/ : \"proven and probable reserves totalled 112Mt grading 0.56% copper\" (end of 2005)"
   },
   {
    "id": "tenke_fungurume_copper",
@@ -177,7 +207,10 @@
    "status": "modern",
    "first_worked": 2009,
    "source": "Coordinate from Wikipedia. Contained copper, order of magnitude from memory. Renamed from freeport_tenke.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 3712800,
+   "contained_basis": "Proven and probable reserves at December 2020 = 176.8 Mt ore x 2.1% Cu = 3.71 Mt copper; production 2009 to 2020 is not given and not added, so a lower bound",
+   "contained_source": "NS Energy, Tenke Fungurume Copper Cobalt Mine, https://www.nsenergybusiness.com/projects/tenke-fungurume-copper-cobalt-mine/ : \"176.8 million tonnes (Mt) of recoverable ore reserves grading 2.1% copper and 0.30% cobalt as of December 2020\""
   },
   {
    "id": "central_african_copperbelt",
@@ -193,7 +226,10 @@
    "status": "modern",
    "first_worked": 1911,
    "source": "Coordinate from Wikipedia. Zambian plus Congolese belts taken together, identified endowment of order a hundred million tonnes of copper from memory of USGS assessments. Renamed from copperbelt_pbzn, which mislabelled it as lead-zinc.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 101000000,
+   "contained_basis": "National copper reserves of the two Copperbelt countries, Congo (Kinshasa) 80 Mt + Zambia 21 Mt = 101 Mt (2023); assumes the reserves of both countries sit in the belt (their copper is almost wholly Copperbelt, assumption); cumulative production since 1911 is not added and resources are larger, so a lower bound",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Copper, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-copper.pdf : reserves column, Congo (Kinshasa) 80,000 and Zambia 21,000 thousand metric tons"
   },
   {
    "id": "olympic_dam_copper",
@@ -209,7 +245,10 @@
    "status": "modern",
    "first_worked": 1988,
    "source": "Coordinate from Wikipedia. Copper resource, order of magnitude from memory. Added so the same orebody has one entry per resource.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 35400000,
+   "contained_basis": "Reserves 2.95 Gt ore x 1.2% Cu = 35.4 Mt copper (year not stated); 1988 to 2005 production (tens of kt a year, e.g. 235,000 t in 2002) not added, so a lower bound",
+   "contained_source": "Wikipedia, Olympic Dam mine, https://en.wikipedia.org/wiki/Olympic_Dam_mine : \"estimated reserves of 2.95 billion tonnes of ore grading 1.2% copper, 0.04% uranium\""
   },
   {
    "id": "neves_corvo_copper",
@@ -225,7 +264,10 @@
    "status": "modern",
    "first_worked": 1989,
    "source": "Coordinate from Wikipedia. Iberian Pyrite Belt; contained copper, order of magnitude from memory. Replaces neves_lead_zinc, which put the mine in Brazil.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1259000,
+   "contained_basis": "Measured and indicated copper resources (include reserves) 56.0 Mt at 2.2% Cu = 1,259 kt contained copper at 31 December 2022; production since 1989 not added, so a lower bound",
+   "contained_source": "Lundin Mining, 2022 Mineral Resource and Mineral Reserve Estimates, https://lundinmining.com/news/lundin-mining-announces-2022-mineral-resource-and-mineral-reserve-estimates : Neves-Corvo copper M&I 56,033 kt, 2.2% Cu, 1,259 kt contained; proven and probable 21.2 Mt at 2.1%, 438 kt (31 December 2022)"
   },
   {
    "id": "carlin_gold",
@@ -241,7 +283,10 @@
    "status": "modern",
    "first_worked": 1965,
    "source": "Carlin Trend production of the order of 2,500 t gold plus reserves; coordinate approximate (trend runs NNW of Carlin, Nevada), unverified this session.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 2177,
+   "contained_basis": "Cumulative production over 70 million troy ounces by 2008 x 31.1035 g = 2,177 t; no reserves on the page, so a lower bound",
+   "contained_source": "Wikipedia, Carlin Trend, https://en.wikipedia.org/wiki/Carlin_Trend : \"By 2008, mines in the Carlin Trend had produced over 70 million ounces of gold\" (2008)"
   },
   {
    "id": "muruntau_gold",
@@ -257,7 +302,10 @@
    "status": "modern",
    "first_worked": 1967,
    "source": "Gold content about 5,000-6,000 t (figure supplied by project owner and consistent with memory); coordinate from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 4819,
+   "contained_basis": "Total gold ore resource including past production about 170 million ounces = 4,819 t as the page states (170e6 x 31.1035 g = 5,288 t; the page's tonne figure is used); undated. Wikipedia's Muruntau mine page gives reserves 71.4 Moz (2,020 t) and 1,750 t residual in 2007",
+   "contained_source": "Wikipedia, Muruntau gold deposit, https://en.wikipedia.org/wiki/Muruntau_gold_deposit : \"about 170 million ounces of gold (4,819 tonnes)\" (total resource including past production); Wikipedia, Muruntau mine, https://en.wikipedia.org/wiki/Muruntau_mine : \"estimated reserves of 71,400,000 ounces (2,020 t) of gold\""
   },
   {
    "id": "witwatersrand_gold",
@@ -273,7 +321,10 @@
    "status": "historic",
    "first_worked": 1886,
    "source": "All-time production of about 50,000 t plus remaining resource; basin centre approximate, Johannesburg is at 26.20S 28.04E per Wikipedia.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 40000,
+   "contained_basis": "Cumulative production over 40,000 t gold since 1886 (page undated); reserves not quantified on the page, so a lower bound",
+   "contained_source": "Wikipedia, Witwatersrand, https://en.wikipedia.org/wiki/Witwatersrand : \"Over 40,000 tonnes (44,000 short tons) have been mined from these rocks since this precious metal was first discovered\""
   },
   {
    "id": "mother_lode_gold",
@@ -289,7 +340,10 @@
    "status": "historic",
    "first_worked": 1848,
    "source": "Vein gold of the Mother Lode belt, order of magnitude from memory; alluvial Gold Rush gold excluded.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 404,
+   "contained_basis": "Mother Lode district production more than 13 million troy ounces through 1959 x 31.1035 g = 404 t; no reserves, so a lower bound",
+   "contained_source": "Wikipedia, Mother Lode, https://en.wikipedia.org/wiki/Mother_Lode : \"The Mother Lode district produced more than 13 million troy ounces of gold through 1959.\" (1959)"
   },
   {
    "id": "kolar_gold",
@@ -305,7 +359,10 @@
    "status": "historic",
    "first_worked": 1880,
    "source": "Coordinate from Wikipedia. Production of roughly 800 t to 2001 closure, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 900,
+   "contained_basis": "Total production over 900 t gold to nationalisation in 1956 as stated on the page; mines ran to 2001, so a lower bound",
+   "contained_source": "Wikipedia, Kolar Gold Fields, https://en.wikipedia.org/wiki/Kolar_Gold_Fields : \"The Kolar gold mines were nationalized in 1956, and provided a total of over 900 tonnes of gold.\""
   },
   {
    "id": "fort_knox_gold",
@@ -321,7 +378,10 @@
    "status": "modern",
    "first_worked": 1996,
    "source": "Coordinate (near Fairbanks, Alaska) and contained gold from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 320,
+   "contained_basis": "Production over 7.5 Moz (2019) + reserves 2.80 Moz (31 Dec 2019) = 10.3 Moz x 31.1035 g = 320 t",
+   "contained_source": "Wikipedia, Fort Knox mine, https://en.wikipedia.org/wiki/Fort_Knox_mine : \"After the production of over 7.5 million ounces\"; \"at 31 December 2019 Proven and Probable Reserves were 255.8 million tonnes @ 0.3 g/t gold for 2.80 million ounces\" (2019)"
   },
   {
    "id": "boddington_gold",
@@ -337,7 +397,10 @@
    "status": "modern",
    "first_worked": 1987,
    "source": "Coordinate from Wikipedia. Contained gold, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 622,
+   "contained_basis": "Bedrock resource almost 20 million troy ounces x 31.1035 g = 622 t (resource estimate, year not stated, excludes earlier production); reserves 390 t at end 2018, so a lower bound",
+   "contained_source": "Wikipedia, Boddington Gold Mine, https://en.wikipedia.org/wiki/Boddington_Gold_Mine : \"A bedrock resource of almost 20 million troy ounces (620 million grams) was identified.\"; reserves \"12.4 million troy ounces (390 tonnes) of gold\" (31 December 2018)"
   },
   {
    "id": "lihir_gold",
@@ -353,7 +416,10 @@
    "status": "modern",
    "first_worked": 1997,
    "source": "Coordinate from Wikipedia. Contained gold, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1431,
+   "contained_basis": "Resource 46 million ounces x 31.1035 g = 1,431 t (year not stated, a resource figure, production not added), so a lower bound",
+   "contained_source": "Wikipedia, Lihir Island, https://en.wikipedia.org/wiki/Lihir_Island : \"The mine holds one of the world's largest gold resources (46 million ounces (1.3 billion grams)).\""
   },
   {
    "id": "cadia_gold",
@@ -369,7 +435,10 @@
    "status": "modern",
    "first_worked": 1998,
    "source": "Coordinate (near Orange, New South Wales) and contained gold from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 420,
+   "contained_basis": "Newmont reserves 13.5 Moz gold x 31.1035 g per troy ounce = 420 t gold; production since 1998 is not added, so a lower bound (Newmont lists a further 11 Moz of resources, not added because it does not say whether they exclude reserves)",
+   "contained_source": "Newmont, Cadia operation page, https://operations.newmont.com/australia/cadia : \"Reserves 13.5 million ounces of gold; 2.9 million tonnes of copper\"; \"Resources 11 million ounces of gold\""
   },
   {
    "id": "canadian_malartic_gold",
@@ -385,7 +454,10 @@
    "status": "modern",
    "first_worked": 2011,
    "source": "Coordinate (Malartic, Quebec) and contained gold from memory; replaces malartic_gold, which was 0.5 degrees off.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 74.3,
+   "contained_basis": "Proven and probable reserves 66.9 Mt at 1.11 g/t Au = 74.3 t gold (December 2019); production since 2011 not added, so a lower bound",
+   "contained_source": "Mining Technology, Canadian Malartic gold mine, https://www.mining-technology.com/projects/canadian-malartic-gold-mine/ : \"66.9Mt of proven and probable\" reserves \"graded at 1.11 grams per ton\" (December 2019)"
   },
   {
    "id": "potosi_silver",
@@ -402,7 +474,10 @@
    "first_worked": 1545,
    "source": "Coordinate from Wikipedia. Total silver 1545-1800s about 30,000-60,000 t; range supplied by project owner and consistent with memory.",
    "conf": "B",
-   "share_of_reference_output": 0.4
+   "share_of_reference_output": 0.4,
+   "contained_tonnes": 114700,
+   "contained_basis": "Cumulative production 60,000 t silver + remaining reserves 1.76 billion ounces x 31.1035 g = 54,700 t (page states 50,000 tons) = 114,700 t; 'tons' taken as metric; years not stated on page",
+   "contained_source": "Wikipedia, Cerro Rico, https://en.wikipedia.org/wiki/Cerro_Rico : \"the Cerro Rico de Potosi mine to date has yielded an estimated 60,000 tons of silver\"; \"estimated reserves of 1.76 billion ounces (50,000 tons) of silver\""
   },
   {
    "id": "cannington_silver",
@@ -418,7 +493,10 @@
    "status": "modern",
    "first_worked": 1997,
    "source": "Coordinate from Wikipedia. Production since 1997 at roughly a thousand tonnes of silver a year plus reserves, from memory. The earlier entry was two degrees west of the mine.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 20700,
+   "contained_basis": "June 2020 resources 79 Mt at 262 g/t Ag = 20,700 t silver (the same resource holds 6.2 Mt lead at 7.89% Pb); production since 1997 not added, so a lower bound",
+   "contained_source": "Mining Technology, Cannington silver-lead-zinc mine, https://www.mining-technology.com/projects/cannington/ : \"79Mt at 262g/t Ag, 7.89% Pb and 5.36% Zn\" (mineral resources, June 2020)"
   },
   {
    "id": "hamersley_iron",
@@ -435,7 +513,10 @@
    "first_worked": 1966,
    "source": "Coordinate from Wikipedia. Pilbara iron ore, identified ore resource of order fifty billion tonnes at mid-fifties percent iron, from memory. fortescue_iron removed: it is a company working the same province.",
    "conf": "C",
-   "share_of_reference_output": 0.02
+   "share_of_reference_output": 0.02,
+   "contained_tonnes": 2489000000,
+   "contained_basis": "Rio Tinto proven and probable reserves, first quarter 2010: Hamersley Pilbara operations 3,344 Mt saleable ore x 62% Fe (assumed grade, a typical Pilbara saleable ore grade, not stated on the page) = 2,073 Mt Fe, plus Robe River 696 Mt ore x 59.7% Fe (midpoint of the stated 57.2 to 62.2% range) = 416 Mt Fe; one operator's reserves only, no other holders, no resources and no production since 1966, so a lower bound",
+   "contained_source": "Mining Technology, RTZ Iron Ore Mine, Hamersley Basin, https://www.mining-technology.com/projects/hamersley/ : \"proven and probable reserves at Hamersley's Pilbara operations yielded 3,344Mt of saleable ore. The Robe River operations had a further 696Mt of proven and probable ore, grading between 57.2% and 62.2% iron\""
   },
   {
    "id": "carajas_iron",
@@ -451,7 +532,10 @@
    "status": "modern",
    "first_worked": 1985,
    "source": "Coordinate from Wikipedia. Reserves plus resources of order fifteen billion tonnes of ore at about two-thirds iron, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 11770000000,
+   "contained_basis": "Reserves 18 Gt ore x 65.4% Fe = 11.77 Gt iron (year not stated; the page also gives 7.2 Gt resources, not combined); production not added, so a lower bound",
+   "contained_source": "Wikipedia, Carajas Mine, https://en.wikipedia.org/wiki/Caraj%C3%A1s_Mine : \"contains known reserves of 18 billion tons with an average grade of 65.4% Fe\""
   },
   {
    "id": "kiruna_iron",
@@ -467,7 +551,10 @@
    "status": "modern",
    "first_worked": 1898,
    "source": "Coordinate from Wikipedia. Original ore about two billion tonnes at roughly sixty percent iron, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 893000000,
+   "contained_basis": "Production since 1898 950 Mt ore x assumed 62.5% Fe (middle of the 60-65% the page gives for the 1985 reserves) = 594 Mt Fe, plus 2018 reserves 683 Mt ore x 43.8% Fe = 299 Mt Fe; total 893 Mt",
+   "contained_source": "Wikipedia, Kiruna Mine, https://en.wikipedia.org/wiki/Kiruna_Mine : \"Since mining began at the site in 1898, the mine has produced over 950 million tonnes of ore\"; \"As of 2018 the Kiruna Mine had Proven and Probable Reserves of 683 million tonnes grading 43.8% iron\"; 1985 reserves \"grading 60-65% iron\""
   },
   {
    "id": "sishen_iron",
@@ -483,7 +570,10 @@
    "status": "modern",
    "first_worked": 1953,
    "source": "Coordinate from Wikipedia. Production plus reserves of order a billion tonnes of ore, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1424000000,
+   "contained_basis": "Estimated reserves 2.43 Gt ore x 58.6% Fe = 1.424 Gt iron; production since 1947 (30.9 Mt ore in 2013 alone) is not added, so a lower bound",
+   "contained_source": "Wikipedia, Sishen mine, https://en.wikipedia.org/wiki/Sishen_mine : \"estimated reserves of 2.43 billion tonnes of ore grading 58.6% iron metal\""
   },
   {
    "id": "thabazimbi_iron",
@@ -498,7 +588,10 @@
    "first_worked": 1931,
    "source": "Coordinate from memory; no defensible endowment figure, omitted.",
    "conf": "C",
-   "share_of_reference_output": 0.05
+   "share_of_reference_output": 0.05,
+   "contained_tonnes": 46000000,
+   "contained_basis": "Wikipedia gives 2 Mt of ore hauled by train as the full-capacity level and the mine closed in 2015 after being more than 80 years old; half of that, 1 Mt a year (assumption, inside the 0.6 to 2 Mt range of the later years), x 84 years (1931 to 2015) = 84 Mt ore x 0.55 iron (the row's ore_grade_kg_per_tonne) = 46 Mt contained iron; production only, reserves at closure not added, so a lower bound. tried: Kumba annual reports and Engineering News (403/503), Mining Weekly (403)",
+   "contained_source": "Wikipedia, Thabazimbi, https://en.wikipedia.org/wiki/Thabazimbi : \"two million tonnes of ore was once hauled by train\"; NS Energy, Thabazimbi closure, https://www.nsenergybusiness.com/?p=9795 : mine \"more than 80 years old\", slope failure 6 June 2015"
   },
   {
    "id": "marcona_iron",
@@ -513,7 +606,10 @@
    "first_worked": 1953,
    "source": "Coordinate from memory; no defensible endowment figure, omitted.",
    "conf": "C",
-   "share_of_reference_output": 0.05
+   "share_of_reference_output": 0.05,
+   "contained_tonnes": 756000000,
+   "contained_basis": "Estimated reserves 1.4 Gt ore x 54% Fe = 756 Mt iron; production since 1953 is not added, so a lower bound",
+   "contained_source": "Wikipedia, Marcona mine, https://en.wikipedia.org/wiki/Marcona_mine : \"estimated reserves of 1.4 billion tonnes of ore grading 54% iron metal\""
   },
   {
    "id": "norilsk_nickel",
@@ -529,7 +625,10 @@
    "status": "modern",
    "first_worked": 1935,
    "source": "Coordinate from Wikipedia. Contained nickel, production plus reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 11778000,
+   "contained_basis": "Measured and indicated nickel resources (include reserves) for the Norilsk and Talnakh deposits 11,778 kt at 31 December 2019; proven and probable reserves 6,176 kt; production not added, so a lower bound",
+   "contained_source": "Nornickel Annual Report 2019, Mineral resources and Ore Reserves, https://ar2019.nornickel.ru/en/appendices/resources-and-reserves.html : Taimyr Peninsula M&I resources nickel 11,778 kt, copper 22,167 kt (31 December 2019)"
   },
   {
    "id": "sudbury_nickel",
@@ -545,7 +644,10 @@
    "status": "modern",
    "first_worked": 1883,
    "source": "Coordinate from Wikipedia. Contained nickel, production plus reserves, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 19800000,
+   "contained_basis": "USGS estimate that Sudbury contains about 19.8 Mt nickel in its sulphide deposits (as reported by The Northern Miner; year not stated, and whether it includes past production is not stated)",
+   "contained_source": "The Northern Miner, Treasure hunt - Sudbury: The Basin That Built a Mining Nation, https://www.northernminer.com/news/treasure-hunt-sudbury-the-basin-that-built-a-mining-nation/1003894370/ : \"estimating that Sudbury contains about 19.8 million tonnes of nickel in its sulphide deposits\""
   },
   {
    "id": "bushveld_pgm",
@@ -561,7 +663,10 @@
    "status": "modern",
    "first_worked": 1924,
    "source": "Bushveld holds the large majority of known platinum-group resources (USGS); figure from memory, coordinate is the complex centre (Rustenburg 25.67S 27.24E per Wikipedia). Earlier entry mislabelled the resource as nickel.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 72000,
+   "contained_basis": "Platinum-group elements plus gold resources and reserves of the Bushveld Complex about 72 kt (adapted from a USGS 2010 report on the page; platinum alone 38.1 kt); production not added",
+   "contained_source": "Wikipedia, Bushveld Igneous Complex, https://en.wikipedia.org/wiki/Bushveld_Igneous_Complex : \"The sum of PGEs and Gold resources and reserves equates to a total of about 72 kilotons from the Bushveld Complex alone.\""
   },
   {
    "id": "broken_hill_pbzn",
@@ -577,7 +682,10 @@
    "status": "historic",
    "first_worked": 1883,
    "source": "Coordinate from Wikipedia. Original resource about three hundred million tonnes of ore at about ten percent lead; contained lead from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 8600000,
+   "contained_basis": "Through 1946, 63.8 million tons of ore had produced 8.6 million tons of lead (and 5.2 Mt zinc, 538 Moz silver = 16,700 t); ton type not stated and not converted; later production and remaining reserves not added, so a lower bound",
+   "contained_source": "Wikipedia, Broken Hill ore deposit, https://en.wikipedia.org/wiki/Broken_Hill_ore_deposit : \"Through 1946, 63.8 million tons of ore have produced 8.6 million tons of lead, 5.2 million tons of zinc, 538 million ounces of silver\""
   },
   {
    "id": "mt_isa_lead",
@@ -593,7 +701,10 @@
    "status": "modern",
    "first_worked": 1923,
    "source": "Coordinate from Wikipedia. Contained lead, order of magnitude from memory. Renamed from mt_isa_pbzn.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 11580000,
+   "contained_basis": "Mount Isa historic production plus resource 11.58 Mt lead metal at 5.8 percent Pb (Ozmin database, as of 2011); the 8.72 Mt lead 1931 to 2014 production figure was seen only in a search result, so it is not cited",
+   "contained_source": "University of Queensland, Atlas of Australian Mineral Deposits prototype, Chapter 2 Mount Isa, https://smi.uq.edu.au/files/36551/Atlas_Prototype_Ch2_MtIsa.pdf : \"11.58mT Pb metal at 5.8% Pb (Ozmin database as of 2011)\""
   },
   {
    "id": "viburnum_trend_lead",
@@ -609,7 +720,10 @@
    "status": "modern",
    "first_worked": 1960,
    "source": "Southeast Missouri lead district; coordinate from memory (the earlier entry was half a degree off), contained lead order of magnitude from memory.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 19200000,
+   "contained_basis": "Derived: Missouri all-time lead production 'more than 30 million tons' minus Old Lead Belt 8.5 million tons (1864 to 1972) minus Mine La Motte 0.325 million tons (1720 to 1959) = 21.2 million short tons x 0.9072 = 19.2 Mt; assumes the other Missouri districts are negligible, so approximate; production only, no reserves",
+   "contained_source": "Missouri Department of Natural Resources, Galena, https://dnr.mo.gov/print/document-search/pub0659 : \"more than 30 million tons\" all-time Missouri lead; Wikipedia, Southeast Missouri Lead District, https://en.wikipedia.org/wiki/Southeast_Missouri_Lead_District : \"From 1864 to 1972, over 8.5 million tons of lead was produced from the Old Lead Belt Subdistrict\"; \"From 1720 to its closure in 1959, the Mine La Motte-Fredericktown Subdistrict produced over 325,000 tons of lead\""
   },
   {
    "id": "kinta_tin",
@@ -626,7 +740,10 @@
    "first_worked": 1880,
    "source": "Perak, Malaysia; tin metal produced, order of magnitude from memory; coordinate from memory. kinta_underground_tin removed as a duplicate of this district.",
    "conf": "C",
-   "share_of_reference_output": 0.3
+   "share_of_reference_output": 0.3,
+   "contained_tonnes": 1300000,
+   "contained_basis": "Kinta Valley contributed about 30 percent of Malaysia's total recorded tin production to 1979; Malaysian output 55,000 t (1949) and almost 63,000 t (1979), taken as about 50,000 t a year (assumption) x 89 years (1890 to 1979) = 4.45 Mt; x 0.30 = 1.3 Mt tin metal; production only, remaining ground not added",
+   "contained_source": "Geological Society of Malaysia, The Kinta Tinfield, Malaysia, Bulletin 11 (1979), https://gsm.org.my/articles/702001-101229/ : Kinta Valley \"to date has contributed approximately 30 per cent of Malaysia's total recorded tin production\"; Wikipedia, Tin mining in Malaysia, https://en.wikipedia.org/wiki/Tin_mining_in_Malaysia : \"55,000 tons in 1949\", \"almost 63,000 tons\" in 1979"
   },
   {
    "id": "bangka_tin",
@@ -642,7 +759,10 @@
    "status": "historic",
    "first_worked": 1710,
    "source": "Coordinate from Wikipedia. Tin metal produced since the 1700s, order of magnitude from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 720000,
+   "contained_basis": "Indonesian proven tin deposit 800,000 t (2020) x 0.9 (Bangka and Belitung produce about 90% of national tin, assumed to hold the same share of the deposit) = 0.72 Mt; cumulative production since 1710 is not added, so a lower bound",
+   "contained_source": "Wikipedia, Tin mining in Indonesia, https://en.wikipedia.org/wiki/Tin_mining_in_Indonesia : \"a proven deposit of 800,000 tonnes\" (Ministry of Energy and Mineral Resources, 2020); \"Around 90 percent of national production originated from Bangka and Belitung\""
   },
   {
    "id": "olympic_dam_uranium",
@@ -658,7 +778,10 @@
    "status": "modern",
    "first_worked": 1988,
    "source": "Coordinate from Wikipedia. Resource of order two million tonnes of uranium, from memory.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 1180000,
+   "contained_basis": "Reserves 2.95 Gt ore x 0.04% U = 1.18 Mt uranium (year not stated); production (about 4,000 t a year) not added, so a lower bound",
+   "contained_source": "Wikipedia, Olympic Dam mine, https://en.wikipedia.org/wiki/Olympic_Dam_mine : \"estimated reserves of 2.95 billion tonnes of ore grading 1.2% copper, 0.04% uranium\""
   },
   {
    "id": "guinea_bauxite",
@@ -674,7 +797,10 @@
    "status": "modern",
    "first_worked": 1973,
    "source": "Boke region coordinate from Wikipedia; Guinea holds the largest reserves in the world (USGS); regional figure from memory. Grade is kilograms of aluminium per tonne of ore. The earlier entry was 3.7 degrees east of Boke.",
-   "conf": "C"
+   "conf": "C",
+   "contained_tonnes": 7400000000,
+   "contained_basis": "Guinean bauxite reserves 7.4 Gt ore (2023); the Boke region holds most of the country's mined bauxite (assumption); production since 1973 is not added, so a lower bound",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Bauxite and Alumina, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-bauxite-alumina.pdf : reserves, Guinea 7,400,000 thousand metric tons"
   },
   {
    "id": "weipa_bauxite",
@@ -690,7 +816,10 @@
    "status": "modern",
    "first_worked": 1960,
    "source": "Coordinate from Wikipedia. Production plus reserves, order of magnitude from memory. Renamed from australia_bauxite.",
-   "conf": "B"
+   "conf": "B",
+   "contained_tonnes": 3500000000,
+   "contained_basis": "Australian bauxite reserves 3.5 Gt ore (2023); Weipa holds most of Australia's reserves (assumption); production since 1960 is not added, so a lower bound",
+   "contained_source": "USGS Mineral Commodity Summaries 2024, Bauxite and Alumina, https://pubs.usgs.gov/periodicals/mcs2024/mcs2024-bauxite-alumina.pdf : reserves, Australia 3,500,000 thousand metric tons"
   }
  ]
 }
