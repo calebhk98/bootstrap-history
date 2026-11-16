@@ -245,8 +245,9 @@ def entry_plan_signatures():
     floats, whole = numpy.ones(2), numpy.zeros(2, dtype=numpy.int64)
     grid, whole_grid = numpy.ones((2, 2)), numpy.zeros((2, 2), dtype=numpy.int64)
     block = tuple(numpy.ones(2) for _ in range(6)) + (numpy.zeros(3, dtype=numpy.int64),)
+    fallbacks = (whole_grid, whole_grid, whole_grid, grid, grid, numpy.zeros((2, 2, 2), dtype=numpy.int64), whole_grid, grid)   # year_arrays_tools.ToolTables[:8]
     tables = (numpy.zeros((3, 2, 2)), numpy.zeros((2, 2, 2)), whole_grid, whole_grid, numpy.zeros((2, 2, 2)), grid, grid, grid, grid,
-              numpy.zeros(3))
+              numpy.zeros(3), fallbacks)
     siting = (grid, grid, numpy.zeros((2, 2), dtype=numpy.bool_), grid, grid, grid, grid, numpy.zeros(2, dtype=numpy.bool_), floats, grid, floats)
     widths = {"order": 2, "fits": 2, "suited": 2, "supply_tiles": 2}
     sites = entry_plan_steps.SITES.new_table(entry_plan_steps.SiteTables, 2, 2, widths=widths)
