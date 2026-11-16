@@ -16,6 +16,12 @@ from sim.markets.api import coin_wear_per_year
 # for many wages, below it nobody would make it. An order of magnitude is the widest grade spread among one
 # metal's deposits, the most that scarcity rent on a sited ore can be (Complaints/519).
 PRICE_OVER_COST_BOUND = 10.0
+# What a mint pays for the money's metal covers what the metal costs to make, or no metal comes to it and the money
+# wears away. How far the price stands above cost is the makers' rent, which follows the deposits and has no bound here:
+# J. S. Mill, Principles of Political Economy, book III chapter IX (opened, econlib.org): the value of a money metal
+# is regulated by the cost of "the worst mine which it is necessary to work", and richer mines earn the difference
+# (Complaints/reports/research-coin-metal-check.md).
+MINT_COVER_LOWEST = 1.0
 # The unskilled wage covers the household's floor; below it workers cannot keep a household fed.
 WAGE_OVER_FLOOR_LOWEST = 1.0
 # A decade of the money trace; the stock may lag a decade of unreplaced wear and no more (Complaints/473).
@@ -74,6 +80,32 @@ def price_over_cost(name: str, ratios: Mapping[str, float], bound: float = PRICE
     worst = max(usable.values(), key=lambda ratio: abs(math.log(ratio)))
     outside = {good: ratio for good, ratio in usable.items() if ratio > bound or ratio < 1.0 / bound}
     return CheckResult(name, worst, bound, "within", not outside, {"ratios": dict(usable), "outside": outside, "unmeasured": unmeasured})
+
+
+def mint_price_over_cost(name: str, paid_price: Optional[float], making_cost: Optional[float],
+                         market_ratio: Optional[float] = None, unmeasured: Optional[Mapping[str, str]] = None,
+                         lowest: float = MINT_COVER_LOWEST) -> CheckResult:
+    """For a money paid in metal at a stated price (a struck coin's mint price, weighed metal's parity): that price over
+    the metal's making cost, which must be at least `lowest`. No stated price or no making cost: no value, and fail,
+    with the cause in the detail. `market_ratio` (the metal's market price over its making cost) and `unmeasured` (why
+    the market price is no trade) are kept in the detail and decide nothing."""
+    detail = {"market_price_over_cost": market_ratio, "unmeasured": dict(unmeasured or {})}
+    cause = "no_mint_price" if not paid_price or paid_price <= 0.0 else ("no_making_cost" if not making_cost or making_cost <= 0.0 else None)
+    if cause is not None:
+        return CheckResult(name, None, lowest, "at least", False, {**detail, "cause": cause})
+    value = paid_price / making_cost
+    return CheckResult(name, value, lowest, "at least", value >= lowest, detail)
+
+
+def coin_metal_check(name: str, group: Mapping[str, Mapping[str, object]], paid_price: Optional[float],
+                     making_cost: Optional[float]) -> CheckResult:
+    """The coin-metal check by regime: a money paid in metal at a stated price (`paid_price` given) is held to
+    `mint_price_over_cost`; any other money (a commodity bought by its ordinary demand, fiat) to the price band of
+    `price_over_cost` over `group` (`{"ratios", "unmeasured"}` of the backing good)."""
+    if paid_price is None:
+        return price_over_cost(name, group["ratios"], unmeasured=group["unmeasured"])
+    ratios = list(group["ratios"].values())
+    return mint_price_over_cost(name, paid_price, making_cost, ratios[0] if ratios else None, group["unmeasured"])
 
 
 def money_against_wear(rows: Sequence[Mapping[str, float]], wear_share: float = coin_wear_per_year(),
