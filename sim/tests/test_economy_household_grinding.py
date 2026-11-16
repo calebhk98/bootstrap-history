@@ -14,7 +14,8 @@ from sim.economy.market_memory import market_key
 from sim.economy.setup import SetupTrade, labour_area
 from sim.economy.types import LabourOffer
 
-DATA = {"days_per_year": 100, "tasks": {
+WORKING_DAYS = 100.0
+DATA = {"days_per_year": 365, "tasks": {
     "water_and_fuel": {"needs_hearth": False, "hours_per_adult_woman_per_day": 0.5, "adult_women_per_person": 0.25},
     "grinding": {"needs_hearth": False, "scales_with_ground_grain": True, "hours_per_adult_woman_per_day": 2.0,
                  "adult_women_per_person": 0.25}}}
@@ -45,7 +46,7 @@ def setup():
     return types.SimpleNamespace(
         opening_wages={"labourer": 1.0, "servant": 1.0}, unskilled_trade="labourer", currency_id="coin",
         trades={"labourer": SetupTrade("labourer"), "servant": SetupTrade("servant")},
-        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth", work_need="household_work",
+        household_work=DATA, working_hours_per_year=1000.0, working_days_per_year=WORKING_DAYS, servant_trade="servant", hunger_need="food", fuel_need="warmth", work_need="household_work",
         ready_to_eat=frozenset(), milled_as=household_grinding.milled_as_map(NEED_DATA),
         basket_for=lambda tile: make_basket(NEED_DATA, {}))
 
@@ -76,7 +77,7 @@ class GrindingChoiceTests(unittest.TestCase):
     def test_a_household_with_no_mill_in_reach_grinds_by_hand_at_the_sourced_load(self):
         _hired, own, milled = plan({"wheat_kg": 1.0}, 1000.0)
         self.assertEqual(milled, ())
-        self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA))
+        self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA, WORKING_DAYS))
         self.assertAlmostEqual(own, 100.0 * (WATER_AND_FUEL_HOURS + GRINDING_HOURS))
 
     def test_water_and_fuel_are_charged_whether_it_grinds_or_buys(self):
@@ -86,9 +87,9 @@ class GrindingChoiceTests(unittest.TestCase):
         self.assertAlmostEqual(grinds - buys, 100.0 * GRINDING_HOURS)
 
     def test_hours_scale_with_the_share_of_the_food_ground_by_hand(self):
-        self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, True, 0.4),
+        self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, WORKING_DAYS, True, 0.4),
                                WATER_AND_FUEL_HOURS + 0.4 * GRINDING_HOURS)
-        self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, True, 0.0), WATER_AND_FUEL_HOURS)
+        self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, WORKING_DAYS, True, 0.0), WATER_AND_FUEL_HOURS)
 
     def test_the_milled_grain_leaves_the_food_need_so_the_household_buys_the_milled_good(self):
         basket = make_basket(NEED_DATA, {})

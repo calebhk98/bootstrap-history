@@ -9,11 +9,13 @@ import unittest
 from sim.content import views
 from sim.economy import households_work
 from sim.world.need_basket import make_basket
+from sim.unit_conversions import WORKING_DAYS_PER_YEAR
 from sim.world import need_basket
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
 
-DATA = {"days_per_year": 100, "tasks": {
+WORKING_DAYS = 100.0
+DATA = {"days_per_year": 365, "tasks": {
     "carrying": {"needs_hearth": False, "hours_per_adult_woman_per_day": 2.0, "adult_women_per_person": 0.25},
     "cooking": {"needs_hearth": True, "hours_per_person_per_day": 0.5},
 }}
@@ -25,26 +27,26 @@ NEED_DATA = {"needs": {"food": {"surplus_budget_share": 0.5, "subsistence_per_ca
 class HoursTests(unittest.TestCase):
     def test_hours_follow_the_figures_of_the_data(self):
         # carrying: 2 hours * 0.25 * 100 days = 50; cooking: 0.5 * 100 = 50
-        self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA), 100.0)
-        self.assertAlmostEqual(households_work.hours_needed(30.0, DATA), 3000.0)
+        self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, WORKING_DAYS), 100.0)
+        self.assertAlmostEqual(households_work.hours_needed(30.0, DATA, WORKING_DAYS), 3000.0)
 
     def test_a_household_without_a_hearth_does_no_cooking_of_its_own(self):
-        self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, has_hearth=False), 50.0)
+        self.assertAlmostEqual(households_work.hours_per_person_per_year(DATA, WORKING_DAYS, has_hearth=False), 50.0)
 
     def test_the_needs_file_satiation_equals_the_hours_of_the_data_file(self):
         data = views.household_work_data(os.path.join(ROOT, "no_mods"))
         with open(os.path.join(ROOT, "data", "world", "needs.json"), encoding="utf-8") as handle:
             need = json.load(handle)["needs"]["household_work"]
-        self.assertAlmostEqual(need["satiation_per_capita_per_year"], households_work.hours_per_person_per_year(data))
+        self.assertAlmostEqual(need["satiation_per_capita_per_year"], households_work.hours_per_person_per_year(data, WORKING_DAYS_PER_YEAR))
 
 
 class HiringTests(unittest.TestCase):
     def test_a_cohort_whose_hour_is_worth_more_than_the_servants_price_hires(self):
-        needed = households_work.hours_needed(100.0, DATA)
+        needed = households_work.hours_needed(100.0, DATA, WORKING_DAYS)
         self.assertGreater(households_work.hired_hours(needed, 3.0, 2.0), 0.99 * needed)
 
     def test_a_cohort_whose_hour_is_worth_less_does_not_hire(self):
-        needed = households_work.hours_needed(100.0, DATA)
+        needed = households_work.hours_needed(100.0, DATA, WORKING_DAYS)
         self.assertLess(households_work.hired_hours(needed, 1.0, 2.0), 0.01 * needed)
 
     def test_nobody_hires_more_than_the_work_there_is(self):
