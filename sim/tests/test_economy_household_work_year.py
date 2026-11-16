@@ -16,6 +16,7 @@ from sim.economy.setup import SetupTrade, labour_area
 from sim.economy.types import LabourOffer
 from sim.world import need_basket
 
+WORKING_DAYS = 100.0
 DATA = {"days_per_year": 100, "tasks": {"carrying": {"needs_hearth": False, "hours_per_adult_woman_per_day": 2.0,
                                                     "adult_women_per_person": 0.25},
                                         "cooking": {"needs_hearth": True, "hours_per_person_per_day": 0.5}},
@@ -56,7 +57,7 @@ def setup():
     return types.SimpleNamespace(
         opening_wages={"labourer": 1.0, "servant": 1.0}, unskilled_trade="labourer", currency_id="coin",
         trades={"labourer": SetupTrade("labourer"), "servant": SetupTrade("servant")},
-        household_work=DATA, working_hours_per_year=1000.0, servant_trade="servant", hunger_need="food", fuel_need="warmth", work_need="household_work",
+        household_work=DATA, working_hours_per_year=1000.0, working_days_per_year=WORKING_DAYS, servant_trade="servant", hunger_need="food", fuel_need="warmth", work_need="household_work",
         ready_to_eat=households_work.ready_to_eat_goods(NEED_DATA), milled_as={},
         basket_for=lambda tile: make_basket(NEED_DATA, {}))
 
@@ -82,8 +83,8 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("rich", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 1.0})
         hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, rich, offers)
-        self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA))
-        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
+        self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
+        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA, WORKING_DAYS))
 
     def test_a_cohort_whose_hour_is_worth_less_does_it_all_itself(self):
         poor, area = cohort("poor"), labour_area("t1")
@@ -91,8 +92,8 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("poor", "labourer", area, 500.0, 0.5)]
         view = View({("labourer", area): 0.8, ("servant", area): 1.0})
         hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, poor, offers)
-        self.assertLess(hired, 0.1 * households_work.hours_needed(100.0, DATA))
-        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
+        self.assertLess(hired, 0.1 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
+        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA, WORKING_DAYS))
 
     def test_a_cohort_does_its_own_work_when_the_service_costs_more_than_its_hour(self):
         # the servant's wage is low but the hour of service sells dear: the household pays the price, not the wage
@@ -101,8 +102,8 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 1.0}, {"domestic_service_hour": 8.0})
         hired, own, _milled = household_work_year.cohort_plan(setup(), rec, view, worker, offers)
-        self.assertLess(hired, 0.01 * households_work.hours_needed(100.0, DATA))
-        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA))
+        self.assertLess(hired, 0.01 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
+        self.assertAlmostEqual(hired + own, households_work.hours_needed(100.0, DATA, WORKING_DAYS))
 
     def test_a_cohort_hires_when_the_service_costs_less_than_its_hour(self):
         worker, area = cohort("worker"), labour_area("t1")
@@ -110,7 +111,7 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("worker", "smith", area, 500.0, 1.0)]
         view = View({("smith", area): 3.0, ("servant", area): 5.0}, {"domestic_service_hour": 2.0})
         hired, _own, _milled = household_work_year.cohort_plan(setup(), rec, view, worker, offers)
-        self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA))
+        self.assertGreater(hired, 0.99 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
 
     def test_a_servant_nobody_has_paid_is_priced_at_the_unskilled_wage_not_the_workers_reservation(self):
         worker, area = cohort("worker"), labour_area("t1")
@@ -125,7 +126,7 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("landless", "labourer", area, 500.0, 0.5)]
         _hired, own, _milled = household_work_year.cohort_plan(setup(), rec, View({("labourer", area): 0.1, ("servant", area): 1.0}),
                                                        landless, offers)
-        self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA, has_hearth=False))
+        self.assertAlmostEqual(own, households_work.hours_needed(100.0, DATA, WORKING_DAYS, has_hearth=False))
 
     def test_own_household_work_hours_reduce_the_hours_offered(self):
         poor, area = cohort("poor"), labour_area("t1")
@@ -140,7 +141,9 @@ class SplitTests(unittest.TestCase):
         offers = [LabourOffer("rich", "smith", area, 500.0, 1.0)]
         household_work_year.decide(setup(), rec, View({("smith", area): 3.0, ("servant", area): 1.0}), offers)
         hired_cohort = rec.cohorts["rich"]
-        self.assertGreater(hired_cohort.hired_work_per_person, 0.99 * households_work.hours_per_person_per_year(DATA))
+        # the year moves the hours a declared share of the way from none (the cohort held none) to the whole work
+        self.assertGreater(hired_cohort.hired_work_per_person, 0.99 * households_work.SERVANT_HIRING_ADJUSTMENT_SHARE_PER_YEAR
+                           * households_work.hours_per_person_per_year(DATA, WORKING_DAYS))
         spec = next(need for need in household_work_year.cohort_basket(setup(), rec, hired_cohort).needs
                     if need.need_id == "household_work")
         self.assertAlmostEqual(spec.subsistence_per_person, hired_cohort.hired_work_per_person)
@@ -164,21 +167,21 @@ class FullCostOfServiceTests(unittest.TestCase):
         return hired
 
     def test_a_household_whose_freed_hours_would_go_unsold_does_not_hire(self):
-        self.assertGreater(self._hired(3.0, 2.0), 0.99 * households_work.hours_needed(100.0, DATA))
-        self.assertLess(self._hired(3.0, 2.0, sold=0.2), 0.01 * households_work.hours_needed(100.0, DATA))
+        self.assertGreater(self._hired(3.0, 2.0), 0.99 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
+        self.assertLess(self._hired(3.0, 2.0, sold=0.2), 0.01 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
 
     def test_a_household_whose_hour_is_worth_well_above_the_full_cost_hires(self):
-        self.assertGreater(self._hired(10.0, 2.0, supervision=0.1, sold=0.9), 0.99 * households_work.hours_needed(100.0, DATA))
+        self.assertGreater(self._hired(10.0, 2.0, supervision=0.1, sold=0.9), 0.99 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
 
     def test_a_household_whose_hour_barely_beats_the_price_does_not_hire_once_directing_costs_hours(self):
-        self.assertGreater(self._hired(2.1, 2.0), 0.5 * households_work.hours_needed(100.0, DATA))
-        self.assertLess(self._hired(2.1, 2.0, supervision=0.2), 0.5 * households_work.hours_needed(100.0, DATA))
+        self.assertGreater(self._hired(2.1, 2.0), 0.5 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
+        self.assertLess(self._hired(2.1, 2.0, supervision=0.2), 0.5 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
 
     def test_hiring_falls_as_the_full_cost_rises(self):
         wages = [1.5 + 0.5 * step for step in range(10)]
 
         def hirers(price, supervision):
-            return sum(1 for wage in wages if self._hired(wage, price, supervision) > 0.5 * households_work.hours_needed(100.0, DATA))
+            return sum(1 for wage in wages if self._hired(wage, price, supervision) > 0.5 * households_work.hours_needed(100.0, DATA, WORKING_DAYS))
 
         by_price = [hirers(price, 0.1) for price in (1.0, 2.0, 3.0, 4.0)]
         self.assertEqual(by_price, sorted(by_price, reverse=True))

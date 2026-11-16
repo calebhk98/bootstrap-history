@@ -10,6 +10,7 @@ from sim.economy.api import (opening_market_rate, EconomySetup, carriage_wear, S
                              plant_builds, recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
+from sim.unit_conversions import WORKING_DAYS_PER_YEAR
 from sim.world import demand, need_basket
 from sim.geography.api import dues_hours_per_tonne, sea_freight, settlement
 from sim.labour import api as labour_api
@@ -251,7 +252,7 @@ def build_setup(sim, opening=None, production=None):
         tax_forms=taxes.forms_from_civ_data(civ.get("state_revenue") or []),
         hiding=agents_api.evasion.hidden_share,   # the one hiding rule the actor layer uses (Complaint 657)
         flight=agents_api.flight,   # the actor layer's flight rules (Complaint 657)
-        working_hours_per_year=float(sim.scenario.HOURS_PER_PERSON_YEAR), working_share=float(opening["working_share"]),
+        working_hours_per_year=float(sim.scenario.HOURS_PER_PERSON_YEAR), working_days_per_year=float(WORKING_DAYS_PER_YEAR), working_share=float(opening["working_share"]),
         gini=demand.GINI_COEFFICIENT_PREINDUSTRIAL_AGRARIAN, opening_population_by_tile=population_by_tile,
         need_share_by_trade={trade: float(share) for trade, share in (opening.get("need_shares") or {}).items()},
         hunger_need=need_roles.need_of_role(need_data, need_roles.HUNGER_ROLE),

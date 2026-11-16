@@ -78,7 +78,7 @@ class OwnPlots:
             return 0.0
         food = next((need for need in priced if need.spec.need_id == setup.hunger_need), None)
         ground = household_grinding.ground_share(food.goods, setup.milled_as, cohort.milled_grains) if food is not None and setup.milled_as else 1.0
-        needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
+        needed = households_work.hours_needed(cohort.people, setup.household_work, setup.working_days_per_year, has_hearth(record, cohort), ground)
         return households_work.own_hours(needed, cohort.hired_work_per_person * cohort.people)
 
     def forget_orders(self) -> None:

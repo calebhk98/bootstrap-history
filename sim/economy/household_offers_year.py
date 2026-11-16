@@ -36,9 +36,9 @@ def hour_values(setup, record, view, reads: OfferReads, expected: Mapping[Tuple[
     return {name: values[number] for number, name in enumerate(reads.rows.workers.names)}
 
 
-def plans(setup, record, view, reads: OfferReads) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
+def plans(setup, record, view, reads: OfferReads, gradual: bool = False) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
     """`household_work_year.plans` with no service-price floors: each cohort's (hours hired a person, hours done itself, grains
-    bought milled) for the year; changes nothing."""
+    bought milled) for the year; changes nothing. `gradual` as there."""
     expected = expected_shares(setup, record, reads) if setup.household_work and lacks_history(record, reads) else {}
     cohort_prime.prime_food_baskets(setup, record, view)
     values = hour_values(setup, record, view, reads, expected) if setup.household_work else {}
@@ -51,7 +51,8 @@ def plans(setup, record, view, reads: OfferReads) -> Dict[AgentId, Tuple[float, 
         else:
             value, needed, price, milled = household_work_year.work_terms_at(setup, record, view, cohort, values.get(cohort.agent_id, 0.0))
             hired, own, milled = household_work_year.planned_hours(needed, value, price, 0.0, milled,
-                                                                  household_work_year.whole_servant_terms(setup, cohort))
+                                                                  household_work_year.whole_servant_terms(setup, cohort),
+                                                                  household_work_year.last_hired(cohort) if gradual else None)
         result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, milled)
     return result
 
@@ -65,7 +66,7 @@ def decide(setup, record, view, rows: LabourOfferRows) -> Dict[AgentId, float]:
     if setup.household_work and lacks_history(record, reads):
         for (trade, area), share in sorted(expected_shares(setup, record, reads).items()):
             record.labour.expect_sold_share(market_key(trade, area), share)
-    decided = plans(setup, record, view, reads)
+    decided = plans(setup, record, view, reads, gradual=True)
     households_cohort.set_work_plans(record.cohorts, decided)
     return {cohort_id: own for cohort_id, (_per_person, own, _milled) in decided.items()}
 
