@@ -30,10 +30,12 @@ FIRM_LABOUR_SUPPLY_ELASTICITY = declare(
         "literature puts the firm-level elasticity of labour supply at a few.")
 
 ON_THE_JOB_SEARCH_SHARE = declare(
-    "ON_THE_JOB_SEARCH_SHARE", 0.1, kind="temporary_heuristic", unit="share of a lower payer's hours per year",
-    source=None, confidence="D",
-    why="The most of a lower-paying employer's hours a better payer can draw off in a year, by workers who "
-        "look while employed; not fitted.")
+    "ON_THE_JOB_SEARCH_SHARE", 0.1, kind="temporary_heuristic",
+    unit="share of a lower payer's hours per year, for each unit the better payer's recruiting premium exceeds one",
+    source=None, confidence="D", retire="Complaints/608: a wage method driven by the market's own state replaces this fixed fraction",
+    why="How much of a lower-paying employer's hours a better payer draws off in a year, by workers who look while "
+        "employed: this share times the recruiting premium less one, so employers standing level exchange nothing and a "
+        "hair of difference moves a hair of hours (Complaint 473). Not fitted.")
 
 
 SUPPLY_SOLVE_STEPS = 60      # a numerical bound: the bisection for the wage a rising supply meets the falling demand at
@@ -180,10 +182,13 @@ def premium_factor(paid: float, rival_paid: float) -> float:
 
 
 def on_the_job_loss_share(paid: float, rival_paid: float) -> float:
-    """Share of an employer's hours a strictly higher rival draws off in a year; none when it pays as much."""
+    """Share of an employer's hours a higher rival draws off in a year: none when it pays as much, then rising from nothing
+    with the rival's recruiting premium over it, so it is continuous where the two stand level."""
     if rival_paid <= paid:
         return 0.0
-    return min(1.0, ON_THE_JOB_SEARCH_SHARE * premium_factor(rival_paid, paid))
+    if paid <= 0.0:
+        return 1.0
+    return min(1.0, ON_THE_JOB_SEARCH_SHARE * (premium_factor(rival_paid, paid) - 1.0))
 
 
 def eligible_bids(bids: Sequence[EmployerHoursBid], wage: float) -> Tuple[Dict[str, float], Dict[str, float], Dict[str, float]]:
@@ -210,28 +215,41 @@ def retain(wanted: Dict[str, float], previous: Dict[str, float], offered: float)
     return {employer: hours * scale for employer, hours in kept.items()}
 
 
-def pay_groups(ranks: Dict[str, float], employers: Sequence[str]) -> List[List[str]]:
-    """Employers grouped by standing, highest first, names sorted within a group."""
-    groups: Dict[float, List[str]] = {}
-    for employer in sorted(employers):
-        groups.setdefault(ranks[employer], []).append(employer)
-    return [groups[wage] for wage in sorted(groups, reverse=True)]
-
-
 def poach(hired: Dict[str, float], wanted: Dict[str, float], paid: Dict[str, float]) -> None:
-    """Short employers (`paid` here is the rank, the highest maximum wage) draw hours off strictly lower ones, in proportion to what each can give."""
-    for group in pay_groups(paid, list(wanted)):
-        for employer in group:
-            short = wanted[employer] - hired[employer]
-            capacity = {other: hired[other] * on_the_job_loss_share(paid[other], paid[employer])
-                        for other in wanted if paid[other] < paid[employer] and hired[other] > 0.0}
-            total = sum(capacity.values())
-            if short <= 0.0 or total <= 0.0:
-                continue
-            moved = min(short, total)
-            for other in sorted(capacity):
-                hired[other] -= moved * capacity[other] / total
-            hired[employer] += moved
+    """Short employers (`paid` here is the rank, the highest maximum wage) draw hours off lower ones, all at once and from
+    the hours each held before any moved: an employer asks every lower one for the share its standing draws off
+    (`on_the_job_loss_share`), scaled down when that is more than it is short; a lower employer asked for more than it
+    holds gives what it holds, shared by the asking. No turn order, so employers a hair apart are treated alike."""
+    names = sorted(wanted)
+    held = {employer: hired[employer] for employer in names}
+    drawn = {}      # the share of what it could draw that each short employer asks for
+    for employer in names:
+        short = wanted[employer] - held[employer]
+        if short <= 0.0:
+            continue
+        reach = 0.0
+        for other in names:
+            if held[other] > 0.0:
+                reach += held[other] * on_the_job_loss_share(paid[other], paid[employer])
+        if reach > 0.0:
+            drawn[employer] = min(short, reach) / reach
+    gained = {employer: 0.0 for employer in names}
+    for other in names:
+        if held[other] <= 0.0:
+            continue
+        asked = 0.0     # as a share of the hours it held
+        for employer in names:
+            if employer in drawn:
+                asked += drawn[employer] * on_the_job_loss_share(paid[other], paid[employer])
+        if asked <= 0.0:
+            continue
+        given = 1.0 / asked if asked > 1.0 else 1.0
+        for employer in names:
+            if employer in drawn:
+                gained[employer] += held[other] * drawn[employer] * on_the_job_loss_share(paid[other], paid[employer]) * given
+        hired[other] = held[other] * (1.0 - asked) if asked < 1.0 else 0.0     # all of it given leaves exactly none
+    for employer in names:
+        hired[employer] += gained[employer]
 
 
 def _wage_with_supply(last, reservation, ceiling, supply, bids):

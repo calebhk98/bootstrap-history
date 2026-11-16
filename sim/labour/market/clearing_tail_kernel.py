@@ -119,38 +119,46 @@ def _loss_share(rank_of_other, rank_of_employer, elasticity, search_share):
     """`clearing.on_the_job_loss_share(rank_of_other, rank_of_employer)`."""
     if rank_of_employer <= rank_of_other:
         return 0.0
-    factor = 1.0
-    if rank_of_other > 0.0:
-        factor = (rank_of_employer / rank_of_other) ** elasticity
-    return min(1.0, search_share * factor)
+    if rank_of_other <= 0.0:
+        return 1.0
+    return min(1.0, search_share * ((rank_of_employer / rank_of_other) ** elasticity - 1.0))
 
 
 @njit
-def _poach(first, last, hired, wanted, rank, elasticity, search_share, order, capacity):
-    """`clearing.poach` for the employers in slots `first` up to `last`."""
+def _poach(first, last, hired, wanted, rank, elasticity, search_share, held, drawn, gained):
+    """`clearing.poach` for the employers in slots `first` up to `last`; `held`, `drawn` and `gained` are scratch of that length."""
     count = last - first
     for position in range(count):
-        place = position
-        while place > 0 and rank[first + order[place - 1]] < rank[first + position]:
-            order[place] = order[place - 1]
-            place -= 1
-        order[place] = position
-    for turn in range(count):
-        employer = first + order[turn]
-        short = wanted[employer] - hired[employer]
-        total = 0.0
-        for other in range(first, last):
-            capacity[other - first] = -1.0
-            if rank[other] < rank[employer] and hired[other] > 0.0:
-                capacity[other - first] = hired[other] * _loss_share(rank[other], rank[employer], elasticity, search_share)
-                total += capacity[other - first]
-        if short <= 0.0 or total <= 0.0:
+        held[position] = hired[first + position]
+        gained[position] = 0.0
+    for position in range(count):
+        drawn[position] = 0.0
+        short = wanted[first + position] - held[position]
+        if short <= 0.0:
             continue
-        moved = short if short < total else total
-        for other in range(first, last):
-            if capacity[other - first] >= 0.0:
-                hired[other] -= moved * capacity[other - first] / total
-        hired[employer] += moved
+        reach = 0.0
+        for other in range(count):
+            if held[other] > 0.0:
+                reach += held[other] * _loss_share(rank[first + other], rank[first + position], elasticity, search_share)
+        if reach > 0.0:
+            drawn[position] = (short if short < reach else reach) / reach
+    for other in range(count):
+        if held[other] <= 0.0:
+            continue
+        asked = 0.0
+        for position in range(count):
+            if drawn[position] > 0.0:
+                asked += drawn[position] * _loss_share(rank[first + other], rank[first + position], elasticity, search_share)
+        if asked <= 0.0:
+            continue
+        given = 1.0 / asked if asked > 1.0 else 1.0
+        for position in range(count):
+            if drawn[position] > 0.0:
+                gained[position] += (held[other] * drawn[position]
+                                     * _loss_share(rank[first + other], rank[first + position], elasticity, search_share) * given)
+        hired[first + other] = held[other] * (1.0 - asked) if asked < 1.0 else 0.0
+    for position in range(count):
+        hired[first + position] += gained[position]
 
 
 @njit
@@ -163,8 +171,9 @@ def finish_markets(heads, market_area, market_trade, cells, offers_matrix, expon
     for market in range(wage_out.shape[0]):
         if slot_offsets[market + 1] - slot_offsets[market] > longest:
             longest = slot_offsets[market + 1] - slot_offsets[market]
-    order = np.empty(longest, np.int64)
-    capacity = np.empty(longest)
+    held = np.empty(longest)
+    drawn = np.empty(longest)
+    gained = np.empty(longest)
     year_cut = 1.0 - (1.0 - cut) ** rounds
     for market in range(wage_out.shape[0]):
         wage_out[market] = np.nan
@@ -193,7 +202,7 @@ def finish_markets(heads, market_area, market_trade, cells, offers_matrix, expon
             if not constant:
                 offered = sold_hours_range(wage, offers_matrix, exponent, int(cells[FIRST, area, trade]),
                                            int(cells[LAST, area, trade]))
-            _poach(first, last, hired, wanted, rank, elasticity, search_share, order, capacity)
+            _poach(first, last, hired, wanted, rank, elasticity, search_share, held, drawn, gained)
         total = 0.0
         for position in range(first, last):
             if hired[position] > 0.0:
