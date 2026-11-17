@@ -1345,3 +1345,11 @@ to hours; the jump in the planned diet is still there, and so are the bids that 
 need should be held to what its market usually trades and a year's growth on it (`limit_shares` already takes a
 limit for each row, and the market memory keeps each market's usual volume).
 
+**Han's first year falls much further short than the others'** (`first_year_probe.py han_china_100ad`): it works well
+under half of the output its opening sized, with several times as many hours idle as hired; firewood and wood are
+staffed at about a third of their sized runs, the one wool producer is sized for more hours than any tile could give
+and is not staffed at all, and draught animals, oil and flour run at a fraction. England's and Norse's first years
+work about four fifths of theirs after the staffing fix. Han's yearly moves in the trimmed stage sit on top of that
+gap, and its samples of four members have differed by as much between like configurations as between unlike ones, so
+no change in this update is judged on Han.
+
