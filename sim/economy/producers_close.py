@@ -12,6 +12,7 @@ import math
 from dataclasses import dataclass
 from typing import Callable, Collection, Mapping, Optional, Tuple
 
+from sim.book import ROUNDING_SHARE
 from sim.constants import declare
 
 from . import capacity_growth, credit, harvest_tax, equity, firm_finance as finance, producer_losses, idle_capacity, inventory, plant_investment, producers_working_capital, unit_cost
@@ -29,7 +30,7 @@ LOSS_YEARS_BEFORE_EXIT = declare(
         "wait follows their credit and the time to build, which are not yet tied to the decision.")
 WORKING_CAPITAL_YEARS_OF_VARIABLE_COST = declare(
     "WORKING_CAPITAL_YEARS_OF_VARIABLE_COST", 1.0, kind="temporary_heuristic",
-    unit="years of full-capacity variable cost", source=None, confidence="D",
+    unit="years of the working plant's variable cost", source=None, confidence="D",
     why="Inputs and wages are paid before the year's sales in a model with one clearing a year, so "
         "a producer keeps a year of them. The true float follows the production cycle and the "
         "credit on offer, which are not modelled.")
@@ -51,11 +52,13 @@ class YearClose:
     exited: bool = False
 
 
-def working_capital_target(recipe: Recipe, capacity_runs: float, input_prices, wages) -> float:
+def working_capital_target(recipe: Recipe, working_runs: float, input_prices, wages) -> float:
+    """The coin a producer keeps: the running cost of the runs its plant works (the plant times the share of its
+    workplaces that cover their cost; the opening gives a producer the same for the runs it is sized to sell)."""
     cost = unit_cost.variable_cost_per_run(recipe, input_prices, wages)
     if not math.isfinite(cost):
         return 0.0
-    return cost * capacity_runs * WORKING_CAPITAL_YEARS_OF_VARIABLE_COST
+    return cost * working_runs * WORKING_CAPITAL_YEARS_OF_VARIABLE_COST
 
 
 def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float, view: MarketView,
@@ -125,7 +128,7 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
         expected = demand_runs if producer.expected_sales <= 0.0 else (
             producer.expected_sales + EXPECTATION_ADJUSTMENT_SHARE * (demand_runs - producer.expected_sales))
         capacity = capacity_growth.grown_capacity(capacity, expected, paying, OUTPUT_CHANGE_SHARE_PER_YEAR)
-    target = working_capital_target(recipe, capacity, inputs, wages)
+    target = working_capital_target(recipe, capacity * paying, inputs, wages)     # the plant that works, as the opening gives it
     replacement, growth = _investment(producer, recipe, view, capacity, worked, cost_per_run, wear if has_plant else 0.0)
     request, grown = (None, 0.0) if rate is None else _expansion(
         producer, recipe, view, currency, rate, growth, inputs, wages, price_share_after)
@@ -180,7 +183,7 @@ def _working_capital(producer, recipe, currency, worked, capacity, cash_kept, pa
     smoothed = within_a_years_change(replaced(producer, last_runs=worked, staffed_runs=None, capacity_runs=capacity),
                                      capacity * paying)
     short_runs = smoothed - cash_kept / paid_now
-    if short_runs <= 0.0:
+    if short_runs <= ROUNDING_SHARE * smoothed:      # coin kept for exactly the plant that works leaves float noise, not a shortfall
         return None
     amount = short_runs * paid_now
     return producers_working_capital.request(producer.agent_id, currency, amount,

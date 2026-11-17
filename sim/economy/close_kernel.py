@@ -10,6 +10,7 @@ import math
 
 import numpy as np
 
+from sim.book import ROUNDING_SHARE
 from sim.jit import njit
 
 from . import close_kernel_cost as cost
@@ -320,7 +321,7 @@ def close_rows(rows, constants,
             if pays > 0.0 and new_cap > 0.0 and math.isfinite(wanted_sales) and math.isfinite(pays):
                 new_cap = new_cap + min(max(0.0, wanted_sales / pays - new_cap), constants[K_CHANGE] * new_cap)
         working_cost = variable_now
-        target = 0.0 if not math.isfinite(working_cost) else working_cost * new_cap * constants[K_WORKING_YEARS]
+        target = 0.0 if not math.isfinite(working_cost) else working_cost * new_cap * pays * constants[K_WORKING_YEARS]
         # _investment, with the producer as it was before the close
         replacement = 0.0
         growth = 0.0
@@ -377,7 +378,7 @@ def close_rows(rows, constants,
                 smoothed = cost.within_a_years_change(worked, np.nan, new_cap, new_cap * pays, constants[K_CHANGE])
                 cash_kept = min(currency_cash, target)
                 short_runs = smoothed - cash_kept / paid_now
-                if short_runs > 0.0:
+                if short_runs > ROUNDING_SHARE * smoothed:
                     amount = short_runs * paid_now
                     max_rate = cost.earnable_rate(revenue_run - paid_now, paid_now)
                     held = 0.0

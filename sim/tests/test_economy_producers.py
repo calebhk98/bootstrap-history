@@ -168,6 +168,16 @@ class CloseYearTests(unittest.TestCase):
         self.assertAlmostEqual(dividend, 500.0 - result.producer.cash_target)
         self.assertEqual(result.transfers[0].payee, "lord")
 
+    def test_the_cash_kept_is_the_running_cost_of_the_plant_that_works(self):
+        # grain at 0.75: a run earns 7.5 against a cost of 7, so only part of the producer's workplaces cover their cost;
+        # it keeps coin to run those, as the opening gives it coin for the runs it works, and pays the rest out
+        view = farm_view(0.75, cash=500.0)
+        closed = producers_close.close_year(farmer(), FARM, 300.0, 100.0, view).producer
+        working = producers.share_working(10.0 * closed.expected_prices["grain"], 7.0)     # at the price it now expects
+        self.assertLess(working, 0.9)
+        self.assertAlmostEqual(closed.cash_target, 7.0 * closed.capacity_runs * working
+                               * producers_close.WORKING_CAPITAL_YEARS_OF_VARIABLE_COST)
+
     def test_no_dividend_when_cash_is_below_target(self):
         result = producers_close.close_year(farmer(), FARM, 300.0, 100.0, farm_view(2.0, cash=5.0))
         self.assertEqual(result.transfers, ())
