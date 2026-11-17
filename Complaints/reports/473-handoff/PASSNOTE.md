@@ -186,8 +186,10 @@ members, not eight: its members fall into a calm kind and a zigzag kind, and eig
 Update 34 took the first item of section 6a (the first years do not reproduce the opening) and found four faults in
 how the opening is built and one in the hiring rounds, each fixed with a rule test: a site-bound recipe with no
 declared site stood whole on one tile; a processor tied to its input's site got no tile when the hands there were
-spoken for; an employer with most of a market's posts could not staff them; the opening ignored the land limits it
-had itself cleared; an input's price limit ignored the wages already committed. The settle test now reads inventory
+spoken for, and served every market from one tile; an employer with most of a market's posts could not staff them;
+the opening ignored the land limits it had itself cleared (holding producers to them closes wheat and cheese, whose
+plough teams and milk no opening producer makes: owner question 15); an input's price limit ignored the wages
+already committed. The settle test now reads inventory
 value against a year's output (owner question 11).
 
 Measured on the head (`ensemble_years.py`, then `ensemble_moves.py`; England 8 members, Norse 24, Han 12):
@@ -209,8 +211,11 @@ What is in the way now, in the order to take it:
    need and a sixth of Norse's. In Han the hungry tiles are fertile ones where producers outbid the household plots
    for all the land and then work about two fifths of their runs, because the iron tools the runs wear do not arrive
    and the work is done by hand; in the Norse lands they are the tiles with no farmland, with coin and no food
-   reaching them. Trace what the merchants carry in the first year against what the opening's placement needs moved
-   (`first_year_probe.py` shows the makers one tile away from the only ore working a third of their runs).
+   reaching them. For Han start with the tools: why its iron chain opens at next to nothing while its ores are dug
+   (`opening_sizes.py`), and whether the farms get the wooden tools the opening sizes in their place
+   (`producer_inputs_probe.py` on a millet farm and on a wooden-tool maker). Then trace what the merchants carry in
+   the first year against what the opening's placement needs moved (`first_year_probe.py` shows England's makers one
+   tile away from the only ore working a third of their runs).
 2. **A good in short supply is rationed for years because its price cannot leave the band above its cost**
    (leather, linen, coal in England; Update 34). The buyers who would pay most do not get it.
 3. **The money stock falls every year in every civilisation** (owner question 13). Holding it for the length of the

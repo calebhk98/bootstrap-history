@@ -1400,6 +1400,10 @@ every year, linen and coal rise by more than it every year. Three things lie und
   fit then held every user of its output to nothing. With the first fix England's only iron-ore tile was in that
   state and the whole iron chain opened at nothing. It is now capped at what all the tile's hands could work and
   shares them with the others through the labour market.
+- **A processor tied to a sited input served every market from one tile** (`location_inputs.place_oriented`;
+  `test_location_inputs`). Its runs for all markets went to the tile cheapest on average, as far as the supply and
+  hands there allowed, so Han's wooden tools and pottery opened whole on one tile each. Each market's runs now go to
+  the tiles cheapest for that market.
 - **The hiring rounds starved an employer with most of a market's posts** (`hiring_kernel._shares_of_prefix`,
   `labour_hiring_reference._taken_by`; `test_labour_eurace_applications`, `test_year_speed_labour_hiring`). A
   searching household applied to a few posters picked evenly. A producer here stands for every workplace of its
@@ -1426,9 +1430,11 @@ every year, linen and coal rise by more than it every year. Three things lie und
   11; `spin_up_gap.state_gaps`, `test_spin_up_measure`).
 
 **What the first year works of the output the opening sized** (`first_year_probe.py <civ>`): England about nine
-tenths (about three quarters at the start of Update 33), Norse more than four fifths, Han somewhat under three fifths
-(under two fifths before). Hours staffed are within a few per cent of hours sized in all three; what is left is
-hours hired and not worked, for want of an input.
+tenths (about three quarters at the start of Update 33), Norse more than four fifths, Han about two thirds (under two
+fifths before). Hours staffed are within a few per cent of hours sized in all three; what is left is hours hired
+and not worked, for want of an input or a tool. Han's farms work about two fifths of the runs they hire hands for:
+the opening has next to no iron tools there (its iron chain is sized at next to nothing while its ores are dug) and
+the wooden tools the opening sizes in their place do not reach the farms, so the work is done by hand.
 
 **Han and the Norse lands are hungry from the first year** (`hunger_probe.py <civ>`). About two fifths of Han's
 food need and a sixth of Norse's is unmet in year one, before any yearly dynamics. In Han the hungry are on fertile,
