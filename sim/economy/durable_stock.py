@@ -15,6 +15,15 @@ EXPECTED_SPENDING_ADJUSTMENT = declare(
         "income history and habit, which are not modelled; the share is an assumption.")
 
 
+DURABLE_GAP_CLOSED_SHARE = declare(
+    "DURABLE_GAP_CLOSED_SHARE", 0.4, kind="temporary_heuristic",
+    unit="share of the gap to the wanted stock bought in a year", source=None, confidence="D",
+    retire="Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md",
+    why="A household replaces the wear of its durables each year and closes the rest of the gap to the stock it "
+        "wants over several years, so its bid moves smoothly with its holding instead of alternating between "
+        "nothing and the whole gap. How fast real households stock up is not modelled; the share is an assumption.")
+
+
 def update_expected_spending(expected: float, spent: float, planned: float = 0.0) -> float:
     """Expected yearly spending after a year in which `spent` was spent (the first year seeds it). Money the
     household bid but the shops could not fill (`planned` above `spent`) is spending it set out to make: a year
@@ -46,6 +55,25 @@ def replacement_for_flow(flow: float, spec: GoodSpec) -> float:
         return flow
     serving = flow * spec.service_life_years
     return serving - after_year_end_losses(serving, spec)
+
+
+def opening_stock_for_replacement(replacement: float, spec: GoodSpec) -> float:
+    """The holding at a planning date that a yearly `replacement` keeps up: the serving stock the replacement
+    restores, after its year-end losses."""
+    loss_rate = min(1.0, min(1.0, 1.0 / spec.service_life_years) + min(1.0, max(0.0, spec.spoilage_per_year)))
+    return after_year_end_losses(replacement / loss_rate, spec)
+
+
+def purchase_toward_stock(flow: float, held: float, spec: GoodSpec) -> float:
+    """Units of a durable bought in a year to serve `flow`: the replacement of the wear and spoilage the wanted
+    stock suffers, plus a share of the gap between the holding and what the wanted stock leaves after its
+    year-end losses. A holding at that level buys the replacement (so it is a fixed point of buying and
+    losses), a larger one the replacement too (a household does not sell), and one below it closes
+    a share of the gap each year, so a bid moves continuously with the holding."""
+    if spec.service_life_years <= 0.0:
+        return flow
+    gap = max(0.0, after_year_end_losses(flow * spec.service_life_years, spec) - max(held, 0.0))
+    return replacement_for_flow(flow, spec) + DURABLE_GAP_CLOSED_SHARE * gap
 
 
 def in_use_stock(flow_by_good: Mapping[GoodId, float], specs: Mapping[GoodId, GoodSpec],

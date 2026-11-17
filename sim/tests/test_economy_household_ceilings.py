@@ -62,9 +62,10 @@ def bid_for(orders, good):
 
 
 class HouseholdCeilingTests(unittest.TestCase):
-    def test_a_poor_tier_has_no_bid_for_a_good_dearer_than_its_household_can_pay(self):
+    def test_a_poor_tier_puts_almost_none_of_its_money_on_a_good_dearer_than_its_household_can_pay(self):
         orders, _people = orders_for(income_per_person=260.0)
-        self.assertIsNone(bid_for(orders, "gold_leaf"))
+        gold_leaf = bid_for(orders, "gold_leaf")
+        self.assertLess(0.0 if gold_leaf is None else gold_leaf.budget, 1e-3 * bid_for(orders, "beads").budget)
         self.assertIsNotNone(bid_for(orders, "beads"))        # its adornment money goes to the cheap good
 
     def test_a_rich_tier_can_bid_for_the_dear_good(self):

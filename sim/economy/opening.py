@@ -346,19 +346,19 @@ def _opening_bids(setup, record, view, memory=None, stationary_durables=True, ow
 def _seed_durable_stocks(setup, record, view, packed=None) -> bool:
     """Households open at the planning date, holding their serving stock after year-end losses.
     Their first purchases replace those losses, as in a later year with the same desired flow. `packed` (the settled
-    cohorts, when the settle packed them) gives the bids of the durables that serve needs."""
+    cohorts, when the settle packed them) gives the replacement bids of the durables that serve needs."""
     if packed is not None:
-        bids = [(cohort, good, quantity) for cohort, good, quantity in packed.durable_bids(record)]
+        bids = [(cohort, good, quantity) for cohort, good, quantity in packed.durable_bids(record, stationary=True)]
     else:
         bids = [(cohort, bid.good, bid.floor_quantity + bid.flexible_quantity)
-                for cohort, bid, _price in _opening_bids(setup, record, view, stationary_durables=False)
+                for cohort, bid, _price in _opening_bids(setup, record, view)
                 if bid.priority != households_store.STORE_PRIORITY]     # a store of wealth is seeded from the deposits (opening_stores), not from need
     moves = []
     for cohort, good, wanted in bids:
         spec = setup.specs.get(good)
         if spec is None or spec.service_life_years <= 0.0:
             continue
-        quantity = durable_stock.after_year_end_losses(wanted, spec)
+        quantity = durable_stock.opening_stock_for_replacement(wanted, spec)
         if quantity > 0.0:
             moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, good, cohort.tile, quantity,
                                    "opening stock of a durable in use"))
