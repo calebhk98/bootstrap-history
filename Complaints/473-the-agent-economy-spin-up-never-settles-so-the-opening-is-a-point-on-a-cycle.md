@@ -1107,9 +1107,11 @@ its own pinned worktree:
   a rounding share of them (`expected_sales.demand_seen`); the branch makes that a narrow ramp. A market's count of
   years with its price over the entry price went back to nothing when the price touched the entry price, and margin
   entry was all or nothing (`entry_margin.margin_streak`); the branch makes it a standing that moves by how far the
-  price stands from the entry price, with entry in proportion. Measured together, England is level and Norse's hours
-  and output move nearly twice as much, so neither is merged; they were not measured apart, and the growth of the
-  twins' difference with them was not measured.
+  price stands from the entry price, with entry in proportion. They do what they are for: twins forked late in
+  England's trimmed stage (`late_twin_probe.py`, one fork) stay within rounding of each other for three years and
+  differ by several orders of magnitude less after five than at the branch head. But measured together on the yearly
+  moves, England is level and Norse's hours and output move nearly twice as much, so neither is merged; they were not
+  measured apart.
 
 **Found and not fixed** (each seen in a probe; none has a fix on the branch):
 - **England's money stock wears away, so England's settled state is a deflation at the wear rate.** The coin-metal
