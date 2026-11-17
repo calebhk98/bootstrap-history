@@ -77,16 +77,29 @@ class FollowingPopulation(unittest.TestCase):
 class WorkPlans(unittest.TestCase):
     def test_a_plan_that_differs_is_stored_and_one_that_does_not_is_not(self):
         store = _store()
-        cohort_people.apply_work_plans(store, {"household:t1:0": (2.0, 5.0, ("wheat",)), "household:t1:1": (0.0, 1.0, ()),
-                                               "household:t2:0": (0.0, 0.0, ())})
+        cohort_people.apply_work_plans(store, {"household:t1:0": (2.0, 5.0, (("wheat", 0.375),), None), "household:t1:1": (0.0, 1.0, (), None),
+                                               "household:t2:0": (0.0, 0.0, (), None)})
         self.assertEqual(store["household:t1:0"].hired_work_per_person, 2.0)
-        self.assertEqual(store["household:t1:0"].milled_grains, ("wheat",))
+        self.assertEqual(store["household:t1:0"].ground_by_hand, (("wheat", 0.375),))
         self.assertEqual(store["household:t1:1"].hired_work_per_person, 0.0)
 
     def test_a_plan_that_only_changes_the_grains_is_stored(self):
         store = _store()
-        cohort_people.apply_work_plans(store, {"household:t2:0": (0.0, 0.0, ("rye",))})
-        self.assertEqual(store["household:t2:0"].milled_grains, ("rye",))
+        cohort_people.apply_work_plans(store, {"household:t2:0": (0.0, 0.0, (("rye", 0.875),), None)})
+        self.assertEqual(store["household:t2:0"].ground_by_hand, (("rye", 0.875),))
+
+    def test_a_plan_that_only_changes_the_overall_share_is_stored(self):
+        store = _store()
+        cohort_people.apply_work_plans(store, {"household:t1:0": (0.0, 0.0, (), 0.25)})
+        self.assertEqual(store["household:t1:0"].food_ground_share, 0.25)
+        cohort_people.apply_work_plans(store, {"household:t1:0": (0.0, 0.0, (), None)})
+        self.assertIsNone(store["household:t1:0"].food_ground_share)
+
+    def test_a_plan_that_only_changes_a_share_is_stored(self):
+        store = _store()
+        cohort_people.apply_work_plans(store, {"household:t1:0": (0.0, 0.0, (("wheat", 0.375),), None)})
+        cohort_people.apply_work_plans(store, {"household:t1:0": (0.0, 0.0, (("wheat", 0.4),), None)})
+        self.assertEqual(store["household:t1:0"].ground_by_hand, (("wheat", 0.4),))
 
 
 class CloseWrite(unittest.TestCase):

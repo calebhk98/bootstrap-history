@@ -52,10 +52,11 @@ class Cohort:
     unmet_floor_by_need: Dict[str, float] = field(default_factory=dict)   # need units short of the floor
     own_plan_by_need: Dict[str, float] = field(default_factory=dict)      # need units it grows with hours kept back
     hired_work_per_person: float = 0.0  # hours of household work a person's share hires this year (household_work_year.py)
-    milled_grains: Tuple[str, ...] = ()  # grains it buys milled rather than grinds by hand this year (household_grinding.py)
+    food_ground_share: Optional[float] = None  # share of its food it ground by hand when its housework hours were last counted (None before a year has) (household_grinding.py)
+    ground_by_hand: Tuple[Tuple[str, float], ...] = ()  # per grain it can have milled, (grain, share of its food units it grinds by hand this year) (household_grinding.py)
 
     def __post_init__(self) -> None:
-        self.milled_grains = tuple(self.milled_grains)  # a saved tuple reads back from JSON as a list
+        self.ground_by_hand = tuple((grain, share) for grain, share in self.ground_by_hand)  # a saved pair reads back from JSON as a list
 
 
 def cohort_id(tile: TileId, income_class: int) -> AgentId:
@@ -162,12 +163,13 @@ def set_column(cohorts: Dict[AgentId, Cohort], name: str, values: Mapping[AgentI
 
 
 def set_work_plans(cohorts: Dict[AgentId, Cohort], plans: Mapping[AgentId, tuple]) -> None:
-    """Each cohort's (hired hours a person, own hours, grains bought milled) is stored where it differs from what the cohort holds."""
+    """Each cohort's (hired hours a person, own hours, shares of grains ground by hand, share of its food ground by hand) is stored where it differs from what the cohort holds."""
     if hasattr(cohorts, "set_rows"):
         from .cohort_people import apply_work_plans      # the table's module imports this one
         apply_work_plans(cohorts, plans)
         return
-    for cohort_id, (per_person, _own, milled) in plans.items():
+    for cohort_id, (per_person, _own, milled, ground_share) in plans.items():
         cohort = cohorts[cohort_id]
-        if per_person != cohort.hired_work_per_person or tuple(milled) != tuple(cohort.milled_grains):
-            change_cohort(cohorts, cohort_id, hired_work_per_person=per_person, milled_grains=milled)
+        if (per_person != cohort.hired_work_per_person or tuple(tuple(each) for each in milled) != tuple(cohort.ground_by_hand)
+                or ground_share != cohort.food_ground_share):
+            change_cohort(cohorts, cohort_id, hired_work_per_person=per_person, ground_by_hand=milled, food_ground_share=ground_share)

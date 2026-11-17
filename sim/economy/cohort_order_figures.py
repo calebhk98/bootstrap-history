@@ -15,7 +15,7 @@ class OrderFigures(NamedTuple):
     tile: str
     people: float
     hired_work_per_person: float
-    milled_grains: tuple
+    ground_by_hand: tuple
     expected_spending: float
     expected_floor_cost: float
     expected_inflation: float
@@ -29,6 +29,6 @@ def order_figures(store: CohortStore, rows: np.ndarray) -> List[OrderFigures]:
     names = ("people", "hired_work_per_person", "expected_spending", "expected_floor_cost", "expected_inflation", "cash_target",
              "share_wealth", "last_year_income")
     people, hired, spending, floor_cost, inflation, target, wealth, income = (store.floats(name, rows) for name in names)
-    return [OrderFigures(store.ids[row], tile, people[place], hired[place], store.milled_of(row), spending[place], floor_cost[place],
+    return [OrderFigures(store.ids[row], tile, people[place], hired[place], store.ground_of(row), spending[place], floor_cost[place],
                          inflation[place], target[place], None if wealth[place] != wealth[place] else wealth[place], income[place])
             for place, (row, tile) in enumerate(zip(rows.tolist(), store.tile_names(rows)))]

@@ -109,7 +109,7 @@ def _with_covering_prices(setup):
     start = opening_income.OpeningStart()
     settled, floors = _solve_opening(setup, start)
     plans = opening_plans.HouseholdPlans(
-        {agent_id: (cohort.hired_work_per_person, 0.0, cohort.milled_grains) for agent_id, cohort in settled[0].cohorts.items()},
+        {agent_id: (cohort.hired_work_per_person, 0.0, cohort.ground_by_hand, cohort.food_ground_share) for agent_id, cohort in settled[0].cohorts.items()},
         floors)
     current = setup
     for _pass in range(COVERING_PRICE_PASSES):

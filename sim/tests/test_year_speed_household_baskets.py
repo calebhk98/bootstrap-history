@@ -85,12 +85,12 @@ class KeptNeedPrices(unittest.TestCase):
 
 class BuiltBaskets(unittest.TestCase):
 
-    def test_a_cohort_basket_has_the_hired_work_the_fuel_and_not_the_milled_grain(self):
-        basket = household_work_year.built_basket(SETUP, "t", True, 3.0, ("wheat_kg",))
+    def test_a_cohort_basket_has_the_hired_work_the_fuel_and_the_grain_capped_at_what_is_ground(self):
+        basket = household_work_year.built_basket(SETUP, "t", True, 3.0, (("wheat_kg", 0.0),))
         needs = {need.need_id: need for need in basket.needs}
         self.assertEqual(needs["household_work"].subsistence_per_person, 3.0)
         self.assertGreater(needs["warmth"].subsistence_per_person, 300.0)
-        self.assertNotIn("wheat_kg", [good for good, _effect in needs["food"].goods])
+        self.assertEqual(dict(needs["food"].share_limits), {"wheat_kg": 0.0})
         self.assertIn("barley_kg", [good for good, _effect in needs["food"].goods])
 
     def test_a_cohort_with_no_hearth_buys_only_food_that_is_ready_to_eat(self):
@@ -111,7 +111,7 @@ class BaseBasket(unittest.TestCase):
 
     def test_a_basket_for_any_hired_work_equals_the_base_with_the_floor_put_on(self):
         for hearth in (True, False):
-            for milled in ((), ("wheat_kg",)):
+            for milled in ((), (("wheat_kg", 0.2),)):
                 base = household_work_year.base_basket(SETUP, "t", hearth, milled)
                 for hired in (0.0, 0.5, 3.0):
                     self.assertEqual(household_work_year.with_hired_work(SETUP, base, hired),

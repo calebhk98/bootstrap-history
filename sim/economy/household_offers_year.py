@@ -10,6 +10,7 @@ from .household_offer_reads import OfferReads
 from .labour_ask_floor import hectares_per_hour_by_recipe
 from .labour_offer_rows import LabourOfferRows
 from .labour_offers_table import PlotParameters
+from .household_grinding import HandGround
 from .market_memory import market_key
 from .types import AgentId
 
@@ -36,29 +37,29 @@ def hour_values(setup, record, view, reads: OfferReads, expected: Mapping[Tuple[
     return {name: values[number] for number, name in enumerate(reads.rows.workers.names)}
 
 
-def plans(setup, record, view, reads: OfferReads, gradual: bool = False) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
+def plans(setup, record, view, reads: OfferReads, gradual: bool = False) -> Dict[AgentId, Tuple[float, float, HandGround, Optional[float]]]:
     """`household_work_year.plans` with no service-price floors: each cohort's (hours hired a person, hours done itself, grains
-    bought milled) for the year; changes nothing. `gradual` as there."""
+    ground by hand, share of its food it counts as ground by hand) for the year; changes nothing. `gradual` as there."""
     expected = expected_shares(setup, record, reads) if setup.household_work and lacks_history(record, reads) else {}
     cohort_prime.prime_food_baskets(setup, record, view)
     values = hour_values(setup, record, view, reads, expected) if setup.household_work else {}
-    result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
+    result: Dict[AgentId, Tuple[float, float, HandGround, Optional[float]]] = {}
     store = table_of(record.cohorts)
     for cohort in store.figures(store.order()):
         cohort_id = cohort.agent_id
         if not setup.household_work:
-            hired, own, milled = 0.0, 0.0, ()
+            hired, own, ground, counted = 0.0, 0.0, (), None
         else:
-            value, needed, price, milled = household_work_year.work_terms_at(setup, record, view, cohort, values.get(cohort.agent_id, 0.0))
-            hired, own, milled = household_work_year.planned_hours(needed, value, price, 0.0, milled,
+            value, needed, price, ground, counted = household_work_year.work_terms_at(setup, record, view, cohort, values.get(cohort.agent_id, 0.0), gradual)
+            hired, own, ground = household_work_year.planned_hours(needed, value, price, 0.0, ground,
                                                                   household_work_year.whole_servant_terms(setup, cohort),
                                                                   household_work_year.last_hired(cohort) if gradual else None)
-        result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, milled)
+        result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, ground, counted)
     return result
 
 
 def decide(setup, record, view, rows: LabourOfferRows) -> Dict[AgentId, float]:
-    """`household_work_year.decide` over the rows: store each cohort's hired hours a person and the grains it buys milled, and
+    """`household_work_year.decide` over the rows: store each cohort's hired hours a person and the grains it grinds by hand, and
     return the own hours of each cohort, which it keeps back from the market."""
     reads = OfferReads(rows)
     if not reads.exact:
@@ -68,7 +69,7 @@ def decide(setup, record, view, rows: LabourOfferRows) -> Dict[AgentId, float]:
             record.labour.expect_sold_share(market_key(trade, area), share)
     decided = plans(setup, record, view, reads, gradual=True)
     households_cohort.set_work_plans(record.cohorts, decided)
-    return {cohort_id: own for cohort_id, (_per_person, own, _milled) in decided.items()}
+    return {cohort_id: own for cohort_id, (_per_person, own, _ground, _counted) in decided.items()}
 
 
 def plot_parameters_by_cohort(setup, record, view, rows: LabourOfferRows, options: Mapping[str, Sequence],

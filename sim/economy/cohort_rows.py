@@ -22,24 +22,26 @@ COHORT_ROWS_SPEC = TableSpec("CohortRows", [
     Column("expected_spending", np.float64, "smoothed spending that sizes the stock of durables it wants", "money"),
     Column("expected_floor_cost", np.float64, "smoothed cost of the cohort's need floors", "money"),
     Column("hired_work_per_person", np.float64, "hours of household work a person's share hires this year", "hours per person"),
+    Column("food_ground_share", np.float64, "share of its food it ground by hand when its housework hours were last counted; NaN before a year has counted them", "ratio"),
     Column("unmet_count", np.int64, "places of the unmet-floor columns in use", "count"),
     Column("plan_count", np.int64, "places of the own-plan columns in use", "count"),
-    Column("milled_count", np.int64, "places of the milled-grain column in use", "count"),
+    Column("ground_count", np.int64, "places of the ground-by-hand columns in use", "count"),
     Column("unmet_need", np.int64, "the need each unmet figure is for, in the order written", "number", ids="needs", width=0),
     Column("unmet_units", np.float64, "need units short of the floor", "need units", width=0),
     Column("plan_need", np.int64, "the need each own-plan figure is for, in the order written", "number", ids="needs", width=0),
     Column("plan_units", np.float64, "need units it grows with hours kept back", "need units", width=0),
-    Column("milled_good", np.int64, "the grains it buys milled, in the order written", "number", ids="goods", width=0),
+    Column("ground_good", np.int64, "the grains it can have milled, in the order written", "number", ids="goods", width=0),
+    Column("ground_units", np.float64, "share of the food units it grinds of that grain by hand", "ratio", width=0),
 ])
 
 CohortRows = COHORT_ROWS_SPEC.make_type(__name__)
 
 FLOAT_FIELDS = ("people", "working_people", "ownership_share", "expected_inflation", "cash_target", "last_basket_price_level",
                 "last_year_income", "share_wealth", "planned_spending", "expected_spending", "expected_floor_cost",
-                "hired_work_per_person")
-OPTIONAL_FLOATS = ("share_wealth",)
+                "hired_work_per_person", "food_ground_share")
+OPTIONAL_FLOATS = ("share_wealth", "food_ground_share")
 SCALAR_FLOATS = tuple(name for name in FLOAT_FIELDS if name not in OPTIONAL_FLOATS)
 # the columns of one wide group grow together
 WIDE_GROUPS = {"unmet": ("unmet_need", "unmet_units"), "plan": ("plan_need", "plan_units"),
-               "milled": ("milled_good",)}
+               "ground": ("ground_good", "ground_units")}
 WIDE_COLUMNS = tuple(name for group in WIDE_GROUPS.values() for name in group)

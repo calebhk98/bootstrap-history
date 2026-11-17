@@ -71,19 +71,23 @@ def hunger_by_tile(store: CohortStore, hunger_need: str) -> Dict[str, float]:
 
 
 def apply_work_plans(store: CohortStore, plans: Mapping[str, tuple]) -> None:
-    """Each cohort's household-work plan (`plans`: id -> (hired hours a person, own hours, grains bought milled)) is stored where it
-    differs from what the cohort holds: its hired hours a person and its grains bought milled (the own hours are not stored)."""
+    """Each cohort's household-work plan (`plans`: id -> (hired hours a person, own hours, per grain the share ground by hand, share of its food ground by hand)) is stored where it
+    differs from what the cohort holds: its hired hours a person, its grains ground by hand with their shares and its overall share of food
+    ground by hand (the own hours are not stored)."""
     ids = list(plans)
     rows = store.rows_of(ids)
     hired = [plans[each][0] for each in ids]
-    milled = [tuple(plans[each][2]) for each in ids]
-    changed = np.array(hired, dtype=np.float64) != store.column("hired_work_per_person")[rows]
+    milled = [tuple(tuple(pair) for pair in plans[each][2]) for each in ids]
+    overall = np.array([np.nan if plans[each][3] is None else plans[each][3] for each in ids], dtype=np.float64)
+    held = store.column("food_ground_share")[rows]
+    changed = (np.array(hired, dtype=np.float64) != store.column("hired_work_per_person")[rows]) | ((overall != held) & ~(np.isnan(overall) & np.isnan(held)))
     counts = np.fromiter(map(len, milled), dtype=np.int64, count=len(milled))
-    for place in np.nonzero((counts != store.table.milled_count[rows]) | (counts > 0))[0].tolist():     # only a cohort that mills is compared
-        changed[place] |= milled[place] != store.milled_of(int(rows[place]))
+    for place in np.nonzero((counts != store.table.ground_count[rows]) | (counts > 0))[0].tolist():     # only a cohort that mills is compared
+        changed[place] |= milled[place] != store.ground_of(int(rows[place]))
     places = np.nonzero(changed)[0]
     if not len(places):
         return
     store.set_rows("hired_work_per_person", rows[places], np.array([hired[each] for each in places.tolist()], dtype=np.float64))
-    store.write_milled(rows[places], [milled[each] for each in places.tolist()])
+    store.set_rows("food_ground_share", rows[places], overall[places])
+    store.write_ground(rows[places], [milled[each] for each in places.tolist()])
 
