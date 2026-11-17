@@ -16,7 +16,7 @@ from . import close_kernel_cost as cost
 from .plan_wear import covered_input_bill
 
 K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_CLOSED, K_WORKING_YEARS = range(9)
-K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(9, 18)
+K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP = range(9, 17)
 
 STATE_OK, STATE_CRISIS, STATE_ILLIQUID, STATE_INSOLVENT = 0, 1, 2, 3
 REQUEST_NONE, REQUEST_EXPAND, REQUEST_WORKING_CAPITAL = 0, 1, 2
@@ -247,8 +247,7 @@ def close_rows(rows, constants,
                 per_run = q_out[slot] * yield_
                 market_capacity_here = market_capacity[good, column] if column >= 0 else 0.0
                 unmet_here = unmet[good, column] if column >= 0 else 0.0
-                seen = cost.demand_seen(sold[row, slot], stock[row, slot], per_run * cap_old, market_capacity_here, unmet_here,
-                                        constants[K_SOLD_OUT])
+                seen = cost.demand_seen(sold[row, slot], stock[row, slot], per_run * cap_old, market_capacity_here, unmet_here)
                 scratch_price = scratch[slot]
                 if not np.isnan(scratch_price):
                     run_value += per_run * scratch_price
