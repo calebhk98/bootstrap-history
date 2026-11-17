@@ -112,11 +112,14 @@ def queued_holding_value(reservation, stock, yearly_sales, rate, spoilage):
 
 
 @njit
-def demand_seen(sold, left, own_capacity, market_capacity, market_unmet):
+def demand_seen(sold, left, own_capacity, market_capacity, market_unmet, sold_out_share):
     """expected_sales.demand_seen."""
     if market_unmet <= 0.0 or own_capacity <= 0.0 or market_capacity <= 0.0:
         return sold
-    return sold + max(0.0, min(1.0, own_capacity / market_capacity) * market_unmet - max(0.0, left))
+    weight = 1.0
+    if left > 0.0:
+        weight = max(0.0, 1.0 - left / (sold_out_share * sold)) if sold > 0.0 else 0.0
+    return sold + weight * min(1.0, own_capacity / market_capacity) * market_unmet
 
 
 @njit
