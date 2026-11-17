@@ -12,9 +12,9 @@ import numpy as np
 from sim.jit import njit
 
 from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_FLOOR_MARGIN, K_HOUSEHOLD_SIZE, K_SAFETY,
-                                    K_WEALTH_TARGET, NF_HAS_FLOOR, NF_LIMIT, NF_PIDX, NF_QUALITIES, NF_SUB, NI_ROW0, NI_ROW1, RF_CEIL, RF_LIFE, RF_PRICE,
+                                    K_WEALTH_TARGET, NF_HAS_FLOOR, NF_LIMIT, NF_PIDX, NF_QUALITIES, NF_SUB, NI_ROW0, NI_ROW1, RF_CEIL, RF_LIFE, RF_PRICE, RF_SPOIL,
                                     RF_SHARE, RI_GOOD, RI_UNIT, SF_LIFE, SF_PRICE, SF_WEIGHT, V_FLOORS, V_PIDX, V_SFLOORS, V_STOTALS, V_TOTALS, W_AFF,
-                                    W_BUDGET, W_CAP, W_CEIL, W_COUNT, W_FLEX, W_FLOOR, W_ON, W_QTY, W_SHARE, _add, _affordable, _need_units,
+                                    W_BUDGET, W_CAP, W_CEIL, W_COUNT, W_FLEX, W_FLOOR, W_ON, W_QTY, W_SHARE, _add, _affordable, _need_units, _purchase_toward_stock,
                                     _resting_purse, _store_value_target, _total)
 from .opening_demand_kernel import flexible_budget_left, store_pot, RF_EFFECT, RF_LIMIT, RF_QUALITY, _remix as _remix_unlimited
 from .satiated_demand import is_satiated
@@ -300,12 +300,12 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
                 if flow <= 0.0:
                     ratio = 0.0
                 else:
-                    ratio = max(0.0, flow * (stock_flow / flow) * life - held_rows[row_base + r]) / flow
+                    ratio = _purchase_toward_stock(flow * (stock_flow / flow), held_rows[row_base + r], life, row_floats[r, RF_SPOIL]) / flow
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 met = _met(row_ints[r, RI_UNIT], unit0, grown0, people, unit_floor_per_person, grown)
                 row_scratch[r, W_FLOOR] = floor_quantity * (1.0 - met) * ratio
                 row_scratch[r, W_FLEX] = flexible_quantity * ratio
-                row_scratch[r, W_CAP] = min(ceil[r], household_cap)
+                row_scratch[r, W_CAP] = min(ceil[r], household_cap * row_floats[r, RF_LIFE] if row_floats[r, RF_LIFE] > 1.0 else household_cap)
                 row_scratch[r, W_ON] = 1.0
     count = 0
     other = 0

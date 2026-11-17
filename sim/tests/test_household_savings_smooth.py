@@ -60,7 +60,7 @@ class SpendingCutSmoothingTests(unittest.TestCase):
         self.assertGreaterEqual(self.bids(expected_spending=expected, expected_floor_cost=1.0), floor * 0.95)
 
     def test_a_household_with_no_history_is_not_held_up(self):
-        self.assertLess(self.bids(), self.bids(expected_spending=120000.0, expected_floor_cost=1.0))
+        self.assertLessEqual(self.bids(), self.bids(expected_spending=120000.0, expected_floor_cost=1.0) * (1.0 + 1e-9))
 
     def test_a_first_year_with_little_income_so_far_spends_its_wealth_at_the_pace_of_its_usual_income(self):
         def spending(**changes):

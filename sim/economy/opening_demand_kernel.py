@@ -8,9 +8,14 @@ cohorts, needs, goods and store goods. The packed columns are named by the const
 and store goods are contiguous slices of the arrays. A bid exists when its budget is above nothing, and a cohort whose
 spending only just covers its floors has a budget left for the rest of a few ulps or none, so the sums the old code made
 with `math.fsum` (or the compensated `sum`) are made here exactly (`_add`, `_total`) and the answer is the old one."""
+import math
+
 import numpy as np
 
 from sim.jit import njit
+
+from .durable_stock import DURABLE_GAP_CLOSED_SHARE
+from .price_setting import LOGIT_INTENSITY
 
 # constants row (opening_demand.constants)
 K_FLOOR_MARGIN = 0
@@ -245,15 +250,39 @@ def _remix(n, r0, r1, reach, exponent, row_floats, share, ceil, pidx, partials):
 
 
 @njit
+def _affordability(price, household_budget, life):
+    """households_ability.affordability."""
+    if household_budget <= 0.0:
+        return 0.0
+    cost = price / life if life > 1.0 else price
+    if cost <= 0.0:
+        return 1.0
+    exponent = LOGIT_INTENSITY * math.log(cost / household_budget)
+    if exponent > 700.0:
+        return 0.0
+    return 1.0 / (1.0 + math.exp(exponent))
+
+
+@njit
+def _purchase_toward_stock(flow, held, life, spoilage):
+    """durable_stock.purchase_toward_stock for a good with a service life."""
+    wear = min(1.0, 1.0 / life)
+    spoiled = min(1.0, max(0.0, spoilage))
+    serving = flow * life
+    after_losses = max(0.0, serving * (1.0 - wear - spoiled))
+    gap = max(0.0, after_losses - max(held, 0.0))
+    return (serving - after_losses) + DURABLE_GAP_CLOSED_SHARE * gap
+
+
+@njit
 def _affordable(r0, r1, household_budget, has_floor, pidx_of_need, row_floats, share, aff, qty, partials):
-    """households_ability.affordable_goods and quantity_per_need_unit for one need: `aff` is 1.0 on the goods one
-    household can pay a unit of, `qty` the units of each per need unit; returns the price cap to bid under."""
+    """households_ability.affordable_goods and quantity_per_need_unit for one need: `aff` is the share of households that
+    can pay a unit of each good (0 for none), `qty` the units of each per need unit; returns the price cap to bid under."""
     count = 0
     for r in range(r0, r1):
-        aff[r] = 1.0 if row_floats[r, RF_PRICE] <= household_budget else 0.0
+        aff[r] = _affordability(row_floats[r, RF_PRICE], household_budget, row_floats[r, RF_LIFE])
         qty[r] = 0.0
-        if aff[r] > 0.0:
-            count = _add(partials, count, share[r])
+        count = _add(partials, count, share[r] * aff[r])
     total = _total(partials, count)
     cap = household_budget
     if total <= 0.0:
@@ -268,11 +297,11 @@ def _affordable(r0, r1, household_budget, has_floor, pidx_of_need, row_floats, s
     count = 0
     for r in range(r0, r1):
         if aff[r] > 0.0:
-            count = _add(partials, count, share[r] / total * row_floats[r, RF_EFFECT] / row_floats[r, RF_PRICE])
+            count = _add(partials, count, share[r] * aff[r] / total * row_floats[r, RF_EFFECT] / row_floats[r, RF_PRICE])
     money_per_unit = min(pidx_of_need, 1.0 / _total(partials, count))
     for r in range(r0, r1):
         if aff[r] > 0.0:
-            qty[r] = money_per_unit * share[r] / total / row_floats[r, RF_PRICE]
+            qty[r] = money_per_unit * share[r] * aff[r] / total / row_floats[r, RF_PRICE]
     return cap
 
 
@@ -442,7 +471,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
                 if flow <= 0.0:
                     ratio = 0.0
                 else:
-                    ratio = max(0.0, flow * (stock_flow / flow) * life - row_floats[r, RF_HELD]) / flow
+                    ratio = _purchase_toward_stock(flow * (stock_flow / flow), row_floats[r, RF_HELD], life, row_floats[r, RF_SPOIL]) / flow
                     if stationary:
                         serving = stock_flow * life
                         wear = min(1.0, 1.0 / life)
@@ -451,7 +480,7 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
             if ratio > 0.0 and floor_quantity + flexible_quantity > 0.0:
                 row_scratch[r, W_FLOOR] = floor_quantity * ratio
                 row_scratch[r, W_FLEX] = flexible_quantity * ratio
-                row_scratch[r, W_CAP] = min(ceil[r], household_cap)
+                row_scratch[r, W_CAP] = min(ceil[r], household_cap * row_floats[r, RF_LIFE] if row_floats[r, RF_LIFE] > 1.0 else household_cap)
                 row_scratch[r, W_ON] = 1.0
     count = 0
     other = 0
