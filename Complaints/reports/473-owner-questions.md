@@ -35,6 +35,18 @@ The questions below stay as they were asked. The answers, and the state of each 
    budget and changes gradually (`households_work.hours_per_person_per_year`, `adjusted_hired_hours`,
    `household_servants.hired_hours_whole`).
 
+## The owner's answers to questions 10 to 12 (2026-11-17)
+
+"Go with your recommendations for 10-12 and keep fixing. ... My goal is purely, stabilize the economy. Find out why it
+is chaotic and not settling, and fix it." So:
+- **10.** The hidden spin-up stays closed to trade. England and the Norse settle on a slow fall of the money stock at
+  the loss rate until a civilisation's trade is part of its opening.
+- **11.** Done: the settle test reads a change in producers' inventory value against the year's real output
+  (`spin_up_gap.state_gaps`, `test_spin_up_measure`).
+- **12.** The first years' shortfall is taken first (Complaint 473 Update 34 and after); where the left-over coin goes
+  is decided when that holds.
+The owner also said the work need not follow the questions: the aim is an economy that settles and is realistic.
+
 ## The owner's answers to questions 8 and 9 (2026-11-17), and three new questions from Update 32
 
 **8. Households hold their wealth in other things than coin; source the loss rates.** Sourced
