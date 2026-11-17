@@ -132,7 +132,8 @@ class Deplete(unittest.TestCase):
 
     def run_new(self, rows, recipes, extraction):
         sim = types.SimpleNamespace(foreign=FakeDeposits(rows))
-        with mock.patch.object(port_sites, "_ore_recipes", return_value=recipes), \
+        typed = {recipe_id: row + (frozenset(), frozenset()) for recipe_id, row in recipes.items()}      # no deposit type names its own ore
+        with mock.patch.object(port_sites, "_ore_recipes", return_value=typed), \
                 mock.patch.object(port_sites.port_timber, "fell"), mock.patch.object(port_sites.port_timber, "regrow"), \
                 mock.patch.object(port_sites, "ore_tonnes_per_tonne", return_value=1.0):
             port_sites.deplete(sim, extraction, {})
