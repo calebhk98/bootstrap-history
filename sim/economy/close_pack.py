@@ -9,7 +9,7 @@ import numpy as np
 
 from sim.loans.close_kernel import producer_loans
 
-from . import ask_adjust, firm_finance, inventory, plant_investment, producers, producers_close
+from . import ask_adjust, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
 from .close_pack_markets import clearing_and_unmet, columns_of_markets
 from .close_pack_asks import ask_multiples
 from .close_pack_kernels import held_goods, pair_values_by_slot, slot_stocks
@@ -25,7 +25,7 @@ def constants_array() -> np.ndarray:
         producers_close.WORKING_CAPITAL_YEARS_OF_VARIABLE_COST, plant_investment.INVESTMENT_INERTIA,
         firm_finance.DIVIDEND_EARNINGS_RATIO, firm_finance.FULL_PAYOUT_YEARS_OF_REVENUE, firm_finance.DEBT_RESCALING_FACTOR,
         firm_finance.BANKRUPTCY_IDLE_YEARS, firm_finance.CASH_BUFFER_SHARE_OF_COSTS, firm_finance.ARREARS_EPSILON,
-        max(0, firm_finance.HISTORY_YEARS - 1)], dtype=np.float64)
+        max(0, firm_finance.HISTORY_YEARS - 1), expected_sales.SOLD_OUT_LEFT_SHARE], dtype=np.float64)
 
 
 @dataclass
