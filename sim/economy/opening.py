@@ -26,6 +26,7 @@ from .market_memory_areas import number_area_markets
 from . import merchants
 from .merchants import Merchant
 from .producers import Producer, paying_output
+from .producers_close import working_capital_target
 from .replaced import replaced
 from .carriage_record import CarriageRecord
 from .record import EconomyRecord
@@ -607,8 +608,8 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
 
 
 def _strike_opening_cash(setup, record, view, extra_spending) -> None:
-    """Each agent's opening purse is struck at the mint. A producer's is the year's variable cost of its plant
-    (the cash `producers_close.working_capital_target` keeps at the close), a merchant's its capital. A household's follows from
+    """Each agent's opening purse is struck at the mint. A producer's is the year's variable cost of its expected sales
+    (the cash `producers_close.working_capital_target` keeps), a merchant's its capital. A household's follows from
     what it owns of those producers (`equity.holdings`, what the spending rule reads as share wealth): the cash that
     brings cash plus share wealth to the wealth target, at which the rule spends exactly its income
     (opening_resting.resting_household_purse; Eurace manual 10.1.3), plus what a household whose plot frees part of its
@@ -617,7 +618,7 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
     transfers: List[Transfer] = []
     for producer in record.producers.values():
         recipe = setup.recipes[producer.recipe_id]
-        target = opening_resting.resting_producer_coin(recipe, producer.capacity_runs, setup.opening_prices, setup.opening_wages)
+        target = working_capital_target(recipe, producer.expected_sales, setup.opening_prices, setup.opening_wages)
         transfers.append(Transfer(EDGE_MINT, producer.agent_id, money, target, "opening coin"))
     for merchant in record.merchants.values():
         transfers.append(Transfer(EDGE_MINT, merchant.agent_id, money, merchant.capital_base, "opening coin"))
