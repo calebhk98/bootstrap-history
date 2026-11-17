@@ -4,7 +4,9 @@ A state is {"price_level", "rate", "prices": {good: price}, plus the quantities 
 "food_need"}. A change is relative to the earlier value, with the earlier value no smaller than a floor where the
 quantity can sit near zero: the rate against a declared floor, unmet need against the economy's whole food need
 (the food floor units its people need, sim/economy/spin_up_state.py `food_floor_units`), so a shortfall on one tile is read as the share of
-the economy's food it is.
+the economy's food it is, and producers' inventory value against the year's real output (both are quantities at the opening's
+prices): the goods markets clear inside the year, so the stock left is a small residual of a year's output, and a change in it
+is read as the share of a year's output it is (the owner's answer to question 11 of Complaints/reports/473-owner-questions.md).
 """
 from sim.constants import declare
 
@@ -15,7 +17,7 @@ SPIN_UP_RATE_FLOOR = declare(
     why="A rate shrinking by a fixed share toward zero would otherwise show that share as its yearly change "
         "for ever; below this rate the change is read as an absolute one.")
 # the state's scalar quantities and the floor each is measured against (zero: purely relative; unmet need's is the
-# earlier state's food need, `state_gaps`)
+# earlier state's food need and inventory value's its real output, `state_gaps`)
 QUANTITY_FLOORS = {"price_level": 0.0, "rate": SPIN_UP_RATE_FLOOR, "real_output": 0.0, "hired_hours": 0.0,
                    "inventory_value": 0.0, "unmet_need": 0.0}
 
@@ -60,6 +62,8 @@ def state_gaps(before, after):
             continue
         if name == "unmet_need":
             floor = before.get("food_need") or 0.0
+        if name == "inventory_value":
+            floor = before.get("real_output") or 0.0
         gaps[name] = 1.0 if after.get(name) is None else change_gap(after[name], before[name], floor)
     gaps["prices"] = price_gap(after["prices"], before["prices"])
     return gaps

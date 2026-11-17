@@ -12,7 +12,8 @@ def move(name, before, after):
     old, new = before.get(name), after.get(name)
     if old is None or new is None:
         return None
-    floor = RATE_FLOOR if name == "rate" else (before.get("food_need") or 0.0) if name == "unmet_need" else 0.0
+    floor = (RATE_FLOOR if name == "rate" else (before.get("food_need") or 0.0) if name == "unmet_need"
+             else (before.get("real_output") or 0.0) if name == "inventory_value" else 0.0)
     base = max(abs(old), floor)
     return abs(new - old) / base if base > 0.0 else (0.0 if new == old else 1.0)
 

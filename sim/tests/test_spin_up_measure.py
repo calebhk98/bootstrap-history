@@ -79,6 +79,14 @@ class WindowGapTests(unittest.TestCase):
     def test_fewer_than_two_states_measure_nothing(self):
         self.assertIsNone(spin_up_gap.window_gaps([_state()]))
 
+    def test_a_change_in_inventories_is_read_against_a_years_output(self):
+        gaps = spin_up_gap.state_gaps(_state(inventory_value=10.0, real_output=100.0), _state(inventory_value=11.0, real_output=100.0))
+        self.assertAlmostEqual(gaps["inventory_value"], 1.0 / 100.0)      # one unit of stock more, in a year that makes a hundred
+
+    def test_inventories_larger_than_a_years_output_are_read_against_themselves(self):
+        gaps = spin_up_gap.state_gaps(_state(inventory_value=400.0, real_output=100.0), _state(inventory_value=440.0, real_output=100.0))
+        self.assertAlmostEqual(gaps["inventory_value"], 40.0 / 400.0)
+
     def test_employment_and_inventories_and_unmet_need_count_toward_settled(self):
         for name, moved in (("hired_hours", 80.0), ("inventory_value", 30.0), ("unmet_need", 5.0)):
             gaps = spin_up_gap.window_gaps([_state(), _state(**{name: moved})])
