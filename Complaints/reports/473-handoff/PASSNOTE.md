@@ -216,8 +216,13 @@ What is in the way now, in the order to take it:
    (`producer_inputs_probe.py` on a millet farm and on a wooden-tool maker). Then trace what the merchants carry in
    the first year against what the opening's placement needs moved (`first_year_probe.py` shows England's makers one
    tile away from the only ore working a third of their runs).
-2. **A good in short supply is rationed for years because its price cannot leave the band above its cost**
-   (leather, linen, coal in England; Update 34). The buyers who would pay most do not get it.
+2. **A good in short supply is rationed for years because its price cannot leave the band above its cost, and the
+   rationing is pro rata among households and makers alike** (Update 34). England's shoemakers lose their leather
+   and Han's farms their tools to household spending, and Han's hunger follows from the second. Serve first the bids
+   that would pay most (a bid's maximum price) inside a priority tier: `goods_market_ration.ration` and its kernel
+   twin `goods_market_kernels.serve`, with the packers that order bids into tiers (`goods_market.py`,
+   `bid_columns.py`, `goods_pack_kernel.py`, `goods_market_demand.tier_bounds`). Probably the largest single step
+   left for Han.
 3. **The money stock falls every year in every civilisation** (owner question 13). Holding it for the length of the
    spin-up does not help the check (England the same, Norse a little worse); over a long run the fall takes the wage
    and the price level with it. A long-run matter, behind the two above.

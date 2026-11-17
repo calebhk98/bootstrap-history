@@ -1452,10 +1452,15 @@ reaching them. Neither can settle while this holds, and the yearly moves measure
 
 **Found and not fixed.**
 - **A good whose buyers want more than there is stays rationed for years, because its price cannot leave the band
-  above its cost** (`ask_adjust.band_edge`, `unsold_search.ask_limits`). England's households take the leather the
-  shoemakers were sized to use (leather meets clothing cheaply), the shoemakers work a quarter of their runs, and
-  shoes then have no price in most years, which the check counts as a full move. Linen and coal climb a few per
-  cent every year for the same reason.
+  above its cost** (`ask_adjust.band_edge`, `unsold_search.ask_limits`), **and the rationing is pro rata among
+  households' bids and producers' input bids alike** (`goods_market_ration.ration`, `goods_market_kernels.serve`:
+  one tier for both). England's households take the leather the shoemakers were sized to use (leather meets
+  clothing cheaply), the shoemakers work a quarter of their runs, and shoes then have no price in most years, which
+  the check counts as a full move. Han's wooden-tool makers work and sell all they are sized for
+  (`producer_inputs_probe.py`), yet its farms get next to none of the tools and work by hand: the households'
+  spending on implements takes them. A price that could rise would hand the good to whoever it is worth most to; a
+  maker's bid for an input states that worth (`producers.input_ceiling`) and is not used to rank it. Linen and coal
+  climb a few per cent every year for the band's reason.
 - **Inputs carried from the one tile that makes them do not arrive in the first year**: England's bloomeries work
   about a third of their runs, and the crops that wear iron tools about three quarters.
 - **Capacity grows only when buyers are turned away at the price**, and the search inside the year raises the price
