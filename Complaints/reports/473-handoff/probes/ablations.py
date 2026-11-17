@@ -2,6 +2,7 @@
 none edits a kernel, so a warm kernel cache stays valid.
 floor   the wage ask cannot fall below the subsistence wage (the floor is the outside option, not the plot's worth)
 nowear  coin does not wear
+held    coin wears only as far as the mint struck in the year (the stock cannot fall; it rises where the mint strikes more)
 """
 import dataclasses
 
@@ -26,4 +27,25 @@ def _nowear():
     metal_stock.wear_share = lambda spec: None
 
 
-SWITCHES = {"floor": _floor, "nowear": _nowear}
+def _held():
+    from sim.economy import metal_stock, wear_year
+    from sim.economy.types import EDGE_MINT
+    original, share_of = wear_year._wear_coin, metal_stock.wear_share
+
+    def patched(book, spec, order):
+        worn = share_of(spec)
+        if worn is None:
+            return original(book, spec, order)
+        share, purpose = worn
+        supply = book.money_supply(spec.currency_id)
+        struck = max(0.0, book.edge_net(EDGE_MINT, spec.currency_id))
+        capped = min(share, struck / supply) if supply > 0.0 else share
+        metal_stock.wear_share = lambda _spec: (capped, purpose)
+        try:
+            return original(book, spec, order)
+        finally:
+            metal_stock.wear_share = share_of
+    wear_year._wear_coin = patched
+
+
+SWITCHES = {"floor": _floor, "nowear": _nowear, "held": _held}

@@ -198,8 +198,10 @@ Measured on the head (`ensemble_years.py`, then `ensemble_moves.py`; England 8 m
 - **Norse: the price level, rate, unmet need and wage are under the tolerance on average; hired hours are about at
   it, output and inventory value about half as much again.** Its economy now keeps about three quarters of the
   opening's hours where it kept about half.
-- **Han: the price level is under the tolerance; hired hours, output, the rate and the wage are between one and two
-  times it** (hours and the wage were several times it). Unmet need and inventory value are several times it.
+- **Han: the price level is under the tolerance and the rate about at it; hired hours, output and the wage are
+  between one and a half and two times it** (hours were over three times it and the wage many times). Its hours and
+  output still shrink through the trimmed stage, and unmet need and inventory value move by several times the
+  tolerance.
 - All three still fail on the watched prices. `spin_up_settled` passes for none.
 
 What is in the way now, in the order to take it:
