@@ -2,6 +2,8 @@
 none edits a kernel, so a warm kernel cache stays valid.
 floor   the wage ask cannot fall below the subsistence wage (the floor is the outside option, not the plot's worth)
 nowear  coin does not wear
+nominal     the wage ask's base and floor stay at the first year's figures (wages do not follow prices by rule)
+notoolbids  households place no bids for the tools their own plots wear
 held    coin wears only as far as the mint struck in the year (the stock cannot fall; it rises where the mint strikes more)
 """
 import dataclasses
@@ -48,4 +50,25 @@ def _held():
     wear_year._wear_coin = patched
 
 
-SWITCHES = {"floor": _floor, "nowear": _nowear, "held": _held}
+def _nominal():
+    """The wage ask's price-indexed base and floor are held at the first year's figures: wages move only with the labour market."""
+    from sim.economy import economy as economy_module
+    original = economy_module.labour_context
+    held = {}
+
+    def patched(*args, **kwargs):
+        context = original(*args, **kwargs)
+        if not held:
+            held["subsistence"] = dict(context.subsistence_per_worker_year)
+            held["floor"] = dict(context.ask_floor_per_worker_year)
+        return dataclasses.replace(context, subsistence_per_worker_year=dict(held["subsistence"]),
+                                   ask_floor_per_worker_year=dict(held["floor"]))
+    economy_module.labour_context = patched
+
+
+def _notoolbids():
+    from sim.economy import year_order_sources
+    year_order_sources.tool_wear.tool_bids = lambda *args, **kwargs: []
+
+
+SWITCHES = {"floor": _floor, "nowear": _nowear, "held": _held, "notoolbids": _notoolbids, "nominal": _nominal}

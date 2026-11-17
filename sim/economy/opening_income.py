@@ -234,11 +234,12 @@ def working_share(recipe, prices: Mapping[GoodId, float], wages: Mapping[str, fl
     """Share of a producer's plant that works at the opening prices: only the workplaces whose own cost the
     revenue (at the tile's yield factor) covers do (producers.share_working), so a producer sized to the runs
     households' demand needs has that much more plant than it works, and the first year's plan (plant times this
-    share) is the runs it was sized for. A run that cannot be priced counts as working in full (the first year's
-    plan finds out)."""
+    share) is the runs it was sized for where a run covers its cost. A run that cannot be priced counts as working in
+    full (the first year's plan finds out)."""
     variable = unit_cost.variable_cost_per_run(recipe, prices, wages, rent_per_run)
     revenue = unit_cost.revenue_per_run(recipe, prices) * yield_factor
     if not math.isfinite(variable) or variable <= 0.0 or revenue <= 0.0:
         return 1.0
-    share = producers.share_working(revenue, variable)
-    return share if share > 0.0 else 1.0      # a run that earns next to nothing is sized to its runs; the first year's plan finds it does not pay
+    # never under the share that works when a run just covers the mean cost: a run priced under its cost would size a plant,
+    # and the coin to run it, many times its runs; the first year's plan finds it does not pay
+    return max(producers.share_working(revenue, variable), producers.share_working(1.0, 1.0))
