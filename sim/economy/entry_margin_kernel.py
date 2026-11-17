@@ -4,8 +4,8 @@ with bids, in market order, each plan sited on the tile that suits it with the s
 Both read, per market, its good column, anchor tile row, place in the year's bids block (`block` as in `entry_unmet_kernel`), price now
 (NaN: none) and its recipes in the order tried (`rank_first`, `rank_count` into `rank_recipe` and `rank_cost`, cheapest first, the full
 cost per unit of the good). They write rows of `plans` (`entry_plan_table.py`) and return how many it holds, or minus one when it is full.
-The margin also reads each market's reachable capacity, expected price, years the expected price has stood above the entry price and whether
-an earlier plan took the market (`skipped`), and writes `years_out` and `counted` (a market whose streak the rule keeps)."""
+The margin also reads each market's reachable capacity, expected price, standing (years of margin, as `entry_margin.margin_standing`) and whether
+an earlier plan took the market (`skipped`), and writes `years_out` and `counted` (a market whose standing the rule keeps)."""
 import numpy
 
 from sim.compiled_tables.growth import NO_ROOM, claim_row
@@ -22,15 +22,19 @@ from .year_arrays_costs import KERNEL
 
 
 @njit(**KERNEL)
-def streak_after(years, expected_price, entry_price):
-    """`entry_margin.margin_streak`: the years in a row the expected price has stood above the entry price, after this year."""
-    return years + 1 if expected_price > entry_price else 0
+def standing_after(standing, expected_price, entry_price):
+    """`entry_margin.margin_standing`."""
+    if not entry_price > 0.0:
+        return 0.0
+    band = entry_price * ENTRY_PRICE_MARGIN_SHARE / (1.0 + ENTRY_PRICE_MARGIN_SHARE)
+    signal = min(1.0, max(-1.0, (expected_price - entry_price) / band))
+    return min(float(LOSS_YEARS_BEFORE_EXIT), max(0.0, standing + signal))
 
 
 @njit(**KERNEL)
-def streak_has_lasted(years):
-    """`entry_margin.margin_has_lasted`."""
-    return years >= LOSS_YEARS_BEFORE_EXIT
+def margin_share_of(standing):
+    """`entry_margin.margin_share`."""
+    return min(1.0, max(0.0, standing - (LOSS_YEARS_BEFORE_EXIT - 1)))
 
 
 @njit(**KERNEL)
@@ -54,9 +58,10 @@ def margin_plans(market_good, market_anchor, market_place, market_capacity, mark
         counted[market] = True
         good, price, expected = market_good[market], market_price[market], market_expected[market]
         first = rank_first[market]
-        years_out[market] = streak_after(market_years[market], min(expected, price) if price > 0.0 else expected,
-                                          rank_cost[first] * (1.0 + ENTRY_PRICE_MARGIN_SHARE))
-        if market_skipped[market] or not streak_has_lasted(years_out[market]):
+        years_out[market] = standing_after(market_years[market], min(expected, price) if price > 0.0 else expected,
+                                           rank_cost[first] * (1.0 + ENTRY_PRICE_MARGIN_SHARE))
+        share = margin_share_of(years_out[market])
+        if market_skipped[market] or share <= 0.0:
             continue
         ceiling = min(expected, price if price > 0.0 else expected)
         capacity = market_capacity[market]
@@ -68,7 +73,7 @@ def margin_plans(market_good, market_anchor, market_place, market_capacity, mark
                 break
             recipe = rank_recipe[position]
             gap = max(0.0, demand_in_market(block, market_place[market], entry_price, price if price > 0.0 else entry_price) - capacity)
-            added = min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
+            added = share * min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
             made = outputs[recipe, good]
             runs = added / made
             tile = market_anchor[market]

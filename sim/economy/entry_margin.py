@@ -42,13 +42,20 @@ MARGIN_ENTRY_SHARE_OF_GAP = declare(
 MARGIN_ENTRY_GROWTH_SHARE = OUTPUT_CHANGE_SHARE_PER_YEAR
 
 
-def margin_streak(years: int, expected_price: float, entry_price: float) -> int:
-    """Years in a row the expected price has stood above the entry price, after this year."""
-    return years + 1 if expected_price > entry_price else 0
+def margin_standing(standing: float, expected_price: float, entry_price: float) -> float:
+    """Years of standing the margin has after this year: the old standing plus the year's signal, kept from nothing to the wait. The signal is how
+    far the expected price stands above the entry price as a share of the margin the entry price adds to the cost, held to a year either way:
+    a whole margin above adds a year, the entry price itself changes nothing, the cost takes a year off. An entry price that is not positive leaves nothing."""
+    if not entry_price > 0.0:
+        return 0.0
+    band = entry_price * ENTRY_PRICE_MARGIN_SHARE / (1.0 + ENTRY_PRICE_MARGIN_SHARE)
+    signal = min(1.0, max(-1.0, (expected_price - entry_price) / band))
+    return min(float(LOSS_YEARS_BEFORE_EXIT), max(0.0, standing + signal))
 
 
-def margin_has_lasted(years: int) -> bool:
-    return years >= LOSS_YEARS_BEFORE_EXIT
+def margin_share(standing: float) -> float:
+    """The share of the year's margin entry that goes ahead: nothing until the standing is within a year of the wait, all of it at the wait."""
+    return min(1.0, max(0.0, standing - (LOSS_YEARS_BEFORE_EXIT - 1)))
 
 
 def gap_at_entry_price(bids: Sequence[Bid], entry_price: float, price_now: float, capacity: float) -> float:
@@ -56,8 +63,8 @@ def gap_at_entry_price(bids: Sequence[Bid], entry_price: float, price_now: float
     return max(0.0, demand_at(bids, entry_price, price_now if price_now > 0.0 else entry_price) - capacity)
 
 
-def keep_streaks(record, kept: Dict[str, int]) -> None:
-    """`record.goods.margin_years` holds the streaks of `kept` (market key -> years) and no other market's: a market not weighed this year
+def keep_streaks(record, kept: Dict[str, float]) -> None:
+    """`record.goods.margin_years` holds the streaks of `kept` (market key -> years of standing) and no other market's: a market not weighed this year
     starts its wait again. The column (or dictionary) is changed in place."""
     margin_years = record.goods.margin_years
     if isinstance(margin_years, MarketColumn):
@@ -71,8 +78,8 @@ def keep_streaks(record, kept: Dict[str, int]) -> None:
 def margin_entry_plans(setup, record, view, area_map, bids_by_market, planned: Sequence[Tuple[GoodId, AreaId]] = (), siting=None, costs=None,
                        weighed=None) -> List[EntryPlan]:
     """Newcomers for each market with makers whose expected price has stood above its entry price for
-    long enough: every recipe whose entry price is under the expected price, cheapest first, shares the
-    year's growth. Keeps the market's streak in `record.goods.margin_years`; a market with no maker, no costable recipe, no price or no bids this year loses its streak.
+    long enough (in proportion to how long it has stood): every recipe whose entry price is under the expected price, cheapest first, shares the
+    year's growth. Keeps the market's standing in `record.goods.margin_years`; a market with no maker, no costable recipe, no price or no bids this year loses its standing.
     With `costs` (entry_tables.EntryTables) the recipes of all the markets are costed at once. `bids_by_market` is the year's bids block
     (`year_bids.YearBids`) or a mapping of market to bids; `weighed` the block's markets as `entry_bid_markets.weigh` made them (made here when
     not given). The demands at every entry price a market could reach are worked out first in one call (they do not depend on the plans
@@ -104,10 +111,11 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market, planned: S
         counted.add(key)
         # the margin must be there in the smoothed price and in the year's price: entry that waited on the
         # smoothed price alone kept adding makers for years after the price had fallen to cost
-        record.goods.margin_years[key] = margin_streak(
-            record.goods.margin_years.get(key, 0), min(expected, price) if price > 0.0 else expected,
+        record.goods.margin_years[key] = margin_standing(
+            record.goods.margin_years.get(key, 0.0), min(expected, price) if price > 0.0 else expected,
             ranked[0][1] * (1.0 + ENTRY_PRICE_MARGIN_SHARE))
-        if (each.good, each.area_id) in skip or not margin_has_lasted(record.goods.margin_years[key]):
+        share = margin_share(record.goods.margin_years[key])
+        if (each.good, each.area_id) in skip or share <= 0.0:
             continue
         ceiling = min(expected, price if price > 0.0 else expected)
         entries = []
@@ -119,10 +127,10 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market, planned: S
             places.append(each.place)
             prices.append(entry_price)
             prices_now.append(price if price > 0.0 else entry_price)
-        reached.append((each, expected, entries, len(places) - len(entries)))
+        reached.append((each, expected, entries, len(places) - len(entries), share))
     demands = block.demand_at_many(places, prices, prices_now).tolist()
     plans = []
-    for each, expected, entries, asked in reached:
+    for each, expected, entries, asked, share in reached:
         capacity = each.capacity
         room = MARGIN_ENTRY_GROWTH_SHARE * capacity
         for recipe_id, cost in entries:
@@ -130,7 +138,7 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market, planned: S
                 break
             gap = max(0.0, demands[asked] - capacity)
             asked += 1
-            added = min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
+            added = share * min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
             runs = added / setup.recipes[recipe_id].outputs[each.good]
             tile = each.area.anchor_tile
             if siting is not None and runs > 0.0:

@@ -69,13 +69,13 @@ def skipped_cells(costs, plans) -> np.ndarray:
 
 
 def _streaks_in(costs, record) -> np.ndarray:
-    """(good column, area column): the years in a row each market's expected price has stood above its entry price (`margin_years`)."""
+    """(good column, area column): the standing in years of each market's margin (`margin_years`)."""
     index = costs.arrays.area_index
-    grid = np.zeros((len(costs.goods.ids), max(1, len(index.areas.ids))), dtype=np.int64)
+    grid = np.zeros((len(costs.goods.ids), max(1, len(index.areas.ids))), dtype=np.float64)
     good_rows, area_columns = market_cells(record.memory, costs.goods, index)
     streak = record.goods.margin_years.take(np.arange(len(good_rows), dtype=np.int64))
     rows = np.flatnonzero(~np.isnan(streak))
-    values = streak[rows].astype(np.int64)
+    values = streak[rows]
     found = (good_rows[rows] >= 0) & (area_columns[rows] >= 0)
     grid[good_rows[rows[found]], area_columns[rows[found]]] = values[found]
     return grid
@@ -92,11 +92,11 @@ def _usual_prices(costs, record) -> np.ndarray:
 
 
 def _write_streaks(costs, record, weighed: Weighed, years_out, counted) -> None:
-    """The streaks the rule keeps are the markets it counted; any other market's streak starts again (`margin_years` in place)."""
+    """The standings the rule keeps are the markets it counted; any other market's standing starts again (`margin_years` in place)."""
     ids_good, ids_area = costs.goods.ids, costs.arrays.area_index.areas.ids
     keep = {}
     for position in np.flatnonzero(counted).tolist():
-        keep[market_key(ids_good[weighed.good[position]], ids_area[weighed.area[position]])] = int(years_out[position])
+        keep[market_key(ids_good[weighed.good[position]], ids_area[weighed.area[position]])] = float(years_out[position])
     keep_streaks(record, keep)
 
 
@@ -109,7 +109,7 @@ def margin_plan_table(costs, record, block, weighed: Weighed, skipped: np.ndarra
     expected = np.where(np.isnan(usual), price, usual)
     recipe, cost, first, count = ranked_by_cost(costs, weighed.good[chosen], weighed.anchor[chosen], MARGIN_ENTRY_GROWTH_SHARE * weighed.capacity[chosen])
     plans = entry_plan_table.empty(len(recipe))
-    years_out = np.zeros(len(chosen), dtype=np.int64)
+    years_out = np.zeros(len(chosen), dtype=np.float64)
     counted = np.zeros(len(chosen), dtype=np.bool_)
     if len(chosen):
         entry_plan_pack.site_tables(costs, recipe)
