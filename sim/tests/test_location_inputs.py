@@ -96,11 +96,27 @@ class MaterialOrientationTests(unittest.TestCase):
                                                 [(area("market"), 10.0)], ["market"])
         self.assertEqual(placed, {})
 
-    def test_a_tile_without_hands_for_the_run_takes_only_what_it_can_staff(self):
-        setup, record = world(list(self.record.producers.values()), self.recipes, {"mine": 0.1, "market": 1000.0})
+    def test_a_tile_takes_no_more_runs_than_all_its_hands_could_work(self):
+        # 0.05 people give 50 hours a year (half of them work, 2000 hours each); a smelting run takes 10
+        setup, record = world(list(self.record.producers.values()), self.recipes, {"mine": 0.05, "market": 1000.0})
+        placed = location_inputs.place_oriented(setup, record, Areas(), Carriage(), SMELT, {ORE: "mine"},
+                                                [(area("market"), 10.0)], ["market", "mine"])
+        self.assertEqual(placed, {"mine": 5.0})
+
+    def test_a_tile_with_nobody_hosts_no_processor(self):
+        setup, record = world(list(self.record.producers.values()), self.recipes, {"mine": 0.0, "market": 1000.0})
         placed = location_inputs.place_oriented(setup, record, Areas(), Carriage(), SMELT, {ORE: "mine"},
                                                 [(area("market"), 10.0)], ["market", "mine"])
         self.assertEqual(placed, {})      # the mine tile has nobody and the market tile no ore
+
+    def test_hands_the_producers_already_placed_would_take_do_not_shut_the_processor_out_of_its_only_site(self):
+        # the mine tile's 1000 people give a million hours; a foundry placed there already wants two million.
+        # The ore is the mine tile's alone, so the smelter opens there and bids for hands like every other producer
+        busy = Producer("producer:cast@mine", "owner", "cast", "mine", 200000.0)
+        setup, record = world(list(self.record.producers.values()) + [busy], self.recipes, self.people)
+        placed = location_inputs.place_oriented(setup, record, Areas(), Carriage(), SMELT, {ORE: "mine"},
+                                                [(area("market"), 10.0)], ["market", "mine"])
+        self.assertEqual(placed, {"mine": 10.0})
 
     def test_fixed_inputs_are_those_a_sited_recipe_makes(self):
         limits = {"mine": {"mine": SimpleNamespace()}}
