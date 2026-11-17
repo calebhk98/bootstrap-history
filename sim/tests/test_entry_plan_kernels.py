@@ -9,7 +9,7 @@ from types import SimpleNamespace
 import numpy
 
 from sim.economy import entry_margin, entry_plan_table, entry_sizing
-from sim.economy.entry_margin_kernel import streak_after, streak_has_lasted
+from sim.economy.entry_margin_kernel import margin_share_of, standing_after
 from sim.economy.entry_plan_steps import (NO_TILE, SITES, SIZING, SiteTables, SizingTables, candidate_tiles, runs_supported, sized_runs_at,
                                           site_newcomer)
 
@@ -62,12 +62,12 @@ class SizedRunsTests(unittest.TestCase):
             self.assertEqual(found, expected)
 
 
-class StreakTests(unittest.TestCase):
-    def test_the_streak_and_its_having_lasted_are_the_plain_rules(self):
-        for years in range(0, 8):
-            for expected_price, entry_price in ((2.0, 1.0), (1.0, 1.0), (0.5, 1.0)):
-                self.assertEqual(streak_after(years, expected_price, entry_price), entry_margin.margin_streak(years, expected_price, entry_price))
-            self.assertEqual(streak_has_lasted(years), entry_margin.margin_has_lasted(years))
+class StandingTests(unittest.TestCase):
+    def test_the_standing_and_its_share_are_the_plain_rules(self):
+        for standing in (0.0, 0.5, 1.0, 2.0, 2.5, 3.0):
+            for expected_price, entry_price in ((2.0, 1.0), (1.0, 1.0), (0.5, 1.0), (1.1, 1.0), (1.0, 0.0)):
+                self.assertEqual(standing_after(standing, expected_price, entry_price), entry_margin.margin_standing(standing, expected_price, entry_price))
+            self.assertEqual(margin_share_of(standing), entry_margin.margin_share(standing))
 
 
 def site_arrays(tiles, runs_anywhere, sited=False, order=()):

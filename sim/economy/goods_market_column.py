@@ -3,8 +3,8 @@
 `MarketColumn` is `merchant_figures.MarketFigures` keyed by the market's name (`market_key(good, area)`: `good|area`), which is how
 `record.goods.volumes`, `unsold`, `unmet` and `margin_years` were keyed as dictionaries. Whole-column readers and writers take `values`,
 `take(rows)`, `put(rows, figures)` and `replace_rows(rows, figures)`; a reader that asks about one market uses the mapping's `get`, `[]`,
-`in`, `items`. Iteration lists the markets in (good, area) order. A column made with `integer=True` answers whole numbers (the streaks of
-`margin_years`); it is stored as floats, which hold them exactly.
+`in`, `items`. Iteration lists the markets in (good, area) order. A column made with `integer=True` answers whole numbers (for a column of counts);
+it is stored as floats, which hold them exactly.
 
 The column follows a redraw of the market areas by `follow` (`market_areas_follow`), and is bound to a record's numbering by `bind`
 (`record.EconomyRecord`); the save writes it as `{market name: figure}` in name order (`saved`) and a load hands it back (`hold_named`)."""
