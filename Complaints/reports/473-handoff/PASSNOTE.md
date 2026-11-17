@@ -126,6 +126,7 @@ Patches are in `unmerged/` (against the `spin-up-settles` commit they were made 
 |---|---|---|
 | branch `opening-cash-at-the-yearly-steady-state` (the `opening-grown-floor-budget` patch re-applied) | the opening meets own-plot floors before sizing the budget, as the yearly rule does (owner question 3, option a) | alone it calms England and Norse; on top of the durable rule England's hours move more and Han's hours and wage swing far more. The cause in Han is not traced |
 | branch `learning-path-plan` | a crew still learning judges whether to run on the discounted cost of its learning path; entry takes the same path (owner question 6) | Mexica's wooden-tool crews go from no runs to a fraction of one: entry sizing still holds them to nothing, so it does not yet do what it is for |
+| branch `sold-out-ramp-and-margin` | (a) a producer counts its market's unmet demand in proportion to how nearly it sold out, on a narrow ramp where there was a rounding-share threshold; (b) the margin-entry streak is a standing that moves by how far the price stands from the entry price, entry goes ahead in proportion to it, and a recipe's entry is drawn in proportion to how far the price stands above its entry price | both rules are amplifiers the late twin probe found at the head, and both have rule tests; measured together, England is level and Norse's hours and output move nearly twice as much. Not separated. An earlier form of (a), counting unmet demand net of the stock left, made England and Norse move more on its own: anything that makes producers count more unmet demand seems to make them chase it |
 | `grinding-share-continuous.patch` | grind-or-buy-milled a logit share per grain | measured before household work was fixed; not re-measured |
 | `inflation-trimmed-mean.patch` | observed inflation a weighted trimmed mean | the rate moved as much or more |
 | `stock-offered-in-tranches.patch` | held stock offered as up to four lots of a year's sales | inventory value moved as much |
@@ -148,7 +149,10 @@ requirement of section 1. Question 2 needs nothing. Questions 3 and 6 are built 
    (Complaints 961, 970). England is the traced case; Norse and Han lose their whole yearly loss too.
 4. Mexica: trace why output shrinks through the spin-up; then entry sizing for a trade nobody practises, so question 6
    can be merged.
-5. The single goods that saw and the first years' amplifiers named in Update 30, with the twin probe.
+5. The single goods that saw and the amplifiers named in Update 30, with the twin probe. Judge an amplifier fix on the
+   growth of the twins' difference (`late_twin_probe.py`) as well as on the yearly moves: a fix that removes a jump can
+   still make the economy move more (section 5, `sold-out-ramp-and-margin`), and then the rule it smooths is itself
+   suspect (a producer adding its market's unmet demand to its sales, entry on a margin).
 6. Rome, once the others are close: one member takes long, so measure it last.
 
 Before any PR: `python3 -m sim.tests --slow`, then rebuild openings as the last commit

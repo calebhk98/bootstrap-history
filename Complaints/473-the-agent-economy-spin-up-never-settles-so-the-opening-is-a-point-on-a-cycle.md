@@ -1102,6 +1102,14 @@ its own pinned worktree:
   (`Complaints/reports/research-how-an-unpractised-crew-starts.md`). On Mexica the wooden-tool crews go from no runs to
   a fraction of a run: the plan no longer refuses, but entry sizes the crew to almost nothing, so tools are still not
   made.
+- `sold-out-ramp-and-margin`: two amplifiers the late twin probe found at the branch head, each made continuous with
+  rule tests. A producer added its share of its market's unmet demand to its sales only when its stock left was under
+  a rounding share of them (`expected_sales.demand_seen`); the branch makes that a narrow ramp. A market's count of
+  years with its price over the entry price went back to nothing when the price touched the entry price, and margin
+  entry was all or nothing (`entry_margin.margin_streak`); the branch makes it a standing that moves by how far the
+  price stands from the entry price, with entry in proportion. Measured together, England is level and Norse's hours
+  and output move nearly twice as much, so neither is merged; they were not measured apart, and the growth of the
+  twins' difference with them was not measured.
 
 **Found and not fixed** (each seen in a probe; none has a fix on the branch):
 - **England's money stock wears away, so England's settled state is a deflation at the wear rate.** The coin-metal
@@ -1126,7 +1134,10 @@ its own pinned worktree:
   dropped: the step that raises an ask when stock is under its cover is the only thing that raises asks between years.
 - **The rate follows the year's inflation** (Update 28). Its relative move stays under the tolerance only when the
   yearly inflation is steady to a small fraction of a per cent, so it settles last.
-- **The first years still amplify.** Twins part within the first years of the first stage. Seen in the second year's
-  differences: a producer's expected sales adding the market's unmet demand when its stock is a rounding share of its
-  sales and not otherwise (`expected_sales.demand_seen`), a market's memory moving by a different rule when it traded and
-  when it did not, and capacity shed or grown on the sign of the margin (`close_kernel`).
+- **Differences still grow.** Twins part within the first years of the first stage, and late in the trimmed stage
+  their difference still grows about fourfold a year. Seen in the differences: a producer's expected sales adding the
+  market's unmet demand when its stock is a rounding share of its sales and not otherwise (`expected_sales.demand_seen`),
+  a market's margin-entry streak resetting when its price touches the entry price (`entry_margin.margin_streak`; one
+  twin kept a streak of decades, the other lost it), a market's memory moving by a different rule when it traded and
+  when it did not, and capacity shed or grown on the sign of the margin (`close_kernel`). The first two are made
+  continuous on branch `sold-out-ramp-and-margin` (above).
