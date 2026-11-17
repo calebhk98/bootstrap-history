@@ -186,7 +186,7 @@ members, not eight: its members fall into a calm kind and a zigzag kind, and eig
 Update 34 took the first item of section 6a (the first years do not reproduce the opening) and found four faults in
 how the opening is built and one in the hiring rounds, each fixed with a rule test: a site-bound recipe with no
 declared site stood whole on one tile; a processor tied to its input's site got no tile when the hands there were
-spoken for, and served every market from one tile; an employer with most of a market's posts could not staff them;
+spoken for; an employer with most of a market's posts could not staff them;
 the opening ignored the land limits it had itself cleared (holding producers to them closes wheat and cheese, whose
 plough teams and milk no opening producer makes: owner question 15); an input's price limit ignored the wages
 already committed. The settle test now reads inventory
@@ -205,6 +205,11 @@ Measured on the head (`ensemble_years.py`, then `ensemble_moves.py`; England 8 m
   output still shrink through the trimmed stage, and unmet need and inventory value move by several times the
   tolerance.
 - All three still fail on the watched prices. `spin_up_settled` passes for none.
+
+Tried in this round and not merged, each measured on ensembles (Update 34 has the figures): the households' mix
+anchored on usual spending, producers hiring within their inputs' reach, a sited-input processor placed per market
+(better first year in Han, larger yearly moves in Norse and Han), holding the coin stock, and leaving wheat and
+cheese open.
 
 What is in the way now, in the order to take it:
 1. **Han and the Norse lands are hungry from the first year** (`hunger_probe.py`): about two fifths of Han's food

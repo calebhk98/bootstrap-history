@@ -1400,10 +1400,6 @@ every year, linen and coal rise by more than it every year. Three things lie und
   fit then held every user of its output to nothing. With the first fix England's only iron-ore tile was in that
   state and the whole iron chain opened at nothing. It is now capped at what all the tile's hands could work and
   shares them with the others through the labour market.
-- **A processor tied to a sited input served every market from one tile** (`location_inputs.place_oriented`;
-  `test_location_inputs`). Its runs for all markets went to the tile cheapest on average, as far as the supply and
-  hands there allowed, so Han's wooden tools and pottery opened whole on one tile each. Each market's runs now go to
-  the tiles cheapest for that market.
 - **The hiring rounds starved an employer with most of a market's posts** (`hiring_kernel._shares_of_prefix`,
   `labour_hiring_reference._taken_by`; `test_labour_eurace_applications`, `test_year_speed_labour_hiring`). A
   searching household applied to a few posters picked evenly. A producer here stands for every workplace of its
@@ -1430,11 +1426,20 @@ every year, linen and coal rise by more than it every year. Three things lie und
   11; `spin_up_gap.state_gaps`, `test_spin_up_measure`).
 
 **What the first year works of the output the opening sized** (`first_year_probe.py <civ>`): England about nine
-tenths (about three quarters at the start of Update 33), Norse more than four fifths, Han about two thirds (under two
-fifths before). Hours staffed are within a few per cent of hours sized in all three; what is left is hours hired
-and not worked, for want of an input or a tool. Han's farms work about two fifths of the runs they hire hands for:
-the opening has next to no iron tools there (its iron chain is sized at next to nothing while its ores are dug) and
-the wooden tools the opening sizes in their place do not reach the farms, so the work is done by hand.
+tenths (about three quarters at the start of Update 33), Norse more than four fifths, Han somewhat under three
+fifths (under two fifths before). Hours staffed are within a few per cent of hours sized in all three; what is left
+is hours hired and not worked, for want of an input or a tool. Han's farms work about two fifths of the runs they
+hire hands for: the opening has next to no iron tools there (its iron chain is sized at next to nothing while its
+ores are dug) and the wooden tools the opening sizes in their place do not reach the farms, so the work is done by
+hand.
+
+**The yearly moves on the head** (`ensemble_years.py`, `ensemble_moves.py`; England 8 members, Norse 24, Han 12):
+England's hired hours, output, price level, inventory value, rate, unmet need and wage all move under the tolerance,
+on average and at the end gap. Norse's price level, rate, unmet need and wage are under it, hired hours about at it,
+output and inventory value about half as much again; it keeps about three quarters of the opening's hours where it
+kept about half. Han's price level is under it and the rate about at it; hired hours, output and the wage are
+between one and a half and two times it (hours were over three times it, the wage many times). The watched prices
+fail in all three.
 
 **Han and the Norse lands are hungry from the first year** (`hunger_probe.py <civ>`). About two fifths of Han's
 food need and a sixth of Norse's is unmet in year one, before any yearly dynamics. In Han the hungry are on fertile,
@@ -1449,6 +1454,13 @@ reaching them. Neither can settle while this holds, and the yearly moves measure
 - **Producers hire within what their inputs' markets can supply** (branch `plans-within-reach`): hiding the shortage
   from the plan hid it from prices and entry as well; bidding for the whole plan while hiring within reach stirred
   late prices and inventories.
+- **A processor tied to a sited input serves each market from the site nearest to it** (commit `fafd2cf4`, reverted
+  after it; `location_inputs.place_oriented` sends every market's runs to the one tile cheapest on average, so Han's
+  wooden tools and pottery open whole on one tile each). Spread per market, Han's first year works about two thirds
+  of its sized output where it worked under three fifths, but over the spin-up England moved the same, Norse more
+  (three of 24 members rough where none were) and Han more in hours, output, the price level and the wage.
+- **The land fit leaving alone the users of a land-bound good that no opening producer makes** (wheat, cheese):
+  England's totals moved nearly twice as much (above).
 
 **Found and not fixed.**
 - **A good whose buyers want more than there is stays rationed for years, because its price cannot leave the band
