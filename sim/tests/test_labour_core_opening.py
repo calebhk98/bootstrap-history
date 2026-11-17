@@ -47,6 +47,26 @@ class OpeningTests(unittest.TestCase):
         self.assertAlmostEqual(by_trade["plougher"], 850.0)
         self.assertAlmostEqual(records.people_in(state), 1000.0)
 
+    def test_an_area_short_of_people_gives_every_trade_the_same_share_of_its_need(self):
+        registry = dict(REGISTRY, plougher={"family": "toil", "training_years": 1})
+        specs = trades.trade_specs(registry)
+        needs = {"carver": 60 * HOURS, "plougher": 90 * HOURS, "digger": 150 * HOURS}
+        state = opening.opening_state(specs, {"vale": 200.0}, {"vale": needs}, HOURS, "plougher")
+        by_trade = {trade: aptitude.band_total(bands) for trade, bands in state.workers["vale"].items()}
+        for trade, hours in needs.items():      # 200 people for the work of 300: two thirds of each
+            self.assertAlmostEqual(by_trade[trade], hours / HOURS * 200.0 / 300.0, places=6, msg=trade)
+        self.assertAlmostEqual(records.people_in(state), 200.0)
+
+    def test_an_area_with_people_to_spare_staffs_each_trade_in_full(self):
+        registry = dict(REGISTRY, plougher={"family": "toil", "training_years": 1})
+        specs = trades.trade_specs(registry)
+        needs = {"carver": 60 * HOURS, "plougher": 90 * HOURS, "digger": 150 * HOURS}
+        state = opening.opening_state(specs, {"vale": 400.0}, {"vale": needs}, HOURS, "plougher")
+        by_trade = {trade: aptitude.band_total(bands) for trade, bands in state.workers["vale"].items()}
+        self.assertAlmostEqual(by_trade["carver"], 60.0)
+        self.assertAlmostEqual(by_trade["digger"], 150.0)
+        self.assertAlmostEqual(by_trade["plougher"], 90.0 + 100.0)      # its own work and the people nobody needs
+
     def test_a_year_runs_from_the_opening(self):
         inputs = records.YearInputs(
             trades=self.specs, bids=[records.EmployerHoursBid("yard", "carver", "vale", 100 * HOURS, 5.0)],
