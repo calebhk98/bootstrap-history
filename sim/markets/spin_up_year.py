@@ -18,6 +18,19 @@ def watched_goods_of(basket, prices, count):
     return sorted(basket, key=lambda good: -basket[good] * prices.get(good, 0.0))[:count]
 
 
+def spending_shares(basket, prices, goods):
+    """{good: its share of the spending on `goods`} at `basket` quantities and `prices` (a good with no price spends
+    nothing); empty when nothing is spent on them."""
+    spent = {good: basket.get(good, 0.0) * (prices.get(good) or 0.0) for good in goods}
+    total = sum(spent.values())
+    return {good: value / total for good, value in spent.items()} if total > 0.0 else {}
+
+
+def watched_shares(economy, watched):
+    """The watched goods' shares of the opening basket's spending on them (`spending_shares`)."""
+    return spending_shares(economy_api.opening_quantities(economy), economy_api.opening_prices_of(economy), watched)
+
+
 def watched_goods(economy):
     """The goods the spin-up watches on `economy`: the opening basket's largest spending."""
     return watched_goods_of(economy_api.opening_quantities(economy), economy_api.opening_prices_of(economy),
@@ -30,12 +43,16 @@ def year_inputs(economy):
                              engine_orders={})
 
 
-def year_state(quantities, price_level, rate, prices, watched, traded):
+def year_state(quantities, price_level, rate, prices, watched, traded, weights=None):
     """The state of a year as spin_up_gap measures it: the settle `quantities` (economy_api.spin_up_state), the price
     level, the rate (None when the economy has none) and the prices of the `watched` goods that were priced as a trade
     (those in `traded`; any other watched good is in "unmeasured" with its cause, since a price nobody traded at may be
-    only what the good would cost to make)."""
+    only what the good would cost to make). With `weights` (`watched_shares`) the state carries them as "price_weights",
+    which is how much each watched price counts in the settle measure."""
     causes = {good: "no_price" if prices.get(good) is None else "price_not_a_trade" for good in watched
               if prices.get(good) is None or good not in traded}
-    return {**quantities, "price_level": price_level, "rate": rate,
-            "prices": {good: prices[good] for good in watched if good not in causes}, "unmeasured": causes}
+    state = {**quantities, "price_level": price_level, "rate": rate,
+             "prices": {good: prices[good] for good in watched if good not in causes}, "unmeasured": causes}
+    if weights:
+        state["price_weights"] = dict(weights)
+    return state

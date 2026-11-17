@@ -23,6 +23,7 @@ with open(out, "w") as handle:
             kept = {name: row.get(name) for name in ("stage", "year", "price_level", "rate", "real_output", "hired_hours", "inventory_value",
                                                      "unmet_need", "food_need", "wage", "money_supply")}
             kept["prices"] = row.get("prices")
+            kept["price_weights"] = row.get("price_weights")
             kept["member"] = member
             handle.write(json.dumps(kept, default=float) + "\n")
         handle.flush()

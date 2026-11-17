@@ -1,7 +1,7 @@
 """How far the agent economy moved between hidden spin-up years: pure arithmetic over per-year states.
 
-A state is {"price_level", "rate", "prices": {good: price}, plus the quantities of `QUANTITY_FLOORS`, and
-"food_need"}. A change is relative to the earlier value, with the earlier value no smaller than a floor where the
+A state is {"price_level", "rate", "prices": {good: price}, "price_weights": {good: share of the watched goods'
+spending}, plus the quantities of `QUANTITY_FLOORS`, and "food_need"}. A change is relative to the earlier value, with the earlier value no smaller than a floor where the
 quantity can sit near zero: the rate against a declared floor, unmet need against the economy's whole food need
 (the food floor units its people need, sim/economy/spin_up_state.py `food_floor_units`), so a shortfall on one tile is read as the share of
 the economy's food it is, and producers' inventory value against the year's real output (both are quantities at the opening's
@@ -37,9 +37,18 @@ def price_gaps(new_prices, old_prices):
             for good, old in old_prices.items() if old is not None and old > 0.0}
 
 
-def price_gap(new_prices, old_prices):
-    """The largest change among the watched goods (`price_gaps`); none when none was priced last year."""
-    return max(price_gaps(new_prices, old_prices).values(), default=0.0)
+def price_gap(new_prices, old_prices, weights=None):
+    """The watched prices' change as one figure: each good's change (`price_gaps`) by its share of the basket's spending
+    (`weights`, over all the watched goods), so a good that is a sliver of the spending moves the figure by a sliver
+    whatever its own price does, and one with no price last year adds nothing. With no shares every good priced last
+    year counts alike. None priced last year is no change."""
+    gaps = price_gaps(new_prices, old_prices)
+    if not gaps:
+        return 0.0
+    if not weights:
+        return sum(gaps.values()) / len(gaps)
+    total = sum(weights.values())
+    return sum(weights.get(good, 0.0) * gap for good, gap in gaps.items()) / total if total > 0.0 else 0.0
 
 
 def worst_price_change(states):
@@ -54,7 +63,8 @@ def worst_price_change(states):
 
 
 def state_gaps(before, after):
-    """{quantity: change between two states}; "prices" is the largest relative change of the watched prices. A quantity
+    """{quantity: change between two states}; "prices" is the watched prices' change weighted by the earlier state's shares
+    of spending ("price_weights", `price_gap`). A quantity
     stated before and gone now is a whole change; one stated in neither state is skipped."""
     gaps = {}
     for name, floor in QUANTITY_FLOORS.items():
@@ -65,7 +75,7 @@ def state_gaps(before, after):
         if name == "inventory_value":
             floor = before.get("real_output") or 0.0
         gaps[name] = 1.0 if after.get(name) is None else change_gap(after[name], before[name], floor)
-    gaps["prices"] = price_gap(after["prices"], before["prices"])
+    gaps["prices"] = price_gap(after["prices"], before["prices"], before.get("price_weights"))
     return gaps
 
 
