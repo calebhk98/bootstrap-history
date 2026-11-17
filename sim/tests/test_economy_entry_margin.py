@@ -101,7 +101,8 @@ class MarketTests(unittest.TestCase):
         setup, record, view, area_map = market(price=12.0, usual=1e3)    # the year's price is under the entry price (10 times 1.25 is 12.5)
         record.goods.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
         self.assertEqual(plans(setup, record, view, area_map, buyer()), [])
-        self.assertLess(record.goods.margin_years[KEY], LOSS_YEARS_BEFORE_EXIT)
+        # a fifth of the margin under the entry price takes a fifth of a year off the standing
+        self.assertAlmostEqual(record.goods.margin_years[KEY], LOSS_YEARS_BEFORE_EXIT - 0.2)
 
     def test_no_newcomer_where_no_buyer_bid(self):
         setup, record, view, area_map = market()

@@ -38,6 +38,15 @@ def margin_share_of(standing):
 
 
 @njit(**KERNEL)
+def margin_draw_of(price, entry_price):
+    """`entry_margin.margin_draw`."""
+    if not entry_price > 0.0:
+        return 0.0
+    band = entry_price * ENTRY_PRICE_MARGIN_SHARE / (1.0 + ENTRY_PRICE_MARGIN_SHARE)
+    return min(1.0, max(0.0, (price - entry_price) / band))
+
+
+@njit(**KERNEL)
 def demand_in_market(block, place, price, price_now):
     """`entry_trial.demand_at` of the market's bids in the block (`place` is a row of the block's `start`)."""
     start = block[6]
@@ -73,7 +82,7 @@ def margin_plans(market_good, market_anchor, market_place, market_capacity, mark
                 break
             recipe = rank_recipe[position]
             gap = max(0.0, demand_in_market(block, market_place[market], entry_price, price if price > 0.0 else entry_price) - capacity)
-            added = share * min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
+            added = share * margin_draw_of(ceiling, entry_price) * min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
             made = outputs[recipe, good]
             runs = added / made
             tile = market_anchor[market]
