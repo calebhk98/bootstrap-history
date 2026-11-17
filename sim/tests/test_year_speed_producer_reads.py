@@ -11,11 +11,13 @@ import types
 import unittest
 
 from sim.economy.producer_store import ProducerStore
-from sim.economy import entry_practice, land_bid, labour_state, location_inputs, practice, trade_wages
+from sim.economy import entry_practice, land_bid, labour_state, location_inputs, practice, practice_path, trade_wages
 from sim.economy.market_memory import KEY_SEPARATOR, MarketMemory, YearView
 from sim.economy.producers import Producer
 from sim.economy.types import GoodSpec, Recipe
 from sim.labour.api import MarketState
+
+RATE = 0.05
 
 TRADES = ("labourer", "smith", "miller")
 AREAS = ("north", "south", "east")
@@ -135,18 +137,16 @@ class PlannedRecipeIsOneObjectPerHours(unittest.TestCase):
         with entry_practice.shared_crews({"a": types.SimpleNamespace(recipe_id="r", crew_runs=crews[0]),
                                           "b": types.SimpleNamespace(recipe_id="r", crew_runs=crews[1])}) as crews_of:
             peers = crews_of("r")
-            first = entry_practice.planned_recipe(recipe, peers, 12.0)
-            again = entry_practice.planned_recipe(recipe, peers, 12.0)
+            first = entry_practice.planned_recipe(recipe, peers, 12.0, RATE)
+            again = entry_practice.planned_recipe(recipe, peers, 12.0, RATE)
         self.assertIs(first, again)
         crew = practice.entrant_crew_runs(recipe, crews)
-        totals = {trade: [] for trade in recipe.labour_hours}
-        for _year in range(entry_practice.LOSS_YEARS_BEFORE_EXIT):
-            hours = practice.recipe_for(recipe, crew).labour_hours
-            for trade in totals:
-                totals[trade].append(hours[trade])
-            crew = practice.crew_runs_after_year(crew, 12.0, 0.0, {})
-        for trade, each in totals.items():
-            self.assertTrue(math.isclose(first.labour_hours[trade], math.fsum(each) / len(each), rel_tol=1e-12))
+        horizon = practice_path.horizon_years(recipe.plant_life_years)
+        weights = [(1.0 + RATE) ** -year for year in range(horizon)]
+        for trade, booked in recipe.labour_hours.items():
+            multipliers = [practice.hours_multiplier(crew[trade] + 12.0 * year) if trade in crew else 1.0 for year in range(horizon)]
+            mean = booked * math.fsum(weight * each for weight, each in zip(weights, multipliers)) / math.fsum(weights)
+            self.assertTrue(math.isclose(first.labour_hours[trade], mean, rel_tol=1e-9))
 
 
 class HaulMemo(unittest.TestCase):

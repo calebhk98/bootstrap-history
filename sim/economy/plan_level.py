@@ -36,7 +36,7 @@ def level_share_working(recipe: Recipe, crew_runs: Mapping[str, float], capacity
     the producer's own, before the spoilage of this year's practice."""
     multipliers, usable = level_figures(recipe, crew_runs, capacity_runs, workshops, rate)
     leveled = level_recipe(recipe, multipliers)
-    revenue = unit_cost.revenue_per_run(leveled, outputs) * base_yield_factor * usable
+    revenue = unit_cost.revenue_per_run(leveled, outputs) * (base_yield_factor * usable)
     variable = (unit_cost.input_cost_per_run(leveled, inputs, wages) + unit_cost.labour_cost_per_run(leveled, wages) + rent)
     return share_working(revenue, variable)
 

@@ -5,12 +5,12 @@ import types
 import unittest
 import unittest.mock
 
-from sim.economy import entry, entry_practice, labour_state, practice
-from sim.economy.producers_close import LOSS_YEARS_BEFORE_EXIT
+from sim.economy import entry, entry_practice, labour_state, practice, practice_path
 from sim.economy.types import Recipe
 from sim.tests.test_economy_producers import View
 
 FLOOR = practice.SOURCE_TASK_FLOOR_FRACTION
+RATE = 0.05
 SALT = Recipe("mine_salt", {"salt": 10.0}, {}, {"hand": 4.0})
 
 
@@ -20,14 +20,16 @@ def hands(recipe):
 
 class PlannedRecipeTests(unittest.TestCase):
     def test_an_entrant_with_no_peers_and_no_runs_needs_a_first_attempts_hours_every_year(self):
-        self.assertAlmostEqual(hands(entry_practice.planned_recipe(SALT, [], 0.0)), 4.0 / FLOOR)
+        self.assertAlmostEqual(hands(entry_practice.planned_recipe(SALT, [], 0.0, RATE)), 4.0 / FLOOR)
 
-    def test_an_entrant_who_reaches_the_floor_in_its_first_year_averages_one_hard_year_and_easy_ones(self):
-        hours = hands(entry_practice.planned_recipe(SALT, [], 1.0e9))
-        self.assertAlmostEqual(hours, (4.0 / FLOOR + 4.0 * (LOSS_YEARS_BEFORE_EXIT - 1)) / LOSS_YEARS_BEFORE_EXIT)
+    def test_an_entrant_who_reaches_the_floor_in_its_first_year_averages_one_hard_year_and_easy_ones_discounted(self):
+        hours = hands(entry_practice.planned_recipe(SALT, [], 1.0e9, RATE))
+        years = practice_path.horizon_years(SALT.plant_life_years)
+        weights = [(1.0 + RATE) ** -year for year in range(years)]
+        self.assertAlmostEqual(hours, 4.0 * (5.0 * weights[0] + sum(weights[1:])) / sum(weights))
 
     def test_an_entrant_beside_established_peers_needs_the_booked_hours(self):
-        self.assertIs(entry_practice.planned_recipe(SALT, [{}, {}], 5.0), SALT)
+        self.assertIs(entry_practice.planned_recipe(SALT, [{}, {}], 5.0, RATE), SALT)
 
     def test_the_first_years_hours_are_a_first_attempts_where_nobody_makes_it(self):
         self.assertAlmostEqual(hands(entry_practice.first_year_recipe(SALT, [])), 4.0 / FLOOR)

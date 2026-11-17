@@ -199,7 +199,7 @@ class ReturnsAreTheOldReturns(unittest.TestCase):
                 new = tables.returns_many(requests)
                 for (recipe_id, tile, runs, _rate), (gross, after) in zip(requests, new):
                     recipe = setup.recipes[recipe_id]
-                    planned = recipe if runs is None else entry_practice.planned_recipe(recipe, crews_of(recipe_id), runs)
+                    planned = recipe if runs is None else entry_practice.planned_recipe(recipe, crews_of(recipe_id), runs, rate)
                     old_gross, old_after = entry._returns_at(planned, recipe_id, tile, view, rate, site_rent_per_run(
                         setup, record, view, recipe_id, tile))
                     self.assertEqual(gross is None, old_gross is None)
