@@ -99,12 +99,14 @@ def stock_runs(sales, yield_factor, variable, made, made_value, stock, price, co
 
 @njit(**KERNEL)
 def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sales, last_runs, staffed, idle, held_expected,
-              cash, stock, hours_scale, tools, slot_goods, slot_trades, inputs, outputs, revenue_outputs, labour_hours, price, offered, cleared, wage,
+              cash, stock, hours_scale, level_scale, level_yield, leveled, tools, slot_goods, slot_trades, inputs, outputs, revenue_outputs, labour_hours, price, offered, cleared, wage,
               area_of, spread, change_share, clearing_years, cover):
     """(runs, wanted, wage line, labour hours, labour ceilings, bid good, bid quantity, bid price, bid budget, bid ceiling): the labour pair
     by row and trade slot (hours NaN where the trade is not bid for), the bids by row and need, in the order the plan makes them (the
     good is -1 where the row has no such bid).
-    The sums are added as `producers.plan` adds them (plan_sums.py)."""
+    `level_scale` and `level_yield` (the hours multipliers and the yield factor averaged over a learning crew's path, `plan_level.py`)
+    are what the choice of the share working reads for the rows that are `leveled`; everything that pays or bids reads `hours_scale`
+    and `yield_factor`, this year's. The sums are added as `producers.plan` adds them (plan_sums.py)."""
     count, good_slots = held_expected.shape
     trade_slots = slot_trades.shape[1]
     bid_width = tools.bid_goods.shape[1]
@@ -157,7 +159,13 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
         held_value = held_value_of(row, recipe, slot_goods, inputs, tools.input_order, capacity[row], stock, market, terms)
         paid_now = market_cost + labour_cost
         affordable = (max(cash[row], 0.0) + held_value) / paid_now if paid_now > 0.0 else capacity[row]
-        chosen = min(capacity[row] * share_working(revenue, variable, spread),
+        level_revenue, level_variable = revenue, variable
+        if leveled[row]:
+            level_revenue = revenue_per_run(recipe, slot_goods, revenue_outputs, expected_out, terms) * level_yield[row]
+            level_variable = (covered_input_bill(recipe, row, tile, slot_goods, inputs, tools, labour_hours, level_scale, wage, plan_price)
+                              + hours_bill(row, recipe, tile, slot_trades, tools.hours_order, labour_hours, level_scale, wage, hour_terms)[0]
+                              + rent[row])
+        chosen = min(capacity[row] * share_working(level_revenue, level_variable, spread),
                      stock_runs(sales[row], yield_factor[row], variable, made, made_value, stock[row], expected_out, cover, clearing_years))
         if last_runs[row] >= 0.0:
             step = change_share * capacity[row]

@@ -167,7 +167,7 @@ def entry_plans(recipes: Mapping[str, Recipe], view: MarketView,
                 planned = recipes[recipe_id]
                 if crews_of is not None:
                     share_runs = demand.quantity / planned.outputs[demand.good] * ENTRY_SHARE_OF_UNMET_DEMAND
-                    planned = entry_practice.planned_recipe(planned, crews_of(recipe_id), share_runs)
+                    planned = entry_practice.planned_recipe(planned, crews_of(recipe_id), share_runs, market_rate)
                 yearly_return, after_recovery = _returns_at(planned, recipe_id, demand.anchor_tile, view, market_rate, rent)
             if yearly_return is not None and after_recovery is not None and after_recovery > market_rate:
                 ranked.append((-yearly_return, recipe_id))

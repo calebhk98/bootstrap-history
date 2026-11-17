@@ -7,7 +7,7 @@ does to the recipe's hours. `write_bids` appends the input bids to the book of o
 read of the book (stock_block.py)."""
 import numpy as np
 
-from . import producer_numbers, producers
+from . import plan_level, producer_numbers, producers
 from .inventory import DEFAULT_MONTHS_OF_COVER
 from .plan_kernel import plan_rows
 from .plan_table import PlanTable
@@ -35,6 +35,13 @@ def stocks_by_slot(record, columns, matrices, tools, rows) -> np.ndarray:
     return stock
 
 
+def _rate_of(setup, view, columns, position):
+    """The market rate of the currency a producer's output sells in (`view.interest_rate`), None where there is none."""
+    recipe = setup.recipes[columns.matrices.recipes.ids[columns.recipe_row[position]]]
+    tile = columns.tile_names()[position]
+    return view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), tile)))
+
+
 def plans_of(setup, record, view, arrays, money) -> PlanTable:
     """Every producer's plan, in sorted id order, as a `PlanTable` (see the module docstring)."""
     columns = arrays.producers.refresh(record.producers)
@@ -43,10 +50,12 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
     ids = columns.ids
     cash = record.book.balances_at(producer_numbers.of_columns(columns, record.book)[0][rows], money)
     stock = stocks_by_slot(record, columns, matrices, tools, rows)
+    level_scale, level_share, leveled = plan_level.level_columns(columns, setup.recipes, lambda position: _rate_of(setup, view, columns, position))
+    level_yield = np.where(leveled, columns.yield_factor * level_share, columns.practised_yield())
     (runs, wanted, line, hours, ceilings, bid_good, quantity, bid_price, budget, worth) = plan_rows(
         columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.practised_yield(), columns.land_rent_per_run, columns.land_run_cap,
         columns.expected_sales, columns.last_runs, columns.staffed_runs, columns.idle_years, columns.expected_prices, cash, stock,
-        columns.hours_scale, tools, matrices.slot_goods, matrices.slot_trades, matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.labour_hours,
+        columns.hours_scale, level_scale, level_yield, leveled, tools, matrices.slot_goods, matrices.slot_trades, matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.labour_hours,
         memory.price, memory.offered, memory.cleared, memory.wage, arrays.area_index.of_good_tile, producers.COST_SPREAD_WITHIN_PRODUCER,
         producers.OUTPUT_CHANGE_SHARE_PER_YEAR, producers.STOCK_CLEARING_YEARS, DEFAULT_MONTHS_OF_COVER)
     idle = runs <= 0.0              # an idle plan has no runs, no wage line and no orders

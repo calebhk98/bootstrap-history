@@ -1,18 +1,15 @@
 """The hours a newcomer's crew will need, for the entry decision. A new producer starts at the mean practice of the
 recipe's other producers (practice.entrant_crew_runs) and learns on the runs it makes (practice.crew_runs_after_year),
-so its first years book more hours than the recipe's. Entry weighs the years a producer is judged over before it
-exits (LOSS_YEARS_BEFORE_EXIT, producers_close.py): the hours it plans on are the mean of those years' hours, so a
-first year that loses and later years that pay enter when the years together pay, as exit would not close them
-before then.
+so its first years book more hours than the recipe's. Entry weighs the learning path the producer's own plan weighs
+(practice_path.learning_path_scales, the same horizon and rate): the hours it plans on are the discounted mean of the
+path's years, so a first year that loses and later years that pay enter when the years together pay.
 """
 import contextlib
 import dataclasses
-import math
 from typing import Callable, Dict, List, Mapping, Sequence
 
-from . import practice
+from . import practice, practice_path
 from .producer_store import ProducerStore
-from .producers_close import LOSS_YEARS_BEFORE_EXIT
 from .types import Recipe
 
 # recipe id -> the crew_runs of the recipe's existing producers
@@ -98,20 +95,16 @@ _planned: Dict[tuple, tuple] = {}     # (recipe id, planned hours) -> (recipe, t
 _PLANNED_KEPT = 20000
 
 
-def planned_recipe(recipe: Recipe, peers: Sequence[Mapping[str, float]], runs_per_year: float,
-                   years: int = LOSS_YEARS_BEFORE_EXIT) -> Recipe:
-    """The recipe with each trade's hours the mean of an entrant's hours over `years` years of `runs_per_year` runs,
-    from the peers' mean practice; the recipe itself when it starts at the floor."""
+def planned_recipe(recipe: Recipe, peers: Sequence[Mapping[str, float]], runs_per_year: float, rate: float) -> Recipe:
+    """The recipe with each trade's hours the discounted mean over the learning path of an entrant making `runs_per_year` runs a
+    year from the peers' mean practice (`practice_path.learning_path_scales` at the plant's or the expected horizon and
+    `rate`, the producer's own plan's); the recipe itself when it starts at the floor."""
     crew = entrant_crew(recipe, peers)
     if not crew:
         return recipe
-    totals = {trade: [] for trade in recipe.labour_hours}
-    for _year in range(max(1, years)):
-        hours = practice.recipe_for(recipe, crew).labour_hours
-        for trade in totals:
-            totals[trade].append(hours[trade])
-        crew = practice.crew_runs_after_year(crew, max(0.0, runs_per_year), 0.0, {})
-    hours = {trade: math.fsum(each) / len(each) for trade, each in totals.items()}
+    multipliers, _share = practice_path.learning_path_scales(
+        crew, recipe.labour_hours, max(0.0, runs_per_year), practice_path.horizon_years(recipe.plant_life_years), rate)
+    hours = {trade: recipe.labour_hours[trade] * multipliers[trade] for trade in recipe.labour_hours}
     key = (id(recipe), tuple(hours.items()))
     kept = _planned.get(key)
     if kept is None or kept[0] is not recipe:

@@ -12,7 +12,7 @@ column and tile row:
     recipe_scalar (recipes, 2)          plant life in years, hectares a run takes
     tile_scalar   (tiles, 2)            the land market's rent per hectare, the mean value a hectare earns
     start_units   (recipes, trades)     the practice an entrant's crew starts at (entry_practice.entrant_crew)
-    curve         (3,)                  the learning curve's exponent, its floor, the years an entrant is judged over
+    curve         (3,)                  the learning curve's exponent, its floor, the years a workshop expects to keep a trade (before the plant's life holds it)
     fallbacks     tuple of 8 arrays     the recipes' tool fallbacks (entry_wear_kernel.py)
 A missing price is NaN and makes a bill infinite, as in unit_cost.py. Each function is the rule of the same name there, in
 entry.py, entry_trial.py, entry_practice.py, entrant_rent.py and location.py; sums run over a recipe's slots in sorted order
@@ -36,16 +36,28 @@ def hours_multiplier(units, exponent, floor):
 
 
 @njit
-def planned_hours(booked, start, runs, years, exponent, floor):
-    """entry_practice.planned_recipe for one trade: the mean over `years` years of an entrant's hours, starting at `start` units
-    of practice and learning `runs` a year. A year's hours are the booked ones times the multiplier kept to a hundredth."""
+def planned_hours(booked, start, runs, horizon, rate, exponent, floor):
+    """entry_practice.planned_recipe for one trade: the hours of an entrant starting at `start` units of practice and learning `runs`
+    a year, the multiplier averaged over `horizon` years each weighted by one over one plus `rate` to the years elapsed
+    (practice_path.learning_path_scales)."""
     units = start
     total = 0.0
-    for _year in range(years):
-        multiplier = np.rint(hours_multiplier(units, exponent, floor) * 100.0) / 100.0
-        total += booked * max(1.0, multiplier)
+    weights = 0.0
+    for year in range(horizon):
+        weight = (1.0 + max(0.0, rate)) ** -year
+        total += weight * hours_multiplier(units, exponent, floor)
+        weights += weight
         units += max(0.0, runs)
-    return total / years
+    return booked * total / weights
+
+
+@njit
+def horizon_years(plant_life, expected_years):
+    """practice_path.horizon_years: the years a workshop expects to keep a trade, held to the plant's life."""
+    kept = expected_years
+    if plant_life > 0.0:
+        kept = min(kept, plant_life)
+    return max(1, int(np.rint(kept)))
 
 
 @njit
@@ -95,9 +107,9 @@ def plant_goods_bill(r, t, quantity, slot_goods, price):
 
 
 @njit
-def labour_bill(r, t, kind, hours, slot_trades, wage, start_units, runs, planned, curve):
+def labour_bill(r, t, kind, hours, slot_trades, wage, start_units, runs, planned, curve, rate, plant_life):
     """unit_cost.labour_cost_per_run (kind 0) or the plant's labour (kind 1) at the wages of tile `t`; with `planned`, the
-    labour of kind 0 at an entrant's mean hours over the years it is judged (entry_practice.planned_recipe)."""
+    labour of kind 0 at an entrant's hours over its learning path at `rate` (entry_practice.planned_recipe)."""
     total = 0.0
     for slot in range(slot_trades.shape[1]):
         trade = slot_trades[r, slot]
@@ -111,7 +123,7 @@ def labour_bill(r, t, kind, hours, slot_trades, wage, start_units, runs, planned
             return np.inf
         used = booked
         if planned and kind == 0:
-            used = planned_hours(booked, start_units[r, trade], runs, int(curve[2]), curve[0], curve[1])
+            used = planned_hours(booked, start_units[r, trade], runs, horizon_years(plant_life, curve[2]), rate, curve[0], curve[1])
         total += used * pay
     return total
 
@@ -160,9 +172,9 @@ def full_cost_one(r, t, good, runs, rate, tables):
         return np.inf
     rent = rent_of(r, t, 1.0, quantity, slot_goods, price, recipe_scalar, tile_scalar)
     variable = (input_bill(r, t, quantity, slot_goods, price, hours, wage, fallbacks)
-                + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, runs, planned, curve) + rent)
+                + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, runs, planned, curve, rate, recipe_scalar[r, 0]) + rent)
     plant = plant_goods_bill(r, t, quantity, slot_goods, price) + labour_bill(
-        r, t, 1, hours, slot_trades, wage, start_units, runs, planned, curve)
+        r, t, 1, hours, slot_trades, wage, start_units, runs, planned, curve, rate, recipe_scalar[r, 0])
     run_cost = variable + capital_charge(plant, recipe_scalar[r, 0], rate)
     if not np.isfinite(run_cost):
         return np.inf
@@ -202,9 +214,9 @@ def returns_many(recipe_rows, tile_rows, runs, rates, tables):
         planned = not np.isnan(runs[i])
         rent = rent_of(r, t, 1.0, quantity, slot_goods, price, recipe_scalar, tile_scalar)
         variable = (input_bill(r, t, quantity, slot_goods, price, hours, wage, fallbacks)
-                    + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, runs[i], planned, curve) + rent)
+                    + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, runs[i], planned, curve, rates[i], recipe_scalar[r, 0]) + rent)
         plant = plant_goods_bill(r, t, quantity, slot_goods, price) + labour_bill(
-            r, t, 1, hours, slot_trades, wage, start_units, runs[i], planned, curve)
+            r, t, 1, hours, slot_trades, wage, start_units, runs[i], planned, curve, rates[i], recipe_scalar[r, 0])
         employed = plant + variable
         if not np.isfinite(employed) or employed <= 0.0:
             continue
@@ -309,7 +321,7 @@ def site_choice(r, anchor, candidates, runs, tonnes_out, tables, tonnes, supply_
         if np.isnan(hauls[r, t]):
             hauls[r, t] = input_haul(r, t, tonnes, supply_weight, supply_present, carriage)
         variable = (input_bill(r, t, quantity, slot_goods, price, hours, wage, fallbacks)
-                    + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, 0.0, False, curve)
+                    + labour_bill(r, t, 0, hours, slot_trades, wage, start_units, 0.0, False, curve, 0.0, 0.0)
                     + rent_of(r, t, factor, quantity, slot_goods, price, recipe_scalar, tile_scalar))
         carried = carriage[t, anchor] * tonnes_out if tonnes_out > 0.0 else 0.0
         cost[i] = (variable + carried + hauls[r, t]) / factor

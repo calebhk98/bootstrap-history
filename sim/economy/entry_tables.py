@@ -16,10 +16,9 @@ import numpy as np
 
 from sim.labour.api import SOURCE_TASK_FLOOR_FRACTION, learning_curve
 
-from . import entry_kernels, entry_plan_pack, entry_siting_tables, labour_state, location, location_inputs, practice, sites
+from . import entry_kernels, entry_plan_pack, entry_siting_tables, labour_state, location, location_inputs, practice, practice_path, sites
 from .entry_spare import idle_runs
 from .year_close_dividend_kernels import add_in_order
-from .producers_close import LOSS_YEARS_BEFORE_EXIT
 from .rates import own_rate
 from .setup import labour_area
 from .types import TileId
@@ -68,7 +67,7 @@ class EntryTables:
                                 for tile in self.tiles.ids], dtype=np.float64).reshape(tile_count, 2)
         self.start_units = np.full((len(recipe_ids), len(self.trades.ids)), practice.established_units())
         self.curve = np.array([learning_curve.learning_exponent(learning_curve.LEARNING_RATE), SOURCE_TASK_FLOOR_FRACTION,
-                               float(max(1, LOSS_YEARS_BEFORE_EXIT))])
+                               float(practice_path.YEARS_A_WORKSHOP_EXPECTS_TO_KEEP_A_TRADE)])
         self.tables = (np.ascontiguousarray(np.stack([matrices.inputs, matrices.outputs, matrices.plant_goods, arrays.revenue_outputs])),
                        np.ascontiguousarray(np.stack([matrices.labour_hours, matrices.plant_labour_hours])),
                        matrices.slot_goods, matrices.slot_trades, price, np.ascontiguousarray(memory.wage.T),

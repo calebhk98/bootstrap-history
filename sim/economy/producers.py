@@ -22,7 +22,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 from sim.constants import declare
 
-from . import ask_adjust, harvest_tax, inventory, practice, tool_fallback, trade_wages, unit_cost
+from . import ask_adjust, harvest_tax, inventory, plan_level, practice, tool_fallback, trade_wages, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .planning_price import held_to_band, is_bare_quote
 from .priced_reads import cleared_prices_for, offered_prices_for
@@ -305,6 +305,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     live wages."""
     if producer.idle_years > 0:
         return Plan(0.0)
+    base_yield = producer.yield_factor
+    booked_recipe = recipe
     producer = with_practised_yield(producer, recipe)
     recipe = practice.recipe_for(recipe, producer.crew_runs)
     outputs = kept_output_prices(producer, recipe, view)
@@ -325,7 +327,8 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     paid_now = unit_cost.input_cost_per_run(recipe, paying_prices, wages) + labour_cost     # rent falls due at the year's end, out of the sales
     affordable = (max(cash, 0.0) + held_value) / paid_now if paid_now > 0.0 else producer.capacity_runs
     # working off stock is a choice and moves at the year's pace; cash and held inputs bind after it
-    chosen = min(producer.capacity_runs * share_working(revenue, variable),
+    chosen = min(producer.capacity_runs * _share_working_on_level(producer, booked_recipe, recipe, base_yield, view, outputs, inputs, wages,
+                                                                     revenue, variable),
                  runs_for_stock(producer, recipe, view, variable, outputs))
     runs = max(0.0, min(within_a_years_change(producer, chosen), affordable))
     wanted = runs
@@ -342,6 +345,16 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
                        revenue / ratio - live_variable, live_variable, wages)
     return Plan(runs, tuple(labour_bids), tuple(bids), wanted, runs * labour_cost)
+
+
+def _share_working_on_level(producer: Producer, booked_recipe: Recipe, recipe: Recipe, base_yield: float, view: MarketView,
+                            outputs, inputs, wages, revenue: float, variable: float) -> float:
+    """`share_working` of a crew with a practice record on the level pair (`plan_level`); of this year's pair for an established crew."""
+    if not producer.crew_runs:
+        return share_working(revenue, variable)
+    rate = view.interest_rate(view.currency_of(view.area_of(min(recipe.outputs), producer.tile)))
+    return plan_level.level_share_working(booked_recipe, producer.crew_runs, producer.capacity_runs, producer.workshops, rate, base_yield,
+                                          outputs, inputs, wages, producer.land_rent_per_run, share_working)
 
 
 def within_a_years_change(producer: Producer, runs: float) -> float:

@@ -153,7 +153,7 @@ def recipes_by_cost(setup, record, view, good, tile, recipe_ids,
         recipe = setup.recipes[recipe_id]
         if output_per_year is not None and recipe.outputs.get(good, 0.0) > 0.0:
             recipe = entry_practice.planned_recipe(recipe, entry_practice.crews_of_recipe(record.producers)(recipe_id),
-                                                   output_per_year / recipe.outputs[good])
+                                                   output_per_year / recipe.outputs[good], rate)
         outputs = {each: view.price(each, view.area_of(each, tile)) for each in recipe.outputs}
         outputs = {each: price for each, price in outputs.items() if price is not None}
         rent = site_rent_per_run(setup, record, view, recipe_id, tile)
