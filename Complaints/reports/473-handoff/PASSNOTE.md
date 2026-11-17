@@ -95,8 +95,10 @@ kills background runs silently. `ROME_KERNEL_CACHE_KEY=kernels` for edit-test lo
 Each is in Complaint 473 with its evidence.
 
 - **The first amplifier was poaching** (Update 30): hours moved between employers on which stood a hair higher.
-  Fixed. Twins forked late in England's trimmed stage now stay together for years, so what is left there is mostly
-  deterministic movement (cycles and drifts), not rounding noise. The first years of the first stage still amplify.
+  Fixed. The difference between twins forked late in England's trimmed stage grew several hundredfold a year before
+  and grows about fourfold a year now (`late_twin_probe.py`): much slower, and still chaotic. The first years of the
+  first stage amplify faster than the late ones. Until that growth is under one, members of an ensemble end in
+  different places and the fixed-point test cannot pass.
 - **England's and Norse's swing in hours was the households' own time** (Updates 27 and 30): household work counted
   over the civil year against a labour year of working days, and a yearly all-or-little choice to hire servants on last
   year's wage. Fixed.

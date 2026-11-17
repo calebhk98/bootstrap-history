@@ -1043,7 +1043,10 @@ rounding; the hours each employer came out with did not, while each market's tot
   hours at any gap in standing (its highest bid cap) and none at none, and employers took turns by rank. Employers of
   one trade often stand level, their caps being one figure, so the last digit decided who lost hours. The share now
   rises from nothing with the recruiting premium, and all short employers draw at once from the hours held before any
-  moved. With it, twins forked late in England's trimmed stage stay together for years; before, they parted at once.
+  moved. Twins forked late in England's trimmed stage (`late_twin_probe.py`) show what it bought: at the head before,
+  the difference between them grew several hundredfold a year after its second year; with this fix it grows about
+  fourfold a year. That is far slower and still growth: the economy is still chaotic, and a rounding-sized difference
+  still becomes a visible one within the length of a spin-up.
 - **Household work was counted over two year lengths** (owner question 7; `households_work.hours_per_person_per_year`,
   `EconomySetup.working_days_per_year`; `test_household_time_budget`). The tasks' hours a day were multiplied by the
   civil year and taken out of a labour year that holds working days only. They are now counted over the labour year's
