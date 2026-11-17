@@ -1,5 +1,5 @@
 {
- "_doc": "Resource definitions per sim/geography/resources_catalogue.py. mechanism: mineral_deposit | point_occurrence | surface_stock | biotic_stand. unit: the quantity unit; with grade_basis true, contained quantity = ore tonnes x grade in that unit per tonne (key median_<unit>_per_tonne). deposit_types: {id, deposits_per_million_km2 (per million km2 of fully permissive land, before clustering), tonnage_lognormal {median_tonnes, sigma (ln)}, grade_lognormal, depth_class, small_scale, permissive_when [conditions], envelope [suitability entries], layer_weights [{layer, weights, default, if_missing}], provincial_only (only near catalogue deposits of that type), clusters (false: no boost from neighbours), gem_fraction {median, sigma}}. Densities are tile averages, heuristic stand-ins for a geologic-province layer (e.g. Hasterok 2022) that would replace the relief and climate proxies. Giants beyond the truncation of the lognormal come only from the known-deposit catalogue. Metals: unit kg of contained metal.",
+ "_doc": "Resource definitions per sim/geography/resources_catalogue.py. mechanism: mineral_deposit | point_occurrence | surface_stock | biotic_stand. unit: the quantity unit; with grade_basis true, contained quantity = ore tonnes x grade in that unit per tonne (key median_<unit>_per_tonne). deposit_types: {id, deposits_per_million_km2 (per million km2 of fully permissive land, before clustering), tonnage_lognormal {median_tonnes, sigma (ln)}, grade_lognormal, depth_class, small_scale, permissive_when [conditions], envelope [suitability entries], layer_weights [{layer, weights, default, if_missing}], provincial_only (only near catalogue deposits of that type), clusters (false: no boost from neighbours), gem_fraction {median, sigma}, ore_goods ({ore good: smelting recipe ids}: a deposit of this type holds that ore and not the resource's own)}. Densities are tile averages, heuristic stand-ins for a geologic-province layer (e.g. Hasterok 2022) that would replace the relief and climate proxies. Giants beyond the truncation of the lognormal come only from the known-deposit catalogue. Metals: unit kg of contained metal.",
  "entries": [
   {
    "id": "iron",
@@ -633,6 +633,11 @@
     },
     {
      "id": "gossan_jarosite",
+     "ore_goods": {
+      "jarosite_ore_kg": [
+       "silver_jarosite_kg"
+      ]
+     },
      "deposits_per_million_km2": 1,
      "tonnage_lognormal": {
       "median_tonnes": 500000.0,

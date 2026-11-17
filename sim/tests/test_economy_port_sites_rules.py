@@ -70,3 +70,36 @@ drawing.drawn.clear()
 port_sites.deplete(drawing, {("iron_ore_kg", "tile_a"): 40000.0}, outputs)
 check("when the first deposit is emptied the next is drawn, and no deposit is drawn below nothing",
       drawing.drawn == [("big", 500.0), ("small", 10.0)], drawing.drawn)
+
+# --- an ore with no deposit on any tile of the economy is dug nowhere (Complaint 981).
+bare = StubSim(found=[], partner=[])
+bare_limits = port_sites.site_limits(bare, outputs, ("tile_p", "tile_q"))
+check("an ore with no deposit on any tile of the economy keeps a limit of nothing on every tile, so it is not dug anywhere",
+      sorted((limit.recipe_id, limit.tile, limit.capacity_runs_per_year) for limit in bare_limits)
+      == [("iron_ore_kg", "tile_p", 0.0), ("iron_ore_kg", "tile_q", 0.0)], bare_limits)
+
+
+# --- a deposit type that names its own ore good: its deposits hold that ore, and the resource's other deposits the resource's.
+class TypedSim(StubSim):
+    def deposit_catalogue(self):
+        return {"ore_goods": {"iron": {"iron_ore_kg": ["smelt"]}},
+                "ore_goods_by_deposit_type": {"iron": {"bog": {"bog_ore_kg": ["smelt_bog"]}}}}
+
+
+typed_outputs = {"iron_ore_kg": {"iron_ore_kg": ORE_KG_PER_RUN}, "bog_ore_kg": {"bog_ore_kg": ORE_KG_PER_RUN}}
+vein, bog = deposit_row("vein", "tile_a", 10.0), deposit_row("bog", "tile_b", 6.0)
+vein["deposit_type"], bog["deposit_type"] = "vein", "bog"
+typed_limits = {(limit.recipe_id, limit.tile): limit.capacity_runs_per_year
+                for limit in port_sites.site_limits(TypedSim(found=[vein, bog], partner=[]), typed_outputs, ("tile_a", "tile_b"))}
+check("a deposit of a type that names its own ore holds that ore only, and the resource's ore is dug from the other deposits",
+      typed_limits == {("iron_ore_kg", "tile_a"): 10.0 * 2.0 * 1000.0 / ORE_KG_PER_RUN,
+                       ("bog_ore_kg", "tile_b"): 6.0 * 2.0 * 1000.0 / ORE_KG_PER_RUN}, typed_limits)
+no_bog = {(limit.recipe_id, limit.tile): limit.capacity_runs_per_year
+          for limit in port_sites.site_limits(TypedSim(found=[vein], partner=[]), typed_outputs, ("tile_a", "tile_b"))}
+check("where no deposit of that type lies on the economy's tiles its ore is dug nowhere",
+      no_bog == {("iron_ore_kg", "tile_a"): 10.0 * 2.0 * 1000.0 / ORE_KG_PER_RUN,
+                 ("bog_ore_kg", "tile_a"): 0.0, ("bog_ore_kg", "tile_b"): 0.0}, no_bog)
+typed_drawing = TypedSim(found=[dict(vein, remaining_tonnes=900.0), dict(bog, remaining_tonnes=500.0, tile_id="tile_a")], partner=[])
+port_sites.deplete(typed_drawing, {("bog_ore_kg", "tile_a"): 100.0}, typed_outputs)
+check("what is raised of a type's own ore is drawn from deposits of that type, not from the tile's largest deposit",
+      typed_drawing.drawn == [("bog", 100.0 * ORE_KG_PER_RUN / 1000.0 / 2.0)], typed_drawing.drawn)

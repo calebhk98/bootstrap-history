@@ -14,6 +14,18 @@ def ore_goods(world_map: WorldMap) -> Dict[str, Dict[str, Tuple[str, ...]]]:
             for resource_id, row in world_map.catalogue("resources").items() if row.get("ore_goods")}
 
 
+def ore_goods_by_deposit_type(world_map: WorldMap) -> Dict[str, Dict[str, Dict[str, Tuple[str, ...]]]]:
+    """{resource id: {deposit type id: {ore good: smelting recipe ids}}} for the deposit types that name their own ore
+    goods: a deposit of such a type holds that ore, not the resource's own."""
+    typed: Dict[str, Dict[str, Dict[str, Tuple[str, ...]]]] = {}
+    for resource_id, row in world_map.catalogue("resources").items():
+        for deposit_type in row.get("deposit_types", ()):
+            if deposit_type.get("ore_goods"):
+                typed.setdefault(resource_id, {})[deposit_type["id"]] = {
+                    good: tuple(recipes) for good, recipes in deposit_type["ore_goods"].items()}
+    return typed
+
+
 def works_priced_from_deposits(world_map: WorldMap) -> Tuple[str, ...]:
     """Resource ids whose mine running cost comes from the deposits' physical works, with no book price needed."""
     return tuple(resource_id for resource_id, row in world_map.catalogue("resources").items()
