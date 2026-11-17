@@ -183,8 +183,8 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
                 if tools.listed_hours[recipe, trade]:
                     hours_out[row, slot] = runs * run_hours(labour_hours, hours_scale, recipe, row, trade)
                     ceiling_out[row, slot] = room / total_hours if claimed_bill <= 0.0 else wage[trade, tile] * room / claimed_bill
-        live_variable = market_cost + labour_cost + rent[row]
-        place_bids(row, recipe, tile, runs, max(cash[row], 0.0) - runs * labour_cost, revenue / ratio - live_variable, live_variable,
+        # the wages are committed by the time the inputs are bought: the inputs share the margin and the wages
+        place_bids(row, recipe, tile, runs, max(cash[row], 0.0) - runs * labour_cost, revenue / ratio - market_cost - rent[row], market_cost,
                    stock, market, slot_goods, inputs, tools, labour_hours, hours_scale, wage, good_out, quantity_out, price_out, budget_out,
                    worth_out, wanted_at, placed, order_place, terms)
     return runs_out, wanted_out, line_out, hours_out, ceiling_out, good_out, quantity_out, price_out, budget_out, worth_out

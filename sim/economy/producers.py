@@ -336,11 +336,11 @@ def plan(producer: Producer, recipe: Recipe, view: MarketView, cash: float) -> P
         return Plan(0.0, wanted_runs=wanted)
     # the workplaces that work are the cheaper ones: what an hour or an input is worth is judged at their cost
     labour_bids = _labour_bids(producer, recipe, view, runs, revenue / ratio, input_cost + rent, wages)
-    # an input is bid up to the price at which the run breaks even at the input prices seen now, not at the
-    # lagging expectation the run is planned on, or a scarce input's price ratchets up on its own bid
-    live_variable = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}, wages) + labour_cost + rent
+    # an input is bid up to the price at which the run still covers its inputs and rent at the input prices seen now
+    # (its hands are hired before the goods change hands), not at the lagging expectation the run is planned on
+    live_inputs = unit_cost.input_cost_per_run(recipe, {**inputs, **market_inputs}, wages)
     bids = _input_bids(producer, recipe, view, runs, market_inputs, max(cash, 0.0) - runs * labour_cost,
-                       revenue / ratio - live_variable, live_variable, wages)
+                       revenue / ratio - live_inputs - rent, live_inputs, wages)       # the wages are committed by then
     return Plan(runs, tuple(labour_bids), tuple(bids), wanted, runs * labour_cost)
 
 
@@ -490,22 +490,23 @@ def _labour_bids(producer, recipe, view, runs, revenue, input_cost, wages) -> Li
             for trade in sorted(recipe.labour_hours) if trade in ceilings]     # no ceilings: a run with no hours bids none
 
 
-def input_ceiling(price: float, margin_per_run: float, variable_cost_per_run: float,
+def input_ceiling(price: float, room_per_run: float, input_cost_per_run: float,
                   value_in_use: Optional[float] = None) -> float:
-    """The most a buyer bids for an input: its price plus the share of the run's margin the input accounts for
-    (its share of the run's variable cost), and never more than the input is worth against its cheapest
-    substitute when it has one. Short supply is rationed by bid inside this bound, not by a bound that moves
-    with the price bid."""
-    worth = price * (1.0 + max(0.0, margin_per_run) / variable_cost_per_run) if variable_cost_per_run > 0.0 else price
+    """The most a buyer bids for an input: its price plus its share, among the run's inputs, of `room_per_run`: the run's
+    margin and the wages it has already committed (hands are hired before the year's goods change hands, so when the
+    inputs are bought the wages are spent whether the run goes ahead or not). Every input may rise by the same share, and
+    together they may take what the run brings in over its rent. Never more than the input is worth against its
+    cheapest substitute when it has one."""
+    worth = price * (1.0 + max(0.0, room_per_run) / input_cost_per_run) if input_cost_per_run > 0.0 else price
     return worth if value_in_use is None else min(worth, value_in_use)
 
 
-def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_per_run, variable_cost_per_run=0.0,
+def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, room_per_run, input_cost_per_run=0.0,
                 wages=None) -> List[Bid]:
     """Inputs for the planned runs, net of what is held: a floor, not price-sensitive. The budget is
     the cash left after wages, split by cost share, so the bids never add up to more than the cash.
-    No input is bid for above `input_ceiling`: the run's margin shared by the input's cost share, and the
-    input's value against its cheapest substitute (the tool basket's later tools, or working by hand)."""
+    No input is bid for above `input_ceiling`: its share of the run's margin and committed wages (`room_per_run`) over
+    the inputs' cost, and the input's value against its cheapest substitute (the tool basket's later tools, or working by hand)."""
     needs = {}
     for good, per_run in sorted(recipe.inputs.items()):
         short = runs * per_run - view.stock(producer.agent_id, good, producer.tile)
@@ -520,7 +521,7 @@ def _input_bids(producer, recipe, view, runs, prices, budget_for_inputs, margin_
     bids = []
     for good, quantity in needs.items():
         share = quantity * prices[good] / total_cost if total_cost > 0.0 else 0.0
-        worth = input_ceiling(prices[good], margin_per_run, variable_cost_per_run,
+        worth = input_ceiling(prices[good], room_per_run, input_cost_per_run,
                               tool_fallback.value_in_use(recipe, good, prices, wages or {}))
         bids.append(Bid(producer.agent_id, good, view.area_of(good, producer.tile), producer.tile,
                         quantity, 0.0, prices[good], 0.0, max(0.0, budget_for_inputs) * share,
