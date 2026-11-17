@@ -35,6 +35,47 @@ The questions below stay as they were asked. The answers, and the state of each 
    budget and changes gradually (`households_work.hours_per_person_per_year`, `adjusted_hired_hours`,
    `household_servants.hired_hours_whole`).
 
+## New questions from Update 31 (2026-11-17), not yet answered
+
+### 8. What should households (and producers) hold their wealth in?
+
+**What was found.** Through England's spin-up the households hold about two years of their income in coin and the
+producers about a year of their sales (`Complaints/reports/473-handoff/probes/money_ratios.py` on a `series_probe.py`
+output). The households' spending rule rests where cash, claims and share wealth together are a target number of
+months of income; the rule comes from Eurace@Unibi, where the cash is a bank deposit. Here it is metal. A stock of
+coin that large loses more metal a year than the placed makers give, and in England more than its own ores could
+give at their ceilings, so the money stock falls every year and the price level and the wage fall with it
+(Complaint 982). `spin_up_settled` and `money_against_wear` cannot pass while it does.
+
+**Why it needs a decision.** Each way out changes what the model says people own:
+- (a) households keep most of their wealth in something other than coin (land titles, plate, stores, stock, loans)
+  and hold in coin what they need between pay and spending; producers likewise. This is what people did, and it is
+  the largest change (the spending rule, the opening's money, what a household can buy and sell to save).
+- (b) the opening sizes the money stock to what the placed coin-metal chain can replace, and the price level in
+  metal follows. Smaller, but it keeps households resting at years of income in a store of value that then barely
+  exists, so their spending rule would pull against it every year.
+- (c) source the loss rates (both are unsourced heuristics) and see whether they are far smaller. Worth doing in any
+  case; it is unlikely to close a gap of this size alone.
+
+**In the meantime.** Nothing changed: the stock and the loss are as they were. My recommendation is (a), with (c)
+done alongside.
+
+### 9. Does a civilisation have an ore that the deposit catalogue lists nowhere on its tiles?
+
+**What was found.** A recipe that digs a catalogue ore is limited to the deposits on the economy's tiles, but when no
+tile holds any deposit of it the recipe has no limit at all and may run on any tile (`UNSITED_EXTRACTION_ANYWHERE`,
+a labelled heuristic). England has no jarosite deposit (the catalogue's is Rio Tinto's), yet its opening prices
+jarosite ore and ranks the jarosite silver recipe first with no ceiling (Complaint 981). Making such an ore absent is
+what the deposits say, but it also removes ores the catalogue does not cover for a region:
+`unsited_probe.py mexica_1500` shows Mexica's silver ore has no site and is dug anywhere today.
+
+**Why it needs a decision.** Either the ore is absent until a deposit is added as data (then the catalogue needs the
+deposits it lacks, New World silver first), or the fallback stays and a civilisation can dig ores it never had.
+
+**In the meantime.** The fallback stays. The other half of Complaint 981 (the opening's recipe choice returning one
+phase of a cycle) is a plain defect and needs no decision; it is not fixed yet because its right answer depends on
+this one (with the fallback, England's consistent answer is a silver industry on an ore England does not have).
+
 ## 1. What "settled" should mean for the spin-up
 
 **What the check asks now.** `spin_up_settled` (sim/markets/spin_up_run.py `final_result`, sim/markets/spin_up_gap.py)

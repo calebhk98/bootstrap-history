@@ -2,7 +2,7 @@
 
 For whoever picks this up next. It says what the goal is, where the work stands, how to measure, what was learned,
 what was tried, and what to do first. The detail behind every claim is in
-`Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md` (Updates 24-30) and the
+`Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md` (Updates 24-31) and the
 owner's answers in `Complaints/reports/473-owner-questions.md`. Figures are not repeated here: each claim names
 the command that measures it.
 
@@ -25,8 +25,8 @@ The owner's requirements, which any change must keep:
 
 ## 2. Where it stands
 
-Branch `economy-settles-not-chaotic` (on top of the merged `spin-up-settles`). Merged, each with a rule test (Update
-30 gives the mechanism and evidence):
+Branch `economy-settles-not-chaotic` (on top of the merged `spin-up-settles`). Merged, each with a rule test (Updates
+30 and 31 give the mechanism and evidence):
 - Labour poaching is continuous in the employers' standing (`sim/labour/market/clearing.py`, `clearing_tail_kernel.py`).
 - Household work is counted over the labour year's working days (owner question 7), and hiring servants is continuous
   in the budget and gradual (`households_work.py`, `household_servants.py`, `household_work_year.py`).
@@ -34,15 +34,17 @@ Branch `economy-settles-not-chaotic` (on top of the merged `spin-up-settles`). M
 - Households' durable purchases replace wear and close a share of the gap to the stock wanted; affordability falls
   smoothly (the former unmerged `durable-demand-continuous` patch).
 - `requirements.txt` lists shapely (owner question 5).
+- Expected inflation takes up a surveyed share of a year's surprise where it took up half, so the rate a lender asks
+  no longer follows each year's price noise (Update 31).
 
 Not settled. What moves, by civilisation (section 3 says how to measure):
 - Norse: far calmer than before (household work was most of its swing); hired hours and output still move by one to
-  two times the tolerance, inventory value and the rate by many times it.
-- England: hired hours, output and the price level move by a little under the tolerance on average, with end gaps
-  about at it; inventory value and the rate by several times it. Its money stock falls by the coin wear every year
-  (section 4).
-- Han: hired hours, output and the price level move by two to three times the tolerance and the rate by many times;
-  its hours are calmer than before and its price level, watched prices and rate are not.
+  two times the tolerance, the rate by about the tolerance, inventory value by many times it.
+- England: hired hours, output, the price level and the rate move by about the tolerance or a little under it on
+  average, with end gaps about at it; inventory value by several times it. Its price level falls through the whole
+  spin-up because its money stock does (section 4).
+- Han: hired hours, output and the price level move by one to two times the tolerance and the rate by under twice it;
+  inventory value and the watched prices by many times it.
 - Mexica: its output shrinks through the whole spin-up; not traced.
 - Rome: not re-measured on this branch (its replay is slow and holds much memory).
 
@@ -112,7 +114,18 @@ Each is in Complaint 473 with its evidence.
   civilisation's tiles can supply at the opening, sized to the loss.
 - **A quarter of England's offered hours go unsold in every year** and the wage stays a steady multiple of the
   reservation (Update 30; Complaints 608, 963).
-- **The rate is the cheapest lender's ask every year** (Update 28) and follows the year's inflation; it settles last.
+- **The rate is the cheapest lender's ask every year** (Update 28): time preference plus expected inflation. The
+  expectation took up half of each year's surprise; it now takes up a surveyed share (Update 31), and the rate moves
+  by about the tolerance. What retires the share is a weight that follows how lasting the surprises have been.
+- **The price level cannot rest while the money stock falls, and it falls in every metal-money civilisation**
+  (Update 31, Complaints 981 and 982). The opening's choice of the coin metal's recipes returns one phase of a cycle
+  (`coin_passes_probe.py`), an ore with no deposit on the economy's tiles is treated as unlimited, and the money stock
+  is so large (households rest at years of income in coin) that its yearly loss is more metal than the ores give.
+  Owner questions 8 and 9 ask what to do; until they are answered no yearly rule can make the price level rest.
+- **Inventory value is a small share of a year's output**, so its relative move is the goods markets' yearly residual
+  magnified. The bulk goods that carry it end a year with nothing left or a large share of a year's output left, in
+  the same years as one another (`analyse_inventory.py`): look at the households' spending as a whole in those years
+  before any one market.
 - **Inventory value lumps come from buyers** (Update 29) and from single goods whose price creeps up and falls back.
 - **The opening solver is not proportional** (Update 25).
 - **Mexica's tool makers** (owner question 6): judging a learning crew on the cost of the crew it will become makes it
@@ -126,7 +139,7 @@ Patches are in `unmerged/` (against the `spin-up-settles` commit they were made 
 |---|---|---|
 | branch `opening-cash-at-the-yearly-steady-state` (the `opening-grown-floor-budget` patch re-applied) | the opening meets own-plot floors before sizing the budget, as the yearly rule does (owner question 3, option a) | alone it calms England and Norse; on top of the durable rule England's hours move more and Han's hours and wage swing far more. The cause in Han is not traced |
 | branch `learning-path-plan` | a crew still learning judges whether to run on the discounted cost of its learning path; entry takes the same path (owner question 6) | Mexica's wooden-tool crews go from no runs to a fraction of one: entry sizing still holds them to nothing, so it does not yet do what it is for |
-| branch `sold-out-ramp-and-margin` | (a) a producer counts its market's unmet demand in proportion to how nearly it sold out, on a narrow ramp where there was a rounding-share threshold; (b) the margin-entry streak is a standing that moves by how far the price stands from the entry price, entry goes ahead in proportion to it, and a recipe's entry is drawn in proportion to how far the price stands above its entry price | both rules are amplifiers the late twin probe found at the head, and both have rule tests; with them a late twin difference on England stays at rounding for three years and is orders of magnitude smaller after five. But measured together on the yearly moves, England is level and Norse's hours and output move nearly twice as much. Not separated: find which of the two swings Norse, then merge. An earlier form of (a), counting unmet demand net of the stock left, made England and Norse move more on its own: anything that makes producers count more unmet demand seems to make them chase it |
+| branch `sold-out-ramp-and-margin`; its halves on `ramp-only` and `margin-only` | (a) a producer counts its market's unmet demand in proportion to how nearly it sold out, on a narrow ramp where there was a rounding-share threshold; (b) the margin-entry streak is a standing that moves by how far the price stands from the entry price, entry goes ahead in proportion to it, and a recipe's entry is drawn in proportion to how far the price stands above its entry price | both rules are amplifiers the late twin probe found at the head, and both have rule tests; with both a late twin difference on England stays at rounding for three years and is orders of magnitude smaller after five, and with either alone it grows as at the head (Update 31). On the yearly moves England is level with all three; (a) alone makes Norse's hours and output move about twice as much, (b) alone somewhat more in the mean. So (a) is what swings Norse: anything that makes producers count more unmet demand makes them chase it, and the rule it smooths (a producer adding its market's unmet demand to its own expected sales) is the thing to change before the ramp can go in |
 | `grinding-share-continuous.patch` | grind-or-buy-milled a logit share per grain | measured before household work was fixed; not re-measured |
 | `inflation-trimmed-mean.patch` | observed inflation a weighted trimmed mean | the rate moved as much or more |
 | `stock-offered-in-tranches.patch` | held stock offered as up to four lots of a year's sales | inventory value moved as much |
@@ -134,8 +147,10 @@ Patches are in `unmerged/` (against the `spin-up-settles` commit they were made 
 
 ## 6. Owner questions
 
-All seven are answered (`Complaints/reports/473-owner-questions.md`, top). Done: 4, 5, 7. Question 1 is the standing
-requirement of section 1. Question 2 needs nothing. Questions 3 and 6 are built on branches and not merged (section 5).
+The first seven are answered (`Complaints/reports/473-owner-questions.md`, top). Done: 4, 5, 7. Question 1 is the
+standing requirement of section 1. Question 2 needs nothing. Questions 3 and 6 are built on branches and not merged
+(section 5). Questions 8 (what households hold their wealth in) and 9 (whether a civilisation has an ore the catalogue
+lists nowhere on its tiles) are new in Update 31 and not answered; the price level waits on them.
 
 ## 7. What to do first
 
@@ -144,9 +159,11 @@ requirement of section 1. Question 2 needs nothing. Questions 3 and 6 are built 
 2. Han: find why its hours and wage swing with the opening branch on top (`series_probe.py` and `analyse_series.py` on
    Han for the trade and area, then `wage_probe.py` on that market, as Update 30 did for England). Then question 3
    can be merged.
-3. The coin metal: make the opening place the coin-metal chain on recipes whose ores the civilisation's tiles can
-   supply and size it to the money's yearly loss, so `money_against_wear` passes and the price level can rest
-   (Complaints 961, 970). England is the traced case; Norse and Han lose their whole yearly loss too.
+3. The coin metal (Complaints 981 and 982). Make `opening_runs.required_runs` reach a fixed point where a
+   by-product's users and its maker feed each other (`coin_passes_probe.py` shows the cycle; a rule test with three
+   small recipes of that shape comes first). Then, with the owner's answers to questions 8 and 9, a money stock the
+   chain can replace, so `money_against_wear` passes and the price level can rest. England is the traced case; Norse
+   and Han lose their whole yearly loss too, and Rome has the same three silver recipes.
 4. Mexica: trace why output shrinks through the spin-up; then entry sizing for a trade nobody practises, so question 6
    can be merged.
 5. The single goods that saw and the amplifiers named in Update 30, with the twin probe. Judge an amplifier fix on the

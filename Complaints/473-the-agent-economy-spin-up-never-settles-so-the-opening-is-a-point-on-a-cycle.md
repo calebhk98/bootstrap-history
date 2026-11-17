@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the owner's answer is that settled stays a fixed point and the economy must not be chaotic; poaching, household time, servant hiring and durable demand no longer amplify or cycle (Update 30) and the yearly moves of hired hours and output are a fraction of what they were, but `spin_up_settled` still fails for every civilisation measured: Update 30 lists what was found and not fixed (England's money stock wears away, a quarter of its offered hours go unsold, single goods saw, the rate follows the year's inflation, Mexica shrinks)
+**Status:** partly - the owner's answer is that settled stays a fixed point and the economy must not be chaotic; poaching, household time, servant hiring, durable demand and the lenders' expected inflation no longer amplify or cycle (Updates 30 and 31) and the yearly moves of hired hours, output and the rate are a fraction of what they were, but `spin_up_settled` still fails for every civilisation measured. The price level cannot rest while the money stock falls: the money is many times what the coin metal chain can replace and the opening's choice of the chain's recipes returns one phase of a cycle (Update 31, Complaints 981 and 982, owner questions 8 and 9)
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -1143,3 +1143,56 @@ its own pinned worktree:
   twin kept a streak of decades, the other lost it), a market's memory moving by a different rule when it traded and
   when it did not, and capacity shed or grown on the sign of the margin (`close_kernel`). The first two are made
   continuous on branch `sold-out-ramp-and-margin` (above).
+
+## Update 31: the rate, the two amplifier fixes measured apart, and why the price level cannot rest (branch economy-settles-not-chaotic)
+
+**Merged: expected inflation takes up a surveyed share of a year's surprise** (`currency.EXPECTATION_ADJUSTMENT_SPEED`).
+The lowest rate a lender asks is its time preference plus the inflation it expects (Update 28), and the expectation
+took up half of each year's surprise, so the rate followed each year's price noise. The share is now four quarters of
+the weight on a new quarterly observation that surveyed inflation expectations imply (the source is in the
+declaration; what was opened is in `Complaints/reports/research-inflation-expectation-weight.md`). It stays a
+temporary heuristic and names what retires it: a weight that follows how lasting the surprises have been, small where
+price changes are noise and large where they last. Under commodity money a year's inflation told little about the
+next year's, so a lender who took up much of each surprise repriced on noise. On the yearly moves (`ensemble_years.py`
+then `ensemble_moves.py`; England and Norse eight members, Han four) the rate's mean yearly move falls from several
+times the tolerance to about the tolerance in England and Norse and from many times it to under twice it in Han,
+whose hired hours, output, price level and wage move less too. Nothing measured moves more by more than the spread
+between runs.
+
+**The two amplifier fixes of branch `sold-out-ramp-and-margin`, measured apart** (branches `ramp-only` and
+`margin-only`):
+- Neither alone cuts the growth of a late twin difference on England (`late_twin_probe.py`); only both together do.
+  Each of the two rules is enough on its own to carry a rounding difference up to whole per cents.
+- The ramp alone makes Norse's hired hours and output move about twice as much as the head and does not calm Han;
+  margin entry alone moves Norse's somewhat more in the mean and about as much in the median. Most of the swing seen
+  with both is the ramp's: a producer that counts its
+  market's unmet demand in proportion to how nearly it sold out chases that demand in more years than the threshold
+  let it. The rule being smoothed, a producer adding its market's unmet demand to its own expected sales, is the
+  suspect; the earlier form of the fix showed the same.
+- With both, the first leaves to part in the late fork are one building trade's wage and the output of a plant good,
+  in one year (`show_twin.py` on the probe's output). Not traced.
+Not merged: the ramp because of Norse, margin entry because alone it cuts nothing and calms nothing.
+
+**England, one run, year by year** (`series_probe.py`, read with `analyse_inventory.py` and `money_ratios.py`):
+- Through the trimmed stage the price level and the unskilled wage fall, in nearly every year and faster than the
+  money stock does. The producers' cash drains; the households' stays level.
+- The households hold about two years of their income in cash and the producers about a year of their sales.
+- Producers' inventory value is a small share of a year's output, so its relative move is the goods markets' yearly
+  residual magnified many times. The goods that carry it (the fuels, a medicine, a grain) end a year with nothing left
+  or with a large share of a year's output left, and in the same years as one another, which points at what the
+  households spend as a whole in those years and not at one market. Not traced further.
+
+**Why the price level cannot rest: the coin metal** (Complaints 981 and 982, with the probes that measure each).
+- The money stock falls by about its whole yearly loss in every metal-money civilisation measured, because the mint
+  strikes next to nothing. England's opening returns one phase of a cycle for its silver recipes
+  (`coin_passes_probe.py`): smelters on the jarosite route, no mine for their ore, the lead route sized for lead's
+  other buyers, galena and silver ore dug with no smelter to use them. Jarosite ore has no deposit on England's tiles
+  and is treated as unlimited. Norse opens with no maker of silver at all, Han with next to no maker of its coin
+  bronze (`unsited_probe.py`).
+- Even a working chain could not keep England's stock: the loss of a stock this large is more silver than the
+  ceilings of England's own ores give. The stock is that large because households rest at years of income in coin
+  (Complaint 982).
+- So a fixed point of the price level, and of the wage, the reservation and cash with it, needs the money's loss
+  replaced. That is a decision about what households hold their wealth in and about which ores a civilisation has
+  (`Complaints/reports/473-owner-questions.md`, questions 8 and 9), before it is an engine change.
+
