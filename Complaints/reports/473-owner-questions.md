@@ -51,8 +51,12 @@ assumption until trade is part of the opening); (b) foreign buyers of the civili
 spin-up (the real mechanism, and a much larger build); (c) households and producers hold about the historical fifth
 of a year's income in coin, so wear is small against what the mint strikes (question 8's option a; the largest).
 
-**In the meantime.** Nothing changed. My recommendation: (a) now, (b) when a civilisation's trade is part of its
-opening.
+**Measured since** (`ABLATE=held python3 ensemble_years.py ...`, the switch in `probes/ablations.py`): with (a) the
+yearly moves over the spin-up's forty-five years are about the same in England and a little larger in the Norse
+lands. Holding the stock does not help the settle check; what it would change is the long run after it.
+
+**In the meantime.** Nothing changed. My recommendation: leave it as it is for now and take (b) when a civilisation's
+trade is part of its opening; (a) buys nothing the check can see.
 
 ### 14. Raw leather clothes a household better than the shoes made from it
 

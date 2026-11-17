@@ -1378,8 +1378,9 @@ every year, linen and coal rise by more than it every year. Three things lie und
   none in Han. Over the long run England's stock falls to about a third; the wage and the price level follow and
   late in the run households go hungry. With wear switched off (`ABLATE=nowear`) the totals move about half as much
   for several decades, the calmest stretch of any run, and then swing widely: the stock is one cause, not the only
-  one. Complaint 982 holds the cause; owner question 10 is the decision. A steady fall under the tolerance passes
-  the check for the stock itself, but what it does to wages, hours and hunger does not.
+  one. Complaint 982 holds the cause; owner questions 10 and 13 are the decision. Holding the stock for the length
+  of the spin-up (`ABLATE=held`: coin wears only as far as the mint struck) leaves England's yearly moves about as
+  they are and makes the Norse lands' a little larger, so the fall is a long-run matter, not what fails the check.
 - **The wage ask cannot be held by a floor at the subsistence wage** (`ABLATE=floor`): the wage still falls, because
   the subsistence wage is the cost of the food basket and the food's price is mostly the wage. The two follow each
   other down against the goods whose price is held (silver at the mint price, goods at the top of their band).
@@ -1411,7 +1412,8 @@ every year, linen and coal rise by more than it every year. Three things lie und
   states the runs each producer's grant allows and the first year's plan works no more, but sales, plant, coin and
   the users of the output stayed sized for the runs asked. Han's wood, firewood and draught animals opened at many
   times what their ground allows. Each producer is now cut to its grant and the users of what only land makes to
-  that supply.
+  that supply. A land-bound good that no opening producer makes (the draught animals of the wheat farms, the milk
+  of the cheese makers) is left out: its users were sized without it, and holding them to nothing closed them.
 - **An input's price limit counts the wages already committed** (`producers.input_ceiling`, `plan_bids.place_bids`;
   `test_economy_input_ceiling_share` and the three beside it). The limit was the price plus a percentage margin, so
   a small input a little dearer than the margin was not bought and the run's wages were lost (the salt of Update

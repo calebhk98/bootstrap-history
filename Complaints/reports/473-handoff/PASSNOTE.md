@@ -213,8 +213,9 @@ What is in the way now, in the order to take it:
    (`first_year_probe.py` shows the makers one tile away from the only ore working a third of their runs).
 2. **A good in short supply is rationed for years because its price cannot leave the band above its cost**
    (leather, linen, coal in England; Update 34). The buyers who would pay most do not get it.
-3. **The money stock falls every year in every civilisation** (owner question 13). With wear off the totals are
-   calmer for decades and then swing, so this is one cause among several.
+3. **The money stock falls every year in every civilisation** (owner question 13). Holding it for the length of the
+   spin-up does not help the check (England the same, Norse a little worse); over a long run the fall takes the wage
+   and the price level with it. A long-run matter, behind the two above.
 4. The single goods: steel, carts and draught animals (zigzags), the unsold co-product, and the data that makes
    raw leather clothe a household better than the shoes made from it (owner question 14).
 5. Rome and Mexica have not been measured on this tree.
