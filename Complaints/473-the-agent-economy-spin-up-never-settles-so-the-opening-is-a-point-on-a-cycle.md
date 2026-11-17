@@ -1296,7 +1296,7 @@ it holds of its inputs, plant and outputs before and after each year) and `house
 about three fifths. Employers want fewer hours in total than households offer, and still about a tenth of what they
 want is not hired: the shortfall is by place and by trade.
 
-**Fixed on branch `opening-staffs-every-trade`, with a rule test** (`sim/labour/market/opening.py` `staffed_share`,
+**Fixed and merged, with a rule test** (`sim/labour/market/opening.py` `staffed_share`,
 `test_labour_core_opening`): an area short of people gives every trade the same share of its need. The opening
 placed an area's people trade by trade, hardest first, and the fallback trade took who was left. On England's busiest
 tile the producers need more hours than its people sell, so labourers and spinners opened with next to nobody and
@@ -1317,4 +1317,31 @@ four fifths of the sized output.
   spare time on its plot does not take labouring work within the year.
 - **The busiest tile's producers still want about a quarter more hours than its people offer** after the fix: the
   opening sizes a tile's producers without regard to its hands (Complaints 961 and 963 on Rome).
+
+**The staffing fix measured, and Norse's zigzag traced** (`ensemble_years.py`, `ensemble_moves.py`). With the staffing
+fix England's hired hours, price level, rate and wage move less (hours, the price level and the rate are under the
+tolerance on average) and Han's price level, rate and output move less. Norse moved about twice as much: of 24
+members a quarter sat in a low-employment zigzag, against one in 24 before. Traced on the unperturbed member
+(`series_probe.py` with `analyse_series.py`, then `grinding_probe.py`):
+- the hours labourers are hired for on Norse's main tile alternate by a third and their wage alternates against them;
+- the households' own housework hours alternate, because the share of their food they count as ground by hand flips
+  between about a half and nothing;
+- that share follows their food mix, and the mix jumps: in alternate years a by-product food (cheese one year, lard
+  another) holds a price of next to nothing for a year, and the mix, which is set by price alone
+  (`priced_need_kernel.mix_shares`), gives it most of the food they plan to buy. The market cannot supply it, the
+  bids are re-spent inside the year, and the next year the food has no price and the mix is back.
+
+**Merged with it: grinding by hand is a smooth share and moves gradually** (branch `grinding-share-continuous`: the
+parked `grinding-share-continuous` patch re-made on the current tree, with a gradual step added;
+`household_grinding.bought_shares`, `ground_by_hand`, `stepped_ground`, `stepped_overall_share`,
+`household_work_year.counted_share`, `Cohort.food_ground_share`, `GRINDING_ADJUSTMENT_SHARE_PER_YEAR`;
+`test_economy_household_grinding`). A cohort buys a share of each grain milled that is a smooth function of the two
+costs, and the share of its food it counts as ground by hand, which sets its housework hours, moves a declared share
+of the way from last year's to this year's each year (the opening takes it whole). With both merged Norse's zigzag
+is back to one member in 24 and its yearly moves are a little under what they were before either.
+
+**Not fixed: a thin, cheap good takes most of a need's planned spending.** The damping above cuts what the jump does
+to hours; the jump in the planned diet is still there, and so are the bids that find nothing. A good's share of a
+need should be held to what its market usually trades and a year's growth on it (`limit_shares` already takes a
+limit for each row, and the market memory keeps each market's usual volume).
 

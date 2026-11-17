@@ -144,7 +144,6 @@ Patches are in `unmerged/` (against the `spin-up-settles` commit they were made 
 | branch `opening-cash-at-the-yearly-steady-state` (the `opening-grown-floor-budget` patch re-applied) | the opening meets own-plot floors before sizing the budget, as the yearly rule does (owner question 3, option a) | alone it calms England and Norse; on top of the durable rule England's hours move more and Han's hours and wage swing far more. The cause in Han is not traced |
 | branch `learning-path-plan` | a crew still learning judges whether to run on the discounted cost of its learning path; entry takes the same path (owner question 6) | Mexica's wooden-tool crews go from no runs to a fraction of one: entry sizing still holds them to nothing, so it does not yet do what it is for |
 | branch `sold-out-ramp-and-margin`; its halves on `ramp-only` and `margin-only` | (a) a producer counts its market's unmet demand in proportion to how nearly it sold out, on a narrow ramp where there was a rounding-share threshold; (b) the margin-entry streak is a standing that moves by how far the price stands from the entry price, entry goes ahead in proportion to it, and a recipe's entry is drawn in proportion to how far the price stands above its entry price | both rules are amplifiers the late twin probe found at the head, and both have rule tests; with both a late twin difference on England stays at rounding for three years and is orders of magnitude smaller after five, and with either alone it grows as at the head (Update 31). On the yearly moves England is level with all three; (a) alone makes Norse's hours and output move about twice as much, (b) alone somewhat more in the mean. So (a) is what swings Norse: anything that makes producers count more unmet demand makes them chase it, and the rule it smooths (a producer adding its market's unmet demand to its own expected sales) is the thing to change before the ramp can go in |
-| `grinding-share-continuous.patch` | grind-or-buy-milled a logit share per grain | measured before household work was fixed; not re-measured |
 | `inflation-trimmed-mean.patch` | observed inflation a weighted trimmed mean | the rate moved as much or more |
 | `stock-offered-in-tranches.patch` | held stock offered as up to four lots of a year's sales | inventory value moved as much |
 | (not kept) | producers plan no stock cover and the ask only falls with unsold stock | prices fell every year: the step that raises an ask when stock is under its cover is what raises asks between years |
@@ -167,10 +166,20 @@ rebuild it out of the producers' coin and the economy ends smaller).
 
 The thing in the way now is upstream of every amplifier: **the first years do not reproduce the opening.** Output
 falls by a fifth in two years, households plan to spend about a third more than they can, the unspent coin piles up
-with them and the wage and prices slide for decades (`household_accounts_probe.py`, `series_probe.py`). Start there:
-compare, producer by producer, the runs the opening sized with the runs of the first year, and find what holds the
-first year's back (hours hired, inputs, coin, the plan's expected sales). Complaints 608 and 960 to 963 are the same
-fall on Rome. Owner questions 10 to 12 are open.
+with them and the wage and prices slide for decades (`household_accounts_probe.py`, `series_probe.py`). Update 33
+starts on it with `first_year_probe.py`, `first_year_labour_probe.py` and `producer_inputs_probe.py`: one cause is
+fixed and merged (an area short of people left the trades staffed last with nobody), together with the grinding
+change that keeps Norse out of a zigzag the fix made more common. What Update 33 lists as found and not fixed is the
+work to do next, in this order:
+1. a producer hires and pays its hands before the year's inputs are bought, so one input that does not arrive (salt
+   for the wool producer) costs it the wage bill and its coin, and everything downstream stops;
+2. the opening sizes a producer past what its land or its tile's hands allow (wool at twice its pasture; the busiest
+   tile wants a quarter more hours than it has);
+3. a thin, cheap good takes most of a need's planned spending (cap a good's share by what its market usually trades);
+4. labourers are offered exactly the hours wanted and seven eighths are hired; farmers' spare hours take no labouring
+   work within the year.
+Complaints 608 and 960 to 963 are the same fall on Rome. Owner questions 10 to 12 are open. Judge Norse on 24
+members, not eight: its members fall into a calm kind and a zigzag kind, and eight cannot tell a change in how many.
 
 ## 7. What to do first
 
