@@ -72,6 +72,25 @@ raw.
 **In the meantime.** Nothing changed. My recommendation: source the two figures (a research task), and until then
 lower raw leather's figure below the shoes'.
 
+### 15. Wheat's plough teams and the cheese makers' milk are goods no opening producer makes
+
+**What was found.** A wheat farm's plant is draught animals by weight and a cheese maker's input is milk; both goods
+are made only by the herd recipes (`data/production/95_herds.json`), which none of England, the Norse lands or Han
+opens with. The oxen and mules the openings do breed are a different good (a count, used by carts and carriers). So
+wheat farms could never replace their teams and cheese makers never had milk.
+
+**What was done.** The opening now holds the users of what only land makes to the supply placed (Update 34), which
+closes wheat and cheese at the opening in all three civilisations. Kept open, they wore out or idled and the
+economy moved more.
+
+**Why it needs a decision.** Wheat and cheese in 1300 England are not a detail. Either the herd recipes belong in
+these civilisations' starting knowledge, or the plough team should be the ox the openings already breed. That is a
+content decision.
+
+**In the meantime.** Wheat and cheese are closed at the opening. My recommendation: make the wheat farm's team the
+ox (or mule) the opening breeds, and add the cattle herd to the starting knowledge of the civilisations that kept
+cattle, each with a source.
+
 ## The owner's answers to questions 10 to 12 (2026-11-17)
 
 "Go with your recommendations for 10-12 and keep fixing. ... My goal is purely, stabilize the economy. Find out why it

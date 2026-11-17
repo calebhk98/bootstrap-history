@@ -1412,8 +1412,12 @@ every year, linen and coal rise by more than it every year. Three things lie und
   states the runs each producer's grant allows and the first year's plan works no more, but sales, plant, coin and
   the users of the output stayed sized for the runs asked. Han's wood, firewood and draught animals opened at many
   times what their ground allows. Each producer is now cut to its grant and the users of what only land makes to
-  that supply. A land-bound good that no opening producer makes (the draught animals of the wheat farms, the milk
-  of the cheese makers) is left out: its users were sized without it, and holding them to nothing closed them.
+  that supply. This closes the users of a land-bound good that no opening producer makes: in all three
+  civilisations the wheat farms (their plough teams are plant no placed herd breeds, so the plant wore out a tenth
+  a year and bread lost its price late in the spin-up) and the cheese makers (no milk is made; they ran one year on
+  an opening stock and then hired hands for nothing). Leaving those users as they were sized was tried
+  (`ensemble_years.py` on England): the totals moved nearly twice as much. They come back when a herd that makes
+  draught animals and milk is part of the opening (owner question 15).
 - **An input's price limit counts the wages already committed** (`producers.input_ceiling`, `plan_bids.place_bids`;
   `test_economy_input_ceiling_share` and the three beside it). The limit was the price plus a percentage margin, so
   a small input a little dearer than the margin was not bought and the run's wages were lost (the salt of Update

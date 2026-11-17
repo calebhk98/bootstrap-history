@@ -63,15 +63,16 @@ class FitToLandTests(unittest.TestCase):
         self.assertAlmostEqual(burner.expected_sales, 100.0)
         self.assertAlmostEqual(burner.capacity_runs, 200.0)
 
-    def test_a_land_bound_input_no_opening_producer_makes_does_not_close_its_users(self):
-        # the opening sized the ploughmen without any herd placed: holding them to a supply of nothing would close them
+    def test_users_of_a_land_bound_good_that_no_opening_producer_makes_are_closed(self):
+        # ploughmen whose teams no placed herd breeds cannot replace them: an opening at rest does not hold them
         self.setup.recipes["graze"] = Recipe("graze", {"draught": 1.0}, {}, {"herder": 1.0})
         self.setup.recipes["plough"] = Recipe("plough", {"grain": 1.0}, {"draught": 1.0}, {"farmer": 1.0})
         self.setup.land_per_run["graze"] = 5.0
         self.record.producers["producer:plough@tile"] = Producer("producer:plough@tile", "owner", "plough", "tile", 90.0,
                                                                  expected_sales=60.0)
         opening_land_fit.fit_to_land(self.setup, self.record)
-        self.assertAlmostEqual(self.record.producers["producer:plough@tile"].expected_sales, 60.0)
+        self.assertEqual(self.record.producers["producer:plough@tile"].expected_sales, 0.0)
+        self.assertEqual(self.record.producers["producer:plough@tile"].capacity_runs, 0.0)
 
 
 if __name__ == "__main__":
