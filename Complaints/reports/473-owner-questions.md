@@ -35,6 +35,39 @@ The questions below stay as they were asked. The answers, and the state of each 
    budget and changes gradually (`households_work.hours_per_person_per_year`, `adjusted_hired_hours`,
    `household_servants.hired_hours_whole`).
 
+## New questions from Update 34 (2026-11-17)
+
+### 13. Should the hidden spin-up lose coin that nothing replaces?
+
+**What was found.** In every civilisation measured the money stock falls every year of the spin-up: wear takes its
+declared share and the mint strikes about half of it in England and the Norse lands and none in Han. A long run of
+England loses two thirds of its coin; the wage and the price level follow, and late in the run households go hungry
+(Complaint 473 Update 34). With wear switched off the totals move about half as much for decades. The answer to
+question 10 (leave the spin-up closed to trade and let the stock fall slowly) assumed a slow fall did no harm.
+
+**Why it needs a decision.** A rest state needs a stock that rests. Three ways: (a) in the hidden spin-up, coin wears
+only as far as the mint struck that year, standing for the trade that brought the metal in (small, labelled as an
+assumption until trade is part of the opening); (b) foreign buyers of the civilisation's exports pay in coin in the
+spin-up (the real mechanism, and a much larger build); (c) households and producers hold about the historical fifth
+of a year's income in coin, so wear is small against what the mint strikes (question 8's option a; the largest).
+
+**In the meantime.** Nothing changed. My recommendation: (a) now, (b) when a civilisation's trade is part of its
+opening.
+
+### 14. Raw leather clothes a household better than the shoes made from it
+
+**What was found.** In the needs data a kilogram of leather meets more of the clothing need than the pair of shoes
+that most of a kilogram and half a day's work make (`data/world/needs.json`, `data/production/95_leather_goods.json`;
+both figures are labelled placeholders). Households therefore buy the leather, the shoemakers work a quarter of
+their runs, and shoes, a watched good in England, have no price in most years.
+
+**Why it needs a decision.** The figures are data with no source; changing them is a content decision. A made-up
+good should meet its need at least as well as the material in it, or the material should meet the need less well
+raw.
+
+**In the meantime.** Nothing changed. My recommendation: source the two figures (a research task), and until then
+lower raw leather's figure below the shoes'.
+
 ## The owner's answers to questions 10 to 12 (2026-11-17)
 
 "Go with your recommendations for 10-12 and keep fixing. ... My goal is purely, stabilize the economy. Find out why it
