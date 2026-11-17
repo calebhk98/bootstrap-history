@@ -4,6 +4,8 @@ The hardest trades are staffed first, each band giving people in proportion to i
 could finish the trade (aptitude.completion_chance), so a hard trade's people come from the able bands
 and the easy trades take who is left. The fallback trade takes the people its own work needs; the rest,
 whom no employer needs, work their own plots as the idle trade when one is named, else join the fallback.
+An area with fewer people than its work needs gives every trade the same share of its need, so the trades
+staffed last are not left with nobody.
 Trainees start empty and wages start unset; a few `year.run_year`s from here settle them.
 """
 from typing import Dict, Mapping, Optional, Union
@@ -21,6 +23,13 @@ def hours_a_person_sells(area: str, hours_per_worker_year: Union[float, Mapping[
     return stated if stated is not None else max(hours_per_worker_year.values(), default=1.0)
 
 
+def staffed_share(people: float, hours_wanted, hours_per_worker: float) -> float:
+    """The share of each trade's need an area can staff: one where its people cover the hours its work wants of them,
+    else the people it has over the people that work needs."""
+    needed = sum(max(0.0, hours) for hours in hours_wanted) / hours_per_worker
+    return min(1.0, people / needed) if needed > 0.0 else 1.0
+
+
 def opening_state(trades: Mapping[str, TradeSpec], working_people_by_area: Mapping[str, float],
                   hours_needed: Mapping[str, Mapping[str, float]],
                   hours_per_worker_year: Union[float, Mapping[str, float]],
@@ -36,9 +45,11 @@ def opening_state(trades: Mapping[str, TradeSpec], working_people_by_area: Mappi
         workers: Dict[str, list] = {}
         wanted = hours_needed.get(area, {})
         hours_per_worker = hours_a_person_sells(area, hours_per_worker_year)
+        staffed = staffed_share(aptitude.band_total(free), [wanted[trade] for trade in sorted(wanted) if trade in trades],
+                                hours_per_worker)
         for trade in sorted((trade for trade in wanted if trade in trades and trade != fallback),
                             key=lambda each: (-trades[each].difficulty, each)):
-            people = max(0.0, wanted[trade]) / hours_per_worker
+            people = staffed * max(0.0, wanted[trade]) / hours_per_worker
             able = [count * chance for count, chance in zip(free, aptitude.completion_by_band(trades[trade].difficulty))]
             able_total = aptitude.band_total(able)
             if people <= 0.0 or able_total <= 0.0:
@@ -49,7 +60,7 @@ def opening_state(trades: Mapping[str, TradeSpec], working_people_by_area: Mappi
                 free[index] -= value
             workers[trade] = taken
         if idle_trade in trades and idle_trade != fallback:
-            needed = max(0.0, wanted.get(fallback, 0.0)) / hours_per_worker
+            needed = staffed * max(0.0, wanted.get(fallback, 0.0)) / hours_per_worker
             free_total = aptitude.band_total(free)
             kept = min(1.0, needed / free_total) if free_total > 0.0 else 0.0
             idle = [value * (1.0 - kept) for value in free]
