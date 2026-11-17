@@ -123,8 +123,8 @@ def _placement_reads(setup) -> _PlacementReads:
 
 def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[TileId, float]:
     """A recipe's opening capacity shared over the tiles: by the site limits when sited, else by the
-    area's working hours. A site-bound recipe with no declared limit stays at the anchor
-    (sites.UNSITED_EXTRACTION_ANYWHERE)."""
+    area's people. A site-bound recipe with no declared limit is shared like an unbound one
+    (sites.UNSITED_EXTRACTION_ANYWHERE): the hands that work it live on every tile, not on the market's anchor."""
     reads = _placement_reads(setup)
     by_recipe = reads.by_recipe
     population = setup.opening_population_by_tile
@@ -139,8 +139,6 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
     if not suited:
         return {}
     if sites.runs_anywhere(recipe, by_recipe):
-        if area.anchor_tile in suited:
-            return {area.anchor_tile: runs}
         return split_runs(runs, {tile: population.get(tile, 0.0) for tile in suited}, {})
     tiles = sites.allowed_tiles(recipe, by_recipe, suited)
     weights = {tile: population.get(tile, 0.0) for tile in tiles}

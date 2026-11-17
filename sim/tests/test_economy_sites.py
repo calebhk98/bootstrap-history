@@ -94,6 +94,14 @@ class OpeningSplitTests(unittest.TestCase):
         self.assertAlmostEqual(split["farms"], 2.0)
         self.assertAlmostEqual(split["hills"], 6.0)
 
+    def test_a_bound_recipe_with_no_declared_site_is_shared_over_the_areas_tiles_by_their_people(self):
+        # the fixture's tiles hold 4000, 3000 and 1000 people; the area's anchor is its first tile
+        setup = fixture.small_setup(recipes={"dig": _bound()})
+        split = location.opening_split(setup, _bound(), self._area(["town", "farms", "hills"]), 8.0)
+        self.assertAlmostEqual(split["town"], 4.0)
+        self.assertAlmostEqual(split["farms"], 3.0)
+        self.assertAlmostEqual(split["hills"], 1.0)
+
     def test_areas_without_sites_pool_their_runs_and_the_others_keep_theirs(self):
         limits = {"town": SiteLimit("dig", "town", 1.0)}
         shares = [(self._area(["town"]), 3.0), (self._area(["farms"]), 2.0), (self._area(["hills"]), 4.0)]
