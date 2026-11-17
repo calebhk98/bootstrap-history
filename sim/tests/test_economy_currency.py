@@ -89,11 +89,14 @@ class IssueTests(unittest.TestCase):
 
 class MoneyDemandTests(unittest.TestCase):
     def test_expectations_adapt(self):
-        value = 0.0
+        self.assertAlmostEqual(currency.update_expected_inflation(0.0, 0.5), currency.EXPECTATION_ADJUSTMENT_SPEED * 0.5)
+        self.assertEqual(currency.update_expected_inflation(0.5, 0.5), 0.5)
+        value, gaps = 0.0, []
         for _ in range(20):
             value = currency.update_expected_inflation(value, 0.5)
-        self.assertAlmostEqual(value, 0.5, places=3)
-        self.assertLess(currency.update_expected_inflation(0.0, 0.5), 0.5)
+            gaps.append(0.5 - value)
+        self.assertEqual(gaps, sorted(gaps, reverse=True))
+        self.assertGreater(gaps[-1], 0.0)
 
 
 class PriceLevelAndRateTests(unittest.TestCase):
