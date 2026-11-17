@@ -1284,3 +1284,37 @@ year (`coin_passes_probe.py`, `coin_opening_probe.py`, `series_probe.py`).
   no floor, although the settle test gives a floor to the two other quantities that can sit near nothing (the rate and
   unmet need). Owner question 11.
 
+## Update 33: the first years do not reproduce the opening, and what holds England's first year back (branches economy-settles-not-chaotic, opening-staffs-every-trade)
+
+**How it was measured** (scratch probes in `Complaints/reports/473-handoff/probes/`, run from a checkout with
+`PYTHONPATH` set to it): `first_year_probe.py` (for each recipe the runs the opening sized, the capacity it placed and
+the runs staffed and worked in each of the first years, valued at the opening's prices), `first_year_labour_probe.py`
+(the first year's labour markets by work area and by trade), `producer_inputs_probe.py` (one producer's coin and what
+it holds of its inputs, plant and outputs before and after each year) and `household_accounts_probe.py`.
+
+**What England shows.** The first year works about three quarters of the output the opening sized and the second
+about three fifths. Employers want fewer hours in total than households offer, and still about a tenth of what they
+want is not hired: the shortfall is by place and by trade.
+
+**Fixed on branch `opening-staffs-every-trade`, with a rule test** (`sim/labour/market/opening.py` `staffed_share`,
+`test_labour_core_opening`): an area short of people gives every trade the same share of its need. The opening
+placed an area's people trade by trade, hardest first, and the fallback trade took who was left. On England's busiest
+tile the producers need more hours than its people sell, so labourers and spinners opened with next to nobody and
+peat, coal and thread could not run. With the fix England's first year rises from about three quarters to more than
+four fifths of the sized output.
+
+**Found and not fixed** (each seen in a probe):
+- **Wool is one producer, sized at about twice the runs its pasture allows** (`land_run_cap` against the expected
+  sales the opening gives it), so its first year is half its sized runs from the start.
+- **In its second year that producer hires its herders, gets no salt, makes next to nothing and loses most of its
+  coin.** Salt is a small input of a run and its price rises by a third that year. Thread, cloth, felt, shoes and
+  leather stop with the wool. This is the pattern of the silver smelters of Update 30: hands are hired and paid before
+  the year's inputs are bought, so an input that does not arrive costs the whole wage bill. The project rule that a
+  shortage of one input must not silently stop everything that uses it is not met here.
+- **Labourers are offered exactly the hours wanted in every area and about seven eighths of those are hired**, where
+  the skilled trades are offered a tenth more than wanted and are hired almost in full.
+- **About a billion hours offered by farmers find no employer**, in tiles where labourers are short: a household with
+  spare time on its plot does not take labouring work within the year.
+- **The busiest tile's producers still want about a quarter more hours than its people offer** after the fix: the
+  opening sizes a tile's producers without regard to its hands (Complaints 961 and 963 on Rome).
+
