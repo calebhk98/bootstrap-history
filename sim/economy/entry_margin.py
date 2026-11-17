@@ -58,6 +58,16 @@ def margin_share(standing: float) -> float:
     return min(1.0, max(0.0, standing - (LOSS_YEARS_BEFORE_EXIT - 1)))
 
 
+def margin_draw(price: float, entry_price: float) -> float:
+    """The share of a recipe's margin entry the price draws: nothing at the recipe's entry price or under it, all of it a whole
+    margin above (the margin the entry price adds to the cost), in proportion between, so a price a hair over the entry price
+    draws a hair of entry. An entry price that is not positive draws nothing."""
+    if not entry_price > 0.0:
+        return 0.0
+    band = entry_price * ENTRY_PRICE_MARGIN_SHARE / (1.0 + ENTRY_PRICE_MARGIN_SHARE)
+    return min(1.0, max(0.0, (price - entry_price) / band))
+
+
 def gap_at_entry_price(bids: Sequence[Bid], entry_price: float, price_now: float, capacity: float) -> float:
     """What the bids would take at the entry price beyond the output makers can reach."""
     return max(0.0, demand_at(bids, entry_price, price_now if price_now > 0.0 else entry_price) - capacity)
@@ -138,7 +148,8 @@ def margin_entry_plans(setup, record, view, area_map, bids_by_market, planned: S
                 break
             gap = max(0.0, demands[asked] - capacity)
             asked += 1
-            added = share * min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
+            ceiling = min(expected, each.price if each.price > 0.0 else expected)
+            added = share * margin_draw(ceiling, cost * (1.0 + ENTRY_PRICE_MARGIN_SHARE)) * min(MARGIN_ENTRY_SHARE_OF_GAP * gap, room)
             runs = added / setup.recipes[recipe_id].outputs[each.good]
             tile = each.area.anchor_tile
             if siting is not None and runs > 0.0:
