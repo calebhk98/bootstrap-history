@@ -17,6 +17,7 @@ from .setup import recipe_tile_key
 from .types import GoodId, Recipe, TileId
 
 INPUT_OUTPUT_PASSES = 60
+STEP_HALVINGS = 6             # numerical bound on how far the passes' step is cut when whole steps circle
 INCUMBENT_PASSES = 4          # numerical bound on choosing recipes against the demand they then meet
 CEILING_SWEEPS = 6            # numerical bound on carrying a deposit's limit down the chain of recipes that use it
 
@@ -195,42 +196,63 @@ def required_runs(final_by_tile, ranked: Mapping[GoodId, List[str]], recipes: Ma
     then the next, so what a deposit cannot feed is made another way; a joint run's other outputs count toward
     their own goods. A recipe in `yields` makes that factor of its stated outputs a run, so it takes more runs.
     With `main` (main_outputs), a good only made alongside another is supplied by the runs its makers' main outputs
-    take (by_product_ceilings), and the recipes that use it are held to that supply."""
+    take (by_product_ceilings), and the recipes that use it are held to that supply.
+
+    The passes take whole steps first. Where a by-product's user is a rival maker of its maker's main output each
+    feeds the other and whole steps circle (one pass gives the output to the user, the next finds no by-product for
+    it); the passes then go on from where they stand with the step halved, block by block, until they settle."""
     static = ceilings or {}
     yields = yields or {}
     runs: Dict[str, float] = {}
     driven: Dict[str, float] = {}
     users = by_product_users(recipes, main) if main is not None else {}
-    for _ in range(INPUT_OUTPUT_PASSES):
-        ceilings = dict(static)
-        if users:
-            for recipe_id, limit in by_product_ceilings(driven, recipes, users, yields).items():
-                ceilings[recipe_id] = min(ceilings.get(recipe_id, math.inf), limit)
-        required = required_quantities(final_by_tile, runs, recipes)
-        tool_fallback.shift_unmet_tools(required, runs, recipes, ranked, ceilings)
-        updated: Dict[str, float] = {}
-        driven = {}
-        for good, quantity in sorted(required.items()):
-            remaining = quantity
-            for recipe_id in ranked.get(good, ()):
-                if quantity <= 0.0:
-                    break
-                made = recipes[recipe_id].outputs.get(good, 0.0) * yields.get(recipe_id, 1.0)
-                if made <= 0.0:
-                    continue
-                for_good = min(remaining / made, ceilings.get(recipe_id, math.inf))
-                runs_now = max(updated.get(recipe_id, 0.0), for_good)
-                updated[recipe_id] = runs_now
-                if main is not None and main.get(recipe_id) == good:
-                    driven[recipe_id] = max(driven.get(recipe_id, 0.0), for_good)
-                remaining = quantity - runs_now * made
-                if remaining <= 1e-9 * quantity:
-                    break
-        if all(abs(updated.get(key, 0.0) - runs.get(key, 0.0)) <= 1e-9 * max(1.0, updated.get(key, 0.0))
-               for key in set(updated) | set(runs)):
-            return updated
-        runs = updated
+    for halvings in range(STEP_HALVINGS + 1):
+        step = 0.5 ** halvings
+        for _ in range(INPUT_OUTPUT_PASSES * 2 ** halvings):
+            updated, driven_now = _pass(final_by_tile, ranked, recipes, static, yields, main, users, runs, driven)
+            if all(abs(updated.get(key, 0.0) - runs.get(key, 0.0)) <= 1e-9 * max(1.0, updated.get(key, 0.0))
+                   for key in set(updated) | set(runs)):
+                return updated
+            runs, driven = _stepped(runs, updated, step), _stepped(driven, driven_now, step)
     return runs
+
+
+def _stepped(before: Mapping[str, float], after: Mapping[str, float], step: float) -> Dict[str, float]:
+    """`before` moved `step` of the way to `after` (a recipe in one only stands at nothing in the other)."""
+    if step >= 1.0:
+        return dict(after)
+    return {key: before.get(key, 0.0) + step * (after.get(key, 0.0) - before.get(key, 0.0))
+            for key in sorted(set(before) | set(after))}
+
+
+def _pass(final_by_tile, ranked, recipes, static, yields, main, users, runs, driven) -> Tuple[Dict[str, float], Dict[str, float]]:
+    """One pass: (the runs that meet final demand and what `runs` use, the runs each recipe's main output took of them),
+    under the ceilings and the by-product supply that `driven` gives."""
+    ceilings = dict(static)
+    if users:
+        for recipe_id, limit in by_product_ceilings(driven, recipes, users, yields).items():
+            ceilings[recipe_id] = min(ceilings.get(recipe_id, math.inf), limit)
+    required = required_quantities(final_by_tile, runs, recipes)
+    tool_fallback.shift_unmet_tools(required, runs, recipes, ranked, ceilings)
+    updated: Dict[str, float] = {}
+    driven_now: Dict[str, float] = {}
+    for good, quantity in sorted(required.items()):
+        remaining = quantity
+        for recipe_id in ranked.get(good, ()):
+            if quantity <= 0.0:
+                break
+            made = recipes[recipe_id].outputs.get(good, 0.0) * yields.get(recipe_id, 1.0)
+            if made <= 0.0:
+                continue
+            for_good = min(remaining / made, ceilings.get(recipe_id, math.inf))
+            runs_now = max(updated.get(recipe_id, 0.0), for_good)
+            updated[recipe_id] = runs_now
+            if main is not None and main.get(recipe_id) == good:
+                driven_now[recipe_id] = max(driven_now.get(recipe_id, 0.0), for_good)
+            remaining = quantity - runs_now * made
+            if remaining <= 1e-9 * quantity:
+                break
+    return updated, driven_now
 
 
 def choose_recipes(final_by_tile, recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float],

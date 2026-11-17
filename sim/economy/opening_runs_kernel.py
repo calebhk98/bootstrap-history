@@ -11,6 +11,7 @@ from sim.jit import njit
 from sim.economy.opening_demand_kernel import PARTIALS, _add, _total
 
 INPUT_OUTPUT_PASSES = 60
+STEP_HALVINGS = 6            # opening_runs.STEP_HALVINGS: how far the step is cut when whole steps circle
 __all__ = ["required_runs", "PARTIALS"]
 
 
@@ -69,79 +70,98 @@ def required_runs(national, static_ceil, has_static, rank_ptr, rank_recipe, rank
     runs_count = 0
     new_order = np.zeros(recipe_count, dtype=np.int64)
     driven = np.zeros(recipe_count)
+    driven_now = np.zeros(recipe_count)
+    in_order = np.zeros(recipe_count, dtype=np.bool_)
     updated = np.zeros(recipe_count)
     touched = np.zeros(recipe_count, dtype=np.bool_)
     ceil = np.zeros(recipe_count)
     has_ceil = np.zeros(recipe_count, dtype=np.bool_)
     required = np.zeros(good_count)
     wearing = np.zeros(good_count)
-    for passes in range(INPUT_OUTPUT_PASSES):
-        for recipe in range(recipe_count):
-            ceil[recipe] = static_ceil[recipe]
-            has_ceil[recipe] = has_static[recipe]
-        for group in range(bp_ptr.shape[0] - 1):
-            count = 0
-            for slot in range(bp_maker_ptr[group], bp_maker_ptr[group + 1]):
-                count = _add(partials, count, driven[bp_maker[slot]] * bp_maker_output[slot] * bp_maker_yield[slot])
-            supply = _total(partials, count)
-            for slot in range(bp_user_ptr[group], bp_user_ptr[group + 1]):
-                user = bp_user[slot]
-                limit = supply / bp_user_needed[slot]
-                if not has_ceil[user] or limit < ceil[user]:
-                    ceil[user] = limit
-                has_ceil[user] = True
-        for good in range(good_count):
-            required[good] = national[good]
-        for slot in range(runs_count):
-            recipe = runs_order[slot]
-            for entry in range(input_ptr[recipe], input_ptr[recipe + 1]):
-                if input_life[entry] > 0.0:
-                    required[input_good[entry]] += runs[recipe] * input_per_run[entry] / input_life[entry]
-                else:
-                    required[input_good[entry]] += runs[recipe] * input_per_run[entry]
-        _shift_unmet_tools(required, runs, runs_order, runs_count, ceil, has_ceil, rank_ptr, rank_recipe, rank_output,
-                           tool_ptr, tool_good, tool_per_run, tool_fallback, tool_fallback_units, wearing, partials)
-        updated[:] = 0.0
-        driven[:] = 0.0
-        touched[:] = False
-        new_count = 0
-        for good in range(good_count):
-            quantity = required[good]
-            remaining = quantity
-            for slot in range(rank_ptr[good], rank_ptr[good + 1]):
-                if quantity <= 0.0:
-                    break
-                made = rank_made[slot]
-                if made <= 0.0:
-                    continue
-                recipe = rank_recipe[slot]
-                for_good = remaining / made
-                if has_ceil[recipe] and ceil[recipe] < for_good:
-                    for_good = ceil[recipe]
-                runs_now = max(updated[recipe], for_good)
-                updated[recipe] = runs_now
-                if not touched[recipe]:
-                    touched[recipe] = True
-                    new_order[new_count] = recipe
-                    new_count += 1
-                if rank_main[slot]:
-                    driven[recipe] = max(driven[recipe], for_good)
-                remaining = quantity - runs_now * made
-                if remaining <= 1e-9 * quantity:
-                    break
-        same = True
-        for recipe in range(recipe_count):
-            if abs(updated[recipe] - runs[recipe]) > 1e-9 * max(1.0, updated[recipe]):
-                same = False
-        if same:
+    passes = 0
+    for halvings in range(STEP_HALVINGS + 1):
+        step = 0.5 ** halvings
+        for _pass in range(INPUT_OUTPUT_PASSES * 2 ** halvings):
+            passes += 1
             for recipe in range(recipe_count):
-                runs_out[recipe] = updated[recipe]
-            return passes + 1
-        for recipe in range(recipe_count):
-            runs[recipe] = updated[recipe]
-        for slot in range(new_count):
-            runs_order[slot] = new_order[slot]
-        runs_count = new_count
+                ceil[recipe] = static_ceil[recipe]
+                has_ceil[recipe] = has_static[recipe]
+            for group in range(bp_ptr.shape[0] - 1):
+                count = 0
+                for slot in range(bp_maker_ptr[group], bp_maker_ptr[group + 1]):
+                    count = _add(partials, count, driven[bp_maker[slot]] * bp_maker_output[slot] * bp_maker_yield[slot])
+                supply = _total(partials, count)
+                for slot in range(bp_user_ptr[group], bp_user_ptr[group + 1]):
+                    user = bp_user[slot]
+                    limit = supply / bp_user_needed[slot]
+                    if not has_ceil[user] or limit < ceil[user]:
+                        ceil[user] = limit
+                    has_ceil[user] = True
+            for good in range(good_count):
+                required[good] = national[good]
+            for slot in range(runs_count):
+                recipe = runs_order[slot]
+                for entry in range(input_ptr[recipe], input_ptr[recipe + 1]):
+                    if input_life[entry] > 0.0:
+                        required[input_good[entry]] += runs[recipe] * input_per_run[entry] / input_life[entry]
+                    else:
+                        required[input_good[entry]] += runs[recipe] * input_per_run[entry]
+            _shift_unmet_tools(required, runs, runs_order, runs_count, ceil, has_ceil, rank_ptr, rank_recipe, rank_output,
+                               tool_ptr, tool_good, tool_per_run, tool_fallback, tool_fallback_units, wearing, partials)
+            updated[:] = 0.0
+            driven_now[:] = 0.0
+            touched[:] = False
+            new_count = 0
+            for good in range(good_count):
+                quantity = required[good]
+                remaining = quantity
+                for slot in range(rank_ptr[good], rank_ptr[good + 1]):
+                    if quantity <= 0.0:
+                        break
+                    made = rank_made[slot]
+                    if made <= 0.0:
+                        continue
+                    recipe = rank_recipe[slot]
+                    for_good = remaining / made
+                    if has_ceil[recipe] and ceil[recipe] < for_good:
+                        for_good = ceil[recipe]
+                    runs_now = max(updated[recipe], for_good)
+                    updated[recipe] = runs_now
+                    if not touched[recipe]:
+                        touched[recipe] = True
+                        new_order[new_count] = recipe
+                        new_count += 1
+                    if rank_main[slot]:
+                        driven_now[recipe] = max(driven_now[recipe], for_good)
+                    remaining = quantity - runs_now * made
+                    if remaining <= 1e-9 * quantity:
+                        break
+            same = True
+            for recipe in range(recipe_count):
+                if abs(updated[recipe] - runs[recipe]) > 1e-9 * max(1.0, updated[recipe]):
+                    same = False
+            if same:
+                for recipe in range(recipe_count):
+                    runs_out[recipe] = updated[recipe]
+                return passes
+            if halvings == 0:
+                for recipe in range(recipe_count):
+                    runs[recipe] = updated[recipe]
+                    driven[recipe] = driven_now[recipe]
+                for slot in range(new_count):
+                    runs_order[slot] = new_order[slot]
+                runs_count = new_count
+            else:      # part of the way: the recipes that hold runs are those that did and those the pass gave any
+                for recipe in range(recipe_count):
+                    runs[recipe] += step * (updated[recipe] - runs[recipe])
+                    driven[recipe] += step * (driven_now[recipe] - driven[recipe])
+                in_order[:] = False
+                for slot in range(runs_count):
+                    in_order[runs_order[slot]] = True
+                for slot in range(new_count):
+                    if not in_order[new_order[slot]]:
+                        runs_order[runs_count] = new_order[slot]
+                        runs_count += 1
     for recipe in range(recipe_count):
         runs_out[recipe] = runs[recipe]
-    return INPUT_OUTPUT_PASSES
+    return passes
