@@ -1356,3 +1356,97 @@ having been killed for memory) says Han's hired hours and wage now move about tw
 level and rate about as much as before. The samples of four put the step at the ore rule (Han's silver can no longer
 come from jarosite ore dug anywhere), not at the staffing or grinding changes. Not traced further.
 
+
+## Update 34: a long run never rests; the opening put whole trades on one tile, ignored land it had already cleared, and the hiring rounds starved large employers (branch economy-settles-not-chaotic)
+
+**How it was measured** (probes in `Complaints/reports/473-handoff/probes/`, run from a checkout with `PYTHONPATH` set
+to it): `probe_spin_years.py <civ> <first years> <trimmed years> <out>` for one long run, read with `windows.py`
+(mean yearly move and net drift of every watched quantity by window of years) and `table.py`; `price_kinds.py` on an
+`ensemble_years.py` file (for each watched quantity the mean move, the drift a year and the lag-one correlation of
+the moves: negative is a zigzag, a drift with none is a slide); `series_probe.py` read with `drift_goods.py` (which
+goods carry a change in real output); `first_year_probe.py`, `first_year_labour_probe.py`, `labourer_probe.py` (one
+labour market: every employer's posts against the hours it was given), `placement_probe.py`, `placement_trace.py`,
+`unsited_list.py`, `fit_probe.py`, `oriented_probe.py`, `opening_sizes.py` and `hunger_probe.py` for the opening and
+the first year. `ablations.py` holds two switches for `probe_spin_years.py` (`ABLATE=nowear`, `ABLATE=floor`).
+
+**A long run of England never comes to rest.** Run for two centuries, no window of twenty years has every watched
+quantity under the tolerance, and the moves do not shrink with time. What the forty-five years of the spin-up show is
+mostly a one-way slide, not a zigzag: the wage falls for a generation, bread and flour fall by about the tolerance
+every year, linen and coal rise by more than it every year. Three things lie under it:
+- **The money stock falls every year, in every civilisation measured** (`money_supply` in any `ensemble_years.py`
+  file). Wear takes its declared share and the mint strikes about half of it in England and the Norse lands and
+  none in Han. Over the long run England's stock falls to about a third; the wage and the price level follow and
+  late in the run households go hungry. With wear switched off (`ABLATE=nowear`) the totals move about half as much
+  for several decades, the calmest stretch of any run, and then swing widely: the stock is one cause, not the only
+  one. Complaint 982 holds the cause; owner question 10 is the decision. A steady fall under the tolerance passes
+  the check for the stock itself, but what it does to wages, hours and hunger does not.
+- **The wage ask cannot be held by a floor at the subsistence wage** (`ABLATE=floor`): the wage still falls, because
+  the subsistence wage is the cost of the food basket and the food's price is mostly the wage. The two follow each
+  other down against the goods whose price is held (silver at the mint price, goods at the top of their band).
+- **The first year does not reproduce the opening**, so capacity is shed in the first years and comes back in rare
+  steps (`series_probe.py`: a producer's capacity stands still for decades and then rises by half in one year). The
+  rest of this update is what was found and fixed there.
+
+**Fixed, each with a rule test.**
+- **A site-bound recipe with no declared site was placed whole on its market's anchor tile** (`location.opening_split`;
+  `test_economy_sites`). A good that trades over the whole economy has one market area, so flax, poppy, wool, wax and
+  draught animals all opened on one tile, which wanted far more hours than its people sell while a third of all hours
+  offered elsewhere found no employer. They are now shared over the area's tiles by their people, like an unbound
+  recipe. This is the busiest tile of Update 33 and most of its idle farmers.
+- **A processor tied to its input's site got no tile when the tile's hands were spoken for** (`location_inputs.place_oriented`;
+  `test_location_inputs`, `test_opening_smelters_beside_ore`). Its placement was capped at the hands left after
+  every producer placed before it, counted at their full capacity; with none left it was not placed, and the supply
+  fit then held every user of its output to nothing. With the first fix England's only iron-ore tile was in that
+  state and the whole iron chain opened at nothing. It is now capped at what all the tile's hands could work and
+  shares them with the others through the labour market.
+- **The hiring rounds starved an employer with most of a market's posts** (`hiring_kernel._shares_of_prefix`,
+  `labour_hiring_reference._taken_by`; `test_labour_eurace_applications`, `test_year_speed_labour_hiring`). A
+  searching household applied to a few posters picked evenly. A producer here stands for every workplace of its
+  recipe on a tile, so one posting half a market's hours drew as many applications as one posting a hundredth, could
+  not take back what each round's dismissals cost it, and ended every year about a quarter short while the small
+  employers were full: the labourers of Update 33 who were offered exactly the hours wanted and seven eighths hired.
+  An application now goes to a poster with the chance of its share of the hours posted.
+- **The opening ignored the land it had already cleared** (`opening_land_fit.held_to_land`, `fit_to_land`,
+  `opening_runs.limited_goods` with the land a run takes; `test_opening_fit_to_land`). The opening's land market
+  states the runs each producer's grant allows and the first year's plan works no more, but sales, plant, coin and
+  the users of the output stayed sized for the runs asked. Han's wood, firewood and draught animals opened at many
+  times what their ground allows. Each producer is now cut to its grant and the users of what only land makes to
+  that supply.
+- **An input's price limit counts the wages already committed** (`producers.input_ceiling`, `plan_bids.place_bids`;
+  `test_economy_input_ceiling_share` and the three beside it). The limit was the price plus a percentage margin, so
+  a small input a little dearer than the margin was not bought and the run's wages were lost (the salt of Update
+  33). It is now what the run can pay for its inputs once its hands are hired.
+- **The settle test reads a change in producers' inventory value against the year's real output** (owner question
+  11; `spin_up_gap.state_gaps`, `test_spin_up_measure`).
+
+**What the first year works of the output the opening sized** (`first_year_probe.py <civ>`): England about nine
+tenths (about three quarters at the start of Update 33), Norse more than four fifths, Han somewhat under three fifths
+(under two fifths before). Hours staffed are within a few per cent of hours sized in all three; what is left is
+hours hired and not worked, for want of an input.
+
+**Han and the Norse lands are hungry from the first year** (`hunger_probe.py <civ>`). About two fifths of Han's
+food need and a sixth of Norse's is unmet in year one, before any yearly dynamics. In Han the hungry are on fertile,
+populous tiles whose households work no plot at all (the land went to producers that outbid the plots) and hold
+several years of income in coin; the farms that took the land hire nearly all the hours they are sized for and work
+about two fifths of the runs. In the Norse lands they are the tiles with no farmland, with coin in hand and no food
+reaching them. Neither can settle while this holds, and the yearly moves measured on them sit on top of it.
+
+**Tried and not merged.**
+- **Households' mix within a need anchored on what the market usually spends on each good** (branch
+  `households-mix-follows-the-market`): England moved more on every watched quantity.
+- **Producers hire within what their inputs' markets can supply** (branch `plans-within-reach`): hiding the shortage
+  from the plan hid it from prices and entry as well; bidding for the whole plan while hiring within reach stirred
+  late prices and inventories.
+
+**Found and not fixed.**
+- **A good whose buyers want more than there is stays rationed for years, because its price cannot leave the band
+  above its cost** (`ask_adjust.band_edge`, `unsold_search.ask_limits`). England's households take the leather the
+  shoemakers were sized to use (leather meets clothing cheaply), the shoemakers work a quarter of their runs, and
+  shoes then have no price in most years, which the check counts as a full move. Linen and coal climb a few per
+  cent every year for the same reason.
+- **Inputs carried from the one tile that makes them do not arrive in the first year**: England's bloomeries work
+  about a third of their runs, and the crops that wear iron tools about three quarters.
+- **Capacity grows only when buyers are turned away at the price**, and the search inside the year raises the price
+  until none are, so a sold-out maker with a wide margin has no signal to grow.
+- Still open from earlier updates: the unsold co-product, the cart and draught-animal price swings, Rome and Mexica
+  unmeasured on this tree.
