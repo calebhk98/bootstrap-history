@@ -12,7 +12,7 @@ QUICK_TOPIC = True
 
 def _cohorts():
     first = Cohort("household:b:1", "tile:b", 1, 30.0, 12.0, 0.6, expected_inflation=0.02, cash_target=5.0, share_wealth=7.5,
-                   unmet_floor_by_need={"hunger": 2.0, "warmth": 0.5}, own_plan_by_need={"hunger": 1.0}, milled_grains=("wheat", "rye"))
+                   unmet_floor_by_need={"hunger": 2.0, "warmth": 0.5}, own_plan_by_need={"hunger": 1.0}, ground_by_hand=(("wheat", 0.25), ("rye", 0.5)))
     second = Cohort("household:a:0", "tile:a", 0, 10.0, 4.0, 0.4, hired_work_per_person=3.0)
     return first, second
 
@@ -61,7 +61,7 @@ class StoreIsAMappingOfRecords(unittest.TestCase):
         store = CohortStore({first.agent_id: first})
         record = store[first.agent_id]
         self.assertEqual(list(record.unmet_floor_by_need), ["hunger", "warmth"])
-        self.assertEqual(record.milled_grains, ("wheat", "rye"))
+        self.assertEqual(record.ground_by_hand, (("wheat", 0.25), ("rye", 0.5)))
 
     def test_a_long_mapping_widens_the_columns(self):
         first, _second = _cohorts()
@@ -118,9 +118,9 @@ class BlockReadsAndWrites(unittest.TestCase):
     def test_write_milled_gives_each_row_its_grains(self):
         first, second = _cohorts()
         store = CohortStore({first.agent_id: first, second.agent_id: second})
-        store.write_milled(np.array([0, 1]), [(), ("barley",)])
-        self.assertEqual(store[first.agent_id].milled_grains, ())
-        self.assertEqual(store[second.agent_id].milled_grains, ("barley",))
+        store.write_ground(np.array([0, 1]), [(), (("barley", 0.375),)])
+        self.assertEqual(store[first.agent_id].ground_by_hand, ())
+        self.assertEqual(store[second.agent_id].ground_by_hand, (("barley", 0.375),))
 
     def test_unmet_of_reads_one_need_for_every_row(self):
         store = CohortStore({each.agent_id: each for each in _cohorts()})

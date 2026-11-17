@@ -1,5 +1,5 @@
 """The rules the year's goods orders, the household work plans and the household loans run on a cohort's figures read from the columns
-(`cohort_order_figures.order_figures`, `CohortStore.milled_of`, `CohortStore.figures`) give what the same rules gave over a `Cohort`."""
+(`cohort_order_figures.order_figures`, `CohortStore.ground_of`, `CohortStore.figures`) give what the same rules gave over a `Cohort`."""
 
 QUICK_TOPIC = True
 
@@ -18,7 +18,7 @@ from sim.economy.setup import labour_area
 
 def _cohorts():
     return [Cohort("household:b", "tile:x", 1, 30.0, 12.0, 0.6, expected_inflation=0.02, cash_target=7.0, last_year_income=5.0,
-                   expected_spending=3.0, expected_floor_cost=2.0, hired_work_per_person=4.0, milled_grains=("wheat_kg", "barley_kg")),
+                   expected_spending=3.0, expected_floor_cost=2.0, hired_work_per_person=4.0, ground_by_hand=(("wheat_kg", 0.25), ("barley_kg", 0.5))),
             Cohort("household:a", "tile:y", 0, 20.0, 8.0, 0.5, expected_inflation=np.float64(0.03), cash_target=np.float64(1.5),
                    share_wealth=np.float64(9.0), last_year_income=3.0)]
 
@@ -49,29 +49,29 @@ class OrderFiguresTests(unittest.TestCase):
 class MilledOfTests(unittest.TestCase):
     def test_the_grains_are_read_back_in_the_order_written(self):
         store = _store()
-        self.assertEqual(store.milled_of(store.row_of["household:b"]), ("wheat_kg", "barley_kg"))
-        self.assertEqual(store.milled_of(store.row_of["household:a"]), ())
+        self.assertEqual(store.ground_of(store.row_of["household:b"]), (("wheat_kg", 0.25), ("barley_kg", 0.5)))
+        self.assertEqual(store.ground_of(store.row_of["household:a"]), ())
 
     def test_a_block_write_of_grains_replaces_what_was_read_before(self):
         store = _store()
         row = store.row_of["household:b"]
-        store.milled_of(row)
-        store.write_milled(np.array([row], dtype=np.int64), [("rye_kg",)])
-        self.assertEqual(store.milled_of(row), ("rye_kg",))
+        store.ground_of(row)
+        store.write_ground(np.array([row], dtype=np.int64), [(("rye_kg", 0.125),)])
+        self.assertEqual(store.ground_of(row), (("rye_kg", 0.125),))
 
     def test_a_single_field_write_of_grains_replaces_what_was_read_before(self):
         store = _store()
         row = store.row_of["household:a"]
-        store.milled_of(row)
-        store.set_fields("household:a", milled_grains=("rye_kg", "wheat_kg"))
-        self.assertEqual(store.milled_of(row), ("rye_kg", "wheat_kg"))
+        store.ground_of(row)
+        store.set_fields("household:a", ground_by_hand=(("rye_kg", 0.75), ("wheat_kg", 0.0625)))
+        self.assertEqual(store.ground_of(row), (("rye_kg", 0.75), ("wheat_kg", 0.0625)))
 
     def test_a_record_put_over_a_row_replaces_its_grains(self):
         store = _store()
         row = store.row_of["household:b"]
-        store.milled_of(row)
-        store.put(Cohort("household:b", "tile:x", 1, 30.0, 12.0, 0.6, milled_grains=()))
-        self.assertEqual(store.milled_of(row), ())
+        store.ground_of(row)
+        store.put(Cohort("household:b", "tile:x", 1, 30.0, 12.0, 0.6, ground_by_hand=()))
+        self.assertEqual(store.ground_of(row), ())
 
 
 class WorkTermsTests(unittest.TestCase):

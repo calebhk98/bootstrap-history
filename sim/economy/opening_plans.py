@@ -12,13 +12,14 @@ import math
 from typing import Callable, Dict, Mapping, Optional, Tuple
 
 from . import household_work_year, households_work, labour_state, year_labour
+from .household_grinding import HandGround
 from .households_cohort import Cohort
 from .opening_placement import hours_per_worker_in
 from .market_memory import MarketMemory, YearView, market_key
 from .setup import labour_area
 from .types import AgentId, TileId
 
-CohortPlan = Tuple[float, float, Tuple[str, ...]]   # (hours hired a person, hours done itself, grains bought milled)
+CohortPlan = Tuple[float, float, HandGround, Optional[float]]   # (hours hired a person, hours done itself, grains ground by hand with their shares, share of its food counted as ground by hand)
 PLAN_TOLERANCE = 1e-6   # a numerical bound: hours hired a person are a share of the work, so a plan agrees within it
 PLAN_FLOOR_HOURS = 1e-3 # a numerical floor under that tolerance (hours a person) so a plan of nothing can agree
 PLAN_PASSES = 6          # a numerical bound on solving the opening against the plans it implies (a cycle of the choice ends here)
@@ -62,7 +63,7 @@ def household_plans(setup, record, area_map, room_by_tile: Optional[Mapping[Tile
         rows: Dict[str, list] = {}
         tiles_of: Dict[str, set] = {}
         for _cohort_id, cohort in sorted(record.cohorts.items()):
-            value, needed, price, _milled = household_work_year.work_terms(setup, record, view, cohort, offers, expected)
+            value, needed, price, _milled, _counted = household_work_year.work_terms(setup, record, view, cohort, offers, expected)
             market = _service_market(setup, area_map, cohort.tile)
             margins[_cohort_id] = value - price
             rows.setdefault(market, []).append((value, needed, price))
@@ -94,14 +95,26 @@ def post_service_prices(memory: MarketMemory, area_map, setup, floors: Mapping[T
 def with_plans(cohorts: Mapping[AgentId, Cohort], plans: HouseholdPlans) -> Dict[AgentId, Cohort]:
     """The cohorts holding what they plan to hire and buy milled; a cohort with no plan is left as it is."""
     return {cohort_id: (dataclasses.replace(cohort, hired_work_per_person=plans.by_cohort[cohort_id][0],
-                                            milled_grains=plans.by_cohort[cohort_id][2])
+                                            ground_by_hand=plans.by_cohort[cohort_id][2], food_ground_share=plans.by_cohort[cohort_id][3])
                         if cohort_id in plans.by_cohort and _differs(cohort, plans.by_cohort[cohort_id]) else cohort)
             for cohort_id, cohort in cohorts.items()}
 
 
 def _differs(cohort: Cohort, plan: CohortPlan) -> bool:
     return (abs(cohort.hired_work_per_person - plan[0]) > PLAN_TOLERANCE * max(abs(plan[0]), PLAN_FLOOR_HOURS)
-            or tuple(cohort.milled_grains) != tuple(plan[2]))
+            or not _same_shares(cohort.ground_by_hand, plan[2]) or not _same_share(cohort.food_ground_share, plan[3]))
+
+
+def _same_share(held: Optional[float], planned: Optional[float]) -> bool:
+    """Whether two overall shares of food ground by hand are both none or agree within PLAN_TOLERANCE."""
+    return held is planned or (held is not None and planned is not None and abs(held - planned) <= PLAN_TOLERANCE)
+
+
+def _same_shares(held: HandGround, planned: HandGround) -> bool:
+    """Whether two ground-by-hand holdings name the same grains and agree on each share within PLAN_TOLERANCE."""
+    return (len(held) == len(planned)
+            and all(grain == other and abs(share - planned_share) <= PLAN_TOLERANCE
+                    for (grain, share), (other, planned_share) in zip(held, planned)))
 
 
 def agree(cohorts: Mapping[AgentId, Cohort], plans: HouseholdPlans) -> bool:

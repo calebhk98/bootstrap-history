@@ -11,7 +11,7 @@ from sim.economy.opening_bid_memory import BidMemory
 
 
 def cohort(hired_work_per_person, agent_id):
-    return types.SimpleNamespace(agent_id=agent_id, tile="t", hired_work_per_person=hired_work_per_person, milled_grains=())
+    return types.SimpleNamespace(agent_id=agent_id, tile="t", hired_work_per_person=hired_work_per_person, ground_by_hand=())
 
 
 class StoresPerBasket(unittest.TestCase):

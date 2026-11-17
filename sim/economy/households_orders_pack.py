@@ -2,8 +2,8 @@
 
 `households_orders_kernel.year_orders` makes the orders `households_orders.goods_orders` and `year_goods.less_what_it_grew` make
 (`cohort_orders` calls this for every cohort; the old functions stay for the opening and the tests).
-A basket's needs, goods and store goods are the same for every cohort that shares a basket key (tile, hearth, hired work, milled
-grains), so they are packed once per key (a template); each cohort adds its holdings, its plot's units and its cash and income."""
+A basket's needs, goods and store goods are the same for every cohort that shares a basket key (tile, hearth, hired work, grains
+ground by hand), so they are packed once per key (a template); each cohort adds its holdings, its plot's units and its cash and income."""
 from typing import Dict, List
 
 import numpy as np

@@ -54,7 +54,7 @@ def figures_in_id_order(cohorts) -> List[CohortFigures]:
     if isinstance(cohorts, CohortStore):
         return cohorts.figures(cohorts.order())
     return [CohortFigures(each.agent_id, each.tile, each.people, getattr(each, "working_people", 0.0), getattr(each, "last_year_income", 0.0),
-                          getattr(each, "hired_work_per_person", 0.0), getattr(each, "milled_grains", ()), None)
+                          getattr(each, "hired_work_per_person", 0.0), getattr(each, "ground_by_hand", ()), getattr(each, "food_ground_share", None), None)
             for each in sorted(cohorts.values(), key=lambda each: each.agent_id)]
 
 

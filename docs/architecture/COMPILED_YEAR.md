@@ -575,7 +575,7 @@ row is written. The writers: `households_cohort.put_cohort`, `change_cohort`, `s
 `rebase_price_level` (a plain mapping, a test's, still works through them); the close writes every figure in one block
 (`cohort_close_write.write_close`); `cohort_people.follow_population` rescales every tile's cohorts to demography's people in one block and
 `apply_work_plans` stores the household-work plans that differ. Block reads: `store.column(name)`, `floats` (Python floats), `order`,
-`rows_on_tile`, `tiles_present`, `ids_on_tiles`, `exact_total`, `unmet_of(need)`, `milled_of`, `pairs_of`, and `figures(rows)`, the
+`rows_on_tile`, `tiles_present`, `ids_on_tiles`, `exact_total`, `unmet_of(need)`, `ground_of`, `pairs_of`, and `figures(rows)`, the
 `CohortFigures` (id, tile, people, working people, last year's income, hired work, grains milled, optionally the own plan) that rules written over
 a cohort read without a `Cohort` being built. Totals by tile in table order (`cohort_people.total_by_tile`) use `sum_in_order_by_group`,
 which adds left to right from zero as the loops did. Converted to columns: the year's close (`year_close_households`: only the market-view
@@ -598,7 +598,7 @@ and `lending.bid_household_loans`. `cohort_orders` reads `cohort_order_figures.o
 and tool bids and the basket key read, a cohort-like tuple with the scalar types a `Cohort` hands back) and orders every cohort through
 `households_orders_pack.kernel_orders` (the per-cohort `households.goods_orders` branch for a basket the kernel does not cover was never reached
 and is gone); `plans` and `bid_household_loans` pass `CohortFigures` to the rules written over a cohort (`work_terms_at`, `grinding_plan`,
-`households_credit.floor_bids`, which only read id, tile and people). `CohortStore.milled_of` keeps the tuple of each row until the row's grains
+`households_credit.floor_bids`, which only read id, tile and people). `CohortStore.ground_of` keeps the tuple of each row until the row's grains
 are written. The basket keys of all cohorts come from one pass (`household_work_year.signatures_of_figures`, `signatures_of`), whose hearths come from
 `titles_worked.worked_shares`: the tenancies of a tile are read once for all its holders instead of once for each.
 
