@@ -3,6 +3,7 @@ none edits a kernel, so a warm kernel cache stays valid.
 floor   the wage ask cannot fall below the subsistence wage (the floor is the outside option, not the plot's worth)
 nowear  coin does not wear
 nominal     the wage ask's base and floor stay at the first year's figures (wages do not follow prices by rule)
+fastask     unsold hours cut next year's wage ask by half their share, not about a ninth
 notoolbids  households place no bids for the tools their own plots wear
 held    coin wears only as far as the mint struck in the year (the stock cannot fall; it rises where the mint strikes more)
 """
@@ -66,9 +67,25 @@ def _nominal():
     economy_module.labour_context = patched
 
 
+def _fastask():
+    """Hours left unsold cut next year's ask by half their share (the declared rule cuts by about a ninth of it)."""
+    from sim.labour.market import clearing_tail
+    real = clearing_tail.kernel
+
+    class Proxy:
+        def __getattr__(self, name):
+            return getattr(real, name)
+
+        def finish_markets(self, *args):
+            args = list(args)
+            args[21] = 1.0 - 0.5 ** (1.0 / args[20])        # the cut a round that compounds to a half over the year's rounds
+            return real.finish_markets(*args)
+    clearing_tail.kernel = Proxy()
+
+
 def _notoolbids():
     from sim.economy import year_order_sources
     year_order_sources.tool_wear.tool_bids = lambda *args, **kwargs: []
 
 
-SWITCHES = {"floor": _floor, "nowear": _nowear, "held": _held, "notoolbids": _notoolbids, "nominal": _nominal}
+SWITCHES = {"floor": _floor, "nowear": _nowear, "held": _held, "notoolbids": _notoolbids, "nominal": _nominal, "fastask": _fastask}
