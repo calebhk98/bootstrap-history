@@ -77,11 +77,10 @@ class DistressAgainstWorkingScaleTests(unittest.TestCase):
         new = small_scale_producer(last_runs=-1.0, expected_sales=0.0)
         self.assertEqual(offered(new, cash=300.0).reservation_price, 0.0)
 
-    def test_the_cash_target_and_dividends_still_follow_the_plant_not_the_scale_it_runs_at(self):
-        # at this price next to every workplace covers its cost, so the plant that works is next to the whole plant
+    def test_the_cash_target_and_dividends_still_follow_the_whole_plant(self):
         closed = producers_close.close_year(small_scale_producer(), FARM, 300.0, 100.0, view(1e6)).producer
         whole_plant = producers_close.working_capital_target(FARM, closed.capacity_runs, {"seed": 1.0}, {"hand": 1.0})
-        self.assertAlmostEqual(closed.cash_target / whole_plant, 1.0, places=3)
+        self.assertAlmostEqual(closed.cash_target, whole_plant)
 
 
 if __name__ == "__main__":
