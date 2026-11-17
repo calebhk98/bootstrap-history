@@ -90,6 +90,23 @@ class MaterialOrientationTests(unittest.TestCase):
         # the first mine's ore is spoken for, so the new runs are fed from the second
         self.assertEqual(placed, {"second": 40.0})
 
+    def test_each_market_is_served_from_the_ore_nearest_to_it(self):
+        # two mines far apart, each beside one market that wants ten runs: the smelters open at both, not all at one
+        second = Producer("producer:mine@second", "owner", "mine", "second", 100.0)
+        people = {"mine": 1000.0, "market": 1000.0, "second": 1000.0, "far": 1000.0}
+        setup, record = world(list(self.record.producers.values()) + [second], self.recipes, people)
+        near = {frozenset(("mine", "market")), frozenset(("second", "far"))}
+
+        class TwoRegions:
+            def cost_per_tonne(self, source, destination):
+                if source == destination:
+                    return 0.0
+                return 100.0 if frozenset((source, destination)) in near else 1000.0
+        placed = location_inputs.place_oriented(setup, record, Areas(), TwoRegions(), SMELT, {ORE: "mine"},
+                                                [(area("market"), 10.0), (area("far"), 10.0)],
+                                                ["far", "market", "mine", "second"])
+        self.assertEqual(placed, {"mine": 10.0, "second": 10.0})
+
     def test_no_ore_in_reach_means_no_processor(self):
         record = SimpleNamespace(producers={})
         placed = location_inputs.place_oriented(self.setup, record, Areas(), Carriage(), SMELT, {ORE: "mine"},
@@ -128,21 +145,6 @@ class MaterialOrientationTests(unittest.TestCase):
     def test_masses_of_goods_with_nothing_to_carry_are_left_out(self):
         specs = dict(SPECS, heat=GoodSpec("heat", math.inf, 0.0, 0.0, "x"))
         self.assertEqual(location_inputs.tonnes_of({ORE: 2000.0, "heat": 5.0}, specs), {ORE: 2.0})
-
-
-class OutputHaulCostTests(unittest.TestCase):
-    """Complaint 970: an output area no tile can reach (an island cut off from the rest) must not make every tile's output carriage infinite."""
-
-    def test_the_mean_is_over_the_areas_the_tile_reaches_weighted_by_runs(self):
-        shares = [(area("mine"), 3.0), (area("market"), 1.0)]
-        self.assertEqual(location_inputs.output_haul_cost(Carriage(), "mine", shares), 25.0)
-
-    def test_an_area_the_tile_cannot_reach_is_left_out_of_the_mean(self):
-        shares = [(area("market"), 9.0), (area("island"), 1.0)]
-        self.assertEqual(location_inputs.output_haul_cost(Carriage(), "mine", shares), 100.0)
-
-    def test_a_tile_that_reaches_none_of_the_areas_has_no_finite_cost(self):
-        self.assertEqual(location_inputs.output_haul_cost(Carriage(), "mine", [(area("island"), 1.0)]), math.inf)
 
 
 class SitingCostTests(unittest.TestCase):

@@ -62,18 +62,6 @@ def input_haul_cost(recipe: Recipe, specs, carriage, supplies: Mapping[GoodId, M
                      for good, tonnes in tonnes_of(recipe.inputs, specs).items())
 
 
-def output_haul_cost(carriage, tile: TileId, shares: Sequence[Tuple[MarketArea, float]]) -> float:
-    """Carriage per tonne of a run's output from `tile`, the mean over the market areas it can reach weighted by the runs wanted for each;
-    an area no path from the tile leads to is left out (it cannot be served from here, and must not make every tile's cost infinite).
-    Infinite when the tile reaches none of them."""
-    reached = [(runs, carriage.cost_per_tonne(tile, area.anchor_tile)) for area, runs in shares]
-    reached = [(runs, cost) for runs, cost in reached if math.isfinite(cost)]
-    weight = math.fsum(runs for runs, _cost in reached)
-    if weight <= 0.0:
-        return math.inf
-    return math.fsum(runs * cost for runs, cost in reached) / weight
-
-
 def input_supplies(record, setup, recipe: Recipe, goods=None, shared=None) -> Dict[GoodId, Dict[TileId, float]]:
     """Where each of the recipe's inputs (or of `goods` among them) is made now. `shared` keeps what is read for a good
     across recipes, for a caller whose producers do not change between them."""
@@ -118,11 +106,12 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
                    shares: Sequence[Tuple[MarketArea, float]], tiles: Sequence[TileId]) -> Dict[TileId, float]:
     """Runs of capacity for each tile for a processor with fixed-site inputs. `shares` are the runs wanted
     for each market area of its output; `tiles` the tiles it may run on. Only tiles in a market area that
-    makes every fixed input can host it. The runs the supply there can feed go to the tiles cheapest first (inputs
-    in, output out); the rest of what was wanted is spread over those tiles in the same proportions, so a supply
-    that cannot feed the capacity shows as the input's price, not as a smaller opening. Each tile takes no more
-    than all its hands could work: the hands the producers already placed there would take are not kept from it,
-    since it has no other tile to go to and the year's labour market shares a tile's hours among all of them."""
+    makes every fixed input can host it. Each market's runs go to the tiles cheapest for that market (inputs in,
+    output out to it) as far as the supply there feeds them, so a good wanted everywhere is made beside the input
+    nearest each market, not all on one tile; the rest of what was wanted is spread over those tiles in the same
+    proportions, so a supply that cannot feed the capacity shows as the input's price, not as a smaller opening.
+    Each tile takes no more than all its hands could work: the hands the producers already placed there would take
+    are not kept from it, since the year's labour market shares a tile's hours among all of them."""
     wanted = math.fsum(runs for _area, runs in shares)
     if wanted <= 0.0:
         return {}
@@ -135,27 +124,26 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
         if hours_per_run <= 0.0:
             return math.inf
         return setup.opening_population_by_tile[tile] * setup.working_share * setup.working_hours_per_year / hours_per_run
-    costed = []
-    for tile in tiles:
-        if setup.opening_population_by_tile.get(tile, 0.0) <= 0.0:
-            continue
-        out_cost = output_haul_cost(carriage, tile, shares)
-        costed.append((input_haul_cost(recipe, setup.specs, carriage, supplies, tile) + output_tonnes * out_cost, tile))
+    peopled = [tile for tile in tiles if setup.opening_population_by_tile.get(tile, 0.0) > 0.0]
+    haul_in = {tile: input_haul_cost(recipe, setup.specs, carriage, supplies, tile) for tile in peopled}
     fed: Dict[TileId, float] = {}
-    left = wanted
-    for cost, tile in sorted(costed):
-        if left <= 0.0:
-            break
-        take = min(left, staffable_runs(tile))
-        for good in fixed:
-            take = min(take, room[good].get(area_map.area_of(good, tile), 0.0) / recipe.inputs[good])
-        if not (math.isfinite(cost) and take > 0.0):
-            continue
-        fed[tile] = take
-        left -= take
-        for good in fixed:
-            area = area_map.area_of(good, tile)
-            room[good][area] = room[good].get(area, 0.0) - take * recipe.inputs[good]
+    for area, runs in shares:
+        left = runs
+        reached = [(carriage.cost_per_tonne(tile, area.anchor_tile), tile) for tile in peopled]
+        for _cost, tile in sorted((haul_in[tile] + output_tonnes * out_cost, tile) for out_cost, tile in reached
+                                  if math.isfinite(out_cost) and math.isfinite(haul_in[tile])):
+            if left <= 0.0:
+                break
+            take = min(left, staffable_runs(tile) - fed.get(tile, 0.0))
+            for good in fixed:
+                take = min(take, room[good].get(area_map.area_of(good, tile), 0.0) / recipe.inputs[good])
+            if take <= 0.0:
+                continue
+            fed[tile] = fed.get(tile, 0.0) + take
+            left -= take
+            for good in fixed:
+                fixed_area = area_map.area_of(good, tile)
+                room[good][fixed_area] = room[good].get(fixed_area, 0.0) - take * recipe.inputs[good]
     total = math.fsum(fed.values())
     if total <= 0.0:
         return {}
