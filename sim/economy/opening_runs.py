@@ -302,8 +302,8 @@ def fit_to_supply(setup, record, land_per_run: Optional[Mapping[str, float]] = N
     supply the placed producers make: where their inputs (and plant wear) would take more, every user's capacity
     and expected sales are cut by the same share, so no processor opens larger than the ore its tiles can feed and
     no smelter larger than the charcoal the timber can burn. A user of the good that something unbound also makes
-    is not held. With `land_per_run` what only land makes is held too (`limited_goods`). The producers' figures are
-    packed once and the sweeps run on the arrays (`held_sales`)."""
+    is not held. With `land_per_run` what only land makes is held too (`limited_goods`), where some placed producer
+    makes it. The producers' figures are packed once and the sweeps run on the arrays (`held_sales`)."""
     by_limits = sites.limits_by_recipe(setup.site_limits)
     fixed = sorted(limited_goods(setup.recipes, by_limits, land_per_run))
     producers = sorted(record.producers.items())
@@ -322,6 +322,10 @@ def fit_to_supply(setup, record, land_per_run: Optional[Mapping[str, float]] = N
             used[row, column] = recipe.hard_inputs.get(good, 0.0)
             if recipe.plant_life_years > 0.0:
                 used[row, column] += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
+    if land_per_run:
+        # a land-bound good no opening producer makes was never part of this opening's supply: its users stay as sized
+        placed = [row for row in range(len(fixed)) if made[row].any()]
+        made, used = made[placed], used[placed]
     factors = held_sales(sales, yield_factor, made, used)
     for column, (_id, producer) in enumerate(producers):
         if factors[column] != 1.0:

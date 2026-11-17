@@ -1,14 +1,14 @@
-"""Before the opening fits producers to supply: each limited good's supply and what its users want.
+"""Before the opening's last fit of producers to supply: each limited good's supply and what its users want.
 Usage: python3 fit_probe.py <civ>"""
 import math, random, sys
 from sim.economy import opening_runs, sites
 from sim.engine.ui_port import Sim, load, load_civ
 original = opening_runs.fit_to_supply
 seen = {"count": 0}
-def probe(setup, record):
+def probe(setup, record, land_per_run=None):
     seen["count"] += 1
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    fixed = sorted(opening_runs.limited_goods(setup.recipes, by_limits))
+    fixed = sorted(opening_runs.limited_goods(setup.recipes, by_limits, land_per_run))
     rows = []
     for good in fixed:
         supply = wanted = 0.0
@@ -27,7 +27,7 @@ def probe(setup, record):
                 users.add(producer.recipe_id)
         rows.append((good, supply, wanted, sorted(makers), sorted(users)))
     seen["rows"] = rows
-    return original(setup, record)
+    return original(setup, record, land_per_run)
 opening_runs.fit_to_supply = probe
 _t, _p, nodes, _w, _g = load()
 game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(sys.argv[1]))
