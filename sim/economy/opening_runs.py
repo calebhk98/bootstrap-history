@@ -271,9 +271,12 @@ def choose_recipes(final_by_tile, recipes: Mapping[str, Recipe], prices: Mapping
     return ranked, runs
 
 
-def limited_goods(recipes: Mapping[str, Recipe], by_limits) -> set:
+def limited_goods(recipes: Mapping[str, Recipe], by_limits, land_per_run: Optional[Mapping[str, float]] = None) -> set:
     """Goods the deposits bound: every recipe that makes the good is site-bound with declared limits, or uses (as an
-    input or plant wear) a good that is itself so bound. Charcoal from standing timber is bound by the timber."""
+    input or plant wear) a good that is itself so bound. Charcoal from standing timber is bound by the timber. With
+    `land_per_run` (the land a run of each recipe takes) a recipe that takes land is bound the same way: the ground
+    it was granted is all it has."""
+    land = land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id, recipe in recipes.items():
         for good, quantity in recipe.outputs.items():
@@ -286,7 +289,7 @@ def limited_goods(recipes: Mapping[str, Recipe], by_limits) -> set:
         for good, makers_of in sorted(makers.items()):
             if good in limited:
                 continue
-            if all(sites.is_sited(recipes[maker], by_limits)
+            if all(sites.is_sited(recipes[maker], by_limits) or land.get(maker, 0.0) > 0.0
                    or any(used in limited for used in list(recipes[maker].hard_inputs) + list(recipes[maker].plant_goods))
                    for maker in makers_of):
                 limited.add(good)
@@ -294,14 +297,15 @@ def limited_goods(recipes: Mapping[str, Recipe], by_limits) -> set:
     return limited
 
 
-def fit_to_supply(setup, record) -> None:
+def fit_to_supply(setup, record, land_per_run: Optional[Mapping[str, float]] = None) -> None:
     """Hold the producers that use a good only deposits supply (or only what they supply, down the chain) to the
     supply the placed producers make: where their inputs (and plant wear) would take more, every user's capacity
     and expected sales are cut by the same share, so no processor opens larger than the ore its tiles can feed and
     no smelter larger than the charcoal the timber can burn. A user of the good that something unbound also makes
-    is not held. The producers' figures are packed once and the sweeps run on the arrays (`held_sales`)."""
+    is not held. With `land_per_run` what only land makes is held too (`limited_goods`). The producers' figures are
+    packed once and the sweeps run on the arrays (`held_sales`)."""
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    fixed = sorted(limited_goods(setup.recipes, by_limits))
+    fixed = sorted(limited_goods(setup.recipes, by_limits, land_per_run))
     producers = sorted(record.producers.items())
     if not fixed or not producers:
         return

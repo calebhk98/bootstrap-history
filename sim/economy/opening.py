@@ -18,7 +18,7 @@ from . import producer_table, workshop_count
 from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
-from . import carriage_fleet_book, carriage_opening_hours, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_demand, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, opening_runs_pack, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
+from . import carriage_fleet_book, carriage_opening_hours, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_demand, opening_income, opening_land_fit, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, opening_runs_pack, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
 from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -180,6 +180,7 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     opening_runs.fit_to_supply(setup, record)
     rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts),
                                land_lease_year.own_plot_returns(setup, record, view, own.options))
+    opening_land_fit.fit_to_land(setup, record)
     workshop_count.refresh_workshops(record.producers, workshop_count.runs_per_workshop_of_setup(setup))
     figure = record.capital_markets.property_income
     record.capital_markets.set_property_income(opening_rent.property_income_with_rent(figure, rent))
