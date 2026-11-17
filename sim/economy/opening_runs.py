@@ -314,6 +314,7 @@ def fit_to_supply(setup, record, land_per_run: Optional[Mapping[str, float]] = N
     yield_factor = np.array([producer.yield_factor for _id, producer in producers])
     made = np.array([[setup.recipes[producer.recipe_id].outputs.get(good, 0.0) for _id, producer in producers] for good in fixed])
     used = np.zeros((len(fixed), len(producers)))
+    upkeep = np.zeros((len(fixed), len(producers)))
     for column, (_id, producer) in enumerate(producers):
         recipe = setup.recipes[producer.recipe_id]
         if sites.is_sited(recipe, by_limits):
@@ -321,32 +322,45 @@ def fit_to_supply(setup, record, land_per_run: Optional[Mapping[str, float]] = N
         for row, good in enumerate(fixed):
             used[row, column] = recipe.hard_inputs.get(good, 0.0)
             if recipe.plant_life_years > 0.0:
-                used[row, column] += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
-    factors = held_sales(sales, yield_factor, made, used)
+                upkeep[row, column] = recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
+    factors = held_sales(sales, yield_factor, made, used, upkeep)
     for column, (_id, producer) in enumerate(producers):
         if factors[column] != 1.0:
             producer_table.set_fields(record.producers, _id, capacity_runs=capacity[column] * factors[column],
                                       expected_sales=sales[column] * factors[column])
 
 
-def held_sales(sales: np.ndarray, yield_factor: np.ndarray, made: np.ndarray, used: np.ndarray) -> np.ndarray:
+def held_sales(sales: np.ndarray, yield_factor: np.ndarray, made: np.ndarray, used: np.ndarray,
+               upkeep: Optional[np.ndarray] = None) -> np.ndarray:
     """The share of its sales each producer is held to: `sales` are the runs worked, `made[good, producer]` what a run
-    of the producer supplies of a good (at its `yield_factor`) and `used[good, producer]` what it takes of it (zero for a producer not held by
-    that good). For each good in turn, where the users would take more than the producers supply, every user is cut by the
-    same share, and the sweeps repeat until none is cut (a chain of holds settles stage by stage)."""
+    of the producer supplies of a good (at its `yield_factor`), `used[good, producer]` what a run takes of it as an input
+    and `upkeep[good, producer]` what the wear of its plant takes of it a run (both zero for a producer not held by that good).
+    For each good in turn, where the users would take more than the producers supply, the plants' upkeep is served
+    first and the input users share what is left, each cut by the same share; only where the supply does not cover
+    the upkeep are the plants cut. A maker whose plant is made with its own output down the chain (a kiln built with
+    the iron its charcoal smelts) is otherwise cut for its plant each time its users are cut for its output, round
+    the loop to nothing. The sweeps repeat until none is cut (a chain of holds settles stage by stage)."""
     factors = np.ones(sales.shape[0])
     sales = sales.copy()
+    upkeep = np.zeros(used.shape) if upkeep is None else upkeep
     for _sweep in range(2 * CEILING_SWEEPS):
         held = False
         for row in range(made.shape[0]):
             supply = math.fsum((sales * yield_factor * made[row]).tolist())
-            users = used[row] > 0.0
+            users, plants = used[row] > 0.0, upkeep[row] > 0.0
             wanted = math.fsum((sales[users] * used[row][users]).tolist())
-            if wanted > supply * (1.0 + 1e-9) and wanted > 0.0:
-                factor = supply / wanted
+            kept_up = math.fsum((sales[plants] * upkeep[row][plants]).tolist())
+            if wanted + kept_up <= supply * (1.0 + 1e-9) or wanted + kept_up <= 0.0:
+                continue
+            held = True
+            if kept_up > supply:
+                sales[plants] *= supply / kept_up
+                factors[plants] *= supply / kept_up
+                kept_up = supply
+            if wanted > 0.0:
+                factor = max(0.0, supply - kept_up) / wanted
                 sales[users] *= factor
                 factors[users] *= factor
-                held = True
         if not held:
             break
     return factors

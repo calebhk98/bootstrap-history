@@ -54,5 +54,33 @@ class FitToSupplyChainTests(unittest.TestCase):
         self.assertNotIn("fuel", opening_runs.limited_goods(self.setup.recipes, {"fell": {"tile": object()}}))
 
 
+class FitToSupplyLoopTests(unittest.TestCase):
+    """A kiln whose plant is the metal smelted with its own fuel: timber short of what the kilns were sized for must hold
+    the kilns to the timber and the smelters to the fuel, not send both round the loop to nothing."""
+
+    def setUp(self):
+        recipes = {
+            "fell": Recipe("fell", {"timber": 1.0}, {}, {"labourer": 1.0}, site_bound=True),
+            "burn": Recipe("burn", {"fuel": 1.0}, {"timber": 1.0}, {"labourer": 1.0}, {"metal": 1.0}, {}, 10.0),
+            "smelt": Recipe("smelt", {"metal": 1.0}, {"fuel": 2.0}, {"labourer": 1.0}),
+            "forge": Recipe("forge", {"tools": 1.0}, {"metal": 1.0}, {"smith": 1.0}),
+        }
+        self.setup = types.SimpleNamespace(recipes=recipes, site_limits=(SiteLimit("fell", "tile", 100.0),))
+        self.record = EconomyRecord.__new__(EconomyRecord)
+        self.record.producers = {
+            "producer:fell@tile": Producer("producer:fell@tile", "owner", "fell", "tile", 100.0, expected_sales=100.0),
+            "producer:burn@tile": Producer("producer:burn@tile", "owner", "burn", "tile", 200.0, expected_sales=200.0),
+            "producer:smelt@tile": Producer("producer:smelt@tile", "owner", "smelt", "tile", 100.0, expected_sales=100.0),
+            "producer:forge@tile": Producer("producer:forge@tile", "owner", "forge", "tile", 80.0, expected_sales=80.0),
+        }
+
+    def test_a_makers_plant_upkeep_is_served_before_the_other_users_are_cut(self):
+        opening_runs.fit_to_supply(self.setup, self.record)
+        sales = {key.split(":")[1].split("@")[0]: producer.expected_sales for key, producer in self.record.producers.items()}
+        self.assertAlmostEqual(sales["burn"], 100.0)       # the timber there is
+        self.assertAlmostEqual(sales["smelt"], 50.0)       # the fuel the kilns then make
+        self.assertAlmostEqual(sales["forge"], 40.0)       # the metal left once the kilns' upkeep (a tenth of a unit a run) is taken
+
+
 if __name__ == "__main__":
     unittest.main()
