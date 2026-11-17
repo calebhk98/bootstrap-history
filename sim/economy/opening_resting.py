@@ -14,6 +14,7 @@ planned runs (expected sales) needs no growth, which agrees with a post-warm-up 
 from typing import Dict, Mapping
 
 from . import households_buffer_stock, inventory
+from .producers_close import working_capital_target
 
 
 def resting_household_purse(mean_income: float, share_wealth: float, claims: float = 0.0,
@@ -41,6 +42,12 @@ def resting_household_purse(mean_income: float, share_wealth: float, claims: flo
         share_term = share * (share_wealth - target)
     cash = max(mean_income + extra_spending, (extra_spending - share_term) / share - claims)
     return cash - mean_income
+
+
+def resting_producer_coin(recipe, capacity_runs: float, input_prices, wages) -> float:
+    """The coin a producer opens holding: what the year's close keeps (`producers_close.working_capital_target` on its
+    whole plant), so the first close pays out what the year earned and holds nothing back to fill a purse."""
+    return working_capital_target(recipe, capacity_runs, input_prices, wages)
 
 
 def purse_with_property_income(purse: float, property_income: float) -> float:

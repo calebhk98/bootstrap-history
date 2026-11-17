@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.tests.economy_view_defaults import ViewDefaults
-from sim.economy import plant_investment, producers, producers_close
+from sim.economy import opening_resting, plant_investment, producers, producers_close
 from sim.economy.types import EDGE_CONSUMPTION, EDGE_PRODUCTION, GoodSpec, Recipe
 
 FARM = Recipe("farm", {"grain": 10.0}, {"seed": 2.0}, {"hand": 5.0})
@@ -167,6 +167,13 @@ class CloseYearTests(unittest.TestCase):
         self.assertLessEqual(dividend, 500.0)
         self.assertAlmostEqual(dividend, 500.0 - result.producer.cash_target)
         self.assertEqual(result.transfers[0].payee, "lord")
+
+    def test_the_opening_gives_a_producer_the_coin_the_years_close_keeps(self):
+        # the close keeps the running cost of the whole plant; an opening that gave less would see the producer hold
+        # back its first year's dividends to make it up, and the households' income fall short of the opening's count
+        closed = producers_close.close_year(farmer(), FARM, 300.0, 100.0, farm_view(2.0, cash=500.0)).producer
+        opened = opening_resting.resting_producer_coin(FARM, closed.capacity_runs, {"seed": 1.0}, {"hand": 1.0})
+        self.assertAlmostEqual(opened, closed.cash_target)
 
     def test_no_dividend_when_cash_is_below_target(self):
         result = producers_close.close_year(farmer(), FARM, 300.0, 100.0, farm_view(2.0, cash=5.0))
