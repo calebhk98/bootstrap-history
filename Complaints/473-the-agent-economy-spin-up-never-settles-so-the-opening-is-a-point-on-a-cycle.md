@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - settled stays a fixed point and the economy must not be chaotic (the owner). Poaching, household time, servant hiring, durable demand and the lenders' expected inflation no longer amplify or cycle (Updates 30 and 31); an ore with no deposit is dug nowhere and the opening's recipe choice settles (Update 32, the owner's answers to questions 8 and 9). `spin_up_settled` still fails for every civilisation measured: producers' inventory value and some watched prices move by many times the tolerance, hired hours and output by one to three times it. Update 32 lists what stands in the way: households rebuild a coin hoard out of the producers' working coin whatever the opening gives them, a co-product nobody buys piles up, and inventory value is measured against itself although it sits near nothing (owner questions 10 to 12)
+**Status:** partly - settled stays a fixed point and the economy must not be chaotic (the owner). Poaching, household time, servant hiring, durable demand and the lenders' expected inflation no longer amplify or cycle (Updates 30 and 31); an ore with no deposit is dug nowhere and the opening's recipe choice settles (Update 32, the owner's answers to questions 8 and 9). `spin_up_settled` still fails for every civilisation measured: producers' inventory value and some watched prices move by many times the tolerance, hired hours and output by one to three times it. Update 32 lists what stands in the way: output falls by a fifth in the first two years after the opening, households cannot buy what they plan to and the unspent coin piles up with them out of the producers' working coin; a co-product nobody buys piles up; and inventory value is measured against itself although it sits near nothing (owner questions 10 to 12)
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -1261,9 +1261,14 @@ year (`coin_passes_probe.py`, `coin_opening_probe.py`, `series_probe.py`).
   hoard the opening sized a rush into store goods and output opened a third lower; without it households bought next
   to no store goods (what they hold wears away), and the rate and the price level jumped late in the run. Not merged.
   The store rule buys the whole gap once past a dead band and nothing below it, which is one more jump.
-- So the change question 8 asks for is larger than the opening: what a household does with income it does not spend
-  decides whether the producers keep the coin they pay wages with. This is the slide of the wage and the price level
-  through every spin-up traced so far, and it is not designed yet (owner question 12).
+- The households' accounts say what the hoard is (`household_accounts_probe.py`): in every year households plan to
+  spend about a third more than they do. Their bids are not filled, because the goods are not made, while a quarter
+  of the hours offered find no employer; output falls by a fifth in the first two years after the opening and takes
+  decades to come back. The hoard is the spending that found nothing to buy, and the coin it holds is the coin the
+  producers would pay wages with.
+- So the change question 8 asks for is larger than the opening, and the first thing in its way is that the first
+  years do not reproduce the opening (Complaints 608 and 960 to 963, found on Rome; England falls the same way).
+  Owner question 12.
 
 **Found and not fixed:**
 - **A co-product nobody buys piles up.** With England's silver on the lead route, the lead has few buyers: its price

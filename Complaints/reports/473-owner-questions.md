@@ -80,21 +80,26 @@ output) is a change to the check, so it is the owner's call.
 **In the meantime.** Nothing changed. My recommendation: measure it against a year's real output. On England that
 alone would put it near the tolerance.
 
-### 12. What does a household do with income it does not spend?
+### 12. Why can households not spend what they plan to, and what should happen to the coin they are left with?
 
 **What was found.** Whatever coin the opening gives them, households end up holding about two years of income in
 coin, and the coin comes out of the producers' working coin; the wage and the price level slide while it happens
-(Complaint 473 Update 32). Lending takes only what borrowers ask for, land and shares only change hands between
-households, and the store-goods rule takes a small share and in jumps.
+(Complaint 473 Update 32). The households' accounts say why
+(`Complaints/reports/473-handoff/probes/household_accounts_probe.py`): in every year they plan to spend about a third
+more than they do. The bids are not filled, because the goods are not made, while a quarter of the hours offered
+find no employer. Output falls by a fifth in the first two years after the opening and takes decades to come back.
+The hoard is the spending that found nothing to buy.
 
-**Why it needs a decision.** The outlets differ in what they say about the society: (a) the unspent income buys
-store goods from their makers every year, a share of the gap at a time, with the opening stock at its target, so the
-coin goes back into wages (plate, jewellery, fine cloth: what the research says people held); (b) households that
-want nothing more at the going prices offer fewer hours; (c) needs that do not satiate for richer households
-(service, building, display). They can be combined.
+**Why it needs a decision.** There are two different things to do and they are not alternatives:
+- make the first years reproduce the opening, so that producers make what the opening sized them for and households
+  can buy it (Complaints 608 and 960 to 963 are this, found on Rome; England shows the same fall). This is engine
+  work and needs no decision;
+- decide where coin goes that still finds nothing to buy: into store goods a share of the gap at a time (what the
+  answer to question 8 asks for, but the makers of plate cannot supply what a hoard would buy, and the mint's melting
+  does not open while producers are short of coin), into fewer hours offered, or into needs that do not satiate.
 
-**In the meantime.** Nothing changed. My recommendation: (a) first, built as a continuous rule, because it is what
-question 8's answer asks for and it sends the coin back to producers; then see what is left for (b) and (c).
+**In the meantime.** Nothing changed. My recommendation: the first before the second. Until the opening's output
+holds through the first years, any rule for the left-over coin is tuning against a moving target.
 
 ## New questions from Update 31 (2026-11-17), answered above
 

@@ -156,6 +156,22 @@ standing requirement of section 1. Question 2 needs nothing. Questions 3 and 6 a
 (section 5). Questions 8 (what households hold their wealth in) and 9 (whether a civilisation has an ore the catalogue
 lists nowhere on its tiles) are new in Update 31 and not answered; the price level waits on them.
 
+## 6a. Where it stands after Update 32 (read this before section 7)
+
+The owner answered questions 8 and 9; Update 32 says what was built (an ore with no deposit is dug nowhere, a deposit
+type names its own ore, the opening's recipe choice settles, two researched deposits), what the research found (the
+coin silver of England and the Norse was imported; the loss rates are not too high; coin was about a fifth of a
+year's income) and one correction (the settle test compares consecutive years, so a steady fall under the tolerance
+passes). Not merged: branch `money-at-the-yearly-steady-state` (opening without the coin hoard: the yearly rules
+rebuild it out of the producers' coin and the economy ends smaller).
+
+The thing in the way now is upstream of every amplifier: **the first years do not reproduce the opening.** Output
+falls by a fifth in two years, households plan to spend about a third more than they can, the unspent coin piles up
+with them and the wage and prices slide for decades (`household_accounts_probe.py`, `series_probe.py`). Start there:
+compare, producer by producer, the runs the opening sized with the runs of the first year, and find what holds the
+first year's back (hours hired, inputs, coin, the plan's expected sales). Complaints 608 and 960 to 963 are the same
+fall on Rome. Owner questions 10 to 12 are open.
+
 ## 7. What to do first
 
 1. Set up the environment and reproduce: `ensemble_years.py` on England, Norse and Han at the head, so your numbers
