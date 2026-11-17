@@ -35,7 +35,68 @@ The questions below stay as they were asked. The answers, and the state of each 
    budget and changes gradually (`households_work.hours_per_person_per_year`, `adjusted_hired_hours`,
    `household_servants.hired_hours_whole`).
 
-## New questions from Update 31 (2026-11-17), not yet answered
+## The owner's answers to questions 8 and 9 (2026-11-17), and three new questions from Update 32
+
+**8. Households hold their wealth in other things than coin; source the loss rates.** Sourced
+(`Complaints/reports/research-coin-loss-and-money-held.md`): the loss rates are not too high, and England's coin about
+the start date was about a fifth of a year's income, a tenth of what the model's households and producers hold.
+Opening without the hoard is built (branch `money-at-the-yearly-steady-state`) and not merged: the yearly rules
+rebuild the hoard out of the producers' coin within twenty years and the economy ends smaller (Complaint 473 Update
+32). Question 12 below is what is left of this.
+
+**9. An ore with no deposit is not dug; add the mines that are missing.** Done: the rule, the jarosite ore tied to its
+deposit type, and the deposits the research could source (`Complaints/reports/research-coin-metal-mines.md`). The
+research answers the owner's expectation that a civilisation whose coin was a metal dug it at home: Rome and Han did,
+England mostly did not and the Norse did not at all. Their silver came in by trade. Question 10 below.
+
+### 10. Where does the coin metal of a civilisation that imported it come from in the hidden spin-up?
+
+**What was found.** England about the start date had one home silver district of note and brought in most of its
+silver through trade; the Norse mined none. The hidden spin-up runs with no foreign orders, so nothing replaces their
+money's loss there and it falls by the loss rate every year (in England's case more slowly now that the ores its
+tiles do hold are worked).
+
+**Why it needs a decision.** Either the spin-up carries the trade that brought the metal in (foreign buyers of what
+the civilisation exported, paying in coin: the engine has the door, `engine_orders`, and the spin-up leaves it shut),
+or the spin-up stays closed and these civilisations settle on a slow fall of the money stock and prices at the loss
+rate. The settle test passes a steady fall that is under the tolerance a year.
+
+**In the meantime.** The spin-up stays closed. My recommendation: leave it closed for now and open it to trade when a
+civilisation's trade is itself part of the opening.
+
+### 11. Should the change in producers' inventory value be measured against a year's output?
+
+**What was found.** Producers' inventory value is a few per cent of a year's output and moves by many times the
+tolerance in every civilisation. The goods markets clear inside the year, so most goods end most years with nothing
+left and a lump where a seller's floor binds. The settle test measures each quantity's change against its own earlier
+value, with a floor for the two quantities that can sit near nothing (the rate, and unmet need against the whole food
+need). Inventory value sits near nothing too and has no floor, so the same tolerance is some twenty times stricter on
+it than on output.
+
+**Why it needs a decision.** The owner said the check is not to be weakened or redefined. Giving inventory value the
+same kind of floor the check already gives the rate and unmet need (the change in stocks against a year's real
+output) is a change to the check, so it is the owner's call.
+
+**In the meantime.** Nothing changed. My recommendation: measure it against a year's real output. On England that
+alone would put it near the tolerance.
+
+### 12. What does a household do with income it does not spend?
+
+**What was found.** Whatever coin the opening gives them, households end up holding about two years of income in
+coin, and the coin comes out of the producers' working coin; the wage and the price level slide while it happens
+(Complaint 473 Update 32). Lending takes only what borrowers ask for, land and shares only change hands between
+households, and the store-goods rule takes a small share and in jumps.
+
+**Why it needs a decision.** The outlets differ in what they say about the society: (a) the unspent income buys
+store goods from their makers every year, a share of the gap at a time, with the opening stock at its target, so the
+coin goes back into wages (plate, jewellery, fine cloth: what the research says people held); (b) households that
+want nothing more at the going prices offer fewer hours; (c) needs that do not satiate for richer households
+(service, building, display). They can be combined.
+
+**In the meantime.** Nothing changed. My recommendation: (a) first, built as a continuous rule, because it is what
+question 8's answer asks for and it sends the coin back to producers; then see what is left for (b) and (c).
+
+## New questions from Update 31 (2026-11-17), answered above
 
 ### 8. What should households (and producers) hold their wealth in?
 
@@ -45,7 +106,8 @@ output). The households' spending rule rests where cash, claims and share wealth
 months of income; the rule comes from Eurace@Unibi, where the cash is a bank deposit. Here it is metal. A stock of
 coin that large loses more metal a year than the placed makers give, and in England more than its own ores could
 give at their ceilings, so the money stock falls every year and the price level and the wage fall with it
-(Complaint 982). `spin_up_settled` and `money_against_wear` cannot pass while it does.
+(Complaint 982). `money_against_wear` cannot pass while it does (a correction: `spin_up_settled` compares
+consecutive years, so a steady fall under the tolerance a year passes it; the larger yearly falls are what fail).
 
 **Why it needs a decision.** Each way out changes what the model says people own:
 - (a) households keep most of their wealth in something other than coin (land titles, plate, stores, stock, loans)

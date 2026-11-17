@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the owner's answer is that settled stays a fixed point and the economy must not be chaotic; poaching, household time, servant hiring, durable demand and the lenders' expected inflation no longer amplify or cycle (Updates 30 and 31) and the yearly moves of hired hours, output and the rate are a fraction of what they were, but `spin_up_settled` still fails for every civilisation measured. The price level cannot rest while the money stock falls: the money is many times what the coin metal chain can replace and the opening's choice of the chain's recipes returns one phase of a cycle (Update 31, Complaints 981 and 982, owner questions 8 and 9)
+**Status:** partly - settled stays a fixed point and the economy must not be chaotic (the owner). Poaching, household time, servant hiring, durable demand and the lenders' expected inflation no longer amplify or cycle (Updates 30 and 31); an ore with no deposit is dug nowhere and the opening's recipe choice settles (Update 32, the owner's answers to questions 8 and 9). `spin_up_settled` still fails for every civilisation measured: producers' inventory value and some watched prices move by many times the tolerance, hired hours and output by one to three times it. Update 32 lists what stands in the way: households rebuild a coin hoard out of the producers' working coin whatever the opening gives them, a co-product nobody buys piles up, and inventory value is measured against itself although it sits near nothing (owner questions 10 to 12)
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -1199,4 +1199,83 @@ Not merged: the ramp because of Norse, margin entry because alone it cuts nothin
 - So a fixed point of the price level, and of the wage, the reservation and cash with it, needs the money's loss
   replaced. That is a decision about what households hold their wealth in and about which ores a civilisation has
   (`Complaints/reports/473-owner-questions.md`, questions 8 and 9), before it is an engine change.
+
+## Update 32: the owner's answers to questions 8 and 9; what was built, what the research found, what the hoard is (branch economy-settles-not-chaotic)
+
+**The owner's answers** (`Complaints/reports/473-owner-questions.md`): households keep most of their wealth in things
+other than coin and the loss rates are to be sourced (question 8); a civilisation cannot dig an ore it has no deposit
+of, and where its coin was a metal the mines it dug that metal from are to be researched and added (question 9).
+
+**A correction to Update 31 and Complaint 982.** They said the price level cannot settle while the money stock falls.
+The settle test compares consecutive years (`spin_up_gap.state_gaps`), so a price level that falls steadily by less
+than the tolerance a year passes it. What fails is the size of the yearly moves. The coin chain decides
+`money_against_wear` and how fast prices drift; it is not by itself what keeps `spin_up_settled` from passing.
+
+**Built and merged, each with a rule test:**
+- **An ore with no deposit on the economy's tiles is dug nowhere** (`port_sites.site_limits`,
+  `test_economy_port_sites_rules`): such an ore keeps a limit of nothing on every tile where it used to have no limit
+  and run anywhere. **A deposit type can name its own ore good** (`resource_links.ore_goods_by_deposit_type`, the
+  resource catalogue's `ore_goods` on a deposit type; worked-deposit rows carry their type): the jarosite ore is dug
+  from gossan deposits alone and silver ore from silver's other deposits. Before, the jarosite ore recipe was tied to
+  no deposit in any civilisation.
+- **The opening's recipe choice settles** (`opening_runs.required_runs` and its kernel twin,
+  `test_required_runs_settles`): where whole steps circle the passes go on from where they stand with the step
+  halved, block by block, until the runs stop moving (Complaint 981's first half).
+- **Deposits from the research**: the Crown's silver-lead mines at Bere Ferrers (England) and the Yandao copper mine
+  (Han), each with the source opened (`Complaints/reports/research-coin-metal-mines.md`).
+
+**What the research found** (three reports under `Complaints/reports/`, each citation opened in its session and one
+of each opened again here):
+- `research-coin-metal-mines.md`: England's coin silver was mostly brought in by trade and the Norse mined none; the
+  one home source for England about the start date is Bere Ferrers. Rome's silver and Han's copper were mined at home;
+  the Mexica's money is cacao. So for England and the Norse there are no missing home mines to add: their money was
+  kept up from abroad, and the hidden spin-up is a closed economy with no foreign orders. Rome's Spanish silver
+  deposits are in the catalogue with no working date, so the engine sizes none of them: Rome's silver on its tiles
+  comes from one district. Not changed here.
+- `research-coin-loss-and-money-held.md`: estimates of a coin stock's whole yearly loss start at the declared rate and
+  run upward; wear alone is a fraction of it; no source was found for the loss of plate. England's coin about the
+  start date was about a fifth of a year's income; Petty's account of England's wealth puts coin at a small part of it
+  and wares, plate and furnishings at several times the coin.
+- `research-inflation-expectation-weight.md` (Update 31).
+
+**Measured with the ore rule** (`ensemble_years.py`, `ensemble_moves.py`; England and Norse eight members, Han four):
+England's money stock falls about three fifths as fast and its yearly moves are level with before (its watched
+prices move less). Norse's output, rate, wage and watched prices move less and its inventory value more. Han's hired
+hours, output and wage move more in a sample of four, which is within the spread between earlier samples of four for
+hours and output and above it for the wage; not settled which, and Han needs more members to judge. In one England
+run the opening now places the lead-silver route and the silver-ore route at their ceilings and silver is made every
+year (`coin_passes_probe.py`, `coin_opening_probe.py`, `series_probe.py`).
+
+**The hoard is made by the yearly rules, and the opening's purse only starts it there** (England, one run each;
+`series_probe.py` read with `money_ratios.py`):
+- The opening gives a household the coin at which a yearly share of its account covers the floors its own plot grows
+  (`opening_resting.resting_household_purse`, `extra_spending`): years of income for a household that grows its
+  food. Branch `money-at-the-yearly-steady-state` (the earlier `opening-cash-at-the-yearly-steady-state` merged on the
+  ore rule) opens without it: households open with well under a year's income in coin and the money stock is a little
+  over half as large.
+- Within twenty years every class of household again holds about two years of its income in coin. It comes out of the
+  producers, whose coin falls by more than half; hours sold a head fall by a quarter in the first five years, the
+  wage ends at a fraction of its opening and output ends lower than with the opening hoard. Not merged.
+- Raising the share of savings a household keeps as store goods (`households_store.STORE_SAVINGS_SHARE`,
+  `STORE_SHARE_LIMIT`, to the share Petty's figures give) does not send the coin back to the makers. With the opening
+  hoard the opening sized a rush into store goods and output opened a third lower; without it households bought next
+  to no store goods (what they hold wears away), and the rate and the price level jumped late in the run. Not merged.
+  The store rule buys the whole gap once past a dead band and nothing below it, which is one more jump.
+- So the change question 8 asks for is larger than the opening: what a household does with income it does not spend
+  decides whether the producers keep the coin they pay wages with. This is the slide of the wage and the price level
+  through every spin-up traced so far, and it is not designed yet (owner question 12).
+
+**Found and not fixed:**
+- **A co-product nobody buys piles up.** With England's silver on the lead route, the lead has few buyers: its price
+  goes to nothing, it piles up in the smelters' stock (so producers' inventory value grows every year), and the
+  lead-silver smelter's runs fade through the trimmed stage although a run pays at the year's prices. The plan rule
+  already leaves a minor output's pile out of the runs (`producers.runs_for_stock`); what does hold the runs back is
+  not traced (`agent_flow_probe.py` shows its coin, capacity and runs falling together).
+- **The watched prices**: the cart is the watched good whose price moves most in most years; draught animals, which
+  are not watched, swing by tens of per cent a year; shoes are watched and never made (one maker, no runs), so their
+  price is a remembered one. Read from the `prices` of `ensemble_years.py` rows.
+- **Inventory value is the residual of markets that clear inside the year** (`unsold_search.py`, `demand_search.py`):
+  most goods end most years with nothing left and a floor that binds leaves a lump. It is measured against itself with
+  no floor, although the settle test gives a floor to the two other quantities that can sit near nothing (the rate and
+  unmet need). Owner question 11.
 

@@ -1,6 +1,6 @@
 # The money stock is many times what the coin metal chain can replace, so prices fall every year
 
-**Status:** open - found tracing why England's price level cannot rest (Complaint 473 Update 31); not fixed: it needs the owner's decision on what households hold their wealth in (`Complaints/reports/473-owner-questions.md`, question 8)
+**Status:** open - found tracing England's falling price level (Complaint 473 Update 31). The owner chose that households hold most of their wealth in other things than coin (question 8); opening without the hoard is not enough, because the yearly rules rebuild it out of the producers' coin (Update 32), so what a household does with income it does not spend is still to be designed
 
 **What is wrong.** A money made of metal loses a share of itself every year (`metal_stock.COIN_WEAR_PER_YEAR`,
 `METAL_GOODS_LOSS_PER_YEAR`, both unsourced). The stock rests only where the mint strikes what is lost. At every
@@ -28,9 +28,18 @@ mines can raise. No source was opened in this session for the money stock or its
 the figure to find is the stock of coin against yearly income (for England about the start date, the mint's output
 and hoard evidence are the usual basis).
 
-**Why it matters.** `spin_up_settled` asks the price level to rest. It cannot while the money stock falls: in
-England's trace the price level and the wage fall every year of the trimmed stage, the producers' cash drains and the
-households' does not. `money_against_wear` fails for the same reason. Complaints 473, 970 and 961 wait on it.
+**Why it matters.** `money_against_wear` fails while the mint strikes less than the money loses. `spin_up_settled`
+compares consecutive years (`spin_up_gap.state_gaps`), so a price level that falls steadily by less than the tolerance
+a year passes it; an earlier version of this note said it could not, which was wrong. What the falling stock does is
+move prices and wages every year, and in England's trace they fell by more than the loss in several years, because
+the producers' cash drains while the households' does not (Update 32). Complaints 473, 970 and 961 wait on it.
+
+**What the sources say** (`Complaints/reports/research-coin-loss-and-money-held.md`, opened in that session): the coin
+stock of England about the start date was about a fifth of a year's income (Mayhew's series, read from a slide of
+Munro's), and estimates of a coin stock's whole yearly loss run from the declared rate upward, with wear alone a
+fraction of it. So the loss rate is not too high; the stock is about ten times too large against income.
+`Complaints/reports/research-coin-metal-mines.md`: England's and the Norse's coin silver was mostly brought in by
+trade, so no home chain replaced it; the hidden spin-up is a closed economy and has no such trade.
 
 **What it would take** (question 8 asks which):
 - households hold most of their wealth in something other than coin (land titles, plate, stores, stock, loans), so
