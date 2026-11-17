@@ -1350,6 +1350,9 @@ under half of the output its opening sized, with several times as many hours idl
 staffed at about a third of their sized runs, the one wool producer is sized for more hours than any tile could give
 and is not staffed at all, and draught animals, oil and flour run at a fraction. England's and Norse's first years
 work about four fifths of theirs after the staffing fix. Han's yearly moves in the trimmed stage sit on top of that
-gap, and its samples of four members have differed by as much between like configurations as between unlike ones, so
-no change in this update is judged on Han.
+gap, and its samples of four members differ by nearly as much between like configurations as between unlike ones. A
+larger sample (twelve members on the merged state against seven at the start of this round, the rest of that run
+having been killed for memory) says Han's hired hours and wage now move about twice as much, and its output, price
+level and rate about as much as before. The samples of four put the step at the ore rule (Han's silver can no longer
+come from jarosite ore dug anywhere), not at the staffing or grinding changes. Not traced further.
 
