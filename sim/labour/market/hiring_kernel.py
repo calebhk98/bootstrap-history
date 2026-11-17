@@ -3,23 +3,12 @@
 Markets sit end to end in the arrays, `offsets` marking where each begins; within a market the employers are in sorted id
 order, so a tie in offers is broken by position. The rules are those of `applications.py`: a round dismisses a share of
 each employer's hours into searching groups, caps the groups' asks at the best posted offer, ranks the posters by offer,
-lets each group apply to a few of those whose offer it accepts, shares the group's hours out by the chance each employer
-is the best that makes an offer, lowers the asks of the hours still searching and raises the offers of employers whose
+lets each group send a few applications to the posts of those whose offer it accepts (a poster draws them by its share
+of the posts), shares the group's hours out by the chance each employer is the best that makes an offer, lowers the asks of the hours still searching and raises the offers of employers whose
 vacancies stay open. Sums run left to right; employers paying the same offer share their tier's hours by rank order."""
 import numpy as np
 
 from sim.jit import njit
-
-
-@njit
-def _binomials(largest, choose):
-    """`table[total, chosen]`: the ways to choose `chosen` of `total`, for totals up to `largest` and chosen up to `choose`."""
-    table = np.zeros((largest + 1, choose + 1), np.int64)
-    for total in range(largest + 1):
-        table[total, 0] = 1
-        for chosen in range(1, min(total, choose) + 1):
-            table[total, chosen] = table[total - 1, chosen - 1] + table[total - 1, chosen]
-    return table
 
 
 @njit
@@ -36,45 +25,41 @@ def _first_below(ranked, count, offers, ask):
 
 
 @njit
-def _shares_of_prefix(count, ranked, offered, offers, applications, shares, ways, better):
-    """For the first `count` ranked posters, the share of one hour of a group applying to `applications` of them at random
-    that each takes on, given the chance each makes an offer; fills `shares[:count]`."""
+def _shares_of_prefix(count, ranked, vacancies, offered, offers, applications, shares):
+    """For the first `count` ranked posters, the share of one hour of a group sending `applications` applications to their posts
+    that each takes on; fills `shares[:count]`. An application goes to a poster with the chance of its share of the posts
+    and gets an offer with the poster's chance of making one; the hours that end at a pay tier are those with no offer from
+    a better payer and at least one from the tier, shared within the tier by each poster's chance."""
     applied = applications if applications < count else count
-    for chosen in range(applications):
-        better[chosen] = 0.0
-    better[0] = 1.0
-    denominator = ways[count - 1, applied - 1]
+    posted = 0.0
     for position in range(count):
-        employer = ranked[position]
-        others = count - (position + 1)
-        weight = 0.0
-        for chosen in range(applied):
-            if applied - 1 - chosen <= others:
-                weight += better[chosen] * ways[others, applied - 1 - chosen]
-        shares[position] = offered[employer] * applied / count * weight / denominator
-        for chosen in range(applied - 1, 0, -1):
-            better[chosen] = better[chosen] + better[chosen - 1] * (1.0 - offered[employer])
+        posted += vacancies[ranked[position]]
+    better = 0.0
     start = 0
     while start < count:
         end = start + 1
         while end < count and offers[ranked[end]] == offers[ranked[start]]:
             end += 1
-        tier_total = 0.0
-        tier_weights = 0.0
+        weights = 0.0
         for position in range(start, end):
-            tier_total += shares[position]
-            tier_weights += offered[ranked[position]]
+            employer = ranked[position]
+            weights += vacancies[employer] / posted * offered[employer]
+        left = 1.0 - better - weights
+        if left < 0.0:
+            left = 0.0
+        total = (1.0 - better) ** applied - left ** applied
         for position in range(start, end):
-            fraction = offered[ranked[position]] / tier_weights if tier_weights > 0.0 else 0.0
-            shares[position] = 1.0 * tier_total * fraction
+            employer = ranked[position]
+            fraction = (vacancies[employer] / posted * offered[employer]) / weights if weights > 0.0 else 0.0
+            shares[position] = 1.0 * total * fraction
+        better += weights
         start = end
 
 
 @njit
 def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ceilings, taken_amount, taken_flag,
-                 rounds, applications, separation, cut, raise_share, threshold, ways):
+                 rounds, applications, separation, cut, raise_share, threshold):
     count_employers = hired.shape[0]
-    better = np.empty(applications)
     capacity = 2 + rounds * count_employers
     group_hours = np.empty(capacity)
     group_ask = np.empty(capacity)
@@ -145,8 +130,11 @@ def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ce
         for slot in range(slots):
             reached = slot_count[slot]
             applied = applications if applications < reached else reached
+            posted_reached = 0.0
             for position in range(reached):
-                applicants[ranked[position]] += slot_hours[slot] * applied / reached
+                posted_reached += vacancies[ranked[position]]
+            for position in range(reached):
+                applicants[ranked[position]] += slot_hours[slot] * applied * vacancies[ranked[position]] / posted_reached
         for position in range(poster_count):
             employer = ranked[position]
             if applicants[employer] > 0.0:
@@ -158,7 +146,7 @@ def _hire_market(hired, kept, wanted, offers, pool, ask, floor, ceilings, has_ce
             reached = slot_count[slot]
             slot_total[slot] = 0.0
             if reached > 0:
-                _shares_of_prefix(reached, ranked, offered, offers, applications, slot_shares[slot], ways, better)
+                _shares_of_prefix(reached, ranked, vacancies, offered, offers, applications, slot_shares[slot])
                 for position in range(reached):
                     slot_total[slot] += slot_shares[slot, position]
         furthest = 0
@@ -219,13 +207,9 @@ def hire_markets(offsets, hired, kept, wanted, offers, ceilings, pools, asks, fl
                  rounds, applications, separation, cut, raise_share, threshold):
     """Run the rounds of each market (employers `offsets[i]:offsets[i + 1]`); `hired`, `kept` and `offers` change in place,
     `taken_amount` and `taken_flag` say what each employer took on."""
-    largest = 0
-    for market in range(offsets.shape[0] - 1):
-        largest = max(largest, offsets[market + 1] - offsets[market])
-    ways = _binomials(largest, applications)
     for market in range(offsets.shape[0] - 1):
         low = offsets[market]
         high = offsets[market + 1]
         _hire_market(hired[low:high], kept[low:high], wanted[low:high], offers[low:high], pools[market], asks[market],
                      floors[market], ceilings[low:high], has_ceilings[market], taken_amount[low:high],
-                     taken_flag[low:high], rounds, applications, separation, cut, raise_share, threshold, ways)
+                     taken_flag[low:high], rounds, applications, separation, cut, raise_share, threshold)

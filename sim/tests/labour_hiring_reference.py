@@ -30,38 +30,42 @@ def _round(groups: List[Searchers], vacancies: Dict[str, float], offers: Dict[st
         hours_reaching[count] = hours_reaching.get(count, 0.0) + group.hours
     applicants = {employer: 0.0 for employer in ranked}
     for count, hours in hours_reaching.items():
+        posted = sum(vacancies[employer] for employer in ranked[:count])
         for employer in ranked[:count]:
-            applicants[employer] += hours * min(APPLICATIONS_PER_ROUND, count) / count
+            applicants[employer] += hours * min(APPLICATIONS_PER_ROUND, count) * vacancies[employer] / posted
     offered = {employer: min(1.0, vacancies[employer] / applicants[employer]) if applicants[employer] > 0.0 else 0.0
                for employer in ranked}
-    return reach, {count: _taken_by(1.0, ranked[:count], offered, offers) for count in hours_reaching}
+    return reach, {count: _taken_by(1.0, ranked[:count], vacancies, offered, offers) for count in hours_reaching}
 
 
-def _taken_by(hours: float, firms: List[str], offered: Dict[str, float], offers: Dict[str, float]) -> Dict[str, float]:
-    """Hours of a group that applies to `APPLICATIONS_PER_ROUND` of `firms` at random and takes the best offer it gets.
-    The chance firm j is the best is: it is chosen, makes an offer, and each better-paying firm also chosen made none;
-    the choices are counted with a polynomial over the better firms (exact for a draw of the applications without
-    replacement). Firms paying the same share their tier's hours by their chance of an offer."""
+def _taken_by(hours: float, firms: List[str], vacancies: Dict[str, float], offered: Dict[str, float],
+              offers: Dict[str, float]) -> Dict[str, float]:
+    """Hours of a group that sends `APPLICATIONS_PER_ROUND` applications to the posts of `firms` and takes the best offer it
+    gets. An application goes to a firm with the chance of its share of the posts (a producer stands for as many workplaces
+    as it posts hours), each application on its own, and gets an offer with the firm's chance of making one. The group's
+    hours that end at a pay tier are those with no offer from a better-paying firm and at least one from the tier; firms
+    paying the same share the tier's hours by their chance of an application that gets an offer."""
     if not firms:
         return {}
     ranked = sorted(firms, key=lambda employer: (-offers[employer], employer))
-    count, applied = len(ranked), min(APPLICATIONS_PER_ROUND, len(ranked))
-    better = [1.0] + [0.0] * (applied - 1)      # better[m]: weight of m better firms chosen and silent
-    shares: Dict[str, float] = {}
-    for position, employer in enumerate(ranked, start=1):
-        others = count - position
-        weight = sum(better[m] * math.comb(others, applied - 1 - m) for m in range(applied) if applied - 1 - m <= others)
-        shares[employer] = offered[employer] * applied / count * weight / math.comb(count - 1, applied - 1)
-        better = [better[m] + (better[m - 1] * (1.0 - offered[employer]) if m else 0.0) for m in range(applied)]
+    applied = min(APPLICATIONS_PER_ROUND, len(ranked))
+    posted = sum(vacancies[employer] for employer in ranked)
+    chance = {employer: vacancies[employer] / posted * offered[employer] for employer in ranked}
     taken: Dict[str, float] = {}
-    for pay in {offers[employer] for employer in ranked}:
-        tier = [employer for employer in ranked if offers[employer] == pay]
-        total, weights = sum(shares[employer] for employer in tier), sum(offered[employer] for employer in tier)
+    better = 0.0      # the chance one application gets an offer from a firm paying more than the tier
+    start = 0
+    while start < len(ranked):
+        end = start + 1
+        while end < len(ranked) and offers[ranked[end]] == offers[ranked[start]]:
+            end += 1
+        tier = ranked[start:end]
+        weights = sum(chance[employer] for employer in tier)
+        total = (1.0 - better) ** applied - max(0.0, 1.0 - better - weights) ** applied
         for employer in tier:
-            taken[employer] = hours * total * (offered[employer] / weights if weights > 0.0 else 0.0)
+            taken[employer] = hours * total * (chance[employer] / weights if weights > 0.0 else 0.0)
+        better += weights
+        start = end
     return taken
-
-
 
 
 def lowered_ask(ask: float, floor: float) -> float:
