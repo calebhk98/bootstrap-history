@@ -1,6 +1,7 @@
-# The third-party packages the simulator imports: numpy (arrays, the goods market's clearing, the map build), numba
-# (compiles the economy's kernels, sim/jit.py; without it the same code runs as plain Python, much slower) and shapely
-# (the geography layer build, sim/geography/layer_build/, and the tests that read it).
+# The third-party packages the simulator imports: numpy (arrays, the goods market's clearing, the map build) and numba
+# (compiles the economy's kernels, sim/jit.py; without it the same code runs as plain Python, much slower). shapely is
+# for the geography layer build (sim/geography/layer_build/), which a game does not run; that build also imports
+# pyproj, rasterio, geopandas and scipy, which are not listed here, and the one test that reads it skips without them.
 numpy
 numba
 shapely

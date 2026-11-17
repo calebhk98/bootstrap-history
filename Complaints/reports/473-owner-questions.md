@@ -4,6 +4,37 @@ Written while working on 473 alone. Each question says what was found, why it ne
 does in the meantime, so it can be answered without the session's context. Nothing here blocks the work: each
 question has a default that the branch follows until answered.
 
+## The owner's answers (2026-11-16) and what was done with each
+
+The questions below stay as they were asked. The answers, and the state of each on branch `economy-settles-not-chaotic`
+(Complaint 473 Update 30 has the evidence and the commands):
+
+1. **Settled means a fixed point; the economy must not be chaotic.** "The economy should settle if nothing drastic
+   happens." The check is unchanged. The work is to remove what amplifies and what cycles (Update 30), not to redefine
+   settling. The owner's point about a smallest coin is right about where it shows: rounding-sized differences were being
+   decided by strict comparisons (who stands a hair higher), which a rule that treats near-equal things alike removes.
+2. **Fertility 0 is intended** (fell, tundra, ice): those people live on fishing, hunting and trade. No data change.
+3. **Households open with the cash of the yearly rule's steady state** (option a). Built on branch
+   `opening-cash-at-the-yearly-steady-state` (the opening meets own-plot floors before sizing the budget, as the yearly
+   rule does) and not merged: alone it calms England and Norse, but with the durable rule merged it makes Han's hours
+   and wage swing far more, and that is not traced yet (Update 30).
+4. **Follow real life.** Done: for a money paid in metal at a stated price the coin-metal check now asks that the price
+   the mint pays covers the metal's making cost, with no ceiling on the makers' margin
+   (`opening_checks.mint_price_over_cost`; research and sources in `Complaints/reports/research-coin-metal-check.md`).
+5. **Add shapely to `requirements.txt`; no setup script.** Done. Set up with `pip install -r requirements.txt`.
+   Shapely alone does not un-skip the one geography test that reads the layer build: that build also imports pyproj,
+   rasterio, geopandas and scipy, which are not listed (a game does not run it).
+6. **Follow the real world.** Researched (`Complaints/reports/research-how-an-unpractised-crew-starts.md`, sources
+   read) and built on branch `learning-path-plan`, not merged: a crew still learning judges whether to run on the
+   discounted cost of the crew it becomes over the years it expects to work (the learning years' losses are an
+   investment paid from its stake or a loan). On Mexica the tool crews then run, but only a fraction of a run: entry
+   sizes a trade nobody practises to almost nothing, which is the part still to do (Update 30).
+7. **One source of truth for a person's time; no double counting; a large share taken must not leave nothing.** Done:
+   household work is counted over the labour year's own working days (housework on the other days is done on those
+   days and takes nothing from the hours a household can sell), and hiring servants is continuous in the household's
+   budget and changes gradually (`households_work.hours_per_person_per_year`, `adjusted_hired_hours`,
+   `household_servants.hired_hours_whole`).
+
 ## 1. What "settled" should mean for the spin-up
 
 **What the check asks now.** `spin_up_settled` (sim/markets/spin_up_run.py `final_result`, sim/markets/spin_up_gap.py)

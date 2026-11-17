@@ -2,6 +2,12 @@
 
 **Status:** partly - silver producers are no longer sized to the mint's capacity bid (below); the common ores (iron, copper, tin, lead) pass in every civilisation; silver and gold ores, and the metals themselves, still open far above cost
 
+**Update (Complaint 473 Update 30, owner question 4).** The opening check `price_over_cost_coin_metal` now tests, for a money
+paid in metal at a stated price (a struck coin's mint price, weighed metal's parity), that the price the mint pays covers
+the metal's making cost, with no ceiling on the makers' margin (`opening_checks.mint_price_over_cost`; research and
+sources in `Complaints/reports/research-coin-metal-check.md`). The sited ores and commodity money keep the band, so the
+ores' side of this complaint is unchanged.
+
 **What is wrong now.** Silver metal trades at tens of times its making cost at an opening, and the ore follows it (Rome and
 England silver ore; Han gold lode ore). Measure: `python3 sim/simulator.py opening-checks` prints a price over its making cost for the full-length opening of each
 civilisation. The one-step validation that used to read the sited ores' ratios was deleted (rule-tests-16): it read one step of an

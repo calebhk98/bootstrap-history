@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the money flow no longer leaks through households' own-plot floors and the mint replaces wear (Update 24); `spin_up_settled` still fails on Norse at the branch head (the other civilisations are being re-measured): watched prices and inventories cycle and the wage drifts where the floor binds; Update 24 lists what was tried and not merged
+**Status:** partly - the owner's answer is that settled stays a fixed point and the economy must not be chaotic; poaching, household time, servant hiring and durable demand no longer amplify or cycle (Update 30) and the yearly moves of hired hours and output are a fraction of what they were, but `spin_up_settled` still fails for every civilisation measured: Update 30 lists what was found and not fixed (England's money stock wears away, a quarter of its offered hours go unsold, single goods saw, the rate follows the year's inflation, Mexica shrinks)
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -1014,3 +1014,116 @@ So removing one traced lump moves the year-to-year noise elsewhere rather than r
 real output and the price level already move by little more than the tolerance while inventory value and the rate move
 by many times it. This is evidence for owner question 1 (a stationarity test over an ensemble, rather than a fixed
 point of every quantity), not a reason to change the check without the owner.
+
+## Update 30: the owner's answers; twin runs find where differences grow; poaching, household time and servants (branch economy-settles-not-chaotic)
+
+**The owner's answers** (`Complaints/reports/473-owner-questions.md`, top): settled stays a fixed point and the economy
+must not be chaotic; fertility 0 is intended; households open at the yearly rule's steady state; questions 4 and 6
+follow the real world; shapely goes into `requirements.txt` and there is no setup script; a person's time has one
+source of truth.
+
+**How it was measured: twin runs.** Two economies are opened from one setup, the second with households' cash scaled
+by a rounding-sized factor, and stepped side by side; after every year the two exported records are compared leaf by
+leaf, by record section (`Complaints/reports/473-handoff/probes/twin_probe.py`, read with `show_twin.py`,
+`show_states.py` and `show_detail.py`). `late_twin_probe.py` forks the twins from one saved economy late in the
+trimmed stage; `phase_probe.py` compares what goes into and comes out of the lending, planning and labour phases of
+one year; `hire_probe.py` does the same inside the labour clearing. This names the year, the phase and then the rule in
+which a difference first grows, which an ensemble's end gaps cannot. `series_probe.py`, `wage_probe.py` and
+`labour_totals_probe.py` log one run year by year (output by good, each labour market's wage rule, the cohorts' hours,
+holdings by good, the labour totals). The probes are scratch scripts: run them from a checkout with `PYTHONPATH` set
+to it; no committed command prints these figures.
+
+**What the twins showed first.** On England the twins agreed to rounding through the first year and differed by whole
+per cents in single outputs in the second. Everything that went into the second year's labour clearing agreed to
+rounding; the hours each employer came out with did not, while each market's total was the same.
+
+**Fixed, each with a rule test:**
+- **Poaching was a jump at equal standing** (`sim/labour/market/clearing.py` `on_the_job_loss_share`, `poach`; kernel
+  `clearing_tail_kernel._poach`; `test_labour_poach_continuous`). A higher employer drew a share of every lower one's
+  hours at any gap in standing (its highest bid cap) and none at none, and employers took turns by rank. Employers of
+  one trade often stand level, their caps being one figure, so the last digit decided who lost hours. The share now
+  rises from nothing with the recruiting premium, and all short employers draw at once from the hours held before any
+  moved. With it, twins forked late in England's trimmed stage stay together for years; before, they parted at once.
+- **Household work was counted over two year lengths** (owner question 7; `households_work.hours_per_person_per_year`,
+  `EconomySetup.working_days_per_year`; `test_household_time_budget`). The tasks' hours a day were multiplied by the
+  civil year and taken out of a labour year that holds working days only. They are now counted over the labour year's
+  working days: housework on the other days is done on those days and takes nothing from the hours a household can
+  sell or hire out. The household-work need's satiation in `data/world/needs.json` follows.
+- **Hiring servants flipped every year** (`household_servants.hired_hours_whole`, `households_work.adjusted_hired_hours`,
+  `SERVANT_HIRING_ADJUSTMENT_SHARE_PER_YEAR`). Each cohort chose, on last year's wage and by a steep rule with a cliff
+  at its budget, how much household work to hire; a cohort's own work alternated between a large and a small share of
+  its year, the hours it sold alternated with it, and so did the wage: the period-two swing of England's hired hours
+  and output (traced with `wage_probe.py` and `series_probe.py`: the employers' hours wanted were steady, the hours
+  offered were not). The share able to pay now falls smoothly with the budget, and the hours hired move a declared
+  share of the way from last year's to the choice each year (the opening takes the choice whole).
+- **A durable's purchase was the whole gap to the stock wanted** (`durable_stock.purchase_toward_stock`,
+  `households_ability.affordability`; `test_durable_demand_continuous`; the former unmerged `durable-demand-continuous`
+  patch). A small change in the flow a household plans moved a year's purchase by about the good's service life times
+  as much. England's households hold noric steel worth years of the economy's output, and making it, with its charcoal
+  and wood, is most of real output at opening prices; producers' steel piled up and cleared in lumps. Purchases now
+  replace wear and close a declared share of the gap, and affordability falls smoothly. Update 29 measured this patch
+  as no help; measured again after the two fixes above, it is one (below).
+- **The coin-metal check** (owner question 4; `opening_checks.mint_price_over_cost`, `coin_metal_check`;
+  `test_opening_check_mint_cover`): for a money paid in metal at a stated price the check asks that the price the mint
+  pays covers the metal's making cost, with no ceiling; commodity money keeps the band. Research and sources:
+  `Complaints/reports/research-coin-metal-check.md`.
+
+**Measured.** The end gap of eight members is a noisy figure: its spread across members is as large as its median, and
+the same code gave different medians in two sessions. So rules were compared on each quantity's mean yearly move over
+the whole trimmed stage, across every member (`Complaints/reports/473-handoff/probes/ensemble_years.py` keeps every
+year of every member as `spin-up-trace --stages --ensemble` replays them; `ensemble_moves.py` prints the mean and
+median yearly move beside the median end gap). Eight members for England and Norse, four for Han, each configuration on
+its own pinned worktree:
+- **Against the head before this branch**, the branch head moves hired hours a third as much and real output about
+  half as much on England, both about a fifth as much on Norse, and on Han hours about half as much and output about
+  three quarters as much. Unmet need falls to almost nothing on England and to a small share on Norse. The rate moves
+  a third as much on England and Norse. Not everything is better: Norse's inventory value moves about three times as
+  much, and Han's price level, watched prices and rate move two to three times as much.
+- **Still over the tolerance.** England's hired hours and output move by a little under the tolerance on average with
+  end gaps about at it, and its inventory value and rate by several times it. Norse's hours and output move by one to
+  two times the tolerance and its inventory value more than before. Han's hours, output and price level move by two to
+  three times it and its rate by many times. `spin_up_settled` fails for all three. Mexica's output shrinks through the
+  whole spin-up (`series_probe.py`); Rome was not measured.
+- **Each change, in the order merged.** Poaching and household time took most of Norse's swing and about half of
+  England's and Han's in hours, and left England's inventory value moving more; the durable rule then about halved
+  England's and Norse's moves in hours, output and the rate and was about level on Han (its price level and wage
+  moved more, on four members).
+
+**Built and not merged** (branches pushed; the passnote's table has the reasons):
+- `opening-cash-at-the-yearly-steady-state` (owner question 3, option a: the `opening-grown-floor-budget` patch
+  re-applied, so the opening meets own-plot floors before sizing the budget as the yearly rule does). Alone it calmed
+  England and Norse. On top of the durable rule England's hours moved more and Han's hours and wage swung far more
+  than without it; the cause in Han is not traced, so it waits.
+- `learning-path-plan` (owner question 6): a crew still learning judges whether to run on the discounted cost of its
+  learning path over the years it expects to keep the trade, and entry takes the same path
+  (`Complaints/reports/research-how-an-unpractised-crew-starts.md`). On Mexica the wooden-tool crews go from no runs to
+  a fraction of a run: the plan no longer refuses, but entry sizes the crew to almost nothing, so tools are still not
+  made.
+
+**Found and not fixed** (each seen in a probe; none has a fix on the branch):
+- **England's money stock wears away, so England's settled state is a deflation at the wear rate.** The coin-metal
+  chain is nearly absent at England's opening. The opening places silver smelters on the jarosite route in most tiles
+  although nothing in England mines jarosite ore: they smelt the stock they open with, then hire hands every year and
+  make nothing until their cash is gone. The one silver-ore mine cannot sell its ore and closes. Silver made is a small
+  share of the year's coin wear from the first year, the mint strikes a small share of the wear in every year, and the
+  money stock falls by the wear rate each year; the price level, the wage and the workers' reservation follow it down
+  together while real balances stay level (`python3 sim/simulator.py spin-up-trace --civ england_1300 --stages` prints
+  `struck` and `wear`; `series_probe.py` logs the producers). `money_against_wear` fails for England. A fixed point of
+  the price level needs an opening whose coin-metal chain its own tiles can supply (Complaints 961, 970), or a money
+  whose loss is replaced some other way. This was so before this branch (the money stock of the head before it falls
+  at the same rate). It is not England alone: on this branch Norse's and Han's money stocks also fall by their whole
+  yearly loss (the `money_supply` of `ensemble_years.py`'s rows); Han's mint replaced part of its wear before, and
+  its opening money is now several times larger (households sell more hours and hold more) while its strikes are not.
+- **About a quarter of England's offered hours go unsold in every year**, and the wage stays a steady multiple of the
+  workers' reservation while both fall with prices (`labour_totals_probe.py`). The labour market does not close the
+  gap; Complaints 608 and 963 are the same finding at the opening.
+- **Single goods still saw.** A medicine good's price creeps up for two years and falls in the third with its output
+  swinging by a third; the crops' outputs fall together in some years. Not traced to one rule. A trial that dropped the
+  producers' stock cover from the plan and let the ask only fall with unsold stock made prices fall every year and was
+  dropped: the step that raises an ask when stock is under its cover is the only thing that raises asks between years.
+- **The rate follows the year's inflation** (Update 28). Its relative move stays under the tolerance only when the
+  yearly inflation is steady to a small fraction of a per cent, so it settles last.
+- **The first years still amplify.** Twins part within the first years of the first stage. Seen in the second year's
+  differences: a producer's expected sales adding the market's unmet demand when its stock is a rounding share of its
+  sales and not otherwise (`expected_sales.demand_seen`), a market's memory moving by a different rule when it traded and
+  when it did not, and capacity shed or grown on the sign of the margin (`close_kernel`).
