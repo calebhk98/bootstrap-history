@@ -20,18 +20,18 @@ def bid(floor, budget):
     return Bid("buyer", "grain", "area", "tile", floor, 0.0, 1.0, 2.0, budget)
 
 
-class StreakTests(unittest.TestCase):
-    def test_a_margin_must_last_before_it_counts(self):
-        years = 0
+class StandingTests(unittest.TestCase):
+    def test_a_clear_margin_must_last_before_it_counts(self):
+        standing = 0.0
         for _ in range(LOSS_YEARS_BEFORE_EXIT - 1):
-            years = entry_margin.margin_streak(years, expected_price=2.0, entry_price=1.0)
-        self.assertFalse(entry_margin.margin_has_lasted(years))
-        years = entry_margin.margin_streak(years, expected_price=2.0, entry_price=1.0)
-        self.assertTrue(entry_margin.margin_has_lasted(years))
+            standing = entry_margin.margin_standing(standing, expected_price=2.0, entry_price=1.0)
+        self.assertEqual(entry_margin.margin_share(standing), 0.0)
+        standing = entry_margin.margin_standing(standing, expected_price=2.0, entry_price=1.0)
+        self.assertEqual(entry_margin.margin_share(standing), 1.0)
 
-    def test_one_year_at_or_under_the_entry_price_ends_the_streak(self):
-        self.assertEqual(entry_margin.margin_streak(5, expected_price=1.0, entry_price=1.0), 0)
-        self.assertEqual(entry_margin.margin_streak(5, expected_price=0.5, entry_price=1.0), 0)
+    def test_a_price_at_cost_takes_a_year_off_the_standing(self):
+        self.assertAlmostEqual(entry_margin.margin_standing(LOSS_YEARS_BEFORE_EXIT, expected_price=0.8, entry_price=1.0), LOSS_YEARS_BEFORE_EXIT - 1)
+        self.assertEqual(entry_margin.margin_standing(0.5, expected_price=0.5, entry_price=1.0), 0.0)
 
 
 class SizeTests(unittest.TestCase):
@@ -97,11 +97,11 @@ class MarketTests(unittest.TestCase):
         added = sum(plan.runs * CARVE_RECIPE.outputs[TRINKET] for plan in found)
         self.assertAlmostEqual(added, entry_margin.MARGIN_ENTRY_GROWTH_SHARE * INCUMBENT_OUTPUT)
 
-    def test_a_price_that_falls_to_the_entry_price_ends_the_streak_and_draws_nobody(self):
+    def test_a_price_that_falls_under_the_entry_price_draws_nobody_and_lowers_the_standing(self):
         setup, record, view, area_map = market(price=12.0, usual=1e3)    # the year's price is under the entry price (10 times 1.25 is 12.5)
         record.goods.margin_years[KEY] = LOSS_YEARS_BEFORE_EXIT
         self.assertEqual(plans(setup, record, view, area_map, buyer()), [])
-        self.assertEqual(record.goods.margin_years[KEY], 0)
+        self.assertLess(record.goods.margin_years[KEY], LOSS_YEARS_BEFORE_EXIT)
 
     def test_no_newcomer_where_no_buyer_bid(self):
         setup, record, view, area_map = market()
