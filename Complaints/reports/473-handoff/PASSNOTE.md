@@ -119,9 +119,12 @@ Each is in Complaint 473 with its evidence.
   by about the tolerance. What retires the share is a weight that follows how lasting the surprises have been.
 - **The price level cannot rest while the money stock falls, and it falls in every metal-money civilisation**
   (Update 31, Complaints 981 and 982). The opening's choice of the coin metal's recipes returns one phase of a cycle
-  (`coin_passes_probe.py`), an ore with no deposit on the economy's tiles is treated as unlimited, and the money stock
-  is so large (households rest at years of income in coin) that its yearly loss is more metal than the ores give.
-  Owner questions 8 and 9 ask what to do; until they are answered no yearly rule can make the price level rest.
+  (`coin_passes_probe.py`); ores with no deposit on the economy's tiles, and the jarosite ore, which is tied to no
+  deposit anywhere, are dug with no limit (`unsited_probe.py`); and the money stock is so large (households rest at
+  years of income in coin, `money_ratios.py`) that its yearly loss is more metal than the ores give. On a scratch copy
+  with a consistent silver chain England's money stock falls about a quarter as fast and its price level about a
+  third as fast, and the lead that comes with the silver piles up unsold (Complaint 981). Owner questions 8 and 9 ask
+  what to do; until they are answered no yearly rule can make the price level rest.
 - **Inventory value is a small share of a year's output**, so its relative move is the goods markets' yearly residual
   magnified. The bulk goods that carry it end a year with nothing left or a large share of a year's output left, in
   the same years as one another (`analyse_inventory.py`): look at the households' spending as a whole in those years

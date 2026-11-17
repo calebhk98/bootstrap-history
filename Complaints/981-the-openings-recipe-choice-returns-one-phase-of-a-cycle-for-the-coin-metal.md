@@ -19,13 +19,25 @@ show the recipes, their ceilings and what is placed):
   ceiling, silver ore smelted, no jarosite smelter, and the jarosite ore dug for the smelters of the pass before. `fit_to_supply` then cuts
   the smelters to the lead there is. England opens with silver smelters in every tile and no mine for their ore; they
   smelt the stock they open with and then hire hands and make nothing (Complaint 473 Update 30).
-- **A catalogue ore with no deposit on any of the economy's tiles runs anywhere.** `port_sites.site_limits` gives a
-  recipe a limit only on tiles that hold a deposit of its ore, and `sites.is_sited` reads a recipe with no limit as
-  unsited, so `UNSITED_EXTRACTION_ANYWHERE` lets it run on any tile with no ceiling. The module's own note says a tile
-  whose deposits are worked out keeps a limit of nothing so the recipe does not fall back; an ore with no deposit at
-  all falls back. England has no jarosite deposit (the catalogue's is Rio Tinto's), yet the opening prices jarosite
-  ore, ranks the jarosite recipe first and has no ceiling on it. England's galena and silver ore, which do have
-  deposits, are dug at their ceilings with no smelter sized to use them.
+- **Ores with no deposit are dug anywhere.** `port_sites.site_limits` limits a recipe that digs an ore to the tiles
+  holding a deposit of the ore's resource. Two cases escape it, and `UNSITED_EXTRACTION_ANYWHERE` then lets the recipe
+  run on any tile with no ceiling:
+  - the jarosite ore recipe is tied to no deposit in any civilisation: the resource catalogue lists no resource whose
+    ore good it is (`sim.geography.queries.ore_goods()`; the Rio Tinto deposit in the data is a silver deposit). So
+    England's opening prices jarosite ore, ranks the jarosite recipe first and has no ceiling on it;
+  - an ore the catalogue does list, with no deposit on the economy's tiles, has no limit either, although the module's
+    own note says a worked-out tile keeps a limit of nothing so the recipe does not fall back.
+    `unsited_probe.py <civ>` lists them with what is placed: England's gold, Norse's tin, galena and gold, Mexica's
+    silver are dug this way today.
+  England's galena and silver ore, which do have deposits, are dug at their ceilings with no smelter sized to use them.
+
+**What a consistent choice does** (one England spin-up on a scratch copy with `silver_jarosite_kg` taken out of
+`data/production/20_nonferrous.json`, `series_probe.py` beside the same run at the head): the choice settles on the
+lead route and the silver-ore route at their ceilings, the placed chain is about the size of the coin's yearly loss,
+silver is made every year at the mint's price, the money stock falls about a quarter as fast through the trimmed
+stage and the price level about a third as fast, and output and hired hours are higher. It also shows what comes
+next: the lead that comes with the silver has no buyers, its price goes to nothing and it piles up in the smelters'
+stock, so producers' inventory value grows every year. A producer needs a way to be rid of a co-product nobody buys.
 
 **Why it matters.** The coin's yearly loss is a demand the opening is meant to size a chain for
 (`opening_metal.py`). With this choice England's mint strikes a small share of the loss from the first year, the money
@@ -38,7 +50,7 @@ measured.
   (the consistent answer runs both recipes: the lead recipe as far as the silver the jarosite recipe cannot make, the
   jarosite recipe as far as that lead goes), or refuse loudly when the passes do not converge. A rule test with three
   small recipes of this shape shows it.
-- Decide question 9: an ore the catalogue lists and no tile of the economy holds is absent (a limit of nothing on
-  every tile), which is what the deposits say, and takes away ores the catalogue does not cover for a region
-  (`unsited_probe.py mexica_1500`: Mexica's silver ore has no site and is dug anywhere today); or the fallback stays
-  until the catalogue covers every region.
+- Decide question 9: whether an ore with no deposit on the economy's tiles is absent (a limit of nothing on every
+  tile, and the jarosite ore recipe tied to the jarosite deposit in the data), which is what the deposits say and
+  takes away the ores listed above until deposits or trade supply them; or the fallback stays.
+- A co-product nobody buys must not pile up for ever (free disposal, or a run sized on what all its outputs sell).

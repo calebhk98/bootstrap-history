@@ -12,13 +12,14 @@ setup = game.view("agent_opening_setup")()
 economy = economy_api.blank_economy(setup)
 record = economy.record
 by_limits = sites.limits_by_recipe(setup.site_limits)
-ore_of = {}
+from sim.geography import queries
+ore_of = {ore: resource for resource, by_ore in queries.ore_goods().items() for ore in by_ore}
 placed = {}
 for producer in record.producers.values():
     placed[producer.recipe_id] = placed.get(producer.recipe_id, 0.0) + producer.capacity_runs
 print(civ, "tiles", len(setup.tiles), "| recipes with site limits:", sorted(by_limits))
 for recipe_id, recipe in sorted(setup.recipes.items()):
-    if recipe.deposit_bound and not by_limits.get(recipe_id):
+    if recipe.deposit_bound and not by_limits.get(recipe_id) and (recipe_id in ore_of or placed.get(recipe_id, 0.0) > 0.0):
         print("   no site: %-24s catalogue ore of %-12s placed capacity runs %.5g" % (recipe_id, ore_of.get(recipe_id, "-"), placed.get(recipe_id, 0.0)))
 spec = record.currency
 good = spec.backing_good

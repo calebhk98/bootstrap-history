@@ -1186,12 +1186,16 @@ Not merged: the ramp because of Norse, margin entry because alone it cuts nothin
 - The money stock falls by about its whole yearly loss in every metal-money civilisation measured, because the mint
   strikes next to nothing. England's opening returns one phase of a cycle for its silver recipes
   (`coin_passes_probe.py`): smelters on the jarosite route, no mine for their ore, the lead route sized for lead's
-  other buyers, galena and silver ore dug with no smelter to use them. Jarosite ore has no deposit on England's tiles
-  and is treated as unlimited. Norse opens with no maker of silver at all, Han with next to no maker of its coin
+  other buyers, galena and silver ore dug with no smelter to use them. The jarosite ore recipe is tied to no
+  deposit in any civilisation and is treated as unlimited. Norse opens with no maker of silver at all, Han with next to no maker of its coin
   bronze (`unsited_probe.py`).
-- Even a working chain could not keep England's stock: the loss of a stock this large is more silver than the
-  ceilings of England's own ores give. The stock is that large because households rest at years of income in coin
-  (Complaint 982).
+- A consistent chain does most of it: on a scratch copy without the jarosite recipe England's silver comes from its
+  own galena and silver ore, the mint strikes most of the coin's loss, and the money stock falls about a quarter as
+  fast and the price level about a third as fast (Complaint 981 says how it was run, and what it shows next: the lead
+  that comes with the silver piles up unsold).
+- Even so the stock still falls: the loss of a stock this large is more silver than the ceilings of England's own
+  ores give once households take their share. The stock is that large because households rest at years of income in
+  coin (Complaint 982).
 - So a fixed point of the price level, and of the wage, the reservation and cash with it, needs the money's loss
   replaced. That is a decision about what households hold their wealth in and about which ores a civilisation has
   (`Complaints/reports/473-owner-questions.md`, questions 8 and 9), before it is an engine change.

@@ -60,21 +60,25 @@ give at their ceilings, so the money stock falls every year and the price level 
 **In the meantime.** Nothing changed: the stock and the loss are as they were. My recommendation is (a), with (c)
 done alongside.
 
-### 9. Does a civilisation have an ore that the deposit catalogue lists nowhere on its tiles?
+### 9. Can a civilisation dig an ore that has no deposit on its tiles?
 
-**What was found.** A recipe that digs a catalogue ore is limited to the deposits on the economy's tiles, but when no
-tile holds any deposit of it the recipe has no limit at all and may run on any tile (`UNSITED_EXTRACTION_ANYWHERE`,
-a labelled heuristic). England has no jarosite deposit (the catalogue's is Rio Tinto's), yet its opening prices
-jarosite ore and ranks the jarosite silver recipe first with no ceiling (Complaint 981). Making such an ore absent is
-what the deposits say, but it also removes ores the catalogue does not cover for a region:
-`unsited_probe.py mexica_1500` shows Mexica's silver ore has no site and is dug anywhere today.
+**What was found.** A recipe that digs an ore is limited to the tiles holding a deposit of it, but where no tile
+holds one the recipe has no limit at all and may run on any tile (`UNSITED_EXTRACTION_ANYWHERE`, a labelled
+heuristic). Dug this way today (`Complaints/reports/473-handoff/probes/unsited_probe.py <civ>`): England's gold,
+Norse's tin, galena and gold, Mexica's silver. The jarosite ore recipe is tied to no deposit in any civilisation, so
+England's opening builds its silver on Rio Tinto's ore (Complaint 981). On a scratch copy without that recipe
+England's silver comes from its own galena and silver ore, the mint strikes most of the coin's loss, and the money
+stock and the price level fall a fraction as fast.
 
-**Why it needs a decision.** Either the ore is absent until a deposit is added as data (then the catalogue needs the
-deposits it lacks, New World silver first), or the fallback stays and a civilisation can dig ores it never had.
+**Why it needs a decision.** Making such an ore absent is what the deposits say, and it takes those ores away from
+those civilisations until a deposit is added as data or trade brings the metal in (the Norse had no tin; they bought
+bronze). Keeping the fallback keeps every civilisation supplied with ores it never had.
 
-**In the meantime.** The fallback stays. The other half of Complaint 981 (the opening's recipe choice returning one
-phase of a cycle) is a plain defect and needs no decision; it is not fixed yet because its right answer depends on
-this one (with the fallback, England's consistent answer is a silver industry on an ore England does not have).
+**In the meantime.** The fallback stays. My recommendation: absent, with the jarosite ore tied to its deposit and
+the missing deposits added (New World silver first), because the coin metal chain of every civilisation depends on
+what its ground holds. The other half of Complaint 981 (the opening's recipe choice returning one phase of a cycle)
+is a plain defect that needs no decision; its consistent answer for England depends on this one, so it is not
+changed yet.
 
 ## 1. What "settled" should mean for the spin-up
 
