@@ -1,18 +1,15 @@
 """What a producer learns its demand from at the year's close."""
 from typing import Callable, Dict, Iterable, Mapping, Tuple
 
-# Stock left below this share of the year's sales counts as sold out (rounding in settlement leaves a hair).
-SOLD_OUT_LEFT_SHARE = 1e-6
-
-
 def demand_seen(sold: float, left: float, own_capacity: float, market_capacity: float, market_unmet: float) -> float:
-    """Quantity a producer takes as the year's demand: what it sold, plus, when it sold out (stock left is a hair or
-    nothing), its share of everything buyers in its market wanted and did not get. Sellers share the unmet demand by
-    capacity (output a year the plant allows), not by what each happened to sell, so a seller that could not run
-    (an input was short) still sees the buyers it turned away."""
-    if market_unmet <= 0.0 or own_capacity <= 0.0 or market_capacity <= 0.0 or left > SOLD_OUT_LEFT_SHARE * sold:
+    """Quantity a producer takes as the year's demand: what it sold, plus its share of everything buyers in its market
+    wanted and did not get, less the stock it still held (which could have served them). Sellers share the unmet demand
+    by capacity (output a year the plant allows), not by what each happened to sell, so a seller that could not run
+    (an input was short) still sees the buyers it turned away. A seller holding as much as its share sees its sales
+    alone, and the figure moves by a hair when the stock left does."""
+    if market_unmet <= 0.0 or own_capacity <= 0.0 or market_capacity <= 0.0:
         return sold
-    return sold + min(1.0, own_capacity / market_capacity) * market_unmet
+    return sold + max(0.0, min(1.0, own_capacity / market_capacity) * market_unmet - max(0.0, left))
 
 
 def market_capacities(sellers: Iterable[Tuple[str, Mapping[str, float], float]],
