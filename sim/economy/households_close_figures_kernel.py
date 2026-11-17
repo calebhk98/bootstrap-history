@@ -20,7 +20,7 @@ def _expected_spending(expected, spent, planned, speed):
 
 @njit
 def _resting_purse(mean_income, share_wealth, claims, share, target_years):
-    """`opening_resting.resting_household_purse` with no extra spending."""
+    """`opening_resting.resting_household_purse`."""
     if share_wealth <= 0.0:
         return 0.0
     share_term = share * (share_wealth - target_years * mean_income)
