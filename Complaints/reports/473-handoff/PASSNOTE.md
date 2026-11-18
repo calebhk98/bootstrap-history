@@ -20,6 +20,10 @@ The owner's requirements, which any change must keep:
 - **Settled is a fixed point, and the economy must not be chaotic** (the owner's answer to question 1). The check is not
   to be weakened or redefined. A small nudge must move the economy a small step: doubling iron's price should move
   each good's price by about its iron cost share and leave the rest close to where it was.
+- **Small goods do not decide it, and the economy takes a change without spiralling** (the owner, 2026-11-17: "I
+  should be able to add a new good, remove a good, double the price, 1/10th the price of anything, and the economy
+  would not suddenly spire out of control"). The settle measure therefore weighs each watched price by the year's
+  spending on it (Update 35), and `perturb_probe.py` is the test of the second half.
 - The project rules in `CLAUDE.md` (no hardcoded outcomes, no content ids in the engine, every heuristic declared with
   a `retire`, TDD, a test calls one function, no figures in markdown or comments).
 
@@ -234,6 +238,54 @@ What is in the way now, in the order to take it:
 4. The single goods: steel, carts and draught animals (zigzags), the unsold co-product, and the data that makes
    raw leather clothe a household better than the shoes made from it (owner question 14).
 5. Rome and Mexica have not been measured on this tree.
+
+## 6c. Where it stands after Update 35 (read this first; it replaces the order in section 6b)
+
+Update 35 followed the owner's direction of 2026-11-17 (section 1). Five fixes, each with a rule test: the settle
+measure weighs each watched price by the year's spending on it; the opening's supply fit serves a maker's plant
+upkeep before it cuts the other users; the opening never sizes plant on a working share under the one at
+break-even (a price a tenth of cost had sized plant and coin larger by many orders of magnitude); a producer
+that lost money no longer closes workplaces its expected sales still call for; and a price under what a unit costs
+is pulled up to it in full, sold out or not. The fourth removed the Norse lands' tipping point: an input shortage
+made the farms work by hand at a loss in a market short of grain, and the loss rule closed a quarter of them a
+year (Update 35 traces the whole chain from the tar burners' wood to the farms).
+
+Measured on the head (`ensemble_years.py`, then `ensemble_moves.py` and `member_gaps.py`):
+- **England:** every total under the tolerance on average; five of eight members pass the whole check, the rest
+  fail by a hair on one quantity or two.
+- **Norse:** every checked quantity under the tolerance on average, no split into a collapsed branch, hired hours
+  near the opening's; two of twenty-four members pass. A slow rise of output and hours remains, and about a fifth of
+  the food need is unmet for good.
+- **Han:** about as it was: hired hours and output a little over the tolerance, unmet need and inventory value two
+  to three times it, no member passing, hired hours falling through the whole spin-up and a third of the food need
+  unmet from the first year.
+- Perturbed runs (`perturb_probe.py`) stay bounded in England and the Norse lands; the Norse ones land far apart.
+
+What is in the way now, in the order to take it:
+1. **Unmet demand does not draw supply across market areas** (Update 35, "Found and not fixed", first item; the
+   Norse lands' hungry seventh). Three steps, each small: (a) a market with buyers and nothing on offer should not
+   remember the national making cost, which is under the price where the good is grown; let its remembered price
+   rise with the unserved bids at the pace a sold-out seller raises its ask (`goods_remember_kernel.signals`,
+   `year_remember.remember_one`, `market_quote.no_trade_quote`, `goods_market_rows.bids_only_quote`), capped at the
+   best unfilled bid; taking the bid itself is wrong, since a household's ceiling for a dear good is its whole need
+   budget (`quote_probe.py` shows it); (b) the volume merchants learn for a market should count its unmet demand
+   (`year_close.learned_prices`, `record.goods.unmet`), so `merchants_shares.room_left` is not nothing where nothing
+   is sold; (c) the opening's merchants (`opening._open_merchants`) sized on what its placement needs moved between
+   areas. Two more rules meet these on the way and need the same look: households bid only for what is on offer
+   (`market_memory.offered_price`), so after the first year the only bids for grain in those areas are the mills',
+   whose ceilings sit under the landed cost; and a market whose only ask stands above its best bid remembers the
+   bid, which is not a price a household can see. Measure with `hunger_probe.py`, `hungry_area_probe.py`,
+   `quote_probe.py` and `merchant_beliefs_probe.py`.
+2. **A maker closed for want of buyers does not come back when they return** (the iron-ore miners in Update 35):
+   closure at a sliver of past scale and regrowth by a share of what is left. Let a maker with no plant grow toward
+   its buyers' call from any size (`capacity_growth.grown_capacity` takes a step of the capacity it has), and look
+   at whether a maker with no plant needs a capacity at all.
+3. **A price moves a few per cent a year and capacity a quarter** (`ask_adjust`, `producers.OUTPUT_CHANGE_SHARE_PER_YEAR`):
+   a good opened at a wrong price loses its makers before the price finds its cost, which is why the perturbed
+   Norse runs land low. A sold-out maker whose cost a unit rose (hand work, a dearer input) should pass it on.
+4. Han's hunger (section 6b, items 1 and 2: the farms' tools and pro-rata rationing).
+5. England's last hair: steel's slide and zigzag, bread's makers (their ask is capped under their cost).
+6. The money stock (question 13), then Rome and Mexica, unmeasured on this tree.
 
 ## 7. What to do first
 

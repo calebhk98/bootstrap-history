@@ -1479,3 +1479,140 @@ reaching them. Neither can settle while this holds, and the yearly moves measure
   until none are, so a sold-out maker with a wide margin has no signal to grow.
 - Still open from earlier updates: the unsold co-product, the cart and draught-animal price swings, Rome and Mexica
   unmeasured on this tree.
+
+## Update 35: small goods no longer decide the check; a wrong price no longer blows the opening up; losses no longer close workplaces buyers still call for (branch economy-settles-not-chaotic)
+
+**The owner's direction (2026-11-17).** "It doesn't matter if some things aren't priced, like shoes ... this is just
+supposed to be a generic economy simulation, that can handle new goods and techs ... The big things, sure ... We are
+just trying to make the simulation stable, not chaotic. I should be able to add a new good, remove a good, double the
+price, 1/10th the price of anything, and the economy would not suddenly spire out of control." Wheat and cheese stay
+in the simulation (owner question 15 is still the way to make them work).
+
+**How it was measured** (probes in `Complaints/reports/473-handoff/probes/`, run from a checkout with `PYTHONPATH` set
+to it). `perturb_probe.py <civ> none|price:<good>:<factor>|drop:<good> <out>` runs the spin-up with one good's opening
+price multiplied or the good removed, and `perturb_table.py` sets each run's trimmed-stage level and yearly move
+against the unchanged run. `member_gaps.py <ensemble file>` lists, member by member, which checked quantity fails.
+`tipping_probe.py <civ> <member> <years> <out> <goods>` follows one ensemble member (hunger by tile, the makers of the
+named goods, their markets, wages, coin by holder); `recipe_coin_probe.py <civ> <member> <years> <recipes>` the coin,
+capacity, expected sales, runs staffed and worked and inputs held of the makers of a recipe; `chain_probe.py <civ>
+<good>` the opening's makers of a good and of everything behind it. For the areas no food reaches:
+`hunger_probe.py`, `areas_probe.py`, `hungry_area_probe.py`, `merchant_beliefs_probe.py`, `market_state_probe.py`,
+`quote_probe.py` and `carriage_probe.py`. `ablations.py` gained `nominal`, `fastask` and `notoolbids`.
+
+**Fixed, each with a rule test.**
+- **The settle measure let the smallest watched good decide it** (`spin_up_gap.price_gap`, `spin_up_year.traded_shares`;
+  `test_spin_up_measure`, `test_spin_up_replay`). Every watched price counted alike, and a good with no price for a
+  year counted as a full move, so shoes failed England whatever the rest did. Each watched price now counts by the
+  share of that year's spending on the watched goods that went to it (traded quantity at the year's prices; the
+  opening basket's shares stand in for a year none of them traded). A good the years have nearly stopped trading
+  counts for next to nothing; a staple counts for most.
+- **The opening's supply fit cut a maker's own plant upkeep along with its customers** (`opening_runs.held_sales`;
+  `test_fit_to_supply_chain_rule`, `test_opening_runs_kernel`). Where a good was short, its users were cut pro rata,
+  the makers of that good's own plant among them, which cut the good again on the next pass until the chain opened at
+  nothing (Han's and the Norse lands' iron). Upkeep is served first and the rest shared.
+- **A price a tenth of a good's cost sized its plant on a working share near nothing** (`opening_income.working_share`;
+  `test_opening_paying_sites`). The opening sizes plant as expected sales over the share of workplaces that pay; with
+  a price far under cost that share is next to nothing and the plant, and the coin struck for it, came out larger by
+  many orders of magnitude. The share is never under the one at break-even. This is what made the price level
+  explode when one large good's opening price was cut to a tenth.
+- **A producer that lost money closed workplaces its buyers still called for** (`producer_losses.capacity_after_losses`,
+  `producers_close.close_year`, `close_kernel.close_rows`; `test_producer_losses`, `test_year_speed_close`). The loss
+  rule closed the share of capacity the year's revenue failed to cover, up to a year's change, whatever the market
+  asked for. The rule that sheds on a negative expected margin already keeps the workplaces the expected sales call
+  for; the loss rule now keeps the same floor. This was the Norse lands' tipping point, traced below.
+- **A sold-out seller asking under its cost climbed back by a few per cent a year** (`ask_adjust.regressive_weight`,
+  `producers.next_expectations`, `close_kernel.close_rows`; `test_goods_ask_anchor`, `test_year_speed_close`). A
+  seller's expected price goes part of the way back to its cost each year, and that pull is withheld from a seller
+  that sold out, because buyers unserved speak against a fall. It was withheld in both directions, so a good opened
+  far under its cost took decades to cover it while its makers worked next to nothing. The pull now applies in full
+  to a price under cost.
+
+**What tipped the Norse lands** (`tipping_probe.py norse_900ad 2 20 ...` against member 3, `recipe_coin_probe.py`,
+`chain_probe.py norse_900ad millet_kg 4`). Every member ran the same path for about a dozen years; then most of them
+lost their market grain within three years and ended with about half the hired hours and a third of the food need
+unmet, while the rest went on. The chain behind it:
+1. Millet wears iron tools. The tools come from bars, the bars from blooms, the blooms from ore and charcoal, and the
+   only charcoal is the tar burners' co-product. In the first year the tar burners get about three fifths of the wood
+   they were sized on, so the bloomeries stand short of charcoal with the ore already in hand.
+2. A bloomery with ore in store and no charcoal buys no ore. The miners sell nothing for years, close to a sliver
+   (`entry.CLOSED_CAPACITY_SHARE_OF_PAST_SCALE`) and regrow by a share of what is left a year, which from a sliver is
+   decades. When charcoal reaches the bloomeries again there is no ore.
+3. Tools then come in at a fraction of what the farms wear, the farms work the rest by hand at twice the hours
+   (`tool_fallback.draws`), their cost a unit doubles and their price cannot follow (the ask moves a few per cent a
+   year inside its band), so they lose money in a market that is short of grain.
+4. The loss rule closed up to a quarter of their capacity a year. Less grain, the mills and bakers short, wages paid
+   out and not earned back: coin drained from producers to households every year (`tipping_probe.py`: producers'
+   coin falls by about a third in a dozen years while households' rises) until the grain makers could not pay for
+   their runs.
+With the floor in place both traced members keep their farm capacity, hire the hands the hand work needs and make
+more millet than the opening sized; the tipping point is gone in the whole ensemble.
+
+**Measured on the head** (`ensemble_years.py`, then `ensemble_moves.py` and `member_gaps.py`; England 8 members,
+Norse 24, Han 12):
+- **England:** every total moves under the tolerance on average, as before, and five of eight members pass the whole
+  check (none did before this round; two did before the pull toward cost). The three that fail do so by a hair on
+  one quantity or two (output, hired hours, the price level). Its unskilled wage still slides by about the
+  tolerance a year late in the run, which the check does not read.
+- **Norse:** every checked quantity now moves under the tolerance on average (hired hours and output moved about
+  twice as much before the loss floor, inventory value three times, unmet need seven times), the members stay
+  together instead of splitting, hired hours end near the opening's where they ended near half, and two of
+  twenty-four members pass the whole check (none ever had). Output and hours still creep up about a per cent a year
+  and unmet need creeps up with them; about a fifth of the food need stays unmet (below).
+- **Han:** about as it was. With the loss floor hired hours and output move by a little over the tolerance, the
+  price level and the rate under it, unmet need and inventory value by two to three times it, and no member passes.
+  Hired hours still fall through the whole spin-up to about half the first year's, and about a third of the food
+  need is unmet from the first year on. The loss rule is not Han's trouble; its farms' tools are (Update 34).
+
+**Perturbed** (`perturb_probe.py`, `perturb_table.py`, on the head): England with steel at twice and at a tenth of
+its price, millet at a tenth, and with shoes or steel removed stays bounded in every run. Hired hours end within
+about a sixth of the unchanged run and output within about a third (lowest with steel removed and with millet at a
+tenth); only the run without steel leaves any food need unmet, a few per cent. With millet at a tenth the wage and
+the price level end far lower, because the opening strikes its coin on the prices it is given. The Norse lands with
+millet at twice and a tenth, steel and peat at a tenth, and steel or bread removed stay bounded too, but land far
+apart: hired hours end between two fifths and four fifths of the unchanged run and unmet food between a quarter and
+a third. Nothing spirals; where a run lands still depends on how it got there.
+
+**Tried and not merged**, each measured on ensembles:
+- **Producers' coin target on the plant that works, not the whole plant** (commit `74e62afd`, reverted in `ba472060`):
+  the Norse lands moved several times as much.
+- **The opening striking a producer the coin the close keeps for its whole plant** (commit `01711972`, reverted in
+  `f7c5db1c`): larger moves over the spin-up.
+- **Wages indexed to the price level** (`ABLATE=nominal`) was the first suspect for the price-level explosion under a
+  cut price and is not its cause (the working share above is). **A faster cut of the wage ask** (`ABLATE=fastask`)
+  leaves the Norse wage path as it was for a dozen years and the moves a little larger. **Households' bids for plot
+  tools switched off** (`ABLATE=notoolbids`) does not free England's crops in the first year.
+
+**Found and not fixed.**
+- **About a seventh of the Norse people live in market areas that grow no food and none reaches them**
+  (`hunger_probe.py norse_900ad 14`, `areas_probe.py norse_900ad millet_kg`). The opening grows nearly all the grain
+  on one fertile tile and sizes mills and bakeries beside the people everywhere, as if grain moved freely; in the
+  year only merchants move goods between market areas, and the one merchant never ships (`hungry_area_probe.py`:
+  the mills there work nothing, its routes stay empty, its coin does not move). Three rules stop it:
+  1. A market with buyers and nothing on offer remembers what the good costs to make
+     (`year_remember.remember_one`, `goods_remember_kernel.signals`), a national figure that leaves out the land's
+     rent and is well under the price in the area that grows the grain, and the memory moves toward it every year
+     (`quote_probe.py`). The merchant reads that as the price there (`merchants.expected_price`), so the starving
+     areas look cheaper than the breadbasket and no route pays. The best unfilled bid in those markets is above the
+     landed cost in the first year and is not used.
+  2. A merchant's room in a destination is a share of what was delivered there (`merchants_shares.room_left`), which
+     is nothing where nothing is sold; the market's unmet demand (`record.goods.unmet`) is not counted.
+  3. The opening seats one merchant for the Norse lands with a small share of a year's output as capital
+     (`opening._open_merchants`), and one merchant supplies at most a share of a market.
+  Carriage from the grain tile to most of those people is about a fifth of the grain's price (`carriage_probe.py
+  norse_900ad millet_kg sweden_01`), so trade should feed them; one tile is many times the price away overland and
+  three have no route at all, and their waters give about a sixth of the food floor (the fishery ceiling), so those
+  few people cannot be fed by any rule of the economy. Households do not bid for a good that is not on offer, so
+  their hunger shows in no market.
+- **A shortage of one input still closes the maker of the input beside it for good** (step 2 above). The loss floor
+  stopped the cascade at the farms, not where it starts. A maker closed for want of buyers should come back as
+  fast as it left once buyers return; capacity that regrows by a share of itself cannot.
+- **A price moves a few per cent a year and capacity a quarter**, so a good opened at a wrong price (the perturbed
+  runs) loses its makers long before its price finds its cost. This is why the perturbed Norse runs land low.
+- **Bakers shrink every year in England and the Norse lands while more bread is asked for than is baked**: their ask
+  is capped by what households would pay for flour and their own baking, which is under what bread costs to make.
+  Bread's price then jumps in the years it barely trades.
+- **The miller's wage triples in the Norse lands' first year** and takes several years to come back.
+- Still open: the money stock falls every year (question 13), steel and cart price swings, the unsold co-product
+  (tar piles up unsold beside the charcoal the iron chain is short of), herds that cannot run for want of bran
+  (question 15), England's households short of shelter and vessels every year, Han's farm tools, Rome and Mexica
+  unmeasured on this tree.
