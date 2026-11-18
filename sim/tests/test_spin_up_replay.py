@@ -9,7 +9,7 @@ from unittest import mock
 
 from sim.markets import spin_up_stages
 from sim.markets.spin_up_gap import price_gaps, window_gaps, worst_price_change
-from sim.markets.spin_up_year import spending_shares, watched_goods_of, year_state
+from sim.markets.spin_up_year import spending_shares, traded_shares, watched_goods_of, year_state
 
 
 class WatchedGoodsTests(unittest.TestCase):
@@ -34,6 +34,20 @@ class YearStateTests(unittest.TestCase):
     def test_spending_shares_are_each_listed_goods_part_of_their_spending(self):
         basket, prices = {"wheat": 10.0, "salt": 1.0, "iron": 2.0}, {"wheat": 2.0, "salt": 5.0, "iron": 0.5}
         self.assertEqual(spending_shares(basket, prices, ["wheat", "salt"]), {"wheat": 0.8, "salt": 0.2})
+
+    def test_a_watched_good_counts_by_what_was_spent_on_it_in_the_year(self):
+        # bread was a large part of the opening basket; this year almost none of it traded
+        opening = {"bread": 0.5, "wheat": 0.5}
+        shares = traded_shares({"bread": 1.0, "wheat": 99.0}, {"bread": 2.0, "wheat": 2.0}, ["bread", "wheat"], opening)
+        self.assertEqual(shares, {"bread": 0.01, "wheat": 0.99})
+
+    def test_a_watched_good_that_did_not_trade_counts_for_nothing(self):
+        shares = traded_shares({"wheat": 10.0}, {"bread": 2.0, "wheat": 2.0}, ["bread", "wheat"], {"bread": 0.5, "wheat": 0.5})
+        self.assertEqual(shares, {"bread": 0.0, "wheat": 1.0})
+
+    def test_a_year_in_which_no_watched_good_traded_keeps_the_opening_shares(self):
+        opening = {"bread": 0.5, "wheat": 0.5}
+        self.assertEqual(traded_shares({}, {"bread": 2.0, "wheat": 2.0}, ["bread", "wheat"], opening), opening)
 
     def test_a_watched_price_that_is_not_a_trade_is_left_out_with_its_cause(self):
         state = year_state({}, 1.0, None, {"wheat": 2.0, "salt": 5.0}, ["wheat", "salt"], {"wheat"})
@@ -92,7 +106,8 @@ class ReplayTests(unittest.TestCase):
         patches = {"spin_up_state": lambda economy, outcome: {"real_output": 1.0}, "interest_rate": lambda economy: 0.05,
                    "money_year_figures": lambda economy, outcome: {"struck": 0.0, "wear": 0.0},
                    "economy_book": lambda economy: None, "currency_id": lambda economy: "coin",
-                   "trim_workforce_to_expected_hours": trim, "traded_price_goods": lambda economy: {"wheat"}}
+                   "trim_workforce_to_expected_hours": trim, "traded_price_goods": lambda economy: {"wheat"},
+                   "traded_volumes": lambda economy: {"wheat": 3.0}}
         with mock.patch.multiple(spin_up_stages.economy_api, **patches), \
                 mock.patch.object(spin_up_stages, "money_by_holder_columns", lambda book, currency: {}):
             rows = list(spin_up_stages.replay(Economy(), object(), ["wheat"], "labour", 2, 3))

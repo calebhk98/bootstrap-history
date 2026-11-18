@@ -31,6 +31,18 @@ def watched_shares(economy, watched):
     return spending_shares(economy_api.opening_quantities(economy), economy_api.opening_prices_of(economy), watched)
 
 
+def traded_shares(volumes, prices, watched, opening_shares):
+    """The watched goods' shares of what was spent on them in the year (`volumes` traded at `prices`), which is how
+    much each watched price counts in the settle measure: a good little is spent on counts little. `opening_shares`
+    (`watched_shares`) stands in for a year in which none of them traded."""
+    return spending_shares(volumes, prices, watched) or dict(opening_shares or {})
+
+
+def year_shares(economy, outcome, watched, opening_shares):
+    """`traded_shares` of the year just stepped."""
+    return traded_shares(economy_api.traded_volumes(economy), outcome.prices, watched, opening_shares)
+
+
 def watched_goods(economy):
     """The goods the spin-up watches on `economy`: the opening basket's largest spending."""
     return watched_goods_of(economy_api.opening_quantities(economy), economy_api.opening_prices_of(economy),
@@ -47,7 +59,7 @@ def year_state(quantities, price_level, rate, prices, watched, traded, weights=N
     """The state of a year as spin_up_gap measures it: the settle `quantities` (economy_api.spin_up_state), the price
     level, the rate (None when the economy has none) and the prices of the `watched` goods that were priced as a trade
     (those in `traded`; any other watched good is in "unmeasured" with its cause, since a price nobody traded at may be
-    only what the good would cost to make). With `weights` (`watched_shares`) the state carries them as "price_weights",
+    only what the good would cost to make). With `weights` (`year_shares`) the state carries them as "price_weights",
     which is how much each watched price counts in the settle measure."""
     causes = {good: "no_price" if prices.get(good) is None else "price_not_a_trade" for good in watched
               if prices.get(good) is None or good not in traded}

@@ -7,7 +7,7 @@ from .port_trace_holders import money_by_holder_columns
 from .spin_up_ensemble import perturb_household_cash
 from .spin_up import SPIN_UP_MEASURED_YEARS, spin_up_years
 from .spin_up_gap import window_gaps, worst_price_change
-from .spin_up_year import watched_goods, watched_shares, year_inputs, year_state
+from .spin_up_year import watched_goods, watched_shares, year_inputs, year_shares, year_state
 
 
 def replay(economy, inputs, watched, unskilled_trade, first_years, trimmed_years, shares=None):
@@ -23,7 +23,7 @@ def replay(economy, inputs, watched, unskilled_trade, first_years, trimmed_years
                    "wage": outcome.wages.get(unskilled_trade)}
             row.update(year_state(economy_api.spin_up_state(economy, outcome), outcome.basket_price_level,
                                   economy_api.interest_rate(economy), outcome.prices, watched,
-                                  economy_api.traded_price_goods(economy), shares))
+                                  economy_api.traded_price_goods(economy), year_shares(economy, outcome, watched, shares)))
             row.update(money_by_holder_columns(economy_api.economy_book(economy), economy_api.currency_id(economy)))
             row.update(economy_api.money_year_figures(economy, outcome))
             yield row

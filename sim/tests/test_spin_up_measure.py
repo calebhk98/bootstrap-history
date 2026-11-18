@@ -179,7 +179,8 @@ class StopRuleTests(unittest.TestCase):
             economy.years += 1
             return types.SimpleNamespace(basket_price_level=1.0, prices={"wheat_kg": 1.0})
         economy.step = step
-        with mock.patch.dict(os.environ, FULL_GAME, clear=True):
+        with mock.patch.dict(os.environ, FULL_GAME, clear=True), \
+                mock.patch.object(spin_up_run.economy_api, "traded_volumes", lambda economy: {"wheat_kg": 1.0}):
             result = spin_up_run.settle(economy, object(), ["wheat_kg"])
         self.assertTrue(result["settled"])
 

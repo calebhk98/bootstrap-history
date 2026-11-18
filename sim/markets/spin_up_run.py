@@ -13,7 +13,7 @@ from .port_trace import TraceRows
 from .spin_up_trace_cache import keep_trace
 from .spin_up import (SPIN_UP_CACHE_DIRECTORY, SPIN_UP_MAXIMUM_YEARS, SPIN_UP_MEASURED_YEARS, SPIN_UP_TOLERANCE,
                       SPIN_UP_TRIMMED_YEARS, spin_up_years)
-from .spin_up_year import SPIN_UP_WATCHED_GOODS, watched_goods, watched_shares, year_inputs, year_state   # the first is read from here by the tools
+from .spin_up_year import SPIN_UP_WATCHED_GOODS, watched_goods, watched_shares, year_inputs, year_shares, year_state   # the first is read from here by the tools
 from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, unsettled_cause, window_gaps
 
 def spin_up_cache_key(setup):
@@ -43,7 +43,7 @@ def spin_up(economy, trace=None):
     """Hidden years from the opening until prices and the interest rate settle; then the price level is rebased to one.
     `trace` (port_trace.TraceRows), when given, gets a row for each first-stage year."""
     watched = watched_goods(economy)
-    shares = watched_shares(economy, watched)     # how much each watched price counts in the settle measure
+    shares = watched_shares(economy, watched)     # the opening basket's shares: what a watched price counts in a year none of them traded
     inputs = year_inputs(economy)
     first_stage = settle(economy, inputs, watched, trace, shares)
     economy_api.trim_workforce_to_expected_hours(economy)
@@ -70,12 +70,13 @@ def settle(economy, inputs, watched, trace=None, shares=None):
         if trace is not None:
             trace.add(economy, outcome)
         now = (outcome.basket_price_level, economy_api.interest_rate(economy),
-               {good: outcome.prices[good] for good in watched if outcome.prices.get(good) is not None})
+               {good: outcome.prices[good] for good in watched if outcome.prices.get(good) is not None},
+               year_shares(economy, outcome, watched, shares))
         if before is not None:
             gap = max(change_gap(now[0], before[0]) if before[0] > 0.0 else 0.0,
                       change_gap(now[1], before[1], SPIN_UP_RATE_FLOOR)
                       if now[1] is not None and before[1] is not None and before[1] > 0.0 else 0.0,     # no rate: no rate gap
-                      price_gap(now[2], before[2], shares))
+                      price_gap(now[2], before[2], before[3]))
             if gap < SPIN_UP_TOLERANCE:
                 settled = True
                 break
@@ -91,7 +92,7 @@ def settle_trimmed(economy, inputs, watched, shares=None):
         outcome = economy.step(inputs)
         states.append(year_state(economy_api.spin_up_state(economy, outcome), outcome.basket_price_level,
                                  economy_api.interest_rate(economy), outcome.prices, watched,
-                                 economy_api.traded_price_goods(economy), shares))
+                                 economy_api.traded_price_goods(economy), year_shares(economy, outcome, watched, shares)))
     return list(states)
 
 
