@@ -71,12 +71,11 @@ class RefreshWorkshopsTests(unittest.TestCase):
 
 
 class PricingReadsTheCountTests(unittest.TestCase):
-    def test_every_producer_takes_the_price_and_a_seller_that_is_no_producer_does_not_count(self):
+    def test_a_producer_of_many_workshops_stands_for_many(self):
         record = types.SimpleNamespace(producers={"crowd": Producer("crowd", "o", "oven", "t", 1.0, workshops=40),
                                                   "lone": Producer("lone", "o", "oven", "t", 1.0, workshops=1)})
         self.assertTrue(seller_offers.stands_for_many(record, Offer("crowd", "bread", "area", "t", 1.0, 1.0)))
-        self.assertTrue(seller_offers.stands_for_many(record, Offer("lone", "bread", "area", "t", 1.0, 1.0)))
-        self.assertFalse(seller_offers.stands_for_many(record, Offer("merchant", "bread", "area", "t", 1.0, 1.0)))
+        self.assertFalse(seller_offers.stands_for_many(record, Offer("lone", "bread", "area", "t", 1.0, 1.0)))
 
 
 if __name__ == "__main__":

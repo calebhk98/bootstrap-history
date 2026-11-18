@@ -46,7 +46,7 @@ def decide_inputs(offer_rows, offer_ptr, offers, producer_row_of_agent, recipe_r
         recipe = recipe_row[producer]
         slot = slot_of[recipe, good_column]
         workshops[place] = float(workshops_of_producer[producer])
-        multiple_workshops[place] = True      # seller_offers.stands_for_many: every producer is a crowd of price takers
+        multiple_workshops[place] = workshops[place] > 1.0
         expected_sales[place] = expected_sales_of_producer[producer] * yield_factor[producer] * outputs[recipe, good_column]
         if slot >= 0:
             unit_cost[place] = cost[producer, slot]

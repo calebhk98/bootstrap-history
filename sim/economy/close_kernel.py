@@ -207,7 +207,8 @@ def close_rows(rows, constants,
             for slot in range(count):
                 if has_latest[slot]:
                     unsold = stock[row, slot] - q_in[slot] * cap_old
-                    exp[slot] = cost.stepped_by_stock(exp[slot], cover[slot], unsold, target_cover * q_out[slot], constants[K_ASK_STEP])
+                    exp[slot] = cost.adjusted_within_band(exp[slot], cover[slot], unsold, target_cover * q_out[slot],
+                                                          ask_multiple[row, slot], input_share, constants[K_ASK_STEP])
         for slot in range(count):
             new_expected[row, slot] = exp[slot]
 

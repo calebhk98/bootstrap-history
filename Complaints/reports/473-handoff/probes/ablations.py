@@ -119,5 +119,19 @@ def _nocarry():
     opening_own.plot_land = lambda held, kept_last: dict(held)
 
 
-SWITCHES = {"floor": _floor, "nowear": _nowear, "held": _held, "notoolbids": _notoolbids, "nominal": _nominal, "fastask": _fastask,
+def _farmsfirst():
+    """A hectare of the households' own plots is counted as returning nothing every year, as at the opening, so a producer
+    that bids anything for contested land takes it before the plots."""
+    from sim.economy import land_lease_year
+    original = land_lease_year.own_plot_returns
+    land_lease_year.own_plot_returns = lambda *args, **kwargs: {tile: 0.0 for tile in original(*args, **kwargs)}
+
+
+def _plotsfirst():
+    """The plots keep every hectare the households work before any producer is granted land, whatever is bid."""
+    from sim.economy import land_lease_year
+    land_lease_year.own_plot_returns = lambda *args, **kwargs: {}
+
+
+SWITCHES = {"farmsfirst": _farmsfirst, "plotsfirst": _plotsfirst, "floor": _floor, "nowear": _nowear, "held": _held, "notoolbids": _notoolbids, "nominal": _nominal, "fastask": _fastask,
             "woodland": _woodland, "fieldsall": _fieldsall, "noplottools": _noplottools, "nocarry": _nocarry}

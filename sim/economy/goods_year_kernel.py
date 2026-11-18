@@ -46,9 +46,8 @@ def queued_holding_value(reservation, stock, yearly_sales, rate, spoilage):
 @njit(**KERNEL)
 def choose_asks(res0, qty, is_producer, cost, share, expected, workshops, crowd, expected_sales, multiple, size,
                 intensity, grid_count, grid_start, grid_step, months, discount_rate):
-    """seller_offers.strategic_offers: the reservations after each producer's opening ask or its crowd's expectation. Every
-    producer arrives as a crowd (goods_decide_inputs_kernel), so the price search below is not reached; `share` and
-    `multiple` are not read."""
+    """seller_offers.strategic_offers: the reservations after each producer's opening ask, its crowd's expectation or its
+    price search against the book as it stood."""
     count = len(res0)
     res = res0.copy()
     rival_counts = numpy.zeros(count)
@@ -63,7 +62,7 @@ def choose_asks(res0, qty, is_producer, cost, share, expected, workshops, crowd,
         if not is_producer[i]:
             continue
         priced = cost[i]
-        limit = numpy.inf       # what the buyers will pay bounds an ask, not a multiple of its cost
+        limit = band_edge(priced, share[i], multiple[i]) if numpy.isfinite(priced) else numpy.inf
         if res0[i] <= 0.0:
             if numpy.isfinite(priced) and priced > 0.0 and numpy.isfinite(expected[i]) and expected[i] > 0.0:
                 res[i] = min(expected[i], limit)
@@ -250,7 +249,7 @@ def salvage_and_search(res, qty, searched, floors, keys, key_count, minimum, has
 def raise_up(res, qty, is_producer, cost, share, multiple, minimum, has_minimum, buyer_floors, flexibles, budgets,
              references, exponents, maximums, capped):
     """unsold_search.raise_sold_out's raise (demand_search.raise_asks): the producers' asks lifted to the highest common level
-    at which the buyers still ask for all that is offered. `cost`, `share` and `multiple` are not read."""
+    at which the buyers still ask for all that is offered, each held to the band above its cost."""
     count = len(res)
     limits = numpy.full(count, numpy.inf)
     any_limit = False
@@ -262,6 +261,9 @@ def raise_up(res, qty, is_producer, cost, share, multiple, minimum, has_minimum,
         if is_producer[i]:
             any_raisable = True
             lowest = min(lowest, res[i])
+            if numpy.isfinite(cost[i]):
+                limits[i] = band_edge(cost[i], share[i], multiple[i])
+                any_limit = True
     if not any_raisable:
         return res.copy()
     scratch = raise_search_kernel.make_scratch(count, len(buyer_floors))

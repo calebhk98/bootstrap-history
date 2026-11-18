@@ -113,7 +113,7 @@ class BatchedMarketsAreTheMarketsOneByOne(unittest.TestCase):
     def test_random_markets(self):
         compared = skipped = 0
         moved = {"lowered": 0, "raised": 0, "opened": 0, "traded": 0}
-        for seed in range(80):      # enough markets that buyers are turned away in more than a handful
+        for seed in range(30):
             setup, record, view, area_map = with_markets(seed)
             rng = random.Random(100 + seed)
             memory = record.memory

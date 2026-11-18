@@ -89,9 +89,10 @@ merging into (`git worktree add --detach ../pin_<name> <commit>`).
 far more. Compiling the kernels for a tree takes several minutes and several GB in each process that does it, and a
 new tree path or an edited kernel file compiles again; a replay holds one to a few GB. On a 16 GB, 4-core container
 two compiles, or one compile and a Han ensemble, are the most that fit: more were killed for memory. A killed worker
-aborts an ensemble with `BrokenProcessPool` and an empty output: check the `.err` file, not only the exit code. Setting
-`NUMBA_CACHE_DIR` to one directory per pinned tree keeps its compiled kernels between runs; after editing a kernel
-file that other kernels call, use a fresh directory (numba does not recompile the callers).
+aborts an ensemble with `BrokenProcessPool` and an empty output: check the `.err` file, not only the exit code. Do
+not set `NUMBA_CACHE_DIR`: a directory kept by hand runs stale code after a kernel file that other kernels call is
+edited (numba does not recompile the callers), and a round of measurements was lost to it (section 6e). The engine's
+own cache directory is keyed on the source and shared by every worktree of the checkout (`sim/kernel_cache.py`).
 
 **Environment.** `pip install -r requirements.txt` (numba, shapely). A container restart drops installed packages and
 kills background runs silently. `ROME_KERNEL_CACHE_KEY=kernels` for edit-test loops.
@@ -330,35 +331,38 @@ What is in the way now, in the order to take it:
 
 ## 6e. Where it stands after Update 37 (read this first; it replaces the order in section 6d)
 
-The owner (2026-11-18): the opening's figures are guesses that should be replaced by the years' own steady state, and
-prices should clear as in a real economy. Update 37 built the upward half (a sold-out seller's ask rises as far as
-its buyers' money goes, no band above cost, every producer a price taker) and then measured four ways to make
-output or prices answer faster. Every one of them left England less settled. Do not repeat them as they stand; the
-patches, with their tests, are in `tried/` beside this note and Update 37 says what each did.
+**A measuring rule first: never set `NUMBA_CACHE_DIR`.** The pinned worktrees of this work did, to keep their
+caches apart. numba checks only the file a kernel is defined in, so a kernel that calls one in another file kept
+the old code after that file changed, and a whole round of ensembles ran stale market kernels (Update 37). The
+engine keys its cache directory on the source (`sim/kernel_cache.py`): leave it to that. A sign of a stale run is
+two trees that differ in a kernel giving the same figures to four digits.
 
-What the measurements say about the head (`price_cost_probe.py`, `stock_probe.py`, `series_means.py`):
-- It rests in a sellers' market: prices well above the makers' cost in much of the economy, supply set by last
-  year's sales, the price clearing above. That is why it is quiet. Anything that brings a price down to cost
-  quickly lands in the zone where close to half of a producer's workplaces stop (`producers.share_working`), and
-  the market then swings.
-- Output falls fast and returns slowly, prices rise fast and fall slowly, and the wage carries the whole fall of
-  the money stock.
-- Han's slide is real, not monetary (`ABLATE=held`): the land passes from the farms to the plots.
+The owner (2026-11-18): the opening's figures are guesses that should be replaced by the years' own steady state, and
+prices should clear as in a real economy. The upward half was built (a sold-out seller's ask rises as far as its
+buyers' money goes, no band above cost, every producer a price taker), reported as harmless on stale kernels, and
+reverted when a clean run showed it sets England swinging by a quarter a year. The code under `sim/` is the tree of
+section 6d again; the change is `tried/prices_clear_upward.patch`.
+
+Not measured, whatever earlier notes in the scratch outputs say: the four patches of `tried/` that make output or
+prices answer faster, and the placement patch. Each needs a clean run alone.
 
 Order from here:
-1. **Land between plots and farms** (Han; section 6d, item 2). The largest move left in any civilisation measured.
-2. **Trade between food areas** (section 6d, item 0). `tried/trade_rules.patch` holds the two rules written so far
-   (what a market with buyers and nothing on offer remembers, the market size a merchant learns), with tests; it
-   passed its tests and was set aside because a merchant still cannot sell in an unfed area (points (c) to (e)).
-3. **The workforce trim** (Norse; section 6d, item 1).
-4. **A faster answer of output to price**, only with: the rent of a held site (standing timber, a seam) charged to
-   its maker so its price over cost says nothing; workplaces that idle near cost without being lost; a response
-   bounded to a few per cent a year. Update 37 gives the reasons.
-5. **A glut does not lower the year's price** for a going maker (the unsold search's floor is its own reservation).
-   `tried/unsold_floor_at_cost.patch` is the direct fix and its tests show the gap; it waits on item 4, since price
-   cuts reach makers as losses that close workplaces.
-6. Remove the dead strategic price search (`price_setting.py`'s grid) and the band arguments of the kernels: a
-   refactor a Sonnet agent can do, with the fingerprint as proof.
+1. **Clean baselines**: the Norse and Han ensembles on this tree with the engine's cache (England is done: five of
+   eight pass).
+2. **The opening places makers where the years cannot supply them** (Han; Update 37 lists them: kilns on two tiles,
+   presses away from the olives, farms sized on tools the ore cannot give). `tried/placement_beside_inputs.patch`
+   holds two rules with tests: a market area that holds a processor's fixed input makes its own share; a crop only
+   some tiles grow pulls its processors as a mine does. Measure each alone on all three civilisations. The second
+   moved the Norse mills away from where the flour is eaten in the one run made, so it likely needs the pooling
+   `_where_it_crops` does.
+3. **Prices that clear**, the owner's direction: measure the three parts of `tried/prices_clear_upward.patch`
+   apart (the raise with no band within the year; every producer taking the price; the yearly step with no ceiling)
+   to find what sets England off.
+4. **Trade between food areas** (section 6d, item 0); `tried/trade_rules.patch` holds the two rules written so far.
+5. **The workforce trim** (Norse; section 6d, item 1).
+6. Han's slide is not the money stock and not the land rule (Update 37). What is left to test: the first year not
+   reproducing the opening (item 2), and employers wanting fewer hours every year while labour stands idle
+   (`labour_totals_probe.py`).
 7. Owner questions 13 and 16; Rome and Mexica, unmeasured on this tree.
 
 ## 7. What to do first

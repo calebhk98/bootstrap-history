@@ -270,9 +270,9 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
                                   ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE))
     for good in ask_adjust.worked_outputs(producer, recipe):
         if good in latest_prices:
-            updated[good] = ask_adjust.stepped_by_stock(
+            updated[good] = ask_adjust.adjusted_within_band(
                 updated[good], cost_covering.get(good), ask_adjust.unsold_stock(producer, recipe, view, good),
-                ask_adjust.target_of(producer, recipe, good))
+                ask_adjust.target_of(producer, recipe, good), ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE), input_share=input_share)
     return updated
 
 

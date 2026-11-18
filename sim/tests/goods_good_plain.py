@@ -123,7 +123,7 @@ def plain_decide_inputs(offers, offer_rows, producer_row_of_agent, recipe_row, w
     expected_sales = numpy.where(is_producer, expected_sales_of_producer[safe] * yield_factor[safe] * outputs[recipe, goods], 0.0)
     return (offers.reservation_price[offer_rows], offers.quantity[offer_rows], is_producer,
             numpy.where(known, cost[safe, place], numpy.inf), numpy.where(known, input_share[safe, place], 0.0),
-            numpy.where(known, expected[safe, place], numpy.nan), workshops, is_producer, expected_sales,
+            numpy.where(known, expected[safe, place], numpy.nan), workshops, is_producer & (workshops > 1.0), expected_sales,
             band_multiple_of_tile[offers.tile[offer_rows]], numpy.full(len(markets), spoilage))
 
 
