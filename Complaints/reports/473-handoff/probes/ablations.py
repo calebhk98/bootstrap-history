@@ -88,4 +88,36 @@ def _notoolbids():
     year_order_sources.tool_wear.tool_bids = lambda *args, **kwargs: []
 
 
-SWITCHES = {"floor": _floor, "nowear": _nowear, "held": _held, "notoolbids": _notoolbids, "nominal": _nominal, "fastask": _fastask}
+def _woodland():
+    """A producer whose recipe is bound to a declared site (standing timber, a seam) asks for none of the tile's cropland."""
+    from sim.economy import land_market, sites
+    original = land_market.demands_of
+
+    def demands_of(setup, record, view, wanted_runs):
+        by_recipe = sites.limits_by_recipe(setup.site_limits)
+        sited = {producer_id for producer_id, producer in record.producers.items() if by_recipe.get(producer.recipe_id)}
+        return [demand for demand in original(setup, record, view, wanted_runs) if demand.agent_id not in sited]
+    land_market.demands_of = demands_of
+
+
+def _fieldsall():
+    """Every recipe with land in its data asks for cropland, sited or not (the rule before Update 36)."""
+    from sim.economy import land_market
+    land_market.cropland_recipes = lambda land_per_run, site_limits: frozenset(name for name, hectares in land_per_run.items() if hectares > 0.0)
+
+
+def _noplottools():
+    """The opening neither seeds the plots' tools nor adds their wear to final demand."""
+    from sim.economy import opening_plot_tools
+    opening_plot_tools.add_wear = lambda *args: None
+    opening_plot_tools.seed_moves = lambda *args: []
+
+
+def _nocarry():
+    """Each opening pass gives the plots all the land the cohorts hold, whatever the last pass's land market left them."""
+    from sim.economy import opening_own
+    opening_own.plot_land = lambda held, kept_last: dict(held)
+
+
+SWITCHES = {"floor": _floor, "nowear": _nowear, "held": _held, "notoolbids": _notoolbids, "nominal": _nominal, "fastask": _fastask,
+            "woodland": _woodland, "fieldsall": _fieldsall, "noplottools": _noplottools, "nocarry": _nocarry}

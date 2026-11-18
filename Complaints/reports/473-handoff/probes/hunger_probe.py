@@ -18,6 +18,10 @@ def patched(self, ledger, level, extraction, stocks_at_start):
     captured["sold"] = dict(ledger.hours_sold)
     return original(self, ledger, level, extraction, stocks_at_start)
 economy_module.Economy._outcome = patched
+import os
+if os.environ.get("ABLATE"):       # experiment switches (ablations.py beside this file)
+    import ablations
+    ablations.apply(os.environ["ABLATE"])
 _t, _p, nodes, _w, _g = load()
 game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ))
 setup = game.view("agent_opening_setup")()

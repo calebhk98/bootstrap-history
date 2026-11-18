@@ -91,6 +91,25 @@ content decision.
 ox (or mule) the opening breeds, and add the cattle herd to the starting knowledge of the civilisations that kept
 cattle, each with a source.
 
+## New questions from Update 36 (2026-11-18)
+
+### 16. What ground do pasture and forest recipes take, and how much poppy does a household want?
+
+**What was found.** The economy has one kind of land on a tile, its cropland, and until Update 36 every recipe with
+land in its data took it. Felling (wood, firewood) is limited by the tile's standing timber and no longer takes
+fields. Timber, bark, wool, milk, meat, oxen and mules still do: their data names pasture or forest as their ground
+and gives hectares a run, and nothing else bounds them. In the Norse lands wool takes over a quarter of the land the
+producers hold. Separately, Han's opening grows more hectares of opium poppy than of millet, which follows from the
+needs data and the poppy's yield a hectare (`land_use_probe.py han_china_100ad`).
+
+**Why it needs a decision.** Rough grazing and woodland were not cropland, and the tile data has a forest fraction
+the economy does not read. Giving a tile a second kind of ground (grazing and woodland, with their own rent) is a
+change to the land model; the poppy figure is content.
+
+**In the meantime.** Nothing changed beyond felling. My recommendation: give each tile its uncropped ground from the
+geography layers as a second pool for the recipes whose data names pasture or forest, and have the needs data's
+poppy figure sourced or cut to a household's medicine.
+
 ## The owner's answers to questions 10 to 12 (2026-11-17)
 
 "Go with your recommendations for 10-12 and keep fixing. ... My goal is purely, stabilize the economy. Find out why it

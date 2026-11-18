@@ -52,7 +52,10 @@ def show(label, prices, wages):
             " ".join("%s %.2f" % (name, value / base) for name, value in sorted(row.items()) if ":" in name)))
 
 show("opening", setup.opening_prices, setup.opening_wages)
+from sim.markets.spin_up_run import spin_up_years
 for year in range(years):
+    if year == spin_up_years()[0]:
+        economy_api.trim_workforce_to_expected_hours(economy)
     outcome = economy.step(inputs)
     prices = dict(setup.opening_prices); prices.update({good: price for good, price in outcome.prices.items() if price})
     wages = dict(setup.opening_wages); wages.update({trade: wage for trade, wage in outcome.wages.items() if wage})

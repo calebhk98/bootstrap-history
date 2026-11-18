@@ -287,6 +287,37 @@ What is in the way now, in the order to take it:
 5. England's last hair: steel's slide and zigzag, bread's makers (their ask is capped under their cost).
 6. The money stock (question 13), then Rome and Mexica, unmeasured on this tree.
 
+## 6d. Where it stands after Update 36 (read this first; it replaces the order in section 6c)
+
+Update 36 traced Han's first-year hunger to the opening contradicting its own first year, and fixed three things,
+each with a rule test: a recipe bound to its own site (felling) takes no cropland; households open with the tools
+their plots wear; each opening pass sizes its demand on the plots the solve's land markets have left. Update 35's
+last fix (a price under cost is pulled up in full) took England from two to five of eight members passing.
+
+Measured on the head (`ensemble_years.py`, `ensemble_moves.py`, `member_gaps.py`):
+- **England:** five of eight members pass the whole check; the rest fail by a hair on one quantity or two.
+- **Norse:** one of twenty-four passes. Hired hours and output move about a third over the tolerance on average
+  (medians under it); about a fifth of the food need unmet late in the run, less in the first twenty years.
+- **Han:** none passes. About a twentieth of the food need unmet for thirty years where over a third was; output
+  and the wage move by several times the tolerance while hired hours fall to a third of the first year's.
+
+What is in the way now, in the order to take it:
+1. **The workforce trim and the tight labour market after it** (Norse; Update 36). The grain farms slump for three
+   years after the trim and the farmers' wage then alternates year by year. Look at what
+   `economy_api.trim_workforce_to_expected_hours` leaves a trade whose employers work part of their runs by hand
+   (the hours hand work takes are not the hours the runs' recipe states), and at a labour market with no idle
+   hands (`recipe_coin_probe.py norse_900ad 0 45 millet_kg` shows both).
+2. **Land between plots and farms** (Han; Update 36). Strict priority by bid hands every contested hectare to one
+   side: the farms at the opening (a plot's own return is nothing at the opening's prices), the plots later. A rule
+   that shares contested land in proportion to the bids, or leases that last, would stop the forty-five-year slide.
+   Then the opening and the years would agree on who works the land.
+3. **Trade between food areas** (section 6c, item 1): the Norse lands' unfed seventh and Han's one area with no
+   grain farm (`area_first_year_probe.py`). Still the largest gap between the opening and the first year.
+4. Section 6c, items 2 and 3 (a maker closed for want of buyers does not come back; prices move slower than
+   capacity).
+5. Owner question 16 (pasture and forest recipes take cropland; Han's poppy), question 13 (the money stock).
+6. Rome and Mexica, unmeasured on this tree.
+
 ## 7. What to do first
 
 1. Set up the environment and reproduce: `ensemble_years.py` on England, Norse and Han at the head, so your numbers

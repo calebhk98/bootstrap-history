@@ -1616,3 +1616,104 @@ a third. Nothing spirals; where a run lands still depends on how it got there.
   (tar piles up unsold beside the charcoal the iron chain is short of), herds that cannot run for want of bran
   (question 15), England's households short of shelter and vessels every year, Han's farm tools, Rome and Mexica
   unmeasured on this tree.
+
+## Update 36: Han's hunger was the opening contradicting its own first year; felling was charged cropland (branch economy-settles-not-chaotic)
+
+**How it was measured** (probes in `Complaints/reports/473-handoff/probes/`): `tool_bids_probe.py <civ>` (what
+households bid for the tools their plots wear against what they hold and what the makers were sized on);
+`plot_land_probe.py <civ>` (the plot land the opening's demand assumed on each tile against the land the households
+hold once its land market has cleared); `plot_pass_probe.py <civ> <tile>` (the same, pass by pass of the solve, with
+what the producers asked for and the tile's cropland); `land_use_probe.py <civ>` (the hectares the opening's
+producers take, by recipe); `area_land_probe.py <civ> <staple> <recipe>` (whether each food area's own cropland could
+grow its people's food); `area_first_year_probe.py <civ> <staple>` (the first year by food area: hunger, plot hours,
+the staple's makers); `crop_suit_probe.py <civ> <tiles>` (which food crops a tile yields and whether the opening may
+place them); `hunger_probe.py`, `first_year_probe.py`. `ablations.py` gained `woodland`.
+
+**Found.** Han's cropland could grow each large food area's food floor about four times over
+(`area_land_probe.py han_china_100ad millet_kg millet_kg`), yet a third of its food need was unmet from the first
+year. Three things in the opening did it:
+- **Households opened with none of the tools their plots wear.** A year's household bids for the stock its plot
+  hours keep in use less what it holds (`tool_wear.tool_bids`). Holding none, Han's households bid in the first year
+  for the whole stock, about two and a half times what the tool makers were sized to sell in a year, and under
+  pro-rata rationing took most of the tools the farms were sized on. The farms worked half their runs, by hand.
+- **The demand was sized on plots the opening's own land market then took away.** The opening cuts each
+  household's food bids by what its plot grows, sizes the producers on the rest, and then clears the land: where
+  the producers' land and the plots together exceed a tile's cropland, the producers outbid the plots for all of it
+  (`land_priority.allocate_by_bid`). On about half of Han's people's tiles, and on the one fertile tile of the Norse
+  lands, the households ended with no plot at all and nobody grew what their plots had been counted on for.
+- **Felling was charged cropland.** Every recipe with land in its data asked the land market for that many
+  hectares of the tile's fields. Wood and firewood are limited by the tile's standing timber (a site limit,
+  `port_timber`) and were charged fields as well: in Han they took over half the land the producers held between
+  them (opium poppy a sixth, millet under a tenth), in the Norse lands wood for charcoal took more than the grain.
+  That is what ran the fields out.
+
+**Fixed, each with a rule test.**
+- **A recipe bound to its own site takes no cropland** (`land_market.cropland_recipes`; `test_economy_land_market`).
+  A recipe with a declared site works that site and asks for none of the land the crops and the plots share.
+- **Each cohort opens with the tool stock its plot hours keep in use, and the stock's yearly wear is in its tile's
+  final demand** (`opening_plot_tools`, `opening_own.OwnPlots.grow`; `test_opening_plot_tools`), so the first
+  year's tool bids replace wear and the makers are sized on it.
+- **Each opening pass of a solve gives a plot no more land than the solve's land markets have left it**
+  (`opening_own.plot_land`, `opening_income.OpeningStart.plot_land`; `test_opening_plot_land`), so the producers
+  are sized on what households with the plots they keep will buy. The carry only ever shrinks, because the passes of
+  one solve differ in what the producers ask (the mint's metal is in some only).
+
+**First year after them** (`first_year_probe.py`, `hunger_probe.py`): Han's unmet food need falls from about a third
+to about a tenth and its first year works about three quarters of the output the opening sizes, where it worked
+under two thirds; the opening itself is much larger, since the farms now feed the households that keep no plot. The
+Norse lands' tar burners work about nine tenths of their runs where they worked three fifths, and the households of
+its grain tile keep their plots. England's first year is unchanged.
+
+**What is left of Han's first-year hunger is one food area with no grain farm**
+(`area_first_year_probe.py han_china_100ad millet_kg`, `market_state_probe.py`): about a sixth of Han's people live
+in an area where millet yields half as much (`crop_suit_probe.py han_china_100ad china_04`), no run pays there at
+the national price, and the opening shares that area's runs over the areas that do grow it
+(`opening._where_it_crops`), counting on carriage between areas. In the year nothing is carried, for the reasons
+Update 35 gives for the Norse lands' unfed areas: its millet market shows buyers unserved, nothing on offer, and a
+remembered price under the price where the millet is grown. The trade between food areas is now the largest single
+gap in both civilisations.
+
+**Measured over the spin-up** (`ensemble_years.py`, `ensemble_moves.py`):
+- **England:** five of eight members pass the whole check, as before these three rules; hired hours, the rate and
+  the weighted prices move a little less, and the unskilled wage no longer slides late in the run.
+- **Han:** fed for most of the run. About a twentieth of the food need is unmet for the first thirty-odd years,
+  where over a third was, rising toward a sixth in the last years. It is not settled and in two ways moves more:
+  output moves by over three times the tolerance where it moved by about one and a half, and the wage falls to
+  about a quarter of its first year's with large yearly swings, while unmet need and inventory value move less than
+  half as much as before. The hired economy shrinks to about a third of the first year's hours, the same hours in
+  absolute terms as before: the opening is now sized with farms feeding the households that keep no plot, and over
+  the years the households take land back and feed themselves (`plot_years_probe.py`). No member passes.
+- **Norse:** less hungry for the first twenty years and no calmer for it: hired hours and output now move by about
+  a third over the tolerance on average (their medians are under it), where every total had been under it, and one
+  member of twenty-four passes. Two things show in the trimmed stage (`plot_years_probe.py norse_900ad 0 sweden_01`,
+  `recipe_coin_probe.py norse_900ad 0 45 millet_kg`): the workforce trim is followed by a slump of the grain farms'
+  runs over three years and a decade's recovery, and the farmers' wage then alternates year by year, hunger and
+  hired hours with it. Before these rules the grain tile's farms were held to the land they could get, which
+  pinned their output and hid both.
+- **Which of the three does what** (`ABLATE=fieldsall|noplottools|nocarry python3 ensemble_years.py ...`, eight
+  Norse members and six of Han): without the cropland rule the other two are far worse in the Norse lands (hired
+  hours end at half, a third of the food need unmet); without the plot tools the Norse swing is a little larger;
+  without the carried plot land the Norse lands move a little less and end with fewer hours and more hunger, and
+  Han opens with over a quarter of its food need unmet where it opens with a tenth.
+
+**Found and not fixed.**
+- **The workforce trim leaves the Norse grain farms short of hands and the labour market with no slack**
+  (above). The farms work part of their runs by hand, which takes more hours than the trim leaves their trade, and a
+  market trimmed to exactly the hours hired answers every change in hiring with the wage. Next to take for the Norse
+  lands.
+- **Han's opening is still far from where its years go.** The yearly land market hands land back to the households'
+  plots as the farms shrink, hired hours fall for forty-five years and the wage with them. Land goes to the higher
+  bid first, plots included (`land_priority.allocate_by_bid`), and a plot's own return is nothing at the opening's
+  prices (`land_lease_year.own_plot_returns`; `plot_pass_probe.py` prints it), so at the opening the farms take
+  every contested hectare and in later years the plots do: an all-or-nothing rule on both sides of a fine line.
+- **Pasture and forest recipes still take cropland** (`land_use_probe.py`): timber, bark, wool, oxen and mules have
+  land in their data, no site limit, and so ask for fields; wool takes over a quarter of the producers' land in the
+  Norse lands. The data names their ground (`extracted_from`: pasture, forest); the economy has one kind of land.
+  A decision for the owner (question 16).
+- **Households still gather their own firewood on their plot land** (`households_own.is_own_plot_recipe` reads the
+  same land figure), and a newcomer that fells is still kept off a tile short of land (`entry_tables`).
+- **The opening shares a crop's runs over an area's tiles by their people, not their cropland**
+  (`location.opening_split`), so a dense tile is asked for more fields than it has while its neighbours have spare.
+  With felling off the fields this no longer runs Han's tiles out; it will again wherever land is tight.
+- **Opium poppy takes more of Han's fields than millet.** The figure follows from the needs data and the poppy's
+  yield a hectare; nothing in the engine is wrong there, and the data may be (question 16).
