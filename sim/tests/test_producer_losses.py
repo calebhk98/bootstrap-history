@@ -37,7 +37,41 @@ class ShedShareTests(unittest.TestCase):
         self.assertEqual(producer_losses.shed_share((0.0,), (0.0,)), 0.0)
 
 
+class CapacityAfterLossesTests(unittest.TestCase):
+    def test_a_loss_closes_its_share_where_sales_call_for_fewer_workplaces_than_are_left(self):
+        # ten workplaces, a fifth to close; sales of three runs with six tenths of workplaces paying call for five
+        self.assertAlmostEqual(producer_losses.capacity_after_losses(10.0, 0.2, 3.0, 0.6), 8.0)
+
+    def test_a_loss_closes_no_workplace_its_expected_sales_still_call_for(self):
+        # sales of nine runs with six tenths paying call for fifteen workplaces: all ten stay
+        self.assertAlmostEqual(producer_losses.capacity_after_losses(10.0, 0.2, 9.0, 0.6), 10.0)
+
+    def test_a_loss_closes_down_to_the_workplaces_sales_call_for_and_no_further(self):
+        # a quarter to close would leave seven and a half; sales of 5.4 runs call for nine
+        self.assertAlmostEqual(producer_losses.capacity_after_losses(10.0, 0.25, 5.4, 0.6), 9.0)
+
+    def test_with_no_sales_expected_the_loss_closes_its_share(self):
+        self.assertAlmostEqual(producer_losses.capacity_after_losses(10.0, 0.2, 0.0, 0.6), 8.0)
+
+    def test_where_no_workplace_pays_the_loss_closes_its_share(self):
+        self.assertAlmostEqual(producer_losses.capacity_after_losses(10.0, 0.2, 9.0, 0.0), 8.0)
+
+    def test_no_loss_leaves_the_capacity(self):
+        self.assertAlmostEqual(producer_losses.capacity_after_losses(10.0, 0.0, 1.0, 0.6), 10.0)
+
+
 class CloseYearTests(unittest.TestCase):
+    def test_a_producer_losing_cash_while_its_sales_call_for_all_its_workplaces_closes_none(self):
+        # the same loss as below, but it expects to sell twelve runs, more than its ten workplaces make
+        result = producers_close.close_year(farmer(capacity_runs=10.0, expected_sales=12.0), FARM, 80.0, 100.0, farm_view(2.0), 5.0)
+        self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
+
+    def test_the_runs_buyers_called_for_this_year_count_in_the_sales_that_keep_workplaces(self):
+        # it expected two runs; buyers called for forty: the sales it will expect call for more than its ten workplaces
+        result = producers_close.close_year(farmer(capacity_runs=10.0, expected_sales=2.0), FARM, 80.0, 100.0, farm_view(2.0), 5.0,
+                                            demand_runs=40.0)
+        self.assertAlmostEqual(result.producer.capacity_runs, 10.0)
+
     def test_a_producer_expecting_a_margin_but_losing_cash_sheds_in_proportion_to_the_loss(self):
         # expected prices pay (farm_view(2.0)); the year's revenue fell a fifth short of what it paid out
         result = producers_close.close_year(farmer(capacity_runs=10.0), FARM, 80.0, 100.0, farm_view(2.0), 5.0)

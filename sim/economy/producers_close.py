@@ -71,7 +71,8 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     without it the producer expects the price it sees. `spoilage` maps an output to its yearly spoilage, which the queue behind held stock loses (a good left out counts as keeping). `service_lives` maps a good to the years it lasts: idle
     capacity with tools wears at theirs (idle_capacity.py). `interest` is what the producer's loans cost it a year:
     with the rent, wages, inputs and wear it makes the year's net earnings, and a producer whose remembered earnings
-    are negative closes that share of its capacity (producer_losses.py), whatever its expected margin says. With
+    are negative closes that share of its capacity (producer_losses.py), whatever its expected margin says, down to the
+    workplaces its sales still call for. With
     `demand_runs` (the runs its buyers called for this year, unmet demand included), a producer with no plant to build
     whose runs pay and who lost nothing grows toward the sales it will expect (capacity_growth.py). `inputs` and `wages` are
     `live_input_prices` and `live_wages` when the caller has them already (the same for every producer of a recipe on a tile).
@@ -120,10 +121,13 @@ def close_year(producer: Producer, recipe: Recipe, revenue: float, costs: float,
     earnings = finance.net_earnings(revenue, costs, interest, depreciation if math.isfinite(depreciation) else 0.0)
     lost = producer_losses.shed_share(finance.appended(producer.net_earnings_history, earnings),
                                       finance.appended(producer.revenue_history, revenue))
-    capacity = min(capacity, producer.capacity_runs * (1.0 - lost))
-    if demand_runs is not None and not has_plant and not shedding and lost <= 0.0:
+    # the sales it will expect next year: this year's expectation moved toward the runs its buyers called for
+    expected = producer.expected_sales
+    if demand_runs is not None:
         expected = demand_runs if producer.expected_sales <= 0.0 else (
             producer.expected_sales + EXPECTATION_ADJUSTMENT_SHARE * (demand_runs - producer.expected_sales))
+    capacity = min(capacity, producer_losses.capacity_after_losses(producer.capacity_runs, lost, expected, paying))
+    if demand_runs is not None and not has_plant and not shedding and lost <= 0.0:
         capacity = capacity_growth.grown_capacity(capacity, expected, paying, OUTPUT_CHANGE_SHARE_PER_YEAR)
     target = working_capital_target(recipe, capacity, inputs, wages)
     replacement, growth = _investment(producer, recipe, view, capacity, worked, cost_per_run, wear if has_plant else 0.0)
