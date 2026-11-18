@@ -1817,3 +1817,65 @@ the Norse lands and Han (the kiln rule is measured on England above). (2) Prices
 the raise with no band is what sets England off, so it needs a seller's answer to a high price that is steady;
 measure the remaining patches of `tried/` together with the change, one at a time, and look at what makes output
 that fell stay down (Update 34). (3) Trade between food areas; the workforce trim (Norse).
+
+## Update 38: the opening counts income the first year does not pay; two opening rules measured cleanly, neither kept (branch economy-settles-not-chaotic)
+
+Everything here was run with the engine's kernel cache on the tree as it stands (Update 37).
+
+**How it was measured** (probes in `Complaints/reports/473-handoff/probes/`): `opening_income_probe.py <civ> [years]`
+(the income the opening counts for the households and its property part, against what each of the first years
+pays them, with the coin of households and producers and the producers' sales); `household_accounts_probe.py`;
+`labour_totals_probe.py`; `unmet_probe.py`; `ensemble_years.py`, `ensemble_moves.py`, `member_gaps.py`,
+`series_means.py`.
+
+**Found: the opening counts about twice the property income the first year pays.** The opening sets a household's
+income to its share of the value of what is bought, the part that is not wages by what it owns
+(`opening_income.property_income_of`). In the first year Han's households are paid under two fifths of that
+property income and England's about half; their whole income is about three fifths (Han) and four fifths
+(England) of the opening's figure (`opening_income_probe.py han_china_100ad 3`, `england_1300 3`).
+
+**Why** (read in the code, then checked by the change below): at the year's close a producer keeps a year of its
+whole capacity's variable cost, the plant it will rebuild and a quarter of its running costs
+(`producers_close.working_capital_target`, `firm_finance.cash_to_keep`), pays its owners what it holds above that,
+and below it pays only a share of its smoothed earnings (`firm_finance.dividend_total`). The opening strikes it a
+year of variable cost at its expected sales only (`opening._strike_opening_cash`), and its capacity is larger than
+its expected sales by the share of workplaces that work at the opening's prices (`opening_income.working_share`). So
+every producer opens far under the cash the close keeps and holds earnings back.
+
+**Tried: a producer opens with the cash the close keeps**
+(`tried/resting_producer_purse.patch`: `opening_resting.resting_producer_purse`, with tests). The first year then
+pays the property income the opening counted, a little over it (`opening_income_probe.py`). Over the spin-up:
+- **England** (eight members): calmer. Hired hours stay within a few per cent of the first year where they fell
+  by a tenth or more; hired hours, output, inventories, the rate and the wage all move less a year. Every member
+  passes every quantity; four miss on the weighted prices alone, by a hair, and in each the price is steel's,
+  which glides down all run to under three fifths of its opening price and carries two fifths of the watched
+  spending.
+- **The Norse lands** (twelve): worse. From about the fifth year the households offer about a fifth fewer hours
+  (`labour_totals_probe.py norse_900ad 16 0` on both trees), hired hours settle near seven tenths of the first
+  year's where they held near nine tenths, and more of the food need is unmet.
+- **Han** (four): the slide is the same.
+Not kept: one civilisation's moves grow. The purse is also too large for a resting state: producers go on paying
+coin out for years as the capacity the years keep falls below the capacity the opening gave them.
+
+**Tried: a market area that holds a processor's fixed input makes its own share** (the kiln rule of
+`tried/placement_beside_inputs.patch`). England: the quantities move as the baseline's, two of eight pass, the
+others miss on the weighted prices by a hair. The Norse lands (twelve): a little calmer, two pass where one of
+twenty-four did. Han (four): the slide is the same and the year-to-year moves no smaller. Not kept on these
+figures; it is the right placement and is worth another look once Han's slide is understood.
+
+**Han's slide, as far as it is read** (clean tree, `labour_totals_probe.py han_china_100ad 30 0`,
+`household_accounts_probe.py han_china_100ad 30`, `unmet_probe.py han_china_100ad 2`): a third of the hours
+households offer are not hired in the first year, and the hours employers want fall every year while the hours
+offered hold, until under a third are hired and the wage sits on its floor. The households' coin rises all run
+and the producers' falls by two thirds; households plan to spend well over what they manage to spend from the
+second year on. Four fifths of the vessels floor and most of the shelter floor go unmet from the first year
+(the kilns and brick makers stand on two tiles). So the goods are not there to buy, the coin piles up with the
+households, and employers that sell less hire less. Neither opening rule above changes it.
+
+**What this says about the order.** Three things recur in every reading: output that falls does not come back; the
+opening's figures (incomes, producers' coin, capacity, prices such as steel's, where makers stand) are not the
+figures the years rest at; and a rule that corrects one of them moves the others. The opening rules above are each
+right on their own and each shifts something else, so the next step is to find the years' own resting state for
+one civilisation and read the opening off it, as the owner said, and not to correct the opening one figure at a
+time. England is the place to start: it is nearly there, and what is left is a handful of prices gliding to
+where the years keep them.
