@@ -263,7 +263,8 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
         for good in latest_prices:
             gap = (ask_adjust.stock_gap(ask_adjust.unsold_stock(producer, recipe, view, good), ask_adjust.target_of(producer, recipe, good))
                    if good in worked else 0.0)
-            updated[good] += ask_adjust.regressive_weight(REGRESSIVE_EXPECTATION_WEIGHT, gap) * (updated[good] * break_even - updated[good])
+            updated[good] += ask_adjust.regressive_weight(REGRESSIVE_EXPECTATION_WEIGHT, gap, break_even > 1.0) * (
+                updated[good] * break_even - updated[good])
     for good in sorted(bare_quotes & set(cost_covering)):
         updated[good] = held_to_band(updated[good], producer.expected_prices.get(good), cost_covering[good], input_share,
                                   ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE))

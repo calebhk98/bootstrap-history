@@ -22,6 +22,13 @@ class RegressiveWeightTest(unittest.TestCase):
     def test_half_sold_out_is_half_the_pull(self):
         self.assertAlmostEqual(ask_adjust.regressive_weight(0.3, 0.5), 0.15)
 
+    def test_a_sold_out_seller_asking_under_its_cost_is_pulled_up_to_it_in_full(self):
+        # the pull is withheld because buyers unserved speak against a fall; they do not speak against covering cost
+        self.assertEqual(ask_adjust.regressive_weight(0.3, 1.0, below_cost=True), 0.3)
+
+    def test_a_seller_under_its_cost_with_a_surplus_keeps_the_full_pull(self):
+        self.assertEqual(ask_adjust.regressive_weight(0.3, -1.0, below_cost=True), 0.3)
+
 
 class ExpectedAskTest(unittest.TestCase):
     def test_stock_within_expected_sales_asks_the_expected_price(self):

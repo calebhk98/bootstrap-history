@@ -195,7 +195,7 @@ def close_rows(rows, constants,
                 if worked_last:
                     unsold = stock[row, slot] - q_in[slot] * cap_old
                     gap = cost.stock_gap(unsold, target_cover * q_out[slot])
-                weight = constants[K_REGRESS] * (1.0 - max(0.0, min(1.0, gap)))
+                weight = constants[K_REGRESS] if break_even > 1.0 else constants[K_REGRESS] * (1.0 - max(0.0, min(1.0, gap)))     # ask_adjust.regressive_weight
                 exp[slot] += weight * (exp[slot] * break_even - exp[slot])
             for slot in range(count):
                 if has_latest[slot] and cost.flag_at(bare_quote, area_of, slot_goods[recipe, slot], tile):
