@@ -1,6 +1,5 @@
-"""Complaint 643: a seller's ask is anchored on what a unit costs it. A sold-out seller's ask rises within a
-band above that cost and stops at its edge; demand that does not respond to price gives a finite ask; only a
-sole owner (one workshop) searches the buyers' book for its best ask."""
+"""A seller's carried ask moves a step a year with its stock, a raise with no ceiling (the year's market finds the
+price, unsold_search.py), and a producer takes the price in its market whether it stands for one workshop or many."""
 
 QUICK_TOPIC = True
 
@@ -15,7 +14,7 @@ from sim.economy.types import Bid, Offer, Recipe
 
 GOOD, AREA, TILE = "alloy", "area", "tile"
 COST = 2.0 * 3.0 + 4.0 * 0.5      # two of metal at three, four hours at half
-MULTIPLE = 3.0                    # the band the buyers give (ask_ceiling.py derives it from them)
+STEP = ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR
 
 
 class View(ViewDefaults):
@@ -54,48 +53,23 @@ def floor_buyer(quantity=100.0):
 
 
 class SoldOutRaiseTests(unittest.TestCase):
-    def test_a_sold_out_ask_rises_one_step_inside_the_band(self):
-        raised = ask_adjust.adjusted_within_band(1.5 * COST, COST, 0.0, 1.0, MULTIPLE)
-        self.assertAlmostEqual(raised, 1.5 * COST * (1.0 + ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR))
+    def test_a_sold_out_ask_rises_one_step(self):
+        self.assertAlmostEqual(ask_adjust.stepped_by_stock(1.5 * COST, COST, 0.0, 1.0), 1.5 * COST * (1.0 + STEP))
 
-    def test_a_sold_out_ask_stops_at_the_band_edge_however_many_years_it_sells_out(self):
-        ask = COST
-        for _year in range(500):
-            ask = ask_adjust.adjusted_within_band(ask, COST, 0.0, 1.0, MULTIPLE)
-        self.assertAlmostEqual(ask, COST * MULTIPLE)
-
-    def test_an_ask_already_above_the_edge_is_not_cut_by_the_raise(self):
-        self.assertEqual(ask_adjust.adjusted_within_band(10.0 * COST, COST, 0.0, 1.0, MULTIPLE), 10.0 * COST)
-
-    def test_a_seller_whose_buyers_give_no_ceiling_is_not_raised_above_its_cost(self):
-        ask = COST
-        for _year in range(50):
-            ask = ask_adjust.adjusted_within_band(ask, COST, 0.0, 1.0, ask_adjust.NO_BOUND_MULTIPLE)
-        self.assertAlmostEqual(ask, COST)
+    def test_a_sold_out_ask_far_above_its_cost_still_rises_a_step(self):
+        # no multiple of the cost stops it: what the buyers will pay is found when the market clears
+        self.assertAlmostEqual(ask_adjust.stepped_by_stock(10.0 * COST, COST, 0.0, 1.0), 10.0 * COST * (1.0 + STEP))
 
     def test_no_cost_to_anchor_on_means_no_raise(self):
-        self.assertEqual(ask_adjust.adjusted_within_band(5.0, None, 0.0, 1.0, MULTIPLE), 5.0)
-        self.assertEqual(ask_adjust.adjusted_within_band(5.0, math.inf, 0.0, 1.0, MULTIPLE), 5.0)
+        self.assertEqual(ask_adjust.stepped_by_stock(5.0, None, 0.0, 1.0), 5.0)
+        self.assertEqual(ask_adjust.stepped_by_stock(5.0, math.inf, 0.0, 1.0), 5.0)
 
 
-class InelasticBookTests(unittest.TestCase):
-    def test_a_sole_owner_facing_unresponsive_demand_asks_a_finite_price_within_the_band(self):
+class PriceTakerTests(unittest.TestCase):
+    def test_a_producer_of_one_workshop_takes_the_price_and_does_not_search(self):
         setup, record = game("only")
-        ask = 1.2 * COST
-        chosen = seller_offers.strategic_offers(setup, record, View(), [floor_buyer()],
-                                                [Offer("only", GOOD, AREA, TILE, 100.0, ask)], 10.0,
-                                                seller_offers.UnitCosts(types.SimpleNamespace(multiple=lambda good, tile: MULTIPLE)))
-        price = chosen[0].reservation_price
-        self.assertTrue(math.isfinite(price))
-        self.assertGreater(price, ask)       # a sole owner still prices strategically
-        self.assertLessEqual(price, COST * MULTIPLE * (1.0 + 1e-9))
-
-    def test_the_band_is_finite_for_every_elasticity_of_substitution(self):
-        for substitution in (0.5, 1.0, 1.05, 3.0):
-            setup, _record = game("only", substitution=substitution)
-            multiple = seller_offers.ask_band_multiple(setup, Offer("only", GOOD, AREA, TILE, 1.0, 1.0))
-            self.assertTrue(math.isfinite(multiple))
-            self.assertGreaterEqual(multiple, 1.0)
+        offers = [Offer("only", GOOD, AREA, TILE, 100.0, 1.2 * COST)]
+        self.assertEqual(seller_offers.strategic_offers(setup, record, View(), [floor_buyer()], offers, 10.0), offers)
 
     def test_an_aggregate_of_many_workshops_takes_the_price_and_does_not_search(self):
         setup, record = game("crowd")

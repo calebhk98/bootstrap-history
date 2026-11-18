@@ -1,17 +1,14 @@
 """The producers' offers in one market, re-priced before it clears.
 
-Each producer with units to sell reads the other sellers' asks and the market's size and chooses its reservation as
-Eurace@Unibi's firm sets its price (price_setting.py, after Market_Research/Firm_market_research_functions.c, Firm_set_price):
-the price on a grid around its own that earns most over the year, sales capped by the units it holds. What a unit is
+A producer stands for every workplace running its recipe on its tile, each of which takes the price (`stands_for_many`),
+so it asks what it expects for the stock it expects to sell and the market finds the price: unsold stock brings the
+ask down and buyers turned away lift it to where their money just takes what is offered (unsold_search.py). What a unit is
 worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding it (its
-price-taking reservation), so a seller never prices below what a unit costs it to make or keep. A producer that
-stands for several workshops (Producer.workshops above one) is not a seller but a crowd of price takers: it keeps the
-price-taking reservation and neither searches nor raises, and as a rival it counts once per workshop. A seller whose
-market has no sales on record keeps its reservation; one whose reservation is nothing but whose good has a making cost
-opens at the price it expects (opened_ask), never at nothing. The chosen
-ask is held inside a band above the seller's unit cost (ask_band_multiple), and a seller whose ask goes unsold is
-brought down to what sells by unsold_search.py. The reservation itself moves between years with the seller's stock
-against its target (ask_adjust.py), which is the grid's centre.
+price-taking reservation), so a seller never prices below what a unit costs it to make or keep. A seller whose
+reservation is nothing but whose good has a making cost opens at the price it expects (opened_ask), never at nothing.
+The reservation itself moves between years with the seller's stock against its target (ask_adjust.py).
+The price search of a seller with a market of its own (price_setting.py) is no longer reached; it and the band
+arguments the kernels still take are to be removed (Complaint 473 Update 37).
 """
 import dataclasses
 import math
@@ -118,11 +115,11 @@ def ask_band_multiple(setup, offer: Offer, alternatives=None) -> float:
 
 
 def stands_for_many(record, offer: Offer) -> bool:
-    """True for a producer that stands for several independent workshops (entry.py joins each newcomer to
-    the tile's producer): each workshop takes the price, so the aggregate offers its units at their
-    price-taking reservations and does not withhold supply against its residual demand."""
-    producer = record.producers.get(offer.seller)
-    return producer is not None and producer.workshops > 1
+    """True for a producer: one producer stands for every workplace running its recipe on its tile, each of which
+    takes the price, so it offers its units at what it expects and does not withhold supply against its residual
+    demand. The market finds the price: unsold stock brings the ask down and buyers turned away lift it
+    (unsold_search.py)."""
+    return offer.seller in record.producers
 
 
 def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[Offer],
@@ -149,8 +146,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         if offer.reservation_price <= 0.0:       # a perishable or a distressed holder: it asks a price, never nothing
             producer = record.producers[offer.seller]
             recipe = setup.recipes[producer.recipe_id]
-            limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer, alternatives))
-                     if math.isfinite(cost) else math.inf)
+            limit = math.inf
             opened = opened_ask(offer.reservation_price, cost,
                                 expected_output_prices(producer, recipe, view).get(offer.good), limit)
             if opened is not None:
@@ -169,8 +165,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
         size = market_size(record, offer)
         if offer.reservation_price <= 0.0 or size is None:
             continue      # a seller that sells at any price, or a market with no sales to judge by, keeps its ask
-        limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer, alternatives))
-                 if math.isfinite(cost) else math.inf)
+        limit = math.inf
         pricing.append((index, value, size, max(limit, value)))
     if pricing:
         rival_asks, rival_counts = rivals_of(record, original)

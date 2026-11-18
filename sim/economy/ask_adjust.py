@@ -1,12 +1,12 @@
 """A seller's ask moves between years with its unsold stock against a target stock: stock below the target (sold
-out) raises it, stock above the target cuts it, in proportion to the gap, and it stays inside the band around the
-seller's unit cost (`band_edge` above, the cost that just covers a unit below). It follows the inventory side of
+out) raises it, stock above the target cuts it, in proportion to the gap, never by a cut below the cost that just
+covers a unit. Nothing caps a raise: the year's market finds the price, lifting a sold-out ask to where the buyers'
+money just takes the stock and lowering an unsold one (unsold_search.py). It follows the inventory side of
 Eurace@Unibi's firm (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_quantity: critical stock against
 current stock), which Eurace's own price rule (Market_Research/Firm_market_research_functions.c, Firm_set_price)
 reads only as a cap on expected sales. The search for unsold stock inside the year (unsold_search.py) is the other
-half of the cut: this is the price the seller carries into next year. A seller whose stock is all gone but whose ask is
-already a multiple of what a unit costs it learns nothing more by asking higher (the width ask_ceiling.py derives from its buyers), and a good whose
-supply cannot respond does not climb for decades."""
+half of the cut: this is the price the seller carries into next year. `band_edge` is what bounds a quote nobody paid
+(planning_price.held_to_band); a price that traded has no such bound."""
 import math
 from typing import List, Optional
 
@@ -52,16 +52,15 @@ def regressive_weight(weight: float, gap: float, below_cost: bool = False) -> fl
     return weight if below_cost else weight * (1.0 - max(0.0, min(1.0, gap)))
 
 
-def adjusted_within_band(expected_price: float, break_even_price: Optional[float], stock: float, target_stock: float,
-                         ceiling_multiple: float, input_share: float = 0.0) -> float:
-    """`expected_price` moved one step by the gap between `stock` and `target_stock`, inside the band: the price that just
-    covers a unit's cost (`break_even_price`) below, `band_edge` above. A seller already outside the band on the side it
-    is moving away from is left where it is, not pulled in here; one with no cost to anchor on does not move."""
+def stepped_by_stock(expected_price: float, break_even_price: Optional[float], stock: float, target_stock: float) -> float:
+    """`expected_price` moved one step by the gap between `stock` and `target_stock`: up with no ceiling, down no further
+    than the price that just covers a unit's cost (`break_even_price`). A seller already under that cost is not pulled
+    up to it by a cut; one with no cost to anchor on does not move."""
     if break_even_price is None or not math.isfinite(break_even_price) or break_even_price <= 0.0:
         return expected_price
     moved = expected_price * (1.0 + GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR * stock_gap(stock, target_stock))
     if moved >= expected_price:
-        return max(expected_price, min(moved, band_edge(break_even_price, input_share, ceiling_multiple)))
+        return moved
     return min(expected_price, max(moved, break_even_price))
 
 

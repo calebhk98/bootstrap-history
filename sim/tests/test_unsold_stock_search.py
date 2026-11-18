@@ -115,11 +115,12 @@ class UnsoldStockSearchTests(unittest.TestCase):
         self.assertAlmostEqual(final["cheap"].reservation_price, COST)
         self.assertAlmostEqual(final["dear"].reservation_price, COST)
 
-    def test_a_seller_that_moves_the_price_and_holds_units_back_on_purpose_is_not_searched(self):
+    def test_a_seller_asking_more_than_any_buyer_pays_is_brought_down_to_what_sells(self):
+        # a producer takes the price: none holds units back on purpose, so the dear one is searched like the other
         final, result = searched([buyer(150.0, 4.0 * COST)],
                                  [offer("cheap", 100.0, 1.2 * COST), offer("dear", 100.0, 5.0 * COST)])
-        self.assertGreater(final["dear"].reservation_price, 1.2 * COST)
-        self.assertLess(sold(result, "dear"), 100.0)
+        self.assertLessEqual(final["dear"].reservation_price, 4.0 * COST)
+        self.assertGreater(sold(result, "dear"), 0.0)
 
     def test_a_market_that_sells_out_with_no_excess_demand_is_left_as_chosen(self):
         setup, record = game("a")
@@ -141,7 +142,8 @@ class UnsoldStockSearchTests(unittest.TestCase):
                                                          GOOD, AREA, "coin", None, costs)
         self.assertAlmostEqual(final[0].reservation_price, 1.45 * COST, delta=0.01 * COST)
 
-    def test_a_seller_turned_buyers_away_asks_no_more_than_the_band_above_its_cost(self):
+    def test_a_seller_turned_buyers_away_is_raised_to_what_the_buyers_bear_however_far_above_its_cost(self):
+        # the buyer takes a hundred units at anything up to forty times the cost; fifty are offered
         setup, record = game("a")
         costs = bands()
         bids = [buyer(100.0, 40.0 * COST)]
@@ -149,9 +151,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
         chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None, costs)
         final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
                                                          GOOD, AREA, "coin", None, costs)
-        limit = unsold_search.ask_limits(setup, record, View(), offers, [0], costs)[0]
-        self.assertAlmostEqual(final[0].reservation_price, limit, delta=0.01 * limit)
-        self.assertLess(limit, 40.0 * COST)
+        self.assertAlmostEqual(final[0].reservation_price, 40.0 * COST, delta=0.01 * 40.0 * COST)
 
     def crossings_for(self, view, bids, asks):
         """How many market crossings one search makes for sellers asking `asks` under `view`."""

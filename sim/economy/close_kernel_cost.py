@@ -77,13 +77,13 @@ def stock_gap(stock, target):
 
 
 @njit
-def adjusted_within_band(expected, break_even, stock, target, ceiling_multiple, input_share, step):
-    """ask_adjust.adjusted_within_band; `break_even` NaN is None."""
+def stepped_by_stock(expected, break_even, stock, target, step):
+    """ask_adjust.stepped_by_stock; `break_even` NaN is None."""
     if np.isnan(break_even) or not math.isfinite(break_even) or break_even <= 0.0:
         return expected
     moved = expected * (1.0 + step * stock_gap(stock, target))
     if moved >= expected:
-        return max(expected, min(moved, band_edge(break_even, input_share, ceiling_multiple)))
+        return moved
     return min(expected, max(moved, break_even))
 
 
