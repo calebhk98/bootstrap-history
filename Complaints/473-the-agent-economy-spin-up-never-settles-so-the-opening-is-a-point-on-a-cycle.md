@@ -1864,13 +1864,15 @@ twenty-four did. Han (four): the slide is the same and the year-to-year moves no
 figures; it is the right placement and is worth another look once Han's slide is understood.
 
 **Han's slide, as far as it is read** (clean tree, `labour_totals_probe.py han_china_100ad 30 0`,
-`household_accounts_probe.py han_china_100ad 30`, `unmet_probe.py han_china_100ad 2`): a third of the hours
-households offer are not hired in the first year, and the hours employers want fall every year while the hours
-offered hold, until under a third are hired and the wage sits on its floor. The households' coin rises all run
+`household_accounts_probe.py han_china_100ad 30`, `unmet_probe.py han_china_100ad 2`): over a third of the hours
+households offer are not hired in the first year. The hours offered fall by about three tenths in the first years
+and then hold, while the hours employers want go on falling, to about two fifths of the first year's by the
+twenty-sixth; by then under two fifths of the hours offered are hired and the wage sits on its floor. The households' coin rises all run
 and the producers' falls by two thirds; households plan to spend well over what they manage to spend from the
-second year on. Four fifths of the vessels floor and most of the shelter floor go unmet from the first year
-(the kilns and brick makers stand on two tiles). So the goods are not there to buy, the coin piles up with the
-households, and employers that sell less hire less. Neither opening rule above changes it.
+second year on. Four fifths of the vessels floor and most of the shelter floor go unmet from the first year;
+the kilns and brick makers standing on two tiles would explain that, and it is not checked. The reading, not yet
+a test: goods are not there to buy, the coin piles up with the households, and employers that sell less hire less.
+Neither opening rule above changes the slide.
 
 **What this says about the order.** Three things recur in every reading: output that falls does not come back; the
 opening's figures (incomes, producers' coin, capacity, prices such as steel's, where makers stand) are not the
