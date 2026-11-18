@@ -302,6 +302,16 @@ Measured on the head (`ensemble_years.py`, `ensemble_moves.py`, `member_gaps.py`
   and the wage move by several times the tolerance while hired hours fall to a third of the first year's.
 
 What is in the way now, in the order to take it:
+0. **Trade between food areas comes first after all** (section 6c, item 1). Update 36's last trace shows the Norse
+   tool shortage, and so the farms' hand work behind item 1 below, starts in an unfed area: the ore tile's
+   households stop selling hours when no food reaches them. Han's one area with no grain farm is the same gap. The
+   whole of it: (a) the remembered price of a market with buyers and nothing on offer; (b) the volume merchants
+   learn where nothing is delivered; (c) a household sees a seller's ask only when the market's remembered kind is
+   an ask, and a market with a low bid and a higher ask remembers the bid (`goods_table_quotes.quote_of`,
+   `market_memory.offered_price`); (d) one merchant dares a share of a market, and the Norse lands open with one
+   (`merchants.MERCHANT_MARKET_SHARE`, `opening._open_merchants`); (e) a merchant sells a year after it buys, so
+   the opening must also put a year's carried goods in the importing areas. Seeding the opening's merchants with
+   the flows its placement implies (stock landed, prices and volumes expected) and fixing (a) to (c) is the build.
 1. **The workforce trim and the tight labour market after it** (Norse; Update 36). The grain farms slump for three
    years after the trim and the farmers' wage then alternates year by year. Look at what
    `economy_api.trim_workforce_to_expected_hours` leaves a trade whose employers work part of their runs by hand

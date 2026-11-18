@@ -1701,6 +1701,14 @@ gap in both civilisations.
   (above). The farms work part of their runs by hand, which takes more hours than the trim leaves their trade, and a
   market trimmed to exactly the hours hired answers every change in hiring with the wage. Next to take for the Norse
   lands.
+- **The Norse tool shortage starts in an unfed food area** (`hunger_probe.py norse_900ad 2`, `recipe_coin_probe.py
+  norse_900ad 0 30 wood_tar_kg iron_bloom_kg iron_tools_kg`). The only ore tile lies outside the grain tile's food
+  area. No food reaches it, and from the second year its households put every hour into their own poor plots and
+  sell none, so the bloomeries there hire nobody for years and the tool makers work about a third of their runs for
+  the rest of the spin-up. The tar burners and, once staffed, the bloomeries work nearly all the runs they are sized
+  on. So the trade between food areas (Update 35) is upstream of the farms' hand work and of most of what moves in
+  the Norse lands: with it the opening's state (sell hours, buy food carried in) can hold; without it the years go
+  to the other state (every household on its own plot).
 - **Han's opening is still far from where its years go.** The yearly land market hands land back to the households'
   plots as the farms shrink, hired hours fall for forty-five years and the wage with them. Land goes to the higher
   bid first, plots included (`land_priority.allocate_by_bid`), and a plot's own return is nothing at the opening's
