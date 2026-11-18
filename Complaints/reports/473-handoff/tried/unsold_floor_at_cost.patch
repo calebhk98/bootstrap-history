@@ -1,0 +1,129 @@
+diff --git a/sim/economy/goods_year_kernel.py b/sim/economy/goods_year_kernel.py
+index 596fd518..18351e87 100644
+--- a/sim/economy/goods_year_kernel.py
++++ b/sim/economy/goods_year_kernel.py
+@@ -138,8 +138,11 @@ def searched_floors(res0, res, qty, is_producer, cost, crowd, expected_sales, ra
+             continue
+         if not is_producer[i]:
+             continue
+-        held = queued_holding_value(res0[i], qty[i], expected_sales[i], rate, spoilage) if numpy.isnan(held_value[i]) else held_value[i]
+-        floor = max(min(cost[i], max(res0[i], 0.0)), held)
++        worth = min(cost[i], max(res0[i], 0.0))      # seller_offers.unit_value
++        if numpy.isnan(held_value[i]):
++            floor = queued_holding_value(worth, qty[i], expected_sales[i], rate, spoilage) if expected_sales[i] > 0.0 else worth
++        else:
++            floor = max(worth, held_value[i])
+         if res[i] > floor:
+             searched[i] = True
+             floors[i] = floor
+diff --git a/sim/economy/unsold_search.py b/sim/economy/unsold_search.py
+index 6cbce70b..80c42af0 100644
+--- a/sim/economy/unsold_search.py
++++ b/sim/economy/unsold_search.py
+@@ -1,6 +1,7 @@
+ """A seller left with unsold stock lowers its ask within the year's clearing until the stock sells or the ask
+-reaches the seller's floor, what a unit is worth to it unsold: the cheaper of making it again and holding it
+-for a year, but never below what the last unit fetches kept for the buyers it expects in later years.
++reaches the seller's floor, what a unit is worth to it unsold: kept, it sells later at the ask or saves making one
++then, whichever is less, carried over the years it waits behind the stock ahead of it. So a glut brings the year's
++price down to what the good costs to make, as a shortage lifts it (demand_search.py).
+ 
+ Every producer with unsold stock is searched (each takes the price, seller_offers.stands_for_many). When any of them
+ is unsold, all of them are brought down to a common ask level, each to no lower than its own floor, because
+@@ -44,19 +45,21 @@ def _floors(setup, record, view, offers: Sequence[Offer], original: Sequence[Off
+         cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
+         if cost is None:
+             continue
+-        held_value = _held_value(setup, record, view, original[index])
+-        if held_value is None:
++        floor = _floor(setup, record, view, original[index], seller_offers.unit_value(original[index], cost))
++        if floor is None:
+             continue
+-        floor = max(seller_offers.unit_value(original[index], cost), held_value)
+         if offer.reservation_price > floor:
+             floors[index] = floor
+     return floors
+ 
+ 
+-def _held_value(setup, record, view, offer: Offer) -> Optional[float]:
+-    """What the offer's last unit is worth to its producer kept for later sales (inventory.queued_holding_value):
+-    a seller that expects buyers next year does not sell a storable good below that this year; None when no
+-    rate is remembered for the offer's currency."""
++def _floor(setup, record, view, offer: Offer, worth: float) -> Optional[float]:
++    """What the offer's last unit is worth to its producer unsold. `worth` is what a unit kept comes to when its turn
++    to sell comes (`seller_offers.unit_value`: it sells at the ask or saves making one, whichever is less); it waits
++    behind the stock ahead of it, losing interest and spoilage (inventory.queued_holding_value), so a seller with
++    stock it cannot sell this year comes down to what a unit costs to make again and no further; one with no record
++    of sales has no queue to wait in. Ground does not queue: every hectare yields its rent while held, and is never
++    sold below that. None when no rate is remembered for the offer's currency."""
+     producer = record.producers[offer.seller]
+     recipe = setup.recipes[producer.recipe_id]
+     spec = setup.specs.get(offer.good)
+@@ -64,12 +67,12 @@ def _held_value(setup, record, view, offer: Offer) -> Optional[float]:
+     if rate is None:
+         return None
+     if spec is not None and not spec.portable:
+-        # ground never queues behind the stock: every hectare yields its rent while held
+-        return titles_value.hectare_value(record.land.land_rent.get(offer.tile, 0.0),
+-                                          titles_value.capitalising_rate(rate, setup.opening_rate))
+-    return inventory.queued_holding_value(offer.reservation_price, offer.quantity,
+-                                          producer.expected_sales * producer.yield_factor * recipe.outputs.get(offer.good, 0.0), rate,
+-                                          spec.spoilage_per_year if spec is not None else 0.0)
++        return max(worth, titles_value.hectare_value(record.land.land_rent.get(offer.tile, 0.0),
++                                                     titles_value.capitalising_rate(rate, setup.opening_rate)))
++    yearly_sales = producer.expected_sales * producer.yield_factor * recipe.outputs.get(offer.good, 0.0)
++    if not yearly_sales > 0.0:      # no record of sales to queue behind
++        return worth
++    return inventory.queued_holding_value(worth, offer.quantity, yearly_sales, rate, spec.spoilage_per_year if spec is not None else 0.0)
+ 
+ 
+ def flood_price(wanted, held: float, lowest: Optional[float], highest: float, points: int = 200) -> float:
+diff --git a/sim/tests/test_economy_land_seller_floor.py b/sim/tests/test_economy_land_seller_floor.py
+index 40d92e44..a1e20a4d 100644
+--- a/sim/tests/test_economy_land_seller_floor.py
++++ b/sim/tests/test_economy_land_seller_floor.py
+@@ -1,6 +1,6 @@
+ """Complaint 538: a land seller's lowest acceptable price follows what the land yields its holder (the tile's rent
+ capitalised at the interest rate), not a queue of years behind a stock that never sells. Built inputs, the rule
+-(`unsold_search._held_value`) called directly."""
++(`unsold_search._floor`) called directly."""
+ 
+ QUICK_TOPIC = True
+ 
+@@ -33,7 +33,8 @@ def held(stock, expected_sales, rent=RENT, rate=RATE, portable=True):
+     setup = types.SimpleNamespace(specs={LAND: spec}, recipes={"claim": recipe}, opening_rate=OPENING_RATE)
+     producer = Producer("seller", "lord", "claim", TILE, 10.0, expected_sales=expected_sales)
+     record = types.SimpleNamespace(producers=ProducerStore({"seller": producer}), land=types.SimpleNamespace(land_rent={TILE: rent}))
+-    return unsold_search._held_value(setup, record, View(rate), Offer("seller", LAND, AREA, TILE, stock, ASK))
++    # a portable unit kept is worth the ask when its turn comes; ground is worth what it yields whatever is asked
++    return unsold_search._floor(setup, record, View(rate), Offer("seller", LAND, AREA, TILE, stock, ASK), ASK if portable else 0.0)
+ 
+ 
+ class LandSellerFloorTests(unittest.TestCase):
+diff --git a/sim/tests/test_unsold_stock_search.py b/sim/tests/test_unsold_stock_search.py
+index 674ff6ee..da041b30 100644
+--- a/sim/tests/test_unsold_stock_search.py
++++ b/sim/tests/test_unsold_stock_search.py
+@@ -45,7 +45,8 @@ BAND = 3.0
+ 
+ def game(*sellers, workshops=1):
+     recipe = Recipe("melt", {GOOD: 1.0}, {"metal": 2.0}, {"labour": 4.0})
+-    producers = {name: Producer(name, "lord", "melt", TILE, 10.0, workshops=workshops) for name in sellers}
++    # each expects to sell far more in a year than it holds, so no unit waits behind a year's stock
++    producers = {name: Producer(name, "lord", "melt", TILE, 10.0, expected_sales=1000.0, workshops=workshops) for name in sellers}
+     basket = types.SimpleNamespace(substitution=1.0, needs=())
+     setup = types.SimpleNamespace(specs={}, currency_id="coin", recipes={"melt": recipe}, basket_for=lambda tile: basket)
+     return setup, types.SimpleNamespace(producers=producers, memory=types.SimpleNamespace(volume_weights={GOOD + "|" + AREA: 100.0}), goods=types.SimpleNamespace(unmet={}))
+@@ -92,6 +93,12 @@ class UnsoldStockSearchTests(unittest.TestCase):
+         self.assertAlmostEqual(final["a"].reservation_price, COST)
+         self.assertEqual(sold(result, "a"), 0.0)
+ 
++    def test_a_seller_asking_under_its_cost_holds_at_its_ask(self):
++        # a unit kept is sold later at the ask, which is worth less than making one again
++        final, result = searched([buyer(100.0, 0.5 * COST)], [offer("a", 100.0, 0.8 * COST)])
++        self.assertAlmostEqual(final["a"].reservation_price, 0.8 * COST)
++        self.assertEqual(sold(result, "a"), 0.0)
++
+     def test_the_ask_stops_at_the_price_that_sells_not_at_the_floor(self):
+         # three quarters of the cost is metal bought in, so the band above cost is 1.5 times it (ask_adjust.band_edge)
+         final, _result = searched([buyer(100.0, 1.45 * COST)], [offer("a", 100.0, 5.0 * COST)])

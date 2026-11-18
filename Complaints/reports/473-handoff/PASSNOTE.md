@@ -328,6 +328,39 @@ What is in the way now, in the order to take it:
 5. Owner question 16 (pasture and forest recipes take cropland; Han's poppy), question 13 (the money stock).
 6. Rome and Mexica, unmeasured on this tree.
 
+## 6e. Where it stands after Update 37 (read this first; it replaces the order in section 6d)
+
+The owner (2026-11-18): the opening's figures are guesses that should be replaced by the years' own steady state, and
+prices should clear as in a real economy. Update 37 built the upward half (a sold-out seller's ask rises as far as
+its buyers' money goes, no band above cost, every producer a price taker) and then measured four ways to make
+output or prices answer faster. Every one of them left England less settled. Do not repeat them as they stand; the
+patches, with their tests, are in `tried/` beside this note and Update 37 says what each did.
+
+What the measurements say about the head (`price_cost_probe.py`, `stock_probe.py`, `series_means.py`):
+- It rests in a sellers' market: prices well above the makers' cost in much of the economy, supply set by last
+  year's sales, the price clearing above. That is why it is quiet. Anything that brings a price down to cost
+  quickly lands in the zone where close to half of a producer's workplaces stop (`producers.share_working`), and
+  the market then swings.
+- Output falls fast and returns slowly, prices rise fast and fall slowly, and the wage carries the whole fall of
+  the money stock.
+- Han's slide is real, not monetary (`ABLATE=held`): the land passes from the farms to the plots.
+
+Order from here:
+1. **Land between plots and farms** (Han; section 6d, item 2). The largest move left in any civilisation measured.
+2. **Trade between food areas** (section 6d, item 0). `tried/trade_rules.patch` holds the two rules written so far
+   (what a market with buyers and nothing on offer remembers, the market size a merchant learns), with tests; it
+   passed its tests and was set aside because a merchant still cannot sell in an unfed area (points (c) to (e)).
+3. **The workforce trim** (Norse; section 6d, item 1).
+4. **A faster answer of output to price**, only with: the rent of a held site (standing timber, a seam) charged to
+   its maker so its price over cost says nothing; workplaces that idle near cost without being lost; a response
+   bounded to a few per cent a year. Update 37 gives the reasons.
+5. **A glut does not lower the year's price** for a going maker (the unsold search's floor is its own reservation).
+   `tried/unsold_floor_at_cost.patch` is the direct fix and its tests show the gap; it waits on item 4, since price
+   cuts reach makers as losses that close workplaces.
+6. Remove the dead strategic price search (`price_setting.py`'s grid) and the band arguments of the kernels: a
+   refactor a Sonnet agent can do, with the fingerprint as proof.
+7. Owner questions 13 and 16; Rome and Mexica, unmeasured on this tree.
+
 ## 7. What to do first
 
 1. Set up the environment and reproduce: `ensemble_years.py` on England, Norse and Han at the head, so your numbers

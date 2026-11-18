@@ -1,0 +1,141 @@
+diff --git a/sim/economy/close_kernel.py b/sim/economy/close_kernel.py
+index 9f9e8894..11b18e12 100644
+--- a/sim/economy/close_kernel.py
++++ b/sim/economy/close_kernel.py
+@@ -232,11 +232,13 @@ def close_rows(rows, constants,
+         worked_now = made[row, paying] / run_of_paying if run_of_paying > 0.0 else 0.0
+         worked = min(max(0.0, worked_now), cap_old)
+         # runs_sold
++        run_value = 0.0
++        left_value = 0.0
++        sold_value = 0.0
+         if yield_ <= 0.0:
+             sold_runs = sales_expected
+         else:
+             seen_value = 0.0
+-            run_value = 0.0
+             best_ratio = -np.inf
+             for slot in range(count):
+                 if not slot_is_output[recipe, slot]:
+@@ -252,14 +254,19 @@ def close_rows(rows, constants,
+                 if not np.isnan(scratch_price):
+                     run_value += per_run * scratch_price
+                     seen_value += seen * scratch_price
++                    left_value += stock[row, slot] * scratch_price
++                    sold_value += sold[row, slot] * scratch_price
+                 ratio = seen / per_run if per_run != 0.0 else np.inf
+                 if ratio > best_ratio:
+                     best_ratio = ratio
+             sold_runs = seen_value / run_value if run_value > 0.0 else best_ratio
+-        demand_runs[row] = sold_runs
+ 
+         input_now = covered_input_bill(recipe, 0, tile, slot_goods, inputs, tools, labour, unscaled, wage, live)
+         variable_now = input_now + cost.bill(q_lab, wages, trades)
++        if yield_ > 0.0:
++            sold_runs = cost.demand_at_cost(sold_runs, run_value, variable_now + rent,
++                                            left_value <= constants[K_SOLD_OUT] * sold_value)
++        demand_runs[row] = sold_runs
+         plant_now = cost.bill(q_plant, live, count) + cost.bill(q_pl, wages, trades)
+         charge = np.nan if no_rate else cost.capital_charge(plant_now, life, rate) * worked
+         loss = worked <= 0.0 or revenue[row] < running_costs[row] + (charge if not np.isnan(charge) and math.isfinite(charge) else 0.0)
+diff --git a/sim/economy/close_kernel_cost.py b/sim/economy/close_kernel_cost.py
+index e672a350..2cb8c631 100644
+--- a/sim/economy/close_kernel_cost.py
++++ b/sim/economy/close_kernel_cost.py
+@@ -119,6 +119,14 @@ def demand_seen(sold, left, own_capacity, market_capacity, market_unmet, sold_ou
+     return sold + min(1.0, own_capacity / market_capacity) * market_unmet
+ 
+ 
++@njit
++def demand_at_cost(sold_runs, revenue_per_run, cost_per_run, sold_out):
++    """expected_sales.demand_at_cost."""
++    if not sold_out or not (math.isfinite(cost_per_run) and cost_per_run > 0.0) or not revenue_per_run > cost_per_run:
++        return sold_runs
++    return sold_runs * revenue_per_run / cost_per_run
++
++
+ @njit
+ def earnable_rate(gain, outlay):
+     """credit.earnable_rate."""
+diff --git a/sim/economy/expected_sales.py b/sim/economy/expected_sales.py
+index 84c31c69..58fb418d 100644
+--- a/sim/economy/expected_sales.py
++++ b/sim/economy/expected_sales.py
+@@ -1,4 +1,5 @@
+ """What a producer learns its demand from at the year's close."""
++import math
+ from typing import Callable, Dict, Iterable, Mapping, Tuple
+ 
+ # Stock left below this share of the year's sales counts as sold out (rounding in settlement leaves a hair).
+@@ -15,6 +16,17 @@ def demand_seen(sold: float, left: float, own_capacity: float, market_capacity:
+     return sold + min(1.0, own_capacity / market_capacity) * market_unmet
+ 
+ 
++def demand_at_cost(sold_runs: float, revenue_per_run: float, cost_per_run: float, sold_out: bool) -> float:
++    """Runs a producer takes as the year's demand once its market has cleared: the runs it sold, and, when it sold out
++    at prices that brought a run more than the run cost, the runs the buyers' money would have taken at the price that
++    just covers that cost (the runs sold times the run's revenue over its cost: buyers who meet a dearer price spend
++    about the same money on fewer units). A price that clears turns no buyer away, so the price carries what unmet
++    demand told a seller when it did not."""
++    if not sold_out or not (math.isfinite(cost_per_run) and cost_per_run > 0.0) or not revenue_per_run > cost_per_run:
++        return sold_runs
++    return sold_runs * revenue_per_run / cost_per_run
++
++
+ def market_capacities(sellers: Iterable[Tuple[str, Mapping[str, float], float]],
+                       area_of: Callable[[str, str], str]) -> Dict[Tuple[str, str], float]:
+     """Output a year the sellers' plants allow, by (good, area): `sellers` are (tile, output per run by good, runs of
+diff --git a/sim/economy/year_close.py b/sim/economy/year_close.py
+index 25190e62..8ae4ed44 100644
+--- a/sim/economy/year_close.py
++++ b/sim/economy/year_close.py
+@@ -6,6 +6,7 @@ from typing import Dict, Mapping, Tuple
+ 
+ from . import producer_table
+ from .staffed_runs import staffed_runs
++from . import expected_sales
+ from .expected_sales import demand_seen, market_capacities
+ from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, currency, expansion_price, merchants, ownership, producer_exit, shares,
+                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
+@@ -202,6 +203,17 @@ def runs_sold(producer, recipe, ledger: YearLedger, book, area_of, prices, marke
+     return max(seen[good] / made[good] for good in made)
+ 
+ 
++def demand_runs(producer, recipe, ledger: YearLedger, book, area_of, prices, market_capacity, cost_per_run: float) -> float:
++    """The runs a producer takes as the year's demand: `runs_sold`, read at a price that covers a run's cost when it sold out
++    above it (`expected_sales.demand_at_cost`). `cost_per_run` is what a run costs it now (its inputs, hands and rent)."""
++    sold = runs_sold(producer, recipe, ledger, book, area_of, prices, market_capacity)
++    priced = [good for good in sorted(recipe.outputs) if prices.get(good) is not None]
++    revenue = math.fsum(recipe.outputs[good] * producer.yield_factor * prices[good] for good in priced)
++    left = math.fsum(book.stock(producer.agent_id, good, producer.tile) * prices[good] for good in priced)
++    taken = math.fsum(ledger.sold.get((producer.agent_id, good), 0.0) * prices[good] for good in priced)
++    return expected_sales.demand_at_cost(sold, revenue, cost_per_run, left <= expected_sales.SOLD_OUT_LEFT_SHARE * taken)
++
++
+ def _with_sales(producer, recipe, ledger: YearLedger, sold: float, prices):
+     """Expected sales move toward the runs it sold this year (`sold`, from `runs_sold`)."""
+     worked = worked_runs(producer, recipe, ledger, producers.paying_output(recipe, prices))
+diff --git a/sim/tests/test_year_speed_close.py b/sim/tests/test_year_speed_close.py
+index a62cfc73..ba49cfcb 100644
+--- a/sim/tests/test_year_speed_close.py
++++ b/sim/tests/test_year_speed_close.py
+@@ -15,7 +15,7 @@ from unittest import mock
+ import numpy as np
+ 
+ from sim.economy.ask_ceiling import AskAlternatives
+-from sim.economy import expansion_price, firm_finance, firm_year, producers, producers_close, year_close
++from sim.economy import expansion_price, firm_finance, firm_year, producers, producers_close, unit_cost, year_close
+ from sim.economy.close_kernel import REQUEST_EXPAND, REQUEST_NONE, STATE_OK
+ from sim.economy.close_pack import pack
+ from sim.economy.close_run import close_producers
+@@ -51,8 +51,9 @@ def old_close(setup, record, view, ledger, area_map, producer_id):
+     revenue, costs = ledger.sales_in.get(producer_id, 0.0), ledger.running_costs(producer_id)
+     here = year_close._prices_here(clearing, recipe, area_map.area_of, producer.tile)
+     worked = year_close.worked_runs(producer, recipe, ledger, producers.paying_output(recipe, here))
+-    demand = year_close.runs_sold(producer, recipe, ledger, record.book, area_map.area_of, here, capacity)
+     inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)
++    demand = year_close.demand_runs(producer, recipe, ledger, record.book, area_map.area_of, here, capacity,
++                                    unit_cost.variable_cost_per_run(recipe, inputs, wages, producer.land_rent_per_run))
+     closed = producers_close.close_year(
+         producer, recipe, revenue, costs, view, worked, lambda good, added: SHARE,
+         [good for good in recipe.outputs if good in setup.specs and not setup.specs[good].portable],

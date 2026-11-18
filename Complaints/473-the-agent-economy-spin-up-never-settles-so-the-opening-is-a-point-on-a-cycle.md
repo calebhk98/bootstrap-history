@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - settled stays a fixed point and the economy must not be chaotic, and small goods do not decide it (the owner). England: most ensemble members pass `spin_up_settled` and the rest miss by a hair. The Norse lands: no collapse any more, about a third over the tolerance in hired hours and output, a fifth of the food need unmet. Han: fed for most of the run where a third of its food need was unmet, not settled (output and the wage move by several times the tolerance). Rome and Mexica are not measured on this tree. Updates 35 and 36 give the fixes, the measurements (`ensemble_years.py`, `ensemble_moves.py`, `member_gaps.py`) and what stands in the way, in order: the workforce trim and the tight labour market after it (Norse), land between household plots and farms (Han), trade between food areas (both), and owner questions 13 and 16
+**Status:** partly - settled stays a fixed point and the economy must not be chaotic, small goods do not decide it, prices are to clear and the opening is to be the years' own steady state (the owner). A shortage now lifts the year's price as far as the buyers' money goes (Update 37). England: most ensemble members pass `spin_up_settled`. The Norse lands: a few pass; about a fifth of the food need is unmet all run (areas no food is carried to). Han: none passes; hired hours and output fall all run to about a third as land passes from the farms to the households' plots, with the money stock held as without. Rome and Mexica are not measured on this tree. Four ways to make output or prices answer faster were measured and left England less settled (Update 37, `Complaints/reports/473-handoff/tried/`). In the way, in order: land between plots and farms (Han), trade between food areas (both), the workforce trim (Norse), then a bounded answer of output to price, and owner questions 13 and 16
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -1725,3 +1725,98 @@ gap in both civilisations.
   With felling off the fields this no longer runs Han's tiles out; it will again wherever land is tight.
 - **Opium poppy takes more of Han's fields than millet.** The figure follows from the needs data and the poppy's
   yield a hectare; nothing in the engine is wrong there, and the data may be (question 16).
+
+## Update 37: prices clear upward; four ways to make output and prices answer faster each left it less settled; Han's slide is the land, not the money (branch economy-settles-not-chaotic)
+
+**The owner's direction (2026-11-18).** "The starting state is just some random numbers we used to guestimate, that
+should have been erased a long time ago to match the real steady state. Our sim should also be one where prices
+clear. I want whatever a real economy uses." So the order is: prices clear; the years then have one state to rest
+in; that state becomes the opening.
+
+**How it was measured** (probes in `Complaints/reports/473-handoff/probes/`): `ensemble_years.py`,
+`ensemble_moves.py` and `member_gaps.py` as before; `series_means.py <every> label=file ...` (the ensemble's mean of
+each quantity by year, as a share of its first year); `price_cost_probe.py <civ> <member> <years>` (each
+producer's price over its full unit cost, by revenue); `stock_probe.py <civ> <member> <years> <every>` (per recipe:
+expected sales, capacity, runs worked, stock against a year's sales, price over cost, every few years);
+`ABLATE=held` of `ablations.py` (the coin's wear capped at what the mint struck, so the money stock holds).
+
+**Built: a shortage lifts the year's price as far as the buyers' money goes** (commit "Prices clear: a sold-out
+seller's ask rises to what its buyers' money bears, and every producer takes the price").
+- A sold-out seller's ask rises within the year to where its buyers' money and ceilings still take the stock, with
+  no band above its cost (`unsold_search.raise_sold_out`, `goods_year_kernel.raise_up`; `test_unsold_stock_search`,
+  `test_economy_ask_band`, `test_economy_ask_band_chain`).
+- Every producer takes the price: none is exempt from the unsold search because it re-priced
+  (`seller_offers.stands_for_many`; `test_economy_workshop_count`).
+- The year-to-year step of an ask by its stock has no ceiling going up and stops at cost going down
+  (`ask_adjust.stepped_by_stock`; `test_economy_ask_stock_rule`).
+- The band is left only for a quote nobody paid (`planning_price.held_to_band`). The strategic price search
+  (`price_setting.py`'s grid) and the band arguments of the kernels are now dead and are still to be removed.
+
+**After it** (`ensemble_moves.py` on `ensemble_years.py england_1300 8`, `norse_900ad 24`, `han_china_100ad 12`):
+England as before (five of eight members pass); the Norse lands a little calmer (three of twenty-four pass, hired
+hours and output still over the tolerance, about a fifth of the food need unmet from the first year to the last);
+Han none, its hired hours and output falling for the whole run to about a third of the first year's.
+
+**What the head rests in** (`price_cost_probe.py england_1300 0 10`, `stock_probe.py england_1300 0 30 6`,
+`series_means.py`):
+- **A sellers' market.** After ten years about half of England's revenue is sold at a sixth or more above the
+  maker's full cost and about a tenth at over three times it. Wood and firewood sell at several times their cost
+  from the first year (felling is held by the standing timber, so that part is a scarcity rent nobody is charged),
+  charcoal and wood tar at several times theirs, and the waterwheels' power at hundreds of times its cost while the
+  wheels' capacity shrinks every year.
+- **Expected sales follow sales.** A maker that keeps selling out grows by a per cent or two a year (it plans its
+  expected sales and a share of its stock target, sells that, and expects more); one left with stock moves half way
+  to what it sold in one year (`EXPECTATION_ADJUSTMENT_SHARE`). So output falls fast and comes back slowly, as
+  Update 34 found, and a maker never plans for much more than it lately sold however far the price stands above its
+  cost.
+- **A glut does not lower the year's price.** The unsold search's floor is the seller's own reservation while its
+  stock is under a year of its expected sales (`unsold_search._floors`, `inventory.queued_holding_value`), so a going
+  maker's ask does not come down within the year. `test_unsold_stock_search` passed only because its sellers had no
+  expected sales: give them some and five of its tests fail on the head.
+- **The wage carries the whole fall of the money stock.** The money stock falls every year (owner's answer 10), the
+  price level holds or rises, and the wage falls: over the run the wage against the price level loses about a fifth
+  in England, over a third in the Norse lands and over three quarters in Han (`series_means.py`).
+
+**Tried and not kept: four ways to make output or prices answer faster.** Each is a patch with its tests in
+`Complaints/reports/473-handoff/tried/`, each was measured against the head on England's eight members, and each
+left England less settled (no member passes with any of them; hired hours move from under the tolerance to over
+it). In the order tried:
+1. `demand_at_revenue_over_cost.patch`: a sold-out seller reads the year's demand as the runs it sold times a run's
+   revenue over its cost.
+2. `wanted_at_makers_cost.patch`: a market's wanted quantity is what its buyers' schedules take at the price that
+   covers its makers' cost, so the old unmet-demand signal returns where a market cleared above cost. Much the
+   worst of the four.
+3. `sell_out_holds_expected_sales.patch`: a sell-out never lowers the sales a seller expects.
+4. `unsold_floor_at_cost.patch`: a seller left with stock comes down within the year to what a unit costs to make
+   again. Also measured on the Norse lands (twelve members) and Han (four): worse in both, and Han slides as before.
+
+**Why, as far as the probes show** (a reading, not yet a test):
+- The head is quiet where it is because sellers sell out and supply does not answer the price. Each of the four
+  ties output to the price, and near the price that covers cost supply answers it sharply: a producer stands for
+  workplaces whose costs are spread around its own (`producers.share_working`, `COST_SPREAD_WITHIN_PRODUCER`), so at
+  that price close to half of them stop, while the demand for floors and for inputs barely moves with the price.
+- A signal read from the price winds up a maker that cannot follow it: one held by a site (felling) or by a short
+  input. With the third patch the thread makers, short of wool, kept expecting the sales they could not make and
+  grew capacity for them (`stock_probe.py` on that tree).
+- A price cut reaches the makers as a loss before their costs fall: losses close workplaces
+  (`producer_losses.shed_share`), fewer hands are hired and the wage falls further. With the fourth patch the Norse
+  wage ends near half of its first year's where the head ends near four fifths.
+- Plant that stands idle near cost wears away and comes back slowly: with the fourth patch England's coal makers
+  lose three fifths of their capacity while coal's price climbs to twice its cost.
+
+So a faster answer needs these first: the rent of a held site charged to its maker, workplaces that idle without
+being lost, and a response bounded to a few per cent a year. Until then the sluggish quantities are what keeps it
+steady, and the gaps to close are the ones that are not about speed at all (below).
+
+**Han's slide is not the money stock** (`ABLATE=held ensemble_years.py han_china_100ad 4` on the head): with the
+money stock held, hired hours and output fall to the same third of the first year's, and the price level triples
+instead. It is the land passing from the hired farms to the households' plots year after year (Update 36, "Found
+and not fixed").
+
+**Also fixed here.** The test twin of the offer-gathering kernel still said only a producer of several workshops
+takes the price (`sim/tests/goods_good_plain.py`); `goods_good_kernels` failed on the head and passes again.
+
+**Order from here.** (1) Land between plots and farms in Han. (2) Trade between food areas (the Norse lands' unfed
+areas, Han's area with no grain farm); the two rules of section 6c's item 1 that are written are in
+`tried/trade_rules.patch`, not yet enough to carry grain. (3) The workforce trim (Norse). (4) Only then a faster
+answer of output to price, with the three conditions above. (5) Remove the dead price search.

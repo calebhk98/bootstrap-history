@@ -1,0 +1,153 @@
+diff --git a/sim/economy/close_kernel.py b/sim/economy/close_kernel.py
+index 9f9e8894..5abed85f 100644
+--- a/sim/economy/close_kernel.py
++++ b/sim/economy/close_kernel.py
+@@ -256,6 +256,8 @@ def close_rows(rows, constants,
+                 if ratio > best_ratio:
+                     best_ratio = ratio
+             sold_runs = seen_value / run_value if run_value > 0.0 else best_ratio
++            if paying >= 0 and not stock[row, paying] - q_in[paying] * cap_old > constants[K_SOLD_OUT] * sold[row, paying]:
++                sold_runs = max(sold_runs, sales_expected)       # expected_sales.held_by_a_sell_out
+         demand_runs[row] = sold_runs
+ 
+         input_now = covered_input_bill(recipe, 0, tile, slot_goods, inputs, tools, labour, unscaled, wage, live)
+diff --git a/sim/economy/expected_sales.py b/sim/economy/expected_sales.py
+index 84c31c69..93d42442 100644
+--- a/sim/economy/expected_sales.py
++++ b/sim/economy/expected_sales.py
+@@ -15,6 +15,16 @@ def demand_seen(sold: float, left: float, own_capacity: float, market_capacity:
+     return sold + min(1.0, own_capacity / market_capacity) * market_unmet
+ 
+ 
++def held_by_a_sell_out(sold_runs: float, expected_runs: float, sold: float, left: float) -> float:
++    """Runs a producer takes as the year's demand given the `sold_runs` it sold: no fewer than the `expected_runs` it
++    expected when its paying output sold out (`left` of it, beyond what its own runs sow, is a hair of the `sold` or
++    nothing). A sell-out shows its buyers would have taken at least what it had and nothing of how much more, so it does
++    not lower the sales it expects; stock left unsold does. A year with nothing to sell says nothing about them."""
++    if left > SOLD_OUT_LEFT_SHARE * sold:
++        return sold_runs
++    return max(sold_runs, expected_runs)
++
++
+ def market_capacities(sellers: Iterable[Tuple[str, Mapping[str, float], float]],
+                       area_of: Callable[[str, str], str]) -> Dict[Tuple[str, str], float]:
+     """Output a year the sellers' plants allow, by (good, area): `sellers` are (tile, output per run by good, runs of
+diff --git a/sim/economy/year_close.py b/sim/economy/year_close.py
+index 25190e62..3ad03908 100644
+--- a/sim/economy/year_close.py
++++ b/sim/economy/year_close.py
+@@ -6,7 +6,7 @@ from typing import Dict, Mapping, Tuple
+ 
+ from . import producer_table
+ from .staffed_runs import staffed_runs
+-from .expected_sales import demand_seen, market_capacities
++from .expected_sales import demand_seen, held_by_a_sell_out, market_capacities
+ from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, currency, expansion_price, merchants, ownership, producer_exit, shares,
+                producers, producers_close, state_budget, tariffs, taxes, trade_wages)
+ from .cohort_store import table_of
+@@ -202,6 +202,17 @@ def runs_sold(producer, recipe, ledger: YearLedger, book, area_of, prices, marke
+     return max(seen[good] / made[good] for good in made)
+ 
+ 
++def demand_runs(producer, recipe, ledger: YearLedger, book, area_of, prices, market_capacity=None) -> float:
++    """The runs a producer takes as the year's demand: `runs_sold`, and no fewer than it expected when the output that pays
++    most of a run sold out (`expected_sales.held_by_a_sell_out`), whatever a minor output left unsold."""
++    sold = runs_sold(producer, recipe, ledger, book, area_of, prices, market_capacity)
++    if producer.yield_factor <= 0.0:
++        return sold
++    paying = producers.paying_output(recipe, prices)
++    left = book.stock(producer.agent_id, paying, producer.tile) - recipe.inputs.get(paying, 0.0) * producer.capacity_runs
++    return held_by_a_sell_out(sold, producer.expected_sales, ledger.sold.get((producer.agent_id, paying), 0.0), left)
++
++
+ def _with_sales(producer, recipe, ledger: YearLedger, sold: float, prices):
+     """Expected sales move toward the runs it sold this year (`sold`, from `runs_sold`)."""
+     worked = worked_runs(producer, recipe, ledger, producers.paying_output(recipe, prices))
+diff --git a/sim/tests/test_expected_sales_sell_out.py b/sim/tests/test_expected_sales_sell_out.py
+new file mode 100644
+index 00000000..073eb019
+--- /dev/null
++++ b/sim/tests/test_expected_sales_sell_out.py
+@@ -0,0 +1,69 @@
++"""A sell-out shows a seller's buyers would have taken at least what it had, so it never lowers the sales the seller expects;
++stock left unsold does. Each test calls one function on written-out inputs."""
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.economy import expected_sales, producers, year_close
++from sim.economy.types import Recipe
++from sim.economy.year_ledger import YearLedger
++
++# a run sows 100 of grain and yields 900 of grain and 500 of straw
++FARM = Recipe("farm", {"grain": 900.0, "straw": 500.0}, {"grain": 100.0}, {"hand": 200.0})
++PRICES = {"grain": 1.0, "straw": 0.1}
++CAPACITY = 20.0
++SEED_KEPT = 100.0 * CAPACITY
++
++
++class Book:
++    def __init__(self, stocks):
++        self.stocks = stocks
++
++    def stock(self, agent, good, tile):
++        return self.stocks.get(good, 0.0)
++
++
++class HeldByASellOutTests(unittest.TestCase):
++    def test_a_seller_that_sold_out_below_what_it_expected_keeps_its_expectation(self):
++        self.assertEqual(expected_sales.held_by_a_sell_out(8.0, 10.0, sold=800.0, left=0.0), 10.0)
++
++    def test_a_seller_that_sold_out_above_what_it_expected_takes_what_it_sold(self):
++        self.assertEqual(expected_sales.held_by_a_sell_out(12.0, 10.0, sold=1200.0, left=0.0), 12.0)
++
++    def test_stock_left_unsold_lowers_the_demand_to_what_it_sold(self):
++        self.assertEqual(expected_sales.held_by_a_sell_out(8.0, 10.0, sold=800.0, left=50.0), 8.0)
++
++    def test_a_year_with_nothing_to_sell_says_nothing_about_the_buyers(self):
++        self.assertEqual(expected_sales.held_by_a_sell_out(0.0, 10.0, sold=0.0, left=0.0), 10.0)
++
++    def test_a_hair_left_in_settlement_counts_as_sold_out(self):
++        self.assertEqual(expected_sales.held_by_a_sell_out(8.0, 10.0, sold=800.0, left=800.0 * expected_sales.SOLD_OUT_LEFT_SHARE), 10.0)
++
++
++class DemandRunsTests(unittest.TestCase):
++    def farm(self):
++        return producers.Producer("farm1", "owner", "farm", "tile", capacity_runs=CAPACITY, expected_sales=10.0)
++
++    def ledger(self, grain_runs, straw_runs):
++        ledger = YearLedger()
++        ledger.sold[("farm1", "grain")] = grain_runs * 900.0
++        ledger.sold[("farm1", "straw")] = straw_runs * 500.0
++        return ledger
++
++    def demand(self, ledger, stocks):
++        return year_close.demand_runs(self.farm(), FARM, ledger, Book(stocks), lambda good, tile: "area", PRICES)
++
++    def test_a_farm_whose_grain_sold_out_keeps_its_expectation_whatever_straw_piles_up(self):
++        # all the grain beyond next year's seed sold (eight runs of it), a fifth of the straw
++        self.assertAlmostEqual(self.demand(self.ledger(8.0, 1.6), {"grain": SEED_KEPT, "straw": 3200.0}), 10.0)
++
++    def test_a_farm_left_with_grain_beyond_its_seed_takes_the_runs_it_sold(self):
++        sold_runs = (8.0 * 900.0 * 1.0 + 8.0 * 500.0 * 0.1) / (900.0 * 1.0 + 500.0 * 0.1)
++        self.assertAlmostEqual(self.demand(self.ledger(8.0, 8.0), {"grain": SEED_KEPT + 900.0, "straw": 0.0}), sold_runs)
++
++    def test_a_farm_that_sold_more_runs_than_it_expected_takes_them(self):
++        self.assertAlmostEqual(self.demand(self.ledger(14.0, 14.0), {"grain": SEED_KEPT, "straw": 0.0}), 14.0)
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/sim/tests/test_year_speed_close.py b/sim/tests/test_year_speed_close.py
+index a62cfc73..a8f3f7e8 100644
+--- a/sim/tests/test_year_speed_close.py
++++ b/sim/tests/test_year_speed_close.py
+@@ -51,7 +51,7 @@ def old_close(setup, record, view, ledger, area_map, producer_id):
+     revenue, costs = ledger.sales_in.get(producer_id, 0.0), ledger.running_costs(producer_id)
+     here = year_close._prices_here(clearing, recipe, area_map.area_of, producer.tile)
+     worked = year_close.worked_runs(producer, recipe, ledger, producers.paying_output(recipe, here))
+-    demand = year_close.runs_sold(producer, recipe, ledger, record.book, area_map.area_of, here, capacity)
++    demand = year_close.demand_runs(producer, recipe, ledger, record.book, area_map.area_of, here, capacity)
+     inputs, wages = live_input_prices(producer, recipe, view), live_wages(producer, recipe, view)
+     closed = producers_close.close_year(
+         producer, recipe, revenue, costs, view, worked, lambda good, added: SHARE,
