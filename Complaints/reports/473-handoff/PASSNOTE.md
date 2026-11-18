@@ -1,8 +1,9 @@
 # Passnote: Complaint 473, the agent economy's spin-up never settles
 
 For whoever picks this up next. It says what the goal is, where the work stands, how to measure, what was learned,
-what was tried, and what to do first. The detail behind every claim is in
-`Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md` (Updates 24-31) and the
+what was tried, and what to do first. **Start with section 6f and section 7**; sections 2 and 6a to 6e are the
+history that led there. The detail behind every claim is in
+`Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md` (Updates 24-38) and the
 owner's answers in `Complaints/reports/473-owner-questions.md`. Figures are not repeated here: each claim names
 the command that measures it.
 
@@ -186,7 +187,7 @@ work to do next, in this order:
 Complaints 608 and 960 to 963 are the same fall on Rome. Owner questions 10 to 12 are open. Judge Norse on 24
 members, not eight: its members fall into a calm kind and a zigzag kind, and eight cannot tell a change in how many.
 
-## 6b. Where it stands after Update 34 (read this first; it replaces the order in section 6a)
+## 6b. Where it stands after Update 34 (history; section 6f replaces its order)
 
 Update 34 took the first item of section 6a (the first years do not reproduce the opening) and found four faults in
 how the opening is built and one in the hiring rounds, each fixed with a rule test: a site-bound recipe with no
@@ -240,7 +241,7 @@ What is in the way now, in the order to take it:
    raw leather clothe a household better than the shoes made from it (owner question 14).
 5. Rome and Mexica have not been measured on this tree.
 
-## 6c. Where it stands after Update 35 (read this first; it replaces the order in section 6b)
+## 6c. Where it stands after Update 35 (history; section 6f replaces its order)
 
 Update 35 followed the owner's direction of 2026-11-17 (section 1). Five fixes, each with a rule test: the settle
 measure weighs each watched price by the year's spending on it; the opening's supply fit serves a maker's plant
@@ -288,7 +289,7 @@ What is in the way now, in the order to take it:
 5. England's last hair: steel's slide and zigzag, bread's makers (their ask is capped under their cost).
 6. The money stock (question 13), then Rome and Mexica, unmeasured on this tree.
 
-## 6d. Where it stands after Update 36 (read this first; it replaces the order in section 6c)
+## 6d. Where it stands after Update 36 (history; section 6f replaces its order)
 
 Update 36 traced Han's first-year hunger to the opening contradicting its own first year, and fixed three things,
 each with a rule test: a recipe bound to its own site (felling) takes no cropland; households open with the tools
@@ -329,7 +330,7 @@ What is in the way now, in the order to take it:
 5. Owner question 16 (pasture and forest recipes take cropland; Han's poppy), question 13 (the money stock).
 6. Rome and Mexica, unmeasured on this tree.
 
-## 6e. Where it stands after Update 37 (read this first; it replaces the order in section 6d)
+## 6e. Where it stands after Update 37 (history; section 6f replaces its order)
 
 **A measuring rule first: never set `NUMBA_CACHE_DIR`.** The pinned worktrees of this work did, to keep their
 caches apart. numba checks only the file a kernel is defined in, so a kernel that calls one in another file kept
@@ -371,25 +372,67 @@ Order from here:
    (`labour_totals_probe.py`).
 6. Owner questions 13 and 16; Rome and Mexica, unmeasured on this tree.
 
+## 6f. Where it stands after Update 38 (read this first; it replaces the order in every section 6 before it)
+
+**Measuring rules that cost a round of work each to learn.**
+- Never set `NUMBA_CACHE_DIR` (section 6e). Run probes and ensembles with the engine's own cache, from a worktree
+  pinned to one commit, with `PYTHONPATH` set to that worktree.
+- Compare a change with a baseline run on the same commit with the same cache. Two trees that differ in a kernel
+  and give the same figures to four digits mean a stale run.
+- England eight members, the Norse lands twelve to twenty-four, Han four to twelve (Han's members take minutes
+  each). Run at most two ensembles at once on a 4-core, 15 GB machine; a third, or a kernel compile beside two,
+  gets processes killed for memory.
+
+**The tree.** The code under `sim/` is what Updates 30 to 36 built; prices that clear upward were reverted
+(Update 37). Clean baselines, all with the engine's cache: England five of eight members pass `spin_up_settled`,
+the Norse lands one of twenty-four, Han none of twelve (`ensemble_years.py`, `ensemble_moves.py`,
+`member_gaps.py`, `series_means.py`).
+
+**Tried and kept as patches** (`tried/`, each with its tests; "clean" means measured with the engine's cache):
+
+| Patch | Applies to | What it does | Measured |
+|---|---|---|---|
+| `prices_clear_upward.patch` | this tree | sold-out ask rises as far as buyers' money goes, no band; every producer a price taker; yearly ask step with no ceiling | clean, England: violently unsteady (Update 37); its no-band raise alone is the cause |
+| `wanted_at_makers_cost.patch` | on top of the one above | a market's wanted quantity read at its makers' cost, so a seller still sees demand beyond what it sold | clean, England, with the one above: less than half its swing, many times the baseline's |
+| `demand_at_revenue_over_cost.patch`, `sell_out_holds_expected_sales.patch`, `unsold_floor_at_cost.patch` | on top of `prices_clear_upward.patch` | other answers of output or price to a price that clears | **not measured cleanly** |
+| `placement_beside_inputs.patch` | this tree | (a) a market area holding a processor's fixed input makes its own share; (b) a crop only some tiles grow pulls its processors | (a) alone, clean: England's quantities as the baseline's with its weighted prices a hair over (two of eight pass), Han as the baseline, the Norse lands a little calmer (Update 38); (b) not measured cleanly |
+| `resting_producer_purse.patch` | this tree | producers open with the cash the year's close keeps | clean: England calmer, the Norse lands worse, Han as the baseline (Update 38) |
+| `trade_rules.patch` | written before Update 37 | what a market with buyers and nothing on offer remembers; the market size a merchant learns | not measured; not enough alone to carry grain |
+
+**What the readings say** (Updates 37 and 38):
+- Under the band a sold-out seller sees the buyers it turned away and grows; a price that clears turns nobody away,
+  output that has fallen does not come back, and the price runs up. Prices that clear need a steady answer of
+  supply to a high price first.
+- The opening's figures are not the years' resting figures: incomes (the opening counts about twice the property
+  income the first year pays), producers' coin, capacity, some prices (England's steel glides down all run),
+  where makers stand. Each corrected alone moves another (the purse calms England and unsettles the Norse lands).
+  This is the owner's point that the opening is a guess.
+- Han's slide (hired hours and output to about a third) is not the money stock, not the land rule, not the kilns'
+  placement and not the producers' opening coin. Read so far: a third of hours offered unhired from the first year,
+  the hours employers want falling every year, households' coin rising, producers' falling, most of the vessels and
+  shelter floors unmet.
+
+**The owner's open decision.** Two directions pull against each other: prices that clear (the owner's ask) and a
+settled economy (the goal). The recommendation given was to keep the band for now, make the opening the years'
+resting state and fix trade between areas, and come back to clearing once supply answers a high price steadily.
+No answer had come when this note was written; ask before building on either side of it.
+
 ## 7. What to do first
 
-1. Set up the environment and reproduce: `ensemble_years.py` on England, Norse and Han at the head, so your numbers
-   are your own.
-2. Han: find why its hours and wage swing with the opening branch on top (`series_probe.py` and `analyse_series.py` on
-   Han for the trade and area, then `wage_probe.py` on that market, as Update 30 did for England). Then question 3
-   can be merged.
-3. The coin metal (Complaints 981 and 982). Make `opening_runs.required_runs` reach a fixed point where a
-   by-product's users and its maker feed each other (`coin_passes_probe.py` shows the cycle; a rule test with three
-   small recipes of that shape comes first). Then, with the owner's answers to questions 8 and 9, a money stock the
-   chain can replace, so `money_against_wear` passes and the price level can rest. England is the traced case; Norse
-   and Han lose their whole yearly loss too, and Rome has the same three silver recipes.
-4. Mexica: trace why output shrinks through the spin-up; then entry sizing for a trade nobody practises, so question 6
-   can be merged.
-5. The single goods that saw and the amplifiers named in Update 30, with the twin probe. Judge an amplifier fix on the
-   growth of the twins' difference (`late_twin_probe.py`) as well as on the yearly moves: a fix that removes a jump can
-   still make the economy move more (section 5, `sold-out-ramp-and-margin`), and then the rule it smooths is itself
-   suspect (a producer adding its market's unmet demand to its sales, entry on a margin).
-6. Rome, once the others are close: one member takes long, so measure it last.
+1. Reproduce the England baseline yourself: `PYTHONPATH=<checkout> python3 Complaints/reports/473-handoff/probes/ensemble_years.py england_1300 8 out.jsonl`,
+   then `ensemble_moves.py base=out.jsonl` and `member_gaps.py out.jsonl`. Five of eight should pass.
+2. **The opening as the years' resting state, England first** (the owner, 2026-11-18). Not designed yet. Work out
+   which of the opening's figures the years move away from and where they rest (`series_means.py` over a long run;
+   `price_cost_probe.py`, `stock_probe.py`, `opening_income_probe.py`), then whether the opening can take them from
+   a late year of its own spin-up instead of solving them from guesses. Check first what `openings/` stores and how
+   `sim/engine/opening_checks.py` reads it, so the change fits the shipped-opening machinery.
+3. Han's slide: test the reading above. `first_year_limits_probe.py`, `first_year_takers_probe.py` and
+   `hours_fall_probe.py` show which makers are short of what; `labour_totals_probe.py` and
+   `household_accounts_probe.py` show the hours and the coin.
+4. Only after the owner answers the decision above: prices that clear, starting from the table's patches, each
+   measured cleanly on top of `prices_clear_upward.patch`.
+5. Trade between food areas (section 6d, item 0), the workforce trim (section 6d, item 1), owner questions 13 and 16,
+   Rome and Mexica (unmeasured on this tree).
 
 Before any PR: `python3 -m sim.tests --slow`, then rebuild openings as the last commit
 (`python3 sim/simulator.py openings --prune`) and check `python3 tools/check_openings_current.py` lists none stale.
