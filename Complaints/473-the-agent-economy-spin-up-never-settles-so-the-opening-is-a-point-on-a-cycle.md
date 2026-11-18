@@ -1753,6 +1753,28 @@ not touched, so the runs labelled "clear" in the scratch outputs cleared their m
 the unchanged head gave the same figures to four digits as a later one-line kernel change, which is how it was caught.
 **Measure with the cache the engine picks: never set `NUMBA_CACHE_DIR`.**
 
+**Measured since with the engine's cache** (`ensemble_years.py`, then `ensemble_moves.py`, `member_gaps.py`,
+`series_means.py`; England eight members each):
+- **The tree as it now stands** (the commit before the change): England five of eight pass; the Norse lands one of
+  twenty-four (`norse_900ad 24`), hired hours and output about a third over the tolerance, a sixth to a fifth of the
+  food need unmet all run; Han none of twelve (`han_china_100ad 12`), hired hours and output falling all run to
+  about a third and the wage to about a quarter. These are Update 36's figures again, so the readings taken before
+  the change were sound.
+- **The sold-out raise with no band, alone** (the other two parts of the change left out): none passes; hired
+  hours move about three tenths a year. In the one member read year by year, output falls for six years, then the
+  price level rises several-fold while output falls to a fifth of the first year's: output that has fallen does not
+  come back when the good is short, so a price free to rise keeps rising. This part is what sets England off.
+- **The change with `tried/wanted_at_makers_cost.patch`** (a seller reads what its buyers would take at its makers'
+  cost, in place of the buyers the band turned away): none passes; hired hours move about a tenth a year and
+  inventories about a quarter. Less than half the swing of the change alone, still many times the band's.
+- **The kiln rule of `tried/placement_beside_inputs.patch` alone** on the tree as it stands: the quantities move as
+  the baseline's; two of eight pass, the others miss on the weighted prices by a hair (steel's price).
+
+So with the bids as they are, a price that clears needs the band's job done some other way. Under the band a
+seller that sells out sees the buyers it turned away and expands; with a clearing price nobody is turned away, and
+the two replacements tried (the price itself, the buyers' schedules read at cost) are either unmeasured or still
+far from steady.
+
 **What that invalidates.**
 - Every ensemble figure quoted for the "clear" tree (England five of eight, the Norse lands three of twenty-four,
   Han none): they are the commit before, near enough.
@@ -1790,9 +1812,8 @@ the unchanged head gave the same figures to four digits as a later one-line kern
 `hours_fall_probe.py`, `first_year_limits_probe.py`, `first_year_takers_probe.py`, `placement_why_probe.py`,
 `placement_order_probe.py`, `oriented_cover_probe.py`; `ablations.py` gained `farmsfirst` and `plotsfirst`.
 
-**Order from here.** (1) Re-run the Norse and Han ensembles on the reverted tree with the engine's cache, to have
-clean baselines. (2) The placement rules of `tried/placement_beside_inputs.patch`, measured cleanly on all three.
-(3) Prices that clear: find which part of the reverted change sets England off (the raise with no band within the
-year, every producer taking the price, the yearly step with no ceiling) by measuring each alone; a market that
-clears is still the owner's direction. (4) Trade between food areas; the workforce trim (Norse). (5) The four
-patches of `tried/`, each measured alone and cleanly, only after (3).
+**Order from here.** (1) The placement rules of `tried/placement_beside_inputs.patch`, each measured cleanly on
+the Norse lands and Han (the kiln rule is measured on England above). (2) Prices that clear, the owner's direction:
+the raise with no band is what sets England off, so it needs a seller's answer to a high price that is steady;
+measure the remaining patches of `tried/` together with the change, one at a time, and look at what makes output
+that fell stay down (Update 34). (3) Trade between food areas; the workforce trim (Norse).

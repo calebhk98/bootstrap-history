@@ -346,24 +346,30 @@ section 6d again; the change is `tried/prices_clear_upward.patch`.
 Not measured, whatever earlier notes in the scratch outputs say: the four patches of `tried/` that make output or
 prices answer faster, and the placement patch. Each needs a clean run alone.
 
+Clean baselines on this tree (Update 37): England five of eight, the Norse lands one of twenty-four, Han none of
+twelve. The sold-out raise with no band is, alone, what sets England off; with a seller reading its buyers'
+schedules at cost in place of the buyers the band turned away, the swing is under half as large and still many
+times the band's.
+
 Order from here:
-1. **Clean baselines**: the Norse and Han ensembles on this tree with the engine's cache (England is done: five of
-   eight pass).
-2. **The opening places makers where the years cannot supply them** (Han; Update 37 lists them: kilns on two tiles,
+1. **The opening places makers where the years cannot supply them** (Han; Update 37 lists them: kilns on two tiles,
    presses away from the olives, farms sized on tools the ore cannot give). `tried/placement_beside_inputs.patch`
    holds two rules with tests: a market area that holds a processor's fixed input makes its own share; a crop only
-   some tiles grow pulls its processors as a mine does. Measure each alone on all three civilisations. The second
-   moved the Norse mills away from where the flour is eaten in the one run made, so it likely needs the pooling
+   some tiles grow pulls its processors as a mine does. Measure each alone on the Norse lands and Han. The first,
+   alone, leaves England's quantities as they are and its weighted prices a hair over (clean). The one run of both
+   together on the Norse lands was on the reverted change's tree, so it is not a reading; it showed more hunger,
+   which would fit mills moved away from where flour is eaten, so the second rule may need the pooling
    `_where_it_crops` does.
-3. **Prices that clear**, the owner's direction: measure the three parts of `tried/prices_clear_upward.patch`
-   apart (the raise with no band within the year; every producer taking the price; the yearly step with no ceiling)
-   to find what sets England off.
-4. **Trade between food areas** (section 6d, item 0); `tried/trade_rules.patch` holds the two rules written so far.
-5. **The workforce trim** (Norse; section 6d, item 1).
-6. Han's slide is not the money stock and not the land rule (Update 37). What is left to test: the first year not
-   reproducing the opening (item 2), and employers wanting fewer hours every year while labour stands idle
+2. **Prices that clear**, the owner's direction. Under the band a sold-out seller sees the buyers it turned away
+   and expands; a clearing price turns nobody away, so the seller needs another steady answer to a high price.
+   Measure the patches of `tried/` together with `prices_clear_upward.patch`, one at a time, with the engine's
+   cache; none of them alone is the test.
+3. **Trade between food areas** (section 6d, item 0); `tried/trade_rules.patch` holds the two rules written so far.
+4. **The workforce trim** (Norse; section 6d, item 1).
+5. Han's slide is not the money stock and not the land rule (Update 37). What is left to test: the first year not
+   reproducing the opening (item 1), and employers wanting fewer hours every year while labour stands idle
    (`labour_totals_probe.py`).
-7. Owner questions 13 and 16; Rome and Mexica, unmeasured on this tree.
+6. Owner questions 13 and 16; Rome and Mexica, unmeasured on this tree.
 
 ## 7. What to do first
 
