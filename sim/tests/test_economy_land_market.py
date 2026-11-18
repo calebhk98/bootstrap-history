@@ -15,7 +15,7 @@ from sim.economy.households_cohort import cohort_id, cohorts_for_tile
 from sim.economy.land_market import LandDemand, clear_land, rent_postings
 from sim.economy.producers import Producer
 from sim.economy.replaced import replaced
-from sim.economy.types import EDGE_MINT, Recipe, TileSpec, Transfer
+from sim.economy.types import EDGE_MINT, Recipe, SiteLimit, TileSpec, Transfer
 from sim.tests.test_economy_producers import View
 
 VALUE = 100.0       # output value per hectare at average fertility
@@ -29,6 +29,19 @@ def demand(agent="p1", tile="t", hectares=10.0):
 def band_spread():
     shares, fertilities = land_market.LAND_BAND_AREA_SHARES, land_market.LAND_BAND_RELATIVE_FERTILITY
     return shares, fertilities
+
+
+class CroplandRecipeTests(unittest.TestCase):
+    def test_a_recipe_bound_to_a_site_of_its_own_takes_no_cropland(self):
+        # felling takes land in the data and is limited by the tile's standing timber: it works that, not the fields
+        limits = [SiteLimit("felling", "t", 500.0), SiteLimit("mine", "t", 80.0)]
+        self.assertEqual(land_market.cropland_recipes({"farm": 1.0, "felling": 0.4}, limits), frozenset({"farm"}))
+
+    def test_a_recipe_that_takes_land_and_has_no_site_takes_cropland(self):
+        self.assertEqual(land_market.cropland_recipes({"farm": 1.0, "pasture": 16.0}, []), frozenset({"farm", "pasture"}))
+
+    def test_a_recipe_that_takes_no_land_takes_no_cropland(self):
+        self.assertEqual(land_market.cropland_recipes({"farm": 1.0, "smithy": 0.0}, []), frozenset({"farm"}))
 
 
 class BandTests(unittest.TestCase):
@@ -138,7 +151,7 @@ def economy_of(arable_by_tile, runs_by_tile):
         book.transfer(Transfer(EDGE_MINT, producer_id, "coin", 1e6, "opening"))
     record = SimpleNamespace(producers=ProducerStore(producers), book=book, cohorts={each.agent_id: each for each in cohorts}, land=LandRecord())
     titles.seed(record)
-    setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run=LAND_PER_RUN, currency_id="coin", harvest_share_by_good={})
+    setup = SimpleNamespace(tiles=tiles, recipes={"wheat": WHEAT}, land_per_run=LAND_PER_RUN, site_limits=(), currency_id="coin", harvest_share_by_good={})
     return setup, record
 
 
