@@ -51,10 +51,12 @@ WARM_BRACKET_WIDENINGS = 6       # doublings of the bracket around a previous ro
 
 @dataclass
 class OpeningStart:
-    """What one opening solve carries from one opening to the next as a starting guess (the solve passes it along; nothing
-    else holds it): the last income per head found below the ceiling and the last share of hours producers hired."""
+    """What one opening solve carries from one opening to the next (the solve passes it along; nothing else holds it):
+    as starting guesses the last income per head found below the ceiling and the last share of hours producers hired,
+    and the land each cohort's plot kept once the last opening's land market had let the rest (`opening_own.plot_land`)."""
     income_per_head: Optional[float] = None
     share_hired: Optional[float] = None
+    plot_land: Optional[Dict[str, float]] = None
 
 
 def value_of(final_by_tile: Mapping[TileId, Mapping[GoodId, float]], prices: Mapping[GoodId, float]) -> float:
