@@ -279,7 +279,7 @@ def build_setup(sim, opening=None, production=None):
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners, recipes),
         tile_owners=sim.farm.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),
-        kernels=dict(sim.bound_kernels()), rule_set=game_rule_set(sim.cfg),
+        kernels=dict(sim.bound_kernels()), rule_set=game_rule_set(sim.scenario.cfg),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]})
