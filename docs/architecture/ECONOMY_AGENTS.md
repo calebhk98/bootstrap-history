@@ -263,6 +263,38 @@ book with cash, who buy where a good is cheap and carry it to where it is dear, 
 the routes that cross a border (their cargo accounts are in the book). Giving trader actors a second domestic router
 would carry the same gap twice, the duplication that `Complaints/closed/405` closed for foreign trade, so there is none.
 
+## Rule sets
+
+The rules of the year that can be swapped are gathered in `sim/economy/rule_sets.py`. A `RuleSet` names the rule each
+of these runs: the hold on a producer's planned runs, the producers' labour bids, the labour clearing, the goods
+clearing, the households' later rounds and the numbers of the producers' close. A setup names its set
+(`EconomySetup.rule_set`) and a phase asks `rule_sets.of(setup)` for its rule, so no phase tests a name and a third set
+is one entry in that file. An economy's record saves the set it opened on and a resumed economy keeps it; a game's
+configuration may name one (`economy_rule_set`, read in `sim/markets/port_setup.py`), else a game opens on `search`.
+
+Everything above describes the `search` set: workers and employers find a wage over rounds of search, sellers search
+for their asks, and what an agent carries into next year is nudged by what happened to it. The `clearing` set
+(Complaint 473) finds the value that clears a market inside the year and moves what carries between years a fixed share
+of the way to it, the same share up and down:
+
+- **Labour.** A producer bids for hours as a schedule over the wage, one bid for each slice of its workplaces at what
+  that slice is worth (`labour_demand.py`), so the wage and the hours are found together. Each (trade, area) pays one
+  wage: last year's moved a share toward the wage where the hours offered meet the hours wanted, never under the floor
+  (`sim/labour/market/clearing_value.py`, `wage_step.py`, `hires_at_wage.py`). There are no rounds of search and no
+  ask that drifts. Poaching, training, switching and migration are the labour core's own, as before.
+- **Goods.** Each market trades at one price, where the buyers' schedules meet the sellers' supply
+  (`goods_clear_one_price.py`). A producer's stock is offered along a supply curve around its target stock: content
+  with the price it expects when it holds exactly that stock, asking less the more it holds beyond it and more as
+  the stock is drawn down (`stock_supply.py`). Sellers do not re-price inside the year and households have no later
+  rounds.
+- **Producers.** A producer plans the runs that pay at the price it expects and is not held to its expected sales;
+  its expected price follows what the market paid and its expected sales what it sold, with no pull toward cost, no
+  step on its unsold stock and no share of unmet demand (`close_pack.constants_array_for_clearing`).
+
+Capacity, entry, exit and bankruptcy are the same rules in both sets. Measure a set on the hand-built economy with
+`python3 sim/simulator.py spin-up-trace --fixture stationary --rules clearing --twin --years 90`; what the clearing set
+is held to there, and what it does not meet yet, is `sim/tests/test_economy_rest_smoke.py`.
+
 ## Heuristics
 
 Every adjustment speed, cash-balance target and expectation rule is declared with

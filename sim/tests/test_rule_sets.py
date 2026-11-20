@@ -21,6 +21,9 @@ class Of(unittest.TestCase):
         with self.assertRaises(ValueError):
             rule_sets.of(types.SimpleNamespace(rule_set="no such set"))
 
+    def test_a_setup_that_names_none_runs_the_default_set(self):
+        self.assertIs(rule_sets.of(types.SimpleNamespace()), rule_sets.RULE_SETS[DEFAULT_RULE_SET])
+
     def test_the_default_rule_set_exists(self):
         self.assertIn(DEFAULT_RULE_SET, rule_sets.RULE_SETS)
 

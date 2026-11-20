@@ -59,8 +59,10 @@ RULE_SETS: Dict[str, RuleSet] = {
 
 
 def of(setup) -> RuleSet:
-    """The rule set `setup` names; a name no set carries is an error listing the ones that exist."""
-    found = RULE_SETS.get(setup.rule_set)
+    """The rule set `setup` names, the default one where it names none (a stand-in setup that carries only what a rule
+    reads); a name no set carries is an error listing the ones that exist."""
+    name = getattr(setup, "rule_set", SEARCH)
+    found = RULE_SETS.get(name)
     if found is None:
-        raise ValueError("the economy has no rule set %r; it has %s" % (setup.rule_set, ", ".join(sorted(RULE_SETS))))
+        raise ValueError("the economy has no rule set %r; it has %s" % (name, ", ".join(sorted(RULE_SETS))))
     return found

@@ -95,8 +95,9 @@ def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> f
 class Economy:
     def __init__(self, setup: EconomySetup, record: EconomyRecord = None) -> None:
         opening = record is None
-        if not opening and record.rule_set and record.rule_set != setup.rule_set:
-            setup = dataclasses.replace(setup, rule_set=record.rule_set)     # an economy keeps the rules it opened on
+        kept = "" if opening else getattr(record, "rule_set", "")
+        if kept and kept != getattr(setup, "rule_set", kept):
+            setup = dataclasses.replace(setup, rule_set=kept)     # an economy keeps the rules it opened on
         self.setup = setup
         if opening:
             record, area_map, carriage = open_economy(setup)
