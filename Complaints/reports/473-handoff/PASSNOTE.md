@@ -577,8 +577,10 @@ After Update 43:
    row of the stages table (hours hired over hours offered in the first year) and by the wage's fall in the first
    decade. A fixture with one unkept good is still owed to Update 44's rule.
 3. The merchant's size (one for England, `opening._open_merchants`) once the two above are in.
-4. The spin-up's length and stop rule for the clearing set (the plan's step 4), then the realism check, the Norse
-   lands and Han, and the game's set.
+4. The spin-up's length and stop rule for the clearing set (the plan's step 4): measured again after Update 44, a
+   first stage more than twice as long does not pass the check either (Update 44's last paragraph), so do this only
+   after items 1 and 2 have steadied the relative prices. Then the realism check, the Norse lands and Han, and the
+   game's set.
 
 After Update 42 (kept for the record; its items 2 and 3 are answered in 6k):
 

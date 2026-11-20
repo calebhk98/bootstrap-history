@@ -2367,3 +2367,10 @@ wage recovers, with flour's price climbing while the mills come back. Behind tha
 about a quarter of the hours on offer have no taker at its wage, nearly all of them people it numbers in the trade
 farms hire from (the scratch probe of the labour clearings by trade), and the decade in which the wage falls to
 clear them is what the next forty years are recovering from.
+
+**A longer spin-up on these rules, measured again** (`ROME_SPIN_UP_YEARS=70,15` before the ensemble command). The
+medians hardly move from the standing length: hours, output and unmet need pass in most members, the price level, the
+rate and stock sit at the tolerance and pass in about half, and the watched prices miss in all of them. Its trend
+column still shows hours and output growing through the measured years, so even that long England is still on its way
+back from the first decade. More years alone do not pass the check; what is left is the slow movement of a handful of
+relative prices (flour, raw glass, carts, the cloths) and behind it the rough plan's first year and the money stock.
