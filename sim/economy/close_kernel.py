@@ -13,13 +13,13 @@ import numpy as np
 from sim.jit import njit
 
 from . import close_kernel_cost as cost
-from .capacity_by_working import capacity_toward_working
+from .capacity_by_working import capacity_toward_working, normal_share
 from .plan_wear import covered_input_bill
 
 K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_CLOSED, K_WORKING_YEARS = range(9)
 K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(9, 18)
-# K_WORKING_WEIGHT: the share of a plantless producer's new capacity taken from the runs it worked (capacity_by_working.py), the
-# rest from its sales and losses; K_WORKING_SHARE: the share of that rule's gap closed a year; K_COIN_ON_WORKING: how far the coin
+# K_WORKING_WEIGHT: the share of a producer's new capacity (without plant) or of the plant it wants (with plant) taken from the runs it
+# worked (capacity_by_working.py), the rest from its sales and losses; K_WORKING_SHARE: the share of that rule's gap closed a year; K_COIN_ON_WORKING: how far the coin
 # a producer keeps follows the share of its capacity that works (1) and not its whole capacity (0); K_EXCESS_PAYOUT: the share of
 # the coin a producer holds beyond what it keeps that it pays its owners in a year (1: all of it); K_COIN_CHARGE: how much of
 # the interest on the coin a run ties up counts in the run's cost (coin_cost.py; 0: none).
@@ -331,9 +331,12 @@ def close_rows(rows, constants,
         if not has_plant and not shedding and lost <= 0.0:
             if pays > 0.0 and new_cap > 0.0 and math.isfinite(wanted_sales) and math.isfinite(pays):
                 new_cap = new_cap + min(max(0.0, wanted_sales / pays - new_cap), constants[K_CHANGE] * new_cap)
+        # the share of its workplaces that works when the price just covers the full cost of a run: with plant, the running cost and the
+        # charge on the plant, so more of them than without (the running cost alone is under the price by that charge)
+        plant_charge = cost.capital_charge(plant_now, life, rate) if has_plant and not no_rate else 0.0
+        by_working = capacity_toward_working(cap_old, worked, normal_share(cost_run, plant_charge, constants[K_SPREAD]),
+                                             constants[K_WORKING_SHARE], constants[K_CHANGE])
         if not has_plant:
-            by_working = capacity_toward_working(cap_old, worked, cost.share_working(1.0, 1.0, constants[K_SPREAD]), constants[K_WORKING_SHARE],
-                                                 constants[K_CHANGE])
             new_cap += constants[K_WORKING_WEIGHT] * (by_working - new_cap)
         working_cost = variable_now
         coin_scale = new_cap * (1.0 - constants[K_COIN_ON_WORKING] * (1.0 - pays))
@@ -351,9 +354,14 @@ def close_rows(rows, constants,
             wanted = plan_runs(q_out, q_val, scratch, stock, row, count, sales_expected, yield_, cost_run, constants[K_MONTHS],
                                constants[K_CLEARING], slot_is_output, recipe)
             planned = cost.within_a_years_change(worked, np.nan, cap_old, worked if math.isinf(wanted) else wanted, constants[K_CHANGE])
+            planned += constants[K_WORKING_WEIGHT] * (by_working - planned)       # the plant wanted, read from the runs worked (capacity_by_working.py)
             gap = planned - new_cap
             investment = 0.0 if gap <= 0.0 else min(gap, constants[K_INERTIA] * max(0.0, wear))
             replacement = min(investment, max(0.0, wear))
+            if constants[K_WORKING_WEIGHT] > 0.0 and plant_now > 0.0 and math.isfinite(plant_now):
+                # the plant it builds itself: beyond the wear, what the coin it holds over its working coin pays for; the rest waits on a loan
+                own = min(investment, max(replacement, max(0.0, currency_cash - target) / plant_now))
+                replacement += constants[K_WORKING_WEIGHT] * (own - replacement)
             growth = investment - replacement
         # _expansion
         kind = REQUEST_NONE

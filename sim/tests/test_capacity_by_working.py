@@ -1,10 +1,12 @@
-"""capacity_by_working.capacity_toward_working: a producer's capacity moved toward what the runs it worked call for."""
+"""capacity_by_working: a producer's capacity moved toward what the runs it worked call for, and the share of its
+workplaces that works when the price just covers a run's full cost."""
 
 QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.capacity_by_working import capacity_toward_working
+from sim.economy.capacity_by_working import capacity_toward_working, normal_share
+from sim.economy.producers import COST_SPREAD_WITHIN_PRODUCER, share_working
 
 NORMAL_SHARE = 0.5      # half the workplaces work when a run brings in what it costs, in these cases
 
@@ -50,6 +52,25 @@ class CapacityTowardWorking(unittest.TestCase):
 
     def test_no_normal_share_leaves_the_capacity_as_it_is(self):
         self.assertAlmostEqual(capacity_toward_working(100.0, 60.0, 0.0, 0.2, 0.25), 100.0)
+
+
+class NormalShare(unittest.TestCase):
+    SPREAD = COST_SPREAD_WITHIN_PRODUCER
+
+    def test_without_plant_it_is_the_share_that_works_when_a_run_brings_in_what_it_costs(self):
+        self.assertAlmostEqual(normal_share(40.0, 0.0, self.SPREAD), share_working(1.0, 1.0))
+
+    def test_with_plant_it_is_the_share_that_works_when_the_price_covers_the_running_cost_and_the_charge(self):
+        self.assertAlmostEqual(normal_share(40.0, 10.0, self.SPREAD), share_working(50.0, 40.0))
+
+    def test_a_charge_on_plant_raises_it(self):
+        self.assertGreater(normal_share(40.0, 10.0, self.SPREAD), normal_share(40.0, 0.0, self.SPREAD))
+        self.assertGreater(normal_share(40.0, 20.0, self.SPREAD), normal_share(40.0, 10.0, self.SPREAD))
+
+    def test_a_cost_or_a_charge_that_is_nothing_or_no_number_gives_the_share_without_plant(self):
+        plain = normal_share(40.0, 0.0, self.SPREAD)
+        for running, charge in ((0.0, 10.0), (float("inf"), 10.0), (float("nan"), 10.0), (40.0, float("nan")), (40.0, float("inf")), (40.0, -3.0)):
+            self.assertEqual(normal_share(running, charge, self.SPREAD), plain)
 
 
 if __name__ == "__main__":

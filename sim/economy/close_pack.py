@@ -60,9 +60,10 @@ def constants_array_for_clearing() -> np.ndarray:
     expected price follows what the market paid by a smaller share a year and takes no step on its unsold stock; it keeps
     the pull toward what the good costs to make (producers.REGRESSIVE_EXPECTATION_WEIGHT), which is how a fall in wages
     reaches prices: without it wages fall, prices stay, and buyers' incomes buy less every year. Its expected
-    sales only follow what it sold (no share of the market's unmet demand added when it sells out), by the smaller share. A producer with no plant moves its capacity toward what the runs it worked call for
-    (capacity_by_working.py) and not by its sales and losses; the coin a producer keeps follows the share of its
-    capacity that works, so workplaces standing idle hold none, and what it holds beyond that is paid out a share a year.
+    sales only follow what it sold (no share of the market's unmet demand added when it sells out), by the smaller share.
+    A producer moves its capacity (with plant: the plant it wants) toward what the runs it worked call for
+    (capacity_by_working.py) and not by its sales and losses; the coin a producer keeps follows the share of its capacity
+    that works, so workplaces standing idle hold none, and what it holds beyond that is paid out a share a year.
     A run's cost counts the interest on the coin its inputs and hours tie up (coin_cost.py)."""
     constants = constants_array()
     constants[K_EXPECT] = EXPECTATION_SHARE_MOVED_UNDER_CLEARING
