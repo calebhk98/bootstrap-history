@@ -266,8 +266,11 @@ would carry the same gap twice, the duplication that `Complaints/closed/405` clo
 ## Rule sets
 
 The rules of the year that can be swapped are gathered in `sim/economy/rule_sets.py`. A `RuleSet` names the rule each
-of these runs: the hold on a producer's planned runs, the producers' labour bids, the labour clearing, the goods
-clearing, the households' later rounds and the numbers of the producers' close. A setup names its set
+of these runs (the file lists them, one field a rule): among them the hold on a producer's planned runs, the producers'
+labour bids, the labour clearing, the goods clearing, the households' later rounds, the numbers of the producers'
+close, what a run's tied-up coin costs, how input orders follow the hours hired, what merchants learn and may borrow,
+what the market memory reads as a making cost, the return the hours kept for the plot are read from, and the rate
+the economy remembers. A setup names its set
 (`EconomySetup.rule_set`) and a phase asks `rule_sets.of(setup)` for its rule, so no phase tests a name and a third set
 is one entry in that file. An economy's record saves the set it opened on and a resumed economy keeps it; a game's
 configuration may name one (`economy_rule_set`, read in `sim/markets/port_setup.py`), else a game opens on `search`.
@@ -281,10 +284,15 @@ of the way to it, the same share up and down:
   that slice is worth (`labour_demand.py`), so the wage and the hours are found together. Stock it holds beyond its
   target takes runs off the schedule at every wage and does not cap it, and a working producer's planned runs are
   raised to what the schedule would staff, so the hours it hires at a lower wage make their runs; a recipe that must
-  buy inputs keeps its plan, which sized its orders. Each (trade, area) pays one wage: last year's moved a share
-  toward the wage where the hours offered meet the hours wanted, never under the floor
-  (`sim/labour/market/clearing_value.py`, `wage_step.py`, `hires_at_wage.py`). There are no rounds of search and no
-  ask that drifts. Poaching, training, switching and migration are the labour core's own, as before.
+  buy inputs has its orders re-sized to the runs the hired hours make (`input_orders_after_hiring.py`). A run's cost
+  counts the interest on the coin it ties up (`coin_cost.py`). Each (trade, area) pays one wage: last year's moved a
+  share toward the wage where the hours offered meet the hours wanted; where the least an hour is sold for rises above
+  the wage, the wage climbs to it by the same share (`sim/labour/market/clearing_value.py`, `wage_step.py`,
+  `hires_at_wage.py`). There are no rounds of search and no ask that drifts. Poaching, training, switching and
+  migration are the labour core's own, as before.
+- **Households' hours.** A household keeps for its plot every hour the plot takes while the crop is worth the wage,
+  and fewer above it (`plot_hours_value.py`); under `search` the plot gets the hours a falling return keeps and the
+  hours nobody hired.
 - **Goods.** Each market trades at one price (`goods_clear_one_price.py`): the price where the buyers' schedules meet
   the sellers' supply, moved no further from last year's than a year allows (`price_step.py`); at a price held short
   of the clearing one the long side goes short (`goods_market.clear_at_price`). A producer's stock is offered along a
@@ -292,21 +300,32 @@ of the way to it, the same share up and down:
   less the more it holds beyond it, down to what a unit is worth carried to next year and no lower, and more as the
   stock is drawn down (`stock_supply.py`). A good that cannot be kept a year is let go in full at the expected price
   and by the share of workplaces a lower price still pays under it (`fresh_supply.py`). A market's first price is
-  measured from what its producers expect. Sellers do not re-price inside the year and households have no later
-  rounds.
+  measured from what its producers expect. Where the buyers' wants step down at the most some bid pays (a mint's price
+  for the coin metal) from more than is on offer to less, the market clears at that price and the bids that end there
+  take what the buyers who would pay more leave. A market that trades nothing quotes what its sellers ask. Sellers do
+  not re-price inside the year and households have no later rounds.
+- **What a market remembers.** In a year a market traded nothing its memory reads a making cost only for a good some
+  recipe makes alone; a joint product has none, and its market keeps the price it had (`making_cost_alone.py`).
+- **Credit and merchants.** The rate the economy remembers moves a share of the way to the rate the year's lending
+  cleared at (`rate_step.py`). Merchants learn a market's volume as what was delivered and what buyers wanted and did
+  not get (`merchant_volume_news.py`), and the loan a merchant asks for its carriers' wages is held to the leverage
+  its cargo loans are held to (`merchant_wage_loans.py`).
 - **Producers.** A producer plans the runs that pay at the price it expects, less a share of the stock it holds
   beyond its target, and is not held to its expected sales. Its expected price follows what the market paid, by a
   smaller share a year than under `search`, and keeps the pull toward what the good costs to make, which is how a
   change in wages reaches prices; it takes no step on unsold stock and adds no share of unmet demand to its expected
   sales. Without plant its capacity moves toward the capacity at which the runs it worked would be the normal share
   of its workplaces (`capacity_by_working.py`); the coin it keeps follows the share of its capacity that works, and
-  what it holds beyond that is paid out a share a year (`close_pack.constants_array_for_clearing`).
+  what it holds beyond that is paid out a share a year (`close_pack.constants_array_for_clearing`). With plant, the
+  plant it wants follows the runs it worked by the same rule, at the share that works when the price covers the
+  plant's charge as well; it builds from coin it holds beyond what it keeps as well as on loans, and the coin for
+  the plant it means to rebuild is set aside before runs and inputs (`plant_coin.py`).
 
-Plant, entry, exit and bankruptcy are the same rules in both sets. Measure a set on the hand-built economy with
+Entry, exit and bankruptcy are the same rules in both sets. Measure a set on the hand-built economy with
 `python3 sim/simulator.py spin-up-trace --fixture stationary --rules clearing --twin --years 130`, and on a
 civilisation with `python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages`; what the
-clearing set is held to on the hand-built economy is `sim/tests/test_economy_rest_smoke.py`, and where it stands on
-England is Complaint 473's latest update.
+clearing set is held to on the hand-built economies is `sim/tests/test_economy_rest_smoke.py` and
+`sim/tests/test_economy_rest_plant_smoke.py`, and where it stands on England is Complaint 473's latest update.
 
 ## Heuristics
 

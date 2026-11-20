@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the three-tile economy it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, all passing). On England it no longer slumps or blows up (Update 40): output, hours hired and unmet need end inside the settle tolerance, the price level and a handful of prices do not, so England still fails `spin_up_settled` on `clearing` and games still open on `search`. What is left is distance, not unsteadiness: the designed opening leaves about a fifth of the hours on offer unhired, the clearing set hires them at a much lower wage, and the years of the spin-up are not enough to finish getting there. On `search` the readings of Update 38 stand. Next, per the passnote's section 6h.
+**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England it no longer slumps, starves or loses its mint, over the spin-up or over a run several times as long (Update 42): hours hired, unmet need and, in nearly every ensemble member, output end inside the settle tolerance; the price level, the rate, stock and the watched prices end near it and miss it, so England still fails `spin_up_settled` on `clearing` and games still open on `search`. What is left: the spin-up ends while England is still growing from the rough plan to where it rests, the merchant is broke, and household work swings the hours on offer over decades. On `search` the readings of Update 38 stand. Next, per the passnote's section 6j.
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -2180,3 +2180,86 @@ jumped several-fold in single years.
   `Complaints/reports/473-handoff/probes/opening_income_probe.py england_1300 2`), on either rule set.
 - The price level jumps in single years where a thin market opens or closes, and bread's market is the least steady
   of the watched goods.
+
+## Update 42: a long run of England found eight more rule faults on the clearing set; it no longer slumps, and the settle check is closer (branch economy-rests-with-clearing-rules)
+
+**How they were found.** England was run for several times the spin-up's length
+(`python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --years 150 --csv out.csv`). On Update 41's
+rules it grew to nearly full hiring over the first decades, lost coin every year, and after about a century hiring
+halved in a single year. Each fault below was traced from such a run with scratch probes (no command in the tree prints
+one market's bids and offers, the parts of the wage floor, a tile's need prices or a year's loan requests), fixed
+behind the rule-set seam with the search set left as it was, and tested one function at a time.
+
+1. *A mint buys at its own price* (`goods_clear_one_price.bid_top_at`, `goods_market.clear_at_price` with
+   `at_a_bid_top`, `goods_market_ration.ration_after_first`; `test_goods_one_price_clearing.py`,
+   `test_goods_clear_at_price.py`, `test_goods_market_ration_after_first.py`). The search for the clearing price
+   stopped a hair above the most a bid pays, so a buyer with a hard top bought nothing: the mint struck no coin in most
+   years while the metal piled up unsold with its makers. A market now clears at a bid's top where the wants step
+   down there; the buyers who would pay more are served first and the bids that end at the price share the rest.
+2. *A market that traded nothing quotes what its sellers ask* (`goods_clear_one_price.untraded_quote`, the curves'
+   `asking_price`). It left no quote, so its memory took the good's making cost whole (fault 5), and a price the
+   year's limit held under the sellers' ask could never climb back to it.
+3. *The wage climbs to its floor* (`wage_step.symmetric_wage`, `clearing_value.clear_one_at_one_wage`;
+   `test_labour_symmetric_wage.py`, `test_labour_clear_at_one_wage.py`). The floor is the worth of an hour on the
+   family plot at the prices of what the plot grows; when a need's price jumped, the floor rose above the wage, the
+   wage jumped to it and employers capped under it hired nobody. The wage now heads for the floor by the share it moves
+   a year, and an employer that can pay the wage paid still hires.
+4. *The hours kept for the plot follow what the plot grows* (`plot_hours_value.py`, `RuleSet.plot_return_for_hours_kept`;
+   `test_plot_hours_value.py`). `households_own.own_production` grows the same crop for every hour the plot takes, but
+   the hours kept for it were decided on a return that falls with the hours, so the plot got little more than the hours
+   nobody hired. A small swing in hiring then swung the staple grown at home by about a third, and the staple's market
+   took the swing as a jump in what households had to buy. A household now keeps every hour the plot takes while its
+   crop is worth the wage, and fewer above it. The crop's worth is averaged over the needs the plot grows, which differ
+   several-fold in worth an hour; keeping them need by need is not built.
+5. *A joint product has no making cost of its own* (`making_cost_alone.py`, `RuleSet.memory_making_costs`,
+   `RuleSet.memory_cost_of_costless`; `test_making_cost_alone.py`). A recipe's cost is split among its outputs by
+   what they sell for, so read back as the price of an output nobody traded it is that output's own remembered price
+   times the recipe's cost over its revenue: the price shrank every such year and ended at nothing. Lard did this; the
+   food need then priced at nothing in the years lard was on offer, households set nothing aside for food and went
+   hungry, and the plot's worth and the wage floor swung with it. The memory now reads a making cost only for a good
+   some recipe makes alone, and a market of a good with none keeps the price it had.
+6. *A merchant's wage loan is held to its leverage* (`merchant_wage_loans.py`, `carriage_funding.loan_within_leverage`,
+   `RuleSet.merchant_wage_loan`; `test_carriage_funding.py`). The loan for its carriers' wages was the whole wage bill
+   of the carriage its plan wanted; with volumes read from unmet demand (Update 41's fourth fix) that was more than
+   every saver held. It took all of it, the rate went to its ceiling for a year, and hiring fell the year after.
+7. *The remembered rate moves a share of the way to the year's cleared rate* (`rate_step.py`,
+   `RuleSet.rate_remembered`; `test_rate_step.py`), as a wage does. The year's loans are still struck at the cleared
+   rate. This adds one labelled heuristic (`RATE_SHARE_MOVED_PER_YEAR`).
+8. *The plant economy's fewer-people check reads the resting years* (`test_economy_rest_plant_smoke.py`). The plant
+   stock itself swings by a few per cent over about its own life, in the unshocked run too, so one year's reading sat
+   on a phase of that swing. Over a longer run the plant with a tenth fewer people ends lower by about half the fall
+   in people (the mint's need for the metal follows the money stock, which does not fall with the people); a scratch
+   runner, no command in the tree.
+
+**Tried and dropped: rebuilding the designed opening from the wages and prices its own spin-up ended at.** A scratch
+runner fed the end state's wages, prices and rate back into `open_economy` for three passes. It diverges: the designed
+opening sizes producers from what households spend at the wages it is given, so a lower wage gives it a smaller
+economy, where the years' rules hire more at a lower wage. A game opens on the end of the spin-up, so the years are
+what corrects the rough plan; the work went into giving the years a place to rest.
+
+**England now.** `python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages --ensemble 8`
+(from a worktree pinned to the commit): hours hired and unmet need end inside the tolerance in every member and output
+in nearly every one; the price level, the rate, stock and the watched prices end near it and miss it in most members,
+so England still fails `spin_up_settled` and games still open on `search`. The same command's trend column shows
+hours and output still rising through the measured years: the spin-up ends before England has finished growing to
+where it rests. The long run (`--years 150`) has no slump, no year without coin struck and no rate at its ceiling;
+unmet food need is nothing or next to it.
+
+**Found, not fixed.**
+- *The spin-up is shorter than England's way to rest.* Hiring grows for some decades from the rough plan; whether more
+  first-stage years (`SPIN_UP_MAXIMUM_YEARS`; `ROME_SPIN_UP_YEARS` tries a length) pass the check is being measured.
+- *Household work swings the hours on offer over decades.* More than a quarter of all hours are household work done
+  at home in the first year; the share falls by more than half over the first decades and climbs back over the next
+  century, and the hours offered for hire move against it (a scratch probe of `labour_supply.HourSupply`). Not traced:
+  `household_work_year.cohort_plan` (hand grinding against bought flour, servants against the household's budget).
+- *The merchant is still broke* (Update 41's finding stands): its coin is gone within a few years and next to
+  nothing moves between areas. Raw glass shows what that costs: its soda is hardly made at home, the makers run down
+  the stock the opening gave them, and the price climbs by the year's limit for decades.
+- *The rough plan over-sizes some goods many-fold.* Raw glass is made in the first year at many times what any later
+  year sells, and its makers start with about a year of that output in stock.
+- *The money stock still wears down, slowly.* The mint now strikes every year, but the metal made at home is under
+  the wear of the opening's money, so the stock falls toward what that output keeps up.
+- *A need prices at its cheapest good on offer, however little of it there is.* Fault 5 removed the case found; the
+  index itself (`need_basket.priced_need`) would still take a sliver of a nearly free good as the price of the need.
+- *The rate's tolerance.* The rate follows expected inflation, so a price level that drifts by a per cent or two a
+  year moves the rate by more than the check allows.

@@ -524,9 +524,44 @@ wrong (the share of hours hired, the wage against prices, coin by holder, the me
 4. Producers end holding more coin and households less than it gives them (the spare coin is paid out a share a year).
 5. The money stock wears down for decades before the mint strikes again.
 
+## 6j. Where it stands after Update 42 (read this first; it replaces 6i's list of what the opening gets wrong)
+
+**What changed.** A run of England several times the spin-up's length found eight more faults of the clearing set, each
+fixed behind the seam with a rule test (Update 42 has them): the mint was shut out at its own price; an untraded market
+left no quote; the wage jumped to its floor; the plot got only the hours nobody hired; a joint product's price decayed
+to nothing and made a need look free; the one merchant borrowed every saver's coin for wages; the rate was remembered
+whole. England no longer slumps or starves, in the spin-up or in the long run.
+
+**The opening is corrected by the years, not by a second solve.** Rebuilding `open_economy` from its own spin-up's end
+wages and prices was tried and diverges (Update 42). A game opens on the end of the spin-up, so "the opening is stable"
+means the spin-up reaches rest. It does not yet: the ensemble
+(`python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages --ensemble 8`) passes on hours
+and unmet need, nearly passes on output, and misses on the price level, the rate, stock and the watched prices; its
+trend column shows England still growing through the measured years.
+
+**How to find the next fault.** Run long (`--years 150 --csv out.csv`), look for the year something breaks or the
+quantity that drifts, then probe that market or rule in that year. Compare single runs with care: members a rounding
+error apart differ by a few points in every gap, so judge a change of that size on the ensemble.
+
 ## 7. What to do first
 
-After Update 41:
+After Update 42:
+
+1. The length of the spin-up: England grows for decades from the rough plan. Try first-stage lengths with
+   `ROME_SPIN_UP_YEARS=<first>,<trimmed>` on the ensemble command above; if a longer stage passes, raise
+   `SPIN_UP_MAXIMUM_YEARS` (`sim/markets/spin_up.py`; the stage stops early on one quiet year, which may need to
+   become a few) and re-time a fresh opening.
+2. The merchant: its coin is gone in a few years and its stock is never offered (`merchants_plan.orders` skips stock on
+   a tile one of its routes starts from; `opening._open_merchants` makes one merchant for England). Imports stop with
+   it, and goods that need an input from abroad climb in price for decades.
+3. Household work: why the hours done at home fall by more than half and then climb back over a century
+   (`household_work_year.cohort_plan`, `household_grinding`, `household_servants`), and whether it has a rest state.
+4. What the rough plan over-sizes (a first year's output many times what later years sell): list them from the
+   stages rows, find the opening rule that sizes each.
+5. The realism check, then the Norse lands and Han, then the game's set, as listed under Update 41 below (its items 4
+   and 5).
+
+After Update 41 (kept for the record; its items 1 and 3 are answered in 6j, its item 2 was tried another way and dropped):
 
 1. Read whether England rests when simply given the years
    (`spin-up-trace --civ england_1300 --rules clearing --years 150 --csv out.csv`, then the last years' moves). If
