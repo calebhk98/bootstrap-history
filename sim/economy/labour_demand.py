@@ -54,6 +54,8 @@ def slice_worths(capacity_runs: float, most_runs: float, revenue_per_run: float,
     for index in range(slices):
         first_run = held_back + index * width
         share = (first_run if first_run > 0.0 else 0.5 * width) / capacity_runs
+        if not 0.0 < share < 1.0:       # a sliver of runs at the very end of the workplaces: no workplace is left to price
+            break
         room = revenue_per_run / cost_multiple_at(share) - other_cost_per_run
         if room <= 0.0:
             break
