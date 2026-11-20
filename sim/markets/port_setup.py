@@ -181,6 +181,11 @@ GAME_RULE_SET = RULE_SET_SEARCH        # the rule set a game's economy opens on 
 RULE_SET_SETTING = "economy_rule_set"   # the configuration key that names one (sim/economy/rule_sets.py lists them)
 
 
+def rule_set_configuration(rule_set) -> dict:
+    """The configuration entries that open a game's economy on `rule_set`; none for no name (the shipped set)."""
+    return {RULE_SET_SETTING: rule_set} if rule_set else {}
+
+
 def game_rule_set(configuration) -> str:
     """The rule set the game's economy opens on: the one its configuration names, else the shipped one."""
     return str(configuration.get(RULE_SET_SETTING) or GAME_RULE_SET)

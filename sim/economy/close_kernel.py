@@ -20,8 +20,9 @@ K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_CLO
 K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(9, 18)
 # K_WORKING_WEIGHT: the share of a plantless producer's new capacity taken from the runs it worked (capacity_by_working.py), the
 # rest from its sales and losses; K_WORKING_SHARE: the share of that rule's gap closed a year; K_COIN_ON_WORKING: how far the coin
-# a producer keeps follows the share of its capacity that works (1) and not its whole capacity (0).
-K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING = range(18, 21)
+# a producer keeps follows the share of its capacity that works (1) and not its whole capacity (0); K_EXCESS_PAYOUT: the share of
+# the coin a producer holds beyond what it keeps that it pays its owners in a year (1: all of it).
+K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT = range(18, 22)
 
 STATE_OK, STATE_CRISIS, STATE_ILLIQUID, STATE_INSOLVENT = 0, 1, 2, 3
 REQUEST_NONE, REQUEST_EXPAND, REQUEST_WORKING_CAPITAL = 0, 1, 2
@@ -442,7 +443,7 @@ def close_rows(rows, constants,
         elif status == STATE_CRISIS:
             pay = max(0.0, money_cash - commitments[row] - target)
         else:
-            pay = max(pay, max(0.0, money_cash - kept_cash))
+            pay = max(pay, constants[K_EXCESS_PAYOUT] * max(0.0, money_cash - kept_cash))
         if status != STATE_ILLIQUID and assets_total - debt[row] < 0.0:
             status = STATE_INSOLVENT
         state[row] = status

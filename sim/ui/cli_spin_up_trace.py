@@ -55,7 +55,8 @@ def cmd_spin_up_trace(args):
     if args.stages and args.ensemble:
         return _print_ensemble(args)
     _tree, _prices, nodes, _wages, _goods = load()
-    game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(args.civ or default_civilisation_id()))
+    game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(args.civ or default_civilisation_id()),
+               cfg=markets_api.rule_set_configuration(args.rules))
     if args.stages:
         return _print_stages(game, args.csv)
     rows = markets_api.spin_up_trace(game, args.years)
@@ -68,7 +69,7 @@ def cmd_spin_up_trace(args):
 def _print_ensemble(args):
     """Replay the opening --ensemble times with rounding-level perturbations and print the distribution of the end gaps."""
     civilisation_id = args.civ or default_civilisation_id()
-    results = run_ensemble(civilisation_id, args.ensemble, args.jobs)
+    results = run_ensemble(civilisation_id, args.ensemble, args.jobs, args.rules or None)
     print(format_ensemble(civilisation_id, results))
     if args.csv:
         write_ensemble_csv(results, args.csv)

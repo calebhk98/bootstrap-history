@@ -1179,8 +1179,8 @@ def main():
     subparser.add_argument("--fixture", default="", choices=("small", "stationary"),
                            help="step the hand-built fixture economy instead of a civilisation's spin-up")
     subparser.add_argument("--years", type=int, default=60, help="years to run (default 60; ignored with --stages)")
-    subparser.add_argument("--rules", default="", help="with --fixture: the rule set the economy runs on (a name in "
-                           "sim/economy/rule_sets.py; default: the setup's own)")
+    subparser.add_argument("--rules", default="", help="the rule set the economy runs on (a name in "
+                           "sim/economy/rule_sets.py; default: the fixture's own, or the one a game ships with)")
     subparser.add_argument("--twin", action="store_true", help="with --fixture: step a second copy whose people differ "
                            "by a rounding-sized share beside it and print how far apart the two are each year")
     subparser.add_argument("--stages", action="store_true", help="replay the spin-up as the run takes it: the first stage "
