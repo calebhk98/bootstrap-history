@@ -573,13 +573,18 @@ tolerance on the median; a quarter of the members pass outright.
 
 **What is left, in the order the table gives.**
 1. The price level. In most members that miss it, one market does it: the gaming table trades slivers at many
-   times its opening price after the year no tallow candle was made. Trace upstream first (why candle makers work
-   at a loss for years while the tables would pay far more for a candle: the makers plan on an expected price that
-   trails, and the tables order only for the runs they staffed), and say plainly in the report what the level does
-   with a market that has all but closed (it counts the whole opening quantity at the last traded price,
-   `year_close.remember_basket_price_level`); changing that is the owner's call, since the settle check reads it.
+   times its opening price after the year no tallow candle was made (traced in Update 46). Do not make the
+   memory of a rationed market move faster: both forms were tried and set the whole economy swinging (Update 46).
+   What is open: the rough plan prices fat, a scarce by-product, at its cost share, so tallow and candles open far
+   too cheap (look at how `opening_runs.unit_costs` values a co-product and at the first years of
+   `civ_good_years`-style probes of fat, tallow and the candle); a recipe stops whole for want of a trifling input
+   (the tables pay a crew they cannot use: `plan_kernel.plan_rows` anchors on the runs staffed); and the level
+   counts the whole opening quantity of a good at the last price a sliver traded at
+   (`year_close.remember_basket_price_level`), which is the owner's call, since the settle check reads it.
 2. The members that miss by a hair on one or two quantities: look at their by-good tables, not at the medians.
-3. Lard opens with no capacity; the merchants' coin runs down; the home metal is under the wear.
+3. Lard opens with no capacity; the merchants' coin runs down; the home metal is under the wear, and in a long run
+   the shrinking coin brings a slump about a century in (Update 46): that one needs the households' wealth rule
+   (owner questions 8 and 13), not an opening change.
 4. Realism of the settled state: firewood and steel a head against the research note, the poppy, then the needs
    data and the ground forest recipes take (owner question 16).
 5. The spin-up's own stop rule (the game's spin-up stops its first stage on one quiet year; the replay does not),

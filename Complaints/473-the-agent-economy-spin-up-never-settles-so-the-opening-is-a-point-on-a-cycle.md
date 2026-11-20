@@ -2447,3 +2447,43 @@ year either way).
   it, so the settled households burn and buy several times what any pre-industrial people did; sourced figures to
   check against are in `Complaints/reports/research-fuel-and-iron-per-head.md`. Poppy for the health need is the
   same kind of fault (owner question 16).
+
+## Update 46: the market behind the price level traced; a faster memory for rationed markets tried and reverted; the long run measured (branch economy-rests-with-clearing-rules)
+
+**The price level's movers, by member** (the last table of `spin-up-trace --civ england_1300 --rules clearing --stages
+--ensemble 8 --jobs 4`): in nearly every member that misses on the price level one good does it, an hour at the
+gaming table. Traced with scratch probes of the good, its makers by tile, the trade's hours by recipe and the candle
+market's bids and offers as it clears:
+- The tables staff their crews every year and then run a fraction of the runs, because each hour of play takes a
+  little of a tallow candle and there are not enough. They pay the crew all the same and lose coin.
+- The candle market is rationed many times over: the price that would clear it is many times last year's. The year's
+  price rises by the most a year allows, and the market's memory then takes only a sliver of that rise, because the
+  trade is small against what buyers wanted at the old price (`year_goods.remembered_price`,
+  `market_memory_asks.memory_reference_volume`). So the price makers plan on climbs a few per cent a year while
+  tallow, whose fat is a scarce by-product the cost table prices far too low, climbs several times as fast. Candle
+  makers work at a loss until, one year, none is made, and no hour is played that year.
+- After that the tables' market trades slivers at many times its opening price, and the price level counts the
+  whole opening quantity of the good at that price (`year_close.remember_basket_price_level` counts every basket
+  good that traded recently, however little).
+
+**Tried and reverted: the memory takes a rationed market's price at the year's pace.** Two forms, each behind the
+seam with a rule test: the year's price taken whole after any trade, and taken whole only where it sat at the edge
+of the year's allowed move. Both set the whole economy swinging (hours, output, the rate and the price level moving
+by several per cent a year in every member, where the committed rules hold them under the tolerance on the median).
+The weighting by volume is what steadies the ordinary markets: a price that runs at the year's full pace overshoots
+before plant and hands can follow. Not kept; the code is not in the tree.
+
+**The long run** (`spin-up-trace --civ england_1300 --rules clearing --years 150 --csv <file>`): steady from about
+the twentieth year for about ninety years, with a few per cent of hours unsold. Then the slump of Update 43 comes
+again, later and milder than before: the coin stock has shrunk by more than a third (the home metal stays under the
+wear), households' coin has run down to its floor, coin moves from producers back to households, the wage falls by
+about two fifths over a decade and about a tenth of hours go unsold before it turns. So the hidden years are clear
+of it, and a long game without trade is not: this is the owner's questions 8 and 13 (what households hold their
+wealth in, and whether coin is lost that nothing replaces), and it wants the households' wealth rule changed, which
+the earlier attempt showed is more than an opening change.
+
+**What is left for the check.** Three kinds of member miss: by a hair on one or two quantities; on the price level
+through the gaming table; and one broadly. The second is not a fault of the settle rules. Either the tables' chain
+is made to work (the rough plan prices a scarce by-product at its cost share, and a recipe stops whole for want of a
+trifling input), or the price level stops giving a market that has all but closed its full opening weight. The
+second changes a quantity the settle check reads, so it is put to the owner, not done.
