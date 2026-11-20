@@ -12,7 +12,7 @@ from typing import List, Optional, Tuple
 
 from sim.constants import declare
 
-from . import coin_cost, plant_coin, practice, unit_cost
+from . import coin_cost, plant_coin, practice, unit_cost, unkept_goods
 from .labour_ceilings import joint_labour_ceilings
 from .producers import (COST_SPREAD_WITHIN_PRODUCER, Producer, expected_input_prices, kept_output_prices, live_input_prices,
                         live_wages, next_years_runs_ceiling, paid_input_prices, runs_for_stock, share_working, with_practised_yield)
@@ -74,6 +74,13 @@ def most_runs_wanted(producer: Producer, cash: float, paid_now_per_run: float, h
     return max(0.0, most)
 
 
+def sales_the_stock_is_read_against(runs_that_pay: float, expected_sales: float, output_cannot_be_kept: bool) -> float:
+    """The sales a producer's stock is read against when its schedule is drawn: the runs that pay for a maker of goods
+    that keep (its stock alone holds its runs); the sales it expects for one whose goods do not keep and that expects
+    some (it has no stock to hold them: unkept_goods.py)."""
+    return expected_sales if output_cannot_be_kept and expected_sales > 0.0 else runs_that_pay
+
+
 def runs_held_back_for_stock(runs_that_pay: float, runs_its_stock_calls_for: float) -> float:
     """Runs a producer leaves unmade because its stock stands above its target: the runs that pay at the going wage less
     the runs its stock calls for (`producers.runs_for_stock` read against the runs that pay); none where its stock
@@ -107,7 +114,9 @@ def schedule(producer: Producer, recipe: Recipe, view, cash: float, coin_charge:
                      for good, quantity in recipe.inputs.items() if good in paying_prices)
     paid_now = unit_cost.input_cost_per_run(recipe, paying_prices, wages) + labour_cost
     paying = producer.capacity_runs * share_working(revenue, run_cost)
-    for_stock = runs_for_stock(dataclasses.replace(producer, expected_sales=paying), recipe, view, run_cost, outputs)
+    held_to = sales_the_stock_is_read_against(paying, producer.expected_sales,
+                                              producer.expected_sales > 0.0 and unkept_goods.cannot_be_kept(recipe, view.setup.specs))
+    for_stock = runs_for_stock(dataclasses.replace(producer, expected_sales=held_to), recipe, view, run_cost, outputs)
     held_back = runs_held_back_for_stock(paying, for_stock)
     most = most_runs_wanted(producer, cash, paid_now, held_value)
     bids = []

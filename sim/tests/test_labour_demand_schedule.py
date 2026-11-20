@@ -5,7 +5,8 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.economy.labour_demand import cost_multiple_at, most_runs_wanted, runs_held_back_for_stock, slice_worths
+from sim.economy.labour_demand import (cost_multiple_at, most_runs_wanted, runs_held_back_for_stock, sales_the_stock_is_read_against,
+                                       slice_worths)
 from sim.economy.producers import OUTPUT_CHANGE_SHARE_PER_YEAR, Producer, share_working
 
 
@@ -97,6 +98,18 @@ class RunsHeldBackForStock(unittest.TestCase):
 
     def test_none_with_no_record_to_read_the_stock_against(self):
         self.assertEqual(runs_held_back_for_stock(50.0, math.inf), 0.0)
+
+
+class SalesTheStockIsReadAgainst(unittest.TestCase):
+    def test_a_maker_of_goods_that_keep_reads_its_stock_against_the_runs_that_pay(self):
+        self.assertEqual(sales_the_stock_is_read_against(80.0, 50.0, False), 80.0)
+
+    def test_a_maker_of_goods_that_do_not_keep_reads_it_against_the_sales_it_expects(self):
+        self.assertEqual(sales_the_stock_is_read_against(80.0, 50.0, True), 50.0)
+        self.assertEqual(sales_the_stock_is_read_against(40.0, 50.0, True), 50.0)
+
+    def test_one_that_expects_no_sales_yet_reads_it_against_the_runs_that_pay(self):
+        self.assertEqual(sales_the_stock_is_read_against(80.0, 0.0, True), 80.0)
 
 
 class MostRunsWanted(unittest.TestCase):

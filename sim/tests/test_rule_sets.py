@@ -36,6 +36,11 @@ class SalesHolds(unittest.TestCase):
         self.assertEqual(held.shape, (3,))
         self.assertTrue(numpy.isnan(held).all())
 
+    def test_hold_to_stock_alone_holds_a_maker_of_unkept_goods_to_its_expected_sales(self):
+        held = rule_sets.hold_to_stock_alone(numpy.array([3.0, 4.0]), numpy.array([False, True]))
+        self.assertTrue(numpy.isnan(held[0]))
+        self.assertEqual(held[1], 4.0)
+
     def test_expected_sales_hold_returns_its_argument(self):
         sales = numpy.array([3.0, 0.0, 5.0])
         self.assertIs(rule_sets.expected_sales_hold(sales), sales)

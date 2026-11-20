@@ -11,9 +11,9 @@ from typing import Dict
 
 import numpy as np
 
-from . import producer_exit, rule_sets, shares, workshop_count
+from . import producer_exit, rule_sets, shares, unkept_goods, workshop_count
 from . import producers_working_capital as working_capital
-from .close_kernel import REQUEST_EXPAND, REQUEST_NONE
+from .close_kernel import K_EXPECT, REQUEST_EXPAND, REQUEST_NONE
 from .close_pack import pack
 from .close_run import close_producers
 from .loan_write_offs import LoanWriteOffs
@@ -40,7 +40,16 @@ def close_producers_of_year(setup, record, view, ledger, arrays: YearArrays, pro
     columns = arrays.producers
     traded, _round_prices = ledger.market_totals()
     bundle = pack(setup, record, view, ledger, arrays)
-    answer = close_producers(arrays, bundle, share_pricer(arrays, ledger, traded), rule_sets.of(setup).close_constants())
+    rules = rule_sets.of(setup)
+    constants = rules.close_constants()
+    answer = close_producers(arrays, bundle, share_pricer(arrays, ledger, traded), constants)
+    answer.new_expected_sales[:] = rules.expected_sales_after_close(
+        answer.new_expected_sales, columns.expected_sales, bundle.revenue,
+        unkept_goods.expected_takings_per_run(
+            unkept_goods.outputs_by_slot(arrays.revenue_outputs, arrays.matrices.slot_goods, arrays.matrices.slot_is_output, columns.recipe_row),
+            columns.expected_prices, columns.yield_factor),
+        unkept_goods.rows_that_cannot_be_kept(arrays.matrices.recipes.ids, columns.recipe_row, setup.recipes, setup.specs),
+        float(constants[K_EXPECT]))
     ids = columns.ids
     ran = columns.idle_years <= 0         # the rows the close kernel ran; the others sat out the year
     exited = answer.exited

@@ -13,7 +13,7 @@ from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
 
 from . import (close_pack, coin_cost, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
                making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, plot_hours_value, rate_step,
-               servant_hours_counted)
+               servant_hours_counted, unkept_goods)
 from .setup import DEFAULT_RULE_SET as SEARCH
 
 CLEARING = "clearing"
@@ -21,7 +21,9 @@ CLEARING = "clearing"
 
 @dataclass(frozen=True)
 class RuleSet:
-    sales_the_plan_holds_to: Callable   # (each producer's expected sales in runs) -> the sales its plan holds its runs to; NaN: its stock alone holds them
+    sales_the_plan_holds_to: Callable   # (each producer's expected sales in runs, whether nothing it makes keeps a year) -> the sales its plan holds its runs to; NaN: its stock alone holds them
+    expected_sales_after_close: Callable   # (the close's expected sales, last year's, the year's takings, what a run was expected to bring in,
+                                           #  whether nothing it makes keeps a year, the share moved a year) -> each producer's expected sales in runs
     producer_labour_bids: Callable  # (setup, record, view, the year's plans, the labour bid table): the producers' bids written
     labour_clearing: Callable       # (the labour core's state, its year inputs) -> the year's clearings, the state written
     goods_clearing: Callable        # (clearing context, good, good id) -> the good's `GoodClearing`
@@ -47,16 +49,20 @@ def planned_hours_bids(_setup, _record, _view, plans, bid_table) -> None:
     plans.write_labour_bids(bid_table)
 
 
-def expected_sales_hold(expected_sales):
+def expected_sales_hold(expected_sales, _output_cannot_be_kept=None):
     """A producer plans no more runs than it expects to sell, with its stock brought toward its target."""
     return expected_sales
 
 
-def hold_to_stock_alone(expected_sales):
+def hold_to_stock_alone(expected_sales, output_cannot_be_kept=None):
     """A producer plans the runs that pay at the price it expects, less what it holds beyond its target stock spread
     over the years a stock is cleared in (more, when it holds less): the market finds the price that sells them, and
-    a pile is worked off. No sales figure holds the runs (NaN to the plan: `plan_kernel.plan_rows`)."""
-    return np.full_like(expected_sales, np.nan)
+    a pile is worked off. No sales figure holds the runs (NaN to the plan: `plan_kernel.plan_rows`), except those of a
+    maker whose goods do not keep a year, which has no stock to hold them and plans to its expected sales
+    (unkept_goods.py)."""
+    if output_cannot_be_kept is None:
+        return np.full_like(expected_sales, np.nan)
+    return unkept_goods.stock_alone_where_kept(expected_sales, output_cannot_be_kept)
 
 
 def schedule_bids_with_coin_cost(setup, record, view, plans, bid_table) -> None:
@@ -70,7 +76,7 @@ def no_respend(_setup, _record, _view, _ledger, _left_markets, _basket_of, _orde
 
 
 RULE_SETS: Dict[str, RuleSet] = {
-    SEARCH: RuleSet(sales_the_plan_holds_to=expected_sales_hold,
+    SEARCH: RuleSet(sales_the_plan_holds_to=expected_sales_hold, expected_sales_after_close=unkept_goods.expected_sales_as_closed,
                     producer_labour_bids=planned_hours_bids, labour_clearing=clear_labour_by_search,
                     goods_clearing=goods_good_clear.clear_good, goods_respend=goods_respend_year.respend,
                     close_constants=close_pack.constants_array, coin_charge=coin_cost.no_charge,
@@ -85,6 +91,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                     servant_hours_counted_on=servant_hours_counted.as_planned,
                     plot_return_for_hours_kept=plot_hours_value.return_of_the_next_hour),
     CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
+                      expected_sales_after_close=unkept_goods.expected_sales_by_takings_where_unkept,
                       producer_labour_bids=schedule_bids_with_coin_cost, labour_clearing=clear_labour_at_one_wage,
                       goods_clearing=goods_clear_one_price.clear_good_at_one_price, goods_respend=no_respend,
                       close_constants=close_pack.constants_array_for_clearing, coin_charge=coin_cost.charge_at_the_going_rate,
