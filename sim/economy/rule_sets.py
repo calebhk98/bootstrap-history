@@ -12,7 +12,7 @@ import numpy as np
 from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
 
 from . import (close_pack, coin_cost, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
-               making_cost_alone, merchant_volume_news, merchant_wage_loans, plot_hours_value)
+               making_cost_alone, merchant_volume_news, merchant_wage_loans, plot_hours_value, rate_step)
 from .setup import DEFAULT_RULE_SET as SEARCH
 
 CLEARING = "clearing"
@@ -29,6 +29,7 @@ class RuleSet:
     coin_charge: Callable           # (setup, view) -> the share of what a run pays in advance that its coin costs (coin_cost.py)
     merchant_volumes: Callable      # (deliveries by market, (market, unmet demand) pairs) -> the volume of each market merchants learn
     input_orders_after_hiring: Callable   # (setup, record, view, the year's plans, the ledger): the plans' input orders re-sized once the hours are hired
+    rate_remembered: Callable       # (the rate remembered, None for none; the rate the year's lending cleared at) -> the rate the economy remembers
     merchant_wage_loan: Callable    # (the loan a merchant wants for its carriers' wages, its capital, its debt) -> the loan it asks for (None: none)
     memory_making_costs: Callable   # (setup, record) -> {good: what it costs to make}, as the market memory reads it in a year a market traded nothing
     memory_cost_of_costless: Callable   # (a market's remembered price, None for none) -> what its memory plans from where its good has no making cost (None: nothing)
@@ -70,6 +71,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                     close_constants=close_pack.constants_array, coin_charge=coin_cost.no_charge,
                     merchant_volumes=merchant_volume_news.delivered_alone,
                     input_orders_after_hiring=input_orders_after_hiring.leave_as_planned,
+                    rate_remembered=rate_step.the_cleared_rate,
                     merchant_wage_loan=merchant_wage_loans.as_wanted,
                     memory_making_costs=making_cost_alone.of_every_good,
                     memory_cost_of_costless=making_cost_alone.no_cost,
@@ -80,6 +82,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                       close_constants=close_pack.constants_array_for_clearing, coin_charge=coin_cost.charge_at_the_going_rate,
                       merchant_volumes=merchant_volume_news.delivered_and_unmet,
                       input_orders_after_hiring=input_orders_after_hiring.resize_to_hired_hours,
+                      rate_remembered=rate_step.toward_the_cleared_rate,
                       merchant_wage_loan=merchant_wage_loans.within_leverage,
                       memory_making_costs=making_cost_alone.of_goods_made_alone,
                       memory_cost_of_costless=making_cost_alone.the_price_it_had,

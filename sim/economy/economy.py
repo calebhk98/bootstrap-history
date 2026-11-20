@@ -450,7 +450,7 @@ class Economy:
         for loan in every_loan:
             record.credit.note_lent(loan)
         if clearing.cause is None and clearing.rate is not None:
-            record.memory.set_rate(money, clearing.rate)      # a year in which nothing cleared leaves the last cleared rate
+            record.memory.set_rate(money, rule_sets.of(setup).rate_remembered(record.memory.rates.get(money), clearing.rate))      # a year in which nothing cleared leaves the rate
         rate = record.memory.rates[money]       # the opening sets one
         # a plant request lenders left unmet is offered to the savers as shares (the money they raise is plant like a loan's)
         raised = shares.raise_equity(record, money, unmet, funds, every_loan, rate, shares.rate_floor_of(setup),
