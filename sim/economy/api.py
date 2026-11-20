@@ -58,12 +58,14 @@ from .titles_moves import holdings as record_title_holdings
 from .spin_up_state import spin_up_state as year_spin_up_state
 from .year_close import rebase_basket_price_level
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
+from .rule_sets import CLEARING as RULE_SET_CLEARING, RULE_SETS, SEARCH as RULE_SET_SEARCH
 from .market_memory import PRICE_SMOOTHED_TRADE
 from .trade_wages import premium_for_training_years, trade_premium
 from sim.world import capital_market
 
 __all__ = [
     "FIXTURE_STAPLE", "FIXTURE_UNSKILLED_TRADE", "fixture_small_setup", "fixture_stationary_setup",
+    "RULE_SETS", "RULE_SET_CLEARING", "RULE_SET_SEARCH",
     "YearAccounts", "spin_up_sensitivity",
     "carriage_wear", "crop_sites", "unit_cost", "diagnostics", "household_grinding", "households", "households_work", "need_roles", "taxes", "tile_costs", "currency_from_coin_standard", "Economy",
     "price_response", "prices_at", "offered_units", "watch_tiles",

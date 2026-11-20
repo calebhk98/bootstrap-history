@@ -13,6 +13,8 @@ from .types import Fill, Offer, Pairing
 
 
 PRICE_SOLVE_STEPS = 60      # a numerical bound: halvings of the bracket the clearing price is searched in
+LOWEST_SHARE_OF_BRACKET_TOP = 1e-9   # a numerical bound: the bracket goes no lower than this share of its top (a pile many times its
+                                     # target puts the bottom at nothing, which has no logarithm)
 
 
 def supply_at(price: float, curves, posted: Sequence[Offer]) -> float:
@@ -26,6 +28,7 @@ def price_where_supply_meets(demand_at: Callable[[float], float], supply_at_pric
     """The lowest price from `lowest` to `highest` at which the units supplied (rising in the price) cover the units
     wanted (falling in it); `highest` where they do not even there, `lowest` where they do already. Found by halving
     the bracket in the log of the price."""
+    lowest = max(lowest, highest * LOWEST_SHARE_OF_BRACKET_TOP)
     if supply_at_price(lowest) >= demand_at(lowest):
         return lowest
     if supply_at_price(highest) < demand_at(highest):

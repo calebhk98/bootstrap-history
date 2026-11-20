@@ -6,7 +6,7 @@ nodes it holds; the economy only receives the recipes.
 """
 import dataclasses
 
-from sim.economy.api import (opening_market_rate, EconomySetup, carriage_wear, SiteLimit, SetupTrade, currency_from_coin_standard, goods_specs, household_grinding, households_work, need_roles,
+from sim.economy.api import (opening_market_rate, EconomySetup, RULE_SET_SEARCH, carriage_wear, SiteLimit, SetupTrade, currency_from_coin_standard, goods_specs, household_grinding, households_work, need_roles,
                              plant_builds, recipe_tile_key,
                              recipes_from_production_data, taxes, tile_costs, with_tool_wear)
 from sim.agents import api as agents_api
@@ -177,6 +177,15 @@ def opening_tiles(sim, tile_ids):
     return tile_costs.tiles_from_map(sim.map.economy_map, list(tile_ids), cropped_share, technique.toolkit.tillage_capacity)
 
 
+GAME_RULE_SET = RULE_SET_SEARCH        # the rule set a game's economy opens on unless its configuration names another
+RULE_SET_SETTING = "economy_rule_set"   # the configuration key that names one (sim/economy/rule_sets.py lists them)
+
+
+def game_rule_set(configuration) -> str:
+    """The rule set the game's economy opens on: the one its configuration names, else the shipped one."""
+    return str(configuration.get(RULE_SET_SETTING) or GAME_RULE_SET)
+
+
 def build_setup(sim, opening=None, production=None):
     """The economy's setup from the opening values (`opening_values(sim)` when none are given), with
     money counted in the economy's unit (`coin_per_unit`). `production` is the catalogue the recipes are
@@ -270,7 +279,7 @@ def build_setup(sim, opening=None, production=None):
         recipes_by_country=recipes_by_country(str(civ["id"]), opening["recipes"], partners, recipes),
         tile_owners=sim.farm.tile_owner_map(),
         world_map=world_map, improvements=dict(opening["ways"]),
-        kernels=dict(sim.bound_kernels()),
+        kernels=dict(sim.bound_kernels()), rule_set=game_rule_set(sim.cfg),
         site_limits=tuple(SiteLimit(*limit) for limit in opening["site_limits"]),
         opening_store_output={good: tuple(tuple(working) for working in entry["workings"])
                               for good, entry in sorted(opening["stores"].items()) if entry["workings"]})

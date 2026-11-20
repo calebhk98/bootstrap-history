@@ -11,7 +11,7 @@ from sim.markets.port_trace_holders import HOLDER_COLUMNS
 from sim.ui.spin_up_stages_report import format_end_gaps, header_line, row_line, write_stage_csv
 from sim.ui.spin_up_ensemble_report import format_ensemble, write_ensemble_csv
 from sim.ui.spin_up_ensemble_run import run_ensemble
-from sim.ui.spin_up_fixture_trace import FIXTURE_COLUMNS, fixture_trace, format_fixture_trace
+from sim.ui.spin_up_fixture_trace import columns_of, fixture_trace, format_fixture_trace
 
 MACRO_COLUMNS = ("year", "price_level", "wage", "unsold_hours_share", "people_unemployment", "real_output",
                  "chained_price_level")
@@ -47,10 +47,10 @@ def write_csv(rows, path, columns=MACRO_COLUMNS + HOLDER_COLUMNS):
 
 def cmd_spin_up_trace(args):
     if args.fixture:
-        rows = fixture_trace(args.fixture, args.years)
+        rows = fixture_trace(args.fixture, args.years, args.rules or None, args.twin)
         print(format_fixture_trace(rows))
         if args.csv:
-            write_csv(rows, args.csv, FIXTURE_COLUMNS)
+            write_csv(rows, args.csv, columns_of(rows))
         return 0
     if args.stages and args.ensemble:
         return _print_ensemble(args)

@@ -54,6 +54,7 @@ class EconomyRecord(OwnedRecord):
     labour: LabourRecord = field(default_factory=LabourRecord)                      # labour_record.py
     goods: GoodsRecord = field(default_factory=GoodsRecord)                         # goods_record.py
     state_budget: StateBudget = field(default_factory=StateBudget)       # the state's revenue and this year's plan
+    rule_set: str = ""                                                   # the rule set the economy opened on (rule_sets.py); empty: the setup's
     settling: bool = False                                               # in the hidden spin-up: households' spending rises as far as their wealth allows
     spin_up_result: Dict[str, Any] = field(default_factory=dict)         # how the hidden first stage ended: settled, years run, last gap (empty: no spin-up ran)
 

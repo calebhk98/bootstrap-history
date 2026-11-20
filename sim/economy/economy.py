@@ -94,10 +94,13 @@ def plant_worth_ratio(yearly_return: float, rate: float, life_years: float) -> f
 
 class Economy:
     def __init__(self, setup: EconomySetup, record: EconomyRecord = None) -> None:
-        self.setup = setup
         opening = record is None
+        if not opening and record.rule_set and record.rule_set != setup.rule_set:
+            setup = dataclasses.replace(setup, rule_set=record.rule_set)     # an economy keeps the rules it opened on
+        self.setup = setup
         if opening:
             record, area_map, carriage = open_economy(setup)
+            record.rule_set = setup.rule_set
         else:
             carriage = setup.carriage_table(record.carriage.ways, record.carriage.area_imbalance)
             area_map = setup.area_map(carriage)
