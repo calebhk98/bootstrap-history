@@ -506,8 +506,10 @@ After Update 40:
 1. Get the owner's choice among the three above, or go on with 2. For 2, find what sizes the hours on offer at the
    opening (`sim/economy/household_work_year.py` `expected_shares`, `labour_state.producers_hours_needed`,
    `households_work.expected_sold_share`) and why a fifth of them have no taker at the opening wage.
-2. Run England for a hundred years and more on the clearing set and read the last years
-   (`spin-up-trace --civ england_1300 --rules clearing --years 110 --csv`): whether it rests at all, and where.
+2. Read Update 40's two longer readings before anything else: England on the clearing set rests in its price level
+   only after about a century, as the money stock wears down to what the mint will keep up, and with the money stock
+   cut at the start the wage still slips for decades near full hiring. Trace the second: who spends rent and profit,
+   and which producers cannot add capacity when their margin is wide.
 3. The faults listed in 6h, merchants first, each reproduced on the smallest economy that shows it.
 4. The Norse lands and Han on the clearing set (not measured).
 5. Then make it the game's set (`sim/markets/port_setup.py` `GAME_RULE_SET`), run the fingerprint on `search`

@@ -2065,6 +2065,22 @@ tolerance; the price level, the interest rate and the watched prices do not. No 
 A warm year of England on the clearing set was timed inside the owner's budget of a few seconds with a scratch
 profile; no command in the tree prints a year's time for a named rule set.
 
+**Two longer readings, after the above.**
+- *A hundred and ten years* (`python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --years 110
+  --csv out.csv`). The money stock falls every year of it: coin wears and the mint strikes next to nothing, because
+  silver stays dearer than the mint pays. Prices and wages fall with the money. Only in the last few years does the
+  mint begin to strike again and the price level hold, with the wage and the hours still moving a few per cent a year.
+  So on the clearing set England does come to rest in its price level, about a century on, at a level far under the
+  opening's. The check `opening_wage_anchor`, which fails on main, says the same of the opening from the other side:
+  its money wage stands well above what the coin metal costs to make.
+- *The same spin-up started with every holder's coin cut to about what that run ended with* (a scratch runner that
+  posts `spin_up_ensemble.scaling_transfers` for every holder before the first year; no command in the tree does it).
+  The mint then strikes each year what wears and the money stock holds from the start, but wages and prices fall much
+  further than in the long run and are still falling slowly at the end, with nearly all hours hired. So the money
+  stock is not the whole of it: near full hiring the wage keeps slipping while output grows, which points at who
+  spends the surplus (rent and profit go to households whose needs are near their limits) and at producers that
+  cannot add capacity (land, plant). Not traced further.
+
 **Also found, not fixed.**
 - A producer with plant (England's salt works) follows the old plant rules under both sets: its capacity wears and is
   replaced only up to what it expects to sell, so a good that sells out at any price gets no more works.
