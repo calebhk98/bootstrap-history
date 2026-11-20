@@ -19,7 +19,7 @@ CLEARING = "clearing"
 
 @dataclass(frozen=True)
 class RuleSet:
-    sales_the_plan_holds_to: Callable   # (each producer's expected sales in runs) -> the sales its plan holds its runs to; none or less: no hold
+    sales_the_plan_holds_to: Callable   # (each producer's expected sales in runs) -> the sales its plan holds its runs to; NaN: its stock alone holds them
     producer_labour_bids: Callable  # (setup, record, view, the year's plans, the labour bid table): the producers' bids written
     labour_clearing: Callable       # (the labour core's state, its year inputs) -> the year's clearings, the state written
     goods_clearing: Callable        # (clearing context, good, good id) -> the good's `GoodClearing`
@@ -37,9 +37,11 @@ def expected_sales_hold(expected_sales):
     return expected_sales
 
 
-def no_hold_to_sales(expected_sales):
-    """A producer plans the runs that pay at the price it expects: the market finds the price that sells them."""
-    return np.zeros_like(expected_sales)
+def hold_to_stock_alone(expected_sales):
+    """A producer plans the runs that pay at the price it expects, less what it holds beyond its target stock spread
+    over the years a stock is cleared in (more, when it holds less): the market finds the price that sells them, and
+    a pile is worked off. No sales figure holds the runs (NaN to the plan: `plan_kernel.plan_rows`)."""
+    return np.full_like(expected_sales, np.nan)
 
 
 def no_respend(_setup, _record, _view, _ledger, _left_markets, _basket_of, _orders) -> None:
@@ -51,7 +53,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                     producer_labour_bids=planned_hours_bids, labour_clearing=clear_labour_by_search,
                     goods_clearing=goods_good_clear.clear_good, goods_respend=goods_respend_year.respend,
                     close_constants=close_pack.constants_array),
-    CLEARING: RuleSet(sales_the_plan_holds_to=no_hold_to_sales,
+    CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
                       producer_labour_bids=labour_demand.write_schedule_bids, labour_clearing=clear_labour_at_one_wage,
                       goods_clearing=goods_clear_one_price.clear_good_at_one_price, goods_respend=no_respend,
                       close_constants=close_pack.constants_array_for_clearing),

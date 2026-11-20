@@ -5,6 +5,7 @@ spread `producers.share_working` reads). A workplace works while a run's revenue
 workplaces, cheapest first, is worth hiring up to the wage at which its dearest workplace breaks even. Bidding the
 slices one by one lets the labour market find, inside the year, the wage and the hours together: a producer that would
 plan fewer runs at a higher wage says so in its bids, and does not wait a year to find out."""
+import dataclasses
 import math
 from statistics import NormalDist
 from typing import List, Optional, Tuple
@@ -14,7 +15,7 @@ from sim.constants import declare
 from . import practice, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .producers import (COST_SPREAD_WITHIN_PRODUCER, Producer, expected_input_prices, kept_output_prices, live_input_prices,
-                        live_wages, next_years_runs_ceiling, paid_input_prices, with_practised_yield)
+                        live_wages, next_years_runs_ceiling, paid_input_prices, runs_for_stock, share_working, with_practised_yield)
 from .types import LabourBid, Recipe
 
 LABOUR_DEMAND_SLICES = declare(
@@ -53,10 +54,12 @@ def slice_worths(capacity_runs: float, most_runs: float, revenue_per_run: float,
     return worths
 
 
-def most_runs_wanted(producer: Producer, cash: float, paid_now_per_run: float, held_input_value: float) -> float:
+def most_runs_wanted(producer: Producer, cash: float, paid_now_per_run: float, held_input_value: float,
+                     runs_its_stock_calls_for: float = math.inf) -> float:
     """The most runs the producer would staff whatever the wage: no more than a year's growth beyond its working scale,
-    what its cash and held inputs pay for, and its land."""
-    most = min(producer.capacity_runs, next_years_runs_ceiling(producer))
+    what its stock calls for (`producers.runs_for_stock` read against the runs that pay), what its cash and held
+    inputs pay for, and its land."""
+    most = min(producer.capacity_runs, next_years_runs_ceiling(producer), runs_its_stock_calls_for)
     if paid_now_per_run > 0.0:
         most = min(most, (max(cash, 0.0) + held_input_value) / paid_now_per_run)
     if producer.land_run_cap is not None:
@@ -85,7 +88,9 @@ def schedule_bids(producer: Producer, recipe: Recipe, view, cash: float) -> List
     held_value = sum(min(view.stock(producer.agent_id, good, producer.tile), quantity * producer.capacity_runs) * paying_prices[good]
                      for good, quantity in recipe.inputs.items() if good in paying_prices)
     paid_now = unit_cost.input_cost_per_run(recipe, paying_prices, wages) + labour_cost
-    most = most_runs_wanted(producer, cash, paid_now, held_value)
+    paying = producer.capacity_runs * share_working(revenue, other_cost + labour_cost)
+    for_stock = runs_for_stock(dataclasses.replace(producer, expected_sales=paying), recipe, view, other_cost + labour_cost, outputs)
+    most = most_runs_wanted(producer, cash, paid_now, held_value, for_stock)
     bids = []
     for runs, room in slice_worths(producer.capacity_runs, most, revenue, other_cost):
         ceilings = joint_labour_ceilings(recipe.labour_hours, wages, room)

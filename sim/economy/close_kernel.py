@@ -13,10 +13,15 @@ import numpy as np
 from sim.jit import njit
 
 from . import close_kernel_cost as cost
+from .capacity_by_working import capacity_toward_working
 from .plan_wear import covered_input_bill
 
 K_EXPECT, K_REGRESS, K_SPREAD, K_CHANGE, K_CLEARING, K_MONTHS, K_ASK_STEP, K_CLOSED, K_WORKING_YEARS = range(9)
 K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EPSILON, K_KEEP, K_SOLD_OUT = range(9, 18)
+# K_WORKING_WEIGHT: the share of a plantless producer's new capacity taken from the runs it worked (capacity_by_working.py), the
+# rest from its sales and losses; K_WORKING_SHARE: the share of that rule's gap closed a year; K_COIN_ON_WORKING: how far the coin
+# a producer keeps follows the share of its capacity that works (1) and not its whole capacity (0).
+K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING = range(18, 21)
 
 STATE_OK, STATE_CRISIS, STATE_ILLIQUID, STATE_INSOLVENT = 0, 1, 2, 3
 REQUEST_NONE, REQUEST_EXPAND, REQUEST_WORKING_CAPITAL = 0, 1, 2
@@ -322,8 +327,13 @@ def close_rows(rows, constants,
         if not has_plant and not shedding and lost <= 0.0:
             if pays > 0.0 and new_cap > 0.0 and math.isfinite(wanted_sales) and math.isfinite(pays):
                 new_cap = new_cap + min(max(0.0, wanted_sales / pays - new_cap), constants[K_CHANGE] * new_cap)
+        if not has_plant:
+            by_working = capacity_toward_working(cap_old, worked, cost.share_working(1.0, 1.0, constants[K_SPREAD]), constants[K_WORKING_SHARE],
+                                                 constants[K_CHANGE])
+            new_cap += constants[K_WORKING_WEIGHT] * (by_working - new_cap)
         working_cost = variable_now
-        target = 0.0 if not math.isfinite(working_cost) else working_cost * new_cap * constants[K_WORKING_YEARS]
+        coin_scale = new_cap * (1.0 - constants[K_COIN_ON_WORKING] * (1.0 - pays))
+        target = 0.0 if not math.isfinite(working_cost) else working_cost * coin_scale * constants[K_WORKING_YEARS]
         # _investment, with the producer as it was before the close
         replacement = 0.0
         growth = 0.0

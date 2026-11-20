@@ -157,8 +157,9 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
         held_value = held_value_of(row, recipe, slot_goods, inputs, tools.input_order, capacity[row], stock, market, terms)
         paid_now = market_cost + labour_cost
         affordable = (max(cash[row], 0.0) + held_value) / paid_now if paid_now > 0.0 else capacity[row]
-        chosen = min(capacity[row] * share_working(revenue, variable, spread),
-                     stock_runs(sales[row], yield_factor[row], variable, made, made_value, stock[row], expected_out, cover, clearing_years))
+        paying = capacity[row] * share_working(revenue, variable, spread)
+        held_to = paying if np.isnan(sales[row]) else sales[row]      # NaN: no sales to hold to; the stock is read against the runs that pay
+        chosen = min(paying, stock_runs(held_to, yield_factor[row], variable, made, made_value, stock[row], expected_out, cover, clearing_years))
         if last_runs[row] >= 0.0:
             step = change_share * capacity[row]
             anchor = last_runs[row]
