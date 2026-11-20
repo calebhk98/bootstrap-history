@@ -45,15 +45,18 @@ def plans(setup, record, view, reads: OfferReads, gradual: bool = False) -> Dict
     values = hour_values(setup, record, view, reads, expected) if setup.household_work else {}
     result: Dict[AgentId, Tuple[float, float, HandGround, Optional[float]]] = {}
     store = table_of(record.cohorts)
-    for cohort in store.figures(store.order()):
+    order = store.order()
+    unmet_work = store.unmet_of(setup.work_need)[order].tolist() if setup.household_work and gradual else None
+    for place, cohort in enumerate(store.figures(order)):
         cohort_id = cohort.agent_id
         if not setup.household_work:
             hired, own, ground, counted = 0.0, 0.0, (), None
         else:
             value, needed, price, ground, counted = household_work_year.work_terms_at(setup, record, view, cohort, values.get(cohort.agent_id, 0.0), gradual)
+            previous, served = (household_work_year.servant_hours_counted_on(setup, household_work_year.last_hired(cohort), unmet_work[place])
+                                if gradual else (None, None))
             hired, own, ground = household_work_year.planned_hours(needed, value, price, 0.0, ground,
-                                                                  household_work_year.whole_servant_terms(setup, cohort),
-                                                                  household_work_year.last_hired(cohort) if gradual else None)
+                                                                  household_work_year.whole_servant_terms(setup, cohort), previous, served)
         result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, ground, counted)
     return result
 

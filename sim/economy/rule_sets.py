@@ -12,7 +12,8 @@ import numpy as np
 from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
 
 from . import (close_pack, coin_cost, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
-               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, plot_hours_value, rate_step)
+               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, plot_hours_value, rate_step,
+               servant_hours_counted)
 from .setup import DEFAULT_RULE_SET as SEARCH
 
 CLEARING = "clearing"
@@ -35,6 +36,8 @@ class RuleSet:
     merchant_wage_loan: Callable    # (the loan a merchant wants for its carriers' wages, its capital, its debt) -> the loan it asks for (None: none)
     memory_making_costs: Callable   # (setup, record) -> {good: what it costs to make}, as the market memory reads it in a year a market traded nothing
     memory_cost_of_costless: Callable   # (a market's remembered price, None for none) -> what its memory plans from where its good has no making cost (None: nothing)
+    servant_hours_counted_on: Callable    # (hours of household work a cohort planned to hire last year, hours of that need it went without) ->
+                                          #  (the hours its next plan starts from, the most it counts on being served: None for whatever it plans)
     plot_return_for_hours_kept: Callable  # (priced needs, plot options, fertility, a worker's hours, people a worker keeps, hectares an hour takes by recipe,
                                           #  hectares held a worker, the state's share by good, hours the plot takes a worker) -> the return the hours kept are read from
 
@@ -79,6 +82,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                     merchant_wage_loan=merchant_wage_loans.as_wanted,
                     memory_making_costs=making_cost_alone.of_every_good,
                     memory_cost_of_costless=making_cost_alone.no_cost,
+                    servant_hours_counted_on=servant_hours_counted.as_planned,
                     plot_return_for_hours_kept=plot_hours_value.return_of_the_next_hour),
     CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
                       producer_labour_bids=schedule_bids_with_coin_cost, labour_clearing=clear_labour_at_one_wage,
@@ -92,6 +96,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                       merchant_wage_loan=merchant_wage_loans.within_leverage,
                       memory_making_costs=making_cost_alone.of_goods_made_alone,
                       memory_cost_of_costless=making_cost_alone.the_price_it_had,
+                      servant_hours_counted_on=servant_hours_counted.as_served,
                       plot_return_for_hours_kept=plot_hours_value.return_keeping_what_the_plot_grows),
 }
 

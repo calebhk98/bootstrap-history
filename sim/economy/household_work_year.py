@@ -4,7 +4,7 @@ it hires become its floor of the `household_work` need, bought from domestic ser
 import dataclasses
 from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
-from . import household_grinding, household_servants, household_urban, households_work, labour_state, titles_worked, trade_wages
+from . import household_grinding, household_servants, household_urban, households_work, labour_state, rule_sets, titles_worked, trade_wages
 from . import households_cohort
 from .household_grinding import HandGround
 from .households_cohort import Cohort
@@ -286,18 +286,28 @@ def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffe
     if not setup.household_work:
         return 0.0, 0.0, (), None
     value, needed, price, ground, counted = work_terms(setup, record, view, cohort, offers, expected, mine, gradual)
-    hired, own, by_hand = planned_hours(needed, value, price, service_price_floor, ground, whole_servant_terms(setup, cohort),
-                                        last_hired(cohort) if gradual else None)
+    previous, served = (servant_hours_counted_on(setup, last_hired(cohort), (cohort.unmet_floor_by_need or {}).get(setup.work_need, 0.0))
+                        if gradual else (None, None))
+    hired, own, by_hand = planned_hours(needed, value, price, service_price_floor, ground, whole_servant_terms(setup, cohort), previous, served)
     return hired, own, by_hand, counted
 
 
+def servant_hours_counted_on(setup, hired_last_year: float, unmet_last_year: float) -> Tuple[float, Optional[float]]:
+    """(the hours of hired household work a cohort's next plan starts from, the most it counts on being served: None for
+    whatever it plans), by the setup's rule set (servant_hours_counted.py), from the hours it planned to hire last year
+    and the hours of the household-work need it went without."""
+    return rule_sets.of(setup).servant_hours_counted_on(hired_last_year, unmet_last_year)
+
+
 def planned_hours(needed: float, value: float, price: float, service_price_floor: float, ground: HandGround,
-                  whole: Optional[Tuple[float, Optional[float], float]] = None, previous_hired: Optional[float] = None):
+                  whole: Optional[Tuple[float, Optional[float], float]] = None, previous_hired: Optional[float] = None,
+                  counted_on: Optional[float] = None):
     """(hours hired, hours done itself, grains ground by hand) from the terms of `work_terms`. With `whole` given
     (`whole_servant_terms`), each household hires a whole servant or none (`household_servants.hired_hours_whole`),
     the share able to pay falling with its budget; else the hiring is divisible. With `previous_hired` (the cohort's
     hours hired last year) the hours move `households_work.adjusted_hired_hours` of the way to the choice; None takes
-    the choice whole."""
+    the choice whole. The hours done itself are the work less the hours hired, or less `counted_on` where that is
+    given and fewer (the most it counts on being served)."""
     cost = max(price, service_price_floor)
     if whole is not None:
         households, budget_per_household, servant_year_hours = whole
@@ -306,7 +316,7 @@ def planned_hours(needed: float, value: float, price: float, service_price_floor
         hired = households_work.hired_hours(needed, value, cost)
     if previous_hired is not None:
         hired = households_work.adjusted_hired_hours(previous_hired, hired, needed)
-    return hired, households_work.own_hours(needed, hired), ground
+    return hired, households_work.own_hours(needed, hired if counted_on is None else min(hired, counted_on)), ground
 
 
 def last_hired(cohort: Cohort) -> float:
