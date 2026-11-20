@@ -79,7 +79,7 @@ class SliceWorthsWithRunsHeldBack(unittest.TestCase):
     def test_a_sliver_of_runs_left_at_the_last_workplace_is_no_error(self):
         # the overhang leaves the smallest step under the capacity: the later slices round onto the last workplace
         capacity = 1000.0
-        worths = slice_worths(capacity, capacity, self.REVENUE, self.OTHER, runs_held_back=math.nextafter(capacity, 0.0))
+        worths = slice_worths(capacity, capacity, self.REVENUE, 0.0, runs_held_back=math.nextafter(capacity, 0.0))      # no other cost: every slice leaves something
         self.assertLessEqual(sum(runs for runs, _room in worths), capacity * 1e-12)
 
     def test_a_negative_figure_holds_nothing_back(self):
