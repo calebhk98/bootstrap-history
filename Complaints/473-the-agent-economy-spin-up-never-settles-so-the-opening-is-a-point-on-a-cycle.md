@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England it no longer slumps, starves or loses its mint or its merchant over the spin-up, and the years now move the rough plan's hours by under a tenth (Update 43): hours hired, output and unmet need end inside the settle tolerance in nearly every ensemble member and the rate at or just over it; the price level, stock and the watched prices still miss, so England still fails `spin_up_settled` on `clearing` and games still open on `search`. What is left: the money stock the rough plan strikes is more than the mint keeps up (it shrinks for a century and brings a slump late in a long run), goods that cannot be kept, the one large merchant, and the spin-up's length. On `search` the readings of Update 38 stand. Next, per the passnote's section 6k.
+**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England the first decade no longer slumps, nobody goes hungry, and every settle quantity but the price level ends inside the tolerance on the ensemble's median; a quarter of the members pass the whole check, the first to do so (Update 45), so England still fails `spin_up_settled` on `clearing` in most members and games still open on `search`. What is left: the price level, moved by markets that have all but closed (the gaming table, for want of a candle) and still carry their opening weight; the members that miss by a hair; the home metal under the coin's wear; the merchants' coin; and the realism of what the settled households buy (firewood and steel a head). On `search` the readings of Update 38 stand. Next, per the passnote's section 6l.
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -2374,3 +2374,76 @@ rate and stock sit at the tolerance and pass in about half, and the watched pric
 column still shows hours and output growing through the measured years, so even that long England is still on its way
 back from the first decade. More years alone do not pass the check; what is left is the slow movement of a handful of
 relative prices (flour, raw glass, carts, the cloths) and behind it the rough plan's first year and the money stock.
+
+## Update 45: what the misses were made of; durables, the mint's first year, the trim and migration in the hidden years; the first members pass (branch economy-rests-with-clearing-rules)
+
+**The stages table now says which goods each gap is made of** (`python3 sim/simulator.py spin-up-trace --civ
+england_1300 --rules clearing --stages`, and with `--ensemble 8` the medians across members;
+`sim/markets/spin_up_by_good.py`, `sim/markets/spin_up_mix_table.py`, `sim/economy/spin_up_mix.py`). After the gaps
+it prints, for each watched good, its share of the watched spending, its largest yearly move and its part of the
+prices gap, with its trend and saw over the last stage; the goods that moved the price level, stock and output in
+the pair of years where each moved most; and the first year, the trough and the last year side by side (hours by
+trade, output by good at the opening prices, recipes whose share of a good moved). This replaced the scratch
+runners and reordered the work: what it showed was not what Update 44 expected.
+
+**What it showed.**
+- One good, the steel households buy for implements and arms, is about half of the watched spending and was most
+  of the prices gap, sawing up and down every year. Flour and bread have nearly left the market by the end
+  (households grind and bake at home), so they weigh little in that gap whatever their prices do.
+- Most of the "growth of output" over the spin-up is firewood: households move from coal and peat to wood, which
+  the measure values at the opening's price. Hours hired grow little.
+- The building trades lose nearly all their hours between the fourth and the eighth year. Nine tenths of the
+  masons' hours cut stone blocks, a long-lived good households buy as a store while they run down the coin the
+  opening gives them (the scratch probe of a trade's hours by recipe); the buying stops when the coin is spent.
+- The price level's misses are a single good in most members: an hour at the gaming table (below).
+
+**Four faults fixed on the clearing set, each behind the rule-set seam with a rule test.**
+1. *Durables are bought at the pace they wear* (`RuleSet.durable_gap_wear_paces`, `durable_stock.gap_share`,
+   `test_durable_demand_continuous.py`). A household bought two fifths of the gap between the stock of a durable it
+   wants and the stock it holds, with the gap valued at last year's price. For a good that lasts decades the gap is
+   many years' purchases, so a small move in last year's price swung this year's purchases several times over and
+   the price swung back (the steel saw). In the first years the same bids could not be filled, tied up the
+   households' budgets and left other goods unsold: most of the first decade's slump. Now the gap closes no faster
+   than one over the good's life a year.
+2. *The money's issuer opens with its mint's wages* (`RuleSet.opening_issuer_coin`, `opening_issuer_coin.py`,
+   `mint.wage_funding`, `state_budget.cash_that_leaves`; `test_mint_labour.py`). The opening struck coin to
+   producers, merchants and households and none to the state, and the mint pays its crew from the state's coin: no
+   crew in the first year, nothing struck, the engravers left their trade and the mint was short of them for more
+   than a decade (the scratch probe of the mint by year).
+3. *No workforce trim* (`RuleSet.spin_up_trims_workforce`, `spin_up_trim.py`, `test_spin_up_trim.py`). The trim
+   between the spin-up's stages cuts each skilled trade to a plan made on last year's wage. Just before it the
+   economy was close to passing; it knocked output down and set prices moving for the rest of the run.
+4. *Workers stay in their areas through the hidden years* (`RuleSet.spin_up_moves_workers`,
+   `spin_up_migration.py`, `labour_inputs.routes_are_open`; `test_spin_up_migration.py`). In a game the labour
+   market's moves go to demography, which moves the people (`sim/markets/port_year.py`); the hidden years step the
+   economy alone and dropped the request. A worker who moved left the household behind: the tile with the lowest
+   wage lost its hands over four decades while its people stayed, with coin and nothing to buy, until they went
+   without food, fuel and water (the scratch probe of one tile by year). This is the hunger that appeared late in
+   the long runs of Update 34 and after.
+
+**England** (`spin-up-trace --civ england_1300 --rules clearing --stages --ensemble 8 --jobs 4`): unmet need is
+nothing in every member; hours hired, output, stock, the rate and the watched prices are inside the tolerance on
+the median; the price level is the one quantity over it on the median. A quarter of the members pass the whole
+check, the first to do so; the rest miss by a hair on one or two quantities or by a wide margin on the price level.
+The first decade no longer slumps: the wage does not halve and output rises from the second year.
+
+**Checked and dropped from the plan.** The coin metal's opening price (with the mint staffed the market reaches the
+mint's price in the first year) and the cash targets at the opening (the mint's capacity is the wear from the first
+year either way).
+
+**Found, not fixed.**
+- *The gaming table.* Its recipe takes a little of a tallow candle for every hour, tallow's price climbs year after
+  year (fat is a by-product and the cost table prices it far under what buyers pay for it), candle makers work at
+  a loss and stop, and in the year no candle is made no hour is played. After that the market trades slivers at
+  many times the opening price, and since the price level counts the whole opening quantity of a good at whatever
+  price it last traded, those slivers move the level by a tenth in single years. Two things behind it are general:
+  a recipe stops whole for want of a trifling input, and the fixed-basket level gives a market that has all but
+  closed its full opening weight.
+- *Lard.* Its makers open with sales expected and no capacity at all, so no lard or pork is ever made.
+- *Coin.* The silver made at home stays under the wear: the lead route runs under its capacity and the native
+  route is priced out by the furnacemen's wage once steel grows. The slow fall stays, as the owner chose.
+- *The merchants' coin* runs down steadily in every run.
+- *Realism.* Warmth and implements have no upper level in the needs data and firewood no yearly growth to bound
+  it, so the settled households burn and buy several times what any pre-industrial people did; sourced figures to
+  check against are in `Complaints/reports/research-fuel-and-iron-per-head.md`. Poppy for the health need is the
+  same kind of fault (owner question 16).

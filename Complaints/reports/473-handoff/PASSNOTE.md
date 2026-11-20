@@ -557,7 +557,37 @@ the rate; the price level, stock and the watched prices still miss by a few poin
 first years). The stock shrinks for a century, prices drift down, and late in a long run households end holding more
 coin than producers and a slump follows (Update 43 has the trace).
 
+## 6l. Where it stands after Update 45 (read this first)
+
+**Read the stages table before anything else.** `spin-up-trace --civ england_1300 --rules clearing --stages` now
+ends with which goods each gap is made of and with the first year, the trough and the last year side by side; with
+`--ensemble 8` it prints the medians and each member's price-level movers. It reordered the work once already: the
+prices gap was one durable good, not bread and flour.
+
+**Done since 6k.** Durables bought at the pace they wear (this also ended most of the first decade's slump); the
+issuer opens with its mint's wages; no workforce trim on the clearing set; workers stay in their areas through the
+hidden years (the cause of the late hunger: the spin-up dropped the labour market's request to move people).
+
+**The check.** Unmet need is nothing in every member and every quantity but the price level is inside the
+tolerance on the median; a quarter of the members pass outright.
+
+**What is left, in the order the table gives.**
+1. The price level. In most members that miss it, one market does it: the gaming table trades slivers at many
+   times its opening price after the year no tallow candle was made. Trace upstream first (why candle makers work
+   at a loss for years while the tables would pay far more for a candle: the makers plan on an expected price that
+   trails, and the tables order only for the runs they staffed), and say plainly in the report what the level does
+   with a market that has all but closed (it counts the whole opening quantity at the last traded price,
+   `year_close.remember_basket_price_level`); changing that is the owner's call, since the settle check reads it.
+2. The members that miss by a hair on one or two quantities: look at their by-good tables, not at the medians.
+3. Lard opens with no capacity; the merchants' coin runs down; the home metal is under the wear.
+4. Realism of the settled state: firewood and steel a head against the research note, the poppy, then the needs
+   data and the ground forest recipes take (owner question 16).
+5. The spin-up's own stop rule (the game's spin-up stops its first stage on one quiet year; the replay does not),
+   then the Norse lands and Han, then the game's set.
+
 ## 7. What to do first
+
+After Update 45: the list in 6l above replaces the ones below, which are kept for the record.
 
 After Update 43:
 
