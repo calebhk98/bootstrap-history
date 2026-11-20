@@ -100,11 +100,12 @@ def stock_runs(sales, yield_factor, variable, made, made_value, stock, price, co
 @njit(**KERNEL)
 def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sales, last_runs, staffed, idle, held_expected,
               cash, stock, hours_scale, tools, slot_goods, slot_trades, inputs, outputs, revenue_outputs, labour_hours, price, offered, cleared, wage,
-              area_of, spread, change_share, clearing_years, cover):
+              area_of, spread, change_share, clearing_years, cover, coin_charge):
     """(runs, wanted, wage line, labour hours, labour ceilings, bid good, bid quantity, bid price, bid budget, bid ceiling): the labour pair
     by row and trade slot (hours NaN where the trade is not bid for), the bids by row and need, in the order the plan makes them (the
     good is -1 where the row has no such bid).
-    The sums are added as `producers.plan` adds them (plan_sums.py)."""
+    The sums are added as `producers.plan` adds them (plan_sums.py). `coin_charge` is the share of what a run pays in
+    advance (inputs and hours) that its coin costs (coin_cost.py; nothing under the search rule set)."""
     count, good_slots = held_expected.shape
     trade_slots = slot_trades.shape[1]
     bid_width = tools.bid_goods.shape[1]
@@ -150,7 +151,7 @@ def plan_rows(recipe_row, tile_row, capacity, yield_factor, rent, land_cap, sale
         input_cost = covered_input_bill(recipe, row, tile, slot_goods, inputs, tools, labour_hours, hours_scale, wage, plan_price)
         labour_cost, total_hours, claimed_bill, hours_priced = hours_bill(
             row, recipe, tile, slot_trades, tools.hours_order, labour_hours, hours_scale, wage, hour_terms)
-        variable = input_cost + labour_cost + rent[row] if hours_priced else np.inf
+        variable = (input_cost + labour_cost) * (1.0 + coin_charge) + rent[row] if hours_priced else np.inf
         if capacity[row] <= 0.0 or revenue <= 0.0 or not np.isfinite(variable):
             continue
         market_cost = covered_input_bill(recipe, row, tile, slot_goods, inputs, tools, labour_hours, hours_scale, wage, market)

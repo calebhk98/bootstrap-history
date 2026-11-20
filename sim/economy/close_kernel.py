@@ -21,8 +21,9 @@ K_INERTIA, K_DIVIDEND, K_FULL_PAYOUT, K_RESCALE, K_BANKRUPT_IDLE, K_BUFFER, K_EP
 # K_WORKING_WEIGHT: the share of a plantless producer's new capacity taken from the runs it worked (capacity_by_working.py), the
 # rest from its sales and losses; K_WORKING_SHARE: the share of that rule's gap closed a year; K_COIN_ON_WORKING: how far the coin
 # a producer keeps follows the share of its capacity that works (1) and not its whole capacity (0); K_EXCESS_PAYOUT: the share of
-# the coin a producer holds beyond what it keeps that it pays its owners in a year (1: all of it).
-K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT = range(18, 22)
+# the coin a producer holds beyond what it keeps that it pays its owners in a year (1: all of it); K_COIN_CHARGE: how much of
+# the interest on the coin a run ties up counts in the run's cost (coin_cost.py; 0: none).
+K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT, K_COIN_CHARGE = range(18, 23)
 
 STATE_OK, STATE_CRISIS, STATE_ILLIQUID, STATE_INSOLVENT = 0, 1, 2, 3
 REQUEST_NONE, REQUEST_EXPAND, REQUEST_WORKING_CAPITAL = 0, 1, 2
@@ -144,6 +145,7 @@ def close_rows(rows, constants,
             wages[slot] = wage[trade, tile]
         rate = rate_of[row]
         no_rate = np.isnan(rate)
+        coin_share = 0.0 if no_rate or rate <= 0.0 else constants[K_COIN_CHARGE] * rate * constants[K_WORKING_YEARS]
         life = plant_life[recipe]
         has_plant = life > 0.0
         rent = land_rent[row]
@@ -184,9 +186,10 @@ def close_rows(rows, constants,
         if not no_rate:
             expected_revenue = cost.revenue_per_run(q_val, exp, count) * yield_
             input_bill = covered_input_bill(recipe, 0, tile, slot_goods, inputs, tools, labour, unscaled, wage, inputs_be)
-            variable = input_bill + cost.bill(q_lab, wages, trades) + rent
+            advanced = input_bill + cost.bill(q_lab, wages, trades)
+            variable = advanced + rent
             plant_value = cost.bill(q_plant, inputs_be, count) + cost.bill(q_pl, wages, trades)
-            full = variable + cost.capital_charge(plant_value, life, rate)
+            full = variable + cost.capital_charge(plant_value, life, rate) + coin_share * advanced
             if expected_revenue > 0.0 and math.isfinite(full) and full > 0.0:
                 break_even = full / expected_revenue
                 input_share = input_bill / full
@@ -290,7 +293,7 @@ def close_rows(rows, constants,
                         held = max(0.0, stock[row, slot] - q_in[slot] * cap_old)
                         prices[slot] = cost.queued_holding_value(prices[slot], held, sales_expected * q_out[slot] * yield_, rate,
                                                                  spoilage[slot_goods[recipe, slot]])
-            run_cost = variable_now + rent
+            run_cost = variable_now * (1.0 + coin_share) + rent
             if math.isfinite(run_cost):
                 revenue_run = cost.revenue_per_run(q_val, prices, count) * yield_
                 cost_run = run_cost

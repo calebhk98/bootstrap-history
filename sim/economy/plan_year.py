@@ -49,7 +49,8 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
         columns.expected_prices, cash, stock,
         columns.hours_scale, tools, matrices.slot_goods, matrices.slot_trades, matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.labour_hours,
         memory.price, memory.offered, memory.cleared, memory.wage, arrays.area_index.of_good_tile, producers.COST_SPREAD_WITHIN_PRODUCER,
-        producers.OUTPUT_CHANGE_SHARE_PER_YEAR, producers.STOCK_CLEARING_YEARS, DEFAULT_MONTHS_OF_COVER)
+        producers.OUTPUT_CHANGE_SHARE_PER_YEAR, producers.STOCK_CLEARING_YEARS, DEFAULT_MONTHS_OF_COVER,
+        float(rule_sets.of(setup).coin_charge(setup, view)))
     idle = runs <= 0.0              # an idle plan has no runs, no wage line and no orders
     names = LocalNames(matrices.goods.ids, columns.tiles.ids, arrays.area_index.areas.ids, matrices.trades.ids)
     block = kernel_rows(columns, matrices, arrays.area_index, view, names, rows, ~idle, hours, ceilings, bid_good, quantity, bid_price, budget,

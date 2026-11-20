@@ -9,7 +9,7 @@ import numpy
 
 from sim.economy import close_pack, rule_sets
 from sim.economy.capacity_by_working import CAPACITY_SHARE_MOVED_PER_YEAR
-from sim.economy.close_kernel import (K_ASK_STEP, K_COIN_ON_WORKING, K_EXCESS_PAYOUT, K_EXPECT, K_REGRESS, K_SOLD_OUT, K_WORKING_SHARE,
+from sim.economy.close_kernel import (K_ASK_STEP, K_COIN_CHARGE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT, K_EXPECT, K_REGRESS, K_SOLD_OUT, K_WORKING_SHARE,
                                       K_WORKING_WEIGHT)
 from sim.economy.setup import DEFAULT_RULE_SET
 
@@ -46,7 +46,7 @@ class ConstantsArrayForClearing(unittest.TestCase):
         search = close_pack.constants_array()
         clearing = close_pack.constants_array_for_clearing()
         self.assertEqual(clearing.shape, search.shape)
-        changed = {K_EXPECT, K_ASK_STEP, K_SOLD_OUT, K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT}
+        changed = {K_EXPECT, K_ASK_STEP, K_SOLD_OUT, K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT, K_COIN_CHARGE}
         for index in range(len(search)):
             if index not in changed:
                 self.assertEqual(clearing[index], search[index])
@@ -58,6 +58,7 @@ class ConstantsArrayForClearing(unittest.TestCase):
         self.assertEqual(clearing[K_WORKING_SHARE], CAPACITY_SHARE_MOVED_PER_YEAR)
         self.assertEqual(clearing[K_COIN_ON_WORKING], 1.0)
         self.assertEqual(clearing[K_EXCESS_PAYOUT], close_pack.SPARE_COIN_SHARE_PAID_PER_YEAR)
+        self.assertEqual(clearing[K_COIN_CHARGE], 1.0)
 
     def test_the_search_constants_leave_the_clearing_rules_off(self):
         search = close_pack.constants_array()

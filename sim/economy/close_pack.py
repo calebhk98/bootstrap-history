@@ -13,7 +13,7 @@ from sim.loans.close_kernel import producer_loans
 
 from . import ask_adjust, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
 from .capacity_by_working import CAPACITY_SHARE_MOVED_PER_YEAR
-from .close_kernel import (K_ASK_STEP, K_COIN_ON_WORKING, K_EXCESS_PAYOUT, K_EXPECT, K_SOLD_OUT, K_WORKING_SHARE,
+from .close_kernel import (K_ASK_STEP, K_COIN_CHARGE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT, K_EXPECT, K_SOLD_OUT, K_WORKING_SHARE,
                            K_WORKING_WEIGHT)
 from .close_pack_markets import clearing_and_unmet, columns_of_markets
 from .close_pack_asks import ask_multiples
@@ -31,7 +31,7 @@ def constants_array() -> np.ndarray:
         firm_finance.DIVIDEND_EARNINGS_RATIO, firm_finance.FULL_PAYOUT_YEARS_OF_REVENUE, firm_finance.DEBT_RESCALING_FACTOR,
         firm_finance.BANKRUPTCY_IDLE_YEARS, firm_finance.CASH_BUFFER_SHARE_OF_COSTS, firm_finance.ARREARS_EPSILON,
         max(0, firm_finance.HISTORY_YEARS - 1), expected_sales.SOLD_OUT_LEFT_SHARE,
-        0.0, 0.0, 0.0, 1.0], dtype=np.float64)       # capacity from sales and losses alone; coin on the whole capacity; coin beyond it paid out whole
+        0.0, 0.0, 0.0, 1.0, 0.0], dtype=np.float64)  # capacity from sales and losses alone; coin on the whole capacity; coin beyond it paid out whole; no charge for tied-up coin
 
 
 EXPECTATION_SHARE_MOVED_UNDER_CLEARING = declare(
@@ -62,7 +62,8 @@ def constants_array_for_clearing() -> np.ndarray:
     reaches prices: without it wages fall, prices stay, and buyers' incomes buy less every year. Its expected
     sales only follow what it sold (no share of the market's unmet demand added when it sells out), by the smaller share. A producer with no plant moves its capacity toward what the runs it worked call for
     (capacity_by_working.py) and not by its sales and losses; the coin a producer keeps follows the share of its
-    capacity that works, so workplaces standing idle hold none, and what it holds beyond that is paid out a share a year."""
+    capacity that works, so workplaces standing idle hold none, and what it holds beyond that is paid out a share a year.
+    A run's cost counts the interest on the coin its inputs and hours tie up (coin_cost.py)."""
     constants = constants_array()
     constants[K_EXPECT] = EXPECTATION_SHARE_MOVED_UNDER_CLEARING
     constants[K_ASK_STEP] = 0.0
@@ -71,6 +72,7 @@ def constants_array_for_clearing() -> np.ndarray:
     constants[K_WORKING_SHARE] = CAPACITY_SHARE_MOVED_PER_YEAR
     constants[K_COIN_ON_WORKING] = 1.0
     constants[K_EXCESS_PAYOUT] = SPARE_COIN_SHARE_PAID_PER_YEAR
+    constants[K_COIN_CHARGE] = 1.0
     return constants
 
 

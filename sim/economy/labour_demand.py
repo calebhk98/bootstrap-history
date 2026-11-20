@@ -12,7 +12,7 @@ from typing import List, Optional, Tuple
 
 from sim.constants import declare
 
-from . import practice, unit_cost
+from . import coin_cost, practice, unit_cost
 from .labour_ceilings import joint_labour_ceilings
 from .producers import (COST_SPREAD_WITHIN_PRODUCER, Producer, expected_input_prices, kept_output_prices, live_input_prices,
                         live_wages, next_years_runs_ceiling, paid_input_prices, runs_for_stock, share_working, with_practised_yield)
@@ -85,11 +85,12 @@ def runs_held_back_for_stock(runs_that_pay: float, runs_its_stock_calls_for: flo
     return max(0.0, runs_that_pay - runs_its_stock_calls_for)
 
 
-def schedule(producer: Producer, recipe: Recipe, view, cash: float, planned_runs: Optional[float] = None
-             ) -> Tuple[float, List[LabourBid]]:
+def schedule(producer: Producer, recipe: Recipe, view, cash: float, planned_runs: Optional[float] = None,
+             coin_charge: float = 0.0) -> Tuple[float, List[LabourBid]]:
     """(the most runs the producer's bids would staff, its bids for the year's hours: one per slice of its workplaces
     and trade, `slice_worths`); nothing for a producer that is idle or whose run brings in nothing. `planned_runs` are
-    the runs its plan ordered inputs for: a recipe that must buy inputs staffs no more than those."""
+    the runs its plan ordered inputs for: a recipe that must buy inputs staffs no more than those. `coin_charge` is
+    the share of what a run pays in advance that its coin costs (coin_cost.py): inputs and hours carry it, rent does not."""
     if producer.idle_years > 0 or producer.capacity_runs <= 0.0:
         return 0.0, []
     producer = with_practised_yield(producer, recipe)
@@ -101,32 +102,34 @@ def schedule(producer: Producer, recipe: Recipe, view, cash: float, planned_runs
     revenue = unit_cost.revenue_per_run(recipe, outputs) * producer.yield_factor
     input_cost = unit_cost.input_cost_per_run(recipe, inputs, wages)
     labour_cost = unit_cost.labour_cost_per_run(recipe, wages)
-    other_cost = input_cost + producer.land_rent_per_run
-    if revenue <= 0.0 or not math.isfinite(other_cost + labour_cost):
+    other_cost = coin_cost.run_cost(input_cost, producer.land_rent_per_run, coin_charge)
+    run_cost = coin_cost.run_cost(input_cost + labour_cost, producer.land_rent_per_run, coin_charge)
+    if revenue <= 0.0 or not math.isfinite(run_cost):
         return 0.0, []
     paying_prices = {**inputs, **market_inputs}
     held_value = sum(min(view.stock(producer.agent_id, good, producer.tile), quantity * producer.capacity_runs) * paying_prices[good]
                      for good, quantity in recipe.inputs.items() if good in paying_prices)
     paid_now = unit_cost.input_cost_per_run(recipe, paying_prices, wages) + labour_cost
-    paying = producer.capacity_runs * share_working(revenue, other_cost + labour_cost)
-    for_stock = runs_for_stock(dataclasses.replace(producer, expected_sales=paying), recipe, view, other_cost + labour_cost, outputs)
+    paying = producer.capacity_runs * share_working(revenue, run_cost)
+    for_stock = runs_for_stock(dataclasses.replace(producer, expected_sales=paying), recipe, view, run_cost, outputs)
     held_back = runs_held_back_for_stock(paying, for_stock)
     inputs_allow = math.inf if planned_runs is None or not recipe.hard_inputs else max(0.0, planned_runs) + held_back
     most = most_runs_wanted(producer, cash, paid_now, held_value, inputs_allow)
     bids = []
     for runs, room in slice_worths(producer.capacity_runs, most, revenue, other_cost, runs_held_back=held_back):
-        ceilings = joint_labour_ceilings(recipe.labour_hours, wages, room)
+        ceilings = joint_labour_ceilings(recipe.labour_hours, wages, coin_cost.left_for_hours(room, coin_charge))
         bids.extend(LabourBid(producer.agent_id, trade, view.area_of(trade, producer.tile), runs * recipe.labour_hours[trade],
                               ceilings[trade]) for trade in sorted(recipe.labour_hours) if trade in ceilings)
     return max(0.0, min(producer.capacity_runs, most) - held_back), bids
 
 
-def schedule_bids(producer: Producer, recipe: Recipe, view, cash: float, planned_runs: Optional[float] = None) -> List[LabourBid]:
+def schedule_bids(producer: Producer, recipe: Recipe, view, cash: float, planned_runs: Optional[float] = None,
+                  coin_charge: float = 0.0) -> List[LabourBid]:
     """The bids of `schedule`."""
-    return schedule(producer, recipe, view, cash, planned_runs)[1]
+    return schedule(producer, recipe, view, cash, planned_runs, coin_charge)[1]
 
 
-def write_schedule_bids(setup, record, view, plans, bid_table, cash_of: Optional[callable] = None) -> None:
+def write_schedule_bids(setup, record, view, plans, bid_table, cash_of: Optional[callable] = None, coin_charge: float = 0.0) -> None:
     """Every producer's schedule of labour bids into the year's bid table, in the producers' saved order. The plan
     (`plans`, the year's plan table) was drawn at last year's wage; the schedule says what the producer would staff at
     every wage, so a working producer's planned runs are raised to the most its schedule would staff: the hours it
@@ -138,7 +141,7 @@ def write_schedule_bids(setup, record, view, plans, bid_table, cash_of: Optional
         cash = record.book.balance(producer_id, money) if cash_of is None else cash_of(producer_id)
         place = None if plans is None else plans.position.get(producer_id)
         planned = None if place is None else plans.runs[place]
-        most, bids = schedule(producer, setup.recipes[producer.recipe_id], view, cash, planned)
+        most, bids = schedule(producer, setup.recipes[producer.recipe_id], view, cash, planned, coin_charge)
         if planned is not None and planned > 0.0 and most > planned:
             plans.runs[place] = most
         bid_table.add_objects(bids)
