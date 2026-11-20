@@ -2339,3 +2339,31 @@ far as its cause: the money stock still shrinks every year.
   Not traced: what holds the mills back (their power, `mechanical_mj`, and the building trades that all but vanish).
 - *Goods that cannot be kept* (bread's price is the least steady of the watched goods) and *the spin-up's length*
   are the plan's next steps and are untouched.
+
+## Update 44: makers of goods that do not keep plan to their expected sales (branch economy-rests-with-clearing-rules)
+
+Bread was still the least steady of the watched prices after Update 43, up and down by about a tenth in alternate
+years. Read from the code it was a cobweb: under the clearing rules a producer's runs are held by its stock, and a
+good that spoils within the year leaves none, so a baker planned the runs that pay at its expected price and nothing
+else; runs answer that price more than one for one near break-even (the spread of workplace costs) and buyers of a
+staple answer its price little. The hold the plan of Update 42 proposed (cut next year's runs by this year's unsold
+share) would have cut output after the glut year and deepened the next shortage, so it was not built.
+
+Built instead (`sim/economy/unkept_goods.py`, `RuleSet.sales_the_plan_holds_to`, `RuleSet.expected_sales_after_close`,
+`labour_demand.sales_the_stock_is_read_against`; `sim/tests/test_unkept_goods.py`): for a recipe none of whose
+outputs keeps a year, the plan and the labour schedule hold to the maker's expected sales, and after the close its
+expected sales move a share of the way to the runs its takings would have sold at the prices it expected. No fixture
+with an unkept good exists yet, so this was judged on England only.
+
+**England** (`spin-up-trace --civ england_1300 --rules clearing --stages --ensemble 8`): unmet need is nothing in
+every member and hours hired are inside the tolerance in nearly every one; the price level and stock are closer to
+it than in Update 43 and their worst members much closer; the rate is at it in about half; the watched prices still
+miss in every member, and their trend column shows why: flour, raw glass and carts climb through the measured years.
+
+**What moves bread now is flour.** Households swing between grinding at home and buying flour over decades: the share
+ground by hand is next to nothing in the rough plan, most of the grain within three decades (the wage halves in the
+first decade, so hours are cheap and the mills lose their custom and their capacity), and falls back slowly as the
+wage recovers, with flour's price climbing while the mills come back. Behind that is the rough plan's first year:
+about a quarter of the hours on offer have no taker at its wage, nearly all of them people it numbers in the trade
+farms hire from (the scratch probe of the labour clearings by trade), and the decade in which the wage falls to
+clear them is what the next forty years are recovering from.

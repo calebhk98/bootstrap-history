@@ -315,7 +315,9 @@ of the way to it, the same share up and down:
   year, for want of crew or of room where it was going, is offered where it stands, and the coin that carrying the
   rest will cost does not buy new cargo (`merchant_stuck_stock.py`).
 - **Producers.** A producer plans the runs that pay at the price it expects, less a share of the stock it holds
-  beyond its target, and is not held to its expected sales. Its expected price follows what the market paid, by a
+  beyond its target, and is not held to its expected sales, unless nothing it makes keeps a year: such a maker has no
+  stock to hold its runs, so it plans to its expected sales, which follow the runs its takings would have sold at the
+  prices it expected (`unkept_goods.py`). Its expected price follows what the market paid, by a
   smaller share a year than under `search`, and keeps the pull toward what the good costs to make, which is how a
   change in wages reaches prices; it takes no step on unsold stock and adds no share of unmet demand to its expected
   sales. Without plant its capacity moves toward the capacity at which the runs it worked would be the normal share
