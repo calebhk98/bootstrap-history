@@ -83,6 +83,15 @@ def spin_up_mix_parts(rows, quantity, mix_name):
 	return mix_parts(trimmed[-int(SPIN_UP_MEASURED_YEARS):], quantity, mix_name)
 
 
+def spin_up_price_level_parts(rows):
+	"""[(good, "moved", "entered" or "left", its effect)] on the price level in the pair of measured years where it moved
+	most, as shares of the earlier level (spin_up_by_good.price_level_parts)."""
+	from .spin_up import SPIN_UP_MEASURED_YEARS
+	from .spin_up_by_good import price_level_parts
+	trimmed = [row for row in rows if row["stage"] == "trimmed"]
+	return price_level_parts(trimmed[-int(SPIN_UP_MEASURED_YEARS):])
+
+
 def spin_up_mix_tables(rows, count):
 	"""(labels, hours by trade, output by good, recipes whose share of a good moved) for the first year, the trough and the
 	last year of the rows `spin_up_stages` gave (spin_up_mix_table.py); each table's rows hold one value per label."""

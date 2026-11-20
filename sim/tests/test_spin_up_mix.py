@@ -6,7 +6,7 @@ QUICK_TOPIC = True
 import unittest
 
 from sim.economy.market_memory import market_key
-from sim.economy.spin_up_mix import hours_by_trade, made_by_recipe, runs_by_recipe, stock_by_good, value_by_good
+from sim.economy.spin_up_mix import basket_costs, hours_by_trade, made_by_recipe, runs_by_recipe, stock_by_good, value_by_good
 from sim.markets.spin_up_ensemble import median_by_good
 from sim.markets.spin_up_mix_table import largest_first, marked_rows, recipe_shares, recipes_that_moved, trough
 
@@ -39,6 +39,13 @@ class StockByGood(unittest.TestCase):
     def test_a_goods_quantity_is_summed_over_agents_and_tiles(self):
         self.assertEqual(stock_by_good([{"grain": {"a": 1.0, "b": 2.0}}, {"grain": {"a": 4.0}, "ale": {"b": 1.0}}]),
                          {"grain": 7.0, "ale": 1.0})
+
+
+class BasketCosts(unittest.TestCase):
+    def test_only_basket_goods_that_traded_recently_and_hold_both_prices_are_counted(self):
+        costs = basket_costs({"bread": 3.0, "cloth": 9.0, "glass": 5.0}, {"bread": 2.0, "cloth": 8.0, "ale": 1.0},
+                             {"bread": 10.0, "cloth": 1.0, "glass": 4.0, "ale": 2.0}, ["bread", "glass", "ale"])
+        self.assertEqual(costs, {"bread": (30.0, 20.0)})
 
 
 ROWS = [{"stage": "first", "year": 0, "real_output": 10.0}, {"stage": "first", "year": 1, "real_output": 7.0},

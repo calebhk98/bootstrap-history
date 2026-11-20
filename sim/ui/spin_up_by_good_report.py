@@ -32,6 +32,17 @@ def format_parts(title, parts, count):
     return "\n".join(lines)
 
 
+def format_level_parts(parts, count):
+    """The `count` goods that moved the price level most in its worst pair of measured years: whether the good's price
+    moved or the good entered or left the goods the level counts, and its effect as a share of the level."""
+    lines = ["price level by good, in the pair of measured years where the level moved most (a good enters or leaves the "
+             "count as its market trades or stops):"]
+    lines.extend("  %-22s %-8s %+8.4f" % (good[:22], kind, effect) for good, kind, effect in parts[:count])
+    if not parts:
+        lines.append("  (no change measured)")
+    return "\n".join(lines)
+
+
 def _hours(value):
     return "%21s" % "-" if value is None else "%10.4g %10.4g" % value
 
@@ -48,6 +59,16 @@ def format_mix(labels, hours, output, recipes):
     for good, rows in recipes:
         lines.extend("  %-44s %s" % (("%s: %s" % (good, recipe_id))[:44], " ".join("%21s" % _short(value, "%.3f") for value in values))
                      for recipe_id, values in rows)
+    return "\n".join(lines)
+
+
+def format_member_level_parts(results):
+    """One line per ensemble member: the goods that moved its price level most in its worst pair of measured years."""
+    lines = ["price level by member, the goods that moved it most in its worst pair of measured years (share of the level):"]
+    for result in results:
+        parts = result.get("level_parts") or []
+        lines.append("  m%-3d %s" % (result["member"], "; ".join("%s %s %+.4f" % (good, kind, effect) for good, kind, effect in parts)
+                                     or "(no change measured)"))
     return "\n".join(lines)
 
 

@@ -8,8 +8,12 @@ from sim.engine.ui_port import Sim, load, load_civ
 from sim.markets import api as markets_api
 
 
+LEVEL_PARTS_KEPT = 4     # the goods that moved a member's price level most, kept for the report
+
+
 def run_member(civilisation_id, member, rules=None):
-    """{"member", "gaps", "trends", "by_good" (spin_up_by_good.by_good)} of one replay of the civilisation's opening; None gaps when too few years were measured.
+    """{"member", "gaps", "trends", "by_good" (spin_up_by_good.by_good), "level_parts" (the goods that moved its price
+    level most, spin_up_by_good.price_level_parts)} of one replay of the civilisation's opening; None gaps when too few years were measured.
     `rules` names the rule set the economy opens on (None: the shipped one)."""
     _tree, _prices, nodes, _wages, _goods = load()
     game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civilisation_id),
@@ -17,7 +21,8 @@ def run_member(civilisation_id, member, rules=None):
     _watched, replayed = markets_api.spin_up_stages(game, markets_api.spin_up_cash_factor(member))
     rows = list(replayed)
     gaps, trends = markets_api.spin_up_member_figures(rows)
-    return {"member": member, "gaps": gaps, "trends": trends, "by_good": markets_api.spin_up_by_good(rows)}
+    return {"member": member, "gaps": gaps, "trends": trends, "by_good": markets_api.spin_up_by_good(rows),
+            "level_parts": markets_api.spin_up_price_level_parts(rows)[:LEVEL_PARTS_KEPT]}
 
 
 def run_ensemble(civilisation_id, members, jobs=0, rules=None):

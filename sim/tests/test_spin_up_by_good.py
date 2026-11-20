@@ -5,8 +5,8 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.markets.spin_up_by_good import (by_good, largest_moves, mix_parts, price_parts, price_trends, trend_and_saw,
-                                         value_parts, worst_pair)
+from sim.markets.spin_up_by_good import (by_good, largest_moves, level_of, level_parts, mix_parts, price_level_parts, price_parts,
+                                         price_trends, trend_and_saw, value_parts, worst_pair)
 from sim.markets.spin_up_gap import price_gap
 
 
@@ -112,6 +112,49 @@ class MixParts(unittest.TestCase):
 
     def test_rows_that_carry_no_mix_give_nothing(self):
         self.assertEqual(mix_parts([state({}, real_output=1.0), state({}, real_output=2.0)], "real_output", "output_by_good"), [])
+
+
+class LevelOf(unittest.TestCase):
+    def test_the_basket_cost_now_over_its_cost_at_the_base(self):
+        self.assertAlmostEqual(level_of({"bread": (30.0, 20.0), "cloth": (90.0, 80.0)}), 1.2)
+
+    def test_nothing_counted_is_level_one(self):
+        self.assertEqual(level_of({}), 1.0)
+
+
+class LevelParts(unittest.TestCase):
+    def test_a_good_whose_price_moved_by_what_the_level_would_be_at_its_earlier_cost(self):
+        before = {"bread": (20.0, 20.0), "cloth": (80.0, 80.0)}
+        after = {"bread": (30.0, 20.0), "cloth": (80.0, 80.0)}
+        self.assertEqual(level_parts(before, after), [("bread", "moved", 1.1 - 1.0)])
+
+    def test_a_dear_good_that_enters_the_count_raises_the_level_and_one_that_leaves_lowers_it(self):
+        base = {"cloth": (80.0, 80.0)}
+        with_glass = {"cloth": (80.0, 80.0), "glass": (60.0, 20.0)}       # glass at three times its base price
+        entered = level_parts(base, with_glass)
+        self.assertEqual([(good, kind) for good, kind, _effect in entered], [("glass", "entered")])
+        self.assertAlmostEqual(entered[0][2], 1.4 - 1.0)
+        left = level_parts(with_glass, base)
+        self.assertEqual([(good, kind) for good, kind, _effect in left], [("glass", "left")])
+        self.assertAlmostEqual(left[0][2], 1.0 - 1.4)
+
+    def test_the_largest_effect_comes_first_and_a_good_that_did_not_move_is_left_out(self):
+        before = {"bread": (20.0, 20.0), "cloth": (80.0, 80.0), "ale": (10.0, 10.0)}
+        after = {"bread": (22.0, 20.0), "cloth": (60.0, 80.0), "ale": (10.0, 10.0)}
+        self.assertEqual([good for good, _kind, _effect in level_parts(before, after)], ["cloth", "bread"])
+
+
+class PriceLevelParts(unittest.TestCase):
+    def test_the_parts_of_the_pair_where_the_level_moved_most_as_shares_of_the_earlier_level(self):
+        states = [state({}, price_level=1.0, mix={"basket_costs": {"cloth": (80.0, 80.0)}}),
+                  state({}, price_level=1.01, mix={"basket_costs": {"cloth": (80.8, 80.0)}}),
+                  state({}, price_level=1.5, mix={"basket_costs": {"cloth": (80.8, 80.0), "glass": (69.2, 20.0)}})]
+        parts = price_level_parts(states)
+        self.assertEqual([(good, kind) for good, kind, _effect in parts], [("glass", "entered")])
+        self.assertAlmostEqual(parts[0][2], (1.5 - 1.01) / 1.01)
+
+    def test_rows_that_carry_no_mix_give_nothing(self):
+        self.assertEqual(price_level_parts([state({}, price_level=1.0), state({}, price_level=1.2)]), [])
 
 
 class ByGood(unittest.TestCase):

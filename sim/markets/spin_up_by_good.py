@@ -75,6 +75,50 @@ def mix_parts(states, quantity, mix_name):
     return value_parts(pair[0]["mix"][mix_name], pair[1]["mix"][mix_name], pair[0].get("real_output") or 0.0)
 
 
+def level_of(costs):
+    """The fixed-basket price level of {good: (its basket cost now, at the base prices)}: the first sum over the second;
+    one where nothing is counted."""
+    base = sum(at_base for _now, at_base in costs.values())
+    return sum(now for now, _at_base in costs.values()) / base if base > 0.0 else 1.0
+
+
+def level_parts(before, after):
+    """[(good, "moved" or "entered" or "left", its effect on the price level)] between two years' basket costs
+    (`spin_up_mix.basket_costs`), largest in size first. A good's effect is the later year's level less what that level
+    would be had the good stayed as it was the year before (its earlier cost for one that moved, out of the count for
+    one that entered, still in it for one that left), the others as they are in the later year; the effects need not
+    add up to the change, since the level is a ratio."""
+    level = level_of(after)
+    parts = []
+    for good in sorted(set(before) | set(after)):
+        held = dict(after)
+        if good in before and good in after:
+            if before[good] == after[good]:
+                continue
+            kind = "moved"
+            held[good] = before[good]
+        elif good in after:
+            kind = "entered"
+            del held[good]
+        else:
+            kind = "left"
+            held[good] = before[good]
+        effect = level - level_of(held)
+        if effect != 0.0:
+            parts.append((good, kind, effect))
+    return sorted(parts, key=lambda part: (-abs(part[2]), part[0]))
+
+
+def price_level_parts(states):
+    """`level_parts` over the pair of `states` with the largest gap in the price level, as shares of the earlier year's
+    level; nothing when fewer than two states or no mix is carried."""
+    pair = worst_pair(states, "price_level")
+    if pair is None or "mix" not in pair[0] or "mix" not in pair[1]:
+        return []
+    earlier = level_of(pair[0]["mix"]["basket_costs"])
+    return [(good, kind, effect / earlier) for good, kind, effect in level_parts(pair[0]["mix"]["basket_costs"], pair[1]["mix"]["basket_costs"])]
+
+
 def by_good(rows, measured_years):
     """{good: {"share", "move" (largest over the measured years), "part" (of the "prices" gap, in the pair of measured
     years where that gap is largest), "trend", "saw" (over all the trimmed rows)}} for the watched goods priced in the

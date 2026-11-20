@@ -10,7 +10,8 @@ from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
 from sim.markets.port_trace_holders import HOLDER_COLUMNS
 from sim.ui.spin_up_moved import format_moved, moved
 from sim.ui.spin_up_stages_report import format_end_gaps, header_line, row_line, write_stage_csv
-from sim.ui.spin_up_by_good_report import format_by_good, format_ensemble_by_good, format_mix, format_parts
+from sim.ui.spin_up_by_good_report import (format_by_good, format_ensemble_by_good, format_level_parts, format_member_level_parts, format_mix,
+                                           format_parts)
 from sim.ui.spin_up_ensemble_report import format_ensemble, write_ensemble_csv
 from sim.ui.spin_up_ensemble_run import run_ensemble
 from sim.ui.spin_up_fixture_trace import columns_of, fixture_trace, format_fixture_trace
@@ -76,6 +77,7 @@ def _print_ensemble(args):
     results = run_ensemble(civilisation_id, args.ensemble, args.jobs, args.rules or None)
     print(format_ensemble(civilisation_id, results))
     print(format_ensemble_by_good(markets_api.spin_up_median_by_good([result["by_good"] for result in results])))
+    print(format_member_level_parts(results))
     if args.csv:
         write_ensemble_csv(results, args.csv)
     return 0
@@ -93,6 +95,7 @@ def _print_stages(game, csv_path):
     print(format_end_gaps(markets_api.spin_up_end_gaps(rows)))
     print(format_moved(moved(rows)))
     print(format_by_good(markets_api.spin_up_by_good(rows)))
+    print(format_level_parts(markets_api.spin_up_price_level_parts(rows), PARTS_SHOWN))
     print(format_parts("stock by good, change in the pair of measured years where stock moved most, as a share of a year's output:",
                        markets_api.spin_up_mix_parts(rows, "inventory_value", "stock_by_good"), PARTS_SHOWN))
     print(format_parts("output by good, change in the pair of measured years where output moved most, as a share of a year's output:",
