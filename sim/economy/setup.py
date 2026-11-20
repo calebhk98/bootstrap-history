@@ -34,6 +34,9 @@ def area_tile(area: str) -> TileId:
     return area[len(LABOUR_AREA_PREFIX):] if area.startswith(LABOUR_AREA_PREFIX) else area
 
 
+DEFAULT_RULE_SET = "search"       # the rule set a setup runs unless it names another (rule_sets.py)
+
+
 @dataclass(frozen=True)
 class SetupTrade:
     trade_id: TradeId
@@ -102,6 +105,7 @@ class EconomySetup:
     # country -> the recipes its producers can run (what its society's techniques allow); empty: every recipe anywhere
     recipes_by_country: Dict[str, Tuple[str, ...]] = field(default_factory=dict)
     kernels: Dict[str, Any] = field(default_factory=dict)   # the markets module's bound kernels by name (markets/kernels.py); absent: the references
+    rule_set: str = DEFAULT_RULE_SET    # which rules the year's swappable phases run (rule_sets.py)
     # tile -> {owner, control} (geography's tile_owners), shared with the game's state; empty: the tiles' own countries
     tile_owners: Dict[TileId, Dict[str, str]] = field(default_factory=dict)
 

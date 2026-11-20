@@ -11,7 +11,7 @@ def run_year(state: MarketState, inputs: YearInputs, owned: bool = False) -> Tup
     if not owned:
         state = copy_state(state)
     report = YearReport()
-    report.clearings = clearing.clear_all(state, inputs)
+    report.clearings = (inputs.clearing or clearing.clear_all)(state, inputs)
     training.advance(state, inputs, report)
     switching.switch_trades(state, inputs, report.clearings, report)
     migration.migrate(state, inputs, report.clearings, report)

@@ -85,6 +85,7 @@ class YearInputs:
     outlay_room: Dict[str, float] = dataclasses.field(default_factory=dict)   # money each employer's plan assigns to no line: with the wage line of its vacancies, all it may spend on bonded people (bonded_room.py)
     taxed_share: Dict[AreaId, float] = dataclasses.field(default_factory=dict)   # share of a worker's income the state takes from those who stay in the area, liability included
     fetch_wage: Optional[Callable] = None   # the kernel that prices fetched hands (fetch_wage.py); None: the reference, for a caller outside a game's assembly
+    clearing: Optional[Callable] = None     # the rule that clears the year's markets, (state, inputs) -> clearings; None: clearing.clear_all
     hours_sold_at: Optional[Dict[Tuple[TradeId, AreaId], Callable[[float], float]]] = None   # (trade, area) -> hours the households there sell at a wage an hour (rising): the hours their offers hold. None: every worker sells a whole year at any wage; a market missing from a given schedule sells nothing
 
     _carriage: Dict[AreaId, Dict[AreaId, float]] = dataclasses.field(default_factory=dict, init=False, repr=False, compare=False)

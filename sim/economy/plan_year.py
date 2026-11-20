@@ -7,7 +7,7 @@ does to the recipe's hours. `write_bids` appends the input bids to the book of o
 read of the book (stock_block.py)."""
 import numpy as np
 
-from . import producer_numbers, producers
+from . import producer_numbers, producers, rule_sets
 from .inventory import DEFAULT_MONTHS_OF_COVER
 from .plan_kernel import plan_rows
 from .plan_table import PlanTable
@@ -45,7 +45,8 @@ def plans_of(setup, record, view, arrays, money) -> PlanTable:
     stock = stocks_by_slot(record, columns, matrices, tools, rows)
     (runs, wanted, line, hours, ceilings, bid_good, quantity, bid_price, budget, worth) = plan_rows(
         columns.recipe_row, columns.tile_row, columns.capacity_runs, columns.practised_yield(), columns.land_rent_per_run, columns.land_run_cap,
-        columns.expected_sales, columns.last_runs, columns.staffed_runs, columns.idle_years, columns.expected_prices, cash, stock,
+        rule_sets.of(setup).sales_the_plan_holds_to(columns.expected_sales), columns.last_runs, columns.staffed_runs, columns.idle_years,
+        columns.expected_prices, cash, stock,
         columns.hours_scale, tools, matrices.slot_goods, matrices.slot_trades, matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.labour_hours,
         memory.price, memory.offered, memory.cleared, memory.wage, arrays.area_index.of_good_tile, producers.COST_SPREAD_WITHIN_PRODUCER,
         producers.OUTPUT_CHANGE_SHARE_PER_YEAR, producers.STOCK_CLEARING_YEARS, DEFAULT_MONTHS_OF_COVER)

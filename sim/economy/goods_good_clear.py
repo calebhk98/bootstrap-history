@@ -81,9 +81,10 @@ class GoodClearing:
     iteration): the year's rules read the columns."""
 
     def __init__(self, context, good: str, rows: GoodRows, batch, pack, untraded, flags_of, last_price: numpy.ndarray, flags: numpy.ndarray,
-                 made=None):
+                 made=None, on_objects=None):
         """`made` is (`clearing_columns`' twelve arrays, how many markets are on the objects, the bid counts) when `goods_clear_kernel` worked them out."""
         self.context, self.good, self.rows, self.batch, self.pack, self.untraded = context, good, rows, batch, pack, untraded
+        self.on_objects = on_objects or _plain      # the rule a market on the objects clears by: (context, good, area, last price, bids, offers) -> (offers after, result)
         self.market = rows.markets
         self.areas = context.orders.area_names_of_markets(rows.markets)
         self.has_offers, self.has_units, self.has_funded_bid = flags_of
@@ -110,11 +111,11 @@ class GoodClearing:
                 self._clear_on_objects(place)
 
     def _clear_on_objects(self, place: int) -> None:
-        """The old rules on the market's `Bid` and `Offer` objects; the figures of the result are written into the columns."""
+        """The market cleared on its `Bid` and `Offer` objects by `on_objects`; the figures of the result are written into the columns."""
         context, orders = self.context, self.context.orders
         bid_objects, offer_objects = orders.bids_of(self.rows.bids_of_market(place)), orders.offers_of(self.rows.offers_of_market(place))
         price = self.last_price[place]
-        after, result = _plain(context, self.good, self.areas[place], None if price != price else float(price), bid_objects, offer_objects)
+        after, result = self.on_objects(context, self.good, self.areas[place], None if price != price else float(price), bid_objects, offer_objects)
         self.objects[place] = (bid_objects, after, offers_left(after, sold_by_result(result)), result)
         self.left_count[place] = len(self.objects[place][2])
         self.quantity[place], self.demand[place], self.offered[place] = result.quantity, result.demand_at_price, result.offered_at_price

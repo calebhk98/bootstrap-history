@@ -10,6 +10,7 @@ import numpy as np
 from sim.loans.close_kernel import producer_loans
 
 from . import ask_adjust, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
+from .close_kernel import K_ASK_STEP, K_REGRESS, K_SOLD_OUT
 from .close_pack_markets import clearing_and_unmet, columns_of_markets
 from .close_pack_asks import ask_multiples
 from .close_pack_kernels import held_goods, pair_values_by_slot, slot_stocks
@@ -26,6 +27,17 @@ def constants_array() -> np.ndarray:
         firm_finance.DIVIDEND_EARNINGS_RATIO, firm_finance.FULL_PAYOUT_YEARS_OF_REVENUE, firm_finance.DEBT_RESCALING_FACTOR,
         firm_finance.BANKRUPTCY_IDLE_YEARS, firm_finance.CASH_BUFFER_SHARE_OF_COSTS, firm_finance.ARREARS_EPSILON,
         max(0, firm_finance.HISTORY_YEARS - 1), expected_sales.SOLD_OUT_LEFT_SHARE], dtype=np.float64)
+
+
+def constants_array_for_clearing() -> np.ndarray:
+    """The close rules' numbers under the clearing rule set (rule_sets.py): the market sets the price, so a producer's
+    expected price only follows what the market paid (no pull toward cost, no step on its unsold stock), and its expected
+    sales only follow what it sold (no share of the market's unmet demand added when it sells out)."""
+    constants = constants_array()
+    constants[K_REGRESS] = 0.0
+    constants[K_ASK_STEP] = 0.0
+    constants[K_SOLD_OUT] = -1.0      # stock left is never under a negative share of sales: no producer counts as sold out
+    return constants
 
 
 @dataclass

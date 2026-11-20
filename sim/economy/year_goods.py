@@ -12,7 +12,7 @@ from typing import Dict, List, Optional, Tuple
 import numpy
 
 from . import currency, mint_price, market_curves, market_curves_rows, market_quote, producers, seller_cash, taxes
-from . import goods_turn, year_bids, year_remember
+from . import goods_turn, rule_sets, year_bids, year_remember
 from .year_bids_by_market import BidsByMarket
 from . import goods_good_clear, goods_memory_notes, goods_production, goods_settle, goods_order_book, goods_respend_year, year_goods_offers
 from .goods_clearing_kernel import ON_OBJECTS
@@ -99,6 +99,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
         costs = OfferCosts.build(arrays, own_rate(view, setup.currency_id))
         offering = (arrays, costs) if year_goods_offers.usable() else None
     context = ClearingContext(setup, record, view, orders, arrays, costs)
+    rules = rule_sets.of(setup)
     if arrays is not None:
         context.ask_known_areas_and_tiles()
     world = goods_turn.TurnWorld.of(setup, record, view, ledger, arrays, costs, plans) if arrays is not None else None
@@ -131,7 +132,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
             done.update(turn)
             _produce_and_offer(setup, record, view, turn, plans, in_kind, orders, ledger, offering, home_outputs)
         good_id = record.book.good_ids.find(good)
-        cleared = goods_good_clear.clear_good(context, good, good_id) if good_id is not None else goods_good_clear.GoodClearing.empty()
+        cleared = rules.goods_clearing(context, good, good_id) if good_id is not None else goods_good_clear.GoodClearing.empty()
         kept = market_curves.kept_areas(area_map, setup.port_tile, (setup.capital_tile, *watched_tiles), good)
         answer = goods_settle.settle_good(record, ledger, cleared, good, plant_makers)
         goods_settle.note_clearings(ledger, cleared, answer, memory_names, metal)
@@ -153,8 +154,8 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
             if cleared.bought is not None:
                 year_markets.add_bought(first_row + cleared.bought[0], *cleared.bought[1:])
         year_markets.fill(first_row, delivered, cleared.wanted, cleared.offered, delivered, idle, goods_settle.last_prices(record.memory, cleared))
-    goods_respend_year.respend(setup, record, view, ledger, left_markets,
-                               lambda cohort: cohort_basket(setup, record, cohort), orders)
+    rules.goods_respend(setup, record, view, ledger, left_markets,
+                        lambda cohort: cohort_basket(setup, record, cohort), orders)
     block = ledger.year_bids = year_bids.build(left_markets)     # demand over the same rounds as the traded quantity, as one table
     ledger.bids_by_market = BidsByMarket(block, left_markets)
     keys = left_markets.sorted_keys()

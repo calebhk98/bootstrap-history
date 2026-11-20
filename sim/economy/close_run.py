@@ -53,9 +53,9 @@ class CloseAnswer:
                       for each in fields(cls)})
 
 
-def _kernel_arguments(rows, arrays: YearArrays, pack: ClosePack, market_capacity, share, answer: CloseAnswer):
+def _kernel_arguments(rows, arrays: YearArrays, pack: ClosePack, market_capacity, share, answer: CloseAnswer, constants=None):
     matrices, columns, memory = arrays.matrices, arrays.producers, arrays.memory
-    return (rows, constants_array(),
+    return (rows, constants_array() if constants is None else constants,
             matrices.slot_goods, matrices.slot_trades, matrices.slot_is_input, matrices.slot_is_output, matrices.slot_is_plant,
             matrices.inputs, matrices.outputs, arrays.revenue_outputs, matrices.plant_goods, matrices.labour_hours, matrices.plant_labour_hours,
             matrices.plant_life_years, matrices.idle_wear_share,
@@ -74,9 +74,10 @@ def _kernel_arguments(rows, arrays: YearArrays, pack: ClosePack, market_capacity
             answer.new_last_runs, answer.new_staffed, answer.demand_runs, answer.needs_share, answer.added, arrays.tools)
 
 
-def close_producers(arrays: YearArrays, pack: ClosePack, price_shares_of=None) -> CloseAnswer:
+def close_producers(arrays: YearArrays, pack: ClosePack, price_shares_of=None, constants=None) -> CloseAnswer:
     """The close of every producer not idle. `price_shares_of(rows, added)` -> the share of the price that stays, rows by slots,
-    for the rows whose growth the kernel flagged and the units each adds per slot (None: no share is priced, every share is one)."""
+    for the rows whose growth the kernel flagged and the units each adds per slot (None: no share is priced, every share is one).
+    `constants` are the close rules' numbers in the kernel's order (None: `close_pack.constants_array()`)."""
     columns = arrays.producers
     count = len(columns.ids)
     answer = CloseAnswer.empty(columns)
@@ -86,9 +87,9 @@ def close_producers(arrays: YearArrays, pack: ClosePack, price_shares_of=None) -
         columns.tile_row, columns.capacity_runs, columns.yield_factor, columns.idle_years, count,
         len(arrays.matrices.goods.ids), len(arrays.area_index.areas.ids))
     rows = np.nonzero(columns.idle_years <= 0)[0].astype(np.int64)
-    close_kernel.close_rows(*_kernel_arguments(rows, arrays, pack, capacity, share, answer))
+    close_kernel.close_rows(*_kernel_arguments(rows, arrays, pack, capacity, share, answer, constants))
     flagged = np.nonzero(answer.needs_share)[0].astype(np.int64)
     if len(flagged) and price_shares_of is not None:
         share[flagged] = price_shares_of(flagged, answer.added[flagged])
-        close_kernel.close_rows(*_kernel_arguments(flagged, arrays, pack, capacity, share, answer))
+        close_kernel.close_rows(*_kernel_arguments(flagged, arrays, pack, capacity, share, answer, constants))
     return answer

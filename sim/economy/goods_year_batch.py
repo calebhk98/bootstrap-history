@@ -8,7 +8,7 @@ A market is batched when it has units on offer, no book edge sells in it (the mi
 in the year arrays (ground holds for its rent, read off the land record)."""
 from typing import List, Sequence, Tuple
 
-from . import goods_good_clear, goods_order_book
+from . import goods_order_book, rule_sets
 from .goods_table_context import ClearingContext
 from .types import Offer, is_edge
 
@@ -37,6 +37,6 @@ def clear_markets(setup, record, view, arrays, costs, markets: Sequence[tuple]) 
     context = ClearingContext(setup, record, view, orders, arrays, costs)
     found = {}
     for good in sorted({market[0] for market in markets}):
-        for each in goods_good_clear.clear_good(context, good, record.book.good_number(good)):
+        for each in rule_sets.of(setup).goods_clearing(context, good, record.book.good_number(good)):
             found[(good, each.area)] = (list(each.objects()[1]), each.result)
     return [found[(good, area)] for good, area, _bids, _offers, _last_price in markets]

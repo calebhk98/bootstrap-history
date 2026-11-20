@@ -10,7 +10,7 @@ import numpy as np
 
 from sim.labour.api import LabourBidTable, TrancheBids, people_in_areas, run_labour_year
 
-from . import cohort_people, cohort_prime, household_work_year, households_basket, labour_settle_year
+from . import cohort_people, cohort_prime, household_work_year, households_basket, labour_settle_year, rule_sets
 from .cohort_store import table_of
 from .household_offer_kernels import sum_in_order_by_group
 from .labour_ask_floor import mean_floor_per_hour
@@ -118,7 +118,8 @@ def clear_labour(setup, record, bids: Union[LabourBidTable, Sequence[LabourBid]]
         context.ask_floor_per_worker_year, dict(zip(floor_areas, people_in_areas(record.labour.workforce, floor_areas).tolist())),
         context.hours_per_worker_year)
     inputs = dataclasses.replace(context, trades=core_trades(setup, core_bids.trade_names()),
-                                 bids=core_bids, hours_sold_at=supply.schedules() if supply is not None else None)
+                                 bids=core_bids, hours_sold_at=supply.schedules() if supply is not None else None,
+                                 clearing=rule_sets.of(setup).labour_clearing)
     record.labour.workforce, report = run_labour_year(record.labour.workforce, inputs, owned=True)
     rows = clearing_rows(report.clearings)
     if supply is not None:

@@ -13,7 +13,7 @@ from sim.world import capital_market
 
 from .cohort_store import table_of
 from .rates import own_rate
-from . import cohort_people, plan_table, plan_year, producer_table
+from . import cohort_people, plan_table, plan_year, producer_table, rule_sets
 from . import outlay_room, taxes, bondage, bondage_hours, bondage_keep, bonded_purchase, banks, carriage_hours, credit, credit_idle_rate, credit_lines, debt_relief, credit_claims, currency, lender_ask, secondary_trade, equity, land_market, lending, merchants_credit, producers, shares, sites, state_budget, tax_farming, titles_inheritance, titles_moves, titles_plots, unit_cost
 from .credit_view import CreditView
 from . import producer_blocks, transfer_rows
@@ -212,7 +212,7 @@ class Economy:
         lending.lend_working_capital(setup, record, view)
         plans = plan_year.plans_of(setup, record, view, arrays, money)
         labour_bids = LabourBidTable()
-        plans.write_labour_bids(labour_bids)
+        rule_sets.of(setup).producer_labour_bids(setup, record, view, plans, labour_bids)
         for orders in inputs.engine_orders.values():
             labour_bids.add_objects(orders.labour_bids)
         state_budget.plan_year(setup, record, view, labour_bids)
