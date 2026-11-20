@@ -269,6 +269,7 @@ class Economy:
             engine.bids_from(orders.bids)
             engine.offers_from(orders.offers)
         engine.write()
+        rule_sets.of(setup).input_orders_after_hiring(setup, record, view, plans, ledger)
         plan_table.write_bids(plans, order_book)
         land_bid_year.write_firm_land_bids(setup, record, view, plans.wanted_runs_by_id(), plans.budget_total_by_id(), order_book)
         funds = capital_year.before_lending(setup, record, view, ledger, funds, view.year, inputs.institutions)   # holders sell shares and loans; depositors run on banks

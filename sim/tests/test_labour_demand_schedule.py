@@ -118,13 +118,6 @@ class MostRunsWanted(unittest.TestCase):
     def test_nothing_paid_now_leaves_cash_out_of_it(self):
         self.assertAlmostEqual(most_runs_wanted(make_producer(10.0), 0.0, 0.0, 0.0), 10.0)
 
-    def test_the_runs_its_inputs_allow_bind(self):
-        producer = make_producer(10.0)
-        self.assertAlmostEqual(most_runs_wanted(producer, 1000.0, 10.0, 0.0, runs_its_inputs_allow=3.0), 3.0)
-
-    def test_no_figure_for_its_inputs_leaves_them_out_of_it(self):
-        self.assertAlmostEqual(most_runs_wanted(make_producer(10.0), 1000.0, 10.0, 0.0), 10.0)
-
     def test_the_land_binds(self):
         producer = make_producer(10.0, land_run_cap=2.0)
         self.assertAlmostEqual(most_runs_wanted(producer, 1000.0, 10.0, 0.0), 2.0)

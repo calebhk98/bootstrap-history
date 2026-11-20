@@ -4,7 +4,7 @@ import math
 from types import MappingProxyType
 from typing import Dict, Mapping, Tuple
 
-from . import producer_table
+from . import producer_table, rule_sets
 from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
 from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, currency, expansion_price, merchants, ownership, producer_exit, shares,
@@ -114,6 +114,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
     arrays = close_producers_of_year(setup, record, view, ledger, arrays, property_income, pooled)
     arrays_kept(arrays)
     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
+    volumes = rule_sets.of(setup).merchant_volumes(volumes, ledger.unmet_demand.items())
     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
     news = merchants_news.YearNews(prices, volumes, anchors)
     interest_rate = own_rate(view, money)

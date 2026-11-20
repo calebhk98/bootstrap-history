@@ -123,6 +123,7 @@ class PlanTable:
         self.ids = ids
         self.position = {producer_id: place for place, producer_id in enumerate(ids)}
         self.runs, self.wanted_runs = runs, wanted_runs
+        self.ordered_runs = list(runs)      # the runs the input bids were sized for; `runs` may be raised once the hours are hired (labour_demand.py)
         self.wage_line = numpy.ascontiguousarray(wage_line, dtype=numpy.float64)
         self.bids, self.labour = bids, labour
         self.good_names, self.tile_names, self.area_names = good_names, tile_names, area_names
