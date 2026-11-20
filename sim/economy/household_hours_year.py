@@ -3,11 +3,11 @@
 hours kept are added to those the own-plot plan and the household work already keep back (`labour_supply.HourSupply`)."""
 from typing import Callable, Dict, Mapping, Optional, Sequence
 
-from . import households_hours_offered, trade_wages
+from . import households_hours_offered, rule_sets, trade_wages
 from .cohort_store import table_of
 from .households_basket import tile_need_prices
 from .households_own import Option, own_production
-from .labour_ask_floor import hectares_per_hour_by_recipe, plot_return_per_hour
+from .labour_ask_floor import hectares_per_hour_by_recipe
 from .labour_offers_table import PlotParameters
 from .types import AgentId, LabourOffer
 
@@ -42,9 +42,9 @@ def cohort_plot_parameters(setup, cohort, available: float, priced, options: Map
         return None
     usable = usable_plot_hours(setup, cohort, options, held)
     per_worker_hours = available / cohort.working_people
-    marginal = plot_return_per_hour(priced, options, tile.fertility, per_worker_hours,
-                                    cohort.people / cohort.working_people, hectares_per_hour, held / cohort.working_people,
-                                    setup.harvest_share_by_good)
+    marginal = rule_sets.of(setup).plot_return_for_hours_kept(
+        priced, options, tile.fertility, per_worker_hours, cohort.people / cohort.working_people, hectares_per_hour,
+        held / cohort.working_people, setup.harvest_share_by_good, usable / cohort.working_people)
     return PlotParameters(per_worker_hours, marginal, usable / cohort.working_people, cohort.working_people)
 
 

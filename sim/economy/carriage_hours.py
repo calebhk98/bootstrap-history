@@ -11,7 +11,7 @@ merchant that owns the carriers.
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import carriage_funding, credit, trade_wages
+from . import carriage_funding, credit, rule_sets, trade_wages
 from .cohort_reads import populated_tiles
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
@@ -228,20 +228,24 @@ def engaged(record, merchant: Merchant, index, populated=None) -> Tuple[Dict[str
     return hours_by_key, wage_by_key
 
 
-def wage_loans(setup, record) -> List[LoanRequest]:
+def wage_loans(setup, record, debts: Optional[Dict[str, float]] = None) -> List[LoanRequest]:
     """A one-year loan to each merchant whose carriers' wages for next year's plan its cash will not cover: carriers are paid at the labour
     market, before the year's lenders meet, so the merchant needs the cash in hand. The request is the wage bill of the hours the plan wants
     that the cash does not pay (`carriage_funding.loan_wanted`), at the wage of the area each is hired in; the credit market's own cap
-    rations it. It offers up to what the hours are worth to it above their wage, as a share of the wage."""
+    rations it, and the rule set says how much of it is asked (`merchant_wage_loans`; `debts` is what each merchant owes now). It offers up
+    to what the hours are worth to it above their wage, as a share of the wage."""
     money = setup.currency_id
     populated = populated_tiles(record.cohorts)
+    debts = debts or {}
+    asked = rule_sets.of(setup).merchant_wage_loan
     requests = []
     for merchant in sorted(record.merchants.values(), key=lambda each: each.agent_id):
         wanted_by_key = merchant.carriage_hours_wanted or {}
         pairs = [(hours, crew_wage(setup, record, merchant, key, populated)) for key, hours in wanted_by_key.items()]
         bill = carriage_funding.wage_bill(pairs)
         worth = sum(merchant.carriage_money_wanted.get(key, 0.0) for key in wanted_by_key)
-        short = carriage_funding.loan_wanted(bill, worth, record.book.balance(merchant.agent_id, money))
+        short = asked(carriage_funding.loan_wanted(bill, worth, record.book.balance(merchant.agent_id, money)), merchant.capital_base,
+                      debts.get(merchant.agent_id, 0.0))
         if short is not None:
             requests.append(LoanRequest(merchant.agent_id, money, short, credit.earnable_rate(worth - bill, bill), 1.0, short,
                                         WORKING_CAPITAL_PURPOSE))

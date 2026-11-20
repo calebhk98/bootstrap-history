@@ -9,12 +9,11 @@ from typing import Optional
 
 import numpy
 
-from . import goods_memory_notes, goods_remember_kernel as kernel
+from . import goods_memory_notes, goods_remember_kernel as kernel, rule_sets
 from .goods_good_clear import QUOTE_KINDS
 from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE, memory_reference_volume
 from .market_memory_asks import RESUMED_TRADE_MEMORY_SHARE
 from .market_memory_offers import NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE, price_after_thin_trade, price_toward_quote
-from .notional import making_costs
 from .setup import opening_price_today
 from .market_memory import market_key
 from .types import EDGE_EXTERNAL, QUOTE_COST_COVERING
@@ -29,8 +28,14 @@ class Costs:
 
     def get(self, good):
         if self._found is None:
-            self._found = making_costs(self._setup, self._record)
+            self._found = rule_sets.of(self._setup).memory_making_costs(self._setup, self._record)
         return self._found.get(good)
+
+    def of_market(self, good, old_price):
+        """The cost the memory of one market of `good` plans from: the good's making cost, else what the rule set gives a
+        market of a costless good that remembers `old_price` (None for none)."""
+        cost = self.get(good)
+        return cost if cost is not None else rule_sets.of(self._setup).memory_cost_of_costless(old_price)
 
 
 def remember_one(setup, record, good, area, market, old, total, usual, was_quote, idle_years, ledger, orders, costs: Costs):
@@ -42,19 +47,20 @@ def remember_one(setup, record, good, area, market, old, total, usual, was_quote
         reference = memory_reference_volume(usual, year_goods._wanted_at(market, old, orders))
         signal = year_goods.price_after_trade(old, was_quote, received, total, reference, idle_years)
         if total < REPRESENTATIVE_TRADE_SHARE * usual:
-            signal = price_after_thin_trade(signal, costs.get(good), total, usual)
+            signal = price_after_thin_trade(signal, costs.of_market(good, old), total, usual)
         return signal, None, True
     quote = market.result.quote
     if market.bids and not market.offers:
         from .goods_market_rows import bids_only_quote
         from . import market_quote
-        quote = (bids_only_quote(orders.bid_lists(), market.rows.bid_rows, costs.get(good)) if market.rows is not None else
-                 market_quote.no_trade_quote(market.bids, market.offers, costs.get(good)))
+        cost = costs.of_market(good, old)
+        quote = (bids_only_quote(orders.bid_lists(), market.rows.bid_rows, cost) if market.rows is not None else
+                 market_quote.no_trade_quote(market.bids, market.offers, cost))
     signal = price_toward_quote(old, quote.price) if quote is not None else None
     if signal is not None:
         quote_kind = quote.kind
         return signal, quote_kind, False
-    return plan_from_cost(costs.get(good))
+    return plan_from_cost(costs.of_market(good, old))
 
 
 def plan_from_cost(cost: Optional[float]):
@@ -120,7 +126,8 @@ def remember_markets(setup, record, keys, left_markets, rows, year_markets, cell
     has_bids, offers_left = table.bid_count[cells] > 0, table.left_count[cells]
     traded = (total > 0.0) & ~numpy.isnan(received)
     needs_cost = (traded & (total < REPRESENTATIVE_TRADE_SHARE * usual)) | ~traded
-    cost = numpy.array([numpy.nan if each is None else each for each in (costs.get(good) for good in goods)]) if needs_cost.any() \
+    cost = numpy.array([numpy.nan if each is None else each for each in (
+        costs.of_market(good, None if price != price else price) for good, price in zip(goods, old.tolist()))]) if needs_cost.any() \
         else numpy.full(len(rows), numpy.nan)
     signal, kind, from_trade = kernel.signals(old, was_quote, usual, idle, total, received, wanted_old, table.quote_price[cells],
                                               table.quote_kind[cells], has_bids, offers_left, cost, funded, best, REPRESENTATIVE_TRADE_SHARE,

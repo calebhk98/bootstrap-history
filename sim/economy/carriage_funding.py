@@ -25,6 +25,15 @@ def loan_wanted(bill: float, worth: float, cash: float) -> Optional[float]:
     return None
 
 
+def loan_within_leverage(wanted: Optional[float], leverage_limit: float, capital: float, debt: float) -> Optional[float]:
+    """`wanted` cut to what is left to a borrower that may owe `leverage_limit` times its own stake (its `capital` less its
+    `debt`), less what it owes already; None where nothing is wanted or nothing is left."""
+    if wanted is None:
+        return None
+    room = leverage_limit * (capital - debt) - debt
+    return min(wanted, room) if room > 0.0 else None
+
+
 def fund_bids(figures: Iterable[BidFigures], wage_of: Callable[[str, str], float], cash_of: Callable[[str], float]) -> List[BidFigures]:
     """Each employer's bids scaled by the share of their wage bill its cash pays (`wage_of(trade, area)` per hour, `cash_of(employer)`); a bid
     scaled to no hours is left out. The maximum wages stay."""

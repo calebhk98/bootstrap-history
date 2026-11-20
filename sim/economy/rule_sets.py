@@ -12,7 +12,7 @@ import numpy as np
 from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
 
 from . import (close_pack, coin_cost, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
-               merchant_volume_news)
+               making_cost_alone, merchant_volume_news, merchant_wage_loans, plot_hours_value)
 from .setup import DEFAULT_RULE_SET as SEARCH
 
 CLEARING = "clearing"
@@ -29,6 +29,11 @@ class RuleSet:
     coin_charge: Callable           # (setup, view) -> the share of what a run pays in advance that its coin costs (coin_cost.py)
     merchant_volumes: Callable      # (deliveries by market, (market, unmet demand) pairs) -> the volume of each market merchants learn
     input_orders_after_hiring: Callable   # (setup, record, view, the year's plans, the ledger): the plans' input orders re-sized once the hours are hired
+    merchant_wage_loan: Callable    # (the loan a merchant wants for its carriers' wages, its capital, its debt) -> the loan it asks for (None: none)
+    memory_making_costs: Callable   # (setup, record) -> {good: what it costs to make}, as the market memory reads it in a year a market traded nothing
+    memory_cost_of_costless: Callable   # (a market's remembered price, None for none) -> what its memory plans from where its good has no making cost (None: nothing)
+    plot_return_for_hours_kept: Callable  # (priced needs, plot options, fertility, a worker's hours, people a worker keeps, hectares an hour takes by recipe,
+                                          #  hectares held a worker, the state's share by good, hours the plot takes a worker) -> the return the hours kept are read from
 
 
 def planned_hours_bids(_setup, _record, _view, plans, bid_table) -> None:
@@ -64,13 +69,21 @@ RULE_SETS: Dict[str, RuleSet] = {
                     goods_clearing=goods_good_clear.clear_good, goods_respend=goods_respend_year.respend,
                     close_constants=close_pack.constants_array, coin_charge=coin_cost.no_charge,
                     merchant_volumes=merchant_volume_news.delivered_alone,
-                    input_orders_after_hiring=input_orders_after_hiring.leave_as_planned),
+                    input_orders_after_hiring=input_orders_after_hiring.leave_as_planned,
+                    merchant_wage_loan=merchant_wage_loans.as_wanted,
+                    memory_making_costs=making_cost_alone.of_every_good,
+                    memory_cost_of_costless=making_cost_alone.no_cost,
+                    plot_return_for_hours_kept=plot_hours_value.return_of_the_next_hour),
     CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
                       producer_labour_bids=schedule_bids_with_coin_cost, labour_clearing=clear_labour_at_one_wage,
                       goods_clearing=goods_clear_one_price.clear_good_at_one_price, goods_respend=no_respend,
                       close_constants=close_pack.constants_array_for_clearing, coin_charge=coin_cost.charge_at_the_going_rate,
                       merchant_volumes=merchant_volume_news.delivered_and_unmet,
-                      input_orders_after_hiring=input_orders_after_hiring.resize_to_hired_hours),
+                      input_orders_after_hiring=input_orders_after_hiring.resize_to_hired_hours,
+                      merchant_wage_loan=merchant_wage_loans.within_leverage,
+                      memory_making_costs=making_cost_alone.of_goods_made_alone,
+                      memory_cost_of_costless=making_cost_alone.the_price_it_had,
+                      plot_return_for_hours_kept=plot_hours_value.return_keeping_what_the_plot_grows),
 }
 
 

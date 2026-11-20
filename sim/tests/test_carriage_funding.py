@@ -56,5 +56,23 @@ class LoanWantedTests(unittest.TestCase):
         self.assertIsNone(carriage_funding.loan_wanted(0.0, 40.0, 0.0))
 
 
+class LoanWithinLeverage(unittest.TestCase):
+    def test_a_loan_the_limit_covers_is_asked_whole(self):
+        # may owe a quarter of its stake of 1000: 250
+        self.assertEqual(carriage_funding.loan_within_leverage(200.0, 0.25, 1000.0, 0.0), 200.0)
+
+    def test_a_loan_beyond_the_limit_is_cut_to_it(self):
+        self.assertEqual(carriage_funding.loan_within_leverage(1e9, 0.25, 1000.0, 0.0), 250.0)
+
+    def test_debt_owed_already_lowers_both_the_stake_and_the_room(self):
+        # stake 1000 - 100 = 900; a quarter is 225; less the 100 owed: 125
+        self.assertAlmostEqual(carriage_funding.loan_within_leverage(1e9, 0.25, 1000.0, 100.0), 125.0)
+
+    def test_nothing_is_asked_where_the_limit_leaves_no_room_or_nothing_is_wanted(self):
+        self.assertIsNone(carriage_funding.loan_within_leverage(500.0, 0.25, 1000.0, 300.0))
+        self.assertIsNone(carriage_funding.loan_within_leverage(500.0, 0.25, 0.0, 0.0))
+        self.assertIsNone(carriage_funding.loan_within_leverage(None, 0.25, 1000.0, 0.0))
+
+
 if __name__ == "__main__":
     unittest.main()
