@@ -2076,7 +2076,8 @@ profile; no command in the tree prints a year's time for a named rule set.
 - *The same spin-up started with every holder's coin cut to about what that run ended with* (a scratch runner that
   posts `spin_up_ensemble.scaling_transfers` for every holder before the first year; no command in the tree does it).
   The mint then strikes each year what wears and the money stock holds from the start, but wages and prices fall much
-  further than in the long run and are still falling slowly at the end, with nearly all hours hired. So the money
+  further than in the long run; the wage is still slipping at the end with nearly all hours hired, and the price
+  level, steady for a decade, jumps in the last two years (not traced; one good of the basket, by the look of it). So the money
   stock is not the whole of it: near full hiring the wage keeps slipping while output grows, which points at who
   spends the surplus (rent and profit go to households whose needs are near their limits) and at producers that
   cannot add capacity (land, plant). Not traced further.
