@@ -8,7 +8,8 @@ import unittest
 import numpy
 
 from sim.economy import close_pack, rule_sets
-from sim.economy.close_kernel import K_ASK_STEP, K_REGRESS, K_SOLD_OUT
+from sim.economy.capacity_by_working import CAPACITY_SHARE_MOVED_PER_YEAR
+from sim.economy.close_kernel import K_ASK_STEP, K_COIN_ON_WORKING, K_EXPECT, K_REGRESS, K_SOLD_OUT, K_WORKING_SHARE, K_WORKING_WEIGHT
 from sim.economy.setup import DEFAULT_RULE_SET
 
 
@@ -29,9 +30,10 @@ class Of(unittest.TestCase):
 
 
 class SalesHolds(unittest.TestCase):
-    def test_no_hold_to_sales_is_zeros_of_the_same_shape(self):
-        held = rule_sets.no_hold_to_sales(numpy.array([3.0, 0.0, 5.0]))
-        self.assertEqual(held.tolist(), [0.0, 0.0, 0.0])
+    def test_hold_to_stock_alone_names_no_sales_for_any_producer(self):
+        held = rule_sets.hold_to_stock_alone(numpy.array([3.0, 0.0, 5.0]))
+        self.assertEqual(held.shape, (3,))
+        self.assertTrue(numpy.isnan(held).all())
 
     def test_expected_sales_hold_returns_its_argument(self):
         sales = numpy.array([3.0, 0.0, 5.0])
@@ -39,17 +41,26 @@ class SalesHolds(unittest.TestCase):
 
 
 class ConstantsArrayForClearing(unittest.TestCase):
-    def test_it_differs_from_the_search_constants_only_at_three_places(self):
+    def test_it_differs_from_the_search_constants_only_where_the_clearing_rules_differ(self):
         search = close_pack.constants_array()
         clearing = close_pack.constants_array_for_clearing()
         self.assertEqual(clearing.shape, search.shape)
-        changed = {K_REGRESS, K_ASK_STEP, K_SOLD_OUT}
+        changed = {K_EXPECT, K_REGRESS, K_ASK_STEP, K_SOLD_OUT, K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING}
         for index in range(len(search)):
             if index not in changed:
                 self.assertEqual(clearing[index], search[index])
+        self.assertEqual(clearing[K_EXPECT], close_pack.EXPECTATION_SHARE_MOVED_UNDER_CLEARING)
         self.assertEqual(clearing[K_REGRESS], 0.0)
         self.assertEqual(clearing[K_ASK_STEP], 0.0)
         self.assertLess(clearing[K_SOLD_OUT], 0.0)
+        self.assertEqual(clearing[K_WORKING_WEIGHT], 1.0)
+        self.assertEqual(clearing[K_WORKING_SHARE], CAPACITY_SHARE_MOVED_PER_YEAR)
+        self.assertEqual(clearing[K_COIN_ON_WORKING], 1.0)
+
+    def test_the_search_constants_leave_the_clearing_rules_off(self):
+        search = close_pack.constants_array()
+        self.assertEqual(search[K_WORKING_WEIGHT], 0.0)
+        self.assertEqual(search[K_COIN_ON_WORKING], 0.0)
 
 
 if __name__ == "__main__":
