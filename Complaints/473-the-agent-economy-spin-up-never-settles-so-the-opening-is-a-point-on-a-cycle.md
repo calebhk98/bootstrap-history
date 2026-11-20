@@ -2246,8 +2246,17 @@ where it rests. The long run (`--years 150`) has no slump, no year without coin 
 unmet food need is nothing or next to it.
 
 **Found, not fixed.**
-- *The spin-up is shorter than England's way to rest.* Hiring grows for some decades from the rough plan; whether more
-  first-stage years (`SPIN_UP_MAXIMUM_YEARS`; `ROME_SPIN_UP_YEARS` tries a length) pass the check is being measured.
+- *The spin-up is shorter than England's way to rest.* Hiring grows for some decades from the rough plan. With a first
+  stage more than twice as long (`ROME_SPIN_UP_YEARS=70,15` before the ensemble command) the trend is gone: hours
+  hired and unmet need pass in every member, output in nearly every one and the rate in about half; the price level
+  and the watched prices still miss, each price moving a few per cent a year. So more years are needed and are not
+  enough, and the length is left as it is until the prices are steadier: a length chosen now would be a guess.
+- *The rough plan's mix of trades is far from where the years take it.* Building trades (masons, carpenters), bakers,
+  servants and the merchants' own trade shrink to a small fraction of the hours the opening gives them within a couple
+  of decades, and the unskilled trade grows by more than half (a scratch probe of the labour clearings by trade; no
+  command in the tree). The share of their year the unskilled offer for hire then falls again over the next century.
+- *Flour's price climbs for decades at the end of a long run* as its output grows by half and millers enter: part of
+  the same slow shift in what households do at home (hand grinding against bought flour).
 - *Household work swings the hours on offer over decades.* More than a quarter of all hours are household work done
   at home in the first year; the share falls by more than half over the first decades and climbs back over the next
   century, and the hours offered for hire move against it (a scratch probe of `labour_supply.HourSupply`). Not traced:
