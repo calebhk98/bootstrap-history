@@ -499,9 +499,53 @@ that both rests in one place and keeps the designed wage.
 - interest on a borrowed wage bill is in no figure a producer plans against;
 - a by-product nobody buys falls in price for ever.
 
+## 6i. Where it stands after Update 41 (read this first; 6h's three ways are decided)
+
+**Decided.** The owner chose to correct the opening (2026-11-20: the opening was a rough plan, to be updated until
+it is stable). Sending unsold hours home was tried on the small economy and fails the headline test (where it rests
+depends on where it started; Update 41), so the idle hours stay in the market, the wage clears them, and the opening is
+to be corrected to the state the rules rest at: nearly everyone hired, food dear against the wage, rents high.
+
+**Done on the clearing set** (Update 41 has each with its test): a run's cost counts the coin it ties up; plant follows
+the runs worked and is built from spare coin as well as on loans; input orders follow the hours hired, with the
+plant's coin set aside first; merchants learn delivered plus unmet volume. Both small economies rest
+(`python3 -m unittest sim.tests.test_economy_rest_smoke sim.tests.test_economy_rest_plant_smoke`).
+
+**How to read England now.** `python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages`
+prints the settle gaps and then "what the years moved": the opening's figures in the first year against the last. On
+the fixes above, output, hours and unmet need end inside the tolerance; the table shows what the opening still gets
+wrong (the share of hours hired, the wage against prices, coin by holder, the merchants' coin).
+
+**What the opening gets wrong, largest first** (each is in Update 41):
+1. It leaves about a quarter of offered hours unhired; most are people it parks in the plot trade, who offer the
+   hours their plots do not take.
+2. Its wage against food is several times what the years end at once those hours are hired.
+3. It counts about twice the rent and profit income the first year pays households.
+4. Producers end holding more coin and households less than it gives them (the spare coin is paid out a share a year).
+5. The money stock wears down for decades before the mint strikes again.
+
 ## 7. What to do first
 
-After Update 40:
+After Update 41:
+
+1. Read whether England rests when simply given the years
+   (`spin-up-trace --civ england_1300 --rules clearing --years 150 --csv out.csv`, then the last years' moves). If
+   it does, the first stage's maximum years (`sim/markets/spin_up.py`; the stage stops early once settled) is the
+   cheapest correction, and the items below shorten it.
+2. The opening hires the hours on offer: beside `opening_income.settled_income_per_head` (the largest income at which
+   households save nothing) a closure on hours, the income at which the hours the sized producers need are the hours
+   households offer; `opening._settle_income` calls it; the purse rule gives every household the wealth it wants at
+   that income; the hours the ask does not count (the mint's, carriage crews', seeded trades') are carried between the
+   opening's passes. Land rent then rises through the existing covering-price passes (`opening_rent.covering_prices`),
+   which is what makes food dear against the wage in the opening as the years make it. Judge by the table's first
+   rows. The three-tile fixture `stationary_setup` sets its hours from the old closure and must keep working.
+3. The merchants (one merchant, its stock never offered), then the thin markets that make the price level jump.
+4. The realism check: the wage in grain, the share of spending on food and the money stock in years of income at
+   the settled state, each against a source someone opens.
+5. The Norse lands and Han on the clearing set; then make it the game's set (`sim/markets/port_setup.py`
+   `GAME_RULE_SET`), run the fingerprint on `search` against main, the slow suite, and rebuild the openings.
+
+After Update 40 (kept for the record; its item 1 is decided above and its item 3's faults are fixed):
 
 1. Get the owner's choice among the three above, or go on with 2. For 2, find what sizes the hours on offer at the
    opening (`sim/economy/household_work_year.py` `expected_shares`, `labour_state.producers_hours_needed`,
