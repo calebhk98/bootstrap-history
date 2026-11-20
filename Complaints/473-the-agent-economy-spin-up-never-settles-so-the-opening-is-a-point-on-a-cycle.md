@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`): on the three-tile economy it rests, a copy a rounding error apart stays close and shocks move it to a new rest, but a start five per cent off rests somewhere else (capacity depends on the path; one bankruptcy idles a whole tile's recipe), and on England it slumps from the seventh year, so games still open on `search`. On `search` the readings of Update 38 stand: England five of eight ensemble members pass `spin_up_settled`, the Norse lands one of twenty-four, Han none of twelve; Rome and Mexica are not measured. Next, per the passnote's section 6g: the smallest economy that slumps as England does, bankruptcy by share, a capacity rule with one rest point, kernels for the clearing set
+**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the three-tile economy it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, all passing). On England it no longer slumps or blows up (Update 40): output, hours hired and unmet need end inside the settle tolerance, the price level and a handful of prices do not, so England still fails `spin_up_settled` on `clearing` and games still open on `search`. What is left is distance, not unsteadiness: the designed opening leaves about a fifth of the hours on offer unhired, the clearing set hires them at a much lower wage, and the years of the spin-up are not enough to finish getting there. On `search` the readings of Update 38 stand. Next, per the passnote's section 6h.
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -2002,3 +2002,78 @@ The slow suite and the openings' rebuild likewise wait for the pull request.
 4. Kernels for the clearing set's object-level parts, once 1 to 3 hold on the small economies.
 5. Then England on the clearing set again, the opening seeded from `opening_stationary.solve`, and the older
    items (trade between food areas, the money stock, Rome and Mexica).
+
+## Update 40: England on the clearing set: three faults of the goods clearing, prices that follow cost, a labour schedule that answers this year's wage; what is left is the distance from the designed opening (branch economy-rests-with-clearing-rules)
+
+**How it was traced.** Each reading below came from stepping England's opening economy on the clearing set year by year
+with a probe on one function (the labour clearing of one market, the goods clearing of one market, the producers'
+close). Swap `rule_sets.of` in a scratch runner as Update 39 says, wrap the function, print. The commands that stand in
+the tree: `python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages` (the settle check as a
+game takes it) and `--years N --csv` for a longer run.
+
+**What the slump of Update 39 was.** Not one thing. In the order found:
+
+1. *A good that cannot be kept was offered at any price.* Bread is baked before the market; the clearing set posted it
+   at its reservation, which for a good that spoils in the year is nothing, and households' wants for bread do not
+   grow as it cheapens. So a surplus of a quarter put bread at the smallest price the market prints, in the first year,
+   on five areas, and the bakers took in next to nothing. The three-tile economy has no such good and never showed it.
+   Now such a good has a supply curve of its own (`fresh_supply.FreshCurve`): all of it at the expected price or more,
+   and under it the share of the producer's workplaces that the price still pays. Rule test:
+   `sim/tests/test_fresh_supply.py`.
+2. *A stored good was let go for next to nothing.* The stock curve asks less the more a seller holds beyond its target,
+   without limit: a pile of twenty targets went for about a hundredth of the expected price. A unit is worth carrying
+   to next year (`inventory.holding_reservation`, the reservation the seller already posts), so the curve now lets
+   nothing go under that (`stock_supply.StockCurve.floor_price`). A glut then shows as unsold stock, which the plan
+   answers. Rule test: `sim/tests/test_stock_supply.py`.
+3. *A thin market cleared at whatever the buyers' coin allowed.* Entry opened potteries on four tiles with a few
+   hundred runs each; the households there need pots whatever the price, so the price went where their budgets ran
+   out, the next year's budget was set from that price, and within a few years pots took all the coin of those tiles.
+   Their survival cost, which reads the same prices, carried the wage floor up tenfold and hiring there stopped (the
+   drop at year eight). Merchants did not close the gap: they size a cargo to what the destination usually trades
+   (`merchants_shares.room_left`), and a starved market trades little. Now a market's price moves to the clearing
+   price but by no more than a set share of last year's (`price_step.within_a_years_move`), and at a price held short
+   of the clearing one the long side goes short (`goods_market.clear_at_price`): buyers by tier, sellers lowest
+   reservation first. A market with no price yet measures its first move from what its producers expect
+   (`goods_clear_one_price.price_moved_from`). Rule tests: `sim/tests/test_price_step.py`,
+   `sim/tests/test_goods_clear_at_price.py`, `sim/tests/test_goods_one_price_clearing.py`. The merchants' sizing rule
+   is untouched and is still wrong for a market that is short.
+4. *Prices did not follow wages down.* With 1 to 3 in, England stopped blowing up and slid instead: the wage fell
+   (item 6), prices sat where the producers' expectations held them, and incomes bought less every year. The clearing
+   set had switched off the pull of a producer's expected price toward what the good costs
+   (`producers.REGRESSIVE_EXPECTATION_WEIGHT`); with it left on, prices follow costs and England recovers to nearly
+   full hiring with next to no bankruptcies. The three-tile economy rests with it too, reaches its price level sooner,
+   and its better-yield check (which had been failing on a producer that ran out of coin) passes.
+5. *The hours wanted did not answer this year's wage.* A producer bid for no more hours than paid at last year's wage
+   (the stock hold was written as a cap), and its plan, drawn at that wage, also capped what hired hours could make
+   (`producers.production_lines`). So with hands idle the wage fell far for nothing, and near full hiring the wage and
+   the hours see-sawed year on year. Now the overhang of stock shifts the schedule and does not cap it
+   (`labour_demand.slice_worths`, `runs_held_back`), and a working producer's planned runs are raised to what its
+   schedule would staff (`labour_demand.write_schedule_bids`). A recipe that must buy inputs keeps its plan, which
+   sized its orders: its hiring still answers only last year's wage downward. Rule test:
+   `sim/tests/test_labour_demand_schedule.py`.
+6. *The designed opening is not a state the clearing set can rest at.* At the opening about a fifth of the hours
+   households offer are not hired at the opening wage (the search set shows the same idle hours and holds the wage
+   against them: its workers' ask falls only slowly, which is the slow drift it never loses). A rule that clears the
+   labour market sells those hours, and since farms take a fixed number of hours a run and are held by their land, it
+   takes a wage far under the opening's to do it. The clearing set's rest state for England is therefore near full
+   hiring at a much lower wage, and thirty and fifteen years are not enough to arrive: quantities are in, prices are
+   still moving (bread and flour climb as hired hands buy the food their plots used to grow).
+
+**Where England stands on the clearing set.** `python3 sim/simulator.py spin-up-trace --civ england_1300 --rules
+clearing --stages` prints the gaps the settle check reads. Real output, hours hired and unmet need end inside the
+tolerance; the price level, the interest rate and the watched prices do not. No year's bankruptcies pass a handful.
+A warm year of England on the clearing set was timed inside the owner's budget of a few seconds with a scratch
+profile; no command in the tree prints a year's time for a named rule set.
+
+**Also found, not fixed.**
+- A producer with plant (England's salt works) follows the old plant rules under both sets: its capacity wears and is
+  replaced only up to what it expects to sell, so a good that sells out at any price gets no more works.
+- A producer short of coin borrows its wage bill each year and the interest is in no figure it plans against; where
+  land rent takes the whole surplus it cannot earn the coin back and fails after some years (the three-tile economy
+  after a better yield, on the tile that is short of land). The pull toward cost hides it; it is not gone.
+- A by-product nobody buys (lead from silver) falls in price by the yearly limit every year.
+- A commit on this branch (`0f065f4a`) stopped England's year with a statistics error; the next commit fixes it with a
+  test. The three-tile economy and the quick tier did not catch it: run a civilisation before pushing a change to
+  the clearing set.
+
+**Order from here.** The passnote's section 6h.

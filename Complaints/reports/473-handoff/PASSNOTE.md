@@ -455,9 +455,65 @@ the spin-up's cache key does not know about the swap.
 - Three capacity rules were tried and taken out (by margin; both ways toward what sales call for; growth only).
   Each failed for the same reason: the coin a producer keeps follows its whole capacity.
 
+## 6h. Where it stands after Update 40 (read this first; it replaces 6g's "what holds and what does not")
+
+**The clearing set on the three-tile economy.** It rests, a twin stays close, a start five per cent off rests in the
+same place, and a better yield or fewer people move it to a new rest. All nine checks of
+`python3 -m unittest sim.tests.test_economy_rest_smoke` pass. Run it after every change to the set; it takes well
+under a minute with `ROME_NO_JIT=1`.
+
+**The clearing set on England.** It no longer blows up or slumps. Read it with
+
+```bash
+python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages          # the settle check's own gaps
+python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --years 110 --csv out.csv   # a longer look
+```
+
+from a worktree pinned to one commit, with its own `ROME_CACHE_DIR`. Output, hours hired and unmet need end inside
+the tolerance; the price level, the rate and several prices do not. Update 40 says what each fault was and which
+function now carries the rule.
+
+**The one thing to understand before going on.** The designed opening has about a fifth of the hours on offer unhired
+at the opening wage. The search set leaves them unhired and lets the wage drift down slowly, which is why it never
+quite settles. The clearing set hires them, at a much lower wage (farms take fixed hours a run and are held by their
+land, so little else can take the hands). So on the clearing set England's rest state is far from the opening the
+game was designed around, and the spin-up's years do not get all the way there. This is not a fault of step sizes
+and no tuning of the set closes it. It is settled one of three ways, and the choice changes what a game opens on:
+
+1. Let the spin-up run until the clearing set rests and open the game there (more hidden years, or the opening
+   seeded from a late year of its own spin-up, as section 7's older item 2 already proposed). The game then opens
+   with nearly everyone hired and a low wage against prices.
+2. Change the designed opening so that it is a state where the labour market clears: fewer hours on offer (hands
+   whose hours do not sell work their own plots and do not stand in the market), or more for them to do. This is a
+   change to the opening's sizing and to data, and it keeps the wage the opening was built around.
+3. Keep the wage from falling while hands are idle (a customary wage). It keeps the opening as designed, but then
+   where the economy rests depends on where it started, which is what the owner's headline test forbids.
+
+Until the owner chooses, 1 is what the rules as built lead to and 2 is the one recommended here: it is the only one
+that both rests in one place and keeps the designed wage.
+
+**Still wrong, in order of how much they move England** (each is in Update 40):
+- merchants size a cargo to what the destination usually trades, so a market that is short stays short;
+- a producer with plant gets no more plant where its good sells out;
+- a recipe that must buy inputs answers only last year's wage when hiring more;
+- interest on a borrowed wage bill is in no figure a producer plans against;
+- a by-product nobody buys falls in price for ever.
+
 ## 7. What to do first
 
-After Update 39 (the list under it is the order for the standing rules, kept for when they are worked on again):
+After Update 40:
+
+1. Get the owner's choice among the three above, or go on with 2. For 2, find what sizes the hours on offer at the
+   opening (`sim/economy/household_work_year.py` `expected_shares`, `labour_state.producers_hours_needed`,
+   `households_work.expected_sold_share`) and why a fifth of them have no taker at the opening wage.
+2. Run England for a hundred years and more on the clearing set and read the last years
+   (`spin-up-trace --civ england_1300 --rules clearing --years 110 --csv`): whether it rests at all, and where.
+3. The faults listed in 6h, merchants first, each reproduced on the smallest economy that shows it.
+4. The Norse lands and Han on the clearing set (not measured).
+5. Then make it the game's set (`sim/markets/port_setup.py` `GAME_RULE_SET`), run the fingerprint on `search`
+   against main, the slow suite, and rebuild the openings.
+
+After Update 39 (kept for the record; items 2 and 3 are done, 1 is what Update 40 did on England itself):
 
 1. Build the smallest economy that slumps on the clearing set as England does (a recipe with plant, a chain of
    inputs, a floor wage that binds, hours idle) and make it rest. First suspect: production with no hold where

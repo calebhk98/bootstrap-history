@@ -278,22 +278,35 @@ for their asks, and what an agent carries into next year is nudged by what happe
 of the way to it, the same share up and down:
 
 - **Labour.** A producer bids for hours as a schedule over the wage, one bid for each slice of its workplaces at what
-  that slice is worth (`labour_demand.py`), so the wage and the hours are found together. Each (trade, area) pays one
-  wage: last year's moved a share toward the wage where the hours offered meet the hours wanted, never under the floor
+  that slice is worth (`labour_demand.py`), so the wage and the hours are found together. Stock it holds beyond its
+  target takes runs off the schedule at every wage and does not cap it, and a working producer's planned runs are
+  raised to what the schedule would staff, so the hours it hires at a lower wage make their runs; a recipe that must
+  buy inputs keeps its plan, which sized its orders. Each (trade, area) pays one wage: last year's moved a share
+  toward the wage where the hours offered meet the hours wanted, never under the floor
   (`sim/labour/market/clearing_value.py`, `wage_step.py`, `hires_at_wage.py`). There are no rounds of search and no
   ask that drifts. Poaching, training, switching and migration are the labour core's own, as before.
-- **Goods.** Each market trades at one price, where the buyers' schedules meet the sellers' supply
-  (`goods_clear_one_price.py`). A producer's stock is offered along a supply curve around its target stock: content
-  with the price it expects when it holds exactly that stock, asking less the more it holds beyond it and more as
-  the stock is drawn down (`stock_supply.py`). Sellers do not re-price inside the year and households have no later
+- **Goods.** Each market trades at one price (`goods_clear_one_price.py`): the price where the buyers' schedules meet
+  the sellers' supply, moved no further from last year's than a year allows (`price_step.py`); at a price held short
+  of the clearing one the long side goes short (`goods_market.clear_at_price`). A producer's stock is offered along a
+  supply curve around its target stock: content with the price it expects when it holds exactly that stock, asking
+  less the more it holds beyond it, down to what a unit is worth carried to next year and no lower, and more as the
+  stock is drawn down (`stock_supply.py`). A good that cannot be kept a year is let go in full at the expected price
+  and by the share of workplaces a lower price still pays under it (`fresh_supply.py`). A market's first price is
+  measured from what its producers expect. Sellers do not re-price inside the year and households have no later
   rounds.
-- **Producers.** A producer plans the runs that pay at the price it expects and is not held to its expected sales;
-  its expected price follows what the market paid and its expected sales what it sold, with no pull toward cost, no
-  step on its unsold stock and no share of unmet demand (`close_pack.constants_array_for_clearing`).
+- **Producers.** A producer plans the runs that pay at the price it expects, less a share of the stock it holds
+  beyond its target, and is not held to its expected sales. Its expected price follows what the market paid, by a
+  smaller share a year than under `search`, and keeps the pull toward what the good costs to make, which is how a
+  change in wages reaches prices; it takes no step on unsold stock and adds no share of unmet demand to its expected
+  sales. Without plant its capacity moves toward the capacity at which the runs it worked would be the normal share
+  of its workplaces (`capacity_by_working.py`); the coin it keeps follows the share of its capacity that works, and
+  what it holds beyond that is paid out a share a year (`close_pack.constants_array_for_clearing`).
 
-Capacity, entry, exit and bankruptcy are the same rules in both sets. Measure a set on the hand-built economy with
-`python3 sim/simulator.py spin-up-trace --fixture stationary --rules clearing --twin --years 90`; what the clearing set
-is held to there, and what it does not meet yet, is `sim/tests/test_economy_rest_smoke.py`.
+Plant, entry, exit and bankruptcy are the same rules in both sets. Measure a set on the hand-built economy with
+`python3 sim/simulator.py spin-up-trace --fixture stationary --rules clearing --twin --years 130`, and on a
+civilisation with `python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages`; what the
+clearing set is held to on the hand-built economy is `sim/tests/test_economy_rest_smoke.py`, and where it stands on
+England is Complaint 473's latest update.
 
 ## Heuristics
 
