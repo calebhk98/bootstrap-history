@@ -9,14 +9,15 @@ from sim.markets import api as markets_api
 
 
 def run_member(civilisation_id, member, rules=None):
-    """{"member", "gaps", "trends"} of one replay of the civilisation's opening; None gaps when too few years were measured.
+    """{"member", "gaps", "trends", "by_good" (spin_up_by_good.by_good)} of one replay of the civilisation's opening; None gaps when too few years were measured.
     `rules` names the rule set the economy opens on (None: the shipped one)."""
     _tree, _prices, nodes, _wages, _goods = load()
     game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civilisation_id),
                cfg=markets_api.rule_set_configuration(rules))
     _watched, replayed = markets_api.spin_up_stages(game, markets_api.spin_up_cash_factor(member))
-    gaps, trends = markets_api.spin_up_member_figures(list(replayed))
-    return {"member": member, "gaps": gaps, "trends": trends}
+    rows = list(replayed)
+    gaps, trends = markets_api.spin_up_member_figures(rows)
+    return {"member": member, "gaps": gaps, "trends": trends, "by_good": markets_api.spin_up_by_good(rows)}
 
 
 def run_ensemble(civilisation_id, members, jobs=0, rules=None):

@@ -84,3 +84,16 @@ def summarise_members(member_values):
         if values:
             summary[name] = {"gaps": values, "median": statistics.median(values), "spread": max(values) - min(values)}
     return summary
+
+
+def median_by_good(tables):
+    """{good: {figure: the median of the members' values}} from one `spin_up_by_good.by_good` table per member; a member
+    with no value for a figure is left out of its median, and a figure no member has is None."""
+    medians = {}
+    for good in sorted({good for table in tables for good in table}):
+        figures = sorted({figure for table in tables for figure in table.get(good, {})})
+        medians[good] = {}
+        for figure in figures:
+            values = [table[good][figure] for table in tables if table.get(good, {}).get(figure) is not None]
+            medians[good][figure] = statistics.median(values) if values else None
+    return medians

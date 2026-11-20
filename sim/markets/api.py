@@ -61,6 +61,38 @@ def spin_up_end_gaps(rows):
 	return end_gaps(rows)
 
 
+def spin_up_by_good(rows):
+	"""{watched good: its share, largest move, part of the "prices" gap, trend and saw} of the rows `spin_up_stages` gave
+	(spin_up_by_good.by_good over the measured years)."""
+	from .spin_up import SPIN_UP_MEASURED_YEARS
+	from .spin_up_by_good import by_good
+	return by_good(rows, int(SPIN_UP_MEASURED_YEARS))
+
+
+def spin_up_median_by_good(tables):
+	"""The members' `spin_up_by_good` tables as one of medians (spin_up_ensemble.median_by_good)."""
+	from .spin_up_ensemble import median_by_good
+	return median_by_good(tables)
+
+
+def spin_up_mix_parts(rows, quantity, mix_name):
+	"""[(good, its part of the change)] in the pair of measured years where `quantity` moved most (spin_up_by_good.mix_parts)."""
+	from .spin_up import SPIN_UP_MEASURED_YEARS
+	from .spin_up_by_good import mix_parts
+	trimmed = [row for row in rows if row["stage"] == "trimmed"]
+	return mix_parts(trimmed[-int(SPIN_UP_MEASURED_YEARS):], quantity, mix_name)
+
+
+def spin_up_mix_tables(rows, count):
+	"""(labels, hours by trade, output by good, recipes whose share of a good moved) for the first year, the trough and the
+	last year of the rows `spin_up_stages` gave (spin_up_mix_table.py); each table's rows hold one value per label."""
+	from . import spin_up_mix_table as table
+	marked = table.marked_rows(rows)
+	mixes = [row["mix"] for _label, row in marked]
+	return ([label for label, _row in marked], table.largest_first(mixes, "hours_by_trade", count, size=lambda hours: hours[0] + hours[1]),
+	        table.largest_first(mixes, "output_by_good", count), table.recipes_that_moved(mixes, count))
+
+
 def sensitivity_table(game, years, skip, variants=None):
 	from .port_trace import sensitivity_table as table
 	return table(game, years, skip, variants)

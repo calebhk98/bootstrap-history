@@ -13,7 +13,8 @@ from .spin_up_year import watched_goods, watched_shares, year_inputs, year_share
 def replay(economy, inputs, watched, unskilled_trade, first_years, trimmed_years, shares=None):
     """Yield one row per year: the first stage's `first_years` years, then (after the workforce is trimmed to the hours
     employers want, as the run does) the trimmed stage's `trimmed_years`. A row is {stage, year, money_supply, wage,
-    money by holder, the year's money figures, and year_state's price_level, rate, prices and settle quantities}."""
+    money by holder, the year's money figures, year_state's price_level, rate, prices and settle quantities, and "mix":
+    what the year's economy is made of (sim/economy/spin_up_mix.py)}."""
     for stage, years in (("first", first_years), ("trimmed", trimmed_years)):
         if stage == "trimmed":
             economy_api.trim_workforce_to_expected_hours(economy)
@@ -26,6 +27,7 @@ def replay(economy, inputs, watched, unskilled_trade, first_years, trimmed_years
                                   economy_api.traded_price_goods(economy), year_shares(economy, outcome, watched, shares)))
             row.update(money_by_holder_columns(economy_api.economy_book(economy), economy_api.currency_id(economy)))
             row.update(economy_api.money_year_figures(economy, outcome))
+            row["mix"] = economy_api.spin_up_mix(economy, outcome)
             yield row
 
 

@@ -107,7 +107,8 @@ class ReplayTests(unittest.TestCase):
                    "money_year_figures": lambda economy, outcome: {"struck": 0.0, "wear": 0.0},
                    "economy_book": lambda economy: None, "currency_id": lambda economy: "coin",
                    "trim_workforce_to_expected_hours": trim, "traded_price_goods": lambda economy: {"wheat"},
-                   "traded_volumes": lambda economy: {"wheat": 3.0}}
+                   "traded_volumes": lambda economy: {"wheat": 3.0},
+                   "spin_up_mix": lambda economy, outcome: {"output_by_good": {"wheat": 4.0}}}
         with mock.patch.multiple(spin_up_stages.economy_api, **patches), \
                 mock.patch.object(spin_up_stages, "money_by_holder_columns", lambda book, currency: {}):
             rows = list(spin_up_stages.replay(Economy(), object(), ["wheat"], "labour", 2, 3))
@@ -116,6 +117,7 @@ class ReplayTests(unittest.TestCase):
                          [("first", 0), ("first", 1), ("trimmed", 0), ("trimmed", 1), ("trimmed", 2)])
         self.assertEqual(rows[0]["wage"], 2.0)
         self.assertEqual(rows[0]["prices"], {"wheat": 1.0})
+        self.assertEqual(rows[0]["mix"], {"output_by_good": {"wheat": 4.0}})
 
 
 if __name__ == "__main__":

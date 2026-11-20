@@ -10,10 +10,13 @@ from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
 from sim.markets.port_trace_holders import HOLDER_COLUMNS
 from sim.ui.spin_up_moved import format_moved, moved
 from sim.ui.spin_up_stages_report import format_end_gaps, header_line, row_line, write_stage_csv
+from sim.ui.spin_up_by_good_report import format_by_good, format_ensemble_by_good, format_mix, format_parts
 from sim.ui.spin_up_ensemble_report import format_ensemble, write_ensemble_csv
 from sim.ui.spin_up_ensemble_run import run_ensemble
 from sim.ui.spin_up_fixture_trace import columns_of, fixture_trace, format_fixture_trace
 
+PARTS_SHOWN = 12       # goods listed in each table of what a gap is made of
+MIX_ROWS_SHOWN = 24    # trades, goods and goods with several recipes listed in the mix tables
 MACRO_COLUMNS = ("year", "price_level", "wage", "unsold_hours_share", "people_unemployment", "real_output",
                  "chained_price_level")
 
@@ -72,6 +75,7 @@ def _print_ensemble(args):
     civilisation_id = args.civ or default_civilisation_id()
     results = run_ensemble(civilisation_id, args.ensemble, args.jobs, args.rules or None)
     print(format_ensemble(civilisation_id, results))
+    print(format_ensemble_by_good(markets_api.spin_up_median_by_good([result["by_good"] for result in results])))
     if args.csv:
         write_ensemble_csv(results, args.csv)
     return 0
@@ -88,6 +92,12 @@ def _print_stages(game, csv_path):
         print(row_line(row, watched), flush=True)
     print(format_end_gaps(markets_api.spin_up_end_gaps(rows)))
     print(format_moved(moved(rows)))
+    print(format_by_good(markets_api.spin_up_by_good(rows)))
+    print(format_parts("stock by good, change in the pair of measured years where stock moved most, as a share of a year's output:",
+                       markets_api.spin_up_mix_parts(rows, "inventory_value", "stock_by_good"), PARTS_SHOWN))
+    print(format_parts("output by good, change in the pair of measured years where output moved most, as a share of a year's output:",
+                       markets_api.spin_up_mix_parts(rows, "real_output", "output_by_good"), PARTS_SHOWN))
+    print(format_mix(*markets_api.spin_up_mix_tables(rows, MIX_ROWS_SHOWN)))
     if csv_path:
         write_stage_csv(rows, watched, csv_path)
     return 0

@@ -56,6 +56,7 @@ from .titles_value import title_wealth
 from .debt_relief import indebted_tiles as record_indebted_tiles
 from .titles_moves import holdings as record_title_holdings
 from .spin_up_state import spin_up_state as year_spin_up_state
+from .spin_up_mix import year_mix as year_spin_up_mix
 from .year_close import rebase_basket_price_level
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .rule_sets import CLEARING as RULE_SET_CLEARING, RULE_SETS, SEARCH as RULE_SET_SEARCH
@@ -439,6 +440,11 @@ def money_year_figures(economy, outcome):
 def spin_up_state(economy, outcome):
     """The year's real output, hours hired and idle, producers' inventories and unmet need; see spin_up_state.py."""
     return year_spin_up_state(economy.setup, economy.record, outcome)
+
+
+def spin_up_mix(economy, outcome):
+    """What the year just stepped is made of (hours by trade, runs by recipe, stock and output by good); see spin_up_mix.py."""
+    return year_spin_up_mix(economy.setup, economy.record, outcome)
 
 
 def note_spin_up_result(economy, result):
