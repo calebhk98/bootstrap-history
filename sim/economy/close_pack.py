@@ -13,7 +13,7 @@ from sim.loans.close_kernel import producer_loans
 
 from . import ask_adjust, expected_sales, firm_finance, inventory, plant_investment, producers, producers_close
 from .capacity_by_working import CAPACITY_SHARE_MOVED_PER_YEAR
-from .close_kernel import (K_ASK_STEP, K_COIN_CHARGE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT, K_EXPECT, K_SOLD_OUT, K_WORKING_SHARE,
+from .close_kernel import (K_ASK_STEP, K_COIN_CHARGE, K_COIN_ON_WORKING, K_EXPECT, K_SOLD_OUT, K_WORKING_SHARE,
                            K_WORKING_WEIGHT)
 from .close_pack_markets import clearing_and_unmet, columns_of_markets
 from .close_pack_asks import ask_multiples
@@ -45,16 +45,6 @@ EXPECTATION_SHARE_MOVED_UNDER_CLEARING = declare(
         "trying shares on the three-tile economy (sim/tests/test_economy_rest_smoke.py); not fitted.")
 
 
-SPARE_COIN_SHARE_PAID_PER_YEAR = declare(
-    "SPARE_COIN_SHARE_PAID_PER_YEAR", 0.25, kind="temporary_heuristic",
-    unit="share of the coin a producer holds beyond what it keeps, paid to its owners in a year",
-    source=None, confidence="D",
-    retire="Complaints/473: owners who weigh a year's dip against the cost of refunding the producer give the share",
-    why="The coin a producer keeps follows the runs it expects to work. Paid out whole, a dip in those runs (a year's "
-        "low price) sends the coin to the owners at once and the producer cannot hire back when the price returns; "
-        "England lost half its hiring to that in two years. A share a year lets a producer ride a dip out. Not fitted.")
-
-
 def constants_array_for_clearing() -> np.ndarray:
     """The close rules' numbers under the clearing rule set (rule_sets.py). The market sets the price, so a producer's
     expected price follows what the market paid by a smaller share a year and takes no step on its unsold stock; it keeps
@@ -63,7 +53,8 @@ def constants_array_for_clearing() -> np.ndarray:
     sales only follow what it sold (no share of the market's unmet demand added when it sells out), by the smaller share.
     A producer moves its capacity (with plant: the plant it wants) toward what the runs it worked call for
     (capacity_by_working.py) and not by its sales and losses; the coin a producer keeps follows the share of its capacity
-    that works, so workplaces standing idle hold none, and what it holds beyond that is paid out a share a year.
+    that works, so workplaces standing idle hold none; what it holds beyond that is paid out whole, as under the
+    search set (a share a year left producers holding years of profit in idle coin that no opening gives them).
     A run's cost counts the interest on the coin its inputs and hours tie up (coin_cost.py)."""
     constants = constants_array()
     constants[K_EXPECT] = EXPECTATION_SHARE_MOVED_UNDER_CLEARING
@@ -72,7 +63,6 @@ def constants_array_for_clearing() -> np.ndarray:
     constants[K_WORKING_WEIGHT] = 1.0
     constants[K_WORKING_SHARE] = CAPACITY_SHARE_MOVED_PER_YEAR
     constants[K_COIN_ON_WORKING] = 1.0
-    constants[K_EXCESS_PAYOUT] = SPARE_COIN_SHARE_PAID_PER_YEAR
     constants[K_COIN_CHARGE] = 1.0
     return constants
 
