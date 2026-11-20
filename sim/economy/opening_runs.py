@@ -17,6 +17,7 @@ from .setup import recipe_tile_key
 from .types import GoodId, Recipe, TileId
 
 INPUT_OUTPUT_PASSES = 60
+STEP_HALVINGS = 6             # numerical bound on how far the passes' step is cut when whole steps circle
 INCUMBENT_PASSES = 4          # numerical bound on choosing recipes against the demand they then meet
 CEILING_SWEEPS = 6            # numerical bound on carrying a deposit's limit down the chain of recipes that use it
 
@@ -195,42 +196,63 @@ def required_runs(final_by_tile, ranked: Mapping[GoodId, List[str]], recipes: Ma
     then the next, so what a deposit cannot feed is made another way; a joint run's other outputs count toward
     their own goods. A recipe in `yields` makes that factor of its stated outputs a run, so it takes more runs.
     With `main` (main_outputs), a good only made alongside another is supplied by the runs its makers' main outputs
-    take (by_product_ceilings), and the recipes that use it are held to that supply."""
+    take (by_product_ceilings), and the recipes that use it are held to that supply.
+
+    The passes take whole steps first. Where a by-product's user is a rival maker of its maker's main output each
+    feeds the other and whole steps circle (one pass gives the output to the user, the next finds no by-product for
+    it); the passes then go on from where they stand with the step halved, block by block, until they settle."""
     static = ceilings or {}
     yields = yields or {}
     runs: Dict[str, float] = {}
     driven: Dict[str, float] = {}
     users = by_product_users(recipes, main) if main is not None else {}
-    for _ in range(INPUT_OUTPUT_PASSES):
-        ceilings = dict(static)
-        if users:
-            for recipe_id, limit in by_product_ceilings(driven, recipes, users, yields).items():
-                ceilings[recipe_id] = min(ceilings.get(recipe_id, math.inf), limit)
-        required = required_quantities(final_by_tile, runs, recipes)
-        tool_fallback.shift_unmet_tools(required, runs, recipes, ranked, ceilings)
-        updated: Dict[str, float] = {}
-        driven = {}
-        for good, quantity in sorted(required.items()):
-            remaining = quantity
-            for recipe_id in ranked.get(good, ()):
-                if quantity <= 0.0:
-                    break
-                made = recipes[recipe_id].outputs.get(good, 0.0) * yields.get(recipe_id, 1.0)
-                if made <= 0.0:
-                    continue
-                for_good = min(remaining / made, ceilings.get(recipe_id, math.inf))
-                runs_now = max(updated.get(recipe_id, 0.0), for_good)
-                updated[recipe_id] = runs_now
-                if main is not None and main.get(recipe_id) == good:
-                    driven[recipe_id] = max(driven.get(recipe_id, 0.0), for_good)
-                remaining = quantity - runs_now * made
-                if remaining <= 1e-9 * quantity:
-                    break
-        if all(abs(updated.get(key, 0.0) - runs.get(key, 0.0)) <= 1e-9 * max(1.0, updated.get(key, 0.0))
-               for key in set(updated) | set(runs)):
-            return updated
-        runs = updated
+    for halvings in range(STEP_HALVINGS + 1):
+        step = 0.5 ** halvings
+        for _ in range(INPUT_OUTPUT_PASSES * 2 ** halvings):
+            updated, driven_now = _pass(final_by_tile, ranked, recipes, static, yields, main, users, runs, driven)
+            if all(abs(updated.get(key, 0.0) - runs.get(key, 0.0)) <= 1e-9 * max(1.0, updated.get(key, 0.0))
+                   for key in set(updated) | set(runs)):
+                return updated
+            runs, driven = _stepped(runs, updated, step), _stepped(driven, driven_now, step)
     return runs
+
+
+def _stepped(before: Mapping[str, float], after: Mapping[str, float], step: float) -> Dict[str, float]:
+    """`before` moved `step` of the way to `after` (a recipe in one only stands at nothing in the other)."""
+    if step >= 1.0:
+        return dict(after)
+    return {key: before.get(key, 0.0) + step * (after.get(key, 0.0) - before.get(key, 0.0))
+            for key in sorted(set(before) | set(after))}
+
+
+def _pass(final_by_tile, ranked, recipes, static, yields, main, users, runs, driven) -> Tuple[Dict[str, float], Dict[str, float]]:
+    """One pass: (the runs that meet final demand and what `runs` use, the runs each recipe's main output took of them),
+    under the ceilings and the by-product supply that `driven` gives."""
+    ceilings = dict(static)
+    if users:
+        for recipe_id, limit in by_product_ceilings(driven, recipes, users, yields).items():
+            ceilings[recipe_id] = min(ceilings.get(recipe_id, math.inf), limit)
+    required = required_quantities(final_by_tile, runs, recipes)
+    tool_fallback.shift_unmet_tools(required, runs, recipes, ranked, ceilings)
+    updated: Dict[str, float] = {}
+    driven_now: Dict[str, float] = {}
+    for good, quantity in sorted(required.items()):
+        remaining = quantity
+        for recipe_id in ranked.get(good, ()):
+            if quantity <= 0.0:
+                break
+            made = recipes[recipe_id].outputs.get(good, 0.0) * yields.get(recipe_id, 1.0)
+            if made <= 0.0:
+                continue
+            for_good = min(remaining / made, ceilings.get(recipe_id, math.inf))
+            runs_now = max(updated.get(recipe_id, 0.0), for_good)
+            updated[recipe_id] = runs_now
+            if main is not None and main.get(recipe_id) == good:
+                driven_now[recipe_id] = max(driven_now.get(recipe_id, 0.0), for_good)
+            remaining = quantity - runs_now * made
+            if remaining <= 1e-9 * quantity:
+                break
+    return updated, driven_now
 
 
 def choose_recipes(final_by_tile, recipes: Mapping[str, Recipe], prices: Mapping[GoodId, float],
@@ -249,9 +271,12 @@ def choose_recipes(final_by_tile, recipes: Mapping[str, Recipe], prices: Mapping
     return ranked, runs
 
 
-def limited_goods(recipes: Mapping[str, Recipe], by_limits) -> set:
+def limited_goods(recipes: Mapping[str, Recipe], by_limits, land_per_run: Optional[Mapping[str, float]] = None) -> set:
     """Goods the deposits bound: every recipe that makes the good is site-bound with declared limits, or uses (as an
-    input or plant wear) a good that is itself so bound. Charcoal from standing timber is bound by the timber."""
+    input or plant wear) a good that is itself so bound. Charcoal from standing timber is bound by the timber. With
+    `land_per_run` (the land a run of each recipe takes) a recipe that takes land is bound the same way: the ground
+    it was granted is all it has."""
+    land = land_per_run or {}
     makers: Dict[GoodId, List[str]] = {}
     for recipe_id, recipe in recipes.items():
         for good, quantity in recipe.outputs.items():
@@ -264,7 +289,7 @@ def limited_goods(recipes: Mapping[str, Recipe], by_limits) -> set:
         for good, makers_of in sorted(makers.items()):
             if good in limited:
                 continue
-            if all(sites.is_sited(recipes[maker], by_limits)
+            if all(sites.is_sited(recipes[maker], by_limits) or land.get(maker, 0.0) > 0.0
                    or any(used in limited for used in list(recipes[maker].hard_inputs) + list(recipes[maker].plant_goods))
                    for maker in makers_of):
                 limited.add(good)
@@ -272,14 +297,15 @@ def limited_goods(recipes: Mapping[str, Recipe], by_limits) -> set:
     return limited
 
 
-def fit_to_supply(setup, record) -> None:
+def fit_to_supply(setup, record, land_per_run: Optional[Mapping[str, float]] = None) -> None:
     """Hold the producers that use a good only deposits supply (or only what they supply, down the chain) to the
     supply the placed producers make: where their inputs (and plant wear) would take more, every user's capacity
     and expected sales are cut by the same share, so no processor opens larger than the ore its tiles can feed and
     no smelter larger than the charcoal the timber can burn. A user of the good that something unbound also makes
-    is not held. The producers' figures are packed once and the sweeps run on the arrays (`held_sales`)."""
+    is not held. With `land_per_run` what only land makes is held too (`limited_goods`). The producers' figures are
+    packed once and the sweeps run on the arrays (`held_sales`)."""
     by_limits = sites.limits_by_recipe(setup.site_limits)
-    fixed = sorted(limited_goods(setup.recipes, by_limits))
+    fixed = sorted(limited_goods(setup.recipes, by_limits, land_per_run))
     producers = sorted(record.producers.items())
     if not fixed or not producers:
         return
@@ -288,6 +314,7 @@ def fit_to_supply(setup, record) -> None:
     yield_factor = np.array([producer.yield_factor for _id, producer in producers])
     made = np.array([[setup.recipes[producer.recipe_id].outputs.get(good, 0.0) for _id, producer in producers] for good in fixed])
     used = np.zeros((len(fixed), len(producers)))
+    upkeep = np.zeros((len(fixed), len(producers)))
     for column, (_id, producer) in enumerate(producers):
         recipe = setup.recipes[producer.recipe_id]
         if sites.is_sited(recipe, by_limits):
@@ -295,32 +322,45 @@ def fit_to_supply(setup, record) -> None:
         for row, good in enumerate(fixed):
             used[row, column] = recipe.hard_inputs.get(good, 0.0)
             if recipe.plant_life_years > 0.0:
-                used[row, column] += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
-    factors = held_sales(sales, yield_factor, made, used)
+                upkeep[row, column] = recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
+    factors = held_sales(sales, yield_factor, made, used, upkeep)
     for column, (_id, producer) in enumerate(producers):
         if factors[column] != 1.0:
             producer_table.set_fields(record.producers, _id, capacity_runs=capacity[column] * factors[column],
                                       expected_sales=sales[column] * factors[column])
 
 
-def held_sales(sales: np.ndarray, yield_factor: np.ndarray, made: np.ndarray, used: np.ndarray) -> np.ndarray:
+def held_sales(sales: np.ndarray, yield_factor: np.ndarray, made: np.ndarray, used: np.ndarray,
+               upkeep: Optional[np.ndarray] = None) -> np.ndarray:
     """The share of its sales each producer is held to: `sales` are the runs worked, `made[good, producer]` what a run
-    of the producer supplies of a good (at its `yield_factor`) and `used[good, producer]` what it takes of it (zero for a producer not held by
-    that good). For each good in turn, where the users would take more than the producers supply, every user is cut by the
-    same share, and the sweeps repeat until none is cut (a chain of holds settles stage by stage)."""
+    of the producer supplies of a good (at its `yield_factor`), `used[good, producer]` what a run takes of it as an input
+    and `upkeep[good, producer]` what the wear of its plant takes of it a run (both zero for a producer not held by that good).
+    For each good in turn, where the users would take more than the producers supply, the plants' upkeep is served
+    first and the input users share what is left, each cut by the same share; only where the supply does not cover
+    the upkeep are the plants cut. A maker whose plant is made with its own output down the chain (a kiln built with
+    the iron its charcoal smelts) is otherwise cut for its plant each time its users are cut for its output, round
+    the loop to nothing. The sweeps repeat until none is cut (a chain of holds settles stage by stage)."""
     factors = np.ones(sales.shape[0])
     sales = sales.copy()
+    upkeep = np.zeros(used.shape) if upkeep is None else upkeep
     for _sweep in range(2 * CEILING_SWEEPS):
         held = False
         for row in range(made.shape[0]):
             supply = math.fsum((sales * yield_factor * made[row]).tolist())
-            users = used[row] > 0.0
+            users, plants = used[row] > 0.0, upkeep[row] > 0.0
             wanted = math.fsum((sales[users] * used[row][users]).tolist())
-            if wanted > supply * (1.0 + 1e-9) and wanted > 0.0:
-                factor = supply / wanted
+            kept_up = math.fsum((sales[plants] * upkeep[row][plants]).tolist())
+            if wanted + kept_up <= supply * (1.0 + 1e-9) or wanted + kept_up <= 0.0:
+                continue
+            held = True
+            if kept_up > supply:
+                sales[plants] *= supply / kept_up
+                factors[plants] *= supply / kept_up
+                kept_up = supply
+            if wanted > 0.0:
+                factor = max(0.0, supply - kept_up) / wanted
                 sales[users] *= factor
                 factors[users] *= factor
-                held = True
         if not held:
             break
     return factors

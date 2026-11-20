@@ -72,16 +72,15 @@ class OpeningSmeltersBesideOreTests(unittest.TestCase):
         self.assertTrue(placed)
         self.assertEqual({area_map.area_of(fixture.ORE, tile) for tile in placed}, {"area:hills"})
 
-    def test_a_smelter_takes_no_more_runs_on_a_tile_than_the_hands_there_can_spare(self):
+    def test_a_smelter_takes_no_more_runs_on_a_tile_than_all_the_hands_there_could_work(self):
         setup, record, area_map, _shares = world()
         setup.opening_population_by_tile[fixture.HILLS] = 100.0
         shares = [(types.SimpleNamespace(area_id="area:all", anchor_tile=fixture.TOWN), 1.0e6)]
         placed = location_inputs.place_oriented(setup, record, area_map, Carriage(), setup.recipes[fixture.SMELT],
                                                 {fixture.ORE: fixture.MINE}, shares, sorted(PEOPLE))
-        mine_hours = ORE_RUNS * sum(setup.recipes[fixture.MINE].labour_hours.values())
         smelter_hours_per_run = sum(setup.recipes[fixture.SMELT].labour_hours.values())
-        spare_runs = (100.0 * setup.working_share * setup.working_hours_per_year - mine_hours) / smelter_hours_per_run
-        self.assertAlmostEqual(placed[fixture.HILLS], spare_runs)
+        staffable_runs = 100.0 * setup.working_share * setup.working_hours_per_year / smelter_hours_per_run
+        self.assertAlmostEqual(placed[fixture.HILLS], staffable_runs)
 
 
 if __name__ == "__main__":

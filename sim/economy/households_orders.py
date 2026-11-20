@@ -18,7 +18,8 @@ from sim.world.need_basket import (Basket, PricedNeed, need_units, price_ceiling
                                    with_quality_reach)
 
 from . import durable_stock, household_grown_floors, households_buffer_stock, households_store, lender_ask, opening_resting
-from .households_ability import affordable_goods, household_budget_for_need, quantity_per_need_unit
+from .households_ability import (affordable_goods, bid_cap, household_budget_for_need, quantity_per_need_unit,
+                                 service_lives_of)
 from .households_basket import need_prices
 from .opening_demand_kernel import flexible_budget_left, store_pot
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
@@ -67,19 +68,20 @@ SPENDING_CUT_LIMIT = declare(
 
 def _durable_ratio(good: GoodId, flow: float, held: float, specs: Mapping[GoodId, GoodSpec],
                    scale: float = 1.0) -> float:
-    """1.0 for a good used up in the year; for a durable, replacement over the flow it serves. The stock
-    wanted is sized on the expected flow (`scale` times this year's)."""
+    """1.0 for a good used up in the year; for a durable, the purchase (replacement plus a share of the gap
+    to the stock wanted, `durable_stock.purchase_toward_stock`) over the flow it serves. The stock wanted is sized
+    on the expected flow (`scale` times this year's)."""
     spec = specs.get(good)
     if spec is None or spec.service_life_years <= 0.0:
         return 1.0
     if flow <= 0.0:
         return 0.0
-    return max(0.0, flow * scale * spec.service_life_years - held) / flow
+    return durable_stock.purchase_toward_stock(flow * scale, held, spec) / flow
 
 
 def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Basket,
-                           spending: Optional[float] = None, floor_cost: Optional[float] = None
-                           ) -> Dict[GoodId, float]:
+                           spending: Optional[float] = None, floor_cost: Optional[float] = None,
+                           specs: Optional[Mapping[GoodId, GoodSpec]] = None) -> Dict[GoodId, float]:
     """The yearly flow of each good the smoothed surplus (smoothed spending over smoothed floor cost) buys,
     with the goods the cohort could afford on it: it sizes the stock of a durable that a bad year, in which
     the floors take nearly all spending or a good is unaffordable, would otherwise size at nothing."""
@@ -93,10 +95,10 @@ def _smoothed_flow_by_good(cohort: Cohort, priced: List[PricedNeed], basket: Bas
         need_id = need.spec.need_id
         affordable, _affordable_share, _household_cap = affordable_goods(
             need.goods, household_budget_for_need(stock_totals[need_id], need.price_index, cohort.people),
-            need.spec.subsistence_per_person > 0.0)
+            need.spec.subsistence_per_person > 0.0, service_lives_of(need.goods, specs or {}))
         quantities = quantity_per_need_unit(need.goods, need.price_index, affordable)
         for good, price, effect, share in need.goods:
-            if affordable[good]:
+            if affordable[good] > 0.0:
                 per_unit = quantities[good]
                 flows[good] = flows.get(good, 0.0) + (stock_floors[need_id] + max(
                     0.0, stock_totals[need_id] - stock_floors[need_id])) * per_unit
@@ -116,7 +118,7 @@ def _store_value_outside_use(cohort: Cohort, priced: List[PricedNeed], basket: B
         return value
     provisional = households_buffer_stock.spending_budget(households_buffer_stock.mean_net_income(income, last_year_income), cash, owned)
     reached = with_quality_reach(priced, basket, quality_reach(provisional, floor_cost))
-    in_use = durable_stock.in_use_stock(_smoothed_flow_by_good(cohort, reached, basket, provisional, floor_cost),
+    in_use = durable_stock.in_use_stock(_smoothed_flow_by_good(cohort, reached, basket, provisional, floor_cost, specs),
                                         specs, 1.0, households_store.STORE_REBALANCE_BAND)
     return value + math.fsum(max(0.0, held[good] - in_use.get(good, 0.0)) * prices[good] for good in in_use_goods)
 
@@ -169,7 +171,7 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
     # spending, but never below the flow the smoothed surplus (smoothed spending over smoothed floor cost)
     # buys, since the scaled flow vanishes when the floors take nearly all of a bad year's spending
     scale = durable_stock.expected_flow_scale(cohort.expected_spending, spending)
-    smoothed_flow = _smoothed_flow_by_good(cohort, priced, basket)
+    smoothed_flow = _smoothed_flow_by_good(cohort, priced, basket, None, None, specs)
     rows = []
     flow_by_good = {}
     for need in priced:
@@ -177,14 +179,15 @@ def goods_orders(cohort: Cohort, view: MarketView, cash: float, income_this_year
         ceilings = need.ceilings or price_ceilings(need.goods)
         limit = satiation_limit(basket, need_id, need.spec.subsistence_per_person)
         satiated = is_satiated(totals[need_id], math.nan if limit is None else limit, cohort.people)
+        lives = service_lives_of(need.goods, specs)
         affordable, _affordable_share, household_cap = affordable_goods(
             need.goods, household_budget_for_need(totals[need_id], need.price_index, cohort.people),
-            need.spec.subsistence_per_person > 0.0)
+            need.spec.subsistence_per_person > 0.0, lives)
         quantities = quantity_per_need_unit(need.goods, need.price_index, affordable)
         for (good, price, effect, share), ceiling in zip(need.goods, ceilings):
-            if not affordable[good]:
+            if affordable[good] <= 0.0:
                 continue
-            ceiling = min(ceiling, household_cap)
+            ceiling = min(ceiling, bid_cap(household_cap, lives.get(good, 0.0)))
             per_unit = quantities[good]
             floor_quantity = floors[need_id] * per_unit
             flexible_quantity = max(0.0, totals[need_id] - floors[need_id]) * per_unit

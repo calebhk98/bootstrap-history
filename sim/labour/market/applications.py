@@ -3,9 +3,10 @@
 Follows the matching protocol of Eurace@Unibi (NOTICE.md), Labour/ in the Eurace source, but leaves out its skill-specific
 offers and its ranking of applicants by skill: hours of a trade are alike. Each round, a firm with
 vacancies posts them with its offer (Firm_send_vacancies, Labour/Firm_Employer_Functions.c); every searching
-household applies to a bounded number of the posters whose offer is at or above its reservation wage, chosen at random,
-the household's own list being cut at random (Household_UNEMPLOYED_read_job_vacancies_and_send_applications,
-Labour/Household_Employee_Functions.c); a firm sends offers to as many applicants as it has vacancies
+household sends a bounded number of applications to the posts whose offer is at or above its reservation wage, chosen at
+random (Household_UNEMPLOYED_read_job_vacancies_and_send_applications, Labour/Household_Employee_Functions.c; there a
+firm is one workplace, here a producer stands for every workplace of its recipe on a tile, so it draws applications by
+its share of the hours posted, not as one name among the posters); a firm sends offers to as many applicants as it has vacancies
 (Firm_read_job_applications_send_job_offer_or_rejection); a household takes the highest offer it got
 (Household_read_job_offers_send_response); one that got none cuts its reservation wage
 (Household_read_application_rejection_update_wage_reservation). Before the round a firm dismisses a random share of its

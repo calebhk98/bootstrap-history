@@ -44,10 +44,11 @@ def needs_of_row(row, recipe, runs, stock, market, slot_goods, inputs, tools, wa
 
 
 @njit(**KERNEL)
-def place_bids(row, recipe, tile, runs, spendable, margin, live_variable, stock, market, slot_goods, inputs, tools,
+def place_bids(row, recipe, tile, runs, spendable, room, input_cost, stock, market, slot_goods, inputs, tools,
                labour_hours, hours_scale, wage, good_out, quantity_out, price_out, budget_out, worth_out, wanted_at, placed, order_place, terms):
     """Write the bids of one row at `[row, n]` in need order: the good (column, -1 where there is no nth bid), its quantity, price, budget and
-    ceiling. `spendable` is the cash left after wages, `margin` and `live_variable` the run's margin and variable cost at the prices seen now."""
+    ceiling. `spendable` is the cash left after wages, `room` the run's margin and committed wages and `input_cost` the cost of its inputs,
+    both at the prices seen now (`producers.input_ceiling`)."""
     count = needs_of_row(row, recipe, runs, stock, market, slot_goods, inputs, tools, wanted_at, placed, order_place)
     for need in range(count):
         place = order_place[need]
@@ -57,7 +58,7 @@ def place_bids(row, recipe, tile, runs, spendable, margin, live_variable, stock,
         place = order_place[need]
         bid_price = market[place]
         share = wanted_at[place] * bid_price / total_cost if total_cost > 0.0 else 0.0
-        worth = bid_price * (1.0 + max(0.0, margin) / live_variable) if live_variable > 0.0 else bid_price
+        worth = bid_price * (1.0 + max(0.0, room) / input_cost) if input_cost > 0.0 else bid_price
         in_use = value_in_use(tools, labour_hours, hours_scale, wage, market, recipe, row, tile, place, terms)
         good_out[row, need] = tools.bid_goods[recipe, place]
         quantity_out[row, need], price_out[row, need] = wanted_at[place], bid_price

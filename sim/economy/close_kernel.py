@@ -195,7 +195,7 @@ def close_rows(rows, constants,
                 if worked_last:
                     unsold = stock[row, slot] - q_in[slot] * cap_old
                     gap = cost.stock_gap(unsold, target_cover * q_out[slot])
-                weight = constants[K_REGRESS] * (1.0 - max(0.0, min(1.0, gap)))
+                weight = constants[K_REGRESS] if break_even > 1.0 else constants[K_REGRESS] * (1.0 - max(0.0, min(1.0, gap)))     # ask_adjust.regressive_weight
                 exp[slot] += weight * (exp[slot] * break_even - exp[slot])
             for slot in range(count):
                 if has_latest[slot] and cost.flag_at(bare_quote, area_of, slot_goods[recipe, slot], tile):
@@ -314,9 +314,12 @@ def close_rows(rows, constants,
         append_history(revenue_history[row], history_count[row], revenue[row], keep, new_revenues[row])
         new_count[row] = count_after
         lost = shed_share(new_earnings[row], new_revenues[row], count_after, constants[K_CHANGE])
-        new_cap = min(new_cap, cap_old * (1.0 - lost))
+        wanted_sales = sold_runs if sales_expected <= 0.0 else sales_expected + constants[K_EXPECT] * (sold_runs - sales_expected)
+        after_loss = cap_old * (1.0 - lost)       # producer_losses.capacity_after_losses
+        if wanted_sales > 0.0 and pays > 0.0:
+            after_loss = max(after_loss, min(cap_old, wanted_sales / pays))
+        new_cap = min(new_cap, after_loss)
         if not has_plant and not shedding and lost <= 0.0:
-            wanted_sales = sold_runs if sales_expected <= 0.0 else sales_expected + constants[K_EXPECT] * (sold_runs - sales_expected)
             if pays > 0.0 and new_cap > 0.0 and math.isfinite(wanted_sales) and math.isfinite(pays):
                 new_cap = new_cap + min(max(0.0, wanted_sales / pays - new_cap), constants[K_CHANGE] * new_cap)
         working_cost = variable_now

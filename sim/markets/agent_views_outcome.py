@@ -34,13 +34,15 @@ class AgentOutcomeViews(AgentViewPart):
 		return self.parts.market_objects.economy.parts.year.last_outcome
 
 	def agent_opening_figures(self):
-		"""What the running agent economy opened with that the opening checks compare: its unskilled trade, interest rate
-		and coin metal; None while it opens."""
+		"""What the running agent economy opened with that the opening checks compare: its unskilled trade, interest rate,
+		coin metal and, in coin, what its regime pays for a unit of that metal (None where it states no price); None while it opens."""
 		if self._answering() is None:
 			return None
 		economy = self._economy().agent.economy()
+		paid = economy_api.metal_paid_price(economy)
 		return {"unskilled_trade": economy_api.unskilled_trade(economy), "opening_rate": economy_api.opening_rate(economy),
-		        "backing_good": economy_api.backing_good(economy)}
+		        "backing_good": economy_api.backing_good(economy),
+		        "metal_paid_price": None if paid is None else paid * economy_api.coin_per_unit(economy)}
 
 	def agent_stale_goods(self):
 		"""The goods whose markets did not clear lately: their shown price is what they would cost to make, not a trade; None while the economy opens."""

@@ -1,24 +1,14 @@
-"""Numba port, labour clearing: the small helpers of the hiring rounds (`hiring_kernel._binomials`, `_first_below`) give what
-`math.comb` and a count over the ranked posters give; no game."""
+"""Numba port, labour clearing: the small helper of the hiring rounds (`hiring_kernel._first_below`) gives what a count over
+the ranked posters gives; no game."""
 
 QUICK_TOPIC = True
 
-import math
 import random
 import unittest
 
 import numpy as np
 
 from sim.labour.market import hiring_kernel
-
-
-class BinomialTable(unittest.TestCase):
-
-    def test_equals_math_comb(self):
-        table = hiring_kernel._binomials(30, 4)
-        for total in range(31):
-            for chosen in range(5):
-                self.assertEqual(int(table[total, chosen]), math.comb(total, chosen), (total, chosen))
 
 
 class PostersReached(unittest.TestCase):

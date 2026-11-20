@@ -1,0 +1,305 @@
+diff --git a/sim/economy/location.py b/sim/economy/location.py
+index f9ce758e..2e0206e0 100644
+--- a/sim/economy/location.py
++++ b/sim/economy/location.py
+@@ -153,6 +153,15 @@ def opening_split(setup, recipe: Recipe, area: MarketArea, runs: float) -> Dict[
+     return split_runs(runs, weights, {})
+ 
+ 
++def placeable_tiles(setup, recipe: Recipe) -> frozenset:
++    """The tiles the opening may place the recipe on (`_placed_tiles`), worked out once for a setup."""
++    reads = _placement_reads(setup)
++    placed = reads.placed.get(recipe.recipe_id)
++    if placed is None:
++        placed = reads.placed[recipe.recipe_id] = _placed_tiles(setup, recipe)
++    return placed
++
++
+ def _placed_tiles(setup, recipe: Recipe) -> frozenset:
+     """The tiles the opening may place the recipe on: where a run pays at the opening's prices and wages (the test the
+     first year's plan applies), over every tile it can run on, not one area's (crop_sites.sites)."""
+diff --git a/sim/economy/location_inputs.py b/sim/economy/location_inputs.py
+index 92e432b4..48235d3b 100644
+--- a/sim/economy/location_inputs.py
++++ b/sim/economy/location_inputs.py
+@@ -6,14 +6,14 @@ The siting cost of a tile is the carriage of a run's fixed-site inputs in from w
+ carriage of its output out to where it is wanted, each by the recipe's own masses. Only fixed-site inputs pull:
+ what a mobile maker supplies is made beside its users, so it has no place to pull towards.
+ 
+-An input that only fixed sites can supply (the goods of a site-bound recipe with declared limits) also
+-bounds where its processors can be placed: only in market areas of that good that hold supply, ranked by
+-the supply an area offers that placed users have not claimed. What the supply there cannot
++An input that only fixed sites can supply (the goods of a site-bound recipe with declared limits, and of a crop
++only some tiles grow) also bounds where its processors can be placed: only in market areas of that good that
++hold supply, ranked by the supply an area offers that placed users have not claimed. What the supply there cannot
+ feed is built all the same, in proportion: the shortage is then the input's price (and the processor's idle
+ capacity), not a smaller opening.
+ """
+ import math
+-from typing import Dict, Mapping, Sequence, Tuple
++from typing import Collection, Dict, Mapping, Sequence, Tuple
+ 
+ from . import sites
+ from .types import GoodId, GoodSpec, MarketArea, Recipe, TileId
+@@ -87,13 +87,21 @@ def fixed_site_goods(recipes: Mapping[str, Recipe], by_limits) -> frozenset:
+     return frozenset(good for recipe in recipes.values() if sites.is_sited(recipe, by_limits) for good in recipe.outputs)
+ 
+ 
++def bound_recipes(placeable_by_recipe: Mapping[str, Collection[TileId]], peopled: Collection[TileId]) -> frozenset:
++    """The recipes that cannot stand on every peopled tile (`placeable_by_recipe`: the tiles each may be placed on): a
++    crop only some tiles grow. Where they are made is geography's, as a mine's place is."""
++    return frozenset(recipe_id for recipe_id, tiles in placeable_by_recipe.items()
++                     if any(tile not in tiles for tile in peopled))
++
++
+ def fixed_inputs(recipe: Recipe, incumbents: Mapping[GoodId, str], recipes: Mapping[str, Recipe],
+-                 by_limits) -> Dict[GoodId, str]:
+-    """The inputs the opening gets from a site-bound recipe with declared limits: input good -> that recipe."""
++                 by_limits, bound: Collection[str] = frozenset()) -> Dict[GoodId, str]:
++    """The inputs whose place geography decides: those the opening gets from a site-bound recipe with declared limits
++    or from a recipe of `bound` (`bound_recipes`). Input good -> that recipe."""
+     fixed = {}
+     for good in sorted(recipe.inputs):
+         maker = incumbents.get(good)
+-        if maker is not None and maker != recipe.recipe_id and sites.is_sited(recipes[maker], by_limits):
++        if maker is not None and maker != recipe.recipe_id and (sites.is_sited(recipes[maker], by_limits) or maker in bound):
+             fixed[good] = maker
+     return fixed
+ 
+@@ -118,11 +126,13 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
+                    shares: Sequence[Tuple[MarketArea, float]], tiles: Sequence[TileId]) -> Dict[TileId, float]:
+     """Runs of capacity for each tile for a processor with fixed-site inputs. `shares` are the runs wanted
+     for each market area of its output; `tiles` the tiles it may run on. Only tiles in a market area that
+-    makes every fixed input can host it. The runs the supply there can feed go to the tiles cheapest first (inputs
+-    in, output out); the rest of what was wanted is spread over those tiles in the same proportions, so a supply
+-    that cannot feed the capacity shows as the input's price, not as a smaller opening. Each tile takes no more
+-    than all its hands could work: the hands the producers already placed there would take are not kept from it,
+-    since it has no other tile to go to and the year's labour market shares a tile's hours among all of them."""
++    makes every fixed input can host it. A market area of the output whose own tiles hold the fixed inputs makes its
++    own share there, as far as that supply and its hands go: nothing then has to be carried between markets. What no
++    area can make for itself goes to the tiles the supply can feed, cheapest first (inputs in, output out); the rest
++    of what was wanted is spread over the tiles chosen in the same proportions, so a supply that cannot feed the
++    capacity shows as the input's price, not as a smaller opening. Each tile takes no more than all its hands could
++    work: the hands the producers already placed there would take are not kept from it, since it has no other tile
++    to go to and the year's labour market shares a tile's hours among all of them."""
+     wanted = math.fsum(runs for _area, runs in shares)
+     if wanted <= 0.0:
+         return {}
+@@ -142,20 +152,32 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
+         out_cost = output_haul_cost(carriage, tile, shares)
+         costed.append((input_haul_cost(recipe, setup.specs, carriage, supplies, tile) + output_tonnes * out_cost, tile))
+     fed: Dict[TileId, float] = {}
+-    left = wanted
+-    for cost, tile in sorted(costed):
+-        if left <= 0.0:
+-            break
+-        take = min(left, staffable_runs(tile))
+-        for good in fixed:
+-            take = min(take, room[good].get(area_map.area_of(good, tile), 0.0) / recipe.inputs[good])
+-        if not (math.isfinite(cost) and take > 0.0):
+-            continue
+-        fed[tile] = take
+-        left -= take
+-        for good in fixed:
+-            area = area_map.area_of(good, tile)
+-            room[good][area] = room[good].get(area, 0.0) - take * recipe.inputs[good]
++
++    def feed(ordered, runs: float) -> float:
++        """Place `runs` on the tiles of `ordered` ((cost, tile), cheapest first), each as far as its hands and the
++        fixed inputs' room in its areas go; the runs no tile took."""
++        left = runs
++        for cost, tile in ordered:
++            if left <= 0.0:
++                break
++            take = min(left, staffable_runs(tile) - fed.get(tile, 0.0))
++            for good in fixed:
++                take = min(take, room[good].get(area_map.area_of(good, tile), 0.0) / recipe.inputs[good])
++            if not (math.isfinite(cost) and take > 0.0):
++                continue
++            fed[tile] = fed.get(tile, 0.0) + take
++            left -= take
++            for good in fixed:
++                area = area_map.area_of(good, tile)
++                room[good][area] = room[good].get(area, 0.0) - take * recipe.inputs[good]
++        return left
++
++    costed.sort()
++    beyond = 0.0       # runs wanted for areas whose own tiles could not make them
++    for area, runs in shares:
++        own = set(area.tiles)
++        beyond += feed([(cost, tile) for cost, tile in costed if tile in own], runs)
++    feed(costed, beyond)
+     total = math.fsum(fed.values())
+     if total <= 0.0:
+         return {}
+diff --git a/sim/economy/opening.py b/sim/economy/opening.py
+index c84e0e16..6f48aa82 100644
+--- a/sim/economy/opening.py
++++ b/sim/economy/opening.py
+@@ -399,10 +399,11 @@ def _final_demand_packed(setup, record, replacement, packed) -> Dict[TileId, Dic
+     return final
+ 
+ 
+-def _placement_order(runs, recipes, setup) -> List[str]:
+-    """Recipes in the order they are placed: site-bound recipes with declared limits first (their tiles are
+-    fixed, so their users are sited by them), then each recipe after every recipe that uses what it makes, so
+-    the users of an input are on the map before its suppliers are placed beside them. A cycle falls back to id order."""
++def _placement_order(runs, recipes, setup, bound=frozenset()) -> List[str]:
++    """Recipes in the order they are placed: site-bound recipes with declared limits and the recipes of `bound` (crops
++    only some tiles grow) first (their tiles are fixed, so their users are sited by them), then each recipe after every
++    recipe that uses what it makes, so the users of an input are on the map before its suppliers are placed beside
++    them. A cycle falls back to id order."""
+     users = {}
+     for recipe_id in runs:
+         recipe = recipes[recipe_id]
+@@ -410,7 +411,7 @@ def _placement_order(runs, recipes, setup) -> List[str]:
+             users.setdefault(good, set()).add(recipe_id)
+     produced = {recipe_id: paying_output(recipes[recipe_id], setup.opening_prices) for recipe_id in runs}
+     by_limits = sites.limits_by_recipe(setup.site_limits)
+-    ordered: List[str] = [recipe_id for recipe_id in sorted(runs) if sites.is_sited(recipes[recipe_id], by_limits)]
++    ordered: List[str] = [recipe_id for recipe_id in sorted(runs) if sites.is_sited(recipes[recipe_id], by_limits) or recipe_id in bound]
+     hands_only = [recipe_id for recipe_id in sorted(runs) if recipe_id not in ordered and _only_hands(recipes[recipe_id], setup)]
+     waiting = [recipe_id for recipe_id in sorted(runs) if recipe_id not in ordered and recipe_id not in hands_only]
+     while waiting:
+@@ -465,7 +466,10 @@ def _place_in_order(setup, record, area_map, carriage, final_by_tile, incumbents
+     population = setup.opening_population_by_tile
+     by_limits = sites.limits_by_recipe(setup.site_limits)
+     input_demand: Dict[TileId, Dict[GoodId, float]] = {}
+-    for recipe_id in _placement_order(runs, setup.recipes, setup):
++    peopled = [tile for tile, people in sorted(population.items()) if people > 0.0 and (within is None or tile in within)]
++    bound = location_inputs.bound_recipes({recipe_id: location.placeable_tiles(setup, setup.recipes[recipe_id])
++                                           for recipe_id in sorted(yields) if recipe_id in runs}, peopled)
++    for recipe_id in _placement_order(runs, setup.recipes, setup, bound):
+         count = runs[recipe_id]
+         recipe = setup.recipes[recipe_id]
+         main = paying_output(recipe, setup.opening_prices)
+@@ -487,15 +491,19 @@ def _place_in_order(setup, record, area_map, carriage, final_by_tile, incumbents
+                   if total > 0.0 and weight > 0.0]
+         if sites.is_sited(recipe, by_limits) and shares:
+             shares = _sited_shares(shares, by_limits[recipe.recipe_id])
+-        fixed = {} if sites.is_sited(recipe, by_limits) else location_inputs.fixed_inputs(recipe, incumbents, setup.recipes, by_limits)
++        fixed = {} if sites.is_sited(recipe, by_limits) else location_inputs.fixed_inputs(recipe, incumbents, setup.recipes, by_limits,
++                                                                                         bound)
+         if fixed:
+             tiles = sites.suited_tiles(recipe, setup.tiles, sorted(within) if within is not None else sorted(setup.tiles),
+                                        setup.recipe_allowed)
+             capacity_by_tile = location_inputs.place_oriented(
+                 setup, record, area_map, carriage, recipe, fixed,
+                 [(area, area_runs) for area, area_runs in shares], tiles)
+-            _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits)
+-            continue
++            # a processor no supply of a site's good reaches is not built; one whose crop no tile in reach grows is built
++            # where its output is wanted, as a recipe with no such input is
++            if capacity_by_tile or any(sites.is_sited(setup.recipes[maker], by_limits) for maker in fixed.values()):
++                _add_producers(setup, record, recipe, capacity_by_tile, input_demand, by_limits)
++                continue
+         if recipe_id in yields:
+             shares = _where_it_crops(setup, recipe, shares)
+         for area, area_runs in shares:
+diff --git a/sim/tests/test_location_inputs.py b/sim/tests/test_location_inputs.py
+index 3b1c322c..dcaa4ad7 100644
+--- a/sim/tests/test_location_inputs.py
++++ b/sim/tests/test_location_inputs.py
+@@ -7,7 +7,7 @@ import math
+ import unittest
+ from types import SimpleNamespace
+ 
+-from sim.economy import entry_sizing, location, location_inputs, unit_cost
++from sim.economy import entry_sizing, location, location_inputs, opening, unit_cost
+ from sim.economy.producers import Producer
+ from sim.economy.types import GoodSpec, MarketArea, Recipe
+ 
+@@ -130,6 +130,71 @@ class MaterialOrientationTests(unittest.TestCase):
+         self.assertEqual(location_inputs.tonnes_of({ORE: 2000.0, "heat": 5.0}, specs), {ORE: 2.0})
+ 
+ 
++POT = "pot_kg"
++# a kiln: a tonne and a half of fuel fires half a tonne of pots; fuel is felled where the timber stands
++KILN = Recipe("kiln", {POT: 500.0}, {FUEL: 1500.0}, {"potter": 10.0})
++FELL = Recipe("fell", {FUEL: 1000.0}, {}, {"labourer": 1.0}, site_bound=True)
++
++
++class Apart:
++    def cost_per_tonne(self, source, destination):
++        return 0.0 if source == destination else 100.0
++
++
++def pot_area(tile):
++    return MarketArea("pot@" + tile, POT, (tile,), tile)       # pots are too cheap to carry: each tile is its own market
++
++
++class EachAreaMakesItsOwnTests(unittest.TestCase):
++    def placed(self, felling_runs, wanted):
++        """Kiln runs by tile, with `felling_runs` of felling capacity on each tile and `wanted` kiln runs for each tile's pot market."""
++        fellers = [Producer("producer:fell@" + tile, "owner", "fell", tile, runs) for tile, runs in felling_runs.items()]
++        setup, record = world(fellers, {"kiln": KILN, "fell": FELL}, {"north": 1000.0, "south": 1000.0})
++        setup.specs[POT] = GoodSpec(POT, 1.0, 0.0, 0.0, "x")
++        return location_inputs.place_oriented(setup, record, Areas(), Apart(), KILN, {FUEL: "fell"},
++                                              [(pot_area(tile), runs) for tile, runs in wanted.items()], ["north", "south"])
++
++    def test_an_area_that_fells_its_own_fuel_fires_its_own_pots(self):
++        # the north is the cheaper tile to serve both from, and each has fuel for far more runs than are wanted
++        self.assertEqual(self.placed({"north": 100.0, "south": 100.0}, {"north": 6.0, "south": 4.0}), {"north": 6.0, "south": 4.0})
++
++    def test_an_area_with_no_fuel_has_its_pots_fired_where_the_fuel_is(self):
++        self.assertEqual(self.placed({"north": 100.0}, {"north": 6.0, "south": 4.0}), {"north": 10.0})
++
++    def test_what_an_areas_own_fuel_cannot_fire_is_fired_where_fuel_is_left(self):
++        # the south fells three runs of fuel, enough for two kiln runs of the four it wants
++        self.assertEqual(self.placed({"north": 100.0, "south": 3.0}, {"north": 6.0, "south": 4.0}), {"north": 8.0, "south": 2.0})
++
++
++PRESS = Recipe("press", {"oil_kg": 200.0}, {"olives_kg": 1000.0}, {"labourer": 10.0})
++GROVE = Recipe("grove", {"olives_kg": 1000.0}, {}, {"labourer": 100.0})
++
++
++class CropsOnlySomeTilesGrowTests(unittest.TestCase):
++    def test_a_recipe_that_cannot_stand_on_every_peopled_tile_is_bound(self):
++        placeable = {"grove": {"south"}, "millet": {"north", "south", "empty"}}
++        self.assertEqual(location_inputs.bound_recipes(placeable, {"north", "south"}), frozenset({"grove"}))
++
++    def test_an_input_only_some_tiles_grow_is_fixed_like_one_a_site_supplies(self):
++        recipes = {"press": PRESS, "grove": GROVE}
++        self.assertEqual(location_inputs.fixed_inputs(PRESS, {"olives_kg": "grove"}, recipes, {}, frozenset({"grove"})),
++                         {"olives_kg": "grove"})
++
++    def test_an_input_every_tile_can_grow_pulls_nothing(self):
++        recipes = {"press": PRESS, "grove": GROVE}
++        self.assertEqual(location_inputs.fixed_inputs(PRESS, {"olives_kg": "grove"}, recipes, {}), {})
++
++    def test_bound_recipes_are_placed_before_the_recipes_that_use_what_they_make(self):
++        setup = SimpleNamespace(opening_prices={"oil_kg": 5.0, "olives_kg": 1.0}, site_limits=(), specs={})
++        order = opening._placement_order({"press": 1.0, "grove": 1.0}, {"press": PRESS, "grove": GROVE}, setup, frozenset({"grove"}))
++        self.assertEqual(order, ["grove", "press"])
++
++    def test_an_unbound_supplier_is_still_placed_after_its_users(self):
++        setup = SimpleNamespace(opening_prices={"oil_kg": 5.0, "olives_kg": 1.0}, site_limits=(), specs={})
++        order = opening._placement_order({"press": 1.0, "grove": 1.0}, {"press": PRESS, "grove": GROVE}, setup)
++        self.assertEqual(order, ["press", "grove"])
++
++
+ class OutputHaulCostTests(unittest.TestCase):
+     """Complaint 970: an output area no tile can reach (an island cut off from the rest) must not make every tile's output carriage infinite."""
+ 
+diff --git a/sim/tests/test_opening_smelters_beside_ore.py b/sim/tests/test_opening_smelters_beside_ore.py
+index 95c4ecd2..6682d2cf 100644
+--- a/sim/tests/test_opening_smelters_beside_ore.py
++++ b/sim/tests/test_opening_smelters_beside_ore.py
+@@ -47,7 +47,7 @@ def world(ore_area_of_tile=None):
+     mine = Producer("producer:dig_ore@hills", "owner", fixture.MINE, fixture.HILLS, ORE_RUNS, expected_sales=ORE_RUNS)
+     record = types.SimpleNamespace(producers={mine.agent_id: mine})
+     area_map = AreaMap(ore_area_of_tile or {tile: "area:all" for tile in PEOPLE})
+-    anchor = types.SimpleNamespace(area_id="area:all", anchor_tile=fixture.TOWN)
++    anchor = types.SimpleNamespace(area_id="area:all", anchor_tile=fixture.TOWN, tiles=tuple(sorted(PEOPLE)))       # the metal is one market over every tile
+     return setup, record, area_map, [(anchor, 5.0)]
+ 
+ 
+@@ -75,7 +75,7 @@ class OpeningSmeltersBesideOreTests(unittest.TestCase):
+     def test_a_smelter_takes_no_more_runs_on_a_tile_than_all_the_hands_there_could_work(self):
+         setup, record, area_map, _shares = world()
+         setup.opening_population_by_tile[fixture.HILLS] = 100.0
+-        shares = [(types.SimpleNamespace(area_id="area:all", anchor_tile=fixture.TOWN), 1.0e6)]
++        shares = [(types.SimpleNamespace(area_id="area:all", anchor_tile=fixture.TOWN, tiles=tuple(sorted(PEOPLE))), 1.0e6)]
+         placed = location_inputs.place_oriented(setup, record, area_map, Carriage(), setup.recipes[fixture.SMELT],
+                                                 {fixture.ORE: fixture.MINE}, shares, sorted(PEOPLE))
+         smelter_hours_per_run = sum(setup.recipes[fixture.SMELT].labour_hours.values())

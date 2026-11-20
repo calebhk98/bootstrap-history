@@ -52,14 +52,23 @@ def farmer(**changes):
 
 
 class InputCeilingTests(unittest.TestCase):
-    def test_a_run_that_no_longer_pays_at_the_live_input_price_bids_no_more_than_that_price(self):
-        # the producer still expects seed at 1 and grain at 2 (a run earns 20 against 7), but seed now sells at 10,
-        # where a run costs 25 and earns 20: it has no margin to offer for seed
+    def test_a_run_that_no_longer_covers_its_inputs_at_the_live_input_price_bids_no_more_than_that_price(self):
+        # the producer still expects seed at 1 and grain at 2 (a run earns 20 against 7), but seed now sells at 12,
+        # where the seed of a run costs 24 and the run earns 20: even with its hands hired it has nothing to offer for seed
         who = farmer(expected_prices={"grain": 2.0, "seed": 1.0})
-        plan = producers.plan(who, FARM, View({"grain": 2.0, "seed": 10.0}, {"hand": 1.0}), 1e6)
+        plan = producers.plan(who, FARM, View({"grain": 2.0, "seed": 12.0}, {"hand": 1.0}), 1e6)
         self.assertGreater(plan.runs, 0.0)
         seed = [bid for bid in plan.bids if bid.good == "seed"][0]
-        self.assertLessEqual(seed.maximum_price, 10.0 + 1e-9)
+        self.assertLessEqual(seed.maximum_price, 12.0 + 1e-9)
+
+    def test_a_run_whose_hands_are_hired_bids_for_an_input_past_the_price_at_which_it_stops_paying_its_wages(self):
+        # seed at 9: a run costs 18 of seed and 5 of wages against 20 earned, so it no longer pays whole; the wages are
+        # committed before the seed is bought, and the run still brings in more than its seed
+        who = farmer(expected_prices={"grain": 2.0, "seed": 1.0})
+        plan = producers.plan(who, FARM, View({"grain": 2.0, "seed": 9.0}, {"hand": 1.0}), 1e6)
+        seed = [bid for bid in plan.bids if bid.good == "seed"][0]
+        self.assertGreater(seed.maximum_price, 9.0)
+        self.assertLessEqual(seed.maximum_price, 20.0 / 2.0 * 1.01)      # a run's grain over the seed it sows
 
     def test_a_run_that_pays_at_the_live_input_price_bids_up_to_the_price_that_breaks_even(self):
         who = farmer(expected_prices={"grain": 2.0, "seed": 1.0})

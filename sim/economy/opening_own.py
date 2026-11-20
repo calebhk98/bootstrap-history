@@ -6,7 +6,7 @@ two functions: the hours a cohort has left are its working hours less the share 
 work it does itself, and the bids it then makes are the year's. The share the producers hire follows from the runs
 sized to that demand, so the opening iterates it (`_settle_income` in opening.py) until it stops moving (Complaint 545)."""
 import math
-from typing import Dict, Mapping, Tuple
+from typing import Dict, Mapping, Optional, Tuple
 
 from . import household_grinding, household_hours_year, households_orders, households_own, households_work, labour_ask_floor, labour_supply, opening_resting, titles_plots, year_goods
 from .household_work_year import has_hearth
@@ -43,13 +43,24 @@ def sold_hours_per_worker(sold_total: float, working_people: float, default: flo
     return sold_total / working_people if working_people > 0.0 else default
 
 
-class OwnPlots:
-    """The own-plot rule of a year applied to an opening record's cohorts, at the share of hours producers hire."""
+def plot_land(held: Mapping[str, float], kept_last: Optional[Mapping[str, float]]) -> Dict[str, float]:
+    """The land each cohort's plot may take in this opening: what it holds, and no more than it kept once the last
+    opening's land market had let the rest to producers that outbid the plots (`kept_last`; None before any opening:
+    all it holds). The demand producers are sized to is then what households with the plots they keep will buy."""
+    if kept_last is None:
+        return dict(held)
+    return {agent_id: min(hectares, kept_last.get(agent_id, hectares)) for agent_id, hectares in held.items()}
 
-    def __init__(self, setup, record) -> None:
+
+class OwnPlots:
+    """The own-plot rule of a year applied to an opening record's cohorts, at the share of hours producers hire.
+    `kept_land` is the land each cohort's plot kept after the last opening's land market (`plot_land`)."""
+
+    def __init__(self, setup, record, kept_land: Optional[Mapping[str, float]] = None) -> None:
         self.setup = setup
         self.options = households_own.own_production_options(setup.recipes, setup.land_per_run, setup.basket)
-        self.held = titles_plots.hectares_held(setup, record)
+        self.held = plot_land(titles_plots.hectares_held(setup, record), kept_land)
+        self.plot_hours: Dict[str, Dict[str, float]] = {}     # cohort -> hours on its plot by recipe, at the last ask
         self.share_hired = 0.0
         self.grown: Dict[str, Dict[GoodId, float]] = {}     # cohort -> goods grown at the last ask
         self.uncut: Dict[str, Tuple[float, object, float]] = {}   # cohort -> (income, orders before the cut or None, purse): the asks of one income share them
@@ -77,8 +88,8 @@ class OwnPlots:
         if not setup.household_work:
             return 0.0
         food = next((need for need in priced if need.spec.need_id == setup.hunger_need), None)
-        ground = household_grinding.ground_share(food.goods, setup.milled_as, cohort.milled_grains) if food is not None and setup.milled_as else 1.0
-        needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
+        ground = household_grinding.ground_share(food.goods, setup.milled_as, cohort.ground_by_hand) if food is not None and setup.milled_as else 1.0
+        needed = households_work.hours_needed(cohort.people, setup.household_work, setup.working_days_per_year, has_hearth(record, cohort), ground)
         return households_work.own_hours(needed, cohort.hired_work_per_person * cohort.people)
 
     def forget_orders(self) -> None:
@@ -121,9 +132,11 @@ class OwnPlots:
         if own_work is None:
             own_work = self.own_work_hours(record, cohort, priced)
         idle = idle_hours(cohort.working_people * setup.working_hours_per_year, self.share_hired, own_work)
+        hours_used: Dict[str, float] = {}
         _moves, grown, units = households_own.own_production(
             cohort, idle, self.options, setup.recipes, tile.fertility if tile else 0.0, setup.basket_for(cohort.tile),
-            setup.land_per_run, self.held.get(cohort.agent_id, 0.0))
+            setup.land_per_run, self.held.get(cohort.agent_id, 0.0), hours_used)
+        self.plot_hours[cohort.agent_id] = hours_used
         self.grown[cohort.agent_id] = grown
         self.hectares[cohort.agent_id] = households_own.plot_hectares(
             units, self.options, setup.recipes, setup.land_per_run, tile.fertility if tile else 0.0)

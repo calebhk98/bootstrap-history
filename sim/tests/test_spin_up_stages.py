@@ -29,6 +29,7 @@ class TrimmedStageTests(unittest.TestCase):
         with mock.patch.dict(os.environ, FULL_GAME, clear=True), \
                 mock.patch.object(spin_up_run.economy_api, "spin_up_state", lambda economy, outcome: {}), \
                 mock.patch.object(spin_up_run.economy_api, "traded_price_goods", lambda economy: set()), \
+                mock.patch.object(spin_up_run.economy_api, "traded_volumes", lambda economy: {}), \
                 mock.patch.object(spin_up_run.economy_api, "interest_rate", lambda economy: 0.05):
             states = spin_up_run.settle_trimmed(economy, object(), [])
         self.assertEqual(economy.years, int(spin_up_run.SPIN_UP_TRIMMED_YEARS))
@@ -60,7 +61,8 @@ class SettledReportTests(unittest.TestCase):
 
     def test_a_stage_that_meets_the_tolerance_reports_settled_with_the_years_it_took(self):
         economy = _economy_whose_price_level_follows([1.0, 1.5, 1.2, 1.2])
-        with mock.patch.dict(os.environ, FULL_GAME, clear=True):
+        with mock.patch.dict(os.environ, FULL_GAME, clear=True), \
+                mock.patch.object(spin_up_run.economy_api, "traded_volumes", lambda economy: {"wheat_kg": 1.0}):
             result = spin_up_run.settle(economy, object(), ["wheat_kg"])
         self.assertTrue(result["settled"])
         self.assertEqual(result["years"], 4)
@@ -68,7 +70,8 @@ class SettledReportTests(unittest.TestCase):
 
     def test_a_stage_that_runs_out_of_years_first_reports_not_settled_and_how_far_it_was(self):
         economy = _economy_whose_price_level_follows([1.0 * 1.5 ** year for year in range(100)])
-        with mock.patch.dict(os.environ, FULL_GAME, clear=True):
+        with mock.patch.dict(os.environ, FULL_GAME, clear=True), \
+                mock.patch.object(spin_up_run.economy_api, "traded_volumes", lambda economy: {"wheat_kg": 1.0}):
             result = spin_up_run.settle(economy, object(), ["wheat_kg"])
         self.assertFalse(result["settled"])
         self.assertEqual(result["years"], int(spin_up_run.SPIN_UP_MAXIMUM_YEARS))

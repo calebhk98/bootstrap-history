@@ -13,10 +13,20 @@ from .types import AgentId, CurrencySpec, GoodId, Transfer
 
 REGIMES = ("struck_coin", "weighed_metal", "commodity", "fiat")
 
+WEIGHT_ON_A_NEW_QUARTER_OF_INFLATION = 0.018
+QUARTERS_PER_YEAR = 4
 EXPECTATION_ADJUSTMENT_SPEED = declare(
-    "EXPECTATION_ADJUSTMENT_SPEED", 0.5, kind="temporary_heuristic", unit="share of the surprise per year",
-    why="adaptive expectations: share of last year's forecast error taken up this year; standard "
-        "modelling convention, no historical source for any period.")
+    "EXPECTATION_ADJUSTMENT_SPEED", 1.0 - (1.0 - WEIGHT_ON_A_NEW_QUARTER_OF_INFLATION) ** QUARTERS_PER_YEAR,
+    kind="temporary_heuristic", unit="share of the surprise per year",
+    source="Nagel, 'Experiences, Expectations, and Asset Prices', NBER Reporter 2026 number 3 "
+           "(https://www.nber.org/reporter/2026number3/experiences-expectations-and-asset-prices): the weight on a new "
+           "quarterly observation that the learning model estimated on surveyed inflation expectations implies",
+    confidence="D", retire="a weight that follows how lasting the surprises have been (Muth 1960), so it is small where "
+                           "price changes are noise and large where they last",
+    why="adaptive expectations: the share of last year's forecast error taken up this year, four quarters of the surveyed "
+        "weight compounded. A modern survey figure stands in for every period: under commodity money yearly inflation was "
+        "close to noise and told little about the next year's (Barsky 1987), so a lender who took up much of each year's "
+        "surprise would reprice on noise (Complaints/reports/research-inflation-expectation-weight.md).")
 
 
 def currency_from_coin_standard(civ_id: str, coin_standard: Mapping, currency_name: str,

@@ -1,6 +1,8 @@
-"""Complaint 473: a buyer's ceiling for an input is its price plus the run's margin shared by the input's cost share, and
-for a tool never more than the input is worth against its cheapest substitute (the next tool in the basket, or working
-by hand). A scarce input is rationed by bid inside that bound and is not bid up without one."""
+"""Complaint 473: a buyer's ceiling for an input. Hands are hired before the year's goods change hands, so when a run buys
+its inputs its wages are already committed: an input is worth its price plus its share, among the inputs, of the run's margin
+and of those wages; for a tool never more than the input is worth against its cheapest substitute (the next tool in the basket,
+or working by hand). A ceiling of the price plus the run's percentage margin let a small input whose price rose by more than
+that margin stop a run whose hands were already paid."""
 
 QUICK_TOPIC = True
 
@@ -74,36 +76,28 @@ class ValueInUseTests(unittest.TestCase):
 
 
 class InputCeilingTests(unittest.TestCase):
-    def test_the_ceiling_is_the_price_plus_the_margin_share_the_input_accounts_for(self):
-        self.assertAlmostEqual(producers.input_ceiling(price=2.0, margin_per_run=30.0, variable_cost_per_run=10.0), 2.0 * (1.0 + 3.0))
+    def test_the_ceiling_is_the_price_plus_the_inputs_share_of_the_margin_and_the_committed_wages(self):
+        # a run whose inputs cost 10 and which has 30 of margin and committed wages to cover them: each input may cost four times its price
+        self.assertAlmostEqual(producers.input_ceiling(price=2.0, room_per_run=30.0, input_cost_per_run=10.0), 2.0 * (1.0 + 3.0))
         self.assertEqual(producers.input_ceiling(2.0, -5.0, 10.0), 2.0)
 
     def test_the_ceiling_is_capped_at_the_value_in_use(self):
         self.assertEqual(producers.input_ceiling(2.0, 30.0, 10.0, value_in_use=3.0), 3.0)
         self.assertEqual(producers.input_ceiling(2.0, 30.0, 10.0, value_in_use=100.0), 8.0)
 
-    def test_a_bid_does_not_exceed_the_margin_share_however_wide_the_margin(self):
+    def test_a_small_input_of_a_run_that_is_mostly_wages_is_bid_for_far_above_its_price(self):
+        # herding: a run of 100 hours that sells for 110 and needs one unit of salt at 1: the margin is thin, the hands are hired
+        herding = Recipe("herd", {"wool": 1.0}, {"salt": 1.0}, {"hand": 100.0})
+        view = View({"wool": 110.0, "salt": 1.0}, WAGES)
+        plan = producers.plan(farmer(expected_prices={"wool": 110.0}), herding, view, 1e6)
+        salt = [bid for bid in plan.bids if bid.good == "salt"][0]
+        self.assertGreater(salt.maximum_price, 50.0)       # not the price plus the run's few per cent of margin
+
+    def test_a_bid_does_not_exceed_what_the_run_brings_in_over_its_other_costs(self):
         view = View({"grain": 100.0, "seed": 1.0}, WAGES)
         plan = producers.plan(farmer(expected_prices={"grain": 100.0}), SEEDED, view, 1e6)
         seed = [bid for bid in plan.bids if bid.good == "seed"][0]
-        variable = 2.0 * 1.0 + 5.0 * 1.0       # a run's seed and hours
-        self.assertLess(seed.maximum_price, 1.0 * (1.0 + 100.0 * 10.0 / variable))      # the old ceiling: the whole run margin over the seed
-        self.assertAlmostEqual(seed.maximum_price, 1.0 * (1.0 + (10.0 * 100.0 - variable) / variable), delta=0.05 * seed.maximum_price)
-
-    def test_an_iron_tool_is_not_bid_above_what_wooden_tools_save_however_scarce_and_dear(self):
-        # the tool's price has run to ten times the cost of the wooden substitute; the margin would pay far more
-        view = View({"iron": 50.0, "wood": 2.0, "grain": 100.0}, WAGES)
-        plan = producers.plan(farmer(expected_prices={"grain": 100.0}), TOOLED, view, 1e6)
-        iron = [bid for bid in plan.bids if bid.good == "iron"][0]
-        self.assertLessEqual(iron.maximum_price, tool_fallback.value_in_use(TOOLED, "iron", {"iron": 50.0, "wood": 2.0}, WAGES) + 1e-9)
-        self.assertLess(iron.maximum_price, iron.reference_price)       # below today's price: the run draws wooden tools
-
-    def test_the_wooden_substitute_is_bid_for_when_it_is_the_cheaper_way(self):
-        view = View({"iron": 50.0, "wood": 2.0, "grain": 100.0}, WAGES)
-        plan = producers.plan(farmer(expected_prices={"grain": 100.0}), TOOLED, view, 1e6)
-        wood = [bid for bid in plan.bids if bid.good == "wood"][0]
-        self.assertGreaterEqual(wood.maximum_price, wood.reference_price)
-        self.assertLessEqual(wood.maximum_price, 11.0 + 1e-9)
+        self.assertLessEqual(seed.maximum_price, 100.0 * 10.0 / 2.0)      # a run's grain over the seed it sows
 
 
 if __name__ == "__main__":

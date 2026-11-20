@@ -3,7 +3,9 @@
 Part of the port. For each ore recipe (a production entry whose output is the ore of a resource the
 catalogue lists), a tile that holds a deposit of that resource gets a limit: the runs a year the deposits'
 room allows (their working rate, less what the seat's own mines name on them), in ore. A tile whose deposits
-are worked out keeps a limit of nothing, so the recipe does not fall back to running anywhere. What the firms
+are worked out keeps a limit of nothing, and an ore with no deposit on any tile of the economy keeps a limit of
+nothing on every tile, so the recipe does not fall back to running anywhere. A deposit type that names its own
+ore good holds that ore; the resource's own ore is dug from its other deposits. What the firms
 raise is read back each year and drawn from the tile's deposits, the same ledger the seat's mines draw on
 (the seat record's `holdings.deposit_drawn`, sim/resources/deposits.py).
 
@@ -28,10 +30,29 @@ SITE_YIELD_FACTOR = declare(
 
 
 def _ore_recipes(sim, outputs_by_recipe):
-    """{recipe id: (resource id, ore kg a run)} for the recipes whose output is a catalogue resource's ore."""
-    ore_of = {ore: resource for resource, by_ore in sim.map.deposit_catalogue()["ore_goods"].items() for ore in by_ore}
-    return {recipe_id: (ore_of[recipe_id], outputs[recipe_id]) for recipe_id, outputs in sorted(outputs_by_recipe.items())
-            if recipe_id in ore_of and outputs.get(recipe_id, 0.0) > 0.0}
+    """{recipe id: (resource id, ore kg a run, the deposit types that hold it, the deposit types that do not)} for the recipes
+    whose output is a catalogue resource's ore. An ore a deposit type names for itself is held by that type's deposits
+    alone; the resource's own ore by the deposits of every other type."""
+    catalogue = sim.map.deposit_catalogue()
+    typed = catalogue.get("ore_goods_by_deposit_type", {})
+    held_by = {}
+    for resource, by_ore in catalogue["ore_goods"].items():
+        for ore in by_ore:
+            held_by[ore] = (resource, frozenset(), frozenset(typed.get(resource, ())))
+    for resource, by_type in typed.items():
+        for deposit_type, by_ore in by_type.items():
+            for ore in by_ore:
+                resource_of, types, _others = held_by.get(ore, (resource, frozenset(), frozenset()))
+                held_by[ore] = (resource_of, types | {deposit_type}, frozenset())
+    return {recipe_id: (held_by[recipe_id][0], outputs[recipe_id]) + held_by[recipe_id][1:]
+            for recipe_id, outputs in sorted(outputs_by_recipe.items())
+            if recipe_id in held_by and outputs.get(recipe_id, 0.0) > 0.0}
+
+
+def _holds(row, types, other_types) -> bool:
+    """Whether a deposit row holds the ore: of one of `types` where the ore is a type's own, else of none of `other_types`."""
+    deposit_type = row.get("deposit_type")
+    return deposit_type in types if types else deposit_type not in other_types
 
 
 def _worked_by_firms(sim, resource_id, tile_ids):
@@ -46,13 +67,16 @@ def site_limits(sim, outputs_by_recipe, tile_ids=()):
     economy); and for the timber recipes, over `tile_ids`, from each tile's standing wood."""
     limits = list(port_timber.limits(sim, outputs_by_recipe, tile_ids))
     worked = {}     # the rows of each resource, read once for the recipes that work it
-    for recipe_id, (resource_id, ore_kg_per_run) in _ore_recipes(sim, outputs_by_recipe).items():
+    for recipe_id, (resource_id, ore_kg_per_run, types, other_types) in _ore_recipes(sim, outputs_by_recipe).items():
         by_tile = {}
         if resource_id not in worked:
             worked[resource_id] = _worked_by_firms(sim, resource_id, tile_ids)
         for row in worked[resource_id]:
-            ore_kg = row["room_tonnes_per_year"] * ore_tonnes_per_tonne(row) * KILOGRAMS_PER_TONNE
-            by_tile[row["tile_id"]] = by_tile.get(row["tile_id"], 0.0) + ore_kg / ore_kg_per_run
+            if _holds(row, types, other_types):
+                ore_kg = row["room_tonnes_per_year"] * ore_tonnes_per_tonne(row) * KILOGRAMS_PER_TONNE
+                by_tile[row["tile_id"]] = by_tile.get(row["tile_id"], 0.0) + ore_kg / ore_kg_per_run
+        if not by_tile:      # no deposit of the ore on any tile of the economy: it is dug nowhere
+            by_tile = {tile: 0.0 for tile in tile_ids}
         limits.extend(SiteLimit(recipe_id, tile, runs, SITE_YIELD_FACTOR) for tile, runs in sorted(by_tile.items()))
     return limits
 
@@ -69,13 +93,13 @@ def deplete(sim, extraction, outputs_by_recipe):
     for (recipe_id, tile), runs in sorted(extraction.items()):
         if recipe_id not in recipes or runs <= 0.0:
             continue
-        resource_id, ore_kg_per_run = recipes[recipe_id]
+        resource_id, ore_kg_per_run, types, other_types = recipes[recipe_id]
         ore_tonnes = runs * ore_kg_per_run / KILOGRAMS_PER_TONNE
         if resource_id not in rows_of or (resource_id, tile) in drawn_tiles:
             rows_of[resource_id] = _worked_by_firms(sim, resource_id, worked_tiles)
             drawn_tiles = {each for each in drawn_tiles if each[0] != resource_id}
         drawn_tiles.add((resource_id, tile))
-        for row in sorted((row for row in rows_of[resource_id] if row["tile_id"] == tile),
+        for row in sorted((row for row in rows_of[resource_id] if row["tile_id"] == tile and _holds(row, types, other_types)),
                           key=lambda row: (-row["remaining_tonnes"], row["id"])):
             take = min(ore_tonnes / ore_tonnes_per_tonne(row), row["remaining_tonnes"])
             if take > 0.0:

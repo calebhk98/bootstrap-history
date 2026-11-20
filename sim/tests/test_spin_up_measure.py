@@ -24,6 +24,25 @@ class ChangeGapTests(unittest.TestCase):
         self.assertEqual(spin_up_gap.price_gap({}, {"grain": 1.0}), 1.0)
         self.assertEqual(spin_up_gap.price_gap({}, {}), 0.0)
 
+    def test_a_small_good_that_loses_its_price_moves_the_measure_by_its_share_of_the_spending(self):
+        shares = {"grain": 0.98, "shoes": 0.02}
+        self.assertAlmostEqual(spin_up_gap.price_gap({"grain": 1.0}, {"grain": 1.0, "shoes": 5.0}, shares), 0.02)
+
+    def test_a_goods_price_change_counts_by_its_share_of_the_spending(self):
+        shares = {"grain": 0.75, "salt": 0.25}
+        self.assertAlmostEqual(spin_up_gap.price_gap({"grain": 1.1, "salt": 2.0}, {"grain": 1.0, "salt": 2.0}, shares), 0.075)
+
+    def test_a_good_with_no_price_last_year_adds_nothing(self):
+        shares = {"grain": 0.75, "salt": 0.25}
+        self.assertAlmostEqual(spin_up_gap.price_gap({"grain": 1.0, "salt": 2.0}, {"grain": 1.0}, shares), 0.0)
+
+    def test_with_no_shares_every_watched_good_counts_alike(self):
+        self.assertAlmostEqual(spin_up_gap.price_gap({"grain": 1.2, "salt": 2.0}, {"grain": 1.0, "salt": 2.0}), 0.1)
+
+    def test_the_states_gap_reads_the_earlier_states_shares(self):
+        before = {"prices": {"grain": 1.0, "shoes": 5.0}, "price_weights": {"grain": 0.98, "shoes": 0.02}}
+        self.assertAlmostEqual(spin_up_gap.state_gaps(before, {"prices": {"grain": 1.0}})["prices"], 0.02)
+
     def test_a_price_is_measured_by_its_relative_change(self):
         self.assertAlmostEqual(spin_up_gap.change_gap(1.5, 1.0), 0.5)
 
@@ -78,6 +97,14 @@ class WindowGapTests(unittest.TestCase):
 
     def test_fewer_than_two_states_measure_nothing(self):
         self.assertIsNone(spin_up_gap.window_gaps([_state()]))
+
+    def test_a_change_in_inventories_is_read_against_a_years_output(self):
+        gaps = spin_up_gap.state_gaps(_state(inventory_value=10.0, real_output=100.0), _state(inventory_value=11.0, real_output=100.0))
+        self.assertAlmostEqual(gaps["inventory_value"], 1.0 / 100.0)      # one unit of stock more, in a year that makes a hundred
+
+    def test_inventories_larger_than_a_years_output_are_read_against_themselves(self):
+        gaps = spin_up_gap.state_gaps(_state(inventory_value=400.0, real_output=100.0), _state(inventory_value=440.0, real_output=100.0))
+        self.assertAlmostEqual(gaps["inventory_value"], 40.0 / 400.0)
 
     def test_employment_and_inventories_and_unmet_need_count_toward_settled(self):
         for name, moved in (("hired_hours", 80.0), ("inventory_value", 30.0), ("unmet_need", 5.0)):
@@ -152,7 +179,8 @@ class StopRuleTests(unittest.TestCase):
             economy.years += 1
             return types.SimpleNamespace(basket_price_level=1.0, prices={"wheat_kg": 1.0})
         economy.step = step
-        with mock.patch.dict(os.environ, FULL_GAME, clear=True):
+        with mock.patch.dict(os.environ, FULL_GAME, clear=True), \
+                mock.patch.object(spin_up_run.economy_api, "traded_volumes", lambda economy: {"wheat_kg": 1.0}):
             result = spin_up_run.settle(economy, object(), ["wheat_kg"])
         self.assertTrue(result["settled"])
 
@@ -171,9 +199,9 @@ class OrderTests(unittest.TestCase):
                 mock.patch.object(api, "note_spin_up_result",
                                   lambda economy, result: calls.append(("note", result))), \
                 mock.patch.object(spin_up_run, "settle",
-                                  lambda economy, inputs, watched, trace=None: calls.append("settle") or first), \
+                                  lambda economy, inputs, watched, trace=None, shares=None: calls.append("settle") or first), \
                 mock.patch.object(spin_up_run, "settle_trimmed",
-                                  lambda economy, inputs, watched: calls.append("trimmed") or window):
+                                  lambda economy, inputs, watched, shares=None: calls.append("trimmed") or window):
             spin_up_run.spin_up(economy)
         self.assertEqual(calls[:5], ["settle", "trim", "trimmed", "trim", "finish"])
         self.assertEqual(calls[5][1]["measured_years"], 4)

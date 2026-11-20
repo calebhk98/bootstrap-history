@@ -102,7 +102,7 @@ def close_households(setup, record, view, ledger, property_income: Dict[str, flo
     offered_prices: Dict = {}      # the prices households are closed on do not change while they close
     baskets: Dict = {}
     packed = households_close_pack.PackedBaskets(book, setup.specs)
-    hired, milled = store.floats("hired_work_per_person", order), [store.milled_of(row) for row in order.tolist()]
+    hired, milled = store.floats("hired_work_per_person", order), [store.ground_of(row) for row in order.tolist()]
     numbers, floor_costs = [], []
     cohort_prime.prime_cohort_baskets(setup, record, view, False)
     keys = household_work_year.signatures_from_fields(record, tiles_of, cohort_ids, hired, milled)       # the hearths of every cohort in one pass

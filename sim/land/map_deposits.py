@@ -3,7 +3,7 @@ what was worked before the game began, the most a deposit yields and what prospe
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from sim.assembly.api import Part
-from sim.geography.api import (endowment, mined_before, mine_demand_goods, ore_goods, parameter_value, prospect, resource_ids,
+from sim.geography.api import (endowment, mined_before, mine_demand_goods, ore_goods, ore_goods_by_deposit_type, parameter_value, prospect, resource_ids,
                                worked_deposits, working_rate_tonnes_per_year, works_priced_from_deposits)
 
 
@@ -19,6 +19,7 @@ class MapDeposits(Part):
     def deposit_catalogue(self) -> Dict[str, Any]:
         """What the map's catalogue says is mined, kept (the map does not change in a game): {mechanisms: {resource id: its
         mechanism}, metals: the resources that yield ore goods, ore_goods: {resource: {ore good: smelting recipes}},
+        ore_goods_by_deposit_type: {resource: {deposit type: {ore good: smelting recipes}}} for the types that name their own,
         works_priced_materials: the resources whose running cost comes from the deposits' works, demand_goods: {resource:
         goods whose demand a mine of it supplies}, mining_trade: the trade whose wage prices mine labour}."""
         if self._deposit_catalogue_cache is None:
@@ -27,7 +28,7 @@ class MapDeposits(Part):
             ores = ore_goods(world_map)
             self._deposit_catalogue_cache = {
                 "mechanisms": {resource: resources[resource].get("mechanism") for resource in resource_ids(world_map)},
-                "metals": tuple(ores), "ore_goods": ores,
+                "metals": tuple(ores), "ore_goods": ores, "ore_goods_by_deposit_type": ore_goods_by_deposit_type(world_map),
                 "works_priced_materials": works_priced_from_deposits(world_map),
                 "demand_goods": mine_demand_goods(world_map), "mining_trade": parameter_value("mining_trade", world_map)}
         return self._deposit_catalogue_cache

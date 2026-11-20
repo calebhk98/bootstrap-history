@@ -25,6 +25,14 @@ class HireThroughRounds(unittest.TestCase):
         self.assertGreater(hired["mill"], 99.0)
         self.assertLess(kept["mill"], 100.0)
 
+    def test_an_employer_with_most_of_the_markets_posts_is_staffed_to_the_same_share_as_the_small_ones(self):
+        # one producer stands for every workplace of its recipe on the tile: 500 hours of posts beside twenty employers of 25
+        wanted = {"big": 500.0, **{"small%02d" % index: 25.0 for index in range(20)}}
+        hired, kept = dict(wanted), dict(wanted)
+        applications.hire_through_rounds(hired, kept, wanted, {employer: 1.0 for employer in wanted}, pool=0.0, ask=1.0, floor=0.5)
+        self.assertAlmostEqual(hired["big"] / wanted["big"], hired["small00"] / wanted["small00"], places=9)
+        self.assertGreater(hired["big"] / wanted["big"], 0.95)
+
     def test_dismissed_hours_return_once_their_cut_ask_reaches_the_offer(self):
         hired, kept = {"mill": 100.0}, {"mill": 100.0}
         applications.hire_through_rounds(hired, kept, {"mill": 100.0}, {"mill": 5.0},

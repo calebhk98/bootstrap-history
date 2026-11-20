@@ -1,0 +1,476 @@
+diff --git a/Complaints/reports/473-handoff/probes/merchant_book_probe.py b/Complaints/reports/473-handoff/probes/merchant_book_probe.py
+new file mode 100644
+index 00000000..5049ff09
+--- /dev/null
++++ b/Complaints/reports/473-handoff/probes/merchant_book_probe.py
+@@ -0,0 +1,36 @@
++"""Each merchant by year: coin, the worth of the goods it holds (at the price of the market where they lie), its routes, the staple it
++routes into each unfed tile, its debts, and the tonnes carried. Usage: python3 merchant_book_probe.py <civ> <years> <good>"""
++import random, sys
++from collections import defaultdict
++from sim.economy import api as economy_api
++from sim.economy.market_memory import market_key
++from sim.engine.ui_port import Sim, load, load_civ
++from sim.markets import spin_up_stages
++
++civ, years, good = sys.argv[1], int(sys.argv[2]), sys.argv[3]
++_t, _p, nodes, _w, _g = load()
++game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ))
++setup = game.view("agent_opening_setup")()
++economy = economy_api.blank_economy(setup)
++economy_api.begin_spin_up(economy)
++inputs = spin_up_stages.year_inputs(economy)
++area_map = setup.area_map()
++record = economy.record
++money = setup.currency_id
++book = record.book
++print("merchants", len(record.merchants), "fields", [name for name in dir(next(iter(record.merchants.values()))) if not name.startswith("_")][:30])
++for year in range(years):
++    outcome = economy.step(inputs)
++    tonnes = sum(band.tonnes if hasattr(band, "tonnes") else band["tonnes"] for band in outcome.merchant_routes)
++    for key, merchant in record.merchants.items():
++        held = sum(book.stock(merchant.agent_id, good, tile) for tile in setup.tiles)
++        into = defaultdict(float)
++        for (item, source), legs in merchant.routes.items():
++            if item == good:
++                for leg in legs:
++                    into[leg[0]] += leg[2]
++        print("year %2d %s coin %10.4g routes %3d tonnes carried %8.4g holds %9.4g of the staple | %s routed into: %s | hunger %.1f%%" % (
++            year, key, book.balance(merchant.agent_id, money), len(merchant.routes), tonnes, held, good,
++            " ".join("%s %.3g" % (tile, units) for tile, units in sorted(into.items())) or "nowhere",
++            100 * sum(outcome.hunger_by_tile.values()) / (sum(cohort.people for cohort in record.cohorts.values()) * next(
++                need.subsistence_per_person for need in setup.basket_for(setup.capital_tile).needs if need.need_id == setup.hunger_need))))
+diff --git a/Complaints/reports/473-handoff/probes/worth_probe.py b/Complaints/reports/473-handoff/probes/worth_probe.py
+new file mode 100644
+index 00000000..a59a1099
+--- /dev/null
++++ b/Complaints/reports/473-handoff/probes/worth_probe.py
+@@ -0,0 +1,34 @@
++"""In each market area of a good that had buyers and nothing on offer: what the good would fetch against the food on offer there
++(ask_ceiling.alternative_ceiling at the area's offered prices), beside its remembered price, the price where it trades, and the
++offered prices of the need's other goods. Usage: python3 worth_probe.py <civ> <years> <good>"""
++import random, sys
++from sim.economy import api as economy_api
++from sim.economy.ask_ceiling import alternative_ceiling
++from sim.economy.market_memory import market_key
++from sim.engine.ui_port import Sim, load, load_civ
++from sim.markets import spin_up_stages
++
++civ, years, good = sys.argv[1], int(sys.argv[2]), sys.argv[3]
++_t, _p, nodes, _w, _g = load()
++game = Sim(nodes, [], random.Random(1), events=False, manual=True, civ=load_civ(civ))
++setup = game.view("agent_opening_setup")()
++economy = economy_api.blank_economy(setup)
++economy_api.begin_spin_up(economy)
++inputs = spin_up_stages.year_inputs(economy)
++area_map = setup.area_map()
++record = economy.record
++for year in range(years):
++    economy.step(inputs)
++    print("year", year)
++    for area in area_map.areas(good):
++        key = market_key(good, area.area_id)
++        tile = area.anchor_tile
++        def offered(other):
++            return record.memory.offered_price(market_key(other, area_map.area_of(other, tile))) if other in area_map.goods() else None
++        ceiling = alternative_ceiling(good, setup.basket_for(tile).needs, offered, lambda other: None)
++        need = next(each for each in setup.basket_for(tile).needs if each.need_id == setup.hunger_need)
++        on_offer = {other: round(offered(other), 3) for other, _effect in need.goods if other != good and offered(other)}
++        print("   %-14s delivered %9.3g unmet %9.3g remembered %s (%s) worth against what is on offer %s | on offer: %s" % (
++            area.area_id, record.goods.volumes.get(key, 0.0) or 0.0, record.goods.unmet.get(key, 0.0) or 0.0,
++            None if record.memory.prices.get(key) is None else round(record.memory.prices.get(key), 3), record.memory.price_kind(key),
++            None if ceiling.price is None else round(ceiling.price, 3), on_offer))
+diff --git a/sim/economy/goods_market_rows.py b/sim/economy/goods_market_rows.py
+index 038aac65..9d16b1cb 100644
+--- a/sim/economy/goods_market_rows.py
++++ b/sim/economy/goods_market_rows.py
+@@ -106,9 +106,10 @@ class MarketRows:
+         return self.orders.offers_of(rows, [quantities[place] for place in keep])
+ 
+ 
+-def bids_only_quote(lists: BidLists, rows: Sequence[int], cost):
+-    """`market_quote.no_trade_quote(bids, [], cost)` over bid rows: a market where buyers bid and nobody offers quotes what a
+-    maker would have to ask to cover a unit's cost, else the best unfilled bid; None when it posts nothing to quote."""
++def bids_only_quote(lists: BidLists, rows: Sequence[int], cost, worth=None):
++    """`market_quote.no_trade_quote(bids, [], cost, worth)` over bid rows: a market where buyers bid and nobody offers quotes
++    what the good is worth against what its buyers can buy (`worth`), else what a maker would have to ask to cover a
++    unit's cost, else the best unfilled bid; None when it posts nothing to quote."""
+     funded = False
+     best = None
+     for row in rows:
+@@ -117,6 +118,8 @@ def bids_only_quote(lists: BidLists, rows: Sequence[int], cost):
+             ceiling = lists.maximum_price[row]
+             if math.isfinite(ceiling) and ceiling > 0.0 and (best is None or ceiling > best):
+                 best = ceiling
++    if worth is not None and worth > 0.0 and funded:
++        return Quote(QUOTE_BEST_UNFILLED_BID, worth)
+     if cost is not None and cost > 0.0 and funded:
+         return Quote(QUOTE_COST_COVERING, cost)
+     return Quote(QUOTE_BEST_UNFILLED_BID, best) if best is not None else None
+diff --git a/sim/economy/goods_remember_kernel.py b/sim/economy/goods_remember_kernel.py
+index 21121f05..8ce7dc66 100644
+--- a/sim/economy/goods_remember_kernel.py
++++ b/sim/economy/goods_remember_kernel.py
+@@ -139,11 +139,12 @@ def price_after_thin_trade(price, cost, quantity, usual, representative_share, t
+ 
+ @njit(**KERNEL)
+ def signals(old, was_quote, usual, quiet_years, total, received, wanted_at_old, quote_price, quote_kind, has_bids, offers_left, cost,
+-            bid_funded, bid_best, representative_share, resumed_share, no_offer_share, thin_trade_share):
++            bid_funded, bid_best, worth, representative_share, resumed_share, no_offer_share, thin_trade_share):
+     """Per market: (the signal its memory moves toward (NaN: none), the kind of the quote it rests on (`NO_QUOTE` when it rests on trade or
+     on nothing), whether it came from trade). A market that traded is weighed against its usual volume or a share of what buyers wanted
+-    at the old price; one that did not moves toward its quote, which for a market with bids and no offers left is what a maker would
+-    have to ask to cover its cost, else the best bid unfilled. A market with nothing to quote plans from the cost of making the good,
++    at the old price; one that did not moves toward its quote, which for a market with bids and no offers left is what the good is
++    worth against what its buyers can buy (`worth`, market_quote.worth_against_offers; NaN: none), else what a maker would have to ask
++    to cover its cost, else the best bid unfilled. A market with nothing to quote plans from the cost of making the good,
+     taken whole (kind COST_COVERING); with no cost either its signal is NaN and the caller forgets its planning price."""
+     markets = len(old)
+     signal = numpy.full(markets, numpy.nan)
+@@ -162,7 +163,9 @@ def signals(old, was_quote, usual, quiet_years, total, received, wanted_at_old,
+             continue
+         price, code = quote_price[market], quote_kind[market]
+         if has_bids[market] and offers_left[market] == 0:
+-            if not numpy.isnan(cost[market]) and cost[market] > 0.0 and bid_funded[market]:
++            if not numpy.isnan(worth[market]) and worth[market] > 0.0 and bid_funded[market]:
++                price, code = worth[market], BEST_UNFILLED_BID
++            elif not numpy.isnan(cost[market]) and cost[market] > 0.0 and bid_funded[market]:
+                 price, code = cost[market], COST_COVERING
+             elif not numpy.isnan(bid_best[market]):
+                 price, code = bid_best[market], BEST_UNFILLED_BID
+diff --git a/sim/economy/market_quote.py b/sim/economy/market_quote.py
+index 6faf14f4..e579a2cc 100644
+--- a/sim/economy/market_quote.py
++++ b/sim/economy/market_quote.py
+@@ -3,16 +3,28 @@
+ A price is one both sides agreed to trade at, so a market has one only for a year in which it traded. A
+ market that did not trade shows the figure that comes from what is actually posted, named as what it is:
+ the best unfilled bid when buyers bid but every ask was above it, the lowest unfilled ask when nobody
+-bid, and (where the caller knows what a unit costs to make) a cost-covering quote when buyers bid and
+-nobody offered.
++bid, and when buyers bid and nobody offered, what the good is worth to them against what they can buy
++(`worth_against_offers`, a bid ceiling), else, where the caller knows what a unit costs to make, a
++cost-covering quote.
+ """
+ import math
+-from typing import Optional, Sequence
++from typing import Callable, Optional, Sequence
+ 
++from sim.world.need_basket import NeedSpec
++
++from .ask_ceiling import alternative_ceiling
+ from .stock_residue import STOCK_RESIDUE_UNITS
+ from .types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, QUOTE_LOWEST_UNFILLED_ASK, Bid, Offer, Quote
+ 
+ 
++def worth_against_offers(good: str, needs: Sequence[NeedSpec], offered_price_of: Callable[[str], Optional[float]]) -> Optional[float]:
++    """What `good` would fetch where buyers want it and none is on offer: the price at which its household buyers do as
++    well through the cheapest other good of each need it meets that they can buy there (`ask_ceiling.alternative_ceiling`
++    at the prices on offer; a good not on offer is no alternative). None when a need it meets has nothing else on
++    offer, or when no need takes it."""
++    return alternative_ceiling(good, needs, offered_price_of, lambda other: None).price
++
++
+ def best_unfilled_bid(bids: Sequence[Bid]) -> Optional[float]:
+     """The most any buyer with money to spend would have paid; None when none names a finite maximum."""
+     ceilings = [bid.maximum_price for bid in bids if bid.budget > 0.0 and math.isfinite(bid.maximum_price)
+@@ -25,12 +37,16 @@ def lowest_unfilled_ask(offers: Sequence[Offer]) -> Optional[float]:
+     return min(asks) if asks else None
+ 
+ 
+-def no_trade_quote(bids: Sequence[Bid], offers: Sequence[Offer], cost: Optional[float] = None) -> Optional[Quote]:
+-    """The quote of a market where nothing traded; None when it posts nothing to quote."""
++def no_trade_quote(bids: Sequence[Bid], offers: Sequence[Offer], cost: Optional[float] = None,
++                   worth: Optional[float] = None) -> Optional[Quote]:
++    """The quote of a market where nothing traded; None when it posts nothing to quote. `worth` is
++    `worth_against_offers` of the good here, when it has one."""
+     asks = lowest_unfilled_ask(offers)
+     anyone_bid = any(bid.budget > 0.0 for bid in bids)
+     bid_price = best_unfilled_bid(bids)
+     if asks is None:
++        if worth is not None and worth > 0.0 and anyone_bid:
++            return Quote(QUOTE_BEST_UNFILLED_BID, worth)
+         if cost is not None and cost > 0.0 and anyone_bid:
+             return Quote(QUOTE_COST_COVERING, cost)
+         return Quote(QUOTE_BEST_UNFILLED_BID, bid_price) if bid_price is not None else None
+diff --git a/sim/economy/year_close.py b/sim/economy/year_close.py
+index 25190e62..92764beb 100644
+--- a/sim/economy/year_close.py
++++ b/sim/economy/year_close.py
+@@ -114,6 +114,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
+     arrays = close_producers_of_year(setup, record, view, ledger, arrays, property_income, pooled)
+     arrays_kept(arrays)
+     prices, volumes = learned_prices(ledger.market_totals(), record.memory)
++    volumes = market_sizes(volumes, ledger.market_totals()[1], prices, {key: ledger.unmet_demand.get(key, 0.0) for key in ledger.unmet_demand})
+     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
+     news = merchants_news.YearNews(prices, volumes, anchors)
+     interest_rate = own_rate(view, money)
+@@ -147,6 +148,25 @@ def learned_prices(totals, memory):
+     return prices, volumes
+ 
+ 
++def market_sizes(volumes, cleared, prices, unmet):
++    """What a trader learns as each market's size, by (good, area): the units its buyers took (`volumes`) and asked for in
++    vain (`unmet`), counted at the lowest price the good traded at in any area this year (`cleared`: the traded price, None
++    where nothing traded). A market that pays several times that price, or remembers such a price with nothing on offer
++    (`prices`), would take more units at a price nearer what the good costs elsewhere: what a trader shares in is the
++    buyers' money, which at the market's own price buys few units. A good that traded nowhere, and a market with no
++    price remembered, count their units as they are."""
++    lowest = {}
++    for (good, _area), price in cleared.items():
++        if price is not None and price > 0.0 and (good not in lowest or price < lowest[good]):
++            lowest[good] = price
++    sizes = {}
++    for key in sorted(set(volumes) | set(unmet)):
++        units = volumes.get(key, 0.0) + unmet.get(key, 0.0)
++        here, base = prices.get(key), lowest.get(key[0])
++        sizes[key] = units * max(1.0, here / base) if here is not None and base is not None else units
++    return sizes
++
++
+ def held_only(moves, book):
+     """The moves with each giver's quantity cut to what it holds: settlement can deliver a rounding hair
+     less than a fill, and an agent consumes what it has, not what its fills say."""
+diff --git a/sim/economy/year_goods.py b/sim/economy/year_goods.py
+index d457c72a..940eda79 100644
+--- a/sim/economy/year_goods.py
++++ b/sim/economy/year_goods.py
+@@ -160,7 +160,7 @@ def clear_goods(setup, record, view, area_map, order_book, plans, ledger: YearLe
+     keys = left_markets.sorted_keys()
+     rows = goods_memory_notes.rows_of(record.memory, [market_key(good, area) for good, area in keys])
+     cells = left_markets.sorted_cells()                  # the markets' rows in the year's table, in sorted order
+-    year_remember.remember_markets(setup, record, keys, left_markets, rows, year_markets, cells, ledger, orders, metal)
++    year_remember.remember_markets(setup, record, keys, left_markets, rows, year_markets, cells, ledger, orders, metal, area_map)
+     _record_year_markets(record, ledger, keys, rows, year_markets, cells)
+ 
+ 
+diff --git a/sim/economy/year_remember.py b/sim/economy/year_remember.py
+index db620bf2..8d2505b8 100644
+--- a/sim/economy/year_remember.py
++++ b/sim/economy/year_remember.py
+@@ -9,7 +9,7 @@ from typing import Optional
+ 
+ import numpy
+ 
+-from . import goods_memory_notes, goods_remember_kernel as kernel
++from . import goods_memory_notes, goods_remember_kernel as kernel, market_quote
+ from .goods_good_clear import QUOTE_KINDS
+ from .market_memory_asks import REPRESENTATIVE_TRADE_SHARE, memory_reference_volume
+ from .market_memory_asks import RESUMED_TRADE_MEMORY_SHARE
+@@ -33,7 +33,33 @@ class Costs:
+         return self._found.get(good)
+ 
+ 
+-def remember_one(setup, record, good, area, market, old, total, usual, was_quote, idle_years, ledger, orders, costs: Costs):
++class Worths:
++    """What each good is worth, in a market area where buyers want it and none is on offer, against the goods of its needs that
++    are on offer there (`market_quote.worth_against_offers`): the area's people are those of its anchor tile, and the prices on
++    offer are the memory's as the year found them. None with no area map (nothing is known of what else is on offer)."""
++
++    def __init__(self, setup, memory, area_map):
++        self._setup, self._memory, self._area_map = setup, memory, area_map
++        self._anchors: dict = {}
++
++    def get(self, good, area):
++        if self._area_map is None or good not in self._area_map.goods():
++            return None
++        anchors = self._anchors.get(good)
++        if anchors is None:
++            anchors = self._anchors[good] = {each.area_id: each.anchor_tile for each in self._area_map.areas(good)}
++        tile = anchors.get(area)
++        if tile is None:
++            return None
++        here = self._area_map.areas_on_tile(tile)
++
++        def offered(other):
++            return self._memory.offered_price(market_key(other, here[other])) if other in here else None
++        return market_quote.worth_against_offers(good, self._setup.basket_for(tile).needs, offered)
++
++
++def remember_one(setup, record, good, area, market, old, total, usual, was_quote, idle_years, ledger, orders, costs: Costs,
++                 worths: Optional[Worths] = None):
+     """The Python rules for one market: (the signal or None, the quote kind or None, whether it came from trade)."""
+     from . import year_goods
+     quote_kind = None
+@@ -47,9 +73,9 @@ def remember_one(setup, record, good, area, market, old, total, usual, was_quote
+     quote = market.result.quote
+     if market.bids and not market.offers:
+         from .goods_market_rows import bids_only_quote
+-        from . import market_quote
+-        quote = (bids_only_quote(orders.bid_lists(), market.rows.bid_rows, costs.get(good)) if market.rows is not None else
+-                 market_quote.no_trade_quote(market.bids, market.offers, costs.get(good)))
++        worth = worths.get(good, area) if worths is not None else None
++        quote = (bids_only_quote(orders.bid_lists(), market.rows.bid_rows, costs.get(good), worth) if market.rows is not None else
++                 market_quote.no_trade_quote(market.bids, market.offers, costs.get(good), worth))
+     signal = price_toward_quote(old, quote.price) if quote is not None else None
+     if signal is not None:
+         quote_kind = quote.kind
+@@ -88,9 +114,10 @@ def _kind_numbers(memory, kind: numpy.ndarray) -> numpy.ndarray:
+     return numbers
+ 
+ 
+-def remember_markets(setup, record, keys, left_markets, rows, year_markets, cells, ledger, orders, metal):
++def remember_markets(setup, record, keys, left_markets, rows, year_markets, cells, ledger, orders, metal, area_map=None):
+     """The memory's notes for the markets `keys` (sorted (good, area); `left_markets` makes a market's `LeftMarket` for the Python rules), with their
+-    market numbers `rows` and table rows `cells`."""
++    market numbers `rows` and table rows `cells`. With `area_map`, a market with buyers and nothing on offer is told what its good is worth
++    against what is on offer in its area (`Worths`)."""
+     memory, table = record.memory, year_markets.table
+     ledger_markets = ledger.tables.markets
+     if ledger_markets is memory.tables:
+@@ -122,16 +149,24 @@ def remember_markets(setup, record, keys, left_markets, rows, year_markets, cell
+     needs_cost = (traded & (total < REPRESENTATIVE_TRADE_SHARE * usual)) | ~traded
+     cost = numpy.array([numpy.nan if each is None else each for each in (costs.get(good) for good in goods)]) if needs_cost.any() \
+         else numpy.full(len(rows), numpy.nan)
++    worths = Worths(setup, memory, area_map)
++    worth = numpy.full(len(rows), numpy.nan)
++    for place in numpy.flatnonzero(~traded & has_bids & (offers_left == 0) & funded).tolist():
++        found = worths.get(*keys[place])
++        if found is not None:
++            worth[place] = found
+     signal, kind, from_trade = kernel.signals(old, was_quote, usual, idle, total, received, wanted_old, table.quote_price[cells],
+-                                              table.quote_kind[cells], has_bids, offers_left, cost, funded, best, REPRESENTATIVE_TRADE_SHARE,
+-                                              RESUMED_TRADE_MEMORY_SHARE, NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE)
++                                              table.quote_kind[cells], has_bids, offers_left, cost, funded, best, worth,
++                                              REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE, NO_OFFER_MEMORY_SHARE,
++                                              THIN_TRADE_COST_SHARE)
+     if flags[0] != kernel.FALLBACK and not plain.any():
+         return _write(setup, memory, rows, keys, signal, kind, from_trade, cleared, table.delivered[cells])
+     every = numpy.ones(len(rows), dtype=numpy.bool_) if flags[0] == kernel.FALLBACK else plain
+     for place in numpy.flatnonzero(every).tolist():
+         good, area = keys[place]
+         found, name, trade = remember_one(setup, record, good, area, left_markets[keys[place]], None if old[place] != old[place] else float(old[place]),
+-                                          float(total[place]), float(usual[place]), bool(was_quote[place]), int(idle[place]), ledger, orders, costs)
++                                          float(total[place]), float(usual[place]), bool(was_quote[place]), int(idle[place]), ledger, orders, costs,
++                                          worths)
+         signal[place], kind[place], from_trade[place] = numpy.nan if found is None else found, QUOTE_KINDS.index(name), trade
+     return _write(setup, memory, rows, keys, signal, kind, from_trade, cleared, table.delivered[cells])
+ 
+diff --git a/sim/tests/test_economy_no_trade_no_price.py b/sim/tests/test_economy_no_trade_no_price.py
+index 974b886d..57947b71 100644
+--- a/sim/tests/test_economy_no_trade_no_price.py
++++ b/sim/tests/test_economy_no_trade_no_price.py
+@@ -11,6 +11,7 @@ from sim.economy import goods_market, market_quote
+ from sim.economy.market_memory import MarketMemory, YearView
+ from sim.economy.national_prices import national_prices
+ from sim.economy.types import (QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, QUOTE_LOWEST_UNFILLED_ASK, Bid, Offer)
++from sim.world.need_basket import NeedSpec
+ 
+ GOOD, AREA, TILE = "grain", "area", "tile"
+ LAST_PRICE = 7.0
+@@ -56,6 +57,25 @@ class ClearingTests(unittest.TestCase):
+         quote = market_quote.no_trade_quote([bid()], [], cost=2.5)
+         self.assertEqual((quote.kind, quote.price), (QUOTE_COST_COVERING, 2.5))
+ 
++    def test_buyers_nobody_serves_quote_what_the_good_is_worth_against_what_they_can_buy(self):
++        # the good costs 2.5 to make somewhere; here its buyers pay 6 for the next best thing on offer
++        quote = market_quote.no_trade_quote([bid()], [], cost=2.5, worth=6.0)
++        self.assertEqual((quote.kind, quote.price), (QUOTE_BEST_UNFILLED_BID, 6.0))
++
++    def test_what_the_good_is_worth_against_the_other_goods_of_its_need_on_offer(self):
++        heat = NeedSpec("heat", 1.0, 1.0, (("charcoal", 2.0), ("wood", 1.0), ("peat", 0.5)))
++        on_offer = {"wood": 3.0, "peat": 2.0}
++        # a unit of heat costs 3 through wood and 4 through peat; charcoal gives two units of heat
++        self.assertEqual(market_quote.worth_against_offers("charcoal", [heat], on_offer.get), 6.0)
++
++    def test_a_good_whose_need_has_nothing_else_on_offer_has_no_such_worth(self):
++        heat = NeedSpec("heat", 1.0, 1.0, (("charcoal", 2.0), ("wood", 1.0)))
++        self.assertIsNone(market_quote.worth_against_offers("charcoal", [heat], {}.get))
++
++    def test_a_good_no_need_takes_has_no_such_worth(self):
++        heat = NeedSpec("heat", 1.0, 1.0, (("wood", 1.0), ("peat", 0.5)))
++        self.assertIsNone(market_quote.worth_against_offers("ore", [heat], {"wood": 3.0}.get))
++
+     def test_a_market_with_nothing_posted_quotes_nothing(self):
+         result = clear([], [])
+         self.assertIsNone(result.traded_price)
+diff --git a/sim/tests/test_economy_no_trade_plans_from_cost.py b/sim/tests/test_economy_no_trade_plans_from_cost.py
+index e9dd9155..95b2ffaf 100644
+--- a/sim/tests/test_economy_no_trade_plans_from_cost.py
++++ b/sim/tests/test_economy_no_trade_plans_from_cost.py
+@@ -22,7 +22,7 @@ def signal_of(cost, old=7.0):
+     one = lambda value, kind=np.float64: np.array([value], dtype=kind)
+     signal, kind, from_trade = kernel.signals(
+         one(old), one(False, np.bool_), one(10.0), one(0, np.int64), one(0.0), one(NAN), one(0.0), one(NAN), one(0, np.int64),
+-        one(False, np.bool_), one(0, np.int64), one(cost), one(False, np.bool_), one(NAN), 0.5, 0.5, 0.3, 0.3)
++        one(False, np.bool_), one(0, np.int64), one(cost), one(False, np.bool_), one(NAN), one(NAN), 0.5, 0.5, 0.3, 0.3)
+     return signal[0], kind[0], from_trade[0]
+ 
+ 
+diff --git a/sim/tests/test_goods_remember_kernel.py b/sim/tests/test_goods_remember_kernel.py
+index addbf6cd..057ffd81 100644
+--- a/sim/tests/test_goods_remember_kernel.py
++++ b/sim/tests/test_goods_remember_kernel.py
+@@ -119,9 +119,10 @@ class SignalTests(unittest.TestCase):
+         cost = np.array([rng.choice((none, 0.0, rng.uniform(0.2, 30.0))) for _each in range(count)])
+         funded = np.array([rng.random() < 0.6 for _each in range(count)])
+         best = np.array([rng.choice((none, rng.uniform(0.2, 30.0))) for _each in range(count)])
++        worth = np.array([rng.choice((none, none, rng.uniform(0.2, 30.0))) for _each in range(count)])
+         signal, kind, from_trade = kernel.signals(old, was_quote, usual, quiet, total, received, wanted, quote_price, quote_kind, has_bids,
+-                                                  offers_left, cost, funded, best, REPRESENTATIVE_TRADE_SHARE, RESUMED_TRADE_MEMORY_SHARE,
+-                                                  NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE)
++                                                  offers_left, cost, funded, best, worth, REPRESENTATIVE_TRADE_SHARE,
++                                                  RESUMED_TRADE_MEMORY_SHARE, NO_OFFER_MEMORY_SHARE, THIN_TRADE_COST_SHARE)
+         for place in range(count):
+             previous = None if math.isnan(old[place]) else float(old[place])
+             if total[place] > 0.0 and not math.isnan(received[place]):
+@@ -137,7 +138,9 @@ class SignalTests(unittest.TestCase):
+             self.assertFalse(from_trade[place])
+             price = None if math.isnan(quote_price[place]) else float(quote_price[place])
+             if has_bids[place] and offers_left[place] == 0:
+-                if not math.isnan(cost[place]) and cost[place] > 0.0 and funded[place]:
++                if not math.isnan(worth[place]) and funded[place]:
++                    price = float(worth[place])
++                elif not math.isnan(cost[place]) and cost[place] > 0.0 and funded[place]:
+                     price = float(cost[place])
+                 else:
+                     price = None if math.isnan(best[place]) else float(best[place])
+diff --git a/sim/tests/test_market_sizes.py b/sim/tests/test_market_sizes.py
+new file mode 100644
+index 00000000..5e227c4c
+--- /dev/null
++++ b/sim/tests/test_market_sizes.py
+@@ -0,0 +1,43 @@
++"""What a trader learns as a market's size: the units its buyers' money would take at the lowest price the good traded at
++anywhere, so a dear or unsupplied market is not a market of no size. Each test calls one function on written-out inputs."""
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.economy import year_close
++
++GRAIN_HOME, GRAIN_FAR, GRAIN_EMPTY = ("grain", "home"), ("grain", "far"), ("grain", "empty")
++
++
++class MarketSizeTests(unittest.TestCase):
++    def test_a_market_at_the_lowest_price_is_the_units_it_took(self):
++        sizes = year_close.market_sizes({GRAIN_HOME: 100.0}, {GRAIN_HOME: 2.0}, {GRAIN_HOME: 2.0}, {})
++        self.assertEqual(sizes, {GRAIN_HOME: 100.0})
++
++    def test_a_market_paying_three_times_the_lowest_price_counts_three_times_its_units(self):
++        # the far market's buyers spent sixty on ten units; at the home price that money takes thirty
++        sizes = year_close.market_sizes({GRAIN_HOME: 100.0, GRAIN_FAR: 10.0}, {GRAIN_HOME: 2.0, GRAIN_FAR: 6.0},
++                                        {GRAIN_HOME: 2.0, GRAIN_FAR: 6.0}, {})
++        self.assertEqual(sizes, {GRAIN_HOME: 100.0, GRAIN_FAR: 30.0})
++
++    def test_a_market_with_buyers_and_nothing_delivered_counts_what_they_asked_for(self):
++        # nothing traded there (no cleared price); it remembers four, twice the home price, and buyers asked for fifteen
++        sizes = year_close.market_sizes({GRAIN_HOME: 100.0, GRAIN_EMPTY: 0.0}, {GRAIN_HOME: 2.0, GRAIN_EMPTY: None},
++                                        {GRAIN_HOME: 2.0, GRAIN_EMPTY: 4.0}, {GRAIN_EMPTY: 15.0})
++        self.assertEqual(sizes, {GRAIN_HOME: 100.0, GRAIN_EMPTY: 30.0})
++
++    def test_units_asked_for_in_vain_count_beside_those_delivered(self):
++        sizes = year_close.market_sizes({GRAIN_HOME: 100.0}, {GRAIN_HOME: 2.0}, {GRAIN_HOME: 2.0}, {GRAIN_HOME: 25.0})
++        self.assertEqual(sizes, {GRAIN_HOME: 125.0})
++
++    def test_a_good_that_traded_nowhere_is_the_units_asked_for(self):
++        sizes = year_close.market_sizes({GRAIN_EMPTY: 0.0}, {GRAIN_EMPTY: None}, {GRAIN_EMPTY: 4.0}, {GRAIN_EMPTY: 15.0})
++        self.assertEqual(sizes, {GRAIN_EMPTY: 15.0})
++
++    def test_a_market_with_no_price_remembered_is_the_units_it_took(self):
++        sizes = year_close.market_sizes({GRAIN_HOME: 100.0, GRAIN_FAR: 10.0}, {GRAIN_HOME: 2.0, GRAIN_FAR: None}, {GRAIN_HOME: 2.0}, {})
++        self.assertEqual(sizes, {GRAIN_HOME: 100.0, GRAIN_FAR: 10.0})
++
++
++if __name__ == "__main__":
++    unittest.main()

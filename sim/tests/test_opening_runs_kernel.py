@@ -110,7 +110,7 @@ class ByProductCeilingTests(unittest.TestCase):
 
 
 def reference_fit_to_supply(setup, record) -> None:
-    """The producer-by-producer loop `opening_runs.fit_to_supply` was before its sweeps ran on arrays."""
+    """`opening_runs.fit_to_supply` as a producer-by-producer loop, to run beside its sweeps on arrays."""
     by_limits = sites.limits_by_recipe(setup.site_limits)
     fixed = opening_runs.limited_goods(setup.recipes, by_limits)
     for _sweep in range(2 * opening_runs.CEILING_SWEEPS):
@@ -118,22 +118,34 @@ def reference_fit_to_supply(setup, record) -> None:
         for good in sorted(fixed):
             supply = math.fsum(producer.expected_sales * producer.yield_factor * setup.recipes[producer.recipe_id].outputs.get(good, 0.0)
                                for producer in record.producers.values())
-            users = []
+            users, plants = [], []
             for producer_id, producer in sorted(record.producers.items()):
                 recipe = setup.recipes[producer.recipe_id]
+                if sites.is_sited(recipe, by_limits):
+                    continue
                 used = recipe.hard_inputs.get(good, 0.0)
-                if recipe.plant_life_years > 0.0:
-                    used += recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years
-                if used > 0.0 and not sites.is_sited(recipe, by_limits):
-                    users.append((producer_id, producer, used))
-            wanted = math.fsum(producer.expected_sales * used for _id, producer, used in users)
-            if wanted > supply * (1.0 + 1e-9) and wanted > 0.0:
-                factor = supply / wanted
-                for producer_id, producer, _used in users:
+                upkeep = recipe.plant_goods.get(good, 0.0) / recipe.plant_life_years if recipe.plant_life_years > 0.0 else 0.0
+                if used > 0.0:
+                    users.append((producer_id, used))
+                if upkeep > 0.0:
+                    plants.append((producer_id, upkeep))
+            wanted = math.fsum(record.producers[producer_id].expected_sales * used for producer_id, used in users)
+            kept_up = math.fsum(record.producers[producer_id].expected_sales * upkeep for producer_id, upkeep in plants)
+            if wanted + kept_up <= supply * (1.0 + 1e-9) or wanted + kept_up <= 0.0:
+                continue
+            held = True
+            cuts = []          # the plants' upkeep is served first; the input users share what is left
+            if kept_up > supply:
+                cuts.append(([producer_id for producer_id, _upkeep in plants], supply / kept_up))
+                kept_up = supply
+            if wanted > 0.0:
+                cuts.append(([producer_id for producer_id, _used in users], max(0.0, supply - kept_up) / wanted))
+            for producer_ids, factor in cuts:
+                for producer_id in producer_ids:
+                    producer = record.producers[producer_id]
                     producer_table.put_producer(record.producers, replaced(
                         producer, capacity_runs=producer.capacity_runs * factor,
                         expected_sales=producer.expected_sales * factor))
-                held = True
         if not held:
             break
 

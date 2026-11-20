@@ -114,15 +114,6 @@ def area_room(record, setup, area_map, good: GoodId, maker: str) -> Dict[str, fl
     return room
 
 
-def committed_hours(record, setup) -> Dict[TileId, float]:
-    """Hours a year the placed producers of each tile would work at full capacity."""
-    hours: Dict[TileId, float] = {}
-    for producer in record.producers.values():
-        hours[producer.tile] = hours.get(producer.tile, 0.0) + producer.capacity_runs * math.fsum(
-            setup.recipes[producer.recipe_id].labour_hours.values())
-    return hours
-
-
 def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Mapping[GoodId, str],
                    shares: Sequence[Tuple[MarketArea, float]], tiles: Sequence[TileId]) -> Dict[TileId, float]:
     """Runs of capacity for each tile for a processor with fixed-site inputs. `shares` are the runs wanted
@@ -130,7 +121,8 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
     makes every fixed input can host it. The runs the supply there can feed go to the tiles cheapest first (inputs
     in, output out); the rest of what was wanted is spread over those tiles in the same proportions, so a supply
     that cannot feed the capacity shows as the input's price, not as a smaller opening. Each tile takes no more
-    than the hands it can still spare."""
+    than all its hands could work: the hands the producers already placed there would take are not kept from it,
+    since it has no other tile to go to and the year's labour market shares a tile's hours among all of them."""
     wanted = math.fsum(runs for _area, runs in shares)
     if wanted <= 0.0:
         return {}
@@ -138,13 +130,11 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
     supplies = input_supplies(record, setup, recipe, fixed)
     output_tonnes = math.fsum(tonnes_of(recipe.outputs, setup.specs).values())
     hours_per_run = math.fsum(recipe.labour_hours.values())
-    used_hours = committed_hours(record, setup)
 
-    def spare_runs(tile: TileId) -> float:
+    def staffable_runs(tile: TileId) -> float:
         if hours_per_run <= 0.0:
             return math.inf
-        free = setup.opening_population_by_tile[tile] * setup.working_share * setup.working_hours_per_year - used_hours.get(tile, 0.0)
-        return max(0.0, free) / hours_per_run
+        return setup.opening_population_by_tile[tile] * setup.working_share * setup.working_hours_per_year / hours_per_run
     costed = []
     for tile in tiles:
         if setup.opening_population_by_tile.get(tile, 0.0) <= 0.0:
@@ -156,7 +146,7 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
     for cost, tile in sorted(costed):
         if left <= 0.0:
             break
-        take = min(left, spare_runs(tile))
+        take = min(left, staffable_runs(tile))
         for good in fixed:
             take = min(take, room[good].get(area_map.area_of(good, tile), 0.0) / recipe.inputs[good])
         if not (math.isfinite(cost) and take > 0.0):
@@ -170,4 +160,4 @@ def place_oriented(setup, record, area_map, carriage, recipe: Recipe, fixed: Map
     if total <= 0.0:
         return {}
     scale = wanted / total
-    return dict(sorted((tile, min(runs * scale, spare_runs(tile))) for tile, runs in fed.items()))
+    return dict(sorted((tile, min(runs * scale, staffable_runs(tile))) for tile, runs in fed.items()))

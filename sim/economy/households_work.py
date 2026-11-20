@@ -13,13 +13,15 @@ from sim.constants import declare
 from sim.world.need_basket import Basket
 from .price_setting import LOGIT_INTENSITY, choice_shares
 
-def hours_per_person_per_year(data: Mapping[str, Any], has_hearth: bool = True, ground_share: float = 1.0,
+def hours_per_person_per_year(data: Mapping[str, Any], working_days: float, has_hearth: bool = True, ground_share: float = 1.0,
                               only_grinding: bool = False) -> float:
-    """Hours of household work one person's share takes a year. A household with no hearth does no
+    """Hours of household work one person's share takes a labour year of `working_days`. The labour year holds
+    working days only; housework on the other days is done on those days and takes nothing from the hours a
+    household can sell or hire out, so each task's hours a day are counted over the working days. A household with no hearth does no
     cooking of its own (its cooking task is left out: it buys cooked food, see `without_hearth_basket`). A task
     that scales with ground grain (grinding) takes the sourced hours times the share of its food the household
     grinds itself. `only_grinding` counts that task alone."""
-    days = float(data["days_per_year"])
+    days = float(working_days)
     total = 0.0
     for task in data["tasks"].values():
         if task.get("needs_hearth") and not has_hearth:
@@ -54,9 +56,10 @@ def with_cooking_fuel(basket: Basket, fuel_per_person: float, fuel_need: str) ->
         if need.need_id == fuel_need else need for need in basket.needs))
 
 
-def hours_needed(people: float, data: Mapping[str, Any], has_hearth: bool = True, ground_share: float = 1.0) -> float:
-    """Hours of household work a cohort's people need done in the year."""
-    return max(0.0, people) * hours_per_person_per_year(data, has_hearth, ground_share)
+def hours_needed(people: float, data: Mapping[str, Any], working_days: float, has_hearth: bool = True,
+                 ground_share: float = 1.0) -> float:
+    """Hours of household work a cohort's people need done in the labour year of `working_days`."""
+    return max(0.0, people) * hours_per_person_per_year(data, working_days, has_hearth, ground_share)
 
 
 def hour_value(hours_and_wages) -> float:
@@ -137,6 +140,22 @@ def service_price_that_fits(households, room_hours: float) -> float:
         if total > room_hours:
             return value
     return 0.0
+
+
+SERVANT_HIRING_ADJUSTMENT_SHARE_PER_YEAR = declare(
+    "SERVANT_HIRING_ADJUSTMENT_SHARE_PER_YEAR", 0.2, kind="temporary_heuristic",
+    unit="share of the gap between the hours a cohort hired last year and the hours its choice asks for closed each year",
+    source=None, confidence="D", retire="Complaints/645-household-work-is-not-a-need-so-there-are-no-servants-cooks-or-taverns.md",
+    why="Households take servants on and let them go over years, not all at once on one year's wage; without it the choice, "
+        "made on last year's wage, swings the hours households sell and the wage with a period of two years (Complaint 473). "
+        "No source found for the speed.")
+
+
+def adjusted_hired_hours(previous_hired: float, wanted_hired: float, needed_hours: float,
+                         share: float = SERVANT_HIRING_ADJUSTMENT_SHARE_PER_YEAR) -> float:
+    """The hours a cohort hires this year: last year's moved `share` of the way to the hours its choice asks for,
+    held between none and the work there is."""
+    return min(max(0.0, needed_hours), max(0.0, previous_hired + share * (wanted_hired - previous_hired)))
 
 
 def own_hours(needed_hours: float, hired: float) -> float:

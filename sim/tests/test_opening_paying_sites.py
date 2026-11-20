@@ -71,6 +71,12 @@ class WorkingShareAtYieldTests(unittest.TestCase):
     def test_a_run_that_earns_next_to_nothing_still_has_a_plant_to_size(self):
         self.assertGreater(opening_income.working_share(FARM, PRICES, WAGES, 1e-300), 0.0)
 
+    def test_a_run_priced_at_a_tenth_of_its_cost_does_not_size_a_plant_many_times_its_runs(self):
+        # a run earns 1 against a cost of 10: next to no workplace covers its cost, and runs over that share would be
+        # a plant (and the coin to run it) many million times the runs. The share is held to the one at break-even.
+        share = opening_income.working_share(FARM, PRICES, WAGES, 0.01)
+        self.assertAlmostEqual(share, producers.share_working(10.0, 10.0))
+
     def test_the_plant_is_sized_so_the_year_one_plan_is_the_expected_sales(self):
         factor = 0.12      # a run earns 12 against a cost of 10 at this tile's yield
         share = opening_income.working_share(FARM, PRICES, WAGES, factor)

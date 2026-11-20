@@ -50,13 +50,15 @@ class DurableStationaryTests(unittest.TestCase):
                 self.assertAlmostEqual(opening + bought - lost, opening)
                 self.assertAlmostEqual(bought, durable_stock.replacement_for_flow(flow, spec))
 
-    def test_serving_stock_does_not_buy_wear_that_has_not_happened(self):
+    def test_a_holding_above_the_stock_after_losses_buys_the_replacement_and_no_more(self):
         spec = GoodSpec("tool", 1.0, 0.0, 10.0, "tool")
-        self.assertEqual(_durable_ratio("tool", 10.0, 100.0, {"tool": spec}), 0.0)
+        self.assertAlmostEqual(_durable_ratio("tool", 10.0, 100.0, {"tool": spec}), 1.0)
 
-    def test_shortage_is_filled_to_the_serving_stock_without_a_second_wear_allowance(self):
+    def test_shortage_is_filled_by_the_replacement_and_a_share_of_the_gap(self):
         spec = GoodSpec("tool", 1.0, 0.0, 4.0, "tool")
-        self.assertEqual(_durable_ratio("tool", 10.0, 20.0, {"tool": spec}), 2.0)
+        replacement, gap = 10.0, 30.0 - 20.0
+        self.assertAlmostEqual(_durable_ratio("tool", 10.0, 20.0, {"tool": spec}),
+                               (replacement + durable_stock.DURABLE_GAP_CLOSED_SHARE * gap) / 10.0)
 
 
 if __name__ == "__main__":

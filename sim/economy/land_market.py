@@ -205,11 +205,20 @@ def _value_and_cost_per_hectare(setup, view, figures, land_per_run: float):
     return None if not math.isfinite(cost) else (revenue / land_per_run, cost / land_per_run)
 
 
+def cropland_recipes(land_per_run: Mapping[str, float], site_limits) -> frozenset:
+    """The recipes whose runs take a tile's cropland: those that take land and have no declared site of their own. A
+    recipe bound to a site (standing timber, a seam: `SiteLimit`) works that site, which is what limits it, and
+    takes none of the land the crops and the households' plots share."""
+    sited = {limit.recipe_id for limit in site_limits}
+    return frozenset(recipe_id for recipe_id, hectares in land_per_run.items() if hectares > 0.0 and recipe_id not in sited)
+
+
 def demands_of(setup, record, view, wanted_runs: Mapping[AgentId, float]) -> List[LandDemand]:
-    """One demand per producer whose recipe takes land and that wants runs this year."""
+    """One demand per producer whose recipe takes cropland (`cropland_recipes`) and that wants runs this year."""
     demands = []
     store = record.producers
-    takes_land = [setup.land_per_run.get(name, 0.0) > 0.0 for name in store.names["recipes"].name_list]
+    cropland = cropland_recipes(setup.land_per_run, setup.site_limits)
+    takes_land = [name in cropland for name in store.names["recipes"].name_list]
     for producer in row_figures(store, store.rows_with_recipes(takes_land)):
         land_per_run = setup.land_per_run.get(producer.recipe_id, 0.0)
         runs = wanted_runs.get(producer.producer_id, 0.0)
@@ -245,7 +254,8 @@ def post_rents(setup, record, view, wanted_runs: Mapping[AgentId, float],
     record.land.land_ceded = dict(result.ceded_by_tile)
     demands_by_agent = {demand.agent_id: demand for demand in demands}
     store = record.producers
-    takes_land = [setup.land_per_run.get(name, 0.0) > 0.0 for name in store.names["recipes"].name_list]
+    cropland = cropland_recipes(setup.land_per_run, setup.site_limits)
+    takes_land = [name in cropland for name in store.names["recipes"].name_list]
     rows = store.rows_with_recipes(takes_land, in_id_order=False)
     rents, caps = [], []
     for producer in row_figures(store, rows):

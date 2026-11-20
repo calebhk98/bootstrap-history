@@ -18,7 +18,7 @@ from . import producer_table, workshop_count
 from .home_scope import has_partners
 from . import households_cohort
 from . import recipes as recipes_module
-from . import carriage_fleet_book, carriage_opening_hours, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_demand, opening_income, opening_metal, opening_own, opening_placement, opening_plans, opening_rent, opening_resting, opening_runs, opening_runs_pack, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles
+from . import carriage_fleet_book, carriage_opening_hours, durable_stock, equity, land_lease_year, goods_market, opening_basket, opening_bid_memory, opening_demand, opening_income, opening_land_fit, opening_metal, opening_own, opening_placement, opening_plans, opening_plot_tools, opening_rent, opening_resting, opening_runs, opening_runs_pack, households, households_store, labour_state, location, location_inputs, mint, opening_stores, ownership, sites, titles, titles_plots
 from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
@@ -109,7 +109,7 @@ def _with_covering_prices(setup):
     start = opening_income.OpeningStart()
     settled, floors = _solve_opening(setup, start)
     plans = opening_plans.HouseholdPlans(
-        {agent_id: (cohort.hired_work_per_person, 0.0, cohort.milled_grains) for agent_id, cohort in settled[0].cohorts.items()},
+        {agent_id: (cohort.hired_work_per_person, 0.0, cohort.ground_by_hand, cohort.food_ground_share) for agent_id, cohort in settled[0].cohorts.items()},
         floors)
     current = setup
     for _pass in range(COVERING_PRICE_PASSES):
@@ -158,8 +158,8 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
     _open_cohorts(setup, record)
     if plans is not None:
         households_cohort.put_cohorts(record.cohorts, opening_plans.with_plans(record.cohorts, plans))
-    own = opening_own.OwnPlots(setup, record)
     start = opening_income.OpeningStart() if start is None else start
+    own = opening_own.OwnPlots(setup, record, start.plot_land)
     own.share_hired = start.share_hired or 0.0
     packed = _settle_income(setup, record, view, priced_goods, replacement, own, start)
     start.share_hired = own.share_hired
@@ -174,12 +174,20 @@ def _open(setup: EconomySetup, replacement: float, plans=None, start=None) -> Tu
         packed.remember_orders(record)
     final_by_tile = (_final_demand_packed(setup, record, replacement, after_settle) if after_settle is not None
                      else _final_demand(setup, record, view, replacement, own=own))
+    # the tools the plots wear: their yearly wear is bought, so it sizes the makers, and the stock is in the households' hands
+    tile_of_cohort = {agent_id: cohort.tile for agent_id, cohort in record.cohorts.items()}
+    opening_plot_tools.add_wear(final_by_tile, tile_of_cohort, own.plot_hours, setup.recipes, setup.specs, priced_goods)
+    record.book.move_many(opening_plot_tools.seed_moves(tile_of_cohort, own.plot_hours, setup.recipes, setup.specs, priced_goods))
     for country in setup.countries():
         _open_country_producers(setup, record, area_map, carriage, priced_goods, final_by_tile, country)
     sites.apply_site_limits(record, setup)
     opening_runs.fit_to_supply(setup, record)
     rent = opening_rent.settle(setup, record, view, own.hectares_by_tile(record.cohorts),
                                land_lease_year.own_plot_returns(setup, record, view, own.options))
+    # the later openings of this solve size their demand on the plots a land market of the solve has left: no more
+    # than any of them left, since the passes differ in what the producers ask (the mint's metal is in some only)
+    start.plot_land = opening_own.plot_land(titles_plots.hectares_held(setup, record), start.plot_land)
+    opening_land_fit.fit_to_land(setup, record)
     workshop_count.refresh_workshops(record.producers, workshop_count.runs_per_workshop_of_setup(setup))
     figure = record.capital_markets.property_income
     record.capital_markets.set_property_income(opening_rent.property_income_with_rent(figure, rent))
@@ -346,19 +354,19 @@ def _opening_bids(setup, record, view, memory=None, stationary_durables=True, ow
 def _seed_durable_stocks(setup, record, view, packed=None) -> bool:
     """Households open at the planning date, holding their serving stock after year-end losses.
     Their first purchases replace those losses, as in a later year with the same desired flow. `packed` (the settled
-    cohorts, when the settle packed them) gives the bids of the durables that serve needs."""
+    cohorts, when the settle packed them) gives the replacement bids of the durables that serve needs."""
     if packed is not None:
-        bids = [(cohort, good, quantity) for cohort, good, quantity in packed.durable_bids(record)]
+        bids = [(cohort, good, quantity) for cohort, good, quantity in packed.durable_bids(record, stationary=True)]
     else:
         bids = [(cohort, bid.good, bid.floor_quantity + bid.flexible_quantity)
-                for cohort, bid, _price in _opening_bids(setup, record, view, stationary_durables=False)
+                for cohort, bid, _price in _opening_bids(setup, record, view)
                 if bid.priority != households_store.STORE_PRIORITY]     # a store of wealth is seeded from the deposits (opening_stores), not from need
     moves = []
     for cohort, good, wanted in bids:
         spec = setup.specs.get(good)
         if spec is None or spec.service_life_years <= 0.0:
             continue
-        quantity = durable_stock.after_year_end_losses(wanted, spec)
+        quantity = durable_stock.opening_stock_for_replacement(wanted, spec)
         if quantity > 0.0:
             moves.append(GoodsMove(EDGE_PRODUCTION, cohort.agent_id, good, cohort.tile, quantity,
                                    "opening stock of a durable in use"))

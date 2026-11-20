@@ -29,7 +29,7 @@ def worked_deposits(world_map: WorldMap, tile_ids: Iterable[str], resource_id: s
                     found: Iterable[Mapping[str, Any]] = ()) -> List[Dict[str, Any]]:
     """Rows {id, name, tile_id, resource, size_tonnes (None: unknown), size_basis (where the size came from:
     the catalogue, the geological model's expectation for the district, or prospecting), grade_kg_per_tonne (None: not an ore
-    with a grade), found_by} of the deposits of `resource_id` a party holding `tile_ids` can name, with the
+    with a grade), deposit_type, found_by} of the deposits of `resource_id` a party holding `tile_ids` can name, with the
     prospected deposits (`found`, as `prospect` returns them) it has found; in id order."""
     tiles = set(tile_ids)
     rows = world_map.catalogue("deposits")
@@ -44,13 +44,14 @@ def worked_deposits(world_map: WorldMap, tile_ids: Iterable[str], resource_id: s
         worked.append({"id": deposit["id"], "name": deposit["name"], "tile_id": deposit["tile_id"],
                        "resource": resource_id, "size_tonnes": size_in_tonnes(quantity, unit), "size_basis": basis,
                        "grade_kg_per_tonne": resources_district.district_grade(world_map, deposit),
-                       "found_by": "catalogue"})
+                       "deposit_type": deposit.get("deposit_type"), "found_by": "catalogue"})
     for deposit in found:
         if deposit["resource"] == resource_id and deposit["tile_id"] in tiles:
             worked.append({"id": deposit["id"], "name": deposit["id"], "tile_id": deposit["tile_id"],
                            "resource": resource_id, "size_tonnes": size_in_tonnes(deposit["contained"], unit),
                            "size_basis": "prospecting",
-                           "grade_kg_per_tonne": deposit.get("grade_per_tonne"), "found_by": "prospecting"})
+                           "grade_kg_per_tonne": deposit.get("grade_per_tonne"),
+                           "deposit_type": deposit.get("deposit_type"), "found_by": "prospecting"})
     return sorted(worked, key=lambda row: row["id"])
 
 

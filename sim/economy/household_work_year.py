@@ -6,6 +6,7 @@ from typing import Dict, List, Mapping, Optional, Sequence, Tuple
 
 from . import household_grinding, household_servants, household_urban, households_work, labour_state, titles_worked, trade_wages
 from . import households_cohort
+from .household_grinding import HandGround
 from .households_cohort import Cohort
 from .market_memory import market_key
 from .households_basket import cohort_need_prices
@@ -47,20 +48,32 @@ def tile_food_basket(setup, tile, hearth: bool):
     return basket
 
 
-def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float) -> Tuple[Tuple[str, ...], float]:
-    """(grains the cohort buys milled, share of its food it grinds by hand): a grain is bought milled when the
-    milled good costs less per need unit than the grain plus the worth of its hours of grinding. With no grain
-    marked as milled, or no priced food, the whole sourced load is its own."""
+def grinding_plan(setup, record, view, cohort: Cohort, hour_value: float, gradual: bool = False) -> Tuple[HandGround, float]:
+    """(per grain, the share of the food units it still grinds by hand; the share of its food it counts as ground by hand in all): the
+    share of a grain bought milled is a logit of the milled good's cost per need unit against the grain's plus the worth of
+    its hours of grinding (`household_grinding.bought_shares`). With no grain marked as milled, or no priced food, the
+    whole sourced load is its own. With `gradual` the shares of each grain, and the overall share (`counted_share`), move
+    `household_grinding.GRINDING_ADJUSTMENT_SHARE_PER_YEAR` of the way from those the cohort held last year to the choice; the
+    opening takes the choice whole."""
     if not setup.milled_as:
-        return (), 1.0
+        return (), counted_share(cohort, 1.0, gradual)
     hearth = has_hearth(record, cohort)
     found = kept_reads(view, ("food_rows", cohort.tile, hearth), lambda: _food_rows(setup, view, cohort.tile, hearth))
     if found is None:
-        return (), 1.0
+        return (), counted_share(cohort, 1.0, gradual)
     floor, rows = found
-    hours_per_unit = households_work.hours_per_person_per_year(setup.household_work, True, 1.0, True) / floor if floor > 0.0 else 0.0
-    bought = household_grinding.bought_milled(rows, setup.milled_as, hours_per_unit, hour_value)
-    return bought, household_grinding.ground_share(rows, setup.milled_as, bought)
+    hours_per_unit = households_work.hours_per_person_per_year(setup.household_work, setup.working_days_per_year, True, 1.0, True) / floor if floor > 0.0 else 0.0
+    ground = household_grinding.ground_by_hand(rows, setup.milled_as, household_grinding.bought_shares(rows, setup.milled_as, hours_per_unit, hour_value))
+    computed = household_grinding.ground_share(rows, setup.milled_as, ground)
+    if gradual:
+        ground = household_grinding.stepped_ground(rows, cohort.ground_by_hand, ground)
+    return ground, counted_share(cohort, computed, gradual)
+
+
+def counted_share(cohort: Cohort, computed: float, gradual: bool) -> float:
+    """The share of its food the cohort counts as ground by hand in its housework hours: `computed` from this year's food mix, or with
+    `gradual` the share it counted last year moved part of the way to it (`household_grinding.stepped_overall_share`)."""
+    return household_grinding.stepped_overall_share(cohort.food_ground_share, computed) if gradual else computed
 
 
 def _food_rows(setup, view, tile, hearth: bool):
@@ -82,8 +95,8 @@ def basket_of_signature(setup, signature: tuple):
 
 def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
     """The basket of a cohort: the tile's, with food bought only as ready to eat when it has no hearth (else cooking fuel on its warmth floor), and
-    this year's hired household work as the floor of that need. `buying` leaves out the grains it buys milled, which
-    it does not bid for; the basket that counts what it ate (`buying` False) keeps them, since a grain it grew on
+    this year's hired household work as the floor of that need. `buying` caps the grains it grinds by hand at their share, which
+    it does not bid for beyond; the basket that counts what it ate (`buying` False) keeps them, since a grain it grew on
     its own plot is eaten whatever it buys. Cohorts of one `basket_key` share one basket object (frozen, never changed)."""
     return kept_basket(setup, basket_signature(record, cohort, buying))
 
@@ -91,18 +104,18 @@ def cohort_basket(setup, record, cohort: Cohort, buying: bool = True):
 def basket_signature(record, cohort: Cohort, buying: bool = True) -> tuple:
     """(tile, hearth, hired household work, grains left out of the food need): what `cohort_basket` is built from, so two
     cohorts, or the two uses of one, with an equal signature have the very same basket."""
-    return signature_of(record, cohort.tile, cohort.agent_id, cohort.hired_work_per_person, cohort.milled_grains, buying)
+    return signature_of(record, cohort.tile, cohort.agent_id, cohort.hired_work_per_person, cohort.ground_by_hand, buying)
 
 
-def signature_of(record, tile: str, agent_id: str, hired_work_per_person: float, milled_grains, buying: bool = True) -> tuple:
+def signature_of(record, tile: str, agent_id: str, hired_work_per_person: float, ground_by_hand, buying: bool = True) -> tuple:
     """`basket_signature` from the cohort's fields, for a caller reading them from the cohort table's columns."""
-    return (tile, hearth_of(record, tile, agent_id), hired_work_per_person, tuple(milled_grains) if buying else ())
+    return (tile, hearth_of(record, tile, agent_id), hired_work_per_person, tuple(ground_by_hand) if buying else ())
 
 
 def eaten_signature(signature: tuple) -> tuple:
     """The signature of the cohort a `buying` signature is of, as it is when it eats what it has milled itself (`buying` False): the same
     tile, hearth and hired work, no grains left out of the food need."""
-    tile, hearth, hired_work_per_person, _milled_grains = signature
+    tile, hearth, hired_work_per_person, _ground_by_hand = signature
     return tile, hearth, hired_work_per_person, ()
 
 
@@ -123,20 +136,20 @@ def kept_basket(setup, key: tuple):
     if found is None:
         if len(_kept_baskets) >= KEPT_BASKETS_LIMIT:
             _kept_baskets.clear()
-        tile, hearth, hired_work_per_person, milled_grains = key
-        base_key = (tile, hearth, milled_grains)
+        tile, hearth, hired_work_per_person, ground_by_hand = key
+        base_key = (tile, hearth, ground_by_hand)
         base = _kept_bases.get(base_key)
         if base is None:
-            base = _kept_bases[base_key] = base_basket(setup, tile, hearth, milled_grains)
+            base = _kept_bases[base_key] = base_basket(setup, tile, hearth, ground_by_hand)
         found = _kept_baskets[key] = with_hired_work(setup, base, hired_work_per_person)
     return found
 
 
-def base_basket(setup, tile, hearth: bool, milled_grains: Tuple[str, ...]):
-    """The basket of a cohort on `tile` with or without a hearth, with `milled_grains` left out of the food need and no hired household work."""
+def base_basket(setup, tile, hearth: bool, ground_by_hand: HandGround):
+    """The basket of a cohort on `tile` with or without a hearth, with the grains in `ground_by_hand` capped in the food need at the share ground by hand and no hired household work."""
     basket = tile_food_basket(setup, tile, hearth)
-    if milled_grains:
-        basket = household_grinding.without_goods(basket, milled_grains, setup.hunger_need)
+    if ground_by_hand:
+        basket = household_grinding.with_hand_ground(basket, ground_by_hand, setup.hunger_need)
     if hearth:
         basket = households_work.with_cooking_fuel(
             basket, households_work.cooking_fuel_per_person_per_year(setup.household_work), setup.fuel_need)
@@ -152,10 +165,10 @@ def with_hired_work(setup, basket, hired_work_per_person: float):
     return basket
 
 
-def built_basket(setup, tile, hearth: bool, hired_work_per_person: float, milled_grains: Tuple[str, ...]):
+def built_basket(setup, tile, hearth: bool, hired_work_per_person: float, ground_by_hand: HandGround):
     """The basket of a cohort on `tile` with or without a hearth, with `hired_work_per_person` as the household-work floor
-    and `milled_grains` left out of the food need (what `cohort_basket` shares by key)."""
-    return with_hired_work(setup, base_basket(setup, tile, hearth, milled_grains), hired_work_per_person)
+    and the grains of `ground_by_hand` capped in the food need (what `cohort_basket` shares by key)."""
+    return with_hired_work(setup, base_basket(setup, tile, hearth, ground_by_hand), hired_work_per_person)
 
 
 def priced_basket(setup, record, view, cohort: Cohort):
@@ -169,7 +182,7 @@ def signatures_of(record, store, rows, buying: bool = True) -> list:
     """`basket_signature` of the cohorts in the `rows` of the cohort table `store`, read from the columns (no cohort is built)."""
     ids = [store.ids[row] for row in rows.tolist()]
     return signatures_from_fields(record, store.tile_names(rows), ids, store.floats("hired_work_per_person", rows),
-                                  [store.milled_of(row) for row in rows.tolist()], buying)
+                                  [store.ground_of(row) for row in rows.tolist()], buying)
 
 
 def signatures_from_fields(record, tiles: Sequence[str], agent_ids: Sequence[str], hired: Sequence[float], milled: Sequence[tuple],
@@ -182,7 +195,7 @@ def signatures_from_fields(record, tiles: Sequence[str], agent_ids: Sequence[str
 def signatures_of_figures(record, figures: Sequence, buying: bool = True) -> list:
     """`basket_signature` of each of `figures` (`CohortFigures` or `OrderFigures`)."""
     return signatures_from_fields(record, [each.tile for each in figures], [each.agent_id for each in figures],
-                                  [each.hired_work_per_person for each in figures], [each.milled_grains for each in figures], buying)
+                                  [each.hired_work_per_person for each in figures], [each.ground_by_hand for each in figures], buying)
 
 
 def priced_basket_of(setup, view, tile: str, signature: tuple):
@@ -235,10 +248,10 @@ def sold_share_at(record, trade, area, expected: float = 1.0) -> float:
 
 
 def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer],
-               expected: Mapping[Tuple[str, str], float] = None, mine: Sequence[LabourOffer] = None
-               ) -> Tuple[float, float, float, Tuple[str, ...]]:
-    """(worth to the cohort of an hour hired, hours of household work it needs, price of an hour hired, grains bought
-    milled): what its choice between hiring and doing the work is read from. The worth of an hour is the wage its
+               expected: Mapping[Tuple[str, str], float] = None, mine: Sequence[LabourOffer] = None,
+               gradual: bool = False) -> Tuple[float, float, float, HandGround, float]:
+    """(worth to the cohort of an hour hired, hours of household work it needs, price of an hour hired, grains ground
+    by hand, share of its food it counts as ground by hand): what its choice between hiring and doing the work is read from. The worth of an hour is the wage its
     offers face, counted only for the share of hours expected to sell (smoothed over the years; before any year, the
     share its producers' planned runs hire, `expected`, read from the record when not given), less the hours spent directing the servant. Grinding
     falls only on the food it grinds by hand, decided at the worth of its own hour (the water and fuel are a fixed
@@ -251,41 +264,54 @@ def work_terms(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer
         [(offer.hours, trade_wages.faced_wage(view.wage(offer.trade, offer.area), offer.reservation_wage)
           * sold_share_at(record, offer.trade, offer.area, expected.get((offer.trade, offer.area), 1.0)))
          for offer in mine])
-    return work_terms_at(setup, record, view, cohort, value)
+    return work_terms_at(setup, record, view, cohort, value, gradual)
 
 
-def work_terms_at(setup, record, view, cohort: Cohort, value: float) -> Tuple[float, float, float, Tuple[str, ...]]:
-    """`work_terms` for a cohort whose own hour is worth `value` (`households_work.hour_value` over its offers)."""
-    milled, ground = grinding_plan(setup, record, view, cohort, value)
-    needed = households_work.hours_needed(cohort.people, setup.household_work, has_hearth(record, cohort), ground)
+def work_terms_at(setup, record, view, cohort: Cohort, value: float, gradual: bool = False) -> Tuple[float, float, float, HandGround, float]:
+    """`work_terms` for a cohort whose own hour is worth `value` (`households_work.hour_value` over its offers); `gradual` as in `grinding_plan`."""
+    by_hand, counted = grinding_plan(setup, record, view, cohort, value, gradual)
+    needed = households_work.hours_needed(cohort.people, setup.household_work, setup.working_days_per_year, has_hearth(record, cohort), counted)
     wage_price = trade_wages.wage_in_view(setup, view, setup.servant_trade, labour_area(cohort.tile))    # a buyer of servants pays what an employer is billed
     return (households_work.net_hour_value(value, households_work.supervision_share(setup.household_work)), needed,
-            service_price_per_hour(setup, view, cohort.tile, wage_price), milled)
+            service_price_per_hour(setup, view, cohort.tile, wage_price), by_hand, counted)
 
 
 def cohort_plan(setup, record, view, cohort: Cohort, offers: Sequence[LabourOffer], service_price_floor: float = 0.0,
-                expected: Mapping[Tuple[str, str], float] = None, mine: Sequence[LabourOffer] = None
-                ) -> Tuple[float, float, Tuple[str, ...]]:
-    """(hours hired, hours done itself, grains bought milled) for one cohort. `service_price_floor` is a price an hour
-    hired is not below (the opening's, where servants are scarce)."""
+                expected: Mapping[Tuple[str, str], float] = None, mine: Sequence[LabourOffer] = None,
+                gradual: bool = False) -> Tuple[float, float, HandGround, Optional[float]]:
+    """(hours hired, hours done itself, grains ground by hand, share of its food it counts as ground by hand) for one cohort. `service_price_floor` is a price an hour
+    hired is not below (the opening's, where servants are scarce). With `gradual` the hours hired move only part of
+    the way from last year's to what the choice asks for (`planned_hours`), and so do the shares of grain ground by hand
+    (`grinding_plan`); the opening takes the choice whole."""
     if not setup.household_work:
-        return 0.0, 0.0, ()
-    value, needed, price, milled = work_terms(setup, record, view, cohort, offers, expected, mine)
-    return planned_hours(needed, value, price, service_price_floor, milled, whole_servant_terms(setup, cohort))
+        return 0.0, 0.0, (), None
+    value, needed, price, ground, counted = work_terms(setup, record, view, cohort, offers, expected, mine, gradual)
+    hired, own, by_hand = planned_hours(needed, value, price, service_price_floor, ground, whole_servant_terms(setup, cohort),
+                                        last_hired(cohort) if gradual else None)
+    return hired, own, by_hand, counted
 
 
-def planned_hours(needed: float, value: float, price: float, service_price_floor: float, milled: Tuple[str, ...],
-                  whole: Optional[Tuple[float, Optional[float], float]] = None):
-    """(hours hired, hours done itself, grains bought milled) from the terms of `work_terms`. With `whole` given
+def planned_hours(needed: float, value: float, price: float, service_price_floor: float, ground: HandGround,
+                  whole: Optional[Tuple[float, Optional[float], float]] = None, previous_hired: Optional[float] = None):
+    """(hours hired, hours done itself, grains ground by hand) from the terms of `work_terms`. With `whole` given
     (`whole_servant_terms`), each household hires a whole servant or none (`household_servants.hired_hours_whole`),
-    none above its budget; else the hiring is divisible."""
+    the share able to pay falling with its budget; else the hiring is divisible. With `previous_hired` (the cohort's
+    hours hired last year) the hours move `households_work.adjusted_hired_hours` of the way to the choice; None takes
+    the choice whole."""
     cost = max(price, service_price_floor)
     if whole is not None:
         households, budget_per_household, servant_year_hours = whole
         hired = household_servants.hired_hours_whole(needed, households, value, cost, budget_per_household, servant_year_hours)
     else:
         hired = households_work.hired_hours(needed, value, cost)
-    return hired, households_work.own_hours(needed, hired), milled
+    if previous_hired is not None:
+        hired = households_work.adjusted_hired_hours(previous_hired, hired, needed)
+    return hired, households_work.own_hours(needed, hired), ground
+
+
+def last_hired(cohort: Cohort) -> float:
+    """The hours of household work the cohort hired last year (what its plan holds), over all its people."""
+    return cohort.hired_work_per_person * cohort.people
 
 
 def whole_servant_terms(setup, cohort: Cohort) -> Optional[Tuple[float, Optional[float], float]]:
@@ -304,20 +330,22 @@ def whole_servant_terms(setup, cohort: Cohort) -> Optional[Tuple[float, Optional
 
 def plans(setup, record, view, offers: Sequence[LabourOffer],
           service_price_floor_by_tile: Mapping[str, float] = None,
-          expected: Mapping[Tuple[str, str], float] = None) -> Dict[AgentId, Tuple[float, float, Tuple[str, ...]]]:
-    """Each cohort's (hours hired a person, hours done itself, grains bought milled) for the year; changes nothing.
-    `expected` is the share of hours its producers hire by market when the caller has worked it out already."""
+          expected: Mapping[Tuple[str, str], float] = None, gradual: bool = False
+          ) -> Dict[AgentId, Tuple[float, float, HandGround, Optional[float]]]:
+    """Each cohort's (hours hired a person, hours done itself, grains ground by hand, share of its food it counts as ground by hand) for the year; changes nothing.
+    `expected` is the share of hours its producers hire by market when the caller has worked it out already.
+    `gradual` is the yearly decision's step from last year's hours (`cohort_plan`); the opening leaves it off."""
     floors = service_price_floor_by_tile or {}
     if expected is None:
         expected = expected_shares(setup, record, offers) if setup.household_work and lacks_history(record, offers) else {}
-    result: Dict[AgentId, Tuple[float, float, Tuple[str, ...]]] = {}
+    result: Dict[AgentId, Tuple[float, float, HandGround, Optional[float]]] = {}
     by_worker: Dict[AgentId, list] = {}
     for offer in offers:
         by_worker.setdefault(offer.worker, []).append(offer)
     for cohort_id, cohort in sorted(record.cohorts.items()):
-        hired, own, milled = cohort_plan(setup, record, view, cohort, offers, floors.get(cohort.tile, 0.0), expected,
-                                         by_worker.get(cohort.agent_id, []))
-        result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, milled)
+        hired, own, ground, counted = cohort_plan(setup, record, view, cohort, offers, floors.get(cohort.tile, 0.0), expected,
+                                         by_worker.get(cohort.agent_id, []), gradual)
+        result[cohort_id] = (hired / cohort.people if cohort.people > 0.0 else 0.0, own, ground, counted)
     return result
 
 
@@ -328,9 +356,9 @@ def decide(setup, record, view, offers: Sequence[LabourOffer]) -> Dict[AgentId, 
     if setup.household_work and lacks_history(record, offers):
         for (trade, area), share in sorted(expected_shares(setup, record, offers).items()):
             record.labour.expect_sold_share(market_key(trade, area), share)
-    decided = plans(setup, record, view, offers)
+    decided = plans(setup, record, view, offers, gradual=True)
     households_cohort.set_work_plans(record.cohorts, decided)
-    return {cohort_id: own for cohort_id, (_per_person, own, _milled) in decided.items()}
+    return {cohort_id: own for cohort_id, (_per_person, own, _ground, _counted) in decided.items()}
 
 
 def basket_key(record, cohort: Cohort):

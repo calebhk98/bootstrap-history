@@ -24,7 +24,7 @@ from .households_cohort import Cohort
 _FIRST_CAPACITY = 64
 _FIELDS = ("agent_id", "tile", "income_class", "people", "working_people", "ownership_share", "expected_inflation", "cash_target",
            "last_basket_price_level", "last_year_income", "share_wealth", "planned_spending", "expected_spending",
-           "expected_floor_cost", "unmet_floor_by_need", "own_plan_by_need", "hired_work_per_person", "milled_grains")
+           "expected_floor_cost", "unmet_floor_by_need", "own_plan_by_need", "hired_work_per_person", "food_ground_share", "ground_by_hand")
 _DICTS = {"unmet": "unmet_floor_by_need", "plan": "own_plan_by_need"}
 
 
@@ -37,7 +37,8 @@ class CohortFigures(NamedTuple):
     working_people: float
     last_year_income: float
     hired_work_per_person: float
-    milled_grains: tuple
+    ground_by_hand: tuple
+    food_ground_share: Optional[float]
     own_plan_by_need: Optional[Dict[str, float]]
 
 
@@ -56,7 +57,7 @@ class CohortStore(MutableMapping):
         self.row_of: Dict[str, int] = {}
         self.version = 0                            # rises on every write
         self._objects: List[Optional[Cohort]] = []
-        self._milled: List[Optional[tuple]] = []    # by row: the grains bought milled as names, until the row's grains are written
+        self._ground: List[Optional[tuple]] = []    # by row: (grain name, share ground by hand) pairs, until the row's grains are written
         self._order: Optional[np.ndarray] = None
         self._order_members = -1
         self._members = 0                           # rises when a cohort enters or its tile or class is written
@@ -151,7 +152,7 @@ class CohortStore(MutableMapping):
         self.table.row_count[0] = row + 1
         self.ids.append(cohort_id)
         self._objects.append(None)
-        self._milled.append(None)
+        self._ground.append(None)
         self.row_of[cohort_id] = row
         self._members += 1
         return row
@@ -179,10 +180,12 @@ class CohortStore(MutableMapping):
         table.income_class[row] = cohort.income_class
         for name in SCALAR_FLOATS:
             getattr(table, name)[row] = getattr(cohort, name)
-        table.share_wealth[row] = np.nan if cohort.share_wealth is None else cohort.share_wealth
+        for name in OPTIONAL_FLOATS:
+            value = getattr(cohort, name)
+            getattr(table, name)[row] = np.nan if value is None else value
         self._write_pairs(row, "unmet", cohort.unmet_floor_by_need)
         self._write_pairs(row, "plan", cohort.own_plan_by_need)
-        self._write_milled(row, cohort.milled_grains)
+        self._write_ground(row, cohort.ground_by_hand)
 
     def _write_pairs(self, row: int, group: str, held: Mapping[str, float]) -> None:
         if len(held) > getattr(self.table, WIDE_GROUPS[group][0]).shape[1]:
@@ -194,25 +197,26 @@ class CohortStore(MutableMapping):
             value_column[row, place] = value
         getattr(self.table, group + "_count")[row] = len(held)
 
-    def _write_milled(self, row: int, grains) -> None:
-        if len(grains) > self.table.milled_good.shape[1]:
-            self._widen("milled", len(grains))
-        self.table.milled_good[row, :] = 0
-        for place, name in enumerate(grains):
-            self.table.milled_good[row, place] = self._name("goods", name)
-        self.table.milled_count[row] = len(grains)
-        self._milled[row] = tuple(grains)
+    def _write_ground(self, row: int, grains) -> None:
+        if len(grains) > self.table.ground_good.shape[1]:
+            self._widen("ground", len(grains))
+        self.table.ground_good[row, :], self.table.ground_units[row, :] = 0, 0.0
+        for place, (name, share) in enumerate(grains):
+            self.table.ground_good[row, place] = self._name("goods", name)
+            self.table.ground_units[row, place] = share
+        self.table.ground_count[row] = len(grains)
+        self._ground[row] = tuple((name, share) for name, share in grains)
 
     def set_fields(self, cohort_id: str, **changes) -> None:
-        """The fields named of one cohort take the values (the scalar fields, the two mappings, `milled_grains`, `tile`, `income_class`)."""
+        """The fields named of one cohort take the values (the scalar fields, the two mappings, `ground_by_hand`, `tile`, `income_class`)."""
         row = self.row_of[cohort_id]
         for name, value in changes.items():
             if name == "unmet_floor_by_need":
                 self._write_pairs(row, "unmet", value)
             elif name == "own_plan_by_need":
                 self._write_pairs(row, "plan", value)
-            elif name == "milled_grains":
-                self._write_milled(row, value)
+            elif name == "ground_by_hand":
+                self._write_ground(row, value)
             elif name == "tile":
                 self.table.tile[row] = self._name("tiles", value)
                 self._members += 1
@@ -251,22 +255,24 @@ class CohortStore(MutableMapping):
             value_column[entry_rows, place] = values
         self.written(rows)
 
-    def milled_of(self, row: int) -> tuple:
-        """The grains the cohort in `row` buys milled (kept until the row's grains are written)."""
-        kept = self._milled[row]
+    def ground_of(self, row: int) -> tuple:
+        """The (grain, share ground by hand) pairs of the cohort in `row` (kept until the row's grains are written)."""
+        kept = self._ground[row]
         if kept is None:
             goods = self.names["goods"].name_list
-            kept = self._milled[row] = tuple(goods[number] for number in self.table.milled_good[row, :int(self.table.milled_count[row])].tolist())
+            count = int(self.table.ground_count[row])
+            kept = self._ground[row] = tuple(zip((goods[number] for number in self.table.ground_good[row, :count].tolist()),
+                                                 self.table.ground_units[row, :count].tolist()))
         return kept
 
     def pairs_of(self, group: str, row: int) -> Dict[str, float]:
         """The mapping field of `group` ("unmet" or "plan") of the cohort in `row`, as `Cohort` holds it."""
         return self._pairs(row, group)
 
-    def write_milled(self, rows: np.ndarray, grains: List[tuple]) -> None:
-        """The grains bought milled of each row are the matching tuple of `grains`."""
+    def write_ground(self, rows: np.ndarray, grains: List[tuple]) -> None:
+        """The (grain, share ground by hand) pairs of each row are the matching tuple of `grains`."""
         for row, each in zip(rows.tolist(), grains):
-            self._write_milled(row, each)
+            self._write_ground(row, each)
         self.written(rows)
 
     def written(self, rows: Optional[np.ndarray] = None) -> None:
@@ -323,8 +329,9 @@ class CohortStore(MutableMapping):
         """The figures of the cohorts in `rows` (in that order), each as a `CohortFigures`; no `Cohort` is built."""
         people, working, income = self.floats("people", rows), self.floats("working_people", rows), self.floats("last_year_income", rows)
         hired = self.floats("hired_work_per_person", rows)
+        held = [None if each != each else each for each in self.floats("food_ground_share", rows)]
         plans = [self._pairs(row, "plan") for row in rows.tolist()] if with_plan else [None] * len(rows)
-        return [CohortFigures(self.ids[row], tile, people[place], working[place], income[place], hired[place], self.milled_of(row), plans[place])
+        return [CohortFigures(self.ids[row], tile, people[place], working[place], income[place], hired[place], self.ground_of(row), held[place], plans[place])
                 for place, (row, tile) in enumerate(zip(rows.tolist(), self.tile_names(rows)))]
 
     def tile_of(self, cohort_id: str) -> Optional[str]:
@@ -399,12 +406,13 @@ class CohortStore(MutableMapping):
         fields = {
             "agent_id": self.ids[row], "tile": self.names["tiles"].name_list[table.tile[row]], "income_class": int(table.income_class[row]),
             "unmet_floor_by_need": self._pairs(row, "unmet"), "own_plan_by_need": self._pairs(row, "plan"),
-            "milled_grains": self.milled_of(row),
+            "ground_by_hand": self.ground_of(row),
         }
         for name in SCALAR_FLOATS:
             fields[name] = getattr(table, name)[row].item()
-        wealth = float(table.share_wealth[row])
-        fields["share_wealth"] = None if wealth != wealth else wealth
+        for name in OPTIONAL_FLOATS:
+            value = float(getattr(table, name)[row])
+            fields[name] = None if value != value else value
         return {name: fields[name] for name in _FIELDS}
 
     # ---- the save --------------------------------------------------------------------------------------------------------

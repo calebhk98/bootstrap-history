@@ -12,7 +12,7 @@ from sim.economy.market_memory import MarketMemory
 from sim.economy.types import Recipe
 
 FARM = Recipe("farm", {"grain": 10.0}, {"seed": 2.0}, {"hand": 5.0})
-BREAK_EVEN_SEED_PRICE = (20.0 - 5.0) / 2.0          # a run earns 20, wages 5, two seed a run
+BREAK_EVEN_SEED_PRICE = 20.0 / 2.0          # a run earns 20 and sows two seed; its wages are committed before the seed is bought
 
 
 class View(ViewDefaults):

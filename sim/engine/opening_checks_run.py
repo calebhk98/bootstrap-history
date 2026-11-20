@@ -86,8 +86,10 @@ def check_game(game, trace=None) -> List[opening_checks.CheckResult]:
     outcome = game.view("agent_last_outcome")()
     opened = game.view("agent_opening_figures")()
     ratios = price_ratios(game)
+    metal_cost = game.view("material_prices")().get(opened["backing_good"]) if opened["backing_good"] else None
     return [opening_checks.price_over_cost("price_over_cost_" + group, ratios[group]["ratios"], unmeasured=ratios[group]["unmeasured"])
-            for group in ("sited_ores", "staple", "coin_metal")] + [
+            for group in ("sited_ores", "staple")] + [
+        opening_checks.coin_metal_check("price_over_cost_coin_metal", ratios["coin_metal"], opened["metal_paid_price"], metal_cost),
         opening_checks.money_against_wear(rows),
         opening_checks.wage_over_floor(outcome.wages.get(opened["unskilled_trade"]), outcome.wage_floor_per_hour),
         opening_checks.spin_up_settled(result, SPIN_UP_TOLERANCE),

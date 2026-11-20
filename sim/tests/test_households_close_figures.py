@@ -8,7 +8,7 @@ from types import SimpleNamespace
 
 import numpy as np
 
-from sim.economy import households_close, households_close_figures
+from sim.economy import currency, households_close, households_close_figures
 
 GRAIN = SimpleNamespace(needs=[SimpleNamespace(goods=[("grain", 1.0)])])
 NOTHING = SimpleNamespace(needs=[])
@@ -85,7 +85,7 @@ class ScalarFiguresEqualThePlainClose(unittest.TestCase):
                "spent": 85.0, "floor_cost": 0.5}
         self.check(view, [("c", "a", GRAIN, one)])
         figures, _expected = both(view, [("c", "a", GRAIN, one)])
-        self.assertAlmostEqual(figures["expected_inflation"][0], 0.02 + 0.5 * (0.1 - 0.02))
+        self.assertAlmostEqual(figures["expected_inflation"][0], 0.02 + currency.EXPECTATION_ADJUSTMENT_SPEED * (0.1 - 0.02))
 
     def test_a_basket_with_no_good_keeps_the_price_figures(self):
         view = StubView({}, {}, {})

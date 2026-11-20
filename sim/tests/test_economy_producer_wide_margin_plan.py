@@ -69,12 +69,14 @@ class WideMarginPlanTests(unittest.TestCase):
         self.assertGreater(wanted_at_price, 0.99 * who.capacity_runs)         # the price is no limit
         self.assertGreater(producers.runs_for_stock(who, CART, wide_margin_view()), who.expected_sales)
 
-    def test_the_input_bids_of_such_a_maker_are_ceilinged_above_the_input_prices_by_the_margin_share_each_input_accounts_for(self):
+    def test_the_input_bids_of_such_a_maker_are_ceilinged_above_the_input_prices_by_the_same_share_for_each_input(self):
         plan = producers.plan(cart_maker(), CART, wide_margin_view(), 1e6)
         ceilings = {bid.good: bid.maximum_price for bid in plan.bids}
         self.assertGreater(ceilings["bar"], 2.0 * 4.0)
         self.assertGreater(ceilings["timber"], 2.0 * 70.0)
-        self.assertLess(ceilings["bar"], 10.0 * 4.0)      # not the whole run margin over the input's share of the run (test_economy_input_ceiling_share)
+        self.assertAlmostEqual(ceilings["bar"] / 4.0, ceilings["timber"] / 70.0)      # every input may rise by the same share
+        # together they take no more than a cart brings in (test_economy_input_ceiling_share)
+        self.assertLessEqual(15.0 * ceilings["bar"] + 0.4 * ceilings["timber"], 1000.0 * 1.01)
 
     def test_the_labour_bids_are_for_every_planned_run(self):
         plan = producers.plan(cart_maker(), CART, wide_margin_view(), 1e6)

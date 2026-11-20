@@ -20,14 +20,19 @@ def hired_hours_whole(needed_hours: float, households: float, own_hour_value: fl
     """Hours of the work a cohort hires when each household hires a whole servant or none. A household's work is
     `needed_hours / households`; a servant's year costs `service_price_per_hour * servant_year_hours` whatever the work
     there is, and frees `own_hour_value` for each hour of work it takes off the household (at most the household's
-    own). A household whose budget is below one servant's year hires none; of those that can pay, the share that
-    hires is a logit on that cost against the worth of the hours freed (price_setting.choice_shares)."""
+    own). The share of households able to pay is a logit on the cost against the budget (price_setting.choice_shares):
+    near all when the budget is well above one servant's year, half when equal, near none well below; none with a
+    budget of zero or less. Of those, the share that hires is a logit on the cost against the worth of the hours
+    freed."""
     if needed_hours <= 0.0 or households <= 0.0 or service_price_per_hour <= 0.0 or own_hour_value <= 0.0 or servant_year_hours <= 0.0:
         return 0.0
     cost = service_price_per_hour * servant_year_hours
-    if budget_per_household is not None and budget_per_household < cost:
-        return 0.0
+    able = 1.0
+    if budget_per_household is not None:
+        if budget_per_household <= 0.0:
+            return 0.0
+        able = choice_shares([cost, budget_per_household], WORK_CHOICE_INTENSITY)[0]
     work_per_household = needed_hours / households
     freed = min(work_per_household, servant_year_hours)
     share = choice_shares([cost, own_hour_value * freed], WORK_CHOICE_INTENSITY)[0]
-    return households * share * freed
+    return households * able * share * freed

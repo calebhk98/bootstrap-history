@@ -4,6 +4,236 @@ Written while working on 473 alone. Each question says what was found, why it ne
 does in the meantime, so it can be answered without the session's context. Nothing here blocks the work: each
 question has a default that the branch follows until answered.
 
+## The owner's answers (2026-11-16) and what was done with each
+
+The questions below stay as they were asked. The answers, and the state of each on branch `economy-settles-not-chaotic`
+(Complaint 473 Update 30 has the evidence and the commands):
+
+1. **Settled means a fixed point; the economy must not be chaotic.** "The economy should settle if nothing drastic
+   happens." The check is unchanged. The work is to remove what amplifies and what cycles (Update 30), not to redefine
+   settling. The owner's point about a smallest coin is right about where it shows: rounding-sized differences were being
+   decided by strict comparisons (who stands a hair higher), which a rule that treats near-equal things alike removes.
+2. **Fertility 0 is intended** (fell, tundra, ice): those people live on fishing, hunting and trade. No data change.
+3. **Households open with the cash of the yearly rule's steady state** (option a). Built on branch
+   `opening-cash-at-the-yearly-steady-state` (the opening meets own-plot floors before sizing the budget, as the yearly
+   rule does) and not merged: alone it calms England and Norse, but with the durable rule merged it makes Han's hours
+   and wage swing far more, and that is not traced yet (Update 30).
+4. **Follow real life.** Done: for a money paid in metal at a stated price the coin-metal check now asks that the price
+   the mint pays covers the metal's making cost, with no ceiling on the makers' margin
+   (`opening_checks.mint_price_over_cost`; research and sources in `Complaints/reports/research-coin-metal-check.md`).
+5. **Add shapely to `requirements.txt`; no setup script.** Done. Set up with `pip install -r requirements.txt`.
+   Shapely alone does not un-skip the one geography test that reads the layer build: that build also imports pyproj,
+   rasterio, geopandas and scipy, which are not listed (a game does not run it).
+6. **Follow the real world.** Researched (`Complaints/reports/research-how-an-unpractised-crew-starts.md`, sources
+   read) and built on branch `learning-path-plan`, not merged: a crew still learning judges whether to run on the
+   discounted cost of the crew it becomes over the years it expects to work (the learning years' losses are an
+   investment paid from its stake or a loan). On Mexica the tool crews then run, but only a fraction of a run: entry
+   sizes a trade nobody practises to almost nothing, which is the part still to do (Update 30).
+7. **One source of truth for a person's time; no double counting; a large share taken must not leave nothing.** Done:
+   household work is counted over the labour year's own working days (housework on the other days is done on those
+   days and takes nothing from the hours a household can sell), and hiring servants is continuous in the household's
+   budget and changes gradually (`households_work.hours_per_person_per_year`, `adjusted_hired_hours`,
+   `household_servants.hired_hours_whole`).
+
+## New questions from Update 34 (2026-11-17)
+
+### 13. Should the hidden spin-up lose coin that nothing replaces?
+
+**What was found.** In every civilisation measured the money stock falls every year of the spin-up: wear takes its
+declared share and the mint strikes about half of it in England and the Norse lands and none in Han. A long run of
+England loses two thirds of its coin; the wage and the price level follow, and late in the run households go hungry
+(Complaint 473 Update 34). With wear switched off the totals move about half as much for decades. The answer to
+question 10 (leave the spin-up closed to trade and let the stock fall slowly) assumed a slow fall did no harm.
+
+**Why it needs a decision.** A rest state needs a stock that rests. Three ways: (a) in the hidden spin-up, coin wears
+only as far as the mint struck that year, standing for the trade that brought the metal in (small, labelled as an
+assumption until trade is part of the opening); (b) foreign buyers of the civilisation's exports pay in coin in the
+spin-up (the real mechanism, and a much larger build); (c) households and producers hold about the historical fifth
+of a year's income in coin, so wear is small against what the mint strikes (question 8's option a; the largest).
+
+**Measured since** (`ABLATE=held python3 ensemble_years.py ...`, the switch in `probes/ablations.py`): with (a) the
+yearly moves over the spin-up's forty-five years are about the same in England and a little larger in the Norse
+lands. Holding the stock does not help the settle check; what it would change is the long run after it.
+
+**In the meantime.** Nothing changed. My recommendation: leave it as it is for now and take (b) when a civilisation's
+trade is part of its opening; (a) buys nothing the check can see.
+
+### 14. Raw leather clothes a household better than the shoes made from it
+
+**What was found.** In the needs data a kilogram of leather meets more of the clothing need than the pair of shoes
+that most of a kilogram and half a day's work make (`data/world/needs.json`, `data/production/95_leather_goods.json`;
+both figures are labelled placeholders). Households therefore buy the leather, the shoemakers work a quarter of
+their runs, and shoes, a watched good in England, have no price in most years.
+
+**Why it needs a decision.** The figures are data with no source; changing them is a content decision. A made-up
+good should meet its need at least as well as the material in it, or the material should meet the need less well
+raw.
+
+**In the meantime.** Nothing changed. My recommendation: source the two figures (a research task), and until then
+lower raw leather's figure below the shoes'.
+
+### 15. Wheat's plough teams and the cheese makers' milk are goods no opening producer makes
+
+**What was found.** A wheat farm's plant is draught animals by weight and a cheese maker's input is milk; both goods
+are made only by the herd recipes (`data/production/95_herds.json`), which none of England, the Norse lands or Han
+opens with. The oxen and mules the openings do breed are a different good (a count, used by carts and carriers). So
+wheat farms could never replace their teams and cheese makers never had milk.
+
+**What was done.** The opening now holds the users of what only land makes to the supply placed (Update 34), which
+closes wheat and cheese at the opening in all three civilisations. Kept open, they wore out or idled and the
+economy moved more.
+
+**Why it needs a decision.** Wheat and cheese in 1300 England are not a detail. Either the herd recipes belong in
+these civilisations' starting knowledge, or the plough team should be the ox the openings already breed. That is a
+content decision.
+
+**In the meantime.** Wheat and cheese are closed at the opening. My recommendation: make the wheat farm's team the
+ox (or mule) the opening breeds, and add the cattle herd to the starting knowledge of the civilisations that kept
+cattle, each with a source.
+
+## New questions from Update 36 (2026-11-18)
+
+### 16. What ground do pasture and forest recipes take, and how much poppy does a household want?
+
+**What was found.** The economy has one kind of land on a tile, its cropland, and until Update 36 every recipe with
+land in its data took it. Felling (wood, firewood) is limited by the tile's standing timber and no longer takes
+fields. Timber, bark, wool, milk, meat, oxen and mules still do: their data names pasture or forest as their ground
+and gives hectares a run, and nothing else bounds them. In the Norse lands wool takes over a quarter of the land the
+producers hold. Separately, Han's opening grows more hectares of opium poppy than of millet, which follows from the
+needs data and the poppy's yield a hectare (`land_use_probe.py han_china_100ad`).
+
+**Why it needs a decision.** Rough grazing and woodland were not cropland, and the tile data has a forest fraction
+the economy does not read. Giving a tile a second kind of ground (grazing and woodland, with their own rent) is a
+change to the land model; the poppy figure is content.
+
+**In the meantime.** Nothing changed beyond felling. My recommendation: give each tile its uncropped ground from the
+geography layers as a second pool for the recipes whose data names pasture or forest, and have the needs data's
+poppy figure sourced or cut to a household's medicine.
+
+## The owner's answers to questions 10 to 12 (2026-11-17)
+
+"Go with your recommendations for 10-12 and keep fixing. ... My goal is purely, stabilize the economy. Find out why it
+is chaotic and not settling, and fix it." So:
+- **10.** The hidden spin-up stays closed to trade. England and the Norse settle on a slow fall of the money stock at
+  the loss rate until a civilisation's trade is part of its opening.
+- **11.** Done: the settle test reads a change in producers' inventory value against the year's real output
+  (`spin_up_gap.state_gaps`, `test_spin_up_measure`).
+- **12.** The first years' shortfall is taken first (Complaint 473 Update 34 and after); where the left-over coin goes
+  is decided when that holds.
+The owner also said the work need not follow the questions: the aim is an economy that settles and is realistic.
+
+## The owner's answers to questions 8 and 9 (2026-11-17), and three new questions from Update 32
+
+**8. Households hold their wealth in other things than coin; source the loss rates.** Sourced
+(`Complaints/reports/research-coin-loss-and-money-held.md`): the loss rates are not too high, and England's coin about
+the start date was about a fifth of a year's income, a tenth of what the model's households and producers hold.
+Opening without the hoard is built (branch `money-at-the-yearly-steady-state`) and not merged: the yearly rules
+rebuild the hoard out of the producers' coin within twenty years and the economy ends smaller (Complaint 473 Update
+32). Question 12 below is what is left of this.
+
+**9. An ore with no deposit is not dug; add the mines that are missing.** Done: the rule, the jarosite ore tied to its
+deposit type, and the deposits the research could source (`Complaints/reports/research-coin-metal-mines.md`). The
+research answers the owner's expectation that a civilisation whose coin was a metal dug it at home: Rome and Han did,
+England mostly did not and the Norse did not at all. Their silver came in by trade. Question 10 below.
+
+### 10. Where does the coin metal of a civilisation that imported it come from in the hidden spin-up?
+
+**What was found.** England about the start date had one home silver district of note and brought in most of its
+silver through trade; the Norse mined none. The hidden spin-up runs with no foreign orders, so nothing replaces their
+money's loss there and it falls by the loss rate every year (in England's case more slowly now that the ores its
+tiles do hold are worked).
+
+**Why it needs a decision.** Either the spin-up carries the trade that brought the metal in (foreign buyers of what
+the civilisation exported, paying in coin: the engine has the door, `engine_orders`, and the spin-up leaves it shut),
+or the spin-up stays closed and these civilisations settle on a slow fall of the money stock and prices at the loss
+rate. The settle test passes a steady fall that is under the tolerance a year.
+
+**In the meantime.** The spin-up stays closed. My recommendation: leave it closed for now and open it to trade when a
+civilisation's trade is itself part of the opening.
+
+### 11. Should the change in producers' inventory value be measured against a year's output?
+
+**What was found.** Producers' inventory value is a few per cent of a year's output and moves by many times the
+tolerance in every civilisation. The goods markets clear inside the year, so most goods end most years with nothing
+left and a lump where a seller's floor binds. The settle test measures each quantity's change against its own earlier
+value, with a floor for the two quantities that can sit near nothing (the rate, and unmet need against the whole food
+need). Inventory value sits near nothing too and has no floor, so the same tolerance is some twenty times stricter on
+it than on output.
+
+**Why it needs a decision.** The owner said the check is not to be weakened or redefined. Giving inventory value the
+same kind of floor the check already gives the rate and unmet need (the change in stocks against a year's real
+output) is a change to the check, so it is the owner's call.
+
+**In the meantime.** Nothing changed. My recommendation: measure it against a year's real output. On England that
+alone would put it near the tolerance.
+
+### 12. Why can households not spend what they plan to, and what should happen to the coin they are left with?
+
+**What was found.** Whatever coin the opening gives them, households end up holding about two years of income in
+coin, and the coin comes out of the producers' working coin; the wage and the price level slide while it happens
+(Complaint 473 Update 32). The households' accounts say why
+(`Complaints/reports/473-handoff/probes/household_accounts_probe.py`): in every year they plan to spend about a third
+more than they do. The bids are not filled, because the goods are not made, while a quarter of the hours offered
+find no employer. Output falls by a fifth in the first two years after the opening and takes decades to come back.
+The hoard is the spending that found nothing to buy.
+
+**Why it needs a decision.** There are two different things to do and they are not alternatives:
+- make the first years reproduce the opening, so that producers make what the opening sized them for and households
+  can buy it (Complaints 608 and 960 to 963 are this, found on Rome; England shows the same fall). This is engine
+  work and needs no decision;
+- decide where coin goes that still finds nothing to buy: into store goods a share of the gap at a time (what the
+  answer to question 8 asks for, but the makers of plate cannot supply what a hoard would buy, and the mint's melting
+  does not open while producers are short of coin), into fewer hours offered, or into needs that do not satiate.
+
+**In the meantime.** Nothing changed. My recommendation: the first before the second. Until the opening's output
+holds through the first years, any rule for the left-over coin is tuning against a moving target.
+
+## New questions from Update 31 (2026-11-17), answered above
+
+### 8. What should households (and producers) hold their wealth in?
+
+**What was found.** Through England's spin-up the households hold about two years of their income in coin and the
+producers about a year of their sales (`Complaints/reports/473-handoff/probes/money_ratios.py` on a `series_probe.py`
+output). The households' spending rule rests where cash, claims and share wealth together are a target number of
+months of income; the rule comes from Eurace@Unibi, where the cash is a bank deposit. Here it is metal. A stock of
+coin that large loses more metal a year than the placed makers give, and in England more than its own ores could
+give at their ceilings, so the money stock falls every year and the price level and the wage fall with it
+(Complaint 982). `money_against_wear` cannot pass while it does (a correction: `spin_up_settled` compares
+consecutive years, so a steady fall under the tolerance a year passes it; the larger yearly falls are what fail).
+
+**Why it needs a decision.** Each way out changes what the model says people own:
+- (a) households keep most of their wealth in something other than coin (land titles, plate, stores, stock, loans)
+  and hold in coin what they need between pay and spending; producers likewise. This is what people did, and it is
+  the largest change (the spending rule, the opening's money, what a household can buy and sell to save).
+- (b) the opening sizes the money stock to what the placed coin-metal chain can replace, and the price level in
+  metal follows. Smaller, but it keeps households resting at years of income in a store of value that then barely
+  exists, so their spending rule would pull against it every year.
+- (c) source the loss rates (both are unsourced heuristics) and see whether they are far smaller. Worth doing in any
+  case; it is unlikely to close a gap of this size alone.
+
+**In the meantime.** Nothing changed: the stock and the loss are as they were. My recommendation is (a), with (c)
+done alongside.
+
+### 9. Can a civilisation dig an ore that has no deposit on its tiles?
+
+**What was found.** A recipe that digs an ore is limited to the tiles holding a deposit of it, but where no tile
+holds one the recipe has no limit at all and may run on any tile (`UNSITED_EXTRACTION_ANYWHERE`, a labelled
+heuristic). Dug this way today (`Complaints/reports/473-handoff/probes/unsited_probe.py <civ>`): England's gold,
+Norse's tin, galena and gold, Mexica's silver. The jarosite ore recipe is tied to no deposit in any civilisation, so
+England's opening builds its silver on Rio Tinto's ore (Complaint 981). On a scratch copy without that recipe
+England's silver comes from its own galena and silver ore, the mint strikes most of the coin's loss, and the money
+stock and the price level fall a fraction as fast.
+
+**Why it needs a decision.** Making such an ore absent is what the deposits say, and it takes those ores away from
+those civilisations until a deposit is added as data or trade brings the metal in (the Norse had no tin; they bought
+bronze). Keeping the fallback keeps every civilisation supplied with ores it never had.
+
+**In the meantime.** The fallback stays. My recommendation: absent, with the jarosite ore tied to its deposit and
+the missing deposits added (New World silver first), because the coin metal chain of every civilisation depends on
+what its ground holds. The other half of Complaint 981 (the opening's recipe choice returning one phase of a cycle)
+is a plain defect that needs no decision; its consistent answer for England depends on this one, so it is not
+changed yet.
+
 ## 1. What "settled" should mean for the spin-up
 
 **What the check asks now.** `spin_up_settled` (sim/markets/spin_up_run.py `final_result`, sim/markets/spin_up_gap.py)

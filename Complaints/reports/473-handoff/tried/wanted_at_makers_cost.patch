@@ -1,0 +1,389 @@
+diff --git a/sim/economy/goods_clear_kernel.py b/sim/economy/goods_clear_kernel.py
+index 56f1284d..bc3f3905 100644
+--- a/sim/economy/goods_clear_kernel.py
++++ b/sim/economy/goods_clear_kernel.py
+@@ -19,6 +19,7 @@ from .goods_decide_inputs_kernel import decide_inputs
+ from .goods_pack_kernel import pack_arrays
+ from .goods_rows_kernel import good_rows
+ from .goods_untraded_kernel import untraded_columns
++from .goods_wanted_kernel import lift_wanted, wanted_at_cost
+ from .goods_year_kernel import decide_markets
+ from .goods_year_results import final_allocations
+ 
+@@ -30,7 +31,8 @@ class NeedsInputs(Exception):
+ @njit
+ def _reservations(offers, packed, held_value, producer_rows, producer_figures, cost_figures, good_column, outputs, band_multiples,
+                   spoilage, missing_tiles, steps):
+-    """The final reservation of each offer of the pack (`goods_table_clear.decide_reservations` without its retry)."""
++    """(the final reservation, the units, whether a maker's and the unit cost) of each offer of the pack
++    (`goods_table_clear.decide_reservations` without its retry)."""
+     (recipe_row, workshops_of_producer, expected_sales_of_producer, yield_factor) = producer_figures
+     (slot_of, cost, input_share, expected) = cost_figures
+     (reservation, quantity, is_producer, unit_cost, share, expected_price, workshops, multiple_workshops, expected_sales, band, spoilages,
+@@ -44,7 +46,7 @@ def _reservations(offers, packed, held_value, producer_rows, producer_figures, c
+         packed[20], packed[3], reservation, quantity, is_producer, unit_cost, share, expected_price, workshops, multiple_workshops,
+         expected_sales, band, packed[4], packed[16], packed[17], spoilages, packed[18], packed[19], packed[6], packed[7], packed[8],
+         packed[9], packed[10], packed[11], packed[15], packed[12], packed[13], packed[14], steps[0], steps[1], steps[2], steps[3],
+-        steps[4], steps[5], held_value), quantity
++        steps[4], steps[5], held_value), quantity, is_producer, unit_cost
+ 
+ 
+ @njit
+@@ -75,8 +77,8 @@ def clear_good_columns(tables, good_id, good_column, market_columns, ranks, is_e
+         missing_areas[:] = packed[22]
+         raise NeedsInputs("area")
+     held_value = numpy.full(len(packed[2]), numpy.nan)
+-    final, quantity = _reservations(offers, packed, held_value, producer_rows, producer_figures, cost_figures, good_column, outputs,
+-                                    band_multiples, spoilage, missing_tiles, steps)
++    final, quantity, is_producer, unit_cost = _reservations(offers, packed, held_value, producer_rows, producer_figures, cost_figures,
++                                                            good_column, outputs, band_multiples, spoilage, missing_tiles, steps)
+     allocated = final_allocations(packed[3], final, quantity, packed[4], packed[18], packed[19], packed[6], packed[7], packed[8],
+                                   packed[9], packed[10], packed[11], packed[15], packed[12], packed[13], packed[14])
+     (traded_flag, requested, traded, mean, supply, ask, sold, left, rank, bid_quantity, bid_cost, pair_ptr, pair_offer, pair_bid,
+@@ -95,6 +97,9 @@ def clear_good_columns(tables, good_id, good_column, market_columns, ranks, is_e
+     clearing = clearing_columns(flags, has_units, last_price, traded_flag, mean, traded, requested, supply, left, packed[3], packed[2],
+                                 lowest_ask, lowest_clamped, quote_supply, quote_wanted, best_bid, quote_funded, offer_grouped,
+                                 offer_ptr, offers.quantity)
++    lift_wanted(clearing[6], clearing[0], wanted_at_cost(
++        packed[3], quantity, is_producer, unit_cost, traded_flag, mean, packed[18], packed[19], packed[6], packed[7], packed[8],
++        packed[9], packed[10], packed[11], packed[15], packed[12]))
+     on_objects = 0
+     for way in clearing[1]:
+         if way == ON_OBJECTS:
+diff --git a/sim/economy/goods_good_clear.py b/sim/economy/goods_good_clear.py
+index b7ede9d6..5caed440 100644
+--- a/sim/economy/goods_good_clear.py
++++ b/sim/economy/goods_good_clear.py
+@@ -9,10 +9,12 @@
+ from collections import namedtuple
+ import numpy
+ 
+-from . import seller_offers, unsold_search
++import math
++
++from . import seller_offers, unsold_search, wanted_at_cost
+ from .ask_ceiling import buyer_limit
+ from .goods_order_tables import HOUSEHOLD
+-from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE
++from .goods_market import MINIMUM_PRICE_SHARE_OF_REFERENCE, quantity_at
+ from .goods_market_rows import MarketRows
+ from .goods_respend import offers_left
+ from .goods_table_clear import clear_batch
+@@ -23,6 +25,7 @@ from .goods_table_quotes import untraded_result
+ from .goods_table_results import TableClearing
+ from .goods_table_views import TableBatch
+ from .goods_untraded_kernel import untraded_columns
++from .goods_wanted_kernel import lift_wanted
+ from .goods_year_results import sold_by_result
+ from .types import QUOTE_BEST_UNFILLED_BID, QUOTE_COST_COVERING, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_OPENING_ESTIMATE
+ from .entry import wanted_in_round
+@@ -63,10 +66,13 @@ def _last_price(context, market: int):
+ 
+ 
+ def _batched(context, good: str, rows: GoodRows, flags: numpy.ndarray):
+-    """(the batch's allocation, the pack): the batched markets cleared."""
++    """(the batch's allocation, the pack): the batched markets cleared. The allocation carries `wanted_at_cost`, per batched market
++    what its buyers would take at its makers' cost."""
+     pack = pack_batch(context, rows, flags)
+-    allocated = clear_batch(context, good, pack)
+-    return TableBatch(allocated, pack, context.orders), pack
++    allocated, at_cost = clear_batch(context, good, pack)
++    batch = TableBatch(allocated, pack, context.orders)
++    batch.wanted_at_cost = at_cost
++    return batch, pack
+ 
+ 
+ QUOTE_KINDS = (None, QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK, QUOTE_COST_COVERING, QUOTE_OPENING_ESTIMATE)    # the code of a quote's kind in `GoodClearing.quote_kind`
+@@ -99,6 +105,8 @@ class GoodClearing:
+                 flags, self.has_units, last_price, *batch_figures, *quote_figures, rows.offer_grouped, rows.offer_group_ptr,
+                 context.orders.tables()[1].quantity)
+             on_objects, self.bid_count = True, numpy.diff(rows.bid_group_ptr)
++            if batch is not None:
++                lift_wanted(columns[6], columns[0], batch.wanted_at_cost)
+         else:
+             columns, on_objects, self.bid_count = made
+         (self.slots, self.way, self.quantity, self.price, self.demand, self.offered, self.wanted, self.quote_price, self.quote_kind,
+@@ -119,8 +127,11 @@ class GoodClearing:
+         self.left_count[place] = len(self.objects[place][2])
+         self.quantity[place], self.demand[place], self.offered[place] = result.quantity, result.demand_at_price, result.offered_at_price
+         self.price[place] = numpy.nan if result.price is None else result.price
+-        wanted = wanted_in_round(bid_objects, after, result)
+-        self.wanted[place] = wanted
++        makers = [(offer.quantity, seller_offers.unit_cost(context.setup, context.record, context.view, offer))
++                  for offer in after if offer.seller in context.record.producers]
++        at_cost = wanted_at_cost.wanted_at_cost(lambda price: math.fsum(quantity_at(bid, price) for bid in bid_objects), result.price if result.quantity > 0.0 else None,
++                                                wanted_at_cost.cost_price(makers))
++        self.wanted[place] = max(wanted_in_round(bid_objects, after, result), at_cost)
+         if result.quote is not None:
+             self.quote_price[place], self.quote_kind[place] = result.quote.price, QUOTE_KINDS.index(result.quote.kind)
+ 
+diff --git a/sim/economy/goods_table_clear.py b/sim/economy/goods_table_clear.py
+index 2b881a8c..a736b4c7 100644
+--- a/sim/economy/goods_table_clear.py
++++ b/sim/economy/goods_table_clear.py
+@@ -10,15 +10,16 @@ import numpy
+ 
+ from sim.compiled_tables.growth import reserve_rows
+ 
+-from . import goods_year_kernel, goods_year_results, price_setting, titles_value
++from . import goods_wanted_kernel, goods_year_kernel, goods_year_results, price_setting, titles_value
+ from .goods_batch_write_kernel import write_batch as write_batch_kernel
+ from .goods_decide_inputs_kernel import decide_inputs
+ from .goods_table_pack import BatchPack
+ 
+ 
+-def decide_reservations(context, good: str, pack: BatchPack) -> numpy.ndarray:
+-    """The final reservation of each offer of the pack: the sellers re-priced and the unsold search done, over the arrays
+-    (`goods_decide_inputs_kernel.decide_inputs` gathers what each offer's seller needs, then `decide_markets` decides)."""
++def decide_reservations(context, good: str, pack: BatchPack) -> tuple:
++    """(the final reservation, whether a maker's, the unit cost) of each offer of the pack: the sellers re-priced and the unsold search
++    done, over the arrays (`goods_decide_inputs_kernel.decide_inputs` gathers what each offer's seller needs, then `decide_markets`
++    decides)."""
+     arrays, costs = context.arrays, context.costs
+     producers, matrices = arrays.producers, arrays.matrices
+     offers = context.orders.offers
+@@ -36,12 +37,21 @@ def decide_reservations(context, good: str, pack: BatchPack) -> numpy.ndarray:
+             context.note_band_multiple(tile, good)
+     floors, flexibles, budgets, references, exponents, capped, tier_ptr, tier_values, maximums = pack.demand
+     steps = price_setting
+-    return goods_year_kernel.decide_markets(
++    final = goods_year_kernel.decide_markets(
+         pack.has_bids, pack.offer_ptr, reservation, quantity, is_producer, unit_cost, input_share, expected_price, workshops,
+         multiple_workshops, expected_sales, band, pack.key_of, pack.size, pack.rate, spoilage, pack.minimum,
+         pack.has_minimum, pack.bid_ptr, floors, flexibles, budgets, references, exponents, maximums, capped, tier_ptr, tier_values,
+         steps.LOGIT_INTENSITY, math.floor((steps.GRID_END - steps.GRID_START) / steps.GRID_STEP + 1e-9), steps.GRID_START,
+         steps.GRID_STEP, steps.MONTHS, steps.MONTHLY_DISCOUNT_RATE, _ground_values(context, good, pack, offers))
++    return final, is_producer, unit_cost
++
++
++def wanted_at_cost(pack: BatchPack, orders, allocated: tuple, is_producer: numpy.ndarray, unit_cost: numpy.ndarray) -> numpy.ndarray:
++    """Per market of the pack, what its buyers would take at the price that covers its makers' cost (`goods_wanted_kernel`)."""
++    floors, flexibles, budgets, references, exponents, capped, _tier_ptr, _tier_values, maximums = pack.demand
++    return goods_wanted_kernel.wanted_at_cost(
++        pack.offer_ptr, orders.offers.quantity[pack.offer_rows], is_producer, unit_cost, allocated[0], allocated[3], pack.minimum,
++        pack.has_minimum, pack.bid_ptr, floors, flexibles, budgets, references, exponents, maximums, capped)
+ 
+ 
+ def _ground_values(context, good: str, pack: BatchPack, offers) -> numpy.ndarray:
+@@ -84,12 +94,13 @@ def write_batch(orders, bids, offers, pack: BatchPack, final: numpy.ndarray, all
+ 
+ 
+ def clear_batch(context, good: str, pack: BatchPack) -> tuple:
+-    """Decide and allocate the pack's markets and write the answer into the tables. Returns the allocation arrays of
++    """Decide and allocate the pack's markets and write the answer into the tables. Returns (the allocation arrays of
+     `final_allocations` (per market the traded flag, units requested, traded, mean ask and supply; per offer and bid and pair
+-    the rest, indexed like the pack's rows)."""
++    the rest, indexed like the pack's rows), per market what its buyers would take at its makers' cost (`wanted_at_cost`))."""
+     orders = context.orders
+-    final = decide_reservations(context, good, pack)
++    final, is_producer, unit_cost = decide_reservations(context, good, pack)
+     allocated = allocate(pack, orders, final)
++    at_cost = wanted_at_cost(pack, orders, allocated, is_producer, unit_cost)
+     bids, offers = orders.tables()
+     write_batch(orders, bids, offers, pack, final, allocated)
+-    return allocated
++    return allocated, at_cost
+diff --git a/sim/economy/goods_wanted_kernel.py b/sim/economy/goods_wanted_kernel.py
+new file mode 100644
+index 00000000..b1a5aa27
+--- /dev/null
++++ b/sim/economy/goods_wanted_kernel.py
+@@ -0,0 +1,52 @@
++"""`wanted_at_cost` on a good's batched markets: per market, the units its buyers would take at the price that covers its
++makers' cost, where it traded above that price."""
++import numpy
++from numba import njit
++
++from . import goods_market_kernels as kernels
++from .goods_market_kernels import KERNEL
++
++
++@njit(**KERNEL)
++def cost_price(quantity, is_producer, unit_cost):
++    """wanted_at_cost.cost_price over one market's offers; NaN is None."""
++    units = 0.0
++    value = 0.0
++    for offer in range(len(quantity)):
++        cost = unit_cost[offer]
++        if is_producer[offer] and quantity[offer] > 0.0 and numpy.isfinite(cost) and cost > 0.0:
++            units += quantity[offer]
++            value += quantity[offer] * cost
++    return value / units if units > 0.0 else numpy.nan
++
++
++@njit(**KERNEL)
++def wanted_at_cost(offer_ptr, quantity, is_producer, unit_cost, traded_flag, mean, minimum, has_minimum, bid_ptr, floors, flexibles,
++                   budgets, references, exponents, maximums, capped):
++    """Per market of the batch (`offer_ptr` and `bid_ptr` cut its offers and bids), `wanted_at_cost.wanted_at_cost`: `mean` is the
++    price it traded at, `minimum` the least price its buyers are read at (`has_minimum`)."""
++    markets = len(offer_ptr) - 1
++    wanted = numpy.zeros(markets)
++    for market in range(markets):
++        if not traded_flag[market]:
++            continue
++        o0, o1 = offer_ptr[market], offer_ptr[market + 1]
++        cost = cost_price(quantity[o0:o1], is_producer[o0:o1], unit_cost[o0:o1])
++        if numpy.isnan(cost) or not mean[market] > cost:
++            continue
++        if has_minimum[market] and cost < minimum[market]:
++            cost = minimum[market]
++        b0, b1 = bid_ptr[market], bid_ptr[market + 1]
++        wanted[market] = kernels.total_wanted(cost, floors[b0:b1], flexibles[b0:b1], budgets[b0:b1], references[b0:b1],
++                                              exponents[b0:b1], maximums[b0:b1], capped[market])
++    return wanted
++
++
++@njit(**KERNEL)
++def lift_wanted(wanted, slots, at_cost):
++    """`wanted` (per market of the good) raised in place to the batch's `at_cost` (per batched market, `slots` its place in the
++    batch, -1 for a market not in it)."""
++    for place in range(len(wanted)):
++        slot = slots[place]
++        if slot >= 0 and at_cost[slot] > wanted[place]:
++            wanted[place] = at_cost[slot]
+diff --git a/sim/economy/wanted_at_cost.py b/sim/economy/wanted_at_cost.py
+new file mode 100644
+index 00000000..1d72f0e1
+--- /dev/null
++++ b/sim/economy/wanted_at_cost.py
+@@ -0,0 +1,28 @@
++"""What a market's buyers wanted, read at the price that covers its makers' cost.
++
++A sold-out seller raises its ask to where its buyers' money just takes the stock (`demand_search.py`), so at the price a
++market clears at nobody is turned away and the units wanted beyond the units delivered are none. A maker reads the sales it
++can expect from what the buyers would take at a price that pays it: where a market cleared above its makers' cost, the units
++its buyers' schedules take at that cost. Above what was delivered, that is the output the market would still buy without
++loss to its makers (`expected_sales.demand_seen` shares it among them). `goods_wanted_kernel` is the same rule on a
++batch's arrays."""
++import math
++from typing import Callable, Optional, Sequence, Tuple
++
++
++def cost_price(offers: Sequence[Tuple[float, Optional[float]]]) -> Optional[float]:
++    """The price that covers the cost of a market's makers: their unit costs weighed by the units each offers. `offers`
++    are (units, unit cost) of each maker's offer; one whose cost cannot be priced is left out. None when none is left."""
++    priced = [(units, cost) for units, cost in offers if units > 0.0 and cost is not None and math.isfinite(cost) and cost > 0.0]
++    units = math.fsum(quantity for quantity, _cost in priced)
++    if not units > 0.0:
++        return None
++    return math.fsum(quantity * cost for quantity, cost in priced) / units
++
++
++def wanted_at_cost(wanted_at: Callable[[float], float], traded_price: Optional[float], cost: Optional[float]) -> float:
++    """The units the buyers take at the makers' cost price (`wanted_at(price)` is their schedule) where the market traded
++    above it; nothing where it did not trade, has no cost price, or traded at or under it."""
++    if traded_price is None or cost is None or not traded_price > cost:
++        return 0.0
++    return wanted_at(cost)
+diff --git a/sim/tests/goods_clear_chain_plain.py b/sim/tests/goods_clear_chain_plain.py
+index 3123b0c0..a004f18f 100644
+--- a/sim/tests/goods_clear_chain_plain.py
++++ b/sim/tests/goods_clear_chain_plain.py
+@@ -15,6 +15,7 @@ from sim.economy.goods_order_tables import (BID_ORDER, GOODS_MARKET_RESULTS, GOO
+ from sim.economy.goods_pack_kernel import pack_arrays
+ from sim.economy.goods_rows_kernel import good_rows
+ from sim.economy.goods_untraded_kernel import untraded_columns
++from sim.economy.goods_wanted_kernel import lift_wanted, wanted_at_cost
+ from sim.economy.goods_year_kernel import decide_markets
+ from sim.economy.goods_year_results import final_allocations
+ from sim.tests.book_table_fixtures import StockBook, agents_table
+@@ -102,6 +103,10 @@ def plain_clear_good(tables, good_id, good_column, arguments):
+     (lowest_ask, lowest_clamped, quote_supply, quote_funded, best_bid, quote_wanted) = quotes
+     clearing = clearing_columns(flags, has_units, last_price, *batch_figures, lowest_ask, lowest_clamped, quote_supply, quote_wanted, best_bid,
+                                 quote_funded, offer_grouped, offer_ptr, offers.quantity)
++    if batched:
++        lift_wanted(clearing[6], clearing[0], wanted_at_cost(
++            pack_offer_ptr, quantity, is_producer, unit_cost, traded_flag, mean, minimum, has_minimum, pack_bid_ptr, floors, flexibles,
++            budgets, references, exponents, maximums, capped))
+     return ((markets, bid_rows, bid_position, offer_rows, offer_position, bid_grouped, bid_ptr, offer_grouped, offer_ptr), flags,
+             (offered, has_units, funded), packed, allocated, quotes, clearing, int((clearing[1] == ON_OBJECTS).sum()),
+             numpy.diff(bid_ptr), last_price, (bid_order, offer_order, pairs, results))
+diff --git a/sim/tests/test_wanted_at_cost.py b/sim/tests/test_wanted_at_cost.py
+new file mode 100644
+index 00000000..717d1755
+--- /dev/null
++++ b/sim/tests/test_wanted_at_cost.py
+@@ -0,0 +1,83 @@
++"""A market that clears turns no buyer away, so what its buyers wanted is read at the price that covers its makers' cost: where
++it cleared above that price, the units they would have taken there. Each test calls one function on written-out inputs."""
++QUICK_TOPIC = True
++
++import math
++import unittest
++
++import numpy
++
++from sim.economy import goods_wanted_kernel, wanted_at_cost
++
++
++class CostPriceTests(unittest.TestCase):
++    def test_the_makers_costs_weigh_by_the_units_each_offers(self):
++        # thirty units that cost 2 each and ten that cost 6
++        self.assertAlmostEqual(wanted_at_cost.cost_price([(30.0, 2.0), (10.0, 6.0)]), 3.0)
++
++    def test_an_offer_whose_cost_cannot_be_priced_is_left_out(self):
++        self.assertAlmostEqual(wanted_at_cost.cost_price([(30.0, 2.0), (10.0, math.inf), (5.0, None), (4.0, 0.0)]), 2.0)
++
++    def test_no_maker_with_a_cost_gives_none(self):
++        self.assertIsNone(wanted_at_cost.cost_price([(10.0, None), (0.0, 3.0)]))
++
++
++class WantedAtCostTests(unittest.TestCase):
++    @staticmethod
++    def buyers(price):      # buyers who spend 120 whatever the price
++        return 120.0 / price
++
++    def test_a_market_cleared_above_cost_wants_what_its_buyers_take_at_cost(self):
++        self.assertAlmostEqual(wanted_at_cost.wanted_at_cost(self.buyers, 3.0, 2.0), 60.0)
++
++    def test_a_market_cleared_at_or_under_cost_wants_no_more_than_it_traded(self):
++        self.assertEqual(wanted_at_cost.wanted_at_cost(self.buyers, 2.0, 2.0), 0.0)
++        self.assertEqual(wanted_at_cost.wanted_at_cost(self.buyers, 1.5, 2.0), 0.0)
++
++    def test_a_market_with_no_makers_cost_or_no_trade_wants_nothing_more(self):
++        self.assertEqual(wanted_at_cost.wanted_at_cost(self.buyers, 3.0, None), 0.0)
++        self.assertEqual(wanted_at_cost.wanted_at_cost(self.buyers, None, 2.0), 0.0)
++
++
++class KernelTests(unittest.TestCase):
++    # market 0: makers offer 30 units costing 2 and 10 costing 6 (cost price 3), a merchant 20; it cleared at 5.
++    # Its buyers: one needs 10 whatever the price, one takes 20 at the reference price 3. Market 1 cleared at 2, under its maker's cost 4.
++    OFFER_PTR = numpy.array([0, 3, 4])
++    QUANTITY = numpy.array([30.0, 10.0, 20.0, 15.0])
++    IS_PRODUCER = numpy.array([True, True, False, True])
++    UNIT_COST = numpy.array([2.0, 6.0, numpy.nan, 4.0])
++    TRADED = numpy.array([True, True])
++    MEAN = numpy.array([5.0, 2.0])
++    BID_PTR = numpy.array([0, 2, 3])
++    FLOORS = numpy.array([10.0, 0.0, 5.0])
++    FLEXIBLES = numpy.array([0.0, 20.0, 0.0])
++    BUDGETS = numpy.array([100.0, 90.0, 50.0])
++    REFERENCES = numpy.array([3.0, 3.0, 2.0])
++    EXPONENTS = numpy.array([-1.0, -1.0, -1.0])
++    MAXIMUMS = numpy.array([numpy.inf, numpy.inf, numpy.inf])
++    CAPPED = numpy.array([False, False])
++
++    def at_cost(self, traded=None, minimum=(0.0, 0.0), has_minimum=(False, False)):
++        return goods_wanted_kernel.wanted_at_cost(
++            self.OFFER_PTR, self.QUANTITY, self.IS_PRODUCER, self.UNIT_COST, self.TRADED if traded is None else traded, self.MEAN,
++            numpy.array(minimum), numpy.array(has_minimum), self.BID_PTR, self.FLOORS, self.FLEXIBLES, self.BUDGETS, self.REFERENCES,
++            self.EXPONENTS, self.MAXIMUMS, self.CAPPED)
++
++    def test_each_market_cleared_above_its_makers_cost_wants_what_its_buyers_take_there(self):
++        numpy.testing.assert_allclose(self.at_cost(), [30.0, 0.0])
++
++    def test_a_market_that_did_not_trade_wants_nothing_more(self):
++        numpy.testing.assert_allclose(self.at_cost(traded=numpy.array([False, True])), [0.0, 0.0])
++
++    def test_the_markets_least_price_holds_the_cost_price_up(self):
++        # at the least price 4 the second buyer takes 20 * 3 / 4
++        numpy.testing.assert_allclose(self.at_cost(minimum=(4.0, 0.0), has_minimum=(True, False)), [25.0, 0.0])
++
++    def test_wanted_is_lifted_only_where_the_batch_traded(self):
++        wanted = numpy.array([12.0, 7.0, 40.0])
++        goods_wanted_kernel.lift_wanted(wanted, numpy.array([0, -1, 1]), numpy.array([30.0, 0.0]))
++        numpy.testing.assert_allclose(wanted, [30.0, 7.0, 40.0])
++
++
++if __name__ == "__main__":
++    unittest.main()

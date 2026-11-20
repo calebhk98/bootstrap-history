@@ -1,0 +1,512 @@
+diff --git a/sim/economy/ask_adjust.py b/sim/economy/ask_adjust.py
+index 2f9df8c0..d9316c7e 100644
+--- a/sim/economy/ask_adjust.py
++++ b/sim/economy/ask_adjust.py
+@@ -1,12 +1,12 @@
+ """A seller's ask moves between years with its unsold stock against a target stock: stock below the target (sold
+-out) raises it, stock above the target cuts it, in proportion to the gap, and it stays inside the band around the
+-seller's unit cost (`band_edge` above, the cost that just covers a unit below). It follows the inventory side of
++out) raises it, stock above the target cuts it, in proportion to the gap, never by a cut below the cost that just
++covers a unit. Nothing caps a raise: the year's market finds the price, lifting a sold-out ask to where the buyers'
++money just takes the stock and lowering an unsold one (unsold_search.py). It follows the inventory side of
+ Eurace@Unibi's firm (Cons_Goods/Firm_Producer_Functions.c, Firm_calc_production_quantity: critical stock against
+ current stock), which Eurace's own price rule (Market_Research/Firm_market_research_functions.c, Firm_set_price)
+ reads only as a cap on expected sales. The search for unsold stock inside the year (unsold_search.py) is the other
+-half of the cut: this is the price the seller carries into next year. A seller whose stock is all gone but whose ask is
+-already a multiple of what a unit costs it learns nothing more by asking higher (the width ask_ceiling.py derives from its buyers), and a good whose
+-supply cannot respond does not climb for decades."""
++half of the cut: this is the price the seller carries into next year. `band_edge` is what bounds a quote nobody paid
++(planning_price.held_to_band); a price that traded has no such bound."""
+ import math
+ from typing import List, Optional
+ 
+@@ -52,16 +52,15 @@ def regressive_weight(weight: float, gap: float, below_cost: bool = False) -> fl
+     return weight if below_cost else weight * (1.0 - max(0.0, min(1.0, gap)))
+ 
+ 
+-def adjusted_within_band(expected_price: float, break_even_price: Optional[float], stock: float, target_stock: float,
+-                         ceiling_multiple: float, input_share: float = 0.0) -> float:
+-    """`expected_price` moved one step by the gap between `stock` and `target_stock`, inside the band: the price that just
+-    covers a unit's cost (`break_even_price`) below, `band_edge` above. A seller already outside the band on the side it
+-    is moving away from is left where it is, not pulled in here; one with no cost to anchor on does not move."""
++def stepped_by_stock(expected_price: float, break_even_price: Optional[float], stock: float, target_stock: float) -> float:
++    """`expected_price` moved one step by the gap between `stock` and `target_stock`: up with no ceiling, down no further
++    than the price that just covers a unit's cost (`break_even_price`). A seller already under that cost is not pulled
++    up to it by a cut; one with no cost to anchor on does not move."""
+     if break_even_price is None or not math.isfinite(break_even_price) or break_even_price <= 0.0:
+         return expected_price
+     moved = expected_price * (1.0 + GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR * stock_gap(stock, target_stock))
+     if moved >= expected_price:
+-        return max(expected_price, min(moved, band_edge(break_even_price, input_share, ceiling_multiple)))
++        return moved
+     return min(expected_price, max(moved, break_even_price))
+ 
+ 
+diff --git a/sim/economy/close_kernel.py b/sim/economy/close_kernel.py
+index 4b4e170d..9f9e8894 100644
+--- a/sim/economy/close_kernel.py
++++ b/sim/economy/close_kernel.py
+@@ -207,8 +207,7 @@ def close_rows(rows, constants,
+             for slot in range(count):
+                 if has_latest[slot]:
+                     unsold = stock[row, slot] - q_in[slot] * cap_old
+-                    exp[slot] = cost.adjusted_within_band(exp[slot], cover[slot], unsold, target_cover * q_out[slot],
+-                                                          ask_multiple[row, slot], input_share, constants[K_ASK_STEP])
++                    exp[slot] = cost.stepped_by_stock(exp[slot], cover[slot], unsold, target_cover * q_out[slot], constants[K_ASK_STEP])
+         for slot in range(count):
+             new_expected[row, slot] = exp[slot]
+ 
+diff --git a/sim/economy/close_kernel_cost.py b/sim/economy/close_kernel_cost.py
+index e307fb00..e672a350 100644
+--- a/sim/economy/close_kernel_cost.py
++++ b/sim/economy/close_kernel_cost.py
+@@ -77,13 +77,13 @@ def stock_gap(stock, target):
+ 
+ 
+ @njit
+-def adjusted_within_band(expected, break_even, stock, target, ceiling_multiple, input_share, step):
+-    """ask_adjust.adjusted_within_band; `break_even` NaN is None."""
++def stepped_by_stock(expected, break_even, stock, target, step):
++    """ask_adjust.stepped_by_stock; `break_even` NaN is None."""
+     if np.isnan(break_even) or not math.isfinite(break_even) or break_even <= 0.0:
+         return expected
+     moved = expected * (1.0 + step * stock_gap(stock, target))
+     if moved >= expected:
+-        return max(expected, min(moved, band_edge(break_even, input_share, ceiling_multiple)))
++        return moved
+     return min(expected, max(moved, break_even))
+ 
+ 
+diff --git a/sim/economy/goods_decide_inputs_kernel.py b/sim/economy/goods_decide_inputs_kernel.py
+index 6b1d2e9b..f36f4ca0 100644
+--- a/sim/economy/goods_decide_inputs_kernel.py
++++ b/sim/economy/goods_decide_inputs_kernel.py
+@@ -46,7 +46,7 @@ def decide_inputs(offer_rows, offer_ptr, offers, producer_row_of_agent, recipe_r
+         recipe = recipe_row[producer]
+         slot = slot_of[recipe, good_column]
+         workshops[place] = float(workshops_of_producer[producer])
+-        multiple_workshops[place] = workshops[place] > 1.0
++        multiple_workshops[place] = True      # seller_offers.stands_for_many: every producer is a crowd of price takers
+         expected_sales[place] = expected_sales_of_producer[producer] * yield_factor[producer] * outputs[recipe, good_column]
+         if slot >= 0:
+             unit_cost[place] = cost[producer, slot]
+diff --git a/sim/economy/goods_year_kernel.py b/sim/economy/goods_year_kernel.py
+index d9f561d7..596fd518 100644
+--- a/sim/economy/goods_year_kernel.py
++++ b/sim/economy/goods_year_kernel.py
+@@ -46,8 +46,9 @@ def queued_holding_value(reservation, stock, yearly_sales, rate, spoilage):
+ @njit(**KERNEL)
+ def choose_asks(res0, qty, is_producer, cost, share, expected, workshops, crowd, expected_sales, multiple, size,
+                 intensity, grid_count, grid_start, grid_step, months, discount_rate):
+-    """seller_offers.strategic_offers: the reservations after each producer's opening ask, its crowd's expectation or its
+-    price search against the book as it stood."""
++    """seller_offers.strategic_offers: the reservations after each producer's opening ask or its crowd's expectation. Every
++    producer arrives as a crowd (goods_decide_inputs_kernel), so the price search below is not reached; `share` and
++    `multiple` are not read."""
+     count = len(res0)
+     res = res0.copy()
+     rival_counts = numpy.zeros(count)
+@@ -62,7 +63,7 @@ def choose_asks(res0, qty, is_producer, cost, share, expected, workshops, crowd,
+         if not is_producer[i]:
+             continue
+         priced = cost[i]
+-        limit = band_edge(priced, share[i], multiple[i]) if numpy.isfinite(priced) else numpy.inf
++        limit = numpy.inf       # what the buyers will pay bounds an ask, not a multiple of its cost
+         if res0[i] <= 0.0:
+             if numpy.isfinite(priced) and priced > 0.0 and numpy.isfinite(expected[i]) and expected[i] > 0.0:
+                 res[i] = min(expected[i], limit)
+@@ -249,7 +250,7 @@ def salvage_and_search(res, qty, searched, floors, keys, key_count, minimum, has
+ def raise_up(res, qty, is_producer, cost, share, multiple, minimum, has_minimum, buyer_floors, flexibles, budgets,
+              references, exponents, maximums, capped):
+     """unsold_search.raise_sold_out's raise (demand_search.raise_asks): the producers' asks lifted to the highest common level
+-    at which the buyers still ask for all that is offered, each held to the band above its cost."""
++    at which the buyers still ask for all that is offered. `cost`, `share` and `multiple` are not read."""
+     count = len(res)
+     limits = numpy.full(count, numpy.inf)
+     any_limit = False
+@@ -261,9 +262,6 @@ def raise_up(res, qty, is_producer, cost, share, multiple, minimum, has_minimum,
+         if is_producer[i]:
+             any_raisable = True
+             lowest = min(lowest, res[i])
+-            if numpy.isfinite(cost[i]):
+-                limits[i] = band_edge(cost[i], share[i], multiple[i])
+-                any_limit = True
+     if not any_raisable:
+         return res.copy()
+     scratch = raise_search_kernel.make_scratch(count, len(buyer_floors))
+diff --git a/sim/economy/producers.py b/sim/economy/producers.py
+index 9e022737..cd217337 100644
+--- a/sim/economy/producers.py
++++ b/sim/economy/producers.py
+@@ -270,9 +270,9 @@ def next_expectations(producer: Producer, recipe: Recipe, view: MarketView,
+                                   ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE))
+     for good in ask_adjust.worked_outputs(producer, recipe):
+         if good in latest_prices:
+-            updated[good] = ask_adjust.adjusted_within_band(
++            updated[good] = ask_adjust.stepped_by_stock(
+                 updated[good], cost_covering.get(good), ask_adjust.unsold_stock(producer, recipe, view, good),
+-                ask_adjust.target_of(producer, recipe, good), ask_multiples.get(good, ask_adjust.NO_BOUND_MULTIPLE), input_share=input_share)
++                ask_adjust.target_of(producer, recipe, good))
+     return updated
+ 
+ 
+diff --git a/sim/economy/seller_offers.py b/sim/economy/seller_offers.py
+index 22065e32..17a104c8 100644
+--- a/sim/economy/seller_offers.py
++++ b/sim/economy/seller_offers.py
+@@ -1,17 +1,14 @@
+ """The producers' offers in one market, re-priced before it clears.
+ 
+-Each producer with units to sell reads the other sellers' asks and the market's size and chooses its reservation as
+-Eurace@Unibi's firm sets its price (price_setting.py, after Market_Research/Firm_market_research_functions.c, Firm_set_price):
+-the price on a grid around its own that earns most over the year, sales capped by the units it holds. What a unit is
++A producer stands for every workplace running its recipe on its tile, each of which takes the price (`stands_for_many`),
++so it asks what it expects for the stock it expects to sell and the market finds the price: unsold stock brings the
++ask down and buyers turned away lift it to where their money just takes what is offered (unsold_search.py). What a unit is
+ worth to the seller unsold is the cheaper of replacing it (its variable cost per unit) and holding it (its
+-price-taking reservation), so a seller never prices below what a unit costs it to make or keep. A producer that
+-stands for several workshops (Producer.workshops above one) is not a seller but a crowd of price takers: it keeps the
+-price-taking reservation and neither searches nor raises, and as a rival it counts once per workshop. A seller whose
+-market has no sales on record keeps its reservation; one whose reservation is nothing but whose good has a making cost
+-opens at the price it expects (opened_ask), never at nothing. The chosen
+-ask is held inside a band above the seller's unit cost (ask_band_multiple), and a seller whose ask goes unsold is
+-brought down to what sells by unsold_search.py. The reservation itself moves between years with the seller's stock
+-against its target (ask_adjust.py), which is the grid's centre.
++price-taking reservation), so a seller never prices below what a unit costs it to make or keep. A seller whose
++reservation is nothing but whose good has a making cost opens at the price it expects (opened_ask), never at nothing.
++The reservation itself moves between years with the seller's stock against its target (ask_adjust.py).
++The price search of a seller with a market of its own (price_setting.py) is no longer reached; it and the band
++arguments the kernels still take are to be removed (Complaint 473 Update 37).
+ """
+ import dataclasses
+ import math
+@@ -118,11 +115,11 @@ def ask_band_multiple(setup, offer: Offer, alternatives=None) -> float:
+ 
+ 
+ def stands_for_many(record, offer: Offer) -> bool:
+-    """True for a producer that stands for several independent workshops (entry.py joins each newcomer to
+-    the tile's producer): each workshop takes the price, so the aggregate offers its units at their
+-    price-taking reservations and does not withhold supply against its residual demand."""
+-    producer = record.producers.get(offer.seller)
+-    return producer is not None and producer.workshops > 1
++    """True for a producer: one producer stands for every workplace running its recipe on its tile, each of which
++    takes the price, so it offers its units at what it expects and does not withhold supply against its residual
++    demand. The market finds the price: unsold stock brings the ask down and buyers turned away lift it
++    (unsold_search.py)."""
++    return offer.seller in record.producers
+ 
+ 
+ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[Offer],
+@@ -149,8 +146,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
+         if offer.reservation_price <= 0.0:       # a perishable or a distressed holder: it asks a price, never nothing
+             producer = record.producers[offer.seller]
+             recipe = setup.recipes[producer.recipe_id]
+-            limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer, alternatives))
+-                     if math.isfinite(cost) else math.inf)
++            limit = math.inf
+             opened = opened_ask(offer.reservation_price, cost,
+                                 expected_output_prices(producer, recipe, view).get(offer.good), limit)
+             if opened is not None:
+@@ -169,8 +165,7 @@ def strategic_offers(setup, record, view, bids: Sequence[Bid], offers: Sequence[
+         size = market_size(record, offer)
+         if offer.reservation_price <= 0.0 or size is None:
+             continue      # a seller that sells at any price, or a market with no sales to judge by, keeps its ask
+-        limit = (band_edge(cost, input_share, ask_band_multiple(setup, offer, alternatives))
+-                 if math.isfinite(cost) else math.inf)
++        limit = math.inf
+         pricing.append((index, value, size, max(limit, value)))
+     if pricing:
+         rival_asks, rival_counts = rivals_of(record, original)
+diff --git a/sim/economy/unsold_search.py b/sim/economy/unsold_search.py
+index b9f621be..6cbce70b 100644
+--- a/sim/economy/unsold_search.py
++++ b/sim/economy/unsold_search.py
+@@ -2,14 +2,13 @@
+ reaches the seller's floor, what a unit is worth to it unsold: the cheaper of making it again and holding it
+ for a year, but never below what the last unit fetches kept for the buyers it expects in later years.
+ 
+-Only producers whose ask is the one `producers.offers` gave them are searched: a seller that re-priced
+-(price_setting.py, via seller_offers.py) chose its ask against the other sellers' on purpose. When any of them
++Every producer with unsold stock is searched (each takes the price, seller_offers.stands_for_many). When any of them
+ is unsold, all of them are brought down to a common ask level, each to no lower than its own floor, because
+ a seller that undercuts leaves its rivals unsold in turn; the level is the highest at which all of them sell
+ out or sit at their floors, found by bisection on whole-market clears. A market with no unsold searchable
+ stock clears once, and a seller's ask is moved between years by its stock against the target (ask_adjust.py).
+ The mirror runs after it: producers whose buyers were turned away raise their asks to where the buyers still ask for
+-the whole stock (demand_search.py).
++the whole stock (demand_search.py), so a year's market ends at the price where what is wanted is what is offered.
+ """
+ import math
+ from typing import List, Optional, Sequence, Tuple
+@@ -19,7 +18,6 @@ import numpy
+ from sim.book import ROUNDING_SHARE
+ 
+ from . import demand_search, goods_market, goods_market_kernels, inventory, seller_offers, titles_value
+-from .ask_adjust import band_edge
+ from .demand_search import SEARCH_PRECISION
+ from .goods_year_results import sold_by_result
+ from .types import Offer
+@@ -137,31 +135,15 @@ def clear_with_search(setup, record, view, bids, original: Sequence[Offer], offe
+                           (setup, view, costs if costs is not None else seller_offers.UnitCosts()))
+ 
+ 
+-def ask_limits(setup, record, view, offers: Sequence[Offer], indices: Sequence[int], costs: seller_offers.UnitCosts) -> dict:
+-    """index -> the most that producer may ask: the top of the band above its unit cost (ask_adjust.band_edge), the same
+-    limit its re-pricing and its carried ask keep to. A seller whose cost cannot be priced has no limit."""
+-    limits = {}
+-    for index in indices:
+-        offer = offers[index]
+-        key = (offer.seller, offer.tile)
+-        cost = costs[key] if key in costs else seller_offers.unit_cost(setup, record, view, offer)
+-        if cost is not None and math.isfinite(cost):
+-            shares = getattr(costs, "shares", {})
+-            share = shares[key] if key in shares else seller_offers.input_share_of_cost(setup, record, view, offer)
+-            limits[index] = band_edge(cost, share, seller_offers.ask_band_multiple(setup, offer, costs.alternatives))
+-    return limits
+-
+-
+ def raise_sold_out(record, buyers: goods_market.Buyers, bids, offers: Sequence[Offer], result, good, area, currency,
+                    last_price: Optional[float], pricing=None) -> Tuple[List[Offer], object]:
+-    """(the offers with the producers' asks raised to where they just sell out (demand_search.py), each held to the band
+-    above its cost; the market's clearing with them); a market in which buyers were not turned away is returned as it
+-    cleared. `pricing` is (setup, view, unit costs by (seller, tile)); without it the asks have no band."""
++    """(the offers with the producers' asks raised to where they just sell out (demand_search.py): the price at which the
++    buyers' money and ceilings still take all that is offered; the market's clearing with them). A market in which
++    buyers were not turned away is returned as it cleared. `pricing` is not read."""
+     if result.quantity >= result.demand_at_price * (1.0 - ROUNDING_SHARE):
+         return list(offers), result
+     producers = [index for index, offer in enumerate(offers) if offer.quantity > 0.0 and offer.seller in record.producers]
+-    limits = ask_limits(pricing[0], record, pricing[1], offers, producers, pricing[2]) if pricing else None
+-    raised = demand_search.raise_asks(buyers, offers, producers, limits)
++    raised = demand_search.raise_asks(buyers, offers, producers, None)
+     if raised == list(offers):
+         return list(offers), result
+     return raised, goods_market.clear(bids, raised, good, area, currency, last_price, buyers)
+diff --git a/sim/tests/test_economy_ask_band.py b/sim/tests/test_economy_ask_band.py
+index eb0f1bca..18c5243b 100644
+--- a/sim/tests/test_economy_ask_band.py
++++ b/sim/tests/test_economy_ask_band.py
+@@ -1,6 +1,5 @@
+-"""Complaint 643: a seller's ask is anchored on what a unit costs it. A sold-out seller's ask rises within a
+-band above that cost and stops at its edge; demand that does not respond to price gives a finite ask; only a
+-sole owner (one workshop) searches the buyers' book for its best ask."""
++"""A seller's carried ask moves a step a year with its stock, a raise with no ceiling (the year's market finds the
++price, unsold_search.py), and a producer takes the price in its market whether it stands for one workshop or many."""
+ 
+ QUICK_TOPIC = True
+ 
+@@ -15,7 +14,7 @@ from sim.economy.types import Bid, Offer, Recipe
+ 
+ GOOD, AREA, TILE = "alloy", "area", "tile"
+ COST = 2.0 * 3.0 + 4.0 * 0.5      # two of metal at three, four hours at half
+-MULTIPLE = 3.0                    # the band the buyers give (ask_ceiling.py derives it from them)
++STEP = ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR
+ 
+ 
+ class View(ViewDefaults):
+@@ -54,48 +53,23 @@ def floor_buyer(quantity=100.0):
+ 
+ 
+ class SoldOutRaiseTests(unittest.TestCase):
+-    def test_a_sold_out_ask_rises_one_step_inside_the_band(self):
+-        raised = ask_adjust.adjusted_within_band(1.5 * COST, COST, 0.0, 1.0, MULTIPLE)
+-        self.assertAlmostEqual(raised, 1.5 * COST * (1.0 + ask_adjust.GOODS_ASK_ADJUSTMENT_SHARE_PER_YEAR))
++    def test_a_sold_out_ask_rises_one_step(self):
++        self.assertAlmostEqual(ask_adjust.stepped_by_stock(1.5 * COST, COST, 0.0, 1.0), 1.5 * COST * (1.0 + STEP))
+ 
+-    def test_a_sold_out_ask_stops_at_the_band_edge_however_many_years_it_sells_out(self):
+-        ask = COST
+-        for _year in range(500):
+-            ask = ask_adjust.adjusted_within_band(ask, COST, 0.0, 1.0, MULTIPLE)
+-        self.assertAlmostEqual(ask, COST * MULTIPLE)
+-
+-    def test_an_ask_already_above_the_edge_is_not_cut_by_the_raise(self):
+-        self.assertEqual(ask_adjust.adjusted_within_band(10.0 * COST, COST, 0.0, 1.0, MULTIPLE), 10.0 * COST)
+-
+-    def test_a_seller_whose_buyers_give_no_ceiling_is_not_raised_above_its_cost(self):
+-        ask = COST
+-        for _year in range(50):
+-            ask = ask_adjust.adjusted_within_band(ask, COST, 0.0, 1.0, ask_adjust.NO_BOUND_MULTIPLE)
+-        self.assertAlmostEqual(ask, COST)
++    def test_a_sold_out_ask_far_above_its_cost_still_rises_a_step(self):
++        # no multiple of the cost stops it: what the buyers will pay is found when the market clears
++        self.assertAlmostEqual(ask_adjust.stepped_by_stock(10.0 * COST, COST, 0.0, 1.0), 10.0 * COST * (1.0 + STEP))
+ 
+     def test_no_cost_to_anchor_on_means_no_raise(self):
+-        self.assertEqual(ask_adjust.adjusted_within_band(5.0, None, 0.0, 1.0, MULTIPLE), 5.0)
+-        self.assertEqual(ask_adjust.adjusted_within_band(5.0, math.inf, 0.0, 1.0, MULTIPLE), 5.0)
++        self.assertEqual(ask_adjust.stepped_by_stock(5.0, None, 0.0, 1.0), 5.0)
++        self.assertEqual(ask_adjust.stepped_by_stock(5.0, math.inf, 0.0, 1.0), 5.0)
+ 
+ 
+-class InelasticBookTests(unittest.TestCase):
+-    def test_a_sole_owner_facing_unresponsive_demand_asks_a_finite_price_within_the_band(self):
++class PriceTakerTests(unittest.TestCase):
++    def test_a_producer_of_one_workshop_takes_the_price_and_does_not_search(self):
+         setup, record = game("only")
+-        ask = 1.2 * COST
+-        chosen = seller_offers.strategic_offers(setup, record, View(), [floor_buyer()],
+-                                                [Offer("only", GOOD, AREA, TILE, 100.0, ask)], 10.0,
+-                                                seller_offers.UnitCosts(types.SimpleNamespace(multiple=lambda good, tile: MULTIPLE)))
+-        price = chosen[0].reservation_price
+-        self.assertTrue(math.isfinite(price))
+-        self.assertGreater(price, ask)       # a sole owner still prices strategically
+-        self.assertLessEqual(price, COST * MULTIPLE * (1.0 + 1e-9))
+-
+-    def test_the_band_is_finite_for_every_elasticity_of_substitution(self):
+-        for substitution in (0.5, 1.0, 1.05, 3.0):
+-            setup, _record = game("only", substitution=substitution)
+-            multiple = seller_offers.ask_band_multiple(setup, Offer("only", GOOD, AREA, TILE, 1.0, 1.0))
+-            self.assertTrue(math.isfinite(multiple))
+-            self.assertGreaterEqual(multiple, 1.0)
++        offers = [Offer("only", GOOD, AREA, TILE, 100.0, 1.2 * COST)]
++        self.assertEqual(seller_offers.strategic_offers(setup, record, View(), [floor_buyer()], offers, 10.0), offers)
+ 
+     def test_an_aggregate_of_many_workshops_takes_the_price_and_does_not_search(self):
+         setup, record = game("crowd")
+diff --git a/sim/tests/test_economy_ask_band_chain.py b/sim/tests/test_economy_ask_band_chain.py
+index 5da6927d..02d4c126 100644
+--- a/sim/tests/test_economy_ask_band_chain.py
++++ b/sim/tests/test_economy_ask_band_chain.py
+@@ -1,6 +1,6 @@
+-"""Complaint 473 (cost-plus ask against Caiani et al. 2016 eq 3.6-3.7, a markup on unit cost): the band above cost marks up
+-what a seller adds, and inputs it buys pass through at their cost, so a chain of makers' ceilings grows by a sum and not
+-by the band to the power of the stages."""
++"""The band above cost that bounds a quote nobody paid (planning_price.held_to_band) marks up what a seller adds, and
++inputs it buys pass through at their cost, so a chain of makers' bounds grows by a sum and not by the band to the
++power of the stages."""
+ 
+ QUICK_TOPIC = True
+ 
+@@ -42,14 +42,6 @@ class BandOnChainTests(unittest.TestCase):
+     def test_a_maker_that_only_resells_inputs_is_not_marked_up_at_all(self):
+         self.assertAlmostEqual(ask_adjust.band_edge(4.0, 1.0, MULTIPLE), 4.0)
+ 
+-    def test_a_sold_out_seller_stops_at_the_edge_of_the_band_on_what_it_adds(self):
+-        cost, share = 4.0, 0.75
+-        ask = cost
+-        for _year in range(500):
+-            ask = ask_adjust.adjusted_within_band(ask, cost, 0.0, 1.0, MULTIPLE, share)
+-        self.assertAlmostEqual(ask, ask_adjust.band_edge(cost, share, MULTIPLE))
+-        self.assertLess(ask, MULTIPLE * cost)
+-
+ 
+ if __name__ == "__main__":
+     unittest.main()
+diff --git a/sim/tests/test_economy_ask_stock_rule.py b/sim/tests/test_economy_ask_stock_rule.py
+index 7fe593fc..79eeb6d9 100644
+--- a/sim/tests/test_economy_ask_stock_rule.py
++++ b/sim/tests/test_economy_ask_stock_rule.py
+@@ -1,4 +1,4 @@
+-"""Complaint 473: a seller's ask moves with its unsold stock against a target stock (ask_adjust.adjusted_within_band),
++"""Complaint 473: a seller's ask moves with its unsold stock against a target stock (ask_adjust.stepped_by_stock),
+ and a plain loop over that one rule against a written-out linear demand and fixed supply settles."""
+ 
+ QUICK_TOPIC = True
+@@ -8,12 +8,11 @@ import unittest
+ from sim.economy import ask_adjust
+ 
+ COST = 10.0
+-MULTIPLE = 3.0
+ SUPPLY, TARGET = 100.0, 10.0
+ 
+ 
+ def next_ask(ask, stock, target=TARGET):
+-    return ask_adjust.adjusted_within_band(ask, COST, stock, target, MULTIPLE)
++    return ask_adjust.stepped_by_stock(ask, COST, stock, target)
+ 
+ 
+ def unsold_at(ask):
+@@ -31,16 +30,15 @@ class StockAgainstTargetTests(unittest.TestCase):
+         self.assertGreater(next_ask(15.0, 0.0), next_ask(15.0, 0.5 * TARGET))
+         self.assertGreater(next_ask(15.0, 1.5 * TARGET), next_ask(15.0, 3.0 * TARGET))
+ 
+-    def test_the_ask_stays_inside_the_band(self):
+-        edge = ask_adjust.band_edge(COST, 0.0, MULTIPLE)
+-        self.assertEqual(next_ask(edge, 0.0), edge)
++    def test_a_cut_stops_at_the_cost_that_covers_a_unit_and_a_raise_has_no_ceiling(self):
+         self.assertEqual(next_ask(COST, 100.0 * TARGET), COST)
++        self.assertGreater(next_ask(30.0 * COST, 0.0), 30.0 * COST)
+ 
+     def test_an_ask_below_cost_is_not_raised_toward_cost_by_a_cut(self):
+         self.assertEqual(next_ask(0.5 * COST, 100.0 * TARGET), 0.5 * COST)
+ 
+     def test_no_cost_to_anchor_on_means_no_move(self):
+-        self.assertEqual(ask_adjust.adjusted_within_band(15.0, None, 0.0, TARGET, MULTIPLE), 15.0)
++        self.assertEqual(ask_adjust.stepped_by_stock(15.0, None, 0.0, TARGET), 15.0)
+ 
+     def test_a_cobweb_around_the_stock_target_shrinks(self):
+         ask, errors = 25.0, []
+diff --git a/sim/tests/test_economy_workshop_count.py b/sim/tests/test_economy_workshop_count.py
+index 55cb8072..59969046 100644
+--- a/sim/tests/test_economy_workshop_count.py
++++ b/sim/tests/test_economy_workshop_count.py
+@@ -71,11 +71,12 @@ class RefreshWorkshopsTests(unittest.TestCase):
+ 
+ 
+ class PricingReadsTheCountTests(unittest.TestCase):
+-    def test_a_producer_of_many_workshops_stands_for_many(self):
++    def test_every_producer_takes_the_price_and_a_seller_that_is_no_producer_does_not_count(self):
+         record = types.SimpleNamespace(producers={"crowd": Producer("crowd", "o", "oven", "t", 1.0, workshops=40),
+                                                   "lone": Producer("lone", "o", "oven", "t", 1.0, workshops=1)})
+         self.assertTrue(seller_offers.stands_for_many(record, Offer("crowd", "bread", "area", "t", 1.0, 1.0)))
+-        self.assertFalse(seller_offers.stands_for_many(record, Offer("lone", "bread", "area", "t", 1.0, 1.0)))
++        self.assertTrue(seller_offers.stands_for_many(record, Offer("lone", "bread", "area", "t", 1.0, 1.0)))
++        self.assertFalse(seller_offers.stands_for_many(record, Offer("merchant", "bread", "area", "t", 1.0, 1.0)))
+ 
+ 
+ if __name__ == "__main__":
+diff --git a/sim/tests/test_unsold_stock_search.py b/sim/tests/test_unsold_stock_search.py
+index 8ef06628..674ff6ee 100644
+--- a/sim/tests/test_unsold_stock_search.py
++++ b/sim/tests/test_unsold_stock_search.py
+@@ -115,11 +115,12 @@ class UnsoldStockSearchTests(unittest.TestCase):
+         self.assertAlmostEqual(final["cheap"].reservation_price, COST)
+         self.assertAlmostEqual(final["dear"].reservation_price, COST)
+ 
+-    def test_a_seller_that_moves_the_price_and_holds_units_back_on_purpose_is_not_searched(self):
++    def test_a_seller_asking_more_than_any_buyer_pays_is_brought_down_to_what_sells(self):
++        # a producer takes the price: none holds units back on purpose, so the dear one is searched like the other
+         final, result = searched([buyer(150.0, 4.0 * COST)],
+                                  [offer("cheap", 100.0, 1.2 * COST), offer("dear", 100.0, 5.0 * COST)])
+-        self.assertGreater(final["dear"].reservation_price, 1.2 * COST)
+-        self.assertLess(sold(result, "dear"), 100.0)
++        self.assertLessEqual(final["dear"].reservation_price, 4.0 * COST)
++        self.assertGreater(sold(result, "dear"), 0.0)
+ 
+     def test_a_market_that_sells_out_with_no_excess_demand_is_left_as_chosen(self):
+         setup, record = game("a")
+@@ -141,7 +142,8 @@ class UnsoldStockSearchTests(unittest.TestCase):
+                                                          GOOD, AREA, "coin", None, costs)
+         self.assertAlmostEqual(final[0].reservation_price, 1.45 * COST, delta=0.01 * COST)
+ 
+-    def test_a_seller_turned_buyers_away_asks_no_more_than_the_band_above_its_cost(self):
++    def test_a_seller_turned_buyers_away_is_raised_to_what_the_buyers_bear_however_far_above_its_cost(self):
++        # the buyer takes a hundred units at anything up to forty times the cost; fifty are offered
+         setup, record = game("a")
+         costs = bands()
+         bids = [buyer(100.0, 40.0 * COST)]
+@@ -149,9 +151,7 @@ class UnsoldStockSearchTests(unittest.TestCase):
+         chosen = seller_offers.strategic_offers(setup, record, View(), bids, offers, None, costs)
+         final, _result = unsold_search.clear_with_search(setup, record, View(), bids, offers, chosen,
+                                                          GOOD, AREA, "coin", None, costs)
+-        limit = unsold_search.ask_limits(setup, record, View(), offers, [0], costs)[0]
+-        self.assertAlmostEqual(final[0].reservation_price, limit, delta=0.01 * limit)
+-        self.assertLess(limit, 40.0 * COST)
++        self.assertAlmostEqual(final[0].reservation_price, 40.0 * COST, delta=0.01 * 40.0 * COST)
+ 
+     def crossings_for(self, view, bids, asks):
+         """How many market crossings one search makes for sellers asking `asks` under `view`."""
+diff --git a/sim/tests/test_year_speed_goods_markets.py b/sim/tests/test_year_speed_goods_markets.py
+index c99c8b1b..1245a581 100644
+--- a/sim/tests/test_year_speed_goods_markets.py
++++ b/sim/tests/test_year_speed_goods_markets.py
+@@ -113,7 +113,7 @@ class BatchedMarketsAreTheMarketsOneByOne(unittest.TestCase):
+     def test_random_markets(self):
+         compared = skipped = 0
+         moved = {"lowered": 0, "raised": 0, "opened": 0, "traded": 0}
+-        for seed in range(30):
++        for seed in range(80):      # enough markets that buyers are turned away in more than a handful
+             setup, record, view, area_map = with_markets(seed)
+             rng = random.Random(100 + seed)
+             memory = record.memory

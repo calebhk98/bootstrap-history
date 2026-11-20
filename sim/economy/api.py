@@ -50,7 +50,7 @@ from .state_wage_ceiling import WAGE_CEILING_MULTIPLE
 from .types import (EDGE_CARGO, EDGE_CONSUMPTION, EDGE_EXCHANGE, EDGE_EXTERNAL, EDGE_ISSUE, EDGE_LEGACY, EDGE_MINT, EDGE_PRODUCTION, EDGE_WEAR, Bid,
                     GoodsMove, LabourBid, LabourOffer, Offer, SiteLimit, Transfer, external_edge)
 from .year_accounts import YearAccounts
-from . import spin_up_sensitivity
+from . import mint_price, spin_up_sensitivity
 from .unit_cost import variable_cost_per_run
 from .titles_value import title_wealth
 from .debt_relief import indebted_tiles as record_indebted_tiles
@@ -80,7 +80,7 @@ __all__ = [
     "actor_fundable_amount", "risk_premium", "lender_listing", "note_pool_posting",
     "found_bank_from_outside", "people_by_trade", "people_by_tile_and_trade", "hours_paid_by_employer", "add_workers", "hours_offered_in_area_of",
     "all_producers", "producer_list", "capacity_units_by_material", "carried_last_year", "backing_marginal_cost", "set_improvements", "begin_spin_up", "trim_workforce_to_expected_hours",
-    "rename_agent", "coin_per_unit", "currency_id", "backing_good", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
+    "rename_agent", "coin_per_unit", "currency_id", "backing_good", "metal_paid_price", "home_country", "economy_countries", "country_of_tile", "economy_tiles",
     "capital_tile", "port_tile", "tile_in_economy", "recipes_of", "good_specs", "recipe_allowed_at", "opening_prices_of", "unskilled_trade",
     "economy_trades", "opening_rate", "opening_market_rate", "labour_area", "COIN_WEAR_PER_YEAR", "working_hours_per_year", "opening_wage_level", "priced_trade_wage", "country_trade_wage",
     "trade_wage_at", "hunger_goods", "health_figures", "PRICE_SMOOTHED_TRADE", "traded_price_goods", "crop_site_inputs", "crop_suitability_inputs",
@@ -554,6 +554,13 @@ def currency_id(economy):
 def backing_good(economy):
     """The good that backs the money, or None for fiat money."""
     return economy.setup.currency.backing_good
+
+
+def metal_paid_price(economy):
+    """What the money's regime pays per unit of its metal, in the economy's unit: a struck coin's mint price or weighed
+    metal's parity (mint_price.py); None for a money that states no price for its good (commodity money, fiat)."""
+    spec = economy.record.currency
+    return mint_price.paid_price(spec) if mint_price.paid_in_metal(spec) else None
 
 
 def home_country(economy):

@@ -1,0 +1,129 @@
+diff --git a/sim/economy/opening.py b/sim/economy/opening.py
+index c84e0e16..6c972758 100644
+--- a/sim/economy/opening.py
++++ b/sim/economy/opening.py
+@@ -26,7 +26,6 @@ from .market_memory_areas import number_area_markets
+ from . import merchants
+ from .merchants import Merchant
+ from .producers import Producer, paying_output
+-from .producers_close import working_capital_target
+ from .replaced import replaced
+ from .carriage_record import CarriageRecord
+ from .record import EconomyRecord
+@@ -615,8 +614,8 @@ def _open_merchants(setup, record, prices, final_by_tile) -> None:
+ 
+ 
+ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
+-    """Each agent's opening purse is struck at the mint. A producer's is the year's variable cost of its expected sales
+-    (the cash `producers_close.working_capital_target` keeps), a merchant's its capital. A household's follows from
++    """Each agent's opening purse is struck at the mint. A producer's is the cash the year's close keeps back
++    (`opening_resting.resting_producer_purse`), a merchant's its capital. A household's follows from
+     what it owns of those producers (`equity.holdings`, what the spending rule reads as share wealth): the cash that
+     brings cash plus share wealth to the wealth target, at which the rule spends exactly its income
+     (opening_resting.resting_household_purse; Eurace manual 10.1.3), plus what a household whose plot frees part of its
+@@ -625,7 +624,8 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
+     transfers: List[Transfer] = []
+     for producer in record.producers.values():
+         recipe = setup.recipes[producer.recipe_id]
+-        target = working_capital_target(recipe, producer.expected_sales, setup.opening_prices, setup.opening_wages)
++        target = opening_resting.resting_producer_purse(recipe, producer.capacity_runs, producer.expected_sales,
++                                                        setup.opening_prices, setup.opening_wages, producer.land_rent_per_run)
+         transfers.append(Transfer(EDGE_MINT, producer.agent_id, money, target, "opening coin"))
+     for merchant in record.merchants.values():
+         transfers.append(Transfer(EDGE_MINT, merchant.agent_id, money, merchant.capital_base, "opening coin"))
+diff --git a/sim/economy/opening_resting.py b/sim/economy/opening_resting.py
+index 9dcc3b10..995b5213 100644
+--- a/sim/economy/opening_resting.py
++++ b/sim/economy/opening_resting.py
+@@ -11,9 +11,10 @@ Capacity needs no function here: the investment rule (`producers_close._investme
+ Firm_calc_input_demands) builds beyond wear only when the planned runs exceed the capacity, so capacity equal to the
+ planned runs (expected sales) needs no growth, which agrees with a post-warm-up Eurace state's median utilisation of 1.0.
+ """
++import math
+ from typing import Dict, Mapping
+ 
+-from . import households_buffer_stock, inventory
++from . import firm_finance, households_buffer_stock, inventory, producers_close, unit_cost
+ 
+ 
+ def resting_household_purse(mean_income: float, share_wealth: float, claims: float = 0.0,
+@@ -50,6 +51,25 @@ def purse_with_property_income(purse: float, property_income: float) -> float:
+     return purse + max(0.0, property_income)
+ 
+ 
++def resting_producer_purse(recipe, capacity_runs: float, expected_sales: float, prices: Mapping[str, float],
++                           wages: Mapping[str, float], rent_per_run: float = 0.0) -> float:
++    """The coin a producer holds at the end of a year it repeats: what the year's close keeps back before it pays its
++    owners the rest (`firm_finance.cash_to_keep`). That is next year's working capital (a year of the whole capacity's
++    variable cost, `producers_close.working_capital_target`), the plant that wears out in a year at what it costs to
++    rebuild, and the buffer on the running costs of the runs it works (their variable cost and rent). A producer
++    opened with less pays its owners only a share of what it earns until it has saved the difference, and the
++    opening's incomes count all of it as paid. Nothing when a run cannot be priced."""
++    working = producers_close.working_capital_target(recipe, capacity_runs, prices, wages)
++    run_cost = unit_cost.variable_cost_per_run(recipe, prices, wages, rent_per_run)
++    if working <= 0.0 or not math.isfinite(run_cost):
++        return 0.0
++    rebuilt = 0.0
++    if recipe.plant_life_years > 0.0:
++        plant = unit_cost.plant_value_per_run(recipe, prices, wages)
++        rebuilt = capacity_runs / recipe.plant_life_years * plant if math.isfinite(plant) else 0.0
++    return firm_finance.cash_to_keep(working, 0.0, rebuilt, max(0.0, expected_sales) * run_cost)
++
++
+ def resting_input_stock(planned_runs: float, inputs_per_run: Mapping[str, float], bought_in_year) -> Dict[str, float]:
+     """The inputs a producer opens holding. `producers._input_bids` buys the planned runs' need less what is held and
+     the year uses it all, so a producer at rest holds an input at the year's start only if it cannot buy it before
+diff --git a/sim/tests/test_opening_resting.py b/sim/tests/test_opening_resting.py
+index be7782d9..d932a158 100644
+--- a/sim/tests/test_opening_resting.py
++++ b/sim/tests/test_opening_resting.py
+@@ -5,7 +5,8 @@ QUICK_TOPIC = True
+ 
+ import unittest
+ 
+-from sim.economy import households_buffer_stock, inventory, opening_resting
++from sim.economy import firm_finance, households_buffer_stock, inventory, opening_resting, producers_close
++from sim.economy.types import Recipe
+ 
+ 
+ class RestingPurseTests(unittest.TestCase):
+@@ -47,5 +48,39 @@ class RestingHoursHeldTests(unittest.TestCase):
+         self.assertEqual(opening_resting.resting_hours_held({"vale": {"reaper": {"farm_a": 300.0}}}, {}), {})
+ 
+ 
++
++# a run takes two of iron at three and ten hours at half: its variable cost is eleven; the plant for a run of yearly
++# capacity is four of timber at five and lasts ten years
++SMITHY = Recipe("smith", {"tool": 1.0}, {"iron": 2.0}, {"smith": 10.0}, plant_goods={"timber": 4.0}, plant_life_years=10.0)
++PRICES = {"iron": 3.0, "timber": 5.0}
++WAGES = {"smith": 0.5}
++RUN_COST = 11.0
++PLANT_PER_RUN = 20.0
++
++
++class ProducerPurseTests(unittest.TestCase):
++    def purse(self, capacity=150.0, expected_sales=100.0, rent=0.0, recipe=SMITHY):
++        return opening_resting.resting_producer_purse(recipe, capacity, expected_sales, PRICES, WAGES, rent)
++
++    def test_a_producer_opens_with_the_cash_the_years_close_keeps_back(self):
++        # the close keeps a year of the capacity's variable cost, the plant that wears in a year and the buffer on the year's running costs
++        working = producers_close.working_capital_target(SMITHY, 150.0, PRICES, WAGES)
++        self.assertEqual(working, 150.0 * RUN_COST)
++        kept = firm_finance.cash_to_keep(working, 0.0, 150.0 / 10.0 * PLANT_PER_RUN, 100.0 * RUN_COST)
++        self.assertAlmostEqual(self.purse(), kept)
++
++    def test_it_holds_working_capital_for_its_whole_capacity_not_only_the_runs_it_expects_to_sell(self):
++        self.assertAlmostEqual(self.purse(capacity=150.0) - self.purse(capacity=100.0), 50.0 * RUN_COST + 5.0 * PLANT_PER_RUN)
++
++    def test_the_rent_of_the_runs_it_works_is_in_the_running_costs_the_buffer_covers(self):
++        self.assertAlmostEqual(self.purse(rent=4.0) - self.purse(), firm_finance.CASH_BUFFER_SHARE_OF_COSTS * 100.0 * 4.0)
++
++    def test_a_producer_with_no_plant_keeps_nothing_back_to_rebuild(self):
++        hands = Recipe("dig", {"clay": 1.0}, {}, {"smith": 10.0})
++        self.assertAlmostEqual(self.purse(recipe=hands), 150.0 * 5.0 + firm_finance.CASH_BUFFER_SHARE_OF_COSTS * 100.0 * 5.0)
++
++    def test_a_run_that_cannot_be_priced_opens_with_nothing(self):
++        self.assertEqual(opening_resting.resting_producer_purse(SMITHY, 150.0, 100.0, {"timber": 5.0}, WAGES), 0.0)
++
+ if __name__ == "__main__":
+     unittest.main()

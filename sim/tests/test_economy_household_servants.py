@@ -10,13 +10,17 @@ YEAR = 2000.0
 
 
 class WholeServantTests(unittest.TestCase):
-    def test_a_household_too_poor_for_one_whole_servant_hires_none_rather_than_a_fraction(self):
+    def test_a_household_too_poor_for_one_whole_servant_hires_almost_none(self):
         # a servant's year costs 1.0 * 2000 = 2000; the household has 1500; its hour is worth 100 so hiring would pay
         hired = household_servants.hired_hours_whole(1000.0, 1.0, 100.0, 1.0, 1500.0, YEAR)
-        self.assertEqual(hired, 0.0)
+        self.assertLess(hired, 50.0)
 
-    def test_the_same_household_with_the_price_of_a_servant_hires(self):
-        self.assertGreater(household_servants.hired_hours_whole(1000.0, 1.0, 100.0, 1.0, 2000.0, YEAR), 900.0)
+    def test_the_same_household_with_well_above_the_price_of_a_servant_hires(self):
+        self.assertGreater(household_servants.hired_hours_whole(1000.0, 1.0, 100.0, 1.0, 4000.0, YEAR), 900.0)
+
+    def test_the_same_household_with_just_the_price_of_a_servant_hires_half_of_what_it_would_unbound(self):
+        self.assertAlmostEqual(household_servants.hired_hours_whole(1000.0, 1.0, 100.0, 1.0, 2000.0, YEAR),
+                               0.5 * household_servants.hired_hours_whole(1000.0, 1.0, 100.0, 1.0, None, YEAR), delta=1.0)
 
     def test_a_servant_frees_no_more_hours_than_the_household_has_of_work(self):
         hired = household_servants.hired_hours_whole(1000.0, 1.0, 1e9, 1.0, 1e9, YEAR)
@@ -46,11 +50,16 @@ class UrbanMarkerTests(unittest.TestCase):
 
 
 class PlannedHoursTests(unittest.TestCase):
-    def test_a_cohort_whose_households_cannot_pay_a_servants_year_does_its_own_work(self):
+    def test_a_cohort_whose_households_cannot_pay_a_servants_year_does_almost_all_its_own_work(self):
         # 10 households needing 1000 hours each, an hour worth 100, a servant's year costing 2000 and a household income of 1500
         hired, own, _milled = household_work_year.planned_hours(10000.0, 100.0, 1.0, 0.0, (), (10.0, 1500.0, YEAR))
-        self.assertEqual(hired, 0.0)
-        self.assertEqual(own, 10000.0)
+        self.assertLess(hired, 500.0)
+        self.assertAlmostEqual(hired + own, 10000.0)
+
+    def test_with_last_years_hours_the_cohort_moves_part_of_the_way_to_its_choice(self):
+        hired, own, _milled = household_work_year.planned_hours(10000.0, 100.0, 1.0, 0.0, (), (10.0, 1e9, YEAR), 0.0)
+        self.assertAlmostEqual(hired, 0.2 * 10000.0)
+        self.assertAlmostEqual(hired + own, 10000.0)
 
     def test_with_no_servant_year_in_the_data_hiring_stays_divisible(self):
         hired, _own, _milled = household_work_year.planned_hours(100.0, 2.0, 2.0, 0.0, ())

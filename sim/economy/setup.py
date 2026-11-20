@@ -11,6 +11,7 @@ import math
 from dataclasses import dataclass, field
 from typing import Any, Dict, Mapping, Optional, Tuple
 
+from sim.unit_conversions import WORKING_DAYS_PER_YEAR
 from sim.world import demand
 
 from .good_mass import unit_mass
@@ -67,6 +68,7 @@ class EconomySetup:
     fuel_need: str  # the basket need fuel meets (need_roles.FUEL_ROLE); a hearth's cooking fuel is added to its floor
     hunger_need: str  # the basket need whose unmet floor counts as hunger (need_roles.HUNGER_ROLE)
     work_need: str  # the basket need met by hours of household work (need_roles.HOUSEHOLD_WORK_ROLE)
+    working_days_per_year: float = float(WORKING_DAYS_PER_YEAR)   # days of the labour year; household work is counted over them and nothing else (households_work.py)
     harvest_share_by_good: Dict[GoodId, float] = field(default_factory=dict)   # good -> share of its harvest the state's forms take from growers this year (the port sets it; harvest_tax.py)
     hiding: Any = None  # (rate, reach) -> share of its base a payer hides; the port hands in the actor layer's rule, None: none
     flight: Any = None  # the actors' flight rules (expected_penalty_of_leaving, arrears_owed_by_fugitive, share_after_immunity), handed in by the port; None: no flight

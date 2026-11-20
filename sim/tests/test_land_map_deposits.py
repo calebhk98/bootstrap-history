@@ -21,6 +21,11 @@ class DepositCatalogueTests(unittest.TestCase):
         self.assertIn("iron", catalogue["metals"])
         self.assertEqual(catalogue["ore_goods"]["iron"]["iron_ore_kg"], ("pig_iron_kg", "iron_bloom_kg"))
 
+    def test_a_deposit_type_that_names_its_own_ore_is_listed_under_its_resource(self):
+        typed = land().deposit_catalogue()["ore_goods_by_deposit_type"]
+        self.assertEqual(typed["silver"]["gossan_jarosite"], {"jarosite_ore_kg": ("silver_jarosite_kg",)})
+        self.assertNotIn("iron", typed)
+
     def test_each_resource_gives_its_mechanism(self):
         mechanisms = land().deposit_catalogue()["mechanisms"]
         self.assertEqual((mechanisms["coal"], mechanisms["cattle"]), ("mineral_deposit", "herd_animal"))
