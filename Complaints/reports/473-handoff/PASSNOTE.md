@@ -1,9 +1,9 @@
 # Passnote: Complaint 473, the agent economy's spin-up never settles
 
 For whoever picks this up next. It says what the goal is, where the work stands, how to measure, what was learned,
-what was tried, and what to do first. **Start with section 6f and section 7**; sections 2 and 6a to 6e are the
-history that led there. The detail behind every claim is in
-`Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md` (Updates 24-38) and the
+what was tried, and what to do first. **Start with section 6g and section 7**; section 6f is where the standing
+(`search`) rules were left, and sections 2 and 6a to 6e are the history that led there. The detail behind every claim is in
+`Complaints/473-the-agent-economy-spin-up-never-settles-so-the-opening-is-a-point-on-a-cycle.md` (Updates 24-39) and the
 owner's answers in `Complaints/reports/473-owner-questions.md`. Figures are not repeated here: each claim names
 the command that measures it.
 
@@ -417,7 +417,58 @@ settled economy (the goal). The recommendation given was to keep the band for no
 resting state and fix trade between areas, and come back to clearing once supply answers a high price steadily.
 No answer had come when this note was written; ask before building on either side of it.
 
+## 6g. Where it stands after Update 39 (read this first)
+
+**The owner's direction (2026-11-20).** Rebuild the two core loops as "find the clearing value inside the year, then
+move what carries between years a fixed share toward it", swapped in beside the standing rules and not in place of
+them; and the headline test, "an economy should settle close to the same thing, even with a 5% change". The first
+pull request is done when the hand-built economy rests and England passes the unchanged settle check. Neither
+direction of section 6f's open decision was waited for: prices that clear are what was built.
+
+**The smallest economy is the place to work.** The three-tile economy (`sim/economy/fixture_setups.py`) has the
+fault on the standing rules and runs ninety years in seconds without numba (`ROME_NO_JIT=1`):
+
+```bash
+python3 sim/simulator.py spin-up-trace --fixture stationary --rules search --twin --years 90     # never rests; the twin drifts off
+python3 sim/simulator.py spin-up-trace --fixture stationary --rules clearing --twin --years 90   # rests; the twin stays close
+python3 -m unittest sim.tests.test_economy_rest_smoke                                            # what the clearing set is held to
+```
+
+A change is judged there first, by three things: the yearly moves once it rests, the gap to the twin, and where it
+rests from a start five per cent off. Only then on a civilisation. The earlier rounds worked on civilisations, where
+one reading takes minutes to hours and differs from run to run.
+
+**The tree.** `sim/economy/rule_sets.py` names the year's swappable rules; a setup names its set and each phase asks
+for its rule. `search` is the rules of section 6f, untouched and the default; `clearing` is the new set
+(`docs/architecture/ECONOMY_AGENTS.md`, "Rule sets"). A game opens on `search` unless its configuration names
+`economy_rule_set`. To run a civilisation's spin-up on another set without a configuration, swap `rule_sets.of` in a
+scratch runner before running `sim/simulator.py` (Update 39 says how it was done), with its own `ROME_CACHE_DIR`:
+the spin-up's cache key does not know about the swap.
+
+**What holds and what does not** (Update 39 has each with its command).
+- On the three-tile economy the clearing set rests, keeps a twin close, and answers a better yield or fewer people
+  the way an economy should.
+- A start five per cent off rests somewhere else (three expected failures in the smoke test): a producer's capacity
+  depends on the path, and one bankruptcy idles every workplace of a recipe on a tile for a year.
+- England on the clearing set slumps from the seventh year and ends far from settled. Not traced.
+- The clearing set's object-level parts are about ten times too slow for a civilisation's year.
+- Three capacity rules were tried and taken out (by margin; both ways toward what sales call for; growth only).
+  Each failed for the same reason: the coin a producer keeps follows its whole capacity.
+
 ## 7. What to do first
+
+After Update 39 (the list under it is the order for the standing rules, kept for when they are worked on again):
+
+1. Build the smallest economy that slumps on the clearing set as England does (a recipe with plant, a chain of
+   inputs, a floor wage that binds, hours idle) and make it rest. First suspect: production with no hold where
+   labour does not bind.
+2. Bankruptcy by share: a producer stands for many workplaces, so a share of them fails.
+3. A capacity rule with one rest point, after the coin a producer keeps follows its working scale.
+4. Kernels for the clearing set's object-level parts.
+5. England on the clearing set again; then make it the game's set (`sim/markets/port_setup.py` `GAME_RULE_SET`),
+   run the fingerprint on `search` against main, the slow suite, and rebuild the openings.
+
+Before Update 39:
 
 1. Reproduce the England baseline yourself: `PYTHONPATH=<checkout> python3 Complaints/reports/473-handoff/probes/ensemble_years.py england_1300 8 out.jsonl`,
    then `ensemble_moves.py base=out.jsonl` and `member_gaps.py out.jsonl`. Five of eight should pass.
