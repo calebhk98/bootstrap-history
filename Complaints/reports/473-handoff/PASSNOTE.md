@@ -543,9 +543,37 @@ trend column shows England still growing through the measured years.
 quantity that drifts, then probe that market or rule in that year. Compare single runs with care: members a rounding
 error apart differ by a few points in every gap, so judge a change of that size on the ensemble.
 
+## 6k. Where it stands after Update 43 (read this first)
+
+**Done since 6j.** The merchant offers where it stands what it cannot carry and no longer buys cargo with the coin its
+held stock needs for carriage; households count on the servants they were served, not the ones they planned. The
+second was most of what the years did to the rough plan: hours hired now rise by under a tenth over the spin-up.
+
+**The check.** The ensemble passes on hours, output and unmet need in nearly every member and is at the tolerance on
+the rate; the price level, stock and the watched prices still miss by a few points.
+
+**The largest thing left is the money stock.** The rough plan strikes more coin than the metal made at home keeps up
+(nearly all of it is a by-product of lead, capped by the galena mined; the dear routes the plan counts on stop in the
+first years). The stock shrinks for a century, prices drift down, and late in a long run households end holding more
+coin than producers and a slump follows (Update 43 has the trace).
+
 ## 7. What to do first
 
-After Update 42:
+After Update 43:
+
+1. The money stock. Three places to look, in this order: the first year's price of the coin metal (the mint bids only
+   for coin already worn, and the metal's opening price is under the mint price: `port_coin.priced_at_the_margin`,
+   `api.backing_marginal_cost`, `mint.mint_orders`); whether the dear routes of the metal can run in the years (their
+   ores, their capacity after the first years: probe the makers of the backing good by year); and the stock the rough
+   plan strikes against the stock that output keeps up (`opening._strike_opening_cash`). Judge by coin struck against
+   coin worn in the trace's columns and by the long run having no late slump.
+2. Goods that cannot be kept: re-measure bread; if it still saws, the missing term is a hold on next year's runs by
+   the share of this year's output that went unsold (the plan's step 3).
+3. The merchant's size (one for England, `opening._open_merchants`) once the two above are in.
+4. The spin-up's length and stop rule for the clearing set (the plan's step 4), then the realism check, the Norse
+   lands and Han, and the game's set.
+
+After Update 42 (kept for the record; its items 2 and 3 are answered in 6k):
 
 1. The length of the spin-up: England grows for decades from the rough plan. Try first-stage lengths with
    `ROME_SPIN_UP_YEARS=<first>,<trimmed>` on the ensemble command above; if a longer stage passes, raise

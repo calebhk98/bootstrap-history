@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England it no longer slumps, starves or loses its mint, over the spin-up or over a run several times as long (Update 42): hours hired, unmet need and, in nearly every ensemble member, output end inside the settle tolerance; the price level, the rate, stock and the watched prices end near it and miss it, so England still fails `spin_up_settled` on `clearing` and games still open on `search`. What is left: the spin-up ends while England is still growing from the rough plan to where it rests, the merchant is broke, and household work swings the hours on offer over decades. On `search` the readings of Update 38 stand. Next, per the passnote's section 6j.
+**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England it no longer slumps, starves or loses its mint or its merchant over the spin-up, and the years now move the rough plan's hours by under a tenth (Update 43): hours hired, output and unmet need end inside the settle tolerance in nearly every ensemble member and the rate at or just over it; the price level, stock and the watched prices still miss, so England still fails `spin_up_settled` on `clearing` and games still open on `search`. What is left: the money stock the rough plan strikes is more than the mint keeps up (it shrinks for a century and brings a slump late in a long run), goods that cannot be kept, the one large merchant, and the spin-up's length. On `search` the readings of Update 38 stand. Next, per the passnote's section 6k.
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -2272,3 +2272,70 @@ unmet food need is nothing or next to it.
   index itself (`need_basket.priced_need`) would still take a sliver of a nearly free good as the price of the need.
 - *The rate's tolerance.* The rate follows expected inflation, so a price level that drifts by a per cent or two a
   year moves the rate by more than the check allows.
+
+## Update 43: the merchant can sell or carry what it holds, and households stop counting on servants who never come; the years now move the opening far less (branch economy-rests-with-clearing-rules)
+
+Two faults of the clearing set traced by reading the code (three read-only reports, each citation checked) and one
+probe, fixed behind the rule-set seam with rule tests; the search set is as it was.
+
+1. *The merchant's stuck stock* (`sim/economy/merchant_stuck_stock.py`, `RuleSet.merchant_stock_offered_where_it_stands`,
+   `RuleSet.merchant_cash_for_new_cargo`; `sim/tests/test_merchant_stuck_stock.py`). A merchant kept stock on a tile one
+   of its routes starts from for carrying and never offered it there (`merchants_plan.orders`). Carrying takes crew
+   hours hired at the labour market, which only coin hires; a purchase set the carriage money aside but next year's
+   purchases were sized from all the cash again, so that coin bought new cargo; `merchants.dispatch` leaves what it
+   cannot carry where it is. By the time merchants order, the labour market has cleared, so each is now told the share
+   of its carriage plan it crewed by source tile (`carriage_hours.crewed_share_by_tile`;
+   `year_order_sources.merchant_orders` takes the ledger). It offers where it stands what it cannot carry this year,
+   for want of crew or of room where the stock was going, buys none of a good where it is selling its own, and buys
+   new cargo with its cash less the carriage of the stock it keeps. On England the merchant stays solvent through the
+   spin-up and turns its stock over; the charcoal it bought dear in the first years still takes about two decades to
+   clear in a market that has too much of it (a scratch probe of its coin and holdings; `money_merchants` in the
+   stages rows).
+2. *Servants a household never gets* (`sim/economy/servant_hours_counted.py`, `RuleSet.servant_hours_counted_on`,
+   `household_work_year.planned_hours` with `counted_on`; `sim/tests/test_servant_hours_counted.py`). The hours of
+   household work a person needs are fixed by `data/world/household_work.json`; a cohort's own hours were that less
+   the hours it PLANNED to hire, and the plan moved a share a year from last year's plan to what it wanted. A probe
+   of every cohort and year (no command in the tree) showed every cohort keeps its hearth throughout, and that the
+   plan climbed for decades to about a quarter of all the hours households have while the hours actually served
+   were nothing to the figures printed; the hours so "freed" were sold for hire, and given back over the next
+   century as the plan fell again. That was the swing in hours on offer Update 42 left untraced, and most of what
+   the years did to the rough plan. Now the plan starts from the hours it was served (its plan less the hours of the
+   need it went without, which the close keeps), and its own hours are the work less no more than that: it still
+   bids for more servants than it had, and keeps the hours for the work they have not yet done.
+
+**What the years move now** (`python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages`,
+the table at its end). Hours hired rise by under a tenth over the spin-up where they rose by more than half; output
+rises by about half where it more than doubled; the price level and the producers' coin end about where they began.
+What still moves by a lot: the share of offered hours hired (the rough plan leaves about a quarter unhired in its
+first year), the wage against prices, households' coin, the money stock and the merchant's coin.
+
+**The settle check** (the same command with `--ensemble 8`): hours hired, output and unmet need end inside the
+tolerance in seven members of eight, the rate at or just over it in all eight; the price level, stock and the
+watched prices still miss in most. England still fails `spin_up_settled`; games still open on `search`.
+
+**The long run** (`--years 150 --csv out.csv`). Hours hired hold from the second decade to the end, with one
+exception: about a century in, coin moves from producers to households for some ten years, the wage falls to a
+third, a sixth of the hours on offer go unhired, and the economy comes back at a lower wage and price level. Traced as
+far as its cause: the money stock still shrinks every year.
+- Nearly all the coin metal is a by-product of smelting lead (`lead_kg` in `data/production/`), and the smelters use
+  every kilogram of galena mined; the dearer routes the rough plan counts on to cover the wear of its money
+  (`silver_jarosite_kg`, `silver_smelted_native_kg`) lose their capacity in the first years and do not come back
+  (a scratch probe of the makers of `silver_kg`: capacity, runs, stock and inputs by year).
+- So the metal made at home covers the wear of a money stock well under the one the rough plan strikes, and the
+  stock falls toward it by a fraction of a per cent a year. Prices drift down with it; when households come to hold
+  more coin than producers, the slump follows.
+- In the first year the metal sells under the mint price: the mint bids only for coin already worn, and the metal's
+  opening price is its cost-table price, which is under what the coin standard makes the mint pay
+  (`port_coin.priced_at_the_margin` scales every other price to the metal's opening price, `api.backing_marginal_cost`).
+
+**Found, not fixed.**
+- *The money stock* (above): the rough plan's stock against what the mint keeps up; the first year's price of the
+  metal; whether the dear routes should run at all.
+- *One merchant is still too lumpy and too small.* Its lots move prices where it buys and sells (the ensemble's price
+  level was noisier in the median with the merchant fix alone), it loses most of its capital on its first cargo, and
+  late in the long run its coin is gone again.
+- *Hand grinding climbs from next to nothing to most of the grain* within three decades, as flour grows dear against
+  grain (the same probe; `cohort.food_ground_share`), which adds a quarter to the hours of household work needed.
+  Not traced: what holds the mills back (their power, `mechanical_mj`, and the building trades that all but vanish).
+- *Goods that cannot be kept* (bread's price is the least steady of the watched goods) and *the spin-up's length*
+  are the plan's next steps and are untouched.

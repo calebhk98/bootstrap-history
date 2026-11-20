@@ -292,7 +292,9 @@ of the way to it, the same share up and down:
   migration are the labour core's own, as before.
 - **Households' hours.** A household keeps for its plot every hour the plot takes while the crop is worth the wage,
   and fewer above it (`plot_hours_value.py`); under `search` the plot gets the hours a falling return keeps and the
-  hours nobody hired.
+  hours nobody hired. The household work it plans to hire starts from the hours it was served last year, and it
+  keeps its own hours for all the work beyond those (`servant_hours_counted.py`); under `search` it starts from last
+  year's plan and counts on it.
 - **Goods.** Each market trades at one price (`goods_clear_one_price.py`): the price where the buyers' schedules meet
   the sellers' supply, moved no further from last year's than a year allows (`price_step.py`); at a price held short
   of the clearing one the long side goes short (`goods_market.clear_at_price`). A producer's stock is offered along a
@@ -309,7 +311,9 @@ of the way to it, the same share up and down:
 - **Credit and merchants.** The rate the economy remembers moves a share of the way to the rate the year's lending
   cleared at (`rate_step.py`). Merchants learn a market's volume as what was delivered and what buyers wanted and did
   not get (`merchant_volume_news.py`), and the loan a merchant asks for its carriers' wages is held to the leverage
-  its cargo loans are held to (`merchant_wage_loans.py`).
+  its cargo loans are held to (`merchant_wage_loans.py`). Stock a merchant holds for a route and cannot carry this
+  year, for want of crew or of room where it was going, is offered where it stands, and the coin that carrying the
+  rest will cost does not buy new cargo (`merchant_stuck_stock.py`).
 - **Producers.** A producer plans the runs that pay at the price it expects, less a share of the stock it holds
   beyond its target, and is not held to its expected sales. Its expected price follows what the market paid, by a
   smaller share a year than under `search`, and keeps the pull toward what the good costs to make, which is how a
