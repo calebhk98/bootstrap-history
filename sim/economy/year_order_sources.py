@@ -7,8 +7,9 @@ the rule and are unpacked into rows at this edge."""
 from typing import List
 
 from . import household_work_year
-from . import carriage_fleet_book, carriage_wear, households_cohort, households_orders_pack, land_bid_year, merchants
-from . import merchants_book, merchants_plan, state_budget, state_store, tool_wear
+from . import carriage_fleet_book, carriage_hours, carriage_wear, households_cohort, households_orders_pack, land_bid_year, merchants
+from . import merchants_book, merchants_plan, rule_sets, state_budget, state_store, tool_wear
+from .cohort_reads import populated_tiles
 from .cohort_order_figures import order_figures
 from .cohort_store import table_of
 from .goods_order_tables import CARRIER, HOUSEHOLD, MERCHANT, STATE
@@ -97,9 +98,14 @@ def state_orders(setup, record, view, area_map, order_book, keep) -> None:
     rows.write()
 
 
-def merchant_orders(setup, record, view, area_map, carriage, order_book) -> None:
-    """The carriers' replacement bids, then each merchant's orders in the order the rotation gives."""
+def merchant_orders(setup, record, view, area_map, carriage, order_book, ledger=None) -> None:
+    """The carriers' replacement bids, then each merchant's orders in the order the rotation gives. With the year's
+    `ledger` each merchant is told the share of its carriage plan it crewed at this year's labour market, which the
+    rule set's rules for stock held on a route read (merchant_stuck_stock.py)."""
     money = setup.currency_id
+    rules = rule_sets.of(setup)
+    hired = ledger.hours_hired_by_market if ledger is not None else {}
+    populated = populated_tiles(record.cohorts)
     rate = own_rate(view, money)
     ordered = sorted(record.merchants.values(), key=lambda each: each.agent_id)
     route = merchants_book.route_pass(view, carriage, area_map, setup.specs) if ordered else None
@@ -117,5 +123,8 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book) -> None
     for merchant in ordered[first:] + ordered[:first]:
         held = held_stock(record.book, merchant.agent_id)
         merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
-                         held, setup.specs, rate, shares, route, rows)
+                         held, setup.specs, rate, shares, route, rows,
+                         crewed_share_by_tile=carriage_hours.crewed_share_by_tile(record, merchant, hired, populated),
+                         stock_offered_where_it_stands=rules.merchant_stock_offered_where_it_stands,
+                         cash_for_new_cargo=rules.merchant_cash_for_new_cargo)
     rows.write()

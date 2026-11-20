@@ -11,7 +11,7 @@ merchant that owns the carriers.
 import math
 from typing import Dict, List, Optional, Tuple
 
-from . import carriage_funding, credit, rule_sets, trade_wages
+from . import carriage_funding, credit, merchant_stuck_stock, rule_sets, trade_wages
 from .cohort_reads import populated_tiles
 from .market_memory import KEY_SEPARATOR as MARKET_KEY_SEPARATOR, market_key
 from .merchants import Merchant
@@ -135,6 +135,20 @@ def hiring_area(record, merchant: Merchant, tile: str, populated=None) -> str:
 def _split(key: str) -> Tuple[str, str]:
     trade, tile = key.split(MARKET_KEY_SEPARATOR, 1)
     return trade, tile
+
+
+def source_tile_of(key: str) -> str:
+    """The tile the goods of a crew key leave from (a key is the crew's trade and that tile)."""
+    return _split(key)[1]
+
+
+def crewed_share_by_tile(record, merchant: Merchant, index, populated=None) -> Dict[str, float]:
+    """Per source tile, the share of the crew hours the merchant's plan wants there that it hired this year
+    (`merchant_stuck_stock.crewed_share_by_tile` over `engaged`); nothing for a merchant with no plan."""
+    if not planned(merchant):
+        return {}
+    hired, _wages = engaged(record, merchant, index, populated)
+    return merchant_stuck_stock.crewed_share_by_tile(merchant.carriage_hours_wanted, hired, source_tile_of)
 
 
 def bids(setup, record) -> List[LabourBid]:

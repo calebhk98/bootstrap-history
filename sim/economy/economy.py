@@ -277,7 +277,7 @@ class Economy:
         kept = capital_year.snapshot(record, money, funds)
         plant_runs = self._lend(funds, view, order_book, ledger, pledged, inputs.credit_asks)
         capital_year.invest_idle(setup, record, view, funds, kept, inputs.institutions)       # savings neither lent nor put in shares go into a fund
-        merchant_orders(setup, record, view, self.area_map, self.carriage, order_book)
+        merchant_orders(setup, record, view, self.area_map, self.carriage, order_book, ledger)
         for producer_id, runs in self._rebuild_worn_plant(view, order_book).items():
             plant_runs[producer_id] = plant_runs.get(producer_id, 0.0) + runs
         clear_goods(setup, record, view, self.area_map, order_book, plans, ledger, self.watched_tiles, arrays)

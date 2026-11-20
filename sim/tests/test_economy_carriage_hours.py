@@ -54,6 +54,26 @@ class CarriageHireTests(unittest.TestCase):
         self.assertEqual(carriage_hours.bought_in_plan_markets(record, who, index), {(fixture.LABOURER, "work@town"): 20.0})
 
 
+class CrewedShareByTileTests(unittest.TestCase):
+    def setUp(self):
+        self.record = types.SimpleNamespace(cohorts={"c": types.SimpleNamespace(tile="town")})      # nobody lives on the hills
+
+    def test_the_share_of_each_source_tiles_wanted_hours_that_was_hired(self):
+        who = Merchant("m1", "town", "owner", 1.0)
+        who.carriage_hours_wanted = {market_key(fixture.LABOURER, "hills"): 30.0, market_key(fixture.LABOURER, "town"): 10.0}
+        shares = carriage_hours.crewed_share_by_tile(self.record, who, {("m1", fixture.LABOURER, "work@town"): (20.0, 50.0)})
+        self.assertAlmostEqual(shares["hills"], 0.5)        # the two keys share the one market's twenty hours by their hours
+        self.assertAlmostEqual(shares["town"], 0.5)
+
+    def test_nothing_hired_is_no_share(self):
+        who = Merchant("m1", "town", "owner", 1.0)
+        who.carriage_hours_wanted = {market_key(fixture.LABOURER, "town"): 10.0}
+        self.assertEqual(carriage_hours.crewed_share_by_tile(self.record, who, {}), {"town": 0.0})
+
+    def test_a_merchant_with_no_plan_has_no_shares(self):
+        self.assertEqual(carriage_hours.crewed_share_by_tile(self.record, Merchant("m1", "town", "owner", 1.0), {}), {})
+
+
 class EntrantInAHeldMarketTests(unittest.TestCase):
     def test_a_merchant_at_the_same_pay_is_hired_only_from_hours_the_incumbent_dismissed(self):
         # Eurace random dismissals (applications.py): the entrant draws no one from the incumbent's held hours, only

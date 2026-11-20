@@ -9,7 +9,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
 
 import numpy as np
 
-from . import merchants, merchants_batch, merchants_book, merchants_book_kernel, merchants_legs
+from . import merchant_stuck_stock, merchants, merchants_batch, merchants_book, merchants_book_kernel, merchants_legs
 from .merchants_shares import MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE, RouteShares
 from .protocols import AgentOrders
 from .types import Bid, GoodId, TileId
@@ -111,11 +111,15 @@ def _group_arrays(book, shares) -> Tuple[np.ndarray, np.ndarray, bool]:
 
 
 def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[Tuple[GoodId, TileId], float], specs,
-           interest_rate: float, shares=None, route=None, rows_out=None) -> AgentOrders:
+           interest_rate: float, shares=None, route=None, rows_out=None, crewed_share_by_tile: Optional[Mapping[TileId, float]] = None,
+           stock_offered_where_it_stands=merchant_stuck_stock.kept_whole, cash_for_new_cargo=merchant_stuck_stock.all_cash) -> AgentOrders:
     """The merchant's offers and bids for the year (`merchants.orders`). `shares` is what rival merchants have already
     committed this year (`RouteShares`, or `merchants_book.DenseShares` when the caller sizes many merchants over one
     `route` pass); this merchant adds its own to it. With `rows_out` (an `OrderRows`) the bids and offers are written to it as rows,
-    offers first as `OrderRows` takes them in any order, and no `Bid` or `Offer` is made; the answer then holds no orders."""
+    offers first as `OrderRows` takes them in any order, and no `Bid` or `Offer` is made; the answer then holds no orders.
+    `crewed_share_by_tile` is the share of its carriage plan's crew hours hired this year by source tile (a tile absent: all of
+    them); `stock_offered_where_it_stands` and `cash_for_new_cargo` are the rule set's rules for stock held on a route
+    (merchant_stuck_stock.py; the defaults keep it whole and buy with all the cash)."""
     route = route or merchants_book.route_pass(view, carriage, area_map, specs)
     book = route.book
     shares = shares if shares is not None else RouteShares()
@@ -123,12 +127,13 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
     merchant.routes = {}
     held_index = merchants.held_by_good(held_stock)
     stock = _Stock(route, merchant, held_stock, area_map)
-    remaining = max(0.0, cash) * (1.0 - merchants.BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
-    rows = _rows(route, merchant, stock, interest_rate, None if remaining > 0.0 else held_index)
+    cash_held = max(0.0, cash)
+    rows = _rows(route, merchant, stock, interest_rate, None if cash_held * (1.0 - merchants.BUDGET_SAFETY_SHARE) > 0.0 else held_index)
     shares_args = (merchants.MERCHANT_MARKET_SHARE, MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE)
     # stock already held where a route out pays is carried along every paying route, by what each destination takes
     held_rooms: Dict[Tuple[GoodId, TileId], Dict[Tuple[TileId, str], float]] = {}
     held_best: Dict[Tuple[GoodId, TileId], Tuple[TileId, str]] = {}     # candidates run best first
+    held_carriage: Dict[Tuple[GoodId, TileId], Dict[Tuple[TileId, str], float]] = {}      # what a unit costs to carry along each leg
     if stock.tiles_in_slot:
         holding_source = np.zeros(book.slots, np.bool_)
         holding_source[list(stock.tiles_in_slot)] = True
@@ -145,17 +150,32 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
                     leg = (destination.anchor_tile, destination.area_id)
                     held_best.setdefault((good, tile), leg)
                     held_rooms.setdefault((good, tile), {})[leg] = room
+                    held_carriage.setdefault((good, tile), {})[leg] = float(rows.outlay[row]) - float(rows.price_here[row])
     for key, rooms in held_rooms.items():
         weights = merchants_legs.held_weights(rooms) or {held_best[key]: 1.0}     # stock with nowhere to go still follows the best route
         merchant.routes[key] = merchants_legs.from_weights(weights)
+    # stock off every route is offered whole; of stock on a route, what the rule set says it cannot carry this year
+    on_offer: Dict[Tuple[GoodId, TileId], float] = {}
+    selling: set = set()         # (good, area) where it offers stock it holds for a route: it buys none of that good there
+    carriage_owed = []
+    crewed = crewed_share_by_tile or {}
+    for key, quantity in held_stock.items():
+        legs = merchant.routes.get(key)
+        if legs is None:
+            on_offer[key] = quantity
+            continue
+        offered = min(quantity, stock_offered_where_it_stands(quantity, crewed.get(key[1], 1.0), math.fsum(held_rooms.get(key, {}).values())))
+        if offered > 0.0:
+            on_offer[key] = offered
+            selling.add((key[0], area_map.area_of(key[0], key[1])))
+        carriage_owed.append(merchant_stuck_stock.carriage_set_aside(quantity - offered, held_carriage.get(key, {}), legs))
+    remaining = cash_for_new_cargo(cash_held, math.fsum(carriage_owed)) * (1.0 - merchants.BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
     if rows_out is None:
-        offers = [offer for offer in merchants._holding_offers(merchant, view, area_map, held_stock, specs, interest_rate)
-                  if (offer.good, offer.tile) not in merchant.routes]
+        offers = merchants._holding_offers(merchant, view, area_map, on_offer, specs, interest_rate)
     else:
-        for good, area, tile, quantity, reservation in merchants.holding_offer_figures(merchant, view, area_map, held_stock, specs, interest_rate,
+        for good, area, tile, quantity, reservation in merchants.holding_offer_figures(merchant, view, area_map, on_offer, specs, interest_rate,
                                                                                        stock.expectation_of):
-            if (good, tile) not in merchant.routes:
-                rows_out.offer(merchant.agent_id, good, area, tile, quantity, reservation)
+            rows_out.offer(merchant.agent_id, good, area, tile, quantity, reservation)
         offers = []
     bids: List[Bid] = []
     bought: Dict[Tuple[GoodId, TileId], Dict[Tuple[TileId, str], float]] = {}
@@ -167,6 +187,8 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
             good_index = int(rows.good[row])
             good = book.goods[good_index]
             source = book.areas[good_index][int(rows.source[row])]
+            if (good, source.area_id) in selling:
+                continue
             destination = book.areas[good_index][int(rows.destination[row])]
             quantity = float(quantities[row])
             if not dense:

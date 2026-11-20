@@ -223,12 +223,14 @@ def expected_price(merchant: Merchant, view: MarketView, good: GoodId, area: Are
 
 def orders(merchant: Merchant, view: MarketView, carriage: CarriageTable, area_map: AreaMap, cash: float,
            held_stock: Mapping[Tuple[GoodId, TileId], float], specs: Mapping[GoodId, GoodSpec],
-           interest_rate: float, shares: Optional[RouteShares] = None, route=None, rows_out=None) -> AgentOrders:
+           interest_rate: float, shares: Optional[RouteShares] = None, route=None, rows_out=None, **stock_rules) -> AgentOrders:
     """The merchant's offers and bids for the year. Sets `merchant.routes`. `shares` is what rival
     merchants have already committed this year; this merchant adds its own to it. Many merchants sized in one
     pass share `route` (`merchants_book.route_pass`) and `merchants_book.DenseShares` (`merchants_plan.orders`). With `rows_out` (an
-    `OrderRows`) the orders are written to it as rows and the answer holds none."""
-    return merchants_plan.orders(merchant, view, carriage, area_map, cash, held_stock, specs, interest_rate, shares, route, rows_out)
+    `OrderRows`) the orders are written to it as rows and the answer holds none. `stock_rules` are the rule set's rules
+    for stock held on a route and the crewed share of its plan by tile (`merchants_plan.orders`)."""
+    return merchants_plan.orders(merchant, view, carriage, area_map, cash, held_stock, specs, interest_rate, shares, route, rows_out,
+                                 **stock_rules)
 
 
 def ships_held_stock(merchant: Merchant, held_stock: Mapping[Tuple[GoodId, TileId], float]) -> bool:
