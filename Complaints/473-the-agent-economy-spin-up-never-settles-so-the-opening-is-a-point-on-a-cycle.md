@@ -1992,7 +1992,10 @@ The slow suite and the openings' rebuild likewise wait for the pull request.
    is the shape to try, since the hold to expected sales is what slumps on the three-tile economy.
 2. One bankruptcy should not idle every workplace of a recipe on a tile: a producer stands for many, so a share of
    them fails (`close_kernel.close_rows`, `K_BANKRUPT_IDLE`; `firm_finance`). This is the largest jump left on the
-   three-tile economy and it recurs.
+   three-tile economy and it recurs: over a longer run every start five per cent off meets one, the base run none.
+   Taking the idle year out alone changes nothing (tried by setting `K_BANKRUPT_IDLE` to nothing in memory): the
+   bankrupt producer has no coin left to hire with. What to trace is why the dearest producer of a good (the town's
+   grain farms, on the tile with the highest wage) loses coin year after year without growing smaller.
 3. A capacity rule with one rest point, which needs the coin a producer keeps to follow its working scale first
    (the three rules tried above; Update 38's purse). With 2 this is what the three expected failures of the smoke
    test wait for.
