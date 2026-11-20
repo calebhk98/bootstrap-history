@@ -1,7 +1,7 @@
 """The clearing rule for a good's markets: each market trades at one price. The price is the one where its buyers'
 schedules meet its sellers' supply (the producers' curves over the price, `stock_supply` and `fresh_supply`, and the
 other sellers' offers at the reservations they posted), moved no further from last year's than a year allows
-(`price_step.within_a_years_move`); where that holds the price short of the clearing one, the long side goes short
+(`price_step.within_a_years_move`; a market's first price is held as near to what its producers expect); where that holds the price short of the clearing one, the long side goes short
 (`goods_market.clear_at_price`). The sellers do not re-price, search for an ask or raise one inside the year, and what a
 seller will not let go at the price stays in stock. It stands where `goods_good_clear.clear_good` stands (rule_sets.py)
 and returns the same `GoodClearing`."""
@@ -86,12 +86,24 @@ def clearing_price(buyers, curves, posted: Sequence[Offer]) -> Optional[float]:
     return goods_market.crossing(buyers, goods_market.in_clearing_order(posted), with_wants=False)[0]
 
 
+def price_moved_from(last_price: Optional[float], curves, buyers) -> Optional[float]:
+    """The price the year's move is measured from: last year's; in a market with none, the price its producers are
+    content at (the mean over their curves, by the units each holds), else the price its buyers reckon the good at. None
+    where the market has none of these, and the first price is then whatever clears it."""
+    if last_price is not None and last_price > 0.0:
+        return last_price
+    held = math.fsum(curve.offer.quantity for curve in curves)
+    if held > 0.0:
+        return math.fsum(curve.content_price * curve.offer.quantity for curve in curves) / held
+    return buyers.price_scale
+
+
 def at_one_price(context, good: str, area: str, last_price, bids: list, offers: list):
     """(the offers the market traded: each producer's as the units its supply curve lets go at the year's price, the
     rest as posted; the market's result at that one price, with who bought from whom)."""
     buyers = goods_market.Buyers(bids, last_price)
     curves, posted = stock_supply.curves_and_posted(context.setup, context.record, context.view, good, offers)
-    price = price_step.within_a_years_move(clearing_price(buyers, curves, posted), last_price)
+    price = price_step.within_a_years_move(clearing_price(buyers, curves, posted), price_moved_from(last_price, curves, buyers))
     if price is None or not price > 0.0:
         return offers, goods_market.clear_at_one_price(bids, offers, good, area, context.setup.currency_id, last_price, buyers)
     offers = posted + [curve.offer_at(price) for curve in curves]

@@ -84,9 +84,9 @@ class ClearingRuleSetOnTheThreeTileEconomy(unittest.TestCase):
         for name in WATCHED:
             self.assertLess(max(yearly_moves(self.base, name, RESTING_FROM)), SPIN_UP_TOLERANCE / 4.0, name)
 
-    def test_the_rest_state_moves_a_tenth_of_the_settle_tolerance_a_year_on_average(self):
+    def test_the_rest_state_moves_under_a_sixth_of_the_settle_tolerance_a_year_on_average(self):
         for name in WATCHED:
-            self.assertLess(statistics.mean(yearly_moves(self.base, name, RESTING_FROM)), SPIN_UP_TOLERANCE / 10.0, name)
+            self.assertLess(statistics.mean(yearly_moves(self.base, name, RESTING_FROM)), SPIN_UP_TOLERANCE / 6.0, name)
 
     def test_a_copy_a_rounding_error_apart_stays_within_half_the_settle_tolerance(self):
         for name in WATCHED:

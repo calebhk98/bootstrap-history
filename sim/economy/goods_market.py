@@ -97,6 +97,7 @@ class Buyers:
     def __init__(self, bids: Sequence[Bid], last_price: Optional[float]):
         self.bids = sorted(bids, key=_BID_ORDER)
         scale = _price_scale(self.bids, last_price)
+        self.price_scale = scale                                                                    # the mean price the buyers reckon the good at, else the last price; None with neither
         self.minimum_price = None if scale is None else MINIMUM_PRICE_SHARE_OF_REFERENCE * scale   # None: no unit to tie a token price to
         self.last_price = last_price
 

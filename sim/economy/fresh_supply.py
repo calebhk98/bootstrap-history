@@ -24,6 +24,11 @@ class FreshCurve:
         return self.offer.quantity * share_working(price, self.expected_price) / share_working(1.0, 1.0)
 
     @property
+    def content_price(self) -> float:
+        """The price at which the seller is content to let go all it made: the one it expected (`StockCurve.content_price`'s twin)."""
+        return self.expected_price
+
+    @property
     def lowest_price(self) -> float:
         """The price under which next to nothing is let go: none above nothing (the share falls off smoothly)."""
         return 0.0

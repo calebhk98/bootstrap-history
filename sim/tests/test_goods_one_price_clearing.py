@@ -7,7 +7,7 @@ import unittest
 
 from sim.economy import goods_market
 from sim.economy.fresh_supply import FreshCurve
-from sim.economy.goods_clear_one_price import clearing_price, pairing_of, price_where_supply_meets, supply_at
+from sim.economy.goods_clear_one_price import clearing_price, pairing_of, price_moved_from, price_where_supply_meets, supply_at
 from sim.economy.stock_supply import StockCurve
 from sim.economy.types import Bid, Fill, Offer
 
@@ -80,6 +80,26 @@ class ClearingPrice(unittest.TestCase):
     def test_with_no_curve_the_price_is_where_the_buyers_meet_the_posted_offers(self):
         posted = [Offer("merchant:a", "grain_kg", "area", "tile", 5.0, 3.0)]
         self.assertAlmostEqual(clearing_price(budget_buyers(40.0), [], posted), 40.0 / 5.0, places=6)
+
+
+class PriceMovedFrom(unittest.TestCase):
+    def setUp(self):
+        self.stock = StockCurve(Offer("producer:a", "grain_kg", "area", "tile", 30.0, 1.0), 4.0, 2.0)
+        self.fresh = FreshCurve(Offer("producer:baker", "grain_kg", "area", "tile", 10.0, 0.0), 6.0)
+        self.buyers = goods_market.Buyers([Bid("household:a", "grain_kg", "area", "tile", 5.0, 0.0, 9.0, 0.0, 100.0)], None)
+
+    def test_last_years_price_where_the_market_has_one(self):
+        self.assertEqual(price_moved_from(3.5, [self.stock, self.fresh], self.buyers), 3.5)
+
+    def test_with_no_price_yet_the_mean_price_its_producers_are_content_at_by_the_units_each_holds(self):
+        for no_price in (None, math.nan, 0.0):
+            self.assertAlmostEqual(price_moved_from(no_price, [self.stock, self.fresh], self.buyers), (2.0 * 30.0 + 6.0 * 10.0) / 40.0)
+
+    def test_with_no_price_and_no_producer_the_price_the_buyers_reckon_the_good_at(self):
+        self.assertAlmostEqual(price_moved_from(None, [], self.buyers), 9.0)
+
+    def test_none_where_nobody_names_a_price(self):
+        self.assertIsNone(price_moved_from(None, [], goods_market.Buyers([], None)))
 
 
 def fill(agent, quantity, price, side):

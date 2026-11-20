@@ -46,12 +46,12 @@ class ConstantsArrayForClearing(unittest.TestCase):
         search = close_pack.constants_array()
         clearing = close_pack.constants_array_for_clearing()
         self.assertEqual(clearing.shape, search.shape)
-        changed = {K_EXPECT, K_REGRESS, K_ASK_STEP, K_SOLD_OUT, K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT}
+        changed = {K_EXPECT, K_ASK_STEP, K_SOLD_OUT, K_WORKING_WEIGHT, K_WORKING_SHARE, K_COIN_ON_WORKING, K_EXCESS_PAYOUT}
         for index in range(len(search)):
             if index not in changed:
                 self.assertEqual(clearing[index], search[index])
         self.assertEqual(clearing[K_EXPECT], close_pack.EXPECTATION_SHARE_MOVED_UNDER_CLEARING)
-        self.assertEqual(clearing[K_REGRESS], 0.0)
+        self.assertEqual(clearing[K_REGRESS], search[K_REGRESS])      # prices keep their pull toward cost
         self.assertEqual(clearing[K_ASK_STEP], 0.0)
         self.assertLess(clearing[K_SOLD_OUT], 0.0)
         self.assertEqual(clearing[K_WORKING_WEIGHT], 1.0)
