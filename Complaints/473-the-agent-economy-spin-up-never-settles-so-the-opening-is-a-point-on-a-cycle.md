@@ -2071,8 +2071,9 @@ profile; no command in the tree prints a year's time for a named rule set.
   silver stays dearer than the mint pays. Prices and wages fall with the money. Only in the last few years does the
   mint begin to strike again and the price level hold, with the wage and the hours still moving a few per cent a year.
   So on the clearing set England does come to rest in its price level, about a century on, at a level far under the
-  opening's. The check `opening_wage_anchor`, which fails on main, says the same of the opening from the other side:
-  its money wage stands well above what the coin metal costs to make.
+  opening's. (An earlier version of this entry read the failing check `opening_wage_anchor` as saying the same of the
+  opening. That was a misreading: the check compares the coin metal's cost in hours across civilisations from the
+  price solver, never opens an economy, and says nothing about England's money stock.)
 - *The same spin-up started with every holder's coin cut to about what that run ended with* (a scratch runner that
   posts `spin_up_ensemble.scaling_transfers` for every holder before the first year; no command in the tree does it).
   The mint then strikes each year what wears and the money stock holds from the start, but wages and prices fall much
