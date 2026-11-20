@@ -34,7 +34,7 @@ from . import goods_market_kernels
 from .goods_market_demand import DemandArrays, DemandSchedule
 from .goods_market_fills import buyer_fills, make_fill, seller_fills, without_edge_self_trades, without_washed
 from .goods_market_logit import allocate
-from .goods_market_ration import ration
+from .goods_market_ration import ration, ration_after_first
 from .goods_market_solve import solve_price
 from . import crossing_columns, crossing_price
 from .bid_columns import columns_of_bids
@@ -141,11 +141,13 @@ def clear_at_one_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodI
 
 
 def clear_at_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId, currency: CurrencyId,
-                   price: float, last_price: Optional[float], buyers: Optional[Buyers] = None) -> ClearingResult:
+                   price: float, last_price: Optional[float], buyers: Optional[Buyers] = None, at_a_bid_top: bool = False) -> ClearingResult:
     """Trade one market for one year at a price given to it: each buyer's want at that price against the offers whose
     reservation it meets. The side that is short is served in full; buyers that cannot all be served go short by priority
     tier, sellers that cannot all sell do so lowest reservation first and the marginal group pro rata. Nothing trades
-    where no offer takes the price, nothing is wanted at it, or what is on offer is float residue."""
+    where no offer takes the price, nothing is wanted at it, or what is on offer is float residue. `at_a_bid_top` says
+    the price is the most some bid pays (the wants step down just above it): the buyers are then served what they would
+    still take a hair above the price first, and the bids that end at the price share the rest."""
     if buyers is None:
         buyers = Buyers(bids, last_price)
     bids = buyers.bids
@@ -156,14 +158,16 @@ def clear_at_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, a
     wanted = math.fsum(wants)
     if not eligible or wanted <= 0.0 or supply <= ROUNDING_SHARE * wanted:
         return _empty(good, area, currency, price, bids, supply, offers)
-    return _traded_at(bids, wants, eligible, supply, good, area, currency, price)
+    first = buyers.schedule.each_at(price * (1.0 + ROUNDING_SHARE)) if at_a_bid_top else None
+    return _traded_at(bids, wants, eligible, supply, good, area, currency, price, first)
 
 
 def _traded_at(bids: Sequence[Bid], wants: Sequence[float], eligible: List[Tuple[float, Offer]], supply: float, good: GoodId,
-               area: AreaId, currency: CurrencyId, price: float) -> ClearingResult:
-    """The trade of `bids` (in clearing order, wanting `wants`) with the `eligible` offers at `price`."""
+               area: AreaId, currency: CurrencyId, price: float, first: Optional[Sequence[float]] = None) -> ClearingResult:
+    """The trade of `bids` (in clearing order, wanting `wants`) with the `eligible` offers at `price`; `first` is the part
+    of each want served before the rest (`ration_after_first`), where given."""
     wanted = math.fsum(wants)
-    served = ration(bids, wants, min(wanted, supply))
+    served = ration(bids, wants, min(wanted, supply)) if first is None else ration_after_first(bids, wants, first, min(wanted, supply))
     traded = math.fsum(served)
     seller_quantities = _fill_sellers(eligible, traded)
 

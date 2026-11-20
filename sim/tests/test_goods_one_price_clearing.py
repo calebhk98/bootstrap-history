@@ -7,9 +7,10 @@ import unittest
 
 from sim.economy import goods_market
 from sim.economy.fresh_supply import FreshCurve
-from sim.economy.goods_clear_one_price import clearing_price, pairing_of, price_moved_from, price_where_supply_meets, supply_at
+from sim.economy.goods_clear_one_price import (bid_top_at, clearing_price, pairing_of, price_moved_from, price_where_supply_meets,
+                                                supply_at, untraded_quote)
 from sim.economy.stock_supply import StockCurve
-from sim.economy.types import Bid, Fill, Offer
+from sim.economy.types import QUOTE_BEST_UNFILLED_BID, QUOTE_LOWEST_UNFILLED_ASK, Bid, Fill, Offer
 
 
 def demand_at(price):
@@ -100,6 +101,74 @@ class PriceMovedFrom(unittest.TestCase):
 
     def test_none_where_nobody_names_a_price(self):
         self.assertIsNone(price_moved_from(None, [], goods_market.Buyers([], None)))
+
+
+def topped_bid(buyer, top, budget=1e9):
+    return Bid(buyer, "silver_kg", "area", "tile", 0.0, 50.0, top, 0.0, budget, 0, top)
+
+
+class BidTopAt(unittest.TestCase):
+    def test_a_bid_that_ends_a_hair_under_the_price_is_at_it(self):
+        self.assertEqual(bid_top_at([topped_bid("edge:mint", 10.0)], 10.0 * (1.0 + 1e-13)), 10.0)
+
+    def test_a_bid_that_ends_at_the_price_is_at_it(self):
+        self.assertEqual(bid_top_at([topped_bid("edge:mint", 10.0)], 10.0), 10.0)
+
+    def test_none_where_every_bid_ends_well_away_from_the_price(self):
+        self.assertIsNone(bid_top_at([topped_bid("edge:mint", 10.0), topped_bid("household:a", 30.0)], 12.0))
+        self.assertIsNone(bid_top_at([Bid("household:a", "silver_kg", "area", "tile", 5.0, 0.0, 9.0, 0.0, 100.0)], 12.0))
+
+    def test_the_highest_of_several_at_the_price(self):
+        self.assertEqual(bid_top_at([topped_bid("a", 10.0 * (1.0 - 1e-12)), topped_bid("b", 10.0)], 10.0 * (1.0 + 1e-13)), 10.0)
+
+    def test_a_bid_with_no_money_behind_it_is_no_step(self):
+        self.assertIsNone(bid_top_at([topped_bid("edge:mint", 10.0, budget=0.0)], 10.0))
+
+    def test_the_search_stops_a_hair_above_a_bids_top_and_the_top_is_found_from_there(self):
+        # the mint wants 50 at ten or less; the household wants five whatever the price; the curve lets go more than five
+        # and less than fifty-five at ten, so the wants step from above the supply to under it at ten
+        curve = StockCurve(Offer("producer:a", "silver_kg", "area", "tile", 30.0, 1.0), 4.0, 2.0)
+        bids = [topped_bid("edge:mint", 10.0), Bid("household:a", "silver_kg", "area", "tile", 5.0, 0.0, 9.0, 0.0, 1e9)]
+        buyers = goods_market.Buyers(bids, None)
+        found = price_where_supply_meets(buyers.schedule.total_at, curve.supply_at, 1.0, 40.0)
+        self.assertGreater(found, 10.0)
+        self.assertEqual(bid_top_at(buyers.bids, found), 10.0)
+
+
+class UntradedQuote(unittest.TestCase):
+    def setUp(self):
+        # holds 30 against a target of 4: lets go from well under its content price of two, down to its floor of 1.5
+        self.stock = StockCurve(Offer("producer:a", "lard_kg", "area", "tile", 30.0, 1.5), 4.0, 2.0, 1.5)
+        self.fresh = FreshCurve(Offer("producer:baker", "lard_kg", "area", "tile", 10.0, 0.0), 6.0)
+
+    def test_with_nobody_bidding_the_least_a_seller_with_units_takes(self):
+        quote = untraded_quote([], [self.stock, self.fresh], [])
+        self.assertEqual(quote.kind, QUOTE_LOWEST_UNFILLED_ASK)
+        self.assertAlmostEqual(quote.price, self.stock.lowest_price)
+
+    def test_a_good_that_cannot_be_kept_asks_the_price_its_maker_expected(self):
+        quote = untraded_quote([], [self.fresh], [])
+        self.assertEqual((quote.kind, quote.price), (QUOTE_LOWEST_UNFILLED_ASK, 6.0))
+
+    def test_a_posted_offer_under_the_curves_is_the_least(self):
+        quote = untraded_quote([], [self.stock], [Offer("merchant:a", "lard_kg", "area", "tile", 3.0, 0.5)])
+        self.assertEqual((quote.kind, quote.price), (QUOTE_LOWEST_UNFILLED_ASK, 0.5))
+
+    def test_buyers_who_would_pay_the_ask_and_still_got_nothing_leave_the_ask_as_the_quote(self):
+        # the year's price was held under the sellers' ask: the market heads for the ask, not for a making cost
+        bids = [Bid("household:a", "lard_kg", "area", "tile", 5.0, 0.0, 9.0, 0.0, 100.0)]
+        quote = untraded_quote(bids, [self.stock], [])
+        self.assertEqual(quote.kind, QUOTE_LOWEST_UNFILLED_ASK)
+        self.assertAlmostEqual(quote.price, self.stock.lowest_price)
+
+    def test_buyers_who_top_out_under_the_ask_quote_their_best_bid(self):
+        bids = [Bid("household:a", "lard_kg", "area", "tile", 5.0, 0.0, 1.0, 0.0, 100.0, 0, 1.2)]
+        quote = untraded_quote(bids, [self.stock], [])
+        self.assertEqual((quote.kind, quote.price), (QUOTE_BEST_UNFILLED_BID, 1.2))
+
+    def test_a_seller_with_nothing_to_sell_asks_nothing(self):
+        empty = StockCurve(Offer("producer:a", "lard_kg", "area", "tile", 0.0, 1.5), 4.0, 2.0, 1.5)
+        self.assertIsNone(untraded_quote([], [empty], []))
 
 
 def fill(agent, quantity, price, side):

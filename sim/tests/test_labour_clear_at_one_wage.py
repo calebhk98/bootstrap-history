@@ -79,6 +79,21 @@ class ClearOneAtOneWage(unittest.TestCase):
             self.assertLessEqual(result.hours_hired, result.hours_offered + 1e-9)
             self.assertLessEqual(result.hours_hired, result.hours_wanted + 1e-9)
 
+    def test_a_floor_that_rose_above_last_years_wage_is_climbed_to_and_those_who_can_pay_the_wage_still_hire(self):
+        # the floor is 3 an hour (300 a year over 100 hours); last year's wage was 1; the employer pays up to 2.5
+        state = make_state(wage=1.0)
+        bids = [bid("a", 500.0, maximum=2.5)]
+        result = clear(state, bids, make_inputs(bids, ask_floor=300.0))
+        self.assertAlmostEqual(result.wage, 1.0 + wage_step.WAGE_SHARE_MOVED_PER_YEAR * (3.0 - 1.0))
+        self.assertAlmostEqual(result.hours_hired, 500.0)
+
+    def test_an_employer_capped_under_the_wage_paid_hires_nobody_while_the_wage_climbs(self):
+        state = make_state(wage=1.0)
+        bids = [bid("a", 500.0, maximum=1.5)]
+        result = clear(state, bids, make_inputs(bids, ask_floor=300.0))
+        self.assertAlmostEqual(result.wage, 2.0)
+        self.assertEqual(result.hours_hired, 0.0)
+
     def test_the_state_is_written(self):
         state = make_state()
         result = clear(state, [bid("a", 2000.0)])

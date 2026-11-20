@@ -91,5 +91,31 @@ class NothingTrades(unittest.TestCase):
         self.assertAlmostEqual(result.quantity, 30.0 / PRICE)
 
 
+class ThePriceIsABidsTop(unittest.TestCase):
+    """A mint takes any quantity at its price and nothing above it; the households would pay more."""
+
+    def setUp(self):
+        self.bids = [fixed_bid("edge:mint", 100.0, priority=-1, maximum_price=PRICE), fixed_bid("household:a", 20.0),
+                     fixed_bid("household:b", 10.0)]
+        self.offers = [offer("producer:mine", 50.0, 1.0)]
+
+    def test_the_buyers_who_would_pay_more_are_served_first_and_the_bid_that_ends_at_the_price_takes_the_rest(self):
+        result = clear_at_price(self.bids, self.offers, GOOD, AREA, MONEY, PRICE, None, at_a_bid_top=True)
+        self.assertAlmostEqual(bought(result, "household:a"), 20.0)
+        self.assertAlmostEqual(bought(result, "household:b"), 10.0)
+        self.assertAlmostEqual(bought(result, "edge:mint"), 20.0)
+        self.assertAlmostEqual(result.quantity, 50.0)
+
+    def test_without_the_step_the_tiers_alone_decide(self):
+        result = clear_at_price(self.bids, self.offers, GOOD, AREA, MONEY, PRICE, None)
+        self.assertAlmostEqual(bought(result, "edge:mint"), 50.0)
+        self.assertEqual(bought(result, "household:a"), 0.0)
+
+    def test_with_enough_on_offer_everyone_is_served_either_way(self):
+        result = clear_at_price(self.bids, [offer("producer:mine", 500.0, 1.0)], GOOD, AREA, MONEY, PRICE, None, at_a_bid_top=True)
+        self.assertAlmostEqual(result.quantity, 130.0)
+        self.assertAlmostEqual(bought(result, "edge:mint"), 100.0)
+
+
 if __name__ == "__main__":
     unittest.main()

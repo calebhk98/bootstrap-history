@@ -44,6 +44,12 @@ def stepped(inputs_for_year=None):
     return rows
 
 
+def mean_plant(rows):
+    """The smelters' plant averaged over the resting years."""
+    resting = rows[RESTING_FROM:]
+    return sum(row["plant"] for row in resting) / len(resting)
+
+
 class ClearingRuleSetWithPlant(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -63,8 +69,9 @@ class ClearingRuleSetWithPlant(unittest.TestCase):
         self.assertGreater(self.base[-1]["plant"], 0.5 * self.base[0]["plant"])
 
     def test_a_tenth_fewer_people_end_with_less_plant(self):
+        # over the resting years, not the last one: the plant itself swings by a few per cent with its own life
         self.assertEqual(self.fewer[SHOCK_YEAR - 1]["plant"], self.base[SHOCK_YEAR - 1]["plant"])
-        self.assertLess(self.fewer[-1]["plant"], 0.95 * self.base[-1]["plant"])
+        self.assertLess(mean_plant(self.fewer), 0.95 * mean_plant(self.base))
 
 
 if __name__ == "__main__":

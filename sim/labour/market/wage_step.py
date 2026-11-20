@@ -1,5 +1,6 @@
 """The wage a market carries from one year to the next under the clearing rules: last year's wage moved a share of the
-way to the wage that clears the market, by the same share whether that is a rise or a fall."""
+way to the wage that clears the market (never headed under the least an hour is sold for), by the same share whether
+that is a rise or a fall."""
 from typing import Optional
 
 from sim.constants import declare
@@ -15,7 +16,9 @@ WAGE_SHARE_MOVED_PER_YEAR = declare(
 
 def symmetric_wage(last: Optional[float], goal: float, floor: float, ceiling: float,
                    share: float = WAGE_SHARE_MOVED_PER_YEAR) -> float:
-    """The year's wage: `goal` where the market has no wage yet, else `last` moved `share` of the way to `goal`; never
-    under `floor`, and no higher than `ceiling` where that is above the floor."""
-    wage = goal if last is None else last + share * (goal - last)
-    return max(floor, min(wage, ceiling))
+    """The year's wage: where it is headed (`goal`, or `floor` where the goal is under it) in a market with no wage yet,
+    else `last` moved `share` of the way there; no higher than `ceiling` where that is above the floor. A wage at or
+    above the floor so stays there, and a floor that rose above last year's wage is climbed to by the share a year."""
+    headed = max(goal, floor)
+    wage = headed if last is None else last + share * (headed - last)
+    return min(wage, max(ceiling, floor))

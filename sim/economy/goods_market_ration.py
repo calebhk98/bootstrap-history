@@ -31,3 +31,16 @@ def ration(bids: Sequence[Bid], wants: List[float], available: float) -> List[fl
             result.extend([want * share for want in tier_wants])
             remaining = 0.0
     return result
+
+
+def ration_after_first(bids: Sequence[Bid], wants: List[float], first: Sequence[float], available: float) -> List[float]:
+    """Each buyer's share of `available` when the part `first` of its want is served before the rest of it: the first
+    parts by tier, then the rest of every want by tier out of what is left. The rest is what the bids that end at the
+    market's price want, so they are the ones that go short there."""
+    first = [min(want, part) for want, part in zip(wants, first)]
+    served = ration(bids, first, available)
+    left = available - math.fsum(served)
+    if left <= 0.0:
+        return served
+    rest = ration(bids, [want - part for want, part in zip(wants, first)], left)
+    return [part + more for part, more in zip(served, rest)]

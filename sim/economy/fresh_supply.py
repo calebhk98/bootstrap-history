@@ -34,6 +34,11 @@ class FreshCurve:
         return 0.0
 
     @property
+    def asking_price(self) -> float:
+        """What the seller asks for a unit nobody bought: the price it expected (`StockCurve.asking_price`'s twin)."""
+        return self.expected_price
+
+    @property
     def highest_price(self) -> float:
         """The price at which everything is let go."""
         return self.expected_price

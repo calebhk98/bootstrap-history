@@ -1,7 +1,7 @@
 """The clearing rule for the year's labour markets: each (trade, area) pays one wage, last year's moved a share of the way
 to the wage where the hours offered meet the hours employers want (`wage_step.symmetric_wage`), and the hours go to the
 bids that want them at that wage (`hires_at_wage`). No rounds of search, no ask that drifts: a market at its clearing
-wage stays there. It stands where `clearing.clear_all` stands (YearInputs.clearing) and writes what that writes."""
+wage stays there, and where the least an hour is sold for rises above the wage, the wage climbs to it by the same share. It stands where `clearing.clear_all` stands (YearInputs.clearing) and writes what that writes."""
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
 from . import clearing
@@ -51,7 +51,7 @@ def clear_one_at_one_wage(state: MarketState, inputs: YearInputs, trade: str, ar
     ordered = sorted(bids, key=lambda bid: (bid.employer, bid.maximum_wage, bid.hours))
     employers = [bid.employer for bid in ordered]
     caps = [bid.maximum_wage for bid in ordered]
-    wanted_by_bid = wanted_at_wage(wage, floor, caps, [bid.hours for bid in ordered])
+    wanted_by_bid = wanted_at_wage(wage, min(floor, wage), caps, [bid.hours for bid in ordered])     # a wage still climbing to its floor is the wage paid
     wanted, standing = ranks_of(employers, caps, wanted_by_bid)
     hired = {employer: 0.0 for employer in wanted}
     hired.update(by_employer(employers, hires_at_wage(offered, wanted_by_bid)))

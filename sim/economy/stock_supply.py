@@ -59,6 +59,11 @@ class StockCurve:
         """The price at which the seller has let everything go."""
         return max(self.floor_price, self.content_price * math.exp(STOCK_PRICE_SLOPE))
 
+    @property
+    def asking_price(self) -> float:
+        """What the seller asks for a unit nobody bought: the least it lets one go for."""
+        return self.lowest_price
+
     def offer_at(self, price: float) -> Offer:
         """The seller's offer in a market that clears at `price`: the units it lets go at it, at that price (at its
         highest price where it lets everything go under `price`)."""

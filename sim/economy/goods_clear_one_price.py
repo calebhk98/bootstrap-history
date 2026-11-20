@@ -2,22 +2,25 @@
 schedules meet its sellers' supply (the producers' curves over the price, `stock_supply` and `fresh_supply`, and the
 other sellers' offers at the reservations they posted), moved no further from last year's than a year allows
 (`price_step.within_a_years_move`; a market's first price is held as near to what its producers expect); where that holds the price short of the clearing one, the long side goes short
-(`goods_market.clear_at_price`). The sellers do not re-price, search for an ask or raise one inside the year, and what a
+(`goods_market.clear_at_price`). Where the buyers' wants step down at the most some bid pays (a mint's price for the coin
+metal) from more than is on offer to less, the market clears at that price and the bids that end there take what the
+buyers who would pay more leave. A market that trades nothing quotes what its sellers ask (`untraded_quote`). The sellers do not re-price, search for an ask or raise one inside the year, and what a
 seller will not let go at the price stays in stock. It stands where `goods_good_clear.clear_good` stands (rule_sets.py)
 and returns the same `GoodClearing`."""
 import dataclasses
 import math
 from typing import Callable, Optional, Sequence
 
-from . import goods_market, price_step, stock_supply
+from . import goods_market, market_quote, price_step, stock_supply
 from .goods_good_clear import GoodClearing, Untraded, note_household_limit
 from .goods_table_group import note_stock_slots, rows_of_good
-from .types import Fill, Offer, Pairing
+from .types import QUOTE_LOWEST_UNFILLED_ASK, Bid, Fill, Offer, Pairing, Quote
 
 
 PRICE_SOLVE_STEPS = 60      # a numerical bound: halvings of the bracket the clearing price is searched in
 LOWEST_SHARE_OF_BRACKET_TOP = 1e-9   # a numerical bound: the bracket goes no lower than this share of its top (a pile many times its
                                      # target puts the bottom at nothing, which has no logarithm)
+BID_TOP_RESOLUTION = 1e-9            # a numerical bound: a bid that ends within this share under the price the search found ends at it
 
 
 def supply_at(price: float, curves, posted: Sequence[Offer]) -> float:
@@ -86,6 +89,26 @@ def clearing_price(buyers, curves, posted: Sequence[Offer]) -> Optional[float]:
     return goods_market.crossing(buyers, goods_market.in_clearing_order(posted), with_wants=False)[0]
 
 
+def bid_top_at(bids: Sequence[Bid], price: float) -> Optional[float]:
+    """The most a funded bid pays (`maximum_price`) where that is `price` or a hair under it, the highest of them; None
+    where no bid ends there. The buyers' wants step down at a bid's top, and the search for the clearing price stops a
+    hair above such a step with the bid left out: the market clears at the top itself (`at_one_price`)."""
+    tops = [bid.maximum_price for bid in bids if bid.budget > 0.0 and price * (1.0 - BID_TOP_RESOLUTION) <= bid.maximum_price <= price]
+    return max(tops) if tops else None
+
+
+def untraded_quote(bids: Sequence[Bid], curves, posted: Sequence[Offer]) -> Optional[Quote]:
+    """What a market that traded nothing this year quotes: `market_quote.no_trade_quote` over what its sellers ask (each
+    curve's `asking_price` for the units it holds, the posted offers as posted). Where buyers would have paid an ask and
+    still got nothing (the year's price was held under it), the quote is the lowest ask, which is where the price
+    heads; None where no seller holds a unit and no buyer names a top."""
+    asks = [Offer(curve.offer.seller, curve.offer.good, curve.offer.area, curve.offer.tile, curve.offer.quantity, curve.asking_price)
+            for curve in curves] + list(posted)
+    quote = market_quote.no_trade_quote(bids, asks)
+    lowest = market_quote.lowest_unfilled_ask(asks)
+    return Quote(QUOTE_LOWEST_UNFILLED_ASK, lowest) if quote is None and lowest is not None else quote
+
+
 def price_moved_from(last_price: Optional[float], curves, buyers) -> Optional[float]:
     """The price the year's move is measured from: last year's; in a market with none, the price its producers are
     content at (the mean over their curves, by the units each holds), else the price its buyers reckon the good at. None
@@ -103,12 +126,19 @@ def at_one_price(context, good: str, area: str, last_price, bids: list, offers: 
     rest as posted; the market's result at that one price, with who bought from whom)."""
     buyers = goods_market.Buyers(bids, last_price)
     curves, posted = stock_supply.curves_and_posted(context.setup, context.record, context.view, good, offers)
-    price = price_step.within_a_years_move(clearing_price(buyers, curves, posted), price_moved_from(last_price, curves, buyers))
+    found = clearing_price(buyers, curves, posted)
+    price = price_step.within_a_years_move(found, price_moved_from(last_price, curves, buyers))
     if price is None or not price > 0.0:
         return offers, goods_market.clear_at_one_price(bids, offers, good, area, context.setup.currency_id, last_price, buyers)
+    top = bid_top_at(buyers.bids, price) if price == found else None      # a price the year's move holds is no step in the wants
+    if top is not None:
+        price = top
     offers = posted + [curve.offer_at(price) for curve in curves]
-    result = goods_market.clear_at_price(bids, offers, good, area, context.setup.currency_id, price, last_price, buyers)
-    return offers, dataclasses.replace(result, pairing=pairing_of(result.fills)) if result.quantity > 0.0 else result
+    result = goods_market.clear_at_price(bids, offers, good, area, context.setup.currency_id, price, last_price, buyers,
+                                         at_a_bid_top=top is not None)
+    if result.quantity > 0.0:
+        return offers, dataclasses.replace(result, pairing=pairing_of(result.fills))
+    return offers, dataclasses.replace(result, quote=untraded_quote(buyers.bids, curves, posted))
 
 
 def clear_good_at_one_price(context, good: str, good_id: int) -> GoodClearing:
