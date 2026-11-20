@@ -3,12 +3,41 @@ offers at the reservation prices they posted (`goods_market.clear_at_one_price`)
 an ask or raise one inside the year: the market finds the price, and what a seller will not let go at it stays in stock.
 It stands where `goods_good_clear.clear_good` stands (rule_sets.py) and returns the same `GoodClearing`."""
 import dataclasses
-from typing import Sequence
+import math
+from typing import Callable, Sequence
 
 from . import goods_market, stock_supply
 from .goods_good_clear import GoodClearing, Untraded, note_household_limit
 from .goods_table_group import note_stock_slots, rows_of_good
-from .types import Fill, Pairing
+from .types import Fill, Offer, Pairing
+
+
+PRICE_SOLVE_STEPS = 60      # a numerical bound: halvings of the bracket the clearing price is searched in
+
+
+def supply_at(price: float, curves, posted: Sequence[Offer]) -> float:
+    """Units on the market at a price: what each supply curve lets go at it, and the posted offers that take it."""
+    return (math.fsum(curve.supply_at(price) for curve in curves)
+            + math.fsum(offer.quantity for offer in posted if offer.reservation_price <= price))
+
+
+def price_where_supply_meets(demand_at: Callable[[float], float], supply_at_price: Callable[[float], float],
+                             lowest: float, highest: float) -> float:
+    """The lowest price from `lowest` to `highest` at which the units supplied (rising in the price) cover the units
+    wanted (falling in it); `highest` where they do not even there, `lowest` where they do already. Found by halving
+    the bracket in the log of the price."""
+    if supply_at_price(lowest) >= demand_at(lowest):
+        return lowest
+    if supply_at_price(highest) < demand_at(highest):
+        return highest
+    low, high = math.log(lowest), math.log(highest)
+    for _step in range(PRICE_SOLVE_STEPS):
+        middle = (low + high) / 2.0
+        if supply_at_price(math.exp(middle)) >= demand_at(math.exp(middle)):
+            high = middle
+        else:
+            low = middle
+    return math.exp(high)
 
 
 def pairing_of(fills: Sequence[Fill]) -> Pairing:
@@ -38,10 +67,15 @@ def pairing_of(fills: Sequence[Fill]) -> Pairing:
 
 
 def at_one_price(context, good: str, area: str, last_price, bids: list, offers: list):
-    """(the offers the market cleared: the producers' cut along their supply curves, the rest as posted; the market
-    cleared at one price, with who bought from whom)."""
-    offers = stock_supply.offers_by_stock_level(context.setup, context.record, context.view, good, offers)
-    result = goods_market.clear_at_one_price(bids, offers, good, area, context.setup.currency_id, last_price)
+    """(the offers the market cleared: each producer's as the units its supply curve lets go at the clearing price, the
+    rest as posted; the market cleared at one price, with who bought from whom)."""
+    buyers = goods_market.Buyers(bids, last_price)
+    curves, posted = stock_supply.curves_and_posted(context.setup, context.record, context.view, good, offers)
+    if curves:
+        price = price_where_supply_meets(buyers.schedule.total_at, lambda at: supply_at(at, curves, posted),
+                                         min(curve.lowest_price for curve in curves), max(curve.highest_price for curve in curves))
+        offers = posted + [curve.offer_at(price) for curve in curves]
+    result = goods_market.clear_at_one_price(bids, offers, good, area, context.setup.currency_id, last_price, buyers)
     return offers, dataclasses.replace(result, pairing=pairing_of(result.fills)) if result.quantity > 0.0 else result
 
 
