@@ -59,6 +59,7 @@ from .spin_up_state import spin_up_state as year_spin_up_state
 from .spin_up_mix import year_mix as year_spin_up_mix
 from .year_close import rebase_basket_price_level
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
+from . import rule_sets as rule_sets_module
 from .rule_sets import CLEARING as RULE_SET_CLEARING, RULE_SETS, SEARCH as RULE_SET_SEARCH
 from .market_memory import PRICE_SMOOTHED_TRADE
 from .trade_wages import premium_for_training_years, trade_premium
@@ -453,8 +454,10 @@ def note_spin_up_result(economy, result):
 
 
 def trim_workforce_to_expected_hours(economy):
-    """Cuts each skilled trade to the hours employers plan to want; see workforce_settle."""
-    workforce_settle.trim_to_expected_hours(economy.setup, economy.record, economy.view())
+    """The workforce as the spin-up leaves it between its stages and at its end, by the economy's rule set: each skilled
+    trade cut to the hours employers plan to want (workforce_settle.py), or left as the years made it."""
+    if rule_sets_module.of(economy.setup).spin_up_trims_workforce():
+        workforce_settle.trim_to_expected_hours(economy.setup, economy.record, economy.view())
 
 
 def settle_economy(economy):

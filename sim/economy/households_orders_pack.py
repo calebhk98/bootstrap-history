@@ -4,6 +4,7 @@
 (`cohort_orders` calls this for every cohort; the old functions stay for the opening and the tests).
 A basket's needs, goods and store goods are the same for every cohort that shares a basket key (tile, hearth, hired work, grains
 ground by hand), so they are packed once per key (a template); each cohort adds its holdings, its plot's units and its cash and income."""
+import math
 from typing import Dict, List
 
 import numpy as np
@@ -132,12 +133,12 @@ class _Arrays:
         return template
 
 
-def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of, orders):
+def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of, orders, durable_gap_wear_paces: float = math.inf):
     """The orders of each cohort of `entries` (cohort, basket, priced needs, cash to spend, income, units its plot grew).
     `key_of(cohort)` names the basket a cohort shares with others, `store_of(cohort)` is the dict their store weights are kept in.
     Returns (offers and savings of each cohort as `AgentOrders` with no bids, by cohort id; the cohorts' bid rows ready for
     `orders.append_bids`; each cohort's planned spending by cohort id). No `Bid` is made: `orders` is the book of orders whose ids
-    the rows are numbered with."""
+    the rows are numbered with. `durable_gap_wear_paces` paces the gap to a durable's wanted stock (`durable_stock.gap_share`)."""
     arrays = _Arrays(specs)
     templates: Dict[tuple, _Template] = {}
     cohort_floats, cohort_ints, grown = [], [], []
@@ -168,7 +169,7 @@ def kernel_orders(view, specs, entries, smooth_rise: bool, key_of, store_of, ord
     store_out = np.zeros((len(held_stores), kernel.SO_COUNT))
     cohort_out = np.zeros((len(placed), kernel.CA_COUNT))
     kernel.year_orders(
-        smooth_rise, opening_demand.constants(), np.array(cohort_floats, dtype=np.float64).reshape(-1, kernel.CO_COUNT),
+        smooth_rise, opening_demand.constants(durable_gap_wear_paces), np.array(cohort_floats, dtype=np.float64).reshape(-1, kernel.CO_COUNT),
         np.array(cohort_ints, dtype=np.int64).reshape(-1, kernel.CT_COUNT), np.array(arrays.template_ints, dtype=np.int64).reshape(-1, kernel.TM_COUNT),
         np.array(arrays.template_floats, dtype=np.float64).reshape(-1, kernel.TF_COUNT), np.array(arrays.need_floats, dtype=np.float64).reshape(-1, 6),
         _joined(arrays.need_ints, 2, np.int64), _joined(arrays.row_floats, opening_kernel.RF_COUNT, np.float64),

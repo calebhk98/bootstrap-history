@@ -50,7 +50,7 @@ def cohort_orders(setup, record, view, ledger, order_book, own_options=None) -> 
             entries.append((cohort, basket, priced, spendable, income, grown_units))
     made, bid_rows, planned = households_orders_pack.kernel_orders(
         view, setup.specs, entries, smooth_rise, lambda cohort: memory.key(record, cohort), lambda cohort: memory.stores(record, cohort),
-        order_book)
+        order_book, durable_gap_wear_paces=rule_sets.of(setup).durable_gap_wear_paces())
     made.update(plain)
     rows = OrderRows(order_book, HOUSEHOLD)
     ground, margins = land_bid_year.ground_of(setup, record) if own_options else None, {}      # the ground goods and sellers, and the best crop margin by tile, are the same for every cohort

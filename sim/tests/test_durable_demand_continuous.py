@@ -6,7 +6,11 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.economy.durable_stock import (DURABLE_GAP_CLOSED_SHARE, after_year_end_losses, purchase_toward_stock,
+import math
+
+from sim.economy import opening_demand_kernel
+from sim.economy.durable_stock import (DURABLE_GAP_CLOSED_SHARE, after_year_end_losses, gap_share, one_wear_pace, purchase_toward_stock,
+                                       unpaced,
                                        replacement_for_flow)
 from sim.economy.households_ability import affordability, affordable_goods, bid_cap
 from sim.economy.types import GoodSpec
@@ -90,8 +94,60 @@ class PurchaseTowardStockTest(unittest.TestCase):
         self.assertGreater(years_below_nine_tenths, 1)
         self.assertAlmostEqual(held, wanted, places=6)
 
+    def test_paced_by_wear_the_gap_term_moves_the_purchase_by_less_than_the_wanted_stock_moved(self):
+        # a holding short of the wanted stock by a hundredth of it: unpaced, the purchase rises by many times a
+        # hundredth of the flow; paced by wear, by under a hundredth of it
+        spec = GoodSpec("steel", 1.0, 0.0, 30.0, "tool")
+        wanted = after_year_end_losses(self.FLOW * 30.0, spec)
+        base = replacement_for_flow(self.FLOW, spec)
+        unpaced_rise = purchase_toward_stock(self.FLOW, 0.99 * wanted, spec) - base
+        paced_rise = purchase_toward_stock(self.FLOW, 0.99 * wanted, spec, wear_paces=1.0) - base
+        self.assertAlmostEqual(unpaced_rise, DURABLE_GAP_CLOSED_SHARE * 0.01 * wanted)
+        self.assertGreater(unpaced_rise, 0.1 * self.FLOW)
+        self.assertAlmostEqual(paced_rise, 0.01 * wanted / 30.0)
+        self.assertLess(paced_rise, 0.01 * self.FLOW)
+
+    def test_paced_by_wear_a_holding_at_the_wanted_stock_still_buys_the_replacement(self):
+        spec = GoodSpec("steel", 1.0, 0.0, 30.0, "tool")
+        held = after_year_end_losses(self.FLOW * 30.0, spec)
+        self.assertAlmostEqual(purchase_toward_stock(self.FLOW, held, spec, wear_paces=1.0), replacement_for_flow(self.FLOW, spec))
+
     def test_a_good_with_no_service_life_buys_the_flow(self):
         self.assertEqual(purchase_toward_stock(self.FLOW, 3.0, GoodSpec("bread", 1.0, 0.0, 0.0, "food")), self.FLOW)
+
+
+
+
+class GapShareTest(unittest.TestCase):
+    def test_unpaced_it_is_the_declared_share_whatever_the_life(self):
+        self.assertEqual(unpaced(), math.inf)
+        self.assertEqual(gap_share(30.0, unpaced()), DURABLE_GAP_CLOSED_SHARE)
+        self.assertEqual(gap_share(2.0, unpaced()), DURABLE_GAP_CLOSED_SHARE)
+
+    def test_paced_by_wear_a_long_lived_good_closes_one_over_its_life_a_year(self):
+        self.assertEqual(one_wear_pace(), 1.0)
+        self.assertAlmostEqual(gap_share(30.0, one_wear_pace()), 1.0 / 30.0)
+
+    def test_paced_by_wear_a_short_lived_good_keeps_the_declared_share(self):
+        self.assertEqual(gap_share(2.0, one_wear_pace()), DURABLE_GAP_CLOSED_SHARE)
+
+    def test_a_good_with_no_life_has_the_declared_share(self):
+        self.assertEqual(gap_share(0.0, one_wear_pace()), DURABLE_GAP_CLOSED_SHARE)
+
+
+class KernelTwinTest(unittest.TestCase):
+    def test_the_kernels_purchase_is_the_plain_one_at_the_same_share(self):
+        spec = GoodSpec("steel", 1.0, 0.0, 30.0, "tool")
+        for held in (0.0, 40.0, 140.0, 400.0):
+            for paces in (unpaced(), one_wear_pace()):
+                self.assertAlmostEqual(
+                    opening_demand_kernel._purchase_toward_stock(5.0, held, 30.0, 0.0, gap_share(30.0, paces)),
+                    purchase_toward_stock(5.0, held, spec, wear_paces=paces))
+
+    def test_the_kernels_share_is_the_plain_one(self):
+        for life in (2.0, 15.0, 30.0, 100.0):
+            for paces in (unpaced(), one_wear_pace()):
+                self.assertAlmostEqual(opening_demand_kernel._gap_share(life, DURABLE_GAP_CLOSED_SHARE, paces), gap_share(life, paces))
 
 
 if __name__ == "__main__":

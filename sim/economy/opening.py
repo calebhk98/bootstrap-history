@@ -23,7 +23,7 @@ from sim.book import Book
 from .market_areas import AreaMap
 from .market_memory import MarketMemory, YearView, market_key
 from .market_memory_areas import number_area_markets
-from . import merchants
+from . import merchants, rule_sets
 from .merchants import Merchant
 from .producers import Producer, paying_output
 from .producers_close import working_capital_target
@@ -620,7 +620,7 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
     what it owns of those producers (`equity.holdings`, what the spending rule reads as share wealth): the cash that
     brings cash plus share wealth to the wealth target, at which the rule spends exactly its income
     (opening_resting.resting_household_purse; Eurace manual 10.1.3), plus what a household whose plot frees part of its
-    budget needs to spend (opening_own.py)."""
+    budget needs to spend (opening_own.py). The money's issuer opens with what its rule set gives it (opening_issuer_coin.py)."""
     money = setup.currency_id
     transfers: List[Transfer] = []
     for producer in record.producers.values():
@@ -639,3 +639,6 @@ def _strike_opening_cash(setup, record, view, extra_spending) -> None:
             purse, record.capital_markets.property_income.get(cohort.agent_id, 0.0)), "opening coin"))
         households_cohort.change_cohort(record.cohorts, cohort.agent_id, share_wealth=owned.get(cohort.agent_id, 0.0))
     record.book.transfer_many([transfer for transfer in transfers if transfer.amount > 0.0])
+    issuer_coin = rule_sets.of(setup).opening_issuer_coin(setup, record, view)      # read on the money struck above
+    if issuer_coin > 0.0:
+        record.book.transfer(Transfer(EDGE_MINT, setup.state_agent, money, issuer_coin, "opening coin"))

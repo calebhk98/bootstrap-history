@@ -9,7 +9,7 @@ import types as pytypes
 import unittest
 
 from sim.economy.producer_store import ProducerStore
-from sim.economy import currency, mint, mint_labour
+from sim.economy import currency, mint, mint_labour, opening_issuer_coin, state_budget
 from sim.book import Book
 from sim.tests.test_economy_mint import BullionAtParity
 from sim.economy.recipes import recipe_from_entry
@@ -134,6 +134,38 @@ class Staffing(unittest.TestCase):
         self.assertEqual(record.book.balance(mint_labour.mint_agent(setup), "coin"), 0.0)
         self.assertEqual(record.book.balance("state", "coin"), purse)
 
+    def test_the_wage_bill_is_the_bids_hours_at_the_most_the_mint_pays_for_each(self):
+        spec = spec_of(fineness=0.8)
+        setup, _record = world(spec)
+        bids = mint_labour.wage_bids(setup, spec, FakeView(), 10.0)
+        hours = mint_labour.hours_per_fine_kilogram(setup.mint_recipe, spec)
+        self.assertEqual({trade for _employer, trade, _area, _hours, _wage in bids}, set(hours))
+        for _employer, trade, _area, bid_hours, maximum_wage in bids:
+            self.assertAlmostEqual(bid_hours, 10.0 * hours[trade])
+            self.assertGreaterEqual(maximum_wage, 2.0)        # never under the going wage of the fake view
+        self.assertAlmostEqual(mint_labour.wage_bill(bids), sum(bid_hours * wage for _e, _t, _a, bid_hours, wage in bids))
+        self.assertGreater(mint_labour.wage_bill(bids), 0.0)
+
+    def test_a_mint_that_does_not_strike_bids_for_no_hours(self):
+        setup, record = world(spec_of(), recipe=None)
+        self.assertEqual(mint_labour.wage_bids(setup, record.currency, FakeView(), 10.0), [])
+        setup, record = world(spec_of())
+        self.assertEqual(mint_labour.wage_bids(setup, record.currency, FakeView(), 0.0), [])
+        self.assertEqual(mint_labour.wage_bill([]), 0.0)
+
+    def test_an_issuer_holding_the_wage_bill_funds_every_hour_the_mint_bids_for(self):
+        # the coin the opening strikes to the issuer (mint.wage_funding) is the bill staff then funds whole
+        spec = spec_of()
+        setup, record = world(spec)
+        bill = mint_labour.wage_bill(mint_labour.wage_bids(setup, spec, FakeView(), 10.0))
+        record.book.transfer(Transfer("state", EDGE_ISSUE, "coin", record.book.balance("state", "coin") - bill, "leave the bill"))
+        bids = []
+        mint_labour.staff(setup, record, FakeView(), bids, capacity_fine_kilograms=10.0)
+        hours = mint_labour.hours_per_fine_kilogram(setup.mint_recipe, spec)
+        for bid in bids:
+            self.assertAlmostEqual(bid.hours, 10.0 * hours[bid.trade])
+        self.assertAlmostEqual(record.book.balance(mint_labour.mint_agent(setup), "coin"), bill)
+
     def test_no_recipe_means_no_staff_and_no_limit(self):
         setup, record = world(spec_of(), recipe=None)
         bids = []
@@ -159,6 +191,48 @@ class Staffing(unittest.TestCase):
         mint_labour.close_year(setup, record)
         self.assertEqual(record.book.balance(mint_labour.mint_agent(setup), "coin"), 0.0)
         self.assertAlmostEqual(record.book.balance("state", "coin"), before + funded)
+
+
+class WageFunding(unittest.TestCase):
+    def test_the_issuers_opening_coin_is_the_bill_of_the_mints_bids_for_its_capacity(self):
+        setup, record = world(spec_of())
+        capacity = mint.capacity_fine_kilograms(setup, record)
+        self.assertGreater(capacity, 0.0)
+        bill = mint_labour.wage_bill(mint_labour.wage_bids(setup, record.currency, FakeView(), capacity))
+        self.assertAlmostEqual(mint.wage_funding(setup, record, FakeView()), bill)
+
+    def test_a_money_with_no_metal_needs_no_coin_for_a_mint(self):
+        setup, record = world(spec_of())
+        record.currency = pytypes.SimpleNamespace(backing_per_unit=0.0)
+        self.assertEqual(mint.wage_funding(setup, record, FakeView()), 0.0)
+
+
+class OpeningIssuerCoin(unittest.TestCase):
+    def test_the_search_rule_gives_the_issuer_nothing(self):
+        setup, record = world(spec_of())
+        self.assertEqual(opening_issuer_coin.nothing(setup, record, FakeView()), 0.0)
+
+    def test_the_clearing_rule_gives_the_issuer_its_mints_wage_bill_and_what_its_own_plan_takes(self):
+        setup, record = world(spec_of())
+        setup.state_policy = pytypes.SimpleNamespace(wage_share=0.5, cash_spend_share=0.5)
+        bill = mint.wage_funding(setup, record, FakeView())
+        coin = opening_issuer_coin.the_mints_wage_bill(setup, record, FakeView())
+        self.assertGreater(bill, 0.0)
+        self.assertAlmostEqual(coin - 0.5 * 0.5 * coin, bill)      # its plan's wage line taken, the bill is left
+
+
+class CashThatLeaves(unittest.TestCase):
+    def test_the_cash_whose_wage_line_leaves_the_sum_wanted(self):
+        policy = pytypes.SimpleNamespace(wage_share=0.4, cash_spend_share=0.5)
+        cash = state_budget.cash_that_leaves(policy, 80.0)
+        self.assertAlmostEqual(cash, 100.0)
+        self.assertAlmostEqual(cash - policy.wage_share * policy.cash_spend_share * cash, 80.0)
+
+    def test_a_plan_that_takes_nothing_needs_only_the_sum(self):
+        self.assertEqual(state_budget.cash_that_leaves(pytypes.SimpleNamespace(wage_share=0.0, cash_spend_share=0.5), 80.0), 80.0)
+
+    def test_a_plan_that_would_take_everything_is_given_the_sum(self):
+        self.assertEqual(state_budget.cash_that_leaves(pytypes.SimpleNamespace(wage_share=1.0, cash_spend_share=1.0), 80.0), 80.0)
 
 
 class StrikeCapacity(unittest.TestCase):

@@ -1,0 +1,80 @@
+# Research: fuel for heat and iron per head, woodland yield, labour to cut firewood
+
+Date of research: 2026-11-20. Web reading only, by a research agent; every figure below was read in an opened page or
+PDF in that session unless it is listed under "Not found". The orchestrating session opened one of the citations
+itself (King, chapter 8: the per-head figures for about 1500 and 1590 are in the text as quoted). Why it was asked:
+Complaint 473 Update 45 found the settled England burning and buying far more firewood and steel a head than any
+pre-industrial economy did, because warmth and implements have no upper level in `data/world/needs.json`.
+
+## 1. Fuel for heat a head a year
+
+**Warde, Paul, "Energy Consumption in England & Wales 1560-2000" (CNR, 2007), section 2.3, p. 39.**
+URL opened: https://histecon.fas.harvard.edu/energyhistory/data/Warde_Energy Consumption England.pdf
+
+- "even in the reign of Elizabeth I, it is doubtful that much more than 1 cubic metre of wood per person per annum
+  could be supplied - certainly a historically low figure by northern European standards."
+- "a supply of around 2.7 million cubic metres in 1550, or not far off one cubic metre per person per year from
+  woodland, even at an assumed high rate of exploitation."
+- This is a ceiling on supply, not a measured demand: "There are no wide-ranging surveys of household and industrial
+  consumption of firewood... nigh on impossible to come to a definitive national figure."
+
+**Allen and Weisdorf, "Was there an 'industrious revolution' before the industrial revolution?", University of
+Copenhagen Discussion Paper 2010-14, Table 1 "Basket of Goods", citing Allen (2001).**
+URL opened: https://www.economics.ku.dk/research/publications/wp/dp_2010/1014.pdf/
+
+- Row "Fuel 5.0 millions BTU" under "Quantity/Person/year": a subsistence allowance. In joules (the agent's
+  conversion at 1.055 kJ a BTU) about 5.3 GJ a head a year.
+
+## 2. Iron a head a year (England)
+
+**King, Peter, PhD thesis on the English iron industry, chapter 8 "Economic Trends and the Consumption of Iron".**
+URL opened: https://archaeologydataservice.ac.uk/catalogue/adsdata/arch-405-1/dissemination/pdf/thesis_text/8_Economic_Trends_and_the_Consumption_of_Iron.pdf
+
+- Method: "'consumption per head' is estimated by dividing domestic consumption by population."
+- About 1500: "English production may possibly have been 1000 tons per year in total and consumption 4 lb. or so per
+  person per year."
+- 1590: "about 9 lb. per head". 1620 to the 1660s: "averaging 8 lb. per head p.a." Later: "12 lb. in the early
+  1720s to around 15½ lb. from the early 1760s", and more than 20 lb. about 1805.
+- At 0.4536 kg a pound: about 1.8 kg a head about 1500, 4 kg in 1590, 9 kg about 1805. Bar iron, not steel alone; no
+  figure for 1300.
+
+## 3. Woodland yield and area
+
+**Warde (as above), pp. 34-35.**
+
+- "Today, the annual increment in broadleaf forest in England is 3.3 cubic metres per hectare. Collins estimates that
+  early modern yields were around 3.6 cubic metres of stacked wood per hectare... or 2.25 metres cubed of solid
+  cordwood."
+- "According to estimates made in the Forest of Dean in the 1690s, coppiced woodland yielded about 4 cubic metres
+  per hectare."
+- England and Wales woodland fell "from around 900,000 hectares" (1550) "to 769,000 hectares by 1905".
+
+**Royal Forestry Society, "7. A Brief History of British Woodlands".**
+URL opened: https://rfs.org.uk/wp-content/uploads/2021/05/7.-A-Brief-History-of-British-Woodlands.pdf
+
+- "The Domesday Book records wood-pasture and woodland covering about 15% of England. However, the following two and
+  a half centuries saw an expanding population and further clearance of woodland, halving woodland cover to about 7%."
+
+## 4. Labour to cut firewood
+
+**Low Tech Institute, "Firewood: Saw and Axe vs. Chainsaw and Splitter" (2021).** One author's extrapolation, sawing
+and splitting only.
+URL opened: https://lowtechinstitute.org/2021/04/26/firewood-saw-and-axe-vs-chainsaw-and-splitter-low-tech-r-d/
+
+- Sawing "would have taken me about twenty-five hours by hand" a cord, and "a full cord of wood could be split by hand
+  in four and a half hours". A cord is "4 ft x 8 ft x 4 ft of stacked, split wood". Felling and hauling are not in it,
+  and the article gives no weight, so hours a tonne need a density that was not sourced.
+
+## Not found
+
+- A generous or comfortable level of fuel a head (the most a rich household burned): no source found.
+- The stock of iron goods a peasant or artisan household held, and any steel-only figure: no source found.
+- A yield of traditional coppice in tonnes a hectare; Rackham's own figures for woodland about 1300: not opened.
+- The share of a pre-industrial household's budget spent on medicine: no source found.
+
+## What follows for the data (not yet done)
+
+- The figures for fuel and iron a head are what people consumed, which the economy is meant to produce from costs and
+  incomes, so they are checks on its settled state and not levels to write into the needs.
+- The woodland yield and area are geography: they bound what felling can take a year, which the model's felling does
+  not yet read as a yearly growth (owner question 16 of `473-owner-questions.md` covers the ground forest recipes take).

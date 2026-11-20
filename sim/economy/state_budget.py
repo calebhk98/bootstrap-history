@@ -47,6 +47,14 @@ class StateBudget:
         self.goods_budget -= amount
 
 
+def cash_that_leaves(policy, wanted: float) -> float:
+    """The cash a state with no revenue yet and no stated programme must hold for `wanted` of it to be left once its
+    plan for the year has taken its wage line (`plan_year`: the wage share of the share of its cash it spends); `wanted`
+    itself where that line would take all of it."""
+    committed_share = policy.wage_share * policy.cash_spend_share
+    return wanted / (1.0 - committed_share) if 0.0 <= committed_share < 1.0 else wanted
+
+
 def plan_year(setup, record, view, labour_bids: List[LabourBid]) -> None:
     """Fix this year's spending and its financing, and add the state's bids for hours to `labour_bids`."""
     policy, budget = setup.state_policy, record.state_budget

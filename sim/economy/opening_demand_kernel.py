@@ -14,7 +14,6 @@ import numpy as np
 
 from sim.jit import njit
 
-from .durable_stock import DURABLE_GAP_CLOSED_SHARE
 from .price_setting import LOGIT_INTENSITY
 
 # constants row (opening_demand.constants)
@@ -30,7 +29,9 @@ K_TIME_PREFERENCE = 8
 K_BAND = 9
 K_HOUSEHOLD_SIZE = 10
 K_PURSE_TOLERANCE = 11
-K_COUNT = 12
+K_GAP_SHARE = 12             # the most of the gap to a durable's wanted stock bought in a year
+K_GAP_WEAR_PACES = 13        # that share is at most this many times one over the good's life (infinite: no bound)
+K_COUNT = 14
 
 # cohort floats
 CF_PEOPLE = 0
@@ -264,14 +265,20 @@ def _affordability(price, household_budget, life):
 
 
 @njit
-def _purchase_toward_stock(flow, held, life, spoilage):
-    """durable_stock.purchase_toward_stock for a good with a service life."""
+def _gap_share(life, share, wear_paces):
+    """durable_stock.gap_share for a good with a service life: `share`, at most `wear_paces` over the life."""
+    return min(share, wear_paces / life)
+
+
+@njit
+def _purchase_toward_stock(flow, held, life, spoilage, gap_share):
+    """durable_stock.purchase_toward_stock for a good with a service life, closing `gap_share` of the gap."""
     wear = min(1.0, 1.0 / life)
     spoiled = min(1.0, max(0.0, spoilage))
     serving = flow * life
     after_losses = max(0.0, serving * (1.0 - wear - spoiled))
     gap = max(0.0, after_losses - max(held, 0.0))
-    return (serving - after_losses) + DURABLE_GAP_CLOSED_SHARE * gap
+    return (serving - after_losses) + gap_share * gap
 
 
 @njit
@@ -471,7 +478,8 @@ def _orders(c, cash, income, last_income, stationary, constants, cohort_floats, 
                 if flow <= 0.0:
                     ratio = 0.0
                 else:
-                    ratio = _purchase_toward_stock(flow * (stock_flow / flow), row_floats[r, RF_HELD], life, row_floats[r, RF_SPOIL]) / flow
+                    ratio = _purchase_toward_stock(flow * (stock_flow / flow), row_floats[r, RF_HELD], life, row_floats[r, RF_SPOIL],
+                                                   _gap_share(life, constants[K_GAP_SHARE], constants[K_GAP_WEAR_PACES])) / flow
                     if stationary:
                         serving = stock_flow * life
                         wear = min(1.0, 1.0 / life)

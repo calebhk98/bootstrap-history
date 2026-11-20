@@ -11,9 +11,9 @@ import numpy as np
 
 from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
 
-from . import (close_pack, coin_cost, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
-               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, plot_hours_value, rate_step,
-               servant_hours_counted, unkept_goods)
+from . import (close_pack, coin_cost, durable_stock, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
+               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, plot_hours_value,
+               rate_step, servant_hours_counted, spin_up_migration, spin_up_trim, unkept_goods)
 from .setup import DEFAULT_RULE_SET as SEARCH
 
 CLEARING = "clearing"
@@ -42,6 +42,11 @@ class RuleSet:
                                           #  (the hours its next plan starts from, the most it counts on being served: None for whatever it plans)
     plot_return_for_hours_kept: Callable  # (priced needs, plot options, fertility, a worker's hours, people a worker keeps, hectares an hour takes by recipe,
                                           #  hectares held a worker, the state's share by good, hours the plot takes a worker) -> the return the hours kept are read from
+    opening_issuer_coin: Callable   # (setup, the opening's record, its view) -> the coin the money's issuer opens holding
+    durable_gap_wear_paces: Callable   # () -> how many times the share of a durable that wears in a year a household may close of the gap
+                                       #  to the stock it wants (durable_stock.gap_share); infinite: the declared share alone
+    spin_up_trims_workforce: Callable   # () -> whether the spin-up cuts each skilled trade to the hours employers plan to want (workforce_settle.py)
+    spin_up_moves_workers: Callable     # () -> whether workers move between labour areas in the hidden years (spin_up_migration.py)
 
 
 def planned_hours_bids(_setup, _record, _view, plans, bid_table) -> None:
@@ -89,7 +94,11 @@ RULE_SETS: Dict[str, RuleSet] = {
                     memory_making_costs=making_cost_alone.of_every_good,
                     memory_cost_of_costless=making_cost_alone.no_cost,
                     servant_hours_counted_on=servant_hours_counted.as_planned,
-                    plot_return_for_hours_kept=plot_hours_value.return_of_the_next_hour),
+                    plot_return_for_hours_kept=plot_hours_value.return_of_the_next_hour,
+                    opening_issuer_coin=opening_issuer_coin.nothing,
+                    durable_gap_wear_paces=durable_stock.unpaced,
+                    spin_up_trims_workforce=spin_up_trim.trims,
+                    spin_up_moves_workers=spin_up_migration.workers_move),
     CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
                       expected_sales_after_close=unkept_goods.expected_sales_by_takings_where_unkept,
                       producer_labour_bids=schedule_bids_with_coin_cost, labour_clearing=clear_labour_at_one_wage,
@@ -104,7 +113,11 @@ RULE_SETS: Dict[str, RuleSet] = {
                       memory_making_costs=making_cost_alone.of_goods_made_alone,
                       memory_cost_of_costless=making_cost_alone.the_price_it_had,
                       servant_hours_counted_on=servant_hours_counted.as_served,
-                      plot_return_for_hours_kept=plot_hours_value.return_keeping_what_the_plot_grows),
+                      plot_return_for_hours_kept=plot_hours_value.return_keeping_what_the_plot_grows,
+                      opening_issuer_coin=opening_issuer_coin.the_mints_wage_bill,
+                      durable_gap_wear_paces=durable_stock.one_wear_pace,
+                      spin_up_trims_workforce=spin_up_trim.leaves_the_workforce,
+                      spin_up_moves_workers=spin_up_migration.workers_stay),
 }
 
 

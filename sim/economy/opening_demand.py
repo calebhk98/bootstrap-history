@@ -13,13 +13,16 @@ import numpy as np
 from sim.world import need_basket
 from sim.world.climate_needs import PERSONS_PER_HOUSEHOLD
 
-from . import households_buffer_stock, households_orders, households_store, opening_demand_kernel as kernel, opening_own
+from . import durable_stock, households_buffer_stock, households_orders, households_store, opening_demand_kernel as kernel, opening_own
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 
 
-def constants() -> np.ndarray:
-    """The rule constants the kernel reads, from the modules that declare them."""
+def constants(durable_gap_wear_paces: float = math.inf) -> np.ndarray:
+    """The rule constants the kernel reads, from the modules that declare them. `durable_gap_wear_paces` paces the gap
+    to a durable's wanted stock (`durable_stock.gap_share`; unpaced by default)."""
     values = np.zeros(kernel.K_COUNT)
+    values[kernel.K_GAP_SHARE] = durable_stock.DURABLE_GAP_CLOSED_SHARE
+    values[kernel.K_GAP_WEAR_PACES] = durable_gap_wear_paces
     values[kernel.K_FLOOR_MARGIN] = households_orders.FLOOR_BUDGET_PRICE_MARGIN
     values[kernel.K_SAFETY] = households_orders.BUDGET_SAFETY_SHARE
     values[kernel.K_DRAWDOWN] = households_orders.WEALTH_DRAWDOWN_LIMIT

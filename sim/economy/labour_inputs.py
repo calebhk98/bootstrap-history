@@ -10,7 +10,7 @@ from typing import Dict, List
 from sim.constants import declare
 from sim.labour.api import CAREER_YEARS, Route, YearInputs as CoreInputs
 
-from . import flight_routes
+from . import flight_routes, rule_sets, spin_up_migration
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import ask_floor_by_tile
@@ -37,6 +37,11 @@ def routes_by_area(setup, carriage) -> Dict[str, List[Route]]:
     return routes
 
 
+def routes_are_open(setup, record) -> bool:
+    """Whether workers have routes between labour areas this year (`spin_up_migration.routes_open`)."""
+    return spin_up_migration.routes_open(bool(getattr(record, "settling", False)), rule_sets.of(setup).spin_up_moves_workers())
+
+
 def labour_context(setup, record, view, carriage, inputs, own_plot_options=None, outside=None) -> CoreInputs:
     """The core's inputs for the year without trades or bids (the clearing adds them). `own_plot_options`
     (households_own.own_production_options) sets how low a worker's ask can fall: the household's costs less what the plot gives.
@@ -53,7 +58,7 @@ def labour_context(setup, record, view, carriage, inputs, own_plot_options=None,
         hours_per_worker_year=setup.working_hours_per_year,
         discount_rate=HOUSEHOLD_TIME_PREFERENCE, career_years=CAREER_YEARS,
         routes=flight_routes.with_recapture_penalty(
-            routes_by_area(setup, carriage), taxed, inputs.state_reach_by_tile, subsistence,
+            routes_by_area(setup, carriage) if routes_are_open(setup, record) else {}, taxed, inputs.state_reach_by_tile, subsistence,
             None if setup.flight is None else setup.flight.expected_penalty_of_leaving),
         value_of_life_years_of_income=VALUE_OF_LIFE_YEARS_OF_INCOME,
         bondage_allowed=frozenset(labour_area(tile) for tile in inputs.bondage_tiles),

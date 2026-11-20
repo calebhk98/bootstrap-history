@@ -124,6 +124,14 @@ def capacity_fine_kilograms(setup, record) -> float:
     return mint_staffing.staffed_money(yearly_monetisation(setup, record), worn_money) * spec.backing_per_unit
 
 
+def wage_funding(setup, record, view) -> float:
+    """The coin the issuer must hold for the mint to bid for the whole crew of its yearly capacity: the bill of those
+    bids at their ceilings (`mint_labour.wage_bids`). What the crew is not paid goes back to the issuer at the close."""
+    if not record.currency.backing_per_unit > 0.0:
+        return 0.0
+    return mint_labour.wage_bill(mint_labour.wage_bids(setup, record.currency, view, capacity_fine_kilograms(setup, record)))
+
+
 def staff(setup, record, view, labour_bids) -> None:
     """Before the labour market clears: the mint bids for the hours of its yearly capacity."""
     if record.currency.backing_per_unit > 0.0:

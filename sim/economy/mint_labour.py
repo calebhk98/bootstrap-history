@@ -48,10 +48,15 @@ def _striking(setup, spec) -> bool:
             and spec.backing_per_unit > 0.0)
 
 
+def wage_bill(bids: List[BidFigures]) -> float:
+    """What the bids (employer, trade, area, hours, maximum wage) cost at their ceilings."""
+    return math.fsum(hours * maximum_wage for _employer, _trade, _area, hours, maximum_wage in bids)
+
+
 def scale_to_funds(bids: List[BidFigures], funded: float) -> List[BidFigures]:
     """The bids (employer, trade, area, hours, maximum wage) with every trade's hours cut by the same share where the bill at their
     ceilings is more than `funded`: hours the mint cannot pay would be hired and sent away unpaid."""
-    bill = math.fsum(hours * maximum_wage for _employer, _trade, _area, hours, maximum_wage in bids)
+    bill = wage_bill(bids)
     if funded <= 0.0:
         return []
     if bill <= funded:
@@ -60,25 +65,31 @@ def scale_to_funds(bids: List[BidFigures], funded: float) -> List[BidFigures]:
     return [(employer, trade, area, hours * share, maximum_wage) for employer, trade, area, hours, maximum_wage in bids]
 
 
+def wage_bids(setup, spec, view, capacity_fine_kilograms: float) -> List[BidFigures]:
+    """The mint's bids for the hours that strike `capacity_fine_kilograms` in a year, at the capital, each trade at the
+    most the mint pays an hour (a multiple of its wage, or what striking is worth, whichever is more); none where it
+    does not strike."""
+    if not _striking(setup, spec) or capacity_fine_kilograms <= 0.0:
+        return []
+    agent, area = mint_agent(setup), labour_area(setup.capital_tile)
+    per_trade = hours_per_fine_kilogram(setup.mint_recipe, spec)
+    value = mint_staffing.hour_value(currency.mint_parity(spec), math.fsum(per_trade.values()))
+    return [(agent, trade, area, capacity_fine_kilograms * per_kilogram,
+             max(trade_wages.wage_in_view(setup, view, trade, area) * WAGE_CEILING_MULTIPLE, value))
+            for trade, per_kilogram in sorted(per_trade.items())]
+
+
 def staff(setup, record, view, labour_bids, capacity_fine_kilograms: float,
           committed_cash: float = 0.0) -> None:
     """Bid for the hours the mint needs to strike `capacity_fine_kilograms` this year, at the capital,
     and fund the mint account for the wages it bids from the issuer's cash beyond `committed_cash`, which the
     issuer's own plan for the year spends."""
-    spec = record.currency
-    if not _striking(setup, spec) or capacity_fine_kilograms <= 0.0:
+    bids = wage_bids(setup, record.currency, view, capacity_fine_kilograms)
+    if not bids:
         return
-    agent, area = mint_agent(setup), labour_area(setup.capital_tile)
-    bids = []
-    per_trade = hours_per_fine_kilogram(setup.mint_recipe, spec)
-    value = mint_staffing.hour_value(currency.mint_parity(spec), math.fsum(per_trade.values()))
-    for trade, per_kilogram in sorted(per_trade.items()):
-        wage = trade_wages.wage_in_view(setup, view, trade, area)
-        bids.append((agent, trade, area, capacity_fine_kilograms * per_kilogram, max(wage * WAGE_CEILING_MULTIPLE, value)))
-    wage_bill = math.fsum(hours * maximum_wage for _employer, _trade, _area, hours, maximum_wage in bids)
-    funded = min(wage_bill, max(0.0, record.book.balance(setup.state_agent, setup.currency_id) - committed_cash))
+    funded = min(wage_bill(bids), max(0.0, record.book.balance(setup.state_agent, setup.currency_id) - committed_cash))
     if funded > 0.0:
-        record.book.transfer(Transfer(setup.state_agent, agent, setup.currency_id, funded, "mint wages funded"))
+        record.book.transfer(Transfer(setup.state_agent, mint_agent(setup), setup.currency_id, funded, "mint wages funded"))
     put_bids(labour_bids, scale_to_funds(bids, funded))
 
 
