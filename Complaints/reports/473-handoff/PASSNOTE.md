@@ -567,8 +567,19 @@ After Update 43:
    ores, their capacity after the first years: probe the makers of the backing good by year); and the stock the rough
    plan strikes against the stock that output keeps up (`opening._strike_opening_cash`). Judge by coin struck against
    coin worn in the trace's columns and by the long run having no late slump.
-2. Goods that cannot be kept: re-measure bread; if it still saws, the missing term is a hold on next year's runs by
-   the share of this year's output that went unsold (the plan's step 3).
+2. Goods that cannot be kept. Re-measured after Update 43: bread still saws by about a tenth up and down in
+   alternate years at the end of the spin-up (the watched prices in the stages rows). Read from the code, this is a
+   cobweb: a maker of an unkept good plans the runs that pay at its expected price (`plan_kernel.plan_rows`, the
+   branch with no sales to hold to), nothing else holds them because there is no stock, runs answer the expected
+   price more than one for one near break-even (the spread of workplace costs), and buyers of a staple answer its
+   price little. A hold on next year's runs by this year's unsold share, which the plan proposed, would cut output
+   after the glut year and so deepen the next shortage: do not build it. What to build: for a good that cannot be
+   kept the plan holds to expected sales (as the search set's plan does, `rule_sets.expected_sales_hold`), and its
+   expected sales follow what it sold at the price it expected (sold runs scaled by the price it got over the price
+   it expected), a share a year, so a maker that sells out dear grows and one that sells cheap shrinks without
+   chasing each year's price. `sales_the_plan_holds_to` gets only the expected sales today: it needs to know which
+   producers' outputs can be kept (`stock_supply.curves_and_posted` has the test), and the expected-sales update is
+   in `close_kernel.close_rows`. Test first on a fixture with one unkept good bought as a need's floor.
 3. The merchant's size (one for England, `opening._open_merchants`) once the two above are in.
 4. The spin-up's length and stop rule for the clearing set (the plan's step 4), then the realism check, the Norse
    lands and Han, and the game's set.
