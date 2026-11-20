@@ -5,9 +5,11 @@ QUICK_TOPIC = True
 import math
 import unittest
 
-from sim.economy.goods_clear_one_price import pairing_of, price_where_supply_meets, supply_at
+from sim.economy import goods_market
+from sim.economy.fresh_supply import FreshCurve
+from sim.economy.goods_clear_one_price import clearing_price, pairing_of, price_where_supply_meets, supply_at
 from sim.economy.stock_supply import StockCurve
-from sim.economy.types import Fill, Offer
+from sim.economy.types import Bid, Fill, Offer
 
 
 def demand_at(price):
@@ -42,6 +44,42 @@ class SupplyAt(unittest.TestCase):
 
     def test_nothing_on_the_market_supplies_nothing(self):
         self.assertEqual(supply_at(2.0, [], []), 0.0)
+
+
+def budget_buyers(budget, wanted=1e9):
+    """Buyers that take up to `wanted` units and spend no more than `budget`: at a price above budget over wanted they
+    take budget over the price."""
+    return goods_market.Buyers([Bid("household:a", "grain_kg", "area", "tile", wanted, 0.0, 1.0, 0.0, budget)], None)
+
+
+class ClearingPrice(unittest.TestCase):
+    def setUp(self):
+        # held 10, target 4, content price 2: lets go nothing under about 1.37, six at 2, all ten from about 2.57
+        self.curve = StockCurve(Offer("producer:a", "grain_kg", "area", "tile", 10.0, 1.0), 4.0, 2.0)
+
+    def test_inside_the_curve_the_price_is_where_the_buyers_want_what_the_curve_lets_go(self):
+        price = clearing_price(budget_buyers(12.0), [self.curve], [])
+        self.assertAlmostEqual(price, 2.0, places=6)            # six units at two is the budget of twelve
+        self.assertAlmostEqual(self.curve.supply_at(price), 12.0 / price, places=6)
+
+    def test_where_buyers_want_more_than_everything_held_the_price_is_where_their_wants_fall_to_it(self):
+        price = clearing_price(budget_buyers(1000.0), [self.curve], [])
+        self.assertGreater(price, self.curve.highest_price)
+        self.assertAlmostEqual(price, 1000.0 / 10.0, places=6)
+
+    def test_a_good_that_cannot_be_kept_clears_under_its_expected_price_when_buyers_want_less_than_was_made(self):
+        fresh = FreshCurve(Offer("producer:baker", "grain_kg", "area", "tile", 100.0, 0.0), 2.0)
+        price = clearing_price(budget_buyers(1e9, wanted=80.0), [fresh], [])
+        self.assertLess(price, 2.0)
+        self.assertAlmostEqual(fresh.supply_at(price), 80.0, places=4)
+
+    def test_a_good_that_cannot_be_kept_clears_at_its_expected_price_when_buyers_want_just_what_was_made(self):
+        fresh = FreshCurve(Offer("producer:baker", "grain_kg", "area", "tile", 100.0, 0.0), 2.0)
+        self.assertAlmostEqual(clearing_price(budget_buyers(200.0), [fresh], []), 2.0, places=6)
+
+    def test_with_no_curve_the_price_is_where_the_buyers_meet_the_posted_offers(self):
+        posted = [Offer("merchant:a", "grain_kg", "area", "tile", 5.0, 3.0)]
+        self.assertAlmostEqual(clearing_price(budget_buyers(40.0), [], posted), 40.0 / 5.0, places=6)
 
 
 def fill(agent, quantity, price, side):

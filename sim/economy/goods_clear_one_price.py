@@ -1,12 +1,15 @@
-"""The clearing rule for a good's markets: each market trades at one price, where its buyers' schedules meet its sellers'
-offers at the reservation prices they posted (`goods_market.clear_at_one_price`). The sellers do not re-price, search for
-an ask or raise one inside the year: the market finds the price, and what a seller will not let go at it stays in stock.
-It stands where `goods_good_clear.clear_good` stands (rule_sets.py) and returns the same `GoodClearing`."""
+"""The clearing rule for a good's markets: each market trades at one price. The price is the one where its buyers'
+schedules meet its sellers' supply (the producers' curves over the price, `stock_supply` and `fresh_supply`, and the
+other sellers' offers at the reservations they posted), moved no further from last year's than a year allows
+(`price_step.within_a_years_move`); where that holds the price short of the clearing one, the long side goes short
+(`goods_market.clear_at_price`). The sellers do not re-price, search for an ask or raise one inside the year, and what a
+seller will not let go at the price stays in stock. It stands where `goods_good_clear.clear_good` stands (rule_sets.py)
+and returns the same `GoodClearing`."""
 import dataclasses
 import math
-from typing import Callable, Sequence
+from typing import Callable, Optional, Sequence
 
-from . import goods_market, stock_supply
+from . import goods_market, price_step, stock_supply
 from .goods_good_clear import GoodClearing, Untraded, note_household_limit
 from .goods_table_group import note_stock_slots, rows_of_good
 from .types import Fill, Offer, Pairing
@@ -69,16 +72,30 @@ def pairing_of(fills: Sequence[Fill]) -> Pairing:
                    tuple(fill.price for fill in sells), tuple(buyer_index), tuple(seller_index), tuple(quantity))
 
 
+def clearing_price(buyers, curves, posted: Sequence[Offer]) -> Optional[float]:
+    """The price at which the market would clear this year: where the buyers' schedule meets the supply of the curves
+    and the posted offers; where the buyers want more than everything on offer even at the curves' highest price, the
+    price at which their wants fall to it. None where the market has neither a price to hold nor one to find."""
+    if curves:
+        top = max(curve.highest_price for curve in curves)
+        price = price_where_supply_meets(buyers.schedule.total_at, lambda at: supply_at(at, curves, posted),
+                                         min(curve.lowest_price for curve in curves), top)
+        if price < top:
+            return price
+        posted = list(posted) + [curve.offer_at(top) for curve in curves]
+    return goods_market.crossing(buyers, goods_market.in_clearing_order(posted), with_wants=False)[0]
+
+
 def at_one_price(context, good: str, area: str, last_price, bids: list, offers: list):
-    """(the offers the market cleared: each producer's as the units its supply curve lets go at the clearing price, the
-    rest as posted; the market cleared at one price, with who bought from whom)."""
+    """(the offers the market traded: each producer's as the units its supply curve lets go at the year's price, the
+    rest as posted; the market's result at that one price, with who bought from whom)."""
     buyers = goods_market.Buyers(bids, last_price)
     curves, posted = stock_supply.curves_and_posted(context.setup, context.record, context.view, good, offers)
-    if curves:
-        price = price_where_supply_meets(buyers.schedule.total_at, lambda at: supply_at(at, curves, posted),
-                                         min(curve.lowest_price for curve in curves), max(curve.highest_price for curve in curves))
-        offers = posted + [curve.offer_at(price) for curve in curves]
-    result = goods_market.clear_at_one_price(bids, offers, good, area, context.setup.currency_id, last_price, buyers)
+    price = price_step.within_a_years_move(clearing_price(buyers, curves, posted), last_price)
+    if price is None or not price > 0.0:
+        return offers, goods_market.clear_at_one_price(bids, offers, good, area, context.setup.currency_id, last_price, buyers)
+    offers = posted + [curve.offer_at(price) for curve in curves]
+    result = goods_market.clear_at_price(bids, offers, good, area, context.setup.currency_id, price, last_price, buyers)
     return offers, dataclasses.replace(result, pairing=pairing_of(result.fills)) if result.quantity > 0.0 else result
 
 

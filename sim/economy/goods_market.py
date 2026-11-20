@@ -136,6 +136,31 @@ def clear_at_one_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodI
     price, eligible, supply, wants = crossing(buyers, in_clearing_order(offers))
     if eligible is None:
         return _empty(good, area, currency, price, bids, supply, offers)
+    return _traded_at(bids, wants, eligible, supply, good, area, currency, price)
+
+
+def clear_at_price(bids: Sequence[Bid], offers: Sequence[Offer], good: GoodId, area: AreaId, currency: CurrencyId,
+                   price: float, last_price: Optional[float], buyers: Optional[Buyers] = None) -> ClearingResult:
+    """Trade one market for one year at a price given to it: each buyer's want at that price against the offers whose
+    reservation it meets. The side that is short is served in full; buyers that cannot all be served go short by priority
+    tier, sellers that cannot all sell do so lowest reservation first and the marginal group pro rata. Nothing trades
+    where no offer takes the price, nothing is wanted at it, or what is on offer is float residue."""
+    if buyers is None:
+        buyers = Buyers(bids, last_price)
+    bids = buyers.bids
+    eligible = [(reservation, offer) for reservation, offer in
+                ((buyers.at_least_minimum(offer.reservation_price), offer) for offer in in_clearing_order(offers)) if reservation <= price]
+    supply = math.fsum(offer.quantity for _reservation, offer in eligible)
+    wants = buyers.schedule.each_at(price)
+    wanted = math.fsum(wants)
+    if not eligible or wanted <= 0.0 or supply <= ROUNDING_SHARE * wanted:
+        return _empty(good, area, currency, price, bids, supply, offers)
+    return _traded_at(bids, wants, eligible, supply, good, area, currency, price)
+
+
+def _traded_at(bids: Sequence[Bid], wants: Sequence[float], eligible: List[Tuple[float, Offer]], supply: float, good: GoodId,
+               area: AreaId, currency: CurrencyId, price: float) -> ClearingResult:
+    """The trade of `bids` (in clearing order, wanting `wants`) with the `eligible` offers at `price`."""
     wanted = math.fsum(wants)
     served = ration(bids, wants, min(wanted, supply))
     traded = math.fsum(served)

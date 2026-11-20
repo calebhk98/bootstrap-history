@@ -17,6 +17,12 @@ def opening_setup(game):
 	return game.view("agent_opening_setup")()
 
 
+def rule_set_configuration(rule_set):
+	"""The configuration entries that open a game's economy on `rule_set`; none for no name (the shipped set)."""
+	from .port_setup import rule_set_configuration as configuration
+	return configuration(rule_set)
+
+
 def spin_up_trace(game, years):
 	"""One row per year of the economy's hidden first stage run on the opening `game` saved."""
 	from .port_trace import spin_up_trace as trace
