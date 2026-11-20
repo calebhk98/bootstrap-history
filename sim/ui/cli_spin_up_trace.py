@@ -8,6 +8,7 @@ import random
 from sim.markets import api as markets_api
 from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
 from sim.markets.port_trace_holders import HOLDER_COLUMNS
+from sim.ui.spin_up_moved import format_moved, moved
 from sim.ui.spin_up_stages_report import format_end_gaps, header_line, row_line, write_stage_csv
 from sim.ui.spin_up_ensemble_report import format_ensemble, write_ensemble_csv
 from sim.ui.spin_up_ensemble_run import run_ensemble
@@ -77,7 +78,8 @@ def _print_ensemble(args):
 
 
 def _print_stages(game, csv_path):
-    """Replay the spin-up's stages (--stages), printing each year as it is stepped, then the gaps it ends with."""
+    """Replay the spin-up's stages (--stages), printing each year as it is stepped, then the gaps it ends with and what
+    the years moved the opening away from."""
     watched, replayed = markets_api.spin_up_stages(game)
     print(header_line(watched), flush=True)
     rows = []
@@ -85,6 +87,7 @@ def _print_stages(game, csv_path):
         rows.append(row)
         print(row_line(row, watched), flush=True)
     print(format_end_gaps(markets_api.spin_up_end_gaps(rows)))
+    print(format_moved(moved(rows)))
     if csv_path:
         write_stage_csv(rows, watched, csv_path)
     return 0
