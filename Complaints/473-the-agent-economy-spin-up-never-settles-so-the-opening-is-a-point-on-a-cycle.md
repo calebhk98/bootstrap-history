@@ -2095,3 +2095,88 @@ profile; no command in the tree prints a year's time for a named rule set.
   the clearing set.
 
 **Order from here.** The passnote's section 6h.
+
+## Update 41: the four rule faults of Update 40 fixed on the clearing set; sending idle hours home was tried and fails the headline test (branch economy-rests-with-clearing-rules)
+
+**The owner's direction (2026-11-20).** Fix the opening ("I had the opening made from a rough plan, I thought they were
+supposed to be updating as we fixed this until the opening was corrected and stable") and fix the faults Update 40
+left. Order taken: the rule faults first, because they decide where the economy rests; then the opening.
+
+**The four faults, each with a rule test of the one function changed.** All four are behind new fields of
+`rule_sets.RuleSet` whose `search` entry does nothing.
+
+1. *A run's cost counts the coin it ties up* (`sim/economy/coin_cost.py`, `sim/tests/test_coin_cost.py`,
+   `test_coin_charge_in_the_year.py`). What a run pays in advance (inputs and hours) costs that money and the interest on
+   it for the years a producer keeps of its running cost; rent, paid at the year's end, carries none. It enters the
+   labour schedule, the plan (`plan_kernel.plan_rows`, one more argument), the close (the cost a run is judged by and
+   the cost the expected price is pulled toward; constant `K_COIN_CHARGE`) and the land market (rent is what is left
+   after it). On England the price level then settles inside the tolerance and the largest end gap halves.
+2. *A producer with plant wants the plant its worked runs call for* (`close_kernel.close_rows`,
+   `capacity_by_working.normal_share`, `sim/tests/test_plant_by_working.py`, `test_capacity_by_working.py`). The share
+   of workplaces that works when the price covers the full cost is higher with plant (the running cost stands under
+   the price by the plant's charge). Found on the way, on a three-tile economy given plant in its smelting: plant beyond
+   the wear could only be built on a loan, so a smelter with coin to spare stayed too small for decades; it now builds
+   what the coin it holds over its working coin pays for. `sim/tests/test_economy_rest_plant_smoke.py` holds that economy
+   to resting, to working a part of its plant and not all of it, and to less plant with fewer people.
+3. *Input orders follow the hours hired* (`sim/economy/input_orders_after_hiring.py`,
+   `sim/tests/test_input_orders_after_hiring.py`). The plan's cap on a recipe that buys inputs is gone; between the
+   labour clearing and the goods markets each input order is re-sized to the runs the hired hours make. Found on the
+   way: runs and inputs could then take all of a producer's coin and the plant it meant to rebuild wore away, so the
+   coin for that plant is set aside first (`sim/economy/plant_coin.py`, `sim/tests/test_plant_coin.py`).
+4. *Merchants learn what a market would have taken* (`sim/economy/merchant_volume_news.py`,
+   `sim/tests/test_merchant_volume_news.py`): what was delivered and what buyers wanted at the year's price and did not
+   get. It does not yet help England, for the reason under "Found, not fixed".
+
+**A command for what the years move.** `python3 sim/simulator.py spin-up-trace --civ <id> --rules <set> --stages` now
+ends with a table of the figures the opening sizes, first year against last (`sim/ui/spin_up_moved.py`): the share of
+offered hours hired, the wage over the price level, hours, output, the money stock and each holder's coin, stock over
+output, unmet need. An opening the years leave where it is shows ones in its last column.
+
+**England on the four fixes** (that command, from a worktree pinned to the commit). Output, hours hired and unmet need
+end inside the tolerance; the rate, the watched prices and stock end near it; the price level fails on a single year's
+jump from one thin market. The table says what still moves: nearly all offered hours come to be hired where the
+opening leaves about a quarter unhired, the wage over the price level falls by about a third, households' coin halves,
+the money stock wears down, and the merchants' coin is gone within a few years.
+
+**Sending idle hours home was tried on the small economy and fails the headline test.** The plan was for hours with no
+taker to leave the market for the household's plot, so the wage would not fall for them. On the three-tile economy with
+a quarter more hours on offer than its opening hires (`stationary_setup(slack_share=0.25, ...)`), a scratch runner
+moved a share of each trade's idle people out of the market every year (no command in the tree does this). With any
+share, a start five per cent off rested somewhere else: by a few per cent of hours at a moderate share, by half at the
+whole. On the rules as built the same economy hires all the spare hours within a few decades, at nearly the wage in
+grain of the economy with none spare, and every start rests in the same place. The reason is plain once seen: a market
+where the idle have left clears at whatever wage suits those who stayed, so every size of workforce is a rest state.
+So the idle hours stay in the market and the wage clears them. On England, where farms are held by their land, that
+means a lower wage against prices and higher rents than the rough opening has.
+
+**Where the unhired fifth is, and what full hiring does to England** (scratch runners over the stages run's inputs; no
+command in the tree prints hours by trade).
+- About three quarters of the hours unhired in the first year belong to the plot trade: the people the opening puts on
+  their plots are numbered in the trade that farms hire from, and they offer the hours their plots do not take, in a
+  market where the farms want a third of them. Over the next years they move into the unskilled trade, which is what
+  carries its wage down.
+- The same people come to offer more of their year as the run goes on (the share of a worker's hours offered for hire
+  rises by about a fifth), so the hours on offer grow with no more people. Not traced: household work and plots are
+  the two things that keep hours at home.
+- With nearly all hours hired, food grows dear against the wage: bread and flour rise by a half to more than double
+  while most made goods fall by a third to two thirds, and an hour's wage ends buying about a fifth of the bread it
+  bought in the first year. Farms are held by their land, so the food does not grow with the hiring; the rent does.
+  That is the classical result for a country short of land and long on hands. Whether the level is right for England
+  in 1300 is the realism check of the plan (the wage in grain against a source someone opens), not something to tune.
+
+**Tried and reverted: the spare coin paid out whole** (`586f0cc6`, reverted by `ac4962df`). It rests on the small
+economies, and it would end the pile of idle coin a share a year leaves with producers. On England it put the owners'
+coin on the market at once: bread went to many times its price and then had no market at all, and the price level
+jumped several-fold in single years.
+
+**Found, not fixed.**
+- England has one merchant, holding about a hundredth of the money. On the clearing set it spends its coin on
+  charcoal in the years charcoal is cheapest, carries it to four areas and never sells it: the same stock stands there
+  year after year and its coin is gone (a scratch runner; `money_merchants` in the stages rows shows the coin). So
+  next to nothing moves between areas, whatever the merchant has learned. Two things to trace: why stock at a
+  destination is not offered (`merchants_plan.orders` skips stock on a tile that one of its routes starts from), and
+  whether one merchant of that size is what the opening means (`opening._open_merchants`).
+- The opening counts about twice the rent and profit income for households that the first year pays them (the probe
+  `Complaints/reports/473-handoff/probes/opening_income_probe.py england_1300 2`), on either rule set.
+- The price level jumps in single years where a thin market opens or closes, and bread's market is the least steady
+  of the watched goods.
