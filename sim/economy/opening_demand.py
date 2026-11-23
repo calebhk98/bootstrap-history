@@ -17,10 +17,12 @@ from . import durable_stock, households_buffer_stock, households_orders, househo
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 
 
-def constants(durable_gap_wear_paces: float = math.inf) -> np.ndarray:
+def constants(durable_gap_wear_paces: float = math.inf, durables_kept_while_used: bool = False) -> np.ndarray:
     """The rule constants the kernel reads, from the modules that declare them. `durable_gap_wear_paces` paces the gap
-    to a durable's wanted stock (`durable_stock.gap_share`; unpaced by default)."""
+    to a durable's wanted stock (`durable_stock.gap_share`; unpaced by default); `durables_kept_while_used` keeps all a
+    household holds of a durable it uses in use (`durable_stock.stock_in_use`; by default the spare is a store)."""
     values = np.zeros(kernel.K_COUNT)
+    values[kernel.K_KEEP_DURABLES] = 1.0 if durables_kept_while_used else 0.0
     values[kernel.K_GAP_SHARE] = durable_stock.DURABLE_GAP_CLOSED_SHARE
     values[kernel.K_GAP_WEAR_PACES] = durable_gap_wear_paces
     values[kernel.K_FLOOR_MARGIN] = households_orders.FLOOR_BUDGET_PRICE_MARGIN

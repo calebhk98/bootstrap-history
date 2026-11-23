@@ -11,7 +11,7 @@ import numpy as np
 
 from sim.jit import njit
 
-from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_FLOOR_MARGIN, K_GAP_SHARE, K_GAP_WEAR_PACES, K_HOUSEHOLD_SIZE, K_SAFETY,
+from .opening_demand_kernel import (K_BAND, K_CASH_SHARE, K_CUT, K_DRAWDOWN, K_FLOOR_MARGIN, K_GAP_SHARE, K_GAP_WEAR_PACES, K_HOUSEHOLD_SIZE, K_KEEP_DURABLES, K_SAFETY,
                                     K_WEALTH_TARGET, NF_HAS_FLOOR, NF_LIMIT, NF_PIDX, NF_QUALITIES, NF_SUB, NI_ROW0, NI_ROW1, RF_CEIL, RF_LIFE, RF_PRICE, RF_SPOIL,
                                     RF_SHARE, RI_GOOD, RI_UNIT, SF_LIFE, SF_PRICE, SF_WEIGHT, V_FLOORS, V_PIDX, V_SFLOORS, V_STOTALS, V_TOTALS, W_AFF,
                                     W_BUDGET, W_CAP, W_CEIL, W_COUNT, W_FLEX, W_FLOOR, W_ON, W_QTY, W_SHARE, _add, _affordable, _gap_share, _need_units, _purchase_toward_stock,
@@ -237,6 +237,8 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
                 in_use = 0.0
                 if flow > 0.0:
                     in_use = flow * store_floats[s, SF_LIFE] * (1.0 + constants[K_BAND])
+                    if constants[K_KEEP_DURABLES] > 0.0 and held > in_use:      # durable_stock.stock_in_use
+                        in_use = held
                 count = _add(partials[1], count, max(0.0, held - in_use) * store_floats[s, SF_PRICE])
         store_value = store_value + _total(partials[1], count)
 
@@ -347,6 +349,8 @@ def _cohort(c, smooth_rise, constants, cohort_floats, cohort_ints, template_ints
             in_use = 0.0
             if store_floats[s, SF_LIFE] > 0.0 and stock_flow > 0.0:
                 in_use = stock_flow * store_floats[s, SF_LIFE] * (1.0 + constants[K_BAND])
+                if constants[K_KEEP_DURABLES] > 0.0 and held > in_use:      # durable_stock.stock_in_use
+                    in_use = held
             held = max(0.0, held - in_use)
             store_out[store_base + s, SO_HELD] = held
             count = _add(partials[0], count, held * store_floats[s, SF_PRICE])

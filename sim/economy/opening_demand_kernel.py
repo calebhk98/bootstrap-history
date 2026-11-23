@@ -31,7 +31,8 @@ K_HOUSEHOLD_SIZE = 10
 K_PURSE_TOLERANCE = 11
 K_GAP_SHARE = 12             # the most of the gap to a durable's wanted stock bought in a year
 K_GAP_WEAR_PACES = 13        # that share is at most this many times one over the good's life (infinite: no bound)
-K_COUNT = 14
+K_KEEP_DURABLES = 14         # above nothing: all a household holds of a durable its flow uses is in use (durable_stock.stock_in_use)
+K_COUNT = 15
 
 # cohort floats
 CF_PEOPLE = 0

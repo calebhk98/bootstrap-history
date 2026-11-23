@@ -98,6 +98,26 @@ def purchase_toward_stock(flow: float, held: float, spec: GoodSpec, wear_paces: 
     return replacement_for_flow(flow, spec) + gap_share(spec.service_life_years, wear_paces) * gap
 
 
+def sold_when_spare() -> bool:
+    """What a household holds of a durable beyond what the year's flow keeps in use is a store: it counts as savings
+    and is offered for sale when the store stands over its target or the household is short of cash for its floors."""
+    return False
+
+
+def kept_while_used() -> bool:
+    """All a household holds of a durable it uses stays in use: a year in which its flow dips does not turn the
+    tools it works with into a store to sell, and wear runs the stock down."""
+    return True
+
+
+def stock_in_use(kept_by_flow: float, held: float, kept_while_it_is_used: bool) -> float:
+    """The stock of a durable a household counts as in use (the rest is its store): what its flow keeps in use
+    (`in_use_stock`), and where durables are kept while used, all it holds of a good its flow has a use for."""
+    if kept_while_it_is_used and kept_by_flow > 0.0:
+        return max(kept_by_flow, held)
+    return kept_by_flow
+
+
 def in_use_stock(flow_by_good: Mapping[GoodId, float], specs: Mapping[GoodId, GoodSpec],
                  scale: float, band: float) -> Dict[GoodId, float]:
     """Stock of each durable the flow keeps in use (flow times service life, `band` added); the store

@@ -45,6 +45,7 @@ class RuleSet:
     opening_issuer_coin: Callable   # (setup, the opening's record, its view) -> the coin the money's issuer opens holding
     durable_gap_wear_paces: Callable   # () -> how many times the share of a durable that wears in a year a household may close of the gap
                                        #  to the stock it wants (durable_stock.gap_share); infinite: the declared share alone
+    durables_kept_while_used: Callable   # () -> whether all a household holds of a durable it uses stays in use, out of the store it sells from (durable_stock.stock_in_use)
     spin_up_trims_workforce: Callable   # () -> whether the spin-up cuts each skilled trade to the hours employers plan to want (workforce_settle.py)
     spin_up_moves_workers: Callable     # () -> whether workers move between labour areas in the hidden years (spin_up_migration.py)
     basket_quantity_counted: Callable   # (a basket good's opening quantity, what its markets usually trade) -> the quantity the price level counts
@@ -101,6 +102,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                     plot_return_for_hours_kept=plot_hours_value.return_of_the_next_hour,
                     opening_issuer_coin=opening_issuer_coin.nothing,
                     durable_gap_wear_paces=durable_stock.unpaced,
+                    durables_kept_while_used=durable_stock.sold_when_spare,
                     spin_up_trims_workforce=spin_up_trim.trims,
                     spin_up_moves_workers=spin_up_migration.workers_move,
                     basket_quantity_counted=basket_counted.whole,
@@ -124,6 +126,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                       plot_return_for_hours_kept=plot_hours_value.return_keeping_what_the_plot_grows,
                       opening_issuer_coin=opening_issuer_coin.the_mints_wage_bill,
                       durable_gap_wear_paces=durable_stock.one_wear_pace,
+                      durables_kept_while_used=durable_stock.kept_while_used,
                       spin_up_trims_workforce=spin_up_trim.leaves_the_workforce,
                       spin_up_moves_workers=spin_up_migration.workers_stay,
                       basket_quantity_counted=basket_counted.still_bought,
