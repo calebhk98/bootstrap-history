@@ -61,6 +61,14 @@ def outside_option_by_tile(setup, record, view) -> Dict[str, float]:
             for tile, floor in floors.items()}
 
 
+def outside_option_for_the_year(setup, record, view) -> Dict[str, float]:
+    """`outside_option_by_tile` as the year's labour market reads it: stepped from last year's figures by the economy's
+    rule set (outside_option_step.py), and kept for next year."""
+    stepped = rule_sets.of(setup).outside_option_stepped(record.labour.outside_option_by_tile, outside_option_by_tile(setup, record, view))
+    record.labour.outside_option_by_tile = stepped
+    return stepped
+
+
 def labour_offer_rows(setup, record, view, subsistence_by_tile, levy_hours_per_worker: float = 0.0,
                       levied_tiles: Sequence[str] = (), rows: Optional[LabourOfferRows] = None) -> LabourOfferRows:
     """Each cohort's share of the tile's workers in each trade, as hours at the reservation wage, appended to `rows` (a new set

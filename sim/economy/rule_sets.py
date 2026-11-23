@@ -12,8 +12,8 @@ import numpy as np
 from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
 
 from . import (basket_counted, close_pack, coin_cost, durable_stock, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
-               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, plot_hours_value,
-               rate_step, servant_hours_counted, spin_up_migration, spin_up_seats, spin_up_stop, spin_up_trim, spin_up_valued, unkept_goods)
+               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, outside_option_step, plot_hours_value,
+               rate_step, servant_hours_counted, spin_up_coin, spin_up_migration, spin_up_seats, spin_up_stop, spin_up_trim, spin_up_valued, unkept_goods)
 from .setup import DEFAULT_RULE_SET as SEARCH
 
 CLEARING = "clearing"
@@ -46,12 +46,14 @@ class RuleSet:
     durable_gap_wear_paces: Callable   # () -> how many times the share of a durable that wears in a year a household may close of the gap
                                        #  to the stock it wants (durable_stock.gap_share); infinite: the declared share alone
     durables_kept_while_used: Callable   # () -> whether all a household holds of a durable it uses stays in use, out of the store it sells from (durable_stock.stock_in_use)
+    outside_option_stepped: Callable    # (what a worker had to earn last year by tile, this year's figures as priced) -> the figures the labour market reads (outside_option_step.py)
     spin_up_trims_workforce: Callable   # () -> whether the spin-up cuts each skilled trade to the hours employers plan to want (workforce_settle.py)
     spin_up_moves_workers: Callable     # () -> whether workers move between labour areas in the hidden years (spin_up_migration.py)
     basket_quantity_counted: Callable   # (a basket good's opening quantity, what its markets usually trade) -> the quantity the price level counts
     spin_up_stops_early: Callable       # () -> whether the spin-up's first stage ends on its first quiet year (spin_up_stop.py)
     spin_up_seats: Callable             # (the year's schools, whether the economy is settling, working people by labour area, the (trade, area) of each labour market) -> the schools the labour core trains through (spin_up_seats.py)
     spin_up_valued: Callable            # (the year's prices by good, quantities made, quantities producers hold) -> what the settle check reads changes in output and stock from beside the opening-price values (None: those alone; spin_up_valued.py)
+    spin_up_coin_wear: Callable         # (coin's declared wear share, whether the economy is settling, the coin stock, coin the mint struck this year net of melting) -> the share of each holding that wears this year (spin_up_coin.py)
 
 
 def planned_hours_bids(_setup, _record, _view, plans, bid_table) -> None:
@@ -103,12 +105,14 @@ RULE_SETS: Dict[str, RuleSet] = {
                     opening_issuer_coin=opening_issuer_coin.nothing,
                     durable_gap_wear_paces=durable_stock.unpaced,
                     durables_kept_while_used=durable_stock.sold_when_spare,
+                    outside_option_stepped=outside_option_step.as_priced,
                     spin_up_trims_workforce=spin_up_trim.trims,
                     spin_up_moves_workers=spin_up_migration.workers_move,
                     basket_quantity_counted=basket_counted.whole,
                     spin_up_stops_early=spin_up_stop.on_a_quiet_year,
                     spin_up_seats=spin_up_seats.by_masters,
-                    spin_up_valued=spin_up_valued.at_the_opening_prices),
+                    spin_up_valued=spin_up_valued.at_the_opening_prices,
+                    spin_up_coin_wear=spin_up_coin.as_declared),
     CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
                       expected_sales_after_close=unkept_goods.expected_sales_by_takings_where_unkept,
                       producer_labour_bids=schedule_bids_with_coin_cost, labour_clearing=clear_labour_at_one_wage,
@@ -127,12 +131,14 @@ RULE_SETS: Dict[str, RuleSet] = {
                       opening_issuer_coin=opening_issuer_coin.the_mints_wage_bill,
                       durable_gap_wear_paces=durable_stock.one_wear_pace,
                       durables_kept_while_used=durable_stock.kept_while_used,
+                      outside_option_stepped=outside_option_step.within_a_years_move,
                       spin_up_trims_workforce=spin_up_trim.leaves_the_workforce,
                       spin_up_moves_workers=spin_up_migration.workers_stay,
                       basket_quantity_counted=basket_counted.still_bought,
                       spin_up_stops_early=spin_up_stop.at_its_bound,
                       spin_up_seats=spin_up_seats.open_while_settling,
-                      spin_up_valued=spin_up_valued.at_the_years_prices),
+                      spin_up_valued=spin_up_valued.at_the_years_prices,
+                      spin_up_coin_wear=spin_up_coin.no_more_than_struck_while_settling),
 }
 
 

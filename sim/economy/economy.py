@@ -52,7 +52,7 @@ from .labour_sold_offers import sold_hours_by_worker
 from .labour_supply import HourSupply
 from .labour_results_table import hours_totals
 from .labour_state import people_in_pairs
-from .year_labour import clear_labour, labour_offer_rows, outside_option_by_tile
+from .year_labour import clear_labour, labour_offer_rows, outside_option_for_the_year
 from . import carried_by_length, carriage_report
 from .year_accounts import YearAccounts, build as build_accounts, stocks as stocks_held
 from .standing_demand import standing_block
@@ -222,7 +222,7 @@ class Economy:
         state_budget.plan_year(setup, record, view, labour_bids)
         staff_mint(setup, record, view, labour_bids)
         ledger.carriage_bids = carriage_hours.write_bids(labour_bids, setup, record)    # merchants' carriers, from last year's shipments
-        outside_option = outside_option_by_tile(setup, record, view)
+        outside_option = outside_option_for_the_year(setup, record, view)
         land_lease_year.lease_in_market(setup, record, view, self.own_plot_options())
         land_bid_year.take_up_own(setup, record, self.own_plot_options())
         levied_tiles = tuple(inputs.population_by_tile)      # the tiles of the nation whose state levies (port_levy.py spreads the hours over them)

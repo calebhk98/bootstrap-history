@@ -13,7 +13,7 @@ from sim.book_post import table_from
 from sim.book_tables import GOODS_MOVE_POSTINGS, TRANSFER_POSTINGS, GoodsMovePostings, TransferPostings
 from sim.compiled_tables.causes import OK
 
-from . import carriage_wear, metal_stock, types
+from . import carriage_wear, metal_stock, rule_sets, types
 from .types import GoodsMove
 from .wear_kernels import loss_moves
 
@@ -73,12 +73,17 @@ def _no_transfers() -> TransferPostings:
     return table_from(TRANSFER_POSTINGS, TransferPostings, 0, *[[] for _column in TRANSFER_POSTINGS.columns])
 
 
-def _wear_coin(book, spec, order: np.ndarray) -> None:
-    """Coin and metal lose their yearly share (metal_stock.wear_share): one transfer from each holder of more than zero."""
+def _wear_coin(book, spec, order: np.ndarray, coin_wear, settling: bool) -> None:
+    """Coin and metal lose their yearly share (metal_stock.wear_share; struck coin the share `coin_wear` makes of it, the rule
+    sets' `spin_up_coin_wear`): one transfer from each holder of more than zero."""
     worn = metal_stock.wear_share(spec)
     if worn is None:
         return
     share, purpose = worn
+    if spec.regime == "struck_coin":     # the rule set's say on a hidden year's wear of coin (spin_up_coin.py)
+        share = coin_wear(share, settling, book.money_supply(spec.currency_id), book.edge_net(types.EDGE_MINT, spec.currency_id))
+    if not share > 0.0:
+        return
     balances = book.balances_at(order, spec.currency_id)
     paying = np.nonzero(balances > 0.0)[0]
     rows = len(paying)
@@ -112,4 +117,4 @@ def wear_and_spoilage(setup, record, durable_users=()) -> None:
     worn = _losses(book, order, _share_by_good(book, setup.specs, _wear_share), users)
     _post_losses(book, spoiled, types.EDGE_SPOILAGE, "spoilage")
     _post_losses(book, worn, types.EDGE_CONSUMPTION, "wear")
-    _wear_coin(book, record.currency, order)
+    _wear_coin(book, record.currency, order, rule_sets.of(setup).spin_up_coin_wear, bool(getattr(record, "settling", False)))

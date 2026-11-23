@@ -18,6 +18,7 @@ class LabourRecord(OwnedRecord):
     sold_share_expected: Dict[str, float] = field(default_factory=dict)  # labour market_key -> share of offered hours households expect to sell, smoothed over the years (household_work_year.py)
     opening_sold_hours_per_worker: float = 0.0   # hours a working person was seeded to sell a year (zero: a whole working year)
     opening_sold_hours_by_area: Dict[str, float] = field(default_factory=dict)   # labour area -> hours a working person there was seeded to sell a year (empty: the one figure above)
+    outside_option_by_tile: Dict[str, float] = field(default_factory=dict)       # tile -> what a worker had to earn last year as the labour market read it (year_labour.outside_option_for_the_year)
 
     OWNERS = ("labour_record", "year_labour")
     AGENT_KEYED = ("hours_paid_by_employer",)
