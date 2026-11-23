@@ -590,9 +590,45 @@ tolerance on the median; a quarter of the members pass outright.
 5. The spin-up's own stop rule (the game's spin-up stops its first stage on one quiet year; the replay does not),
    then the Norse lands and Han, then the game's set.
 
+## 6m. Where it stands after Update 48 (read this first)
+
+**The near misses of 6l were a drift, not noise.** Before trusting a member that "passes", look at the trend
+columns of the ensemble and at one run's years: Update 48 found prices and wages falling several times as fast as
+the coin stock with a third of households' planned spending never filled. Probes that found it are scratch scripts
+of a few lines each (wrap `goods_clear_one_price.at_one_price` to sum bids against sales by good; wrap
+`households_orders_pack.kernel_orders` to read cash, income and planned spending by class; read
+`record.labour.people_in_markets` and the year's wages by trade). When a household budget alternates from year to
+year, print every good's household budget by year and look for the one that moves the other way.
+
+**Done since 6l.** The price level counts what is still bought; the first stage runs to its bound; the ensemble
+names each member's misses (Update 47). Any trade can be learnt while the economy settles; an untraded market with
+a seller holding units quotes the ask; the check reads output and stock at the earlier year's prices (Update 48).
+
+**Tried and reverted, do not repeat as they were.** A faster price memory for rationed markets (two forms, Update
+46); households' land and durables counted toward the wealth target (Update 47); opening prices raised to clear
+what the opening holds short (Update 48).
+
+**The check.** By the market-price reading three members in eight pass; hours, output and the rate are inside the
+tolerance in all eight.
+
+**What is left, in order.**
+1. Households budget for goods nobody sells (bronze, stone walls, brass). The money sits in bids that never fill
+   and, in a year when the good has no seller, lands on steel. Let a household plan a good at what it takes to get
+   it: a multiple per good learnt at the close from delivered against delivered plus unmet
+   (`year_close`, where `merchant_volumes` already reads `ledger.unmet_demand`), applied to the prices households
+   price their needs at (`households_basket.need_prices` and the batch path in `priced_need_prime`). Shares within
+   a need fall with the price (the substitution elasticity), so no kernel changes. Keep the market's own price as
+   it is: moving it was what failed in Update 46.
+2. Why the makers of walls, roof tiles and mortar do not regrow at several times cost: the expected price's pull
+   toward cost and the capacity rule (`close_pack.constants_array_for_clearing`, `capacity_by_working.py`).
+3. The opening: its price table for wood, draught animals and by-products; the purse it gives households with
+   plots; the property income it counts. Each is a place the rough plan is far from where the years settle.
+4. Step 6 of round five (a maker plans from the runs it made; lard opens with no capacity) and the realism table.
+5. The Norse lands and Han on `clearing`, then the game's set.
+
 ## 7. What to do first
 
-After Update 45: the list in 6l above replaces the ones below, which are kept for the record.
+After Update 48: the list in 6m above replaces the ones below, which are kept for the record.
 
 After Update 43:
 

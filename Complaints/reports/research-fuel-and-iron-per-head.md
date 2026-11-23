@@ -65,6 +65,32 @@ URL opened: https://lowtechinstitute.org/2021/04/26/firewood-saw-and-axe-vs-chai
   in four and a half hours". A cord is "4 ft x 8 ft x 4 ft of stacked, split wood". Felling and hauling are not in it,
   and the article gives no weight, so hours a tonne need a density that was not sourced.
 
+## 5. Iron goods a household held (second pass, 2026-11-23)
+
+Asked for: the weight of iron and other metal goods a pre-industrial household held, poor and well-off, and how long
+such goods lasted, so that the implements need could be bounded by a stock a head as the vessels need is. The
+orchestrating session opened the Roman figure's page itself (the table's wording is as quoted).
+
+- **A stock a household or a head held: no source found.** The probate-inventory studies (Overton and others;
+  Weatherill; Dyer; Briggs and Tompkins) could be reached only as catalogue pages; from search summaries alone, not
+  opened, inventories list tools by count and value and not by weight.
+- **A flow a head a year, Roman Britain.** Wikipedia, "Roman economy", section "Mining and metallurgy", table "Annual
+  metal production in metric tons" (https://en.wikipedia.org/wiki/Roman_economy, opened): iron "82,500 t", comment
+  "Based on estimate of iron production at 1.5 kg per head in Roman Britain, extrapolated to population size of 55
+  million for entire empire". An assumption extrapolated from one province; the works the page cites for it were not
+  opened.
+- **Single objects.** Kulturhistorisk museum, "The Langeid broadaxe"
+  (https://khm.uio.no/english/collections/objects/the-langeid-broadaxe.html, opened): "an original weight of around
+  800 grams (now 550 grams)", a two-handed war axe. O'Neill and others, EXARC Journal 2022/2
+  (https://exarc.net/ark:/88735/10639, opened): replica ard shares show "significant signs of wear on the shares
+  already over the course of a few years", one pictured "after five years of regular use". No weight given.
+- **A service life of iron tools, pots or edged weapons in years: no source found.**
+- **Copper-alloy goods: no source found.**
+
+With the flows of this note (one to two kilograms of iron a head a year, sections 2 and 5) and any service life of
+ten to twenty years, the iron in use a head comes to a few tens of kilograms; the life is not sourced, so this is an
+order of magnitude and not a figure for the data.
+
 ## Not found
 
 - A generous or comfortable level of fuel a head (the most a rich household burned): no source found.

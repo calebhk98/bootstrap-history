@@ -2487,3 +2487,125 @@ through the gaming table; and one broadly. The second is not a fault of the sett
 is made to work (the rough plan prices a scarce by-product at its cost share, and a recipe stops whole for want of a
 trifling input), or the price level stops giving a market that has all but closed its full opening weight. The
 second changes a quantity the settle check reads, so it is put to the owner, not done.
+
+## Update 47: the price level counts what is still bought; three members pass; wealth outside coin tried and reverted; the forests are not the bound on firewood (branch economy-rests-with-clearing-rules)
+
+**The owner's answer** to Update 46's question (how the price level should treat a market that has all but
+closed): "I don't care either way, as long as it's stabilizing and realistic." So the choice was made here.
+
+**Kept, behind the seam with rule tests.**
+1. *The price level counts what is still bought* (`RuleSet.basket_quantity_counted`, `basket_counted.py`,
+   `year_close.basket_counted_now`; `test_basket_counted.py`). A good of the opening basket counts by the lesser of
+   its opening quantity and what its markets usually trade. A market that trades as it did counts as before; one
+   that shrinks loses weight as its usual volume falls; a sliver at many times the opening price moves the level
+   by a sliver. This changes what the level means under `clearing`: it is the cost of the part of the opening
+   basket still bought. Nothing else in the economy moved with it (the level feeds behaviour only as a fallback
+   for households' expected inflation).
+2. *The first stage runs to its bound* (`RuleSet.spin_up_stops_early`, `spin_up_stop.py`, `spin_up_run.settle`;
+   `test_spin_up_stop.py`), so the opening a game saves is the path `spin-up-trace --stages` replays.
+3. *The ensemble names each member's misses*: every quantity a member ends over the tolerance on, with the good
+   that moved it most, and how many members pass (`spin_up_by_good.misses`).
+
+**England** (`spin-up-trace --civ england_1300 --rules clearing --stages --ensemble 8 --jobs 4`): every settle
+quantity is inside the tolerance on the median, and three members in eight pass the whole check. Of the rest, most
+miss by a hair on one or two quantities and one broadly; the good named beside nearly every miss is the steel
+households buy, with firewood and charcoal (which steel making burns) beside the stock misses.
+
+**Tried and reverted: households' wealth outside coin** (the owner's answer 8). The wealth a household counts
+toward its target was given its land (`titles_value.title_wealth`) and the durable goods it holds, in the opening's
+strike and in the years, through the one figure both read. Measured on one run and the small economies:
+- the opening's coin fell by about a third and the mint kept up with the wear for the first decade;
+- the rate swung between about a twentieth and a fifth, hours and output swung with it, and one rest test of the
+  three-tile economy failed by a hair. The households' spare coin is also the pool the loans come from, and a run's
+  cost counts its coin at the going rate, so a thin loan market moves every cost.
+- A scratch probe of wealth by class explains why the hoard is not mainly a shortfall of shares: shares alone
+  already meet the target for two classes in three at the opening; land is worth two to five years of a class's
+  income and the durable goods it holds five to nine, nearly all of it steel.
+So the count is not in the tree. What it would need first: a supply of loans that does not rest on spare coin.
+
+**Measured, no change needed: felling against growth.** The plan was to hold the hidden years' felling to a year's
+growth. A scratch probe of each tile's forest (`sim/geography/forest_timber.py`: hectares, standing stock, a
+year's regrowth) against the runs the wood and firewood makers worked shows the years fell about a third of what
+grows, on every tile: England's tiles hold about ten hectares of forest a head. The bound would bind nowhere.
+Firewood a head is high because warmth has no upper level in the needs data and wood is there for the cutting.
+
+**What steel is doing.** One need, implements and arms, takes a fifth of what a household spends beyond its floors
+and has no upper level; steel serves it best a kilogram and is cheap in hours, so households hold about a tonne a
+head, steel is two fifths of the watched spending, and its making (charcoal, and the wood behind it) is a large
+part of what the economy does. Its price is still gliding down a little each year at the end as charcoal's does,
+and its makers' stock moves by a point or two of a year's output: that is what most of the near misses are made of.
+
+## Update 48: the settled years were drifting; any trade can be learnt while the economy settles; an untraded market quotes its sellers' ask; the check reads output and stock at market prices (branch economy-rests-with-clearing-rules)
+
+**Tried and reverted: opening prices that clear the scarce goods** (round five, step 5). After each opening the
+share of what households and makers asked for that the placed producers supply was read good by good, and a short
+good's price raised by a damped step toward the price that clears it, inside the loop of the rent passes. One run
+looked better (more of the first year's hours hired, nothing left far short). The ensemble was worse: no member
+passed, steel's saw about tripled and two members blew up on cooked meals. A pitfall for whoever tries again: a good
+all of whose output its users take (leather) reads as wholly short against households' asks alone; the share has to
+be read against households' asks plus makers' use. Why it could not work is in the next paragraph: most of what the
+opening leaves short is short because its makers cannot grow, and a price many times the cost invites nobody.
+
+**What Update 47's near misses were made of: the settled years were not at rest.** Scratch probes of the trimmed
+stage year by year (households' coin, income and share wealth by class; the goods accounts; every trade's people,
+hiring and wage; each good's bids against what sold) showed:
+- the coin stock falling slowly (wear over strikes) while the price level and the wage fell several times as fast,
+  producers' stock rising every year and a few hours in a hundred with no taker;
+- about a third of what households planned to spend never filled: their bids for stone walls, bronze, brass,
+  gaming tables, tallow lights and ceramics met almost no supply and the money came back unspent;
+- the trades behind those goods (lime burners, potters, smiths, furnacemen) earning several times a labourer's wage
+  decades in, their numbers creeping up a little each year. A trade teaches at once only a share of its masters
+  (`sim/labour/market/training.py`), so a trade the first years shrank cannot regrow inside the hidden years. The
+  charcoal burner's wage was still falling toward a labourer's at the end and took charcoal's and steel's price
+  with it: that was the "glide" of steel in Update 47.
+
+**Kept, behind the seam, each with rule tests.**
+1. *Any trade can be learnt while the economy settles* (`RuleSet.spin_up_seats`, `spin_up_seats.py`,
+   `labour_inputs.schools_of_the_year`; `test_spin_up_seats.py`). In a hidden year under `clearing` every trade
+   with a labour market in an area has a place for each of the area's working people. Training years, completion
+   chances and the workers' own weighing of trades are untouched; the masters' cap is a friction of the path, and
+   at rest a trade trains its replacements well inside it. On one run the deflation and the stock pile-up went,
+   idle hours fell to about a third of what they were and about a third more was sold; a long run
+   (`--years 150`) is level for three decades from about year thirty.
+2. *An untraded market with a seller holding units quotes the least ask*
+   (`goods_clear_one_price.untraded_quote`; `test_goods_one_price_clearing.py`). Before, where the buyers' bids
+   stopped under every ask the market quoted the buyers' best bid. Buyers do not see a bid ceiling as a price on
+   offer (`MarketMemory.offered_price`), so the good left their sight for a year, nobody bid, the quote went back
+   to the ask and the good returned: a two-year flip-flop built into the quote. Timber frames came and went that
+   way over most of England, and in the years without them the whole shelter floor was bid for stone walls at many
+   times the price, which cut every other good's budget by about a twentieth. That was steel's saw.
+3. *The check reads changes in output and stock at the earlier year's prices* (`RuleSet.spin_up_valued`,
+   `spin_up_valued.py`, `spin_up_gap.valued_gaps`, the by-good parts in `spin_up_by_good.valued_parts`;
+   `test_spin_up_valued.py`, `test_spin_up_measure.py`). The check valued what is made and held at the opening's
+   cost table, which stands many times above what wood, firewood, draught animals and lead trade at once the
+   markets have run, so a small change in a herd or a wood pile read as a large share of a year's output. The
+   years themselves are untouched; the columns shown and the `search` set keep the opening prices. This changes a
+   yardstick, so both readings are given below.
+
+**England** (`spin-up-trace --civ england_1300 --rules clearing --stages --ensemble 8 --jobs 4`), the same eight
+runs read both ways: hours, output and the rate are inside the tolerance in every member and the price level in
+most; the drift across the trimmed stage (price level, stock, rate) is gone. By the opening-price reading one
+member in eight passes (the others miss on stock, the movers being mules, wood and firewood); by the market-price
+reading three pass, and what the rest miss on is steel's price, with one year's jump in gaming-table hours in one.
+
+**What the remaining misses are made of.** In the members that miss, one year in which households spend far more
+on steel. About a seventh of all that households bid goes to bronze and stone walls, of which almost none is made
+(the bronze makers want for tin and copper; the wall, roof-tile and mortar makers collapsed in the first years).
+The money is parked in bids that never fill. In a year when no seller holds a unit of bronze the good leaves the
+buyers' sight and its whole budget lands on steel, iron bar and brass. So the next rule: a household plans a good
+at what it takes to get it, learnt from the share of what was asked that the markets delivered.
+
+**Found, not fixed.**
+- The opening's price table is far from where several markets settle: wood, firewood, mules and oxen many times
+  too dear, lead (a by-product priced by its mass share of the smelt) a hundred times.
+- The building trades collapse in the first years: no stone wall sells in the first year, masons and carpenters
+  fall to a few in a hundred of what the opening placed, and the makers of walls, roof tiles and mortar shrink with
+  them. Their expected price lags the market's by years (the pull toward cost in the close), so they do not regrow
+  though walls sell at several times their cost.
+- The households' purse. The opening gives a household whose plot frees part of its budget a purse of that amount
+  over the yearly share of cash it spends (`opening_resting.resting_household_purse`), several times a year's
+  money income for the poorer classes; and the opening counts far more property income than the first years pay.
+  Once share wealth stands above the wealth target a household's resting purse is nothing, so the coin moves to
+  producers over decades.
+- A long run with the open seats is level from about year thirty to sixty, steps down with the coin stock after
+  that and slumps after about year one hundred and ten (owner question 13 stands).
