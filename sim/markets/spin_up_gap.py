@@ -62,10 +62,31 @@ def worst_price_change(states):
     return worst
 
 
+def value_at(quantities, prices, other_prices=None):
+    """The quantities' value at `prices`; a good they do not hold counts at `other_prices`, and at nothing where
+    neither holds it."""
+    other_prices = other_prices or {}
+    return sum(quantity * prices.get(good, other_prices.get(good, 0.0)) for good, quantity in sorted(quantities.items()))
+
+
+def valued_gaps(before, after):
+    """{"real_output", "inventory_value"}: the change between two years' "valued" figures ({"prices", "output", "stock"},
+    sim/economy/spin_up_valued.py) with every quantity at the earlier year's price (a good that year did not price at the
+    later year's): the change in the value of what is made over the earlier year's, and the change in the value of what
+    producers hold over the earlier year's output or, where it is larger, the stock itself."""
+    prices, later = before["prices"], after["prices"]
+    made = value_at(before["output"], prices, later)
+    held = value_at(before["stock"], prices, later)
+    return {"real_output": change_gap(value_at(after["output"], prices, later), made),
+            "inventory_value": change_gap(value_at(after["stock"], prices, later), held, made)}
+
+
 def state_gaps(before, after):
     """{quantity: change between two states}; "prices" is the watched prices' change weighted by the earlier state's shares
     of spending ("price_weights", `price_gap`). A quantity
-    stated before and gone now is a whole change; one stated in neither state is skipped."""
+    stated before and gone now is a whole change; one stated in neither state is skipped. Where both states carry a
+    year's prices and quantities ("valued"), output and stock are read from them (`valued_gaps`) and not from the
+    opening-price values."""
     gaps = {}
     for name, floor in QUANTITY_FLOORS.items():
         if before.get(name) is None:
@@ -76,6 +97,8 @@ def state_gaps(before, after):
             floor = before.get("real_output") or 0.0
         gaps[name] = 1.0 if after.get(name) is None else change_gap(after[name], before[name], floor)
     gaps["prices"] = price_gap(after["prices"], before["prices"], before.get("price_weights"))
+    if before.get("valued") and after.get("valued"):
+        gaps.update(valued_gaps(before["valued"], after["valued"]))
     return gaps
 
 

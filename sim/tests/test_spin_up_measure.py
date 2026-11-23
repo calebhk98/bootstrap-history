@@ -106,6 +106,36 @@ class WindowGapTests(unittest.TestCase):
         gaps = spin_up_gap.state_gaps(_state(inventory_value=400.0, real_output=100.0), _state(inventory_value=440.0, real_output=100.0))
         self.assertAlmostEqual(gaps["inventory_value"], 40.0 / 400.0)
 
+    def test_a_value_is_each_quantity_at_its_price(self):
+        self.assertAlmostEqual(spin_up_gap.value_at({"wood_kg": 500.0, "mule": 2.0}, {"wood_kg": 0.01, "mule": 300.0}), 605.0)
+
+    def test_a_good_the_prices_do_not_hold_counts_at_the_other_prices_and_at_nothing_where_they_hold_none(self):
+        self.assertAlmostEqual(spin_up_gap.value_at({"wood_kg": 500.0, "mule": 2.0, "cart": 1.0}, {"wood_kg": 0.01}, {"mule": 250.0}), 505.0)
+
+    def test_states_that_carry_a_years_prices_read_output_and_stock_at_the_earlier_years_prices(self):
+        before = _state(real_output=9999.0, inventory_value=9999.0, valued={
+            "prices": {"wood_kg": 1.0, "steel_kg": 10.0}, "output": {"wood_kg": 100.0, "steel_kg": 10.0}, "stock": {"wood_kg": 50.0}})
+        after = _state(real_output=1.0, inventory_value=1.0, valued={     # every price doubled: not a change in what is made or held
+            "prices": {"wood_kg": 2.0, "steel_kg": 20.0}, "output": {"wood_kg": 110.0, "steel_kg": 10.0}, "stock": {"wood_kg": 54.0}})
+        gaps = spin_up_gap.state_gaps(before, after)
+        self.assertAlmostEqual(gaps["real_output"], 10.0 / 200.0)
+        self.assertAlmostEqual(gaps["inventory_value"], 4.0 / 200.0)
+
+    def test_a_good_the_earlier_year_did_not_price_counts_at_the_later_years_price(self):
+        before = _state(valued={"prices": {"wood_kg": 1.0}, "output": {"wood_kg": 100.0}, "stock": {}})
+        after = _state(valued={"prices": {"wood_kg": 1.0, "cart": 30.0}, "output": {"wood_kg": 100.0}, "stock": {"cart": 1.0}})
+        self.assertAlmostEqual(spin_up_gap.state_gaps(before, after)["inventory_value"], 30.0 / 100.0)
+
+    def test_a_valued_stock_larger_than_a_years_output_is_read_against_itself(self):
+        before = _state(valued={"prices": {"wood_kg": 1.0}, "output": {"wood_kg": 100.0}, "stock": {"wood_kg": 400.0}})
+        after = _state(valued={"prices": {"wood_kg": 1.0}, "output": {"wood_kg": 100.0}, "stock": {"wood_kg": 440.0}})
+        self.assertAlmostEqual(spin_up_gap.state_gaps(before, after)["inventory_value"], 40.0 / 400.0)
+
+    def test_a_state_with_no_prices_carried_beside_one_with_them_is_read_by_the_values_both_state(self):
+        before = _state(inventory_value=10.0, real_output=100.0)
+        after = _state(inventory_value=11.0, real_output=100.0, valued={"prices": {"wood_kg": 1.0}, "output": {"wood_kg": 5.0}, "stock": {}})
+        self.assertAlmostEqual(spin_up_gap.state_gaps(before, after)["inventory_value"], 1.0 / 100.0)
+
     def test_employment_and_inventories_and_unmet_need_count_toward_settled(self):
         for name, moved in (("hired_hours", 80.0), ("inventory_value", 30.0), ("unmet_need", 5.0)):
             gaps = spin_up_gap.window_gaps([_state(), _state(**{name: moved})])
@@ -222,6 +252,18 @@ class StateTests(unittest.TestCase):
         self.assertEqual(state["hired_hours"], 900.0)
         self.assertEqual(state["inventory_value"], 80.0)
         self.assertEqual(state["unmet_need"], 4.5)
+
+
+    def test_under_the_clearing_rules_the_state_also_carries_the_years_prices_and_quantities(self):
+        book = Book()
+        book.move(GoodsMove("edge:production", "producer:a", "wheat_kg", "farms", 40.0, "production"))
+        setup = types.SimpleNamespace(opening_prices={"wheat_kg": 2.0}, rule_set="clearing")
+        record = types.SimpleNamespace(producers={"producer:a": None}, book=book)
+        outcome = types.SimpleNamespace(output={"wheat_kg": 100.0}, hired_hours=900.0, idle_hours=100.0, hunger_by_tile={},
+                                        prices={"wheat_kg": 0.5})
+        state = year_state_of(setup, record, outcome)
+        self.assertEqual(state["valued"], {"prices": {"wheat_kg": 0.5}, "output": {"wheat_kg": 100.0}, "stock": {"wheat_kg": 40.0}})
+        self.assertEqual(state["real_output"], 200.0)           # the figure shown stays at the opening prices
 
 
 class RebaseTests(unittest.TestCase):

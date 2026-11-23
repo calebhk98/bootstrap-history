@@ -40,6 +40,9 @@ def format_end_gaps(report):
     lines.extend("  %-16s %.4f" % (name, value) for name, value in report["gaps"].items())
     lines.append("  largest price change: %s %.4f" % (good, gap))
     lines.append("  largest of all: %.4f" % max(report["gaps"].values()))
+    if report.get("at_years_prices"):
+        lines.append("  (real_output and inventory_value: the change in what is made and held at the earlier year's prices; "
+                     "the columns above value both at the opening prices)")
     return "\n".join(lines)
 
 

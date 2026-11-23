@@ -113,6 +113,14 @@ class MixParts(unittest.TestCase):
     def test_rows_that_carry_no_mix_give_nothing(self):
         self.assertEqual(mix_parts([state({}, real_output=1.0), state({}, real_output=2.0)], "real_output", "output_by_good"), [])
 
+    def test_rows_that_carry_a_years_prices_give_the_parts_at_the_earlier_years_prices(self):
+        # at its opening price the mule herd would dwarf the wood; at what each trades for the wood moved the stock more
+        before = state({}, real_output=1.0, inventory_value=1.0, mix={"stock_by_good": {"mule": 900.0}},
+                       valued={"prices": {"wood_kg": 1.0, "mule": 10.0}, "output": {"wood_kg": 200.0}, "stock": {"wood_kg": 50.0, "mule": 3.0}})
+        after = state({}, real_output=1.0, inventory_value=1.0, mix={"stock_by_good": {"mule": 300.0}},
+                      valued={"prices": {"wood_kg": 3.0, "mule": 30.0}, "output": {"wood_kg": 200.0}, "stock": {"wood_kg": 62.0, "mule": 2.0}})
+        self.assertEqual(mix_parts([before, after], "inventory_value", "stock_by_good"), [("wood_kg", 0.06), ("mule", -0.05)])
+
 
 class LevelOf(unittest.TestCase):
     def test_the_basket_cost_now_over_its_cost_at_the_base(self):

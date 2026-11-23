@@ -1,7 +1,7 @@
 """Which goods the spin-up's settle gaps are made of, for `spin-up-trace --stages`: pure arithmetic over the per-year
 states of spin_up_gap.py (a replayed row also carries "mix", sim/economy/spin_up_mix.py). The settle test does not read
 this; it says where to look when the test fails."""
-from .spin_up_gap import price_gaps, state_gaps, window_gaps
+from .spin_up_gap import price_gaps, state_gaps, value_at, window_gaps
 
 
 def worst_pair(states, name):
@@ -65,11 +65,29 @@ def value_parts(before, after, base):
     return sorted((part for part in parts if part[1] != 0.0), key=lambda part: (-abs(part[1]), part[0]))
 
 
+MIX_OF_VALUED = {"stock_by_good": "stock", "output_by_good": "output"}      # the valued figure each mix value stands for
+
+
+def valued_parts(before, after, kind):
+    """`value_parts` of what is made ("output") or held ("stock") between two years' "valued" figures
+    (sim/economy/spin_up_valued.py), every quantity at the earlier year's price (a good that year did not price at the
+    later year's), as shares of the earlier year's output at those prices: what `spin_up_gap.valued_gaps` adds up."""
+    prices, later = before["prices"], after["prices"]
+
+    def values(quantities):
+        return {good: quantity * prices.get(good, later.get(good, 0.0)) for good, quantity in quantities.items()}
+    return value_parts(values(before[kind]), values(after[kind]), value_at(before["output"], prices, later))
+
+
 def mix_parts(states, quantity, mix_name):
     """`value_parts` of the mix values `mix_name` ("stock_by_good" or "output_by_good") over the pair of `states` with
     the largest gap in `quantity`, as shares of the earlier year's real output (what `state_gaps` reads stock against;
-    for output itself the parts then add up to its change). Nothing when fewer than two states or no mix is carried."""
+    for output itself the parts then add up to its change). Where the pair carries a year's prices and quantities
+    ("valued") the parts are read from them (`valued_parts`), as the gap is. Nothing when fewer than two states or
+    neither is carried."""
     pair = worst_pair(states, quantity)
+    if pair is not None and pair[0].get("valued") and pair[1].get("valued"):
+        return valued_parts(pair[0]["valued"], pair[1]["valued"], MIX_OF_VALUED[mix_name])
     if pair is None or "mix" not in pair[0] or "mix" not in pair[1]:
         return []
     return value_parts(pair[0]["mix"][mix_name], pair[1]["mix"][mix_name], pair[0].get("real_output") or 0.0)

@@ -48,7 +48,9 @@ def replay_opening(setup, cash_factor=1.0):
 def end_gaps(rows, measured_years=None):
     """What the opening reports of the rows: {"gaps": window_gaps of the last `measured_years` (default
     SPIN_UP_MEASURED_YEARS) trimmed rows, as spin_up_run.final_result computes it (None when fewer than two),
-    "measured_years", "worst_price": (the watched good with the largest change in them, that change)}."""
+    "measured_years", "worst_price": (the watched good with the largest change in them, that change), "at_years_prices":
+    whether every measured row carries its year's prices, so that output and stock are read at them (spin_up_gap.valued_gaps)}."""
     count = int(SPIN_UP_MEASURED_YEARS) if measured_years is None else measured_years
     states = [row for row in rows if row["stage"] == "trimmed"][-count:]
-    return {"gaps": window_gaps(states), "measured_years": len(states), "worst_price": worst_price_change(states)}
+    return {"gaps": window_gaps(states), "measured_years": len(states), "worst_price": worst_price_change(states),
+            "at_years_prices": bool(states) and all(state.get("valued") for state in states)}

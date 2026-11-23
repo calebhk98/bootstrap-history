@@ -19,7 +19,8 @@ def format_ensemble(civilisation_id, results):
              % (civilisation_id, len(results), markets_api.spin_up_cash_factor(1) - 1.0),
              "end gap = largest change between consecutive years over the last trimmed years; trend = change from the first "
              "to the second half of the trimmed stage over the second half's mean (rate against SPIN_UP_RATE_FLOOR, unmet "
-             "need against the food need)",
+             "need against the food need); where a rule set carries each year's prices the end gaps of real_output and "
+             "inventory_value are read at the earlier year's prices, and their trends are of the opening-price values",
              "%-16s %s | %9s %9s | %s | %9s" % ("quantity", " ".join("%9s" % ("gap m%d" % member) for member in members),
                                                 "median", "spread",
                                                 " ".join("%9s" % ("trend m%d" % member) for member in members),

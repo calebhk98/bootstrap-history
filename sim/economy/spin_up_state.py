@@ -2,22 +2,24 @@
 import math
 from typing import Callable, Mapping, Optional
 
-from . import cohort_people
+from . import cohort_people, rule_sets, spin_up_mix
 
 
 def spin_up_state(setup, record, outcome):
     """Real output and producers' inventories (quantities valued at the opening prices, so a price swing is not
     read as a quantity change), hours hired and idle, unmet need (food floor units short) and, where the record holds
-    cohorts, the food need it is measured against (`food_floor_units`)."""
+    cohorts, the food need it is measured against (`food_floor_units`). Where the rule set carries them, also "valued":
+    the year's prices and the quantities made and held (`spin_up_valued`), which the settle check reads changes from."""
     weight = setup.opening_prices
-    held = 0.0
-    for agent in record.producers:
-        for good, by_tile in record.book.holdings(agent)["goods"].items():
-            if good in weight:      # a good with no opening price is left out of the value
-                held += weight[good] * sum(by_tile.values())
-    return {"real_output": sum(weight[good] * quantity for good, quantity in outcome.output.items() if good in weight),
-            "hired_hours": outcome.hired_hours, "idle_hours": outcome.idle_hours, "inventory_value": held,
-            "unmet_need": sum(outcome.hunger_by_tile.values()), **_food_need(setup, record)}
+    held_by_good = spin_up_mix.stock_by_good(record.book.holdings(agent)["goods"] for agent in record.producers)
+    state = {"real_output": sum(weight[good] * quantity for good, quantity in outcome.output.items() if good in weight),
+             "hired_hours": outcome.hired_hours, "idle_hours": outcome.idle_hours,
+             "inventory_value": sum(weight[good] * quantity for good, quantity in held_by_good.items() if good in weight),   # a good with no opening price is left out
+             "unmet_need": sum(outcome.hunger_by_tile.values()), **_food_need(setup, record)}
+    valued = rule_sets.of(setup).spin_up_valued(getattr(outcome, "prices", None) or {}, outcome.output, held_by_good)
+    if valued is not None:
+        state["valued"] = valued
+    return state
 
 
 def _food_need(setup, record):
