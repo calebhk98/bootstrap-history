@@ -2609,3 +2609,67 @@ at what it takes to get it, learnt from the share of what was asked that the mar
   producers over decades.
 - A long run with the open seats is level from about year thirty to sixty, steps down with the coin stock after
   that and slumps after about year one hundred and ten (owner question 13 stands).
+
+## Update 49: why every long run slumped, and three rules that end it; a rule tried on the parked bids and shelved (branch economy-rests-with-clearing-rules)
+
+**Every long run of England slumped about a century and a quarter in** (`spin-up-trace --years 150`): a tenth or
+more of the hours with no taker, the wage falling by several points a year. Three causes were traced, each to the
+year it starts, with scratch probes (who offers and sells a good by kind of seller; every trade's people, hiring and
+wage across the year; each need's price index and the cost of the floors by tile).
+
+1. *Households sold the durables they use.* What a household holds of a durable beyond what the year's flow keeps in
+   use counted as a store. In a year their coin had run low and their flow dipped, households put more than a tenth
+   of the steel they hold up for sale, part of it at the discount a household short of cash for its floors takes.
+   The steel makers' sales halved, their stock tripled, they cut their runs by more than half, and the charcoal,
+   wood and iron behind them went too. Kept: `RuleSet.durables_kept_while_used` (`durable_stock.stock_in_use`, a
+   constant the orders kernel reads where it works out the stock in use; `test_durables_kept.py`). Under
+   `clearing` all a household holds of a durable its flow has a use for stays in use and wear runs it down.
+2. *What a worker must earn jumped twentyfold on one tile.* The cost of a household's floors is the least a worker
+   asks for a year. On the largest tile timber frames dropped out of offer for one year, shelter was read at the
+   stone-wall quote (a starved market that has ratcheted its price up by the yearly limit for a century), and the
+   asks rose with the cost: a seventh of all hours went unhired while wages rose. Kept:
+   `RuleSet.outside_option_stepped` (`outside_option_step.py`, `year_labour.outside_option_for_the_year`, the
+   figure kept in the labour record; `test_outside_option_step.py`). The figure moves from last year's by no more
+   than a market's price may in a year.
+3. *The coin stock fell every hidden year* (wear over strikes), and prices stepped down with it in waves, each with
+   a few years of idle hours. Kept: `RuleSet.spin_up_coin_wear` (`spin_up_coin.py`, `wear_year._wear_coin`;
+   `test_spin_up_coin.py`): in a hidden year coin wears only as far as the mint struck that year. This is owner
+   question 13's option (a), taken on the owner's later word that such choices are the session's as long as the
+   result is stable and realistic. It stands for the trade that brought metal in and should go when the opening
+   carries that trade; the mint still sizes its strike on the declared wear, and a year of play wears coin as
+   declared.
+
+**England with the three** (and the rules of Update 48): a 150-year run has no slump. Between one and three hours in
+a hundred are unhired throughout; sales, the wage bill and its share of sales are level from about year sixty; the
+price level rises until about then and holds. On the eight members at the usual length four pass with the kept
+durables alone, every median gap inside the tolerance; adding the level coin stock leaves three, because the price
+level is then still rising a little at the end of the usual length; with a first stage of 55 years
+(`ROME_SPIN_UP_YEARS=55,15`) four pass and in the other four the one miss is the watched prices, steel's, just over
+the tolerance, every other quantity passing in all eight.
+
+**Tried and shelved: a household plans around what can be bought.** A multiple per good, learnt at the close from
+the units its markets delivered against delivered plus unmet (`record.goods.volumes` and `unmet`), raised while less
+than most of what was asked is delivered and eased once nobody goes short, each need's goods held against its least
+short one, the coin metal left out.
+- First form, the multiple applied to the price households price their needs at: the economy collapsed inside
+  fifteen years. Shelter is a floor whose goods are all short, so its price index grew without bound, the cost of
+  the floors with it, and the asks priced labour out. A multiple must never reach what a need costs.
+- Second form, the multiple moving only the mix within a need (`need_basket.priced_need` and the kernel
+  `priced_need_kernel.price_needs` given a per-good figure the weight is divided by; kernel and Python agreed bit
+  for bit): the bids parked on bronze went to steel and iron within a few years and one run passed every settle
+  quantity, but the ensemble was a little worse than without it, and worse again with the level coin stock:
+  markets that are only mildly or now and then short (flour, milk, opium) hunt, a year short and a year over. It
+  was measured before the three rules above were in. A gentler form would act only on goods grossly short for
+  years.
+
+**What is left.**
+- Steel's price in the members that miss: one year in which the budget households park on bronze (almost none is
+  made) lands on steel when no seller holds a unit of bronze and the good leaves their sight.
+- The length of the hidden years. With the coin stock level the economy reaches its rest about year sixty, not
+  thirty; the first stage's length under `clearing` should follow (`sim/markets/spin_up.py`), at the cost of a
+  longer fresh opening.
+- The stone-wall market: floor bids have no price cap, almost nothing is made, and the price climbs by the yearly
+  limit for as long as the run lasts. The step on what a worker must earn keeps it from pricing labour out; the
+  market itself is still wrong, and so is the supply behind it (Update 48).
+- Households spend down their coin for decades because their share wealth stands far above the wealth target; at
+  the end they hold little more than the year's income. With the three rules that no longer ends in a slump.
