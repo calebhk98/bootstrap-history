@@ -98,15 +98,18 @@ def bid_top_at(bids: Sequence[Bid], price: float) -> Optional[float]:
 
 
 def untraded_quote(bids: Sequence[Bid], curves, posted: Sequence[Offer]) -> Optional[Quote]:
-    """What a market that traded nothing this year quotes: `market_quote.no_trade_quote` over what its sellers ask (each
-    curve's `asking_price` for the units it holds, the posted offers as posted). Where buyers would have paid an ask and
-    still got nothing (the year's price was held under it), the quote is the lowest ask, which is where the price
-    heads; None where no seller holds a unit and no buyer names a top."""
+    """What a market that traded nothing this year quotes. Where a seller holds a unit it is the least any of them asks
+    (each curve's `asking_price` for the units it holds, the posted offers as posted): that is what a buyer can still
+    buy at and where the price heads, whether the buyers' bids stopped under it or the year's move held the price
+    under it. A quote of the buyers' best bid there would take the good out of the buyers' sight for a year
+    (`MarketMemory.offered_price` shows no bid ceiling) and the ask would put it back the next. Where no seller holds a
+    unit it is `market_quote.no_trade_quote`: the buyers' best bid, or None where no buyer names a top."""
     asks = [Offer(curve.offer.seller, curve.offer.good, curve.offer.area, curve.offer.tile, curve.offer.quantity, curve.asking_price)
             for curve in curves] + list(posted)
-    quote = market_quote.no_trade_quote(bids, asks)
     lowest = market_quote.lowest_unfilled_ask(asks)
-    return Quote(QUOTE_LOWEST_UNFILLED_ASK, lowest) if quote is None and lowest is not None else quote
+    if lowest is not None:
+        return Quote(QUOTE_LOWEST_UNFILLED_ASK, lowest)
+    return market_quote.no_trade_quote(bids, asks)
 
 
 def price_moved_from(last_price: Optional[float], curves, buyers) -> Optional[float]:

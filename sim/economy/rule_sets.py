@@ -13,7 +13,7 @@ from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
 
 from . import (basket_counted, close_pack, coin_cost, durable_stock, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
                making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, plot_hours_value,
-               rate_step, servant_hours_counted, spin_up_migration, spin_up_stop, spin_up_trim, unkept_goods)
+               rate_step, servant_hours_counted, spin_up_migration, spin_up_seats, spin_up_stop, spin_up_trim, unkept_goods)
 from .setup import DEFAULT_RULE_SET as SEARCH
 
 CLEARING = "clearing"
@@ -49,6 +49,7 @@ class RuleSet:
     spin_up_moves_workers: Callable     # () -> whether workers move between labour areas in the hidden years (spin_up_migration.py)
     basket_quantity_counted: Callable   # (a basket good's opening quantity, what its markets usually trade) -> the quantity the price level counts
     spin_up_stops_early: Callable       # () -> whether the spin-up's first stage ends on its first quiet year (spin_up_stop.py)
+    spin_up_seats: Callable             # (the year's schools, whether the economy is settling, working people by labour area, the (trade, area) of each labour market) -> the schools the labour core trains through (spin_up_seats.py)
 
 
 def planned_hours_bids(_setup, _record, _view, plans, bid_table) -> None:
@@ -102,7 +103,8 @@ RULE_SETS: Dict[str, RuleSet] = {
                     spin_up_trims_workforce=spin_up_trim.trims,
                     spin_up_moves_workers=spin_up_migration.workers_move,
                     basket_quantity_counted=basket_counted.whole,
-                    spin_up_stops_early=spin_up_stop.on_a_quiet_year),
+                    spin_up_stops_early=spin_up_stop.on_a_quiet_year,
+                    spin_up_seats=spin_up_seats.by_masters),
     CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
                       expected_sales_after_close=unkept_goods.expected_sales_by_takings_where_unkept,
                       producer_labour_bids=schedule_bids_with_coin_cost, labour_clearing=clear_labour_at_one_wage,
@@ -123,7 +125,8 @@ RULE_SETS: Dict[str, RuleSet] = {
                       spin_up_trims_workforce=spin_up_trim.leaves_the_workforce,
                       spin_up_moves_workers=spin_up_migration.workers_stay,
                       basket_quantity_counted=basket_counted.still_bought,
-                      spin_up_stops_early=spin_up_stop.at_its_bound),
+                      spin_up_stops_early=spin_up_stop.at_its_bound,
+                      spin_up_seats=spin_up_seats.open_while_settling),
 }
 
 

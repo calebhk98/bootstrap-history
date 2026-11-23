@@ -10,10 +10,11 @@ from typing import Dict, List
 from sim.constants import declare
 from sim.labour.api import CAREER_YEARS, Route, YearInputs as CoreInputs
 
-from . import flight_routes, rule_sets, spin_up_migration
+from . import flight_routes, rule_sets, spin_up_migration, spin_up_seats
 from .households_cohort import VALUE_OF_LIFE_YEARS_OF_INCOME
 from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
 from .labour_ask_floor import ask_floor_by_tile
+from .market_table_specs import KEY_SEPARATOR
 from .setup import labour_area
 from .year_labour import outside_option_by_tile
 
@@ -42,6 +43,14 @@ def routes_are_open(setup, record) -> bool:
     return spin_up_migration.routes_open(bool(getattr(record, "settling", False)), rule_sets.of(setup).spin_up_moves_workers())
 
 
+def schools_of_the_year(setup, record, schools) -> tuple:
+    """The schools the labour core trains through this year (`spin_up_seats`): the year's own, and whatever the rule set
+    adds while the economy settles."""
+    people = spin_up_seats.working_people_by_area((labour_area(cohort.tile), cohort.working_people) for cohort in record.cohorts.values())
+    return rule_sets.of(setup).spin_up_seats(schools, bool(getattr(record, "settling", False)), people,
+                                             spin_up_seats.markets_of(record.labour.hours_idle, KEY_SEPARATOR))
+
+
 def labour_context(setup, record, view, carriage, inputs, own_plot_options=None, outside=None) -> CoreInputs:
     """The core's inputs for the year without trades or bids (the clearing adds them). `own_plot_options`
     (households_own.own_production_options) sets how low a worker's ask can fall: the household's costs less what the plot gives.
@@ -62,6 +71,6 @@ def labour_context(setup, record, view, carriage, inputs, own_plot_options=None,
             None if setup.flight is None else setup.flight.expected_penalty_of_leaving),
         value_of_life_years_of_income=VALUE_OF_LIFE_YEARS_OF_INCOME,
         bondage_allowed=frozenset(labour_area(tile) for tile in inputs.bondage_tiles),
-        schools=tuple(inputs.schools),
+        schools=schools_of_the_year(setup, record, inputs.schools),
         bonded_for_sale={labour_area(tile): dict(by_trade)
                          for tile, by_trade in (inputs.bonded_for_sale or {}).items()})

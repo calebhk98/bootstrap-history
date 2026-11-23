@@ -161,9 +161,17 @@ class UntradedQuote(unittest.TestCase):
         self.assertEqual(quote.kind, QUOTE_LOWEST_UNFILLED_ASK)
         self.assertAlmostEqual(quote.price, self.stock.lowest_price)
 
-    def test_buyers_who_top_out_under_the_ask_quote_their_best_bid(self):
+    def test_buyers_who_top_out_under_the_ask_leave_the_ask_as_the_quote(self):
+        # the good is still on offer at the ask: a quote of the buyers' bid would hide it from them for a year
         bids = [Bid("household:a", "lard_kg", "area", "tile", 5.0, 0.0, 1.0, 0.0, 100.0, 0, 1.2)]
         quote = untraded_quote(bids, [self.stock], [])
+        self.assertEqual(quote.kind, QUOTE_LOWEST_UNFILLED_ASK)
+        self.assertAlmostEqual(quote.price, self.stock.lowest_price)
+
+    def test_with_no_seller_holding_a_unit_the_buyers_best_bid(self):
+        empty = StockCurve(Offer("producer:a", "lard_kg", "area", "tile", 0.0, 1.5), 4.0, 2.0, 1.5)
+        bids = [Bid("household:a", "lard_kg", "area", "tile", 5.0, 0.0, 1.0, 0.0, 100.0, 0, 1.2)]
+        quote = untraded_quote(bids, [empty], [])
         self.assertEqual((quote.kind, quote.price), (QUOTE_BEST_UNFILLED_BID, 1.2))
 
     def test_a_seller_with_nothing_to_sell_asks_nothing(self):
