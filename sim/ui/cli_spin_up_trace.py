@@ -10,8 +10,8 @@ from sim.engine.ui_port import Sim, default_civilisation_id, load, load_civ
 from sim.markets.port_trace_holders import HOLDER_COLUMNS
 from sim.ui.spin_up_moved import format_moved, moved
 from sim.ui.spin_up_stages_report import format_end_gaps, header_line, row_line, write_stage_csv
-from sim.ui.spin_up_by_good_report import (format_by_good, format_ensemble_by_good, format_level_parts, format_member_level_parts, format_mix,
-                                           format_parts)
+from sim.ui.spin_up_by_good_report import (format_by_good, format_ensemble_by_good, format_level_parts, format_member_level_parts,
+                                           format_member_misses, format_mix, format_parts)
 from sim.ui.spin_up_ensemble_report import format_ensemble, write_ensemble_csv
 from sim.ui.spin_up_ensemble_run import run_ensemble
 from sim.ui.spin_up_fixture_trace import columns_of, fixture_trace, format_fixture_trace
@@ -78,6 +78,7 @@ def _print_ensemble(args):
     print(format_ensemble(civilisation_id, results))
     print(format_ensemble_by_good(markets_api.spin_up_median_by_good([result["by_good"] for result in results])))
     print(format_member_level_parts(results))
+    print(format_member_misses(results))
     if args.csv:
         write_ensemble_csv(results, args.csv)
     return 0

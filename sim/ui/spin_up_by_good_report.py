@@ -72,6 +72,26 @@ def format_member_level_parts(results):
     return "\n".join(lines)
 
 
+def format_member_misses(results):
+    """One line per ensemble member: the settle quantities it ends over the tolerance on, each with its gap and the good
+    that moved it most where the quantity is made of goods; a member with none passes. Ends with how many pass."""
+    lines = ["each member's misses (quantity, its gap, the good that moved it most and that good's part):"]
+    passed = 0
+    for result in results:
+        found = result.get("misses")
+        if result.get("gaps") is None:
+            lines.append("  m%-3d too few years measured" % result["member"])
+            continue
+        if not found:
+            passed += 1
+            lines.append("  m%-3d passes" % result["member"])
+            continue
+        lines.append("  m%-3d %s" % (result["member"], "; ".join(
+            "%s %.4f" % (quantity, gap) + ("" if good is None else " (%s %+.4f)" % (good, part)) for quantity, gap, good, part in found)))
+    lines.append("  %d of %d members pass" % (passed, len(results)))
+    return "\n".join(lines)
+
+
 def format_ensemble_by_good(medians):
     """The by-good table of an ensemble: each figure's median across the members ({good: {figure: median}})."""
     return "medians across the members\n" + format_by_good(medians)

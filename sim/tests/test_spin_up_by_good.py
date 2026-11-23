@@ -5,7 +5,7 @@ QUICK_TOPIC = True
 
 import unittest
 
-from sim.markets.spin_up_by_good import (by_good, largest_moves, level_of, level_parts, mix_parts, price_level_parts, price_parts,
+from sim.markets.spin_up_by_good import (by_good, largest_moves, level_of, level_parts, misses, mix_parts, price_level_parts, price_parts,
                                          price_trends, trend_and_saw, value_parts, worst_pair)
 from sim.markets.spin_up_gap import price_gap
 
@@ -155,6 +155,31 @@ class PriceLevelParts(unittest.TestCase):
 
     def test_rows_that_carry_no_mix_give_nothing(self):
         self.assertEqual(price_level_parts([state({}, price_level=1.0), state({}, price_level=1.2)]), [])
+
+
+class Misses(unittest.TestCase):
+    def quiet(self, **changes):
+        base = dict(price_level=1.0, rate=0.05, real_output=100.0, hired_hours=50.0, inventory_value=40.0, unmet_need=0.0, food_need=10.0)
+        base.update(changes)
+        return state({"bread": 1.0}, {"bread": 1.0}, **base)
+
+    def test_a_window_inside_the_tolerance_on_every_quantity_has_none(self):
+        self.assertEqual(misses([self.quiet(), self.quiet(real_output=101.0)], 0.02), [])
+
+    def test_a_quantity_made_of_goods_names_the_good_that_moved_it_most(self):
+        before = self.quiet(mix={"stock_by_good": {"wood": 30.0, "steel": 10.0}, "output_by_good": {}, "basket_costs": {}})
+        after = self.quiet(inventory_value=45.0, mix={"stock_by_good": {"wood": 34.5, "steel": 10.5}, "output_by_good": {}, "basket_costs": {}})
+        found = misses([before, after], 0.02)
+        self.assertEqual([(quantity, good) for quantity, _gap, good, _part in found], [("inventory_value", "wood")])
+        self.assertAlmostEqual(found[0][1], 0.05)       # stock moved by five of a hundred of output
+        self.assertAlmostEqual(found[0][3], 0.045)
+
+    def test_hours_and_the_rate_name_no_good_and_the_largest_gap_comes_first(self):
+        found = misses([self.quiet(), self.quiet(hired_hours=55.0, rate=0.053)], 0.02)
+        self.assertEqual([(quantity, good) for quantity, _gap, good, _part in found], [("hired_hours", None), ("rate", None)])
+
+    def test_fewer_than_two_years_have_none(self):
+        self.assertEqual(misses([self.quiet()], 0.02), [])
 
 
 class ByGood(unittest.TestCase):

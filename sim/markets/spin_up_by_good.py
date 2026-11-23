@@ -1,7 +1,7 @@
 """Which goods the spin-up's settle gaps are made of, for `spin-up-trace --stages`: pure arithmetic over the per-year
 states of spin_up_gap.py (a replayed row also carries "mix", sim/economy/spin_up_mix.py). The settle test does not read
 this; it says where to look when the test fails."""
-from .spin_up_gap import price_gaps, state_gaps
+from .spin_up_gap import price_gaps, state_gaps, window_gaps
 
 
 def worst_pair(states, name):
@@ -135,3 +135,32 @@ def by_good(rows, measured_years):
         trend, saw = trends.get(good, (None, None))
         table[good] = {"share": share, "move": moves.get(good), "part": part, "trend": trend, "saw": saw}
     return table
+
+
+def misses(states, tolerance):
+    """[(quantity, its gap, the good that moved it most or None, that good's part or None)] for the settle quantities whose
+    gap over `states` (the measured years) is at or over `tolerance`, the largest gap first. The good is read where the
+    quantity is made of goods: the watched prices (`price_parts`), the price level (`price_level_parts`), stock and
+    output (`mix_parts`); hours, the rate and unmet need name none. Nothing when fewer than two states."""
+    gaps = window_gaps(states)
+    if gaps is None:
+        return []
+    found = []
+    for quantity, gap in sorted(gaps.items(), key=lambda item: (-item[1], item[0])):
+        if gap < tolerance:
+            continue
+        good, part = None, None
+        if quantity == "prices":
+            parts = price_parts(*worst_pair(states, "prices"))
+            if parts:
+                good, part = parts[0][0], parts[0][3]
+        elif quantity == "price_level":
+            parts = price_level_parts(states)
+            if parts:
+                good, part = parts[0][0], parts[0][2]
+        elif quantity in ("inventory_value", "real_output"):
+            parts = mix_parts(states, quantity, "stock_by_good" if quantity == "inventory_value" else "output_by_good")
+            if parts:
+                good, part = parts[0]
+        found.append((quantity, gap, good, part))
+    return found

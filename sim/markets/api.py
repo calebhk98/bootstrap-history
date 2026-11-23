@@ -92,6 +92,15 @@ def spin_up_price_level_parts(rows):
 	return price_level_parts(trimmed[-int(SPIN_UP_MEASURED_YEARS):])
 
 
+def spin_up_member_misses(rows):
+	"""[(quantity, gap, the good that moved it most or None, its part or None)] for the settle quantities the rows end over
+	the tolerance on (spin_up_by_good.misses over the measured years); nothing for rows that pass."""
+	from .spin_up import SPIN_UP_MEASURED_YEARS, SPIN_UP_TOLERANCE
+	from .spin_up_by_good import misses
+	trimmed = [row for row in rows if row["stage"] == "trimmed"]
+	return misses(trimmed[-int(SPIN_UP_MEASURED_YEARS):], float(SPIN_UP_TOLERANCE))
+
+
 def spin_up_mix_tables(rows, count):
 	"""(labels, hours by trade, output by good, recipes whose share of a good moved) for the first year, the trough and the
 	last year of the rows `spin_up_stages` gave (spin_up_mix_table.py); each table's rows hold one value per label."""

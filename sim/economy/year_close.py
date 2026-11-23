@@ -4,7 +4,7 @@ import math
 from types import MappingProxyType
 from typing import Dict, Mapping, Tuple
 
-from . import credit_claims, producer_table, rule_sets
+from . import basket_counted, credit_claims, producer_table, rule_sets
 from .staffed_runs import staffed_runs
 from .expected_sales import demand_seen, market_capacities
 from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, currency, expansion_price, merchants, ownership, producer_exit, shares,
@@ -216,15 +216,22 @@ def _with_sales(producer, recipe, ledger: YearLedger, sold: float, prices):
                                last_runs=worked, staffed_runs=staffed)
 
 
+def basket_counted_now(setup, record) -> Dict[str, float]:
+    """The quantity of each opening basket good the price level counts this year, by the economy's rule set
+    (basket_counted.py): its whole opening quantity, or what its markets usually trade."""
+    return basket_counted.counted(record.goods.opening_basket, basket_counted.usual_volume_by_good(usual_volumes(record)),
+                                  rule_sets.of(setup).basket_quantity_counted)
+
+
 def remember_basket_price_level(setup, record) -> float:
     """The fixed basket's cost at today's prices over its cost at the base prices, over the goods that
     traded recently (notional.RECENT_TRADE_YEARS): a good that has not cleared holds only an estimate,
     and an estimate frozen at its base price would damp measured inflation. The basket's quantities
-    stay those of the opening; which goods are priced follows trade."""
+    are those of the opening as far as the rule set counts them (`basket_counted_now`); which goods are priced follows trade."""
     recent = recently_traded_goods(record.memory)
     prices = {good: price for good, price in national_prices(record).items() if good in recent}
     base = record.goods.index_base_prices or setup.opening_prices
-    level = currency.basket_price_level(prices, base, record.goods.opening_basket)
+    level = currency.basket_price_level(prices, base, basket_counted_now(setup, record))
     # the median's weights are what the goods traded for last year; the opening basket's value stands in until they trade
     spending = traded_spending_weights(usual_volumes(record),
                                        record.memory.last_year_prices or prices, set(record.goods.opening_basket)) \

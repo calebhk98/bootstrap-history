@@ -5,6 +5,7 @@ from typing import Dict, Iterable, Mapping, Sequence, Tuple
 
 from .market_memory import KEY_SEPARATOR
 from .notional import recently_traded_goods
+from .year_close import basket_counted_now
 
 
 def hours_by_trade(keys: Sequence[str], hired: Sequence[float], idle: Sequence[float]) -> Dict[str, Tuple[float, float]]:
@@ -58,7 +59,7 @@ def basket_costs(prices: Mapping[str, float], base: Mapping[str, float], basket:
                  recent: Iterable[str]) -> Dict[str, Tuple[float, float]]:
     """{good: (what the basket's quantity of it costs at `prices`, what it cost at the `base` prices)} for the goods the
     fixed-basket price level counts in a year (`currency.basket_price_level` over the goods of `recent`): those of the
-    basket that traded recently and hold a price now and at the base. The level is the first column's sum over the second's."""
+    basket (as far as the level counts each: `year_close.basket_counted_now`) that traded recently and hold a price now and at the base. The level is the first column's sum over the second's."""
     counted = set(recent)
     return {good: (prices[good] * quantity, base[good] * quantity) for good, quantity in sorted(basket.items())
             if good in counted and good in prices and good in base}
@@ -76,4 +77,4 @@ def year_mix(setup, record, outcome) -> dict:
             "stock_by_good": value_by_good(held, setup.opening_prices),
             "output_by_good": value_by_good(outcome.output, setup.opening_prices),
             "basket_costs": basket_costs(outcome.prices, record.goods.index_base_prices or setup.opening_prices,
-                                         record.goods.opening_basket, recently_traded_goods(record.memory))}
+                                         basket_counted_now(setup, record), recently_traded_goods(record.memory))}

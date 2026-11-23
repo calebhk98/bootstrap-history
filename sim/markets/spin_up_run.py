@@ -57,13 +57,15 @@ def spin_up(economy, trace=None):
 def settle(economy, inputs, watched, trace=None, shares=None):
     """The first stage's stop rule (it decides when the stage ends; it is not the opening's reported
     result): hidden years until the price level, the rate (against a floor, see spin_up_gap) and the main
-    prices move less than the tolerance a year. Returns {"settled": whether the tolerance was met, "years":
-    years run, "gap": the largest change in the last year measured (none measured: infinity is not stored,
-    so one)}."""
+    prices move less than the tolerance a year; under a rule set that does not stop early
+    (`economy_api.spin_up_stops_early`) the stage runs its full length. Returns {"settled": whether the last year
+    measured met the tolerance, "years": years run, "gap": the largest change in the last year measured (none
+    measured: infinity is not stored, so one)}."""
     before = None
     gap = 1.0
     years = 0
     settled = False
+    stops_early = economy_api.spin_up_stops_early(economy)
     for _year in range(spin_up_years()[0]):
         outcome = economy.step(inputs)
         years += 1
@@ -77,8 +79,8 @@ def settle(economy, inputs, watched, trace=None, shares=None):
                       change_gap(now[1], before[1], SPIN_UP_RATE_FLOOR)
                       if now[1] is not None and before[1] is not None and before[1] > 0.0 else 0.0,     # no rate: no rate gap
                       price_gap(now[2], before[2], before[3]))
-            if gap < SPIN_UP_TOLERANCE:
-                settled = True
+            settled = gap < SPIN_UP_TOLERANCE
+            if settled and stops_early:
                 break
         before = now
     return {"settled": settled, "years": years, "gap": gap}
