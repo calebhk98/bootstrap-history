@@ -465,6 +465,11 @@ def spin_up_stops_early(economy):
     return rule_sets_module.of(economy.setup).spin_up_stops_early()
 
 
+def spin_up_first_stage_years(economy, declared_years):
+    """The most years the hidden spin-up's first stage runs, by the economy's rule set (spin_up_stop.py)."""
+    return rule_sets_module.of(economy.setup).spin_up_first_stage_years(declared_years)
+
+
 def settle_economy(economy):
     """Its step has returned: figures read from its record are kept until it next steps (`quiet_year`)."""
     quiet_year.settle(economy)

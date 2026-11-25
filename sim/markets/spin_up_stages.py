@@ -5,7 +5,7 @@ from sim.economy import api as economy_api
 
 from .port_trace_holders import money_by_holder_columns
 from .spin_up_ensemble import perturb_household_cash
-from .spin_up import SPIN_UP_MEASURED_YEARS, spin_up_years
+from .spin_up import SPIN_UP_MEASURED_YEARS, stage_years
 from .spin_up_gap import window_gaps, worst_price_change
 from .spin_up_year import watched_goods, watched_shares, year_inputs, year_shares, year_state
 
@@ -40,7 +40,7 @@ def replay_opening(setup, cash_factor=1.0):
     if cash_factor != 1.0:
         perturb_household_cash(economy, cash_factor)
     watched = watched_goods(economy)
-    first_years, trimmed_years = spin_up_years()
+    first_years, trimmed_years = stage_years(lambda declared: economy_api.spin_up_first_stage_years(economy, declared))
     return watched, replay(economy, year_inputs(economy), watched, setup.unskilled_trade, first_years, trimmed_years,
                            watched_shares(economy, watched))
 

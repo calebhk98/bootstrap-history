@@ -43,3 +43,11 @@ def spin_up_years():
         return first, trimmed
     return int(SPIN_UP_MAXIMUM_YEARS), int(SPIN_UP_TRIMMED_YEARS)
 
+
+def stage_years(first_stage_rule):
+    """(most first-stage years, trimmed years) for an economy whose rule set makes `first_stage_rule(declared bound)` of
+    the first stage's bound (economy_api.spin_up_first_stage_years); years named in SPIN_UP_YEARS_ENV stand as named."""
+    first, trimmed = spin_up_years()
+    if os.environ.get(SPIN_UP_YEARS_ENV):
+        return first, trimmed
+    return int(first_stage_rule(first)), trimmed

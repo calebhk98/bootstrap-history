@@ -12,7 +12,7 @@ from .port_key import spin_up_key
 from .port_trace import TraceRows
 from .spin_up_trace_cache import keep_trace
 from .spin_up import (SPIN_UP_CACHE_DIRECTORY, SPIN_UP_MAXIMUM_YEARS, SPIN_UP_MEASURED_YEARS, SPIN_UP_TOLERANCE,
-                      SPIN_UP_TRIMMED_YEARS, spin_up_years)
+                      SPIN_UP_TRIMMED_YEARS, spin_up_years, stage_years)
 from .spin_up_year import SPIN_UP_WATCHED_GOODS, watched_goods, watched_shares, year_inputs, year_shares, year_state   # the first is read from here by the tools
 from .spin_up_gap import SPIN_UP_RATE_FLOOR, change_gap, price_gap, unsettled_cause, window_gaps
 
@@ -58,7 +58,8 @@ def settle(economy, inputs, watched, trace=None, shares=None):
     """The first stage's stop rule (it decides when the stage ends; it is not the opening's reported
     result): hidden years until the price level, the rate (against a floor, see spin_up_gap) and the main
     prices move less than the tolerance a year; under a rule set that does not stop early
-    (`economy_api.spin_up_stops_early`) the stage runs its full length. Returns {"settled": whether the last year
+    (`economy_api.spin_up_stops_early`) the stage runs its full length, which the rule set also gives
+    (`spin_up.stage_years`). Returns {"settled": whether the last year
     measured met the tolerance, "years": years run, "gap": the largest change in the last year measured (none
     measured: infinity is not stored, so one)}."""
     before = None
@@ -66,7 +67,7 @@ def settle(economy, inputs, watched, trace=None, shares=None):
     years = 0
     settled = False
     stops_early = economy_api.spin_up_stops_early(economy)
-    for _year in range(spin_up_years()[0]):
+    for _year in range(stage_years(lambda declared: economy_api.spin_up_first_stage_years(economy, declared))[0]):
         outcome = economy.step(inputs)
         years += 1
         if trace is not None:

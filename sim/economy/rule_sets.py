@@ -51,6 +51,7 @@ class RuleSet:
     spin_up_moves_workers: Callable     # () -> whether workers move between labour areas in the hidden years (spin_up_migration.py)
     basket_quantity_counted: Callable   # (a basket good's opening quantity, what its markets usually trade) -> the quantity the price level counts
     spin_up_stops_early: Callable       # () -> whether the spin-up's first stage ends on its first quiet year (spin_up_stop.py)
+    spin_up_first_stage_years: Callable # (the first stage's declared bound in years) -> the most years the stage runs (spin_up_stop.py)
     spin_up_seats: Callable             # (the year's schools, whether the economy is settling, working people by labour area, the (trade, area) of each labour market) -> the schools the labour core trains through (spin_up_seats.py)
     spin_up_valued: Callable            # (the year's prices by good, quantities made, quantities producers hold) -> what the settle check reads changes in output and stock from beside the opening-price values (None: those alone; spin_up_valued.py)
     spin_up_coin_wear: Callable         # (coin's declared wear share, whether the economy is settling, the coin stock, coin the mint struck this year net of melting) -> the share of each holding that wears this year (spin_up_coin.py)
@@ -110,6 +111,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                     spin_up_moves_workers=spin_up_migration.workers_move,
                     basket_quantity_counted=basket_counted.whole,
                     spin_up_stops_early=spin_up_stop.on_a_quiet_year,
+                    spin_up_first_stage_years=spin_up_stop.the_declared_bound,
                     spin_up_seats=spin_up_seats.by_masters,
                     spin_up_valued=spin_up_valued.at_the_opening_prices,
                     spin_up_coin_wear=spin_up_coin.as_declared),
@@ -136,6 +138,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                       spin_up_moves_workers=spin_up_migration.workers_stay,
                       basket_quantity_counted=basket_counted.still_bought,
                       spin_up_stops_early=spin_up_stop.at_its_bound,
+                      spin_up_first_stage_years=spin_up_stop.long_enough_to_rest,
                       spin_up_seats=spin_up_seats.open_while_settling,
                       spin_up_valued=spin_up_valued.at_the_years_prices,
                       spin_up_coin_wear=spin_up_coin.no_more_than_struck_while_settling),
