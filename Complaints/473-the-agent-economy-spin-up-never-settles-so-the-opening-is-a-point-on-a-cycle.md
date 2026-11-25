@@ -2699,10 +2699,10 @@ and every member that misses, misses there. Measured on the committed state with
 - The one merchant bids for steel only every other year, about a twentieth of the market coming and going. The
   households' steel budget echoes it a year behind and moves the other way to iron bar's, because the mix within a
   need follows last year's cleared price.
-- Inside a year the price answers a shift in demand by about six tenths of the shift: the buyers' budgets are fixed
-  in coin, and the makers' supply curves (`stock_supply.STOCK_PRICE_SLOPE` over the months of cover of
-  `inventory.target_stock`) let go about two thirds of a per cent more for each per cent of price. No command prints
-  this; it is read from the curve and the bids.
+- Inside a year the price answers a shift in demand by about half the shift: the buyers' budgets are fixed in
+  coin, and the makers' supply curves (`stock_supply.STOCK_PRICE_SLOPE` over the months of cover of
+  `inventory.target_stock`) let go about one per cent of a year's sales more for each per cent of price. No command
+  prints this; it is read from the curve's formula and the two declared numbers.
 - Why the merchant buys every other year, link by link. It sizes cargo for all its coin every year
   (`merchants_book_kernel.commit_orders`), but in alternate years almost none of those bids are written: a merchant
   buys none of a good in an area where it offers stock of it (`merchants_plan.orders`, the set `selling`), and every
