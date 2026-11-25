@@ -1,0 +1,356 @@
+diff --git a/sim/economy/economy.py b/sim/economy/economy.py
+index 856120bb..81dfbade 100644
+--- a/sim/economy/economy.py
++++ b/sim/economy/economy.py
+@@ -41,7 +41,7 @@ from .types import EDGE_CONSUMPTION, GoodsMove
+ from .national_prices import national_prices, national_wages
+ from .merchants_dispatch import dispatch_merchants
+ from .year_arrays import YearArrays, same_source, source_of
+-from .year_close import close_agents, money_taxes, remember_basket_price_level, wear_and_spoilage
++from .year_close import close_agents, learn_planning_scarcity, money_taxes, remember_basket_price_level, wear_and_spoilage
+ from .year_goods import clear_goods
+ from .year_order_sources import cohort_orders, merchant_orders, state_orders
+ from .goods_order_book import new_order_book
+@@ -153,11 +153,13 @@ class Economy:
+         return self._rebuild_carriage()
+ 
+     def view(self) -> YearView:
+-        return CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, self.setup,
++        view = CreditView(self.record.memory, self.record.book, self.area_map, self.setup.currency_id, self.setup,
+                           labour_area, loans=lambda: self.record.credit.loans, equity=self._equity_read,
+                           loss_rates=lambda: self.record.credit.loss_rates,
+                           pooled=self.record.credit.contracts.deposit_value, public_premium=lambda: self.record.credit.public_premium,
+                           land_yield=lambda: self.record.credit.land_yield)
++        view.planning_scarcity = self.record.goods.planning_scarcity      # the multiples households price their needs with (planning_scarcity.py)
++        return view
+ 
+     def _equity_read(self, view) -> Dict[str, float]:
+         arrays = self._year_arrays
+@@ -311,6 +313,7 @@ class Economy:
+         extraction = sites.extraction_by_tile(record, setup)
+         close_idle_producers(setup, record)
+         wear_and_spoilage(setup, record, inputs.durable_users)
++        learn_planning_scarcity(setup, record)
+         level = remember_basket_price_level(setup, record)
+         record.memory.advance_year()
+         return self._outcome(ledger, level, extraction, stocks_at_start)
+diff --git a/sim/economy/goods_record.py b/sim/economy/goods_record.py
+index 9a1987e7..81790c3b 100644
+--- a/sim/economy/goods_record.py
++++ b/sim/economy/goods_record.py
+@@ -44,6 +44,7 @@ class GoodsRecord(OwnedRecord):
+     opening_demand_by_country: Dict[str, Dict[str, float]] = field(default_factory=dict)  # country -> good -> quantity its households were seeded to want
+     buyer_limits: Dict[str, float] = field(default_factory=dict)         # good -> the highest price a household bid for it took units at when it last cleared (ask_ceiling.buyer_limit)
+     output_by_tile: Dict[TileId, Dict[str, float]] = field(default_factory=dict)   # tile -> good -> units the home producers made last year
++    planning_scarcity: Dict[str, float] = field(default_factory=dict)    # good -> the multiple of its offered price households plan it at; a good at one is absent (planning_scarcity.py)
+ 
+     OWNERS = ("goods_record", "year_goods", "entry_margin", "goods_good_clear")
+     ENCODERS = {"volumes": _saved, "unsold": _saved, "unmet": _saved, "margin_years": _saved}
+@@ -65,6 +66,11 @@ class GoodsRecord(OwnedRecord):
+         else:
+             self.buyer_limits[good] = limit
+ 
++    def note_planning_scarcity(self, multiples: Dict[str, float]) -> None:
++        """The goods' planning multiples for the coming year, written into the one store the year's views read."""
++        self.planning_scarcity.clear()
++        self.planning_scarcity.update(multiples)
++
+     def reset_output(self) -> None:
+         self.output_by_tile = {}
+ 
+diff --git a/sim/economy/households_basket.py b/sim/economy/households_basket.py
+index 97af7356..22c7a067 100644
+--- a/sim/economy/households_basket.py
++++ b/sim/economy/households_basket.py
+@@ -19,10 +19,11 @@ from .types import TileId
+ 
+ def need_prices(basket: Basket, view: MarketView, tile: TileId) -> PricedNeeds:
+     """Each need that has a priced good on this tile (the kernel's `need_basket.need_prices` at the
+-    tile's market prices). A pass that prices many cohorts shares the result by basket (`BidMemory.priced`)."""
++    tile's market prices, the mix chosen with each good at the multiple the view's households plan it at: planning_scarcity.py).
++    A pass that prices many cohorts shares the result by basket (`BidMemory.priced`)."""
+     goods = {good for spec in basket.needs for good, _effect in spec.goods}
+     prices = offered_prices_for(view, tile, sorted(goods))
+-    return priced_needs_at(basket, prices)
++    return priced_needs_at(basket, prices, scarcity=getattr(view, "planning_scarcity", None))
+ 
+ 
+ def tile_need_prices(setup, view: MarketView, tile: TileId) -> PricedNeeds:
+diff --git a/sim/economy/priced_need_kernel.py b/sim/economy/priced_need_kernel.py
+index 45e896b5..45c525b6 100644
+--- a/sim/economy/priced_need_kernel.py
++++ b/sim/economy/priced_need_kernel.py
+@@ -120,11 +120,12 @@ def price_ceilings(first, last, prices, effects, priced, ceiling):
+ 
+ 
+ @njit
+-def price_needs(needs, rows, price_matrix, quality_reach, with_limits):
++def price_needs(needs, rows, price_matrix, quality_reach, with_limits, scarcity):
+     """Every need priced: `need_basket.priced_need` for each need row, at the offered prices of its tile (`price_matrix[tile, good]`, NaN
+     for none). Writes `price` and `priced` (a good with a positive price that gives need units), `share`, `ceiling` at the good rows and
+     `need_priced` and `price_index` at the need rows. `quality_reach` (0 to 1) is how far the buyer pays for quality; `with_limits` says
+-    whether any good has a share limit (else the search is skipped)."""
++    whether any good has a share limit (else the search is skipped). `scarcity[good]` is how many times its price a buyer reckons
++    the good at when choosing the mix (one for a good the markets deliver; `need_basket.priced_need`'s `scarcity_of`)."""
+     row_count = rows.row_count[0]
+     units = np.zeros(row_count)
+     fixed_value = np.zeros(row_count)
+@@ -139,7 +140,7 @@ def price_needs(needs, rows, price_matrix, quality_reach, with_limits):
+             price = price_matrix[needs.tile[need], rows.good[row]]
+             rows.price[row] = price
+             rows.priced[row] = 1 if (price > 0.0 and rows.effect[row] > 0.0) else 0
+-            valued[row] = rows.effect[row] * rows.quality[row] ** quality_reach
++            valued[row] = rows.effect[row] * rows.quality[row] ** quality_reach / scarcity[rows.good[row]]
+         if mix_shares(first, last, rows.price, rows.effect, valued, needs.exponent[need], rows.priced, rows.share, partials) == 0:
+             continue
+         per_money = units_per_money(first, last, rows.price, rows.effect, rows.priced, rows.share, partials)
+diff --git a/sim/economy/priced_need_prime.py b/sim/economy/priced_need_prime.py
+index d454a753..eb4c13de 100644
+--- a/sim/economy/priced_need_prime.py
++++ b/sim/economy/priced_need_prime.py
+@@ -42,7 +42,7 @@ def price_asked(view, reads: dict, pending: List[tuple]) -> bool:
+     matrix = None if matrix_of is None else matrix_of(tiles, GOODS.names)
+     if matrix is None:
+         return False
+-    answer = PricedBatch(batch, matrix)
++    answer = PricedBatch(batch, matrix, scarcity=getattr(view, "planning_scarcity", None))     # the mix at the multiples households plan the goods at
+     for (tile, key, _basket), positions in zip(pending, answer.positions_by_request()):
+         reads[("need_prices", tile, key)] = PricedNeeds(answer, positions)
+     return True
+diff --git a/sim/economy/priced_need_tables.py b/sim/economy/priced_need_tables.py
+index 719d6e7c..ec210b47 100644
+--- a/sim/economy/priced_need_tables.py
++++ b/sim/economy/priced_need_tables.py
+@@ -195,3 +195,15 @@ def price_matrix(tile_prices: Sequence) -> numpy.ndarray:
+             if place is not None and price is not None:
+                 matrix[row, place] = price
+     return matrix
++
++
++def scarcity_by_number(multiples, count: int) -> numpy.ndarray:
++    """One figure per good number below `count`: the good's planning multiple in `multiples` (good -> multiple, or None for none;
++    sim/economy/planning_scarcity.py), one for a good that carries none."""
++    figures = numpy.ones(count)
++    number = GOODS.number
++    for good, multiple in (multiples or {}).items():
++        place = number.get(good)
++        if place is not None and place < count:
++            figures[place] = multiple
++    return figures
+diff --git a/sim/economy/priced_needs.py b/sim/economy/priced_needs.py
+index 0ee49b02..bb424ad7 100644
+--- a/sim/economy/priced_needs.py
++++ b/sim/economy/priced_needs.py
+@@ -1,7 +1,7 @@
+ """Baskets priced at tiles' prices in one kernel call (`priced_need_kernel.price_needs` over the tables of `priced_need_tables`), the answer
+ kept as columns (`PricedBatch`) and read as `priced_need_list.PricedNeeds`; a `PricedNeed` object (`need_basket.need_prices` / `priced_need` at
+ the same prices) is made only for a reader that wants objects."""
+-from typing import List
++from typing import List, Mapping, Optional
+ 
+ import numpy
+ 
+@@ -9,16 +9,16 @@ from sim.world.need_basket import Basket, PricedNeed
+ 
+ from .priced_need_kernel import price_needs
+ from .priced_need_list import ColumnArrays, PricedNeeds
+-from .priced_need_tables import GOODS, NeedBatch, price_matrix
++from .priced_need_tables import GOODS, NeedBatch, price_matrix, scarcity_by_number
+ 
+ 
+ class PricedBatch:
+     """A batch of requests answered, as columns over the priced goods only: need `position` has its goods in rows `start[position]` to
+     `stop[position]` of `names`, `price`, `effect`, `share` and `ceiling` (Python lists, made once), and its figure in `index[position]`."""
+ 
+-    def __init__(self, batch: NeedBatch, matrix: numpy.ndarray, quality_reach: float = 0.0) -> None:
++    def __init__(self, batch: NeedBatch, matrix: numpy.ndarray, quality_reach: float = 0.0, scarcity: Optional[Mapping[str, float]] = None) -> None:
+         needs, rows = batch.tables()
+-        price_needs(needs, rows, matrix, quality_reach, batch.has_limits)
++        price_needs(needs, rows, matrix, quality_reach, batch.has_limits, scarcity_by_number(scarcity, matrix.shape[1]))
+         self.batch = batch
+         self.owners = batch.owners
+         self.specs = batch.specs
+@@ -51,11 +51,12 @@ class PricedBatch:
+                           tuple(self.ceiling[first:end]) if with_ceilings else ())
+ 
+ 
+-def priced_needs_at(basket: Basket, prices: dict, quality_reach: float = 0.0) -> PricedNeeds:
+-    """The needs of `basket` that have a priced good at the prices (good -> price; a good absent has none), through the tables."""
++def priced_needs_at(basket: Basket, prices: dict, quality_reach: float = 0.0, scarcity: Optional[Mapping[str, float]] = None) -> PricedNeeds:
++    """The needs of `basket` that have a priced good at the prices (good -> price; a good absent has none), through the tables;
++    `scarcity` is the goods' planning multiples (good -> multiple, sim/economy/planning_scarcity.py), None for none."""
+     batch = NeedBatch()
+     batch.add(0, 1.0 - basket.substitution, basket.needs)
+-    answer = PricedBatch(batch, price_matrix([prices]), quality_reach)
++    answer = PricedBatch(batch, price_matrix([prices]), quality_reach, scarcity)
+     return PricedNeeds(answer, answer.positions_by_request()[0])
+ 
+ 
+diff --git a/sim/economy/rule_sets.py b/sim/economy/rule_sets.py
+index c8e34ecb..422671e2 100644
+--- a/sim/economy/rule_sets.py
++++ b/sim/economy/rule_sets.py
+@@ -12,7 +12,7 @@ import numpy as np
+ from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
+ 
+ from . import (basket_counted, close_pack, coin_cost, durable_stock, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
+-               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, plot_hours_value,
++               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, planning_scarcity, plot_hours_value,
+                rate_step, servant_hours_counted, spin_up_migration, spin_up_seats, spin_up_stop, spin_up_trim, spin_up_valued, unkept_goods)
+ from .setup import DEFAULT_RULE_SET as SEARCH
+ 
+@@ -51,6 +51,8 @@ class RuleSet:
+     spin_up_stops_early: Callable       # () -> whether the spin-up's first stage ends on its first quiet year (spin_up_stop.py)
+     spin_up_seats: Callable             # (the year's schools, whether the economy is settling, working people by labour area, the (trade, area) of each labour market) -> the schools the labour core trains through (spin_up_seats.py)
+     spin_up_valued: Callable            # (the year's prices by good, quantities made, quantities producers hold) -> what the settle check reads changes in output and stock from beside the opening-price values (None: those alone; spin_up_valued.py)
++    planning_scarcity_learnt: Callable  # (the goods' planning multiples, units delivered by good, units buyers were left short of by good, each need's goods,
++                                        #  how far spending on a good falls with its price) -> the multiples households plan the goods at next year (planning_scarcity.py)
+ 
+ 
+ def planned_hours_bids(_setup, _record, _view, plans, bid_table) -> None:
+@@ -106,7 +108,8 @@ RULE_SETS: Dict[str, RuleSet] = {
+                     basket_quantity_counted=basket_counted.whole,
+                     spin_up_stops_early=spin_up_stop.on_a_quiet_year,
+                     spin_up_seats=spin_up_seats.by_masters,
+-                    spin_up_valued=spin_up_valued.at_the_opening_prices),
++                    spin_up_valued=spin_up_valued.at_the_opening_prices,
++                    planning_scarcity_learnt=planning_scarcity.nothing_learnt),
+     CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
+                       expected_sales_after_close=unkept_goods.expected_sales_by_takings_where_unkept,
+                       producer_labour_bids=schedule_bids_with_coin_cost, labour_clearing=clear_labour_at_one_wage,
+@@ -129,7 +132,8 @@ RULE_SETS: Dict[str, RuleSet] = {
+                       basket_quantity_counted=basket_counted.still_bought,
+                       spin_up_stops_early=spin_up_stop.at_its_bound,
+                       spin_up_seats=spin_up_seats.open_while_settling,
+-                      spin_up_valued=spin_up_valued.at_the_years_prices),
++                      spin_up_valued=spin_up_valued.at_the_years_prices,
++                      planning_scarcity_learnt=planning_scarcity.learnt),
+ }
+ 
+ 
+diff --git a/sim/economy/year_close.py b/sim/economy/year_close.py
+index 55574584..32ac4172 100644
+--- a/sim/economy/year_close.py
++++ b/sim/economy/year_close.py
+@@ -4,7 +4,7 @@ import math
+ from types import MappingProxyType
+ from typing import Dict, Mapping, Tuple
+ 
+-from . import basket_counted, credit_claims, producer_table, rule_sets
++from . import basket_counted, credit_claims, planning_scarcity, producer_table, rule_sets
+ from .staffed_runs import staffed_runs
+ from .expected_sales import demand_seen, market_capacities
+ from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, carriage_hours, currency, expansion_price, merchants, ownership, producer_exit, shares,
+@@ -12,7 +12,7 @@ from . import (practice, firm_finance, firm_year, tax_farming, merchants_news, c
+ from .cohort_store import table_of
+ from .home_scope import has_partners, home_cohort_ids, on_home_tile
+ from . import households_cohort
+-from .market_memory import market_key
++from .market_memory import KEY_SEPARATOR, market_key
+ from .national_prices import national_prices, traded_spending_weights, usual_volumes
+ from .notional import recently_traded_goods
+ from .setup import labour_area
+@@ -223,6 +223,17 @@ def basket_counted_now(setup, record) -> Dict[str, float]:
+                                   rule_sets.of(setup).basket_quantity_counted)
+ 
+ 
++def learn_planning_scarcity(setup, record) -> None:
++    """The multiples households plan each good at next year, by the economy's rule set (planning_scarcity.py): learnt
++    from what the year's markets delivered and left buyers short of, over the goods that serve a need; the coin metal
++    is left out (the mint wants all there is of it, so its market always leaves a buyer short)."""
++    coin_metal = record.currency.backing_good
++    goods_by_need = [[good for good, _effect in need.goods if good != coin_metal] for need in setup.basket.needs]
++    record.goods.note_planning_scarcity(rule_sets.of(setup).planning_scarcity_learnt(
++        record.goods.planning_scarcity, planning_scarcity.by_good(dict(record.goods.volumes.items()), KEY_SEPARATOR),
++        planning_scarcity.by_good(dict(record.goods.unmet.items()), KEY_SEPARATOR), goods_by_need, setup.basket.substitution - 1.0))
++
++
+ def remember_basket_price_level(setup, record) -> float:
+     """The fixed basket's cost at today's prices over its cost at the base prices, over the goods that
+     traded recently (notional.RECENT_TRADE_YEARS): a good that has not cleared holds only an estimate,
+diff --git a/sim/tests/test_priced_need_kernel.py b/sim/tests/test_priced_need_kernel.py
+index f85843f8..77b0422e 100644
+--- a/sim/tests/test_priced_need_kernel.py
++++ b/sim/tests/test_priced_need_kernel.py
+@@ -76,6 +76,52 @@ class WrittenOutTests(unittest.TestCase):
+         compare(self, [every], {"a": 1.0, "b": 2.0})
+ 
+ 
++class ScarcityByNumberTests(unittest.TestCase):
++    def test_one_figure_per_good_number_and_one_for_a_good_that_carries_none(self):
++        numbers = priced_need_tables.GOODS
++        priced_needs.priced_needs_at(basket_of([NeedSpec("n", 0.0, 0.1, (("scarcity_test_a", 1.0), ("scarcity_test_b", 1.0)))]), {"scarcity_test_a": 1.0})
++        count = len(numbers.names)
++        figures = priced_need_tables.scarcity_by_number({"scarcity_test_b": 7.0, "never_numbered": 3.0}, count)
++        self.assertEqual(figures[numbers.number["scarcity_test_b"]], 7.0)
++        self.assertEqual(figures[numbers.number["scarcity_test_a"]], 1.0)
++        self.assertEqual(len(figures), count)
++
++    def test_no_multiples_give_ones(self):
++        self.assertEqual(priced_need_tables.scarcity_by_number(None, 3).tolist(), [1.0, 1.0, 1.0])
++
++
++class ScarcityTests(unittest.TestCase):
++    """A good reckoned at a multiple of its price when the mix is chosen: the kernel against the Python, written out."""
++    TOOLS = NeedSpec("implements", 0.0, 0.2, (("bronze", 1.0), ("steel", 2.0)))
++
++    def priced_both_ways(self, prices, multiples):
++        basket = basket_of([self.TOOLS])
++        expected = need_basket.priced_need(self.TOOLS, 1.0 - basket.substitution, prices.get, scarcity_of=lambda good: multiples.get(good, 1.0))
++        (got,) = list(priced_needs.priced_needs_at(basket, prices, scarcity=multiples))
++        self.assertEqual(got.goods, expected.goods)
++        self.assertEqual(got.price_index, expected.price_index)
++        return expected
++
++    def test_a_good_reckoned_at_ten_times_its_price_takes_a_tenth_of_the_weight_it_had(self):
++        plain = self.priced_both_ways({"bronze": 4.0, "steel": 4.0}, {})
++        scarce = self.priced_both_ways({"bronze": 4.0, "steel": 4.0}, {"bronze": 10.0})
++        weight = {good: share for good, _price, _effect, share in plain.goods}
++        scarce_weight = {good: share for good, _price, _effect, share in scarce.goods}
++        self.assertAlmostEqual(scarce_weight["bronze"] / scarce_weight["steel"], weight["bronze"] / weight["steel"] / 10.0)
++
++    def test_the_goods_keep_their_own_prices_and_the_index_is_what_the_mix_costs_at_them(self):
++        scarce = self.priced_both_ways({"bronze": 4.0, "steel": 4.0}, {"bronze": 10.0})
++        self.assertEqual([price for _good, price, _effect, _share in scarce.goods], [4.0, 4.0])
++        units_per_money = sum(share * effect / price for _good, price, effect, share in scarce.goods)
++        self.assertAlmostEqual(scarce.price_index, 1.0 / units_per_money)
++
++    def test_a_good_alone_in_its_need_is_priced_as_ever(self):
++        alone = NeedSpec("salt", 1.0, 0.01, (("salt", 1.0),))
++        plain = need_basket.priced_need(alone, -1.0, {"salt": 2.0}.get)
++        scarce = need_basket.priced_need(alone, -1.0, {"salt": 2.0}.get, scarcity_of=lambda good: 1000.0)
++        self.assertEqual((scarce.goods, scarce.price_index), (plain.goods, plain.price_index))
++
++
+ def random_needs(rng):
+     goods = ["g%d" % number for number in range(rng.randint(2, 9))]
+     specs = []
+diff --git a/sim/world/need_basket.py b/sim/world/need_basket.py
+index 21db51ac..a86269f8 100644
+--- a/sim/world/need_basket.py
++++ b/sim/world/need_basket.py
+@@ -163,18 +163,21 @@ def need_prices(basket: Basket, price_of: Callable[[str], Optional[float]]) -> L
+ 
+ 
+ def priced_need(spec: NeedSpec, exponent: float, price_of: Callable[[str], Optional[float]],
+-                with_ceilings: bool = True, quality_reach: float = 0.0) -> Optional[PricedNeed]:
++                with_ceilings: bool = True, quality_reach: float = 0.0,
++                scarcity_of: Optional[Callable[[str], float]] = None) -> Optional[PricedNeed]:
+     """One need priced, or None when none of its goods has a price. `exponent` is one minus the
+     substitution elasticity; a caller that never reads `ceilings` can leave them out. `quality_reach` (0 to 1)
+     is how far the buyer pays for quality: the mix weighs a good's quality factor to that power, while the
+     need units a good gives stay its effectiveness. At zero, or for a good with no factor, the mix is by cost
+-    per need unit alone."""
++    per need unit alone. `scarcity_of(good)` (one where nothing is said) is how many times its price a buyer reckons
++    a good at when choosing the mix, because the market does not deliver all that is asked of it: it moves the mix
++    alone, and the price index stays what the chosen mix costs at the goods' own prices."""
+     quality = dict(spec.qualities)
+     rows = []
+     for good, effect in spec.goods:
+         price = price_of(good)
+         if price is not None and price > 0.0 and effect > 0.0:
+-            valued = effect * quality.get(good, 1.0) ** quality_reach
++            valued = effect * quality.get(good, 1.0) ** quality_reach / (1.0 if scarcity_of is None else scarcity_of(good))
+             rows.append((good, price, effect, (price / valued) ** exponent))
+     if not rows:
+         return None

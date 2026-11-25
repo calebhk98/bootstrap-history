@@ -590,7 +590,7 @@ tolerance on the median; a quarter of the members pass outright.
 5. The spin-up's own stop rule (the game's spin-up stops its first stage on one quiet year; the replay does not),
    then the Norse lands and Han, then the game's set.
 
-## 6m. Where it stands after Update 49 (read this first)
+## 6m. Where it stands after Update 49 (history; section 6n replaces its order)
 
 **The near misses of 6l were a drift, not noise, and the long runs slumped for three findable reasons.** Before
 trusting a member that "passes", look at the trend columns of the ensemble, at one run's years, and at a long run
@@ -631,9 +631,46 @@ and the other four miss on the watched prices alone, by a hair.
 5. Step 6 of round five (a maker plans from the runs it made; lard opens with no capacity) and the realism table.
 6. The Norse lands and Han on `clearing`, then the game's set.
 
+## 6n. Where it stands after Update 50 (read this first)
+
+**One good decides the check, and one agent paces it.** Steel is close to half of the watched spending, and the one
+merchant's buying comes and goes from year to year. When a member misses on the watched prices, print a good's bids
+and offers by kind of agent (`probes/good_orders_by_kind.py`) before anything else: a buyer that is there one year
+and gone the next is the pacemaker, and the households' budgets only echo it. For the merchant, `probes/merchant_years_probe.py`
+(coin, cargo, bids, offers by year), `probes/merchant_limits_probe.py` (coin against room in the sizing) and
+`probes/merchant_stuck_probe.py` (cargo sized against bids written, stock offered where it stands, the share crewed)
+show which link fails. A rule that makes the merchant trade more makes some members much worse while its cargo can
+still outrun its carriers; judge a merchant rule by the worst member as well as by the count.
+
+**Done since 6m.** The first stage runs long enough to reach the rest (`spin_up_stop.long_enough_to_rest`). The
+share of a stock a merchant's crew can carry is reckoned in hours against the stocks it holds
+(`merchant_stuck_stock.by_the_hours_the_stocks_need`): five members in eight pass.
+
+**Tried and reverted, do not repeat as they were** (patches in `tried/`, reasons in Update 50). Households planning
+goods at a multiple, the gentler form (shelved for good: a slump in the middle of the hidden years). The mix within
+a need chosen on the usual price. The merchant's room without this year's cargo, and a year's cargo held to half its
+share. New cargo within the merchant's capital over the two years a turn takes.
+
+**The check.** Five members in eight pass; the other three miss the watched prices by under a point.
+
+**What is left, in order.**
+1. The merchant bids only for what the crew it hired this year can still carry, and the hours of the cargo left
+   unbid join next year's plan (`merchants_plan.orders` after `commit_orders`; `merchants_dispatch`, where
+   `carriage_hours_wanted` is set; the merchant's record in `record.py` if the unbid hours need a field). Then try
+   the capital-over-the-turn patch again on top of it.
+2. Steel a head (of the order of a hundred kilograms a year against under two of iron about 1500): find what makes
+   steel cost a few hours of the average wage a kilogram and whether the implements need should have an upper
+   level, from sources someone opens. Start from `Complaints/reports/research-fuel-and-iron-per-head.md`.
+3. The stone-wall market and the building trades behind it (Update 48, Update 49).
+4. The opening: its price table for wood, draught animals and by-products; the purse it gives households with
+   plots; the property income it counts; a land clearer's stock that rises for years and leaves in one.
+5. Step 6 of round five (a maker plans from the runs it made; lard opens with no capacity) and the rest of the
+   realism table.
+6. The Norse lands and Han on `clearing`, then the game's set.
+
 ## 7. What to do first
 
-After Update 49: the list in 6m above replaces the ones below, which are kept for the record.
+After Update 50: the list in 6n above replaces the ones below, which are kept for the record.
 
 After Update 43:
 

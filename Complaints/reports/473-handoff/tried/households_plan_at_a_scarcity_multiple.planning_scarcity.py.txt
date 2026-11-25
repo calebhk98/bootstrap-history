@@ -1,0 +1,99 @@
+"""What it takes a household to get a good (the rule sets' `planning_scarcity_learnt`). A market can leave its buyers
+short year after year at a price that does not rise to clear it (its makers want for an input, or cannot grow). The
+money households bid there comes back unspent, and in a year the good drops out of their sight it lands on the need's
+other goods all at once. Where the rule learns, a household chooses the mix of goods within each need with a good
+reckoned at its offered price times a multiple that rises while the good's markets deliver far less than was asked
+(`PLANNING_SERVED_ENOUGH`) and eases once nobody goes short (`need_basket.priced_need`'s `scarcity_of`): the money moves to the goods that can be
+had. What a need costs is still reckoned at the goods' own prices, and the market's price and what its sellers read
+are untouched."""
+from typing import Dict, Mapping, Sequence
+
+from sim.constants import declare
+
+_RETIRE = "Complaints/473: a market whose price rises to clear it inside the year leaves no buyer short to learn from"
+
+PLANNING_SERVED_ENOUGH = declare(
+    "PLANNING_SERVED_ENOUGH", 0.5, kind="temporary_heuristic", unit="share of the units asked for that were delivered",
+    source=None, confidence="D", retire=_RETIRE,
+    why="At or above this share a good's planning multiple stays where it is; only a good that delivers less than "
+        "this of what is asked is taken to be out of reach. A market that is a little short now and then carries no "
+        "multiple: with a share near one, flour, milk and a physic each a few points short in turn passed their "
+        "buyers back and forth every year and moved output by several points (Complaint 473 Update 49). Not fitted.")
+PLANNING_STEP_SHARE = declare(
+    "PLANNING_STEP_SHARE", 0.6, kind="temporary_heuristic",
+    unit="share of the way (in logs) from this year's spending on a short good to the spending that fits what was delivered",
+    source=None, confidence="D", retire=_RETIRE,
+    why="How fast households stop budgeting for a good they cannot get. A whole step would overshoot wherever the "
+        "makers answer the same year. Not fitted.")
+PLANNING_MOST_RAISED_A_YEAR = declare(
+    "PLANNING_MOST_RAISED_A_YEAR", 3.0, kind="temporary_heuristic", unit="largest factor a planning multiple rises by in a year",
+    source=None, confidence="D", retire=_RETIRE,
+    why="A good that vanishes in one year does not send its whole budget onto its substitutes the next: the move is "
+        "spread over a few years. Not fitted.")
+PLANNING_RELAX_SHARE = declare(
+    "PLANNING_RELAX_SHARE", 0.2, kind="temporary_heuristic",
+    unit="share of a planning multiple's excess over one given up in a year in which no buyer went short",
+    source=None, confidence="D", retire=_RETIRE,
+    why="Once a good can be had again households come back to it over some years, not at once. Not fitted.")
+PLANNING_MOST_MULTIPLE = 1.0e6      # a numerical bound: beyond it a good's share of its need is nothing to any precision
+NEGLIGIBLE_EXCESS = 1.0e-6          # a numerical bound: a multiple this close to one is kept as none
+
+
+def multiple_after(multiple: float, delivered: float, unmet: float, spending_elasticity: float) -> float:
+    """A good's planning multiple a year on. `delivered` and `unmet` are the units its markets delivered and left its
+    buyers short of; `spending_elasticity` is how many per cent less a household spends on a good per cent its price
+    rises (the need's substitution elasticity less one). Short of `PLANNING_SERVED_ENOUGH` the multiple rises by the
+    step toward the spending that fits what was delivered, by no more than a year allows; with nobody short it eases
+    toward one; otherwise, and where spending does not fall with the price, it stays."""
+    if not spending_elasticity > 0.0:
+        return multiple
+    if not unmet > 0.0:
+        return 1.0 + (multiple - 1.0) * (1.0 - PLANNING_RELAX_SHARE)
+    served = max(0.0, delivered) / (max(0.0, delivered) + unmet)
+    if served >= PLANNING_SERVED_ENOUGH:
+        return multiple
+    rise = PLANNING_MOST_RAISED_A_YEAR
+    if served > 0.0:
+        rise = min(rise, (1.0 / served) ** (PLANNING_STEP_SHARE / spending_elasticity))
+    return min(PLANNING_MOST_MULTIPLE, multiple * rise)
+
+
+def learnt(multiples: Mapping[str, float], delivered_by_good: Mapping[str, float], unmet_by_good: Mapping[str, float],
+           goods_by_need: Sequence[Sequence[str]], spending_elasticity: float) -> Dict[str, float]:
+    """{good: its planning multiple a year on} for the goods of `goods_by_need` (each need's goods) whose multiple
+    stands above one, in sorted order. Within a need only the goods' multiples against one another move the mix, so
+    each need's are divided by its lowest (`against_the_needs_lowest`): a need all of whose goods are short keeps its
+    figures bounded, and its least short good is planned at its price."""
+    raised = {good: multiple_after(multiples.get(good, 1.0), delivered_by_good.get(good, 0.0), unmet_by_good.get(good, 0.0), spending_elasticity)
+              for good in sorted({good for goods in goods_by_need for good in goods})}
+    found = against_the_needs_lowest(raised, goods_by_need)
+    return {good: multiple for good, multiple in found.items() if multiple > 1.0 + NEGLIGIBLE_EXCESS}
+
+
+def against_the_needs_lowest(multiples: Mapping[str, float], goods_by_need: Sequence[Sequence[str]]) -> Dict[str, float]:
+    """The multiples with each need's goods divided by the lowest among them, need after need in the order given (a
+    good that serves two needs is divided for both); a good with no multiple stands at one."""
+    found = dict(multiples)
+    for goods in goods_by_need:
+        if not goods:
+            continue
+        lowest = min(found.get(good, 1.0) for good in goods)
+        if lowest > 1.0:
+            for good in goods:
+                found[good] = found.get(good, 1.0) / lowest
+    return found
+
+
+def nothing_learnt(_multiples: Mapping[str, float], _delivered_by_good: Mapping[str, float], _unmet_by_good: Mapping[str, float],
+                   _goods_by_need: Sequence[Sequence[str]], _spending_elasticity: float) -> Dict[str, float]:
+    """No good carries a multiple: households plan every good at its offered price."""
+    return {}
+
+
+def by_good(figures_by_market: Mapping[str, float], separator: str) -> Dict[str, float]:
+    """{good: the figure summed over its markets}; a market's key is its good, `separator`, its area."""
+    totals: Dict[str, float] = {}
+    for key in sorted(figures_by_market):
+        good = key.split(separator, 1)[0]
+        totals[good] = totals.get(good, 0.0) + figures_by_market[key]
+    return totals

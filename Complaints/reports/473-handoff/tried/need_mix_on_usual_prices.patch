@@ -1,0 +1,506 @@
+diff --git a/sim/economy/households_basket.py b/sim/economy/households_basket.py
+index 97af7356..00052292 100644
+--- a/sim/economy/households_basket.py
++++ b/sim/economy/households_basket.py
+@@ -8,6 +8,7 @@ from typing import List
+ 
+ from sim.world.need_basket import Basket
+ 
++from . import need_mix_prices
+ from .priced_need_list import PricedNeeds
+ from .priced_need_prime import TILE_BASKET_KEY
+ from .priced_needs import priced_needs_at
+@@ -19,10 +20,11 @@ from .types import TileId
+ 
+ def need_prices(basket: Basket, view: MarketView, tile: TileId) -> PricedNeeds:
+     """Each need that has a priced good on this tile (the kernel's `need_basket.need_prices` at the
+-    tile's market prices). A pass that prices many cohorts shares the result by basket (`BidMemory.priced`)."""
+-    goods = {good for spec in basket.needs for good, _effect in spec.goods}
+-    prices = offered_prices_for(view, tile, sorted(goods))
+-    return priced_needs_at(basket, prices)
++    tile's market prices, the mix chosen on the prices the view's rule set names: need_mix_prices.py).
++    A pass that prices many cohorts shares the result by basket (`BidMemory.priced`)."""
++    goods = sorted({good for spec in basket.needs for good, _effect in spec.goods})
++    prices = offered_prices_for(view, tile, goods)
++    return priced_needs_at(basket, prices, mix_prices=need_mix_prices.prices_for(view, tile, goods))
+ 
+ 
+ def tile_need_prices(setup, view: MarketView, tile: TileId) -> PricedNeeds:
+diff --git a/sim/economy/market_memory.py b/sim/economy/market_memory.py
+index d05cbd07..bc590a24 100644
+--- a/sim/economy/market_memory.py
++++ b/sim/economy/market_memory.py
+@@ -473,6 +473,13 @@ class YearView:
+         grid = self._grid()
+         return grid.matrix(tiles, names) if grid else None
+ 
++    def usual_price_matrix(self, tiles, names):
++        """`offered_price_matrix` for the usual prices (`usual_price`)."""
++        if self._stamp != _writes[0]:
++            self._current()
++        grid = self._grid()
++        return grid.matrix(tiles, names, usual=True) if grid else None
++
+     def offered_prices_for(self, tile: TileId, goods) -> Dict[GoodId, Optional[float]]:
+         """`offered_price(good, area_of(good, tile))` for each of `goods`, read from the tile's block; a good outside the block (the area
+         map has no market for it) is read by itself."""
+diff --git a/sim/economy/need_mix_prices.py b/sim/economy/need_mix_prices.py
+new file mode 100644
+index 00000000..955d4f9c
+--- /dev/null
++++ b/sim/economy/need_mix_prices.py
+@@ -0,0 +1,47 @@
++"""The prices a household chooses the mix of goods within a need on (the rule sets' `need_mix_on_usual_prices`).
++
++A household that shares its spending on a need between the goods that serve it by last year's prices moves the shares every year: the good
++that cleared cheap is asked for more, clears dear, and is dropped the year after, so two substitutes trade a budget back and forth and
++neither price rests. Chosen on what each good has usually cost (`MarketMemory.usual_prices`, a slow average of its price), the mix follows a
++lasting change of price over the years and passes over one year's. The goods' own prices, what a unit of the need costs at them, the bids
++and the ceilings stay those on offer; a good with no usual price is weighed at its offered price; a need re-mixed for quality
++(`need_basket.with_quality_reach`) is re-mixed on the offered prices."""
++from typing import Dict, Optional
++
++from .priced_reads import usual_prices_for
++
++NO_MATRIX = object()     # the mix is chosen on usual prices and the view keeps no matrix of them: the caller prices its asks one at a time
++
++
++def chosen_on_the_offered_prices() -> bool:
++    """The mix is chosen on the prices on offer."""
++    return False
++
++
++def chosen_on_the_usual_prices() -> bool:
++    """The mix is chosen on what each good has usually cost."""
++    return True
++
++
++def _on_usual_prices(view) -> bool:
++    """Whether the rule set of the view's setup has households choose on usual prices (the default set where the view has no setup)."""
++    from . import rule_sets      # the rule sets import this module for the two rules above
++    return rule_sets.of(getattr(view, "setup", None)).need_mix_on_usual_prices()
++
++
++def matrix_for(view, tiles, names):
++    """(tile by good) the prices the view's households choose a need's mix on, NaN where a good has none on a tile; None where they
++    choose on the prices on offer, `NO_MATRIX` where the view keeps no matrix of them."""
++    if not _on_usual_prices(view):
++        return None
++    matrix_of = getattr(view, "usual_price_matrix", None)
++    matrix = None if matrix_of is None else matrix_of(tiles, names)
++    return NO_MATRIX if matrix is None else matrix
++
++
++def prices_for(view, tile, goods) -> Optional[Dict[str, Optional[float]]]:
++    """{good: the price the view's households choose a need's mix on, None for none} on `tile`; None where they choose on the prices
++    on offer."""
++    if not _on_usual_prices(view):
++        return None
++    return usual_prices_for(view, tile, goods)
+diff --git a/sim/economy/price_grid.py b/sim/economy/price_grid.py
+index 108f83ea..bed789a1 100644
+--- a/sim/economy/price_grid.py
++++ b/sim/economy/price_grid.py
+@@ -137,17 +137,17 @@ class PriceGrid:
+             kept = self.__dict__["_names_array"] = np.array(self._index.goods.ids, dtype=object)
+         return kept
+ 
+-    def matrix(self, tiles, names) -> Optional[np.ndarray]:
+-        """The offered prices of the goods `names` on each of `tiles` as a (tile by good) matrix, NaN for no price: the same figures as
+-        `on_tile(tile).prices` for each tile (the matrix `priced_need_kernel.price_needs` reads). None when a tile is not one the area map
+-        holds or the memory numbers a market for a good outside the area map, where a reader takes the per-good path."""
++    def matrix(self, tiles, names, usual: bool = False) -> Optional[np.ndarray]:
++        """The offered prices (the usual prices when `usual`) of the goods `names` on each of `tiles` as a (tile by good) matrix, NaN for no
++        price: the same figures as `on_tile(tile).prices` for each tile (the matrix `priced_need_kernel.price_needs` reads). None when a tile
++        is not one the area map holds or the memory numbers a market for a good outside the area map, where a reader takes the per-good path."""
+         self._current()
+         index = self._index
+         columns = [index.tiles.row.get(tile) for tile in tiles]
+         if not self._rows[2] or None in columns:
+             return None
+         rows = np.array([index.goods.row.get(name, -1) for name in names], dtype=np.int64)
+-        found = self._grids[0][np.maximum(rows, 0)][:, np.array(columns, dtype=np.int64)].T
++        found = self._grids[2 if usual else 0][np.maximum(rows, 0)][:, np.array(columns, dtype=np.int64)].T
+         return np.where(rows >= 0, found, np.nan)
+ 
+     @property
+diff --git a/sim/economy/priced_need_kernel.py b/sim/economy/priced_need_kernel.py
+index 45e896b5..8961ca31 100644
+--- a/sim/economy/priced_need_kernel.py
++++ b/sim/economy/priced_need_kernel.py
+@@ -120,12 +120,15 @@ def price_ceilings(first, last, prices, effects, priced, ceiling):
+ 
+ 
+ @njit
+-def price_needs(needs, rows, price_matrix, quality_reach, with_limits):
++def price_needs(needs, rows, price_matrix, quality_reach, with_limits, mix_matrix):
+     """Every need priced: `need_basket.priced_need` for each need row, at the offered prices of its tile (`price_matrix[tile, good]`, NaN
+     for none). Writes `price` and `priced` (a good with a positive price that gives need units), `share`, `ceiling` at the good rows and
+     `need_priced` and `price_index` at the need rows. `quality_reach` (0 to 1) is how far the buyer pays for quality; `with_limits` says
+-    whether any good has a share limit (else the search is skipped)."""
++    whether any good has a share limit (else the search is skipped). `mix_matrix`, the shape of `price_matrix`, holds the prices the mix
++    is chosen on (`priced_need`'s `mix_price_of`): a good with no positive one there is weighed at its offered price, and the price
++    matrix itself chooses the mix on the offer."""
+     row_count = rows.row_count[0]
++    mix_price = np.zeros(row_count)
+     units = np.zeros(row_count)
+     fixed_value = np.zeros(row_count)
+     fixed_flag = np.zeros(row_count)
+@@ -140,7 +143,9 @@ def price_needs(needs, rows, price_matrix, quality_reach, with_limits):
+             rows.price[row] = price
+             rows.priced[row] = 1 if (price > 0.0 and rows.effect[row] > 0.0) else 0
+             valued[row] = rows.effect[row] * rows.quality[row] ** quality_reach
+-        if mix_shares(first, last, rows.price, rows.effect, valued, needs.exponent[need], rows.priced, rows.share, partials) == 0:
++            chosen_on = mix_matrix[needs.tile[need], rows.good[row]]
++            mix_price[row] = chosen_on if chosen_on > 0.0 else price
++        if mix_shares(first, last, mix_price, rows.effect, valued, needs.exponent[need], rows.priced, rows.share, partials) == 0:
+             continue
+         per_money = units_per_money(first, last, rows.price, rows.effect, rows.priced, rows.share, partials)
+         if with_limits:
+diff --git a/sim/economy/priced_need_prime.py b/sim/economy/priced_need_prime.py
+index d454a753..9e7b7f71 100644
+--- a/sim/economy/priced_need_prime.py
++++ b/sim/economy/priced_need_prime.py
+@@ -9,6 +9,7 @@ its pass's baskets up front asks `price_asked` for all of them (`cohort_prime.pr
+ The answers equal the one-need-at-a-time path (`need_basket.priced_need`) bit for bit (`test_priced_need_kernel.py`)."""
+ from typing import Dict, List, Optional
+ 
++from . import need_mix_prices
+ from .priced_need_list import PricedNeeds
+ from .priced_need_tables import GOODS, NeedBatch
+ from .priced_needs import PricedBatch
+@@ -42,7 +43,10 @@ def price_asked(view, reads: dict, pending: List[tuple]) -> bool:
+     matrix = None if matrix_of is None else matrix_of(tiles, GOODS.names)
+     if matrix is None:
+         return False
+-    answer = PricedBatch(batch, matrix)
++    mix_matrix = need_mix_prices.matrix_for(view, tiles, GOODS.names)
++    if mix_matrix is need_mix_prices.NO_MATRIX:
++        return False
++    answer = PricedBatch(batch, matrix, mix_matrix=mix_matrix)
+     for (tile, key, _basket), positions in zip(pending, answer.positions_by_request()):
+         reads[("need_prices", tile, key)] = PricedNeeds(answer, positions)
+     return True
+diff --git a/sim/economy/priced_needs.py b/sim/economy/priced_needs.py
+index 0ee49b02..a8817b93 100644
+--- a/sim/economy/priced_needs.py
++++ b/sim/economy/priced_needs.py
+@@ -1,7 +1,7 @@
+ """Baskets priced at tiles' prices in one kernel call (`priced_need_kernel.price_needs` over the tables of `priced_need_tables`), the answer
+ kept as columns (`PricedBatch`) and read as `priced_need_list.PricedNeeds`; a `PricedNeed` object (`need_basket.need_prices` / `priced_need` at
+ the same prices) is made only for a reader that wants objects."""
+-from typing import List
++from typing import List, Optional
+ 
+ import numpy
+ 
+@@ -16,9 +16,9 @@ class PricedBatch:
+     """A batch of requests answered, as columns over the priced goods only: need `position` has its goods in rows `start[position]` to
+     `stop[position]` of `names`, `price`, `effect`, `share` and `ceiling` (Python lists, made once), and its figure in `index[position]`."""
+ 
+-    def __init__(self, batch: NeedBatch, matrix: numpy.ndarray, quality_reach: float = 0.0) -> None:
++    def __init__(self, batch: NeedBatch, matrix: numpy.ndarray, quality_reach: float = 0.0, mix_matrix: Optional[numpy.ndarray] = None) -> None:
+         needs, rows = batch.tables()
+-        price_needs(needs, rows, matrix, quality_reach, batch.has_limits)
++        price_needs(needs, rows, matrix, quality_reach, batch.has_limits, matrix if mix_matrix is None else mix_matrix)
+         self.batch = batch
+         self.owners = batch.owners
+         self.specs = batch.specs
+@@ -51,11 +51,12 @@ class PricedBatch:
+                           tuple(self.ceiling[first:end]) if with_ceilings else ())
+ 
+ 
+-def priced_needs_at(basket: Basket, prices: dict, quality_reach: float = 0.0) -> PricedNeeds:
+-    """The needs of `basket` that have a priced good at the prices (good -> price; a good absent has none), through the tables."""
++def priced_needs_at(basket: Basket, prices: dict, quality_reach: float = 0.0, mix_prices: Optional[dict] = None) -> PricedNeeds:
++    """The needs of `basket` that have a priced good at the prices (good -> price; a good absent has none), through the tables;
++    `mix_prices` (good -> price) are the prices the mix is chosen on, None for the prices themselves (need_mix_prices.py)."""
+     batch = NeedBatch()
+     batch.add(0, 1.0 - basket.substitution, basket.needs)
+-    answer = PricedBatch(batch, price_matrix([prices]), quality_reach)
++    answer = PricedBatch(batch, price_matrix([prices]), quality_reach, None if mix_prices is None else price_matrix([mix_prices]))
+     return PricedNeeds(answer, answer.positions_by_request()[0])
+ 
+ 
+diff --git a/sim/economy/rule_sets.py b/sim/economy/rule_sets.py
+index ebef85e9..a26f01d2 100644
+--- a/sim/economy/rule_sets.py
++++ b/sim/economy/rule_sets.py
+@@ -12,7 +12,7 @@ import numpy as np
+ from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
+ 
+ from . import (basket_counted, close_pack, coin_cost, durable_stock, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
+-               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, outside_option_step, plot_hours_value,
++               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, need_mix_prices, opening_issuer_coin, outside_option_step, plot_hours_value,
+                rate_step, servant_hours_counted, spin_up_coin, spin_up_migration, spin_up_seats, spin_up_stop, spin_up_trim, spin_up_valued, unkept_goods)
+ from .setup import DEFAULT_RULE_SET as SEARCH
+ 
+@@ -54,6 +54,7 @@ class RuleSet:
+     spin_up_first_stage_years: Callable # (the first stage's declared bound in years) -> the most years the stage runs (spin_up_stop.py)
+     spin_up_seats: Callable             # (the year's schools, whether the economy is settling, working people by labour area, the (trade, area) of each labour market) -> the schools the labour core trains through (spin_up_seats.py)
+     spin_up_valued: Callable            # (the year's prices by good, quantities made, quantities producers hold) -> what the settle check reads changes in output and stock from beside the opening-price values (None: those alone; spin_up_valued.py)
++    need_mix_on_usual_prices: Callable  # () -> whether a household chooses the mix of goods within a need on what each has usually cost, where not on the prices on offer (need_mix_prices.py)
+     spin_up_coin_wear: Callable         # (coin's declared wear share, whether the economy is settling, the coin stock, coin the mint struck this year net of melting) -> the share of each holding that wears this year (spin_up_coin.py)
+ 
+ 
+@@ -114,7 +115,8 @@ RULE_SETS: Dict[str, RuleSet] = {
+                     spin_up_first_stage_years=spin_up_stop.the_declared_bound,
+                     spin_up_seats=spin_up_seats.by_masters,
+                     spin_up_valued=spin_up_valued.at_the_opening_prices,
+-                    spin_up_coin_wear=spin_up_coin.as_declared),
++                    spin_up_coin_wear=spin_up_coin.as_declared,
++                    need_mix_on_usual_prices=need_mix_prices.chosen_on_the_offered_prices),
+     CLEARING: RuleSet(sales_the_plan_holds_to=hold_to_stock_alone,
+                       expected_sales_after_close=unkept_goods.expected_sales_by_takings_where_unkept,
+                       producer_labour_bids=schedule_bids_with_coin_cost, labour_clearing=clear_labour_at_one_wage,
+@@ -141,7 +143,8 @@ RULE_SETS: Dict[str, RuleSet] = {
+                       spin_up_first_stage_years=spin_up_stop.long_enough_to_rest,
+                       spin_up_seats=spin_up_seats.open_while_settling,
+                       spin_up_valued=spin_up_valued.at_the_years_prices,
+-                      spin_up_coin_wear=spin_up_coin.no_more_than_struck_while_settling),
++                      spin_up_coin_wear=spin_up_coin.no_more_than_struck_while_settling,
++                      need_mix_on_usual_prices=need_mix_prices.chosen_on_the_usual_prices),
+ }
+ 
+ 
+diff --git a/sim/tests/test_need_mix_prices.py b/sim/tests/test_need_mix_prices.py
+new file mode 100644
+index 00000000..4531f8bd
+--- /dev/null
++++ b/sim/tests/test_need_mix_prices.py
+@@ -0,0 +1,160 @@
++"""The prices a household chooses the mix of goods within a need on (sim/economy/need_mix_prices.py): the search rules choose on the prices
++on offer, the clearing rules on what each good has usually cost, and the goods' own prices and the cost of a unit of the need stay at the
++offer. The kernel's pricing equals the Python's bit for bit. No game."""
++
++QUICK_TOPIC = True
++
++import random
++import types
++import unittest
++
++import numpy
++
++from sim.economy import need_mix_prices, priced_needs, rule_sets
++from sim.world import need_basket
++from sim.world.need_basket import Basket, NeedSpec
++
++TOOLS = NeedSpec("implements", 0.0, 0.2, (("iron", 1.0), ("steel", 2.0)))
++EXPONENT = -1.0      # one minus a substitution elasticity of two
++
++
++def shares_of(priced):
++    return {good: share for good, _price, _effect, share in priced.goods}
++
++
++class PricedNeedOnMixPrices(unittest.TestCase):
++    def test_the_shares_are_those_of_the_mix_prices(self):
++        at_mix_prices = need_basket.priced_need(TOOLS, EXPONENT, {"iron": 1.0, "steel": 4.0}.get)
++        chosen = need_basket.priced_need(TOOLS, EXPONENT, {"iron": 1.0, "steel": 2.0}.get, mix_price_of={"iron": 1.0, "steel": 4.0}.get)
++        self.assertEqual(shares_of(chosen), shares_of(at_mix_prices))
++
++    def test_a_year_of_cheap_steel_moves_no_spending_when_the_usual_prices_stand(self):
++        usual = {"iron": 1.0, "steel": 4.0}
++        dear = need_basket.priced_need(TOOLS, EXPONENT, {"iron": 1.0, "steel": 4.4}.get, mix_price_of=usual.get)
++        cheap = need_basket.priced_need(TOOLS, EXPONENT, {"iron": 1.0, "steel": 3.6}.get, mix_price_of=usual.get)
++        self.assertEqual(shares_of(dear), shares_of(cheap))
++
++    def test_the_goods_keep_the_offered_prices_and_the_index_is_what_the_mix_costs_at_them(self):
++        chosen = need_basket.priced_need(TOOLS, EXPONENT, {"iron": 1.0, "steel": 2.0}.get, mix_price_of={"iron": 1.0, "steel": 4.0}.get)
++        self.assertEqual([price for _good, price, _effect, _share in chosen.goods], [1.0, 2.0])
++        units_per_money = sum(share * effect / price for _good, price, effect, share in chosen.goods)
++        self.assertAlmostEqual(chosen.price_index, 1.0 / units_per_money)
++
++    def test_a_good_with_no_mix_price_is_weighed_at_its_offered_price(self):
++        plain = need_basket.priced_need(TOOLS, EXPONENT, {"iron": 1.0, "steel": 2.0}.get)
++        for missing in ({}, {"steel": None}, {"steel": 0.0}, {"steel": float("nan")}):
++            chosen = need_basket.priced_need(TOOLS, EXPONENT, {"iron": 1.0, "steel": 2.0}.get, mix_price_of=dict(missing, iron=1.0).get)
++            self.assertEqual(chosen.goods, plain.goods)
++
++    def test_mix_prices_equal_to_the_offered_ones_change_nothing(self):
++        prices = {"iron": 1.3, "steel": 2.9}
++        plain = need_basket.priced_need(TOOLS, EXPONENT, prices.get)
++        chosen = need_basket.priced_need(TOOLS, EXPONENT, prices.get, mix_price_of=prices.get)
++        self.assertEqual((chosen.goods, chosen.price_index, chosen.ceilings), (plain.goods, plain.price_index, plain.ceilings))
++
++    def test_a_good_not_on_offer_is_out_of_the_mix_whatever_it_usually_cost(self):
++        chosen = need_basket.priced_need(TOOLS, EXPONENT, {"iron": 1.0}.get, mix_price_of={"iron": 1.0, "steel": 0.01}.get)
++        self.assertEqual(shares_of(chosen), {"iron": 1.0})
++
++
++def priced_both_ways(test, specs, prices, mix_prices, substitution=2.0):
++    """The kernel's priced needs and the Python's for the same needs, offered prices and mix prices: equal field by field, exactly."""
++    basket = Basket(tuple(specs), substitution, {})
++    expected = [priced for priced in (need_basket.priced_need(spec, 1.0 - substitution, prices.get, mix_price_of=mix_prices.get) for spec in specs)
++                if priced is not None]
++    got = list(priced_needs.priced_needs_at(basket, prices, mix_prices=mix_prices))
++    test.assertEqual(len(got), len(expected))
++    for left, right in zip(got, expected):
++        test.assertEqual(left.spec, right.spec)
++        test.assertEqual(left.price_index, right.price_index)
++        test.assertEqual(left.goods, right.goods)
++        test.assertEqual(left.ceilings, right.ceilings)
++    return expected
++
++
++class KernelAgainstThePython(unittest.TestCase):
++    def test_two_goods_with_a_usual_price_each(self):
++        (need,) = priced_both_ways(self, [TOOLS], {"iron": 1.0, "steel": 2.0}, {"iron": 1.1, "steel": 4.0})
++        self.assertAlmostEqual(sum(shares_of(need).values()), 1.0)
++
++    def test_a_good_with_no_usual_price_and_a_usual_price_for_a_good_not_on_offer(self):
++        wide = NeedSpec("implements", 0.0, 0.2, (("iron", 1.0), ("steel", 2.0), ("bronze", 1.0)))
++        (need,) = priced_both_ways(self, [wide], {"iron": 1.0, "steel": 2.0}, {"steel": 4.0, "bronze": 0.5})
++        self.assertEqual(sorted(shares_of(need)), ["iron", "steel"])
++
++    def test_with_a_share_limit_that_binds(self):
++        limited = NeedSpec("food", 200.0, 0.5, (("grain", 1.0), ("tallow", 2.0)), (("tallow", 0.35),))
++        priced_both_ways(self, [limited], {"grain": 1.0, "tallow": 0.2}, {"grain": 1.4, "tallow": 0.1})
++
++    def test_random_needs_prices_and_usual_prices(self):
++        rng = random.Random(11)
++        for _case in range(60):
++            goods = ["good%d" % number for number in range(rng.randint(2, 7))]
++            specs = []
++            for number in range(rng.randint(1, 4)):
++                served = rng.sample(goods, rng.randint(1, len(goods)))
++                limits = tuple((good, rng.uniform(0.1, 0.9)) for good in served if rng.random() < 0.2)
++                specs.append(NeedSpec("need%d" % number, rng.choice([0.0, 50.0]), rng.uniform(0.05, 0.5),
++                                      tuple((good, rng.uniform(0.2, 3.0)) for good in served), limits))
++            prices = {good: rng.uniform(0.1, 9.0) for good in goods if rng.random() < 0.85}
++            mix_prices = {good: rng.uniform(0.1, 9.0) for good in goods if rng.random() < 0.7}
++            priced_both_ways(self, specs, prices, mix_prices, substitution=rng.choice([1.5, 2.0, 3.0]))
++
++
++class StandInView:
++    """A view that answers only what the mix-price reads ask of one."""
++
++    def __init__(self, rule_set, usual):
++        self.setup = types.SimpleNamespace(rule_set=rule_set)
++        self.usual = usual       # {(good, tile): price}
++
++    def usual_price_matrix(self, tiles, names):
++        return numpy.array([[self.usual.get((good, tile), numpy.nan) for good in names] for tile in tiles])
++
++    def area_of(self, _good, tile):
++        return tile
++
++    def usual_price(self, good, area):
++        return self.usual.get((good, area))
++
++
++class MixPricesOfAView(unittest.TestCase):
++    USUAL = {("iron", "north"): 1.5, ("steel", "north"): 4.0, ("iron", "south"): 1.25}
++
++    def test_the_search_rules_choose_on_the_offered_prices(self):
++        view = StandInView("search", self.USUAL)
++        self.assertIsNone(need_mix_prices.matrix_for(view, ["north", "south"], ["iron", "steel"]))
++        self.assertIsNone(need_mix_prices.prices_for(view, "north", ["iron", "steel"]))
++
++    def test_the_clearing_rules_choose_on_the_usual_prices_tile_by_good(self):
++        view = StandInView("clearing", self.USUAL)
++        matrix = need_mix_prices.matrix_for(view, ["north", "south"], ["iron", "steel"])
++        self.assertEqual(matrix[0].tolist(), [1.5, 4.0])
++        self.assertEqual(matrix[1, 0], 1.25)
++        self.assertTrue(numpy.isnan(matrix[1, 1]))
++
++    def test_the_clearing_rules_usual_prices_of_one_tile(self):
++        view = StandInView("clearing", self.USUAL)
++        self.assertEqual(need_mix_prices.prices_for(view, "south", ["iron", "steel"]), {"iron": 1.25, "steel": None})
++
++    def test_a_view_with_no_setup_chooses_on_the_offered_prices(self):
++        self.assertIsNone(need_mix_prices.matrix_for(object(), ["north"], ["iron"]))
++        self.assertIsNone(need_mix_prices.prices_for(object(), "north", ["iron"]))
++
++    def test_a_view_that_keeps_no_matrix_of_usual_prices_cannot_answer_for_a_batch(self):
++        view = types.SimpleNamespace(setup=types.SimpleNamespace(rule_set="clearing"))
++        self.assertIs(need_mix_prices.matrix_for(view, ["north"], ["iron"]), need_mix_prices.NO_MATRIX)
++
++
++class Rules(unittest.TestCase):
++    def test_which_rule_each_set_runs(self):
++        self.assertIs(rule_sets.RULE_SETS["search"].need_mix_on_usual_prices, need_mix_prices.chosen_on_the_offered_prices)
++        self.assertIs(rule_sets.RULE_SETS["clearing"].need_mix_on_usual_prices, need_mix_prices.chosen_on_the_usual_prices)
++
++    def test_what_each_rule_says(self):
++        self.assertFalse(need_mix_prices.chosen_on_the_offered_prices())
++        self.assertTrue(need_mix_prices.chosen_on_the_usual_prices())
++
++
++if __name__ == "__main__":
++    unittest.main()
+diff --git a/sim/tests/test_price_grid.py b/sim/tests/test_price_grid.py
+index 046e9573..8983032e 100644
+--- a/sim/tests/test_price_grid.py
++++ b/sim/tests/test_price_grid.py
+@@ -126,6 +126,24 @@ class UsualPrices(unittest.TestCase):
+                 held += sum(1 for price in expected.values() if price is not None)
+         self.assertGreater(held, 8)
+ 
++    def test_the_matrix_of_usual_prices_is_the_per_good_read_tile_by_good_with_nan_for_none(self):
++        _setup, record, view, _ledger, area_map = economy_of(3)
++        for number, good in enumerate(GOODS):
++            if number % 2 == 0:
++                record.memory.usual_prices[good + KEY_SEPARATOR + area_map.area_of(good, TILES[0])] = 1.5 + number
++        matrix = view.usual_price_matrix(TILES, GOODS)
++        self.assertEqual(matrix.shape, (len(TILES), len(GOODS)))
++        held = 0
++        for row, tile in enumerate(TILES):
++            for column, good in enumerate(GOODS):
++                expected = view.usual_price(good, view.area_of(good, tile))
++                if expected is None:
++                    self.assertTrue(math.isnan(matrix[row, column]))
++                else:
++                    held += 1
++                    self.assertEqual(matrix[row, column], expected)
++        self.assertGreater(held, 0)
++
+     def test_a_usual_price_written_after_it_was_read_is_seen(self):
+         _setup, record, view, _ledger, area_map = economy_of(5)
+         key = GOODS[0] + KEY_SEPARATOR + area_map.area_of(GOODS[0], TILES[0])
+diff --git a/sim/ui/kernel_signatures.py b/sim/ui/kernel_signatures.py
+index bbb2d708..fc43b2cf 100644
+--- a/sim/ui/kernel_signatures.py
++++ b/sim/ui/kernel_signatures.py
+@@ -130,7 +130,7 @@ def priced_need_signatures(types):
+     from sim.economy.api import GOOD_ROWS, NEED_ROWS, PricedGoodRows, PricedNeedRows
+     return {"sim.economy.priced_need_kernel.price_needs": [(
+         typeof(NEED_ROWS.new_table(PricedNeedRows, 1)), typeof(GOOD_ROWS.new_table(PricedGoodRows, 1)), types.Array(types.float64, 2, "C"),
+-        types.float64, types.boolean)]}
++        types.float64, types.boolean, types.Array(types.float64, 2, "C"))]}
+ 
+ 
+ def loan_signatures(types):
+diff --git a/sim/world/need_basket.py b/sim/world/need_basket.py
+index 21db51ac..155d61c7 100644
+--- a/sim/world/need_basket.py
++++ b/sim/world/need_basket.py
+@@ -163,19 +163,25 @@ def need_prices(basket: Basket, price_of: Callable[[str], Optional[float]]) -> L
+ 
+ 
+ def priced_need(spec: NeedSpec, exponent: float, price_of: Callable[[str], Optional[float]],
+-                with_ceilings: bool = True, quality_reach: float = 0.0) -> Optional[PricedNeed]:
++                with_ceilings: bool = True, quality_reach: float = 0.0,
++                mix_price_of: Optional[Callable[[str], Optional[float]]] = None) -> Optional[PricedNeed]:
+     """One need priced, or None when none of its goods has a price. `exponent` is one minus the
+     substitution elasticity; a caller that never reads `ceilings` can leave them out. `quality_reach` (0 to 1)
+     is how far the buyer pays for quality: the mix weighs a good's quality factor to that power, while the
+     need units a good gives stay its effectiveness. At zero, or for a good with no factor, the mix is by cost
+-    per need unit alone."""
++    per need unit alone. `mix_price_of(good)` is the price the buyer chooses the mix on where that is not the
++    price on offer (a good it gives no positive price for is weighed at its offered price): it moves the shares
++    alone, and the goods' prices and the price index stay those of the offer."""
+     quality = dict(spec.qualities)
+     rows = []
+     for good, effect in spec.goods:
+         price = price_of(good)
+         if price is not None and price > 0.0 and effect > 0.0:
+             valued = effect * quality.get(good, 1.0) ** quality_reach
+-            rows.append((good, price, effect, (price / valued) ** exponent))
++            mix_price = None if mix_price_of is None else mix_price_of(good)
++            if mix_price is None or not mix_price > 0.0:
++                mix_price = price
++            rows.append((good, price, effect, (mix_price / valued) ** exponent))
+     if not rows:
+         return None
+     power = math.fsum(row[3] for row in rows)

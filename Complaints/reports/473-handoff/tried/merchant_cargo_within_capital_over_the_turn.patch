@@ -1,0 +1,202 @@
+diff --git a/sim/economy/merchant_stuck_stock.py b/sim/economy/merchant_stuck_stock.py
+index b482c3e3..dc4682d5 100644
+--- a/sim/economy/merchant_stuck_stock.py
++++ b/sim/economy/merchant_stuck_stock.py
+@@ -4,7 +4,8 @@ A merchant keeps stock on a tile one of its routes starts from for carrying, and
+ labour market, which only coin can hire. Under the search rules the stock is kept whole and every coin buys new cargo;
+ a merchant whose coin has gone into cargo then has stock it can neither carry nor sell. Under the clearing rules it
+ offers where it stands the part it cannot carry this year, for want of crew it hired or of room where the stock was
+-going, and the coin that carrying the rest will cost does not buy new cargo.
++going, and the coin that carrying the rest will cost does not buy new cargo; nor does more than its capital over the
++years a turn of trade takes (`spread_over_the_turn`).
+ 
+ The part its crew can carry: under the search rules each stock takes the share of last year's carriage plan that was
+ hired on its tile, so a stock the hired hours cover whole is still cut, a part of every stock is offered where it stands
+@@ -106,11 +107,25 @@ def carriage_set_aside(units_kept: float, carriage_per_unit_by_leg: Mapping[Tupl
+     return math.fsum(units * carriage_per_unit_by_leg.get((tile, area), 0.0) for tile, area, units in merchants_legs.split(legs, units_kept))
+ 
+ 
+-def all_cash(cash: float, _carriage_set_aside: float) -> float:
++YEARS_A_TURN_OF_TRADE_TAKES = 2.0      # the timing of `merchants`: cargo bought in one year's market is sold in the next year's, and the
++                                       # coin it brings is at hand for the market after that
++
++
++def all_cash(cash: float, _carriage_set_aside: float, _value_of_stock_held: float = 0.0) -> float:
+     """The coin that buys new cargo: all the merchant has."""
+     return cash
+ 
+ 
+-def cash_less_carriage(cash: float, carriage_set_aside_for_kept_stock: float) -> float:
++def cash_less_carriage(cash: float, carriage_set_aside_for_kept_stock: float, _value_of_stock_held: float = 0.0) -> float:
+     """The coin that buys new cargo: what the merchant has less what carrying the stock it keeps will cost, never below nothing."""
+     return max(0.0, cash - max(0.0, carriage_set_aside_for_kept_stock))
++
++
++def spread_over_the_turn(cash: float, carriage_set_aside_for_kept_stock: float, value_of_stock_held: float = 0.0) -> float:
++    """The coin that buys new cargo: `cash_less_carriage`, and no more than the merchant's trading capital (its coin and
++    the cargo it holds, at what it expects to sell it for) over the years a turn of trade takes. A coin laid out this
++    year is back only for the market after next, so a merchant that lays out all it has each year trades two pools of
++    coin that never meet, one in the odd years and one in the even; whatever their sizes it then buys much one year and
++    little the next for ever. Held to its capital over the turn it lays out the same every year."""
++    capital = max(0.0, cash) + max(0.0, value_of_stock_held)
++    return min(cash_less_carriage(cash, carriage_set_aside_for_kept_stock), capital / YEARS_A_TURN_OF_TRADE_TAKES)
+diff --git a/sim/economy/merchants_plan.py b/sim/economy/merchants_plan.py
+index e874b3ff..4ff1f0d2 100644
+--- a/sim/economy/merchants_plan.py
++++ b/sim/economy/merchants_plan.py
+@@ -75,6 +75,21 @@ def _rows(route, merchant, stock, interest_rate, only_held=None, area_map=None)
+                                  good_allowed, source_allowed, merchant.traded_tiles)
+ 
+ 
++def _value_of_stock(merchant, route, area_map, held_stock, stock) -> float:
++    """What the merchant expects to sell its stock for: each stock at hand at its own expected price of the market it stands in, each
++    haul on the road at its expected price where it is bound; a stock it has no expected price for is left out."""
++    values = []
++    for (good, tile), quantity in sorted(held_stock.items()):
++        expected = stock.expectation_of(good, tile)
++        if expected is not None and expected is not merchants.NOT_AT_HAND and quantity > 0.0:
++            values.append(quantity * expected)
++    for each in merchant.in_transit:
++        slot = route.slot_of_stock(area_map, each.good, each.destination_tile)
++        if slot is not None and not math.isnan(stock.expected[slot]):
++            values.append(each.quantity * float(stock.expected[slot]))
++    return math.fsum(values)
++
++
+ def prepare_rows(route, merchants, interest_rate: float) -> None:
+     """Search the candidate rows of these merchants in one call, for their `orders` or `credit_wanted` that follow on this `route`."""
+     if merchants:
+@@ -121,8 +136,8 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+     `route` pass); this merchant adds its own to it. With `rows_out` (an `OrderRows`) the bids and offers are written to it as rows,
+     offers first as `OrderRows` takes them in any order, and no `Bid` or `Offer` is made; the answer then holds no orders.
+     `crewed_share_by_tile` is the share of its carriage plan's crew hours hired this year by source tile (a tile absent: all of
+-    them); `stock_offered_where_it_stands` and `cash_for_new_cargo` are the rule set's rules for stock held on a route
+-    (merchant_stuck_stock.py; the defaults keep it whole and buy with all the cash). `crewed_share_of_stocks` is its rule for the
++    them); `stock_offered_where_it_stands` and `cash_for_new_cargo` are the rule set's rules for stock held on a route and for the
++    coin laid out on new cargo (merchant_stuck_stock.py; the defaults keep it whole and buy with all the cash). `crewed_share_of_stocks` is its rule for the
+     share of each such stock the crew can carry (the default: its tile's share of the plan); a rule that reckons in hours reads
+     `crew_hours_per_tonne(tile, destination tile)` (((crew key, hours),), `carriage_hours.Crew.hours_per_tonne`) and
+     `crew_hours_hired` (by crew key; None: no plan to hire for yet)."""
+@@ -182,7 +197,8 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+             on_offer[key] = offered
+             selling.add((key[0], area_map.area_of(key[0], key[1])))
+         carriage_owed.append(merchant_stuck_stock.carriage_set_aside(quantity - offered, held_carriage.get(key, {}), legs))
+-    remaining = cash_for_new_cargo(cash_held, math.fsum(carriage_owed)) * (1.0 - merchants.BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
++    remaining = (cash_for_new_cargo(cash_held, math.fsum(carriage_owed), _value_of_stock(merchant, route, area_map, held_stock, stock))
++                 * (1.0 - merchants.BUDGET_SAFETY_SHARE))     # a hair kept back: borrowed cash is all spent
+     if rows_out is None:
+         offers = merchants._holding_offers(merchant, view, area_map, on_offer, specs, interest_rate)
+     else:
+diff --git a/sim/economy/rule_sets.py b/sim/economy/rule_sets.py
+index da637681..39ed93f2 100644
+--- a/sim/economy/rule_sets.py
++++ b/sim/economy/rule_sets.py
+@@ -34,7 +34,7 @@ class RuleSet:
+     input_orders_after_hiring: Callable   # (setup, record, view, the year's plans, the ledger): the plans' input orders re-sized once the hours are hired
+     rate_remembered: Callable       # (the rate remembered, None for none; the rate the year's lending cleared at) -> the rate the economy remembers
+     merchant_stock_offered_where_it_stands: Callable   # (units of a stock held for a route, the share of its tile's carriage plan that is crewed, the room at its destinations) -> units offered where they stand
+-    merchant_cash_for_new_cargo: Callable   # (a merchant's cash, the coin carrying the stock it keeps for routes will cost) -> the cash that buys new cargo
++    merchant_cash_for_new_cargo: Callable   # (a merchant's cash, the coin carrying the stock it keeps for routes will cost, what it expects to sell the stock it holds for) -> the cash that buys new cargo
+     merchant_crewed_share_of_stocks: Callable   # (the stocks a merchant holds for routes, the share of its carriage plan crewed by tile, () -> the crew hours each stock needs by crew key, the hours it hired by crew key) -> the share of each stock its crew can carry (merchant_stuck_stock.py)
+     merchant_wage_loan: Callable    # (the loan a merchant wants for its carriers' wages, its capital, its debt) -> the loan it asks for (None: none)
+     memory_making_costs: Callable   # (setup, record) -> {good: what it costs to make}, as the market memory reads it in a year a market traded nothing
+@@ -126,7 +126,7 @@ RULE_SETS: Dict[str, RuleSet] = {
+                       input_orders_after_hiring=input_orders_after_hiring.resize_to_hired_hours,
+                       rate_remembered=rate_step.toward_the_cleared_rate,
+                       merchant_stock_offered_where_it_stands=merchant_stuck_stock.part_it_cannot_carry,
+-                      merchant_cash_for_new_cargo=merchant_stuck_stock.cash_less_carriage,
++                      merchant_cash_for_new_cargo=merchant_stuck_stock.spread_over_the_turn,
+                       merchant_crewed_share_of_stocks=merchant_stuck_stock.by_the_hours_the_stocks_need,
+                       merchant_wage_loan=merchant_wage_loans.within_leverage,
+                       memory_making_costs=making_cost_alone.of_goods_made_alone,
+diff --git a/sim/tests/test_merchant_stuck_stock.py b/sim/tests/test_merchant_stuck_stock.py
+index 1bc9fd74..a52564a2 100644
+--- a/sim/tests/test_merchant_stuck_stock.py
++++ b/sim/tests/test_merchant_stuck_stock.py
+@@ -9,7 +9,7 @@ from sim.economy import merchants
+ from sim.economy import rule_sets
+ from sim.economy.merchant_stuck_stock import (all_cash, by_the_hours_the_stocks_need, by_the_plans_share, carriage_set_aside,
+                                               cash_less_carriage, crewed_share_by_tile, hours_needed_by_stock, kept_whole,
+-                                              part_it_cannot_carry)
++                                              part_it_cannot_carry, spread_over_the_turn)
+ from sim.tests.test_economy_merchants import CARRIAGE_PER_UNIT, SPECS, View, merchant, world
+ 
+ 
+@@ -124,11 +124,55 @@ class StockOfferedWhereItStands(unittest.TestCase):
+ class CashForNewCargo(unittest.TestCase):
+     def test_under_the_search_rules_all_the_cash_buys(self):
+         self.assertEqual(all_cash(100.0, 30.0), 100.0)
++        self.assertEqual(all_cash(100.0, 30.0, 500.0), 100.0)
+ 
+     def test_the_carriage_set_aside_is_taken_off_and_never_below_nothing(self):
+         self.assertEqual(cash_less_carriage(100.0, 30.0), 70.0)
+         self.assertEqual(cash_less_carriage(100.0, 130.0), 0.0)
+         self.assertEqual(cash_less_carriage(100.0, 0.0), 100.0)
++        self.assertEqual(cash_less_carriage(100.0, 30.0, 500.0), 70.0)
++
++
++class SpreadOverTheTurn(unittest.TestCase):
++    def test_a_merchant_holding_only_coin_lays_out_half_of_it(self):
++        self.assertEqual(spread_over_the_turn(100.0, 0.0, 0.0), 50.0)
++
++    def test_a_merchant_with_as_much_cargo_as_coin_lays_out_all_its_coin(self):
++        self.assertEqual(spread_over_the_turn(50.0, 0.0, 50.0), 50.0)
++
++    def test_a_merchant_with_more_cargo_than_coin_lays_out_no_more_than_its_coin(self):
++        self.assertEqual(spread_over_the_turn(20.0, 0.0, 80.0), 20.0)
++
++    def test_the_carriage_set_aside_still_comes_off_the_coin(self):
++        self.assertEqual(spread_over_the_turn(20.0, 5.0, 80.0), 15.0)
++        self.assertEqual(spread_over_the_turn(100.0, 70.0, 0.0), 30.0)
++        self.assertEqual(spread_over_the_turn(10.0, 30.0, 0.0), 0.0)
++
++    def test_cargo_with_no_value_to_read_counts_for_nothing(self):
++        self.assertEqual(spread_over_the_turn(100.0, 0.0, -5.0), 50.0)
++
++    def laid_out_over_years(self, coin, cargo, years, rule):
++        """A merchant whose cargo sells the year after it is bought, for what it paid: what it lays out each year."""
++        laid_out = []
++        for _year in range(years):
++            spent = rule(coin, 0.0, cargo)
++            laid_out.append(spent)
++            coin, cargo = coin - spent + cargo, spent
++        return laid_out
++
++    def test_a_merchant_that_starts_with_all_its_capital_in_coin_lays_out_the_same_every_year(self):
++        self.assertEqual(self.laid_out_over_years(100.0, 0.0, 5, spread_over_the_turn), [50.0, 50.0, 50.0, 50.0, 50.0])
++
++    def test_spending_all_its_coin_it_lays_out_everything_one_year_and_nothing_the_next(self):
++        self.assertEqual(self.laid_out_over_years(100.0, 0.0, 4, cash_less_carriage), [100.0, 0.0, 100.0, 0.0])
++
++    def test_uneven_pools_of_coin_and_cargo_even_out(self):
++        laid_out = self.laid_out_over_years(80.0, 20.0, 4, spread_over_the_turn)
++        self.assertEqual(laid_out, [50.0, 50.0, 50.0, 50.0])
++
++    def test_which_rule_each_set_runs(self):
++        self.assertIs(rule_sets.RULE_SETS["search"].merchant_cash_for_new_cargo, all_cash)
++        self.assertIs(rule_sets.RULE_SETS["clearing"].merchant_cash_for_new_cargo, spread_over_the_turn)
+ 
+ 
+ class CarriageSetAside(unittest.TestCase):
+@@ -150,7 +194,8 @@ def ordered(cash, held, shares=None, clearing=False, price_a=2.0, price_b=5.0, *
+     who.expected_prices = {("salt", area_a["salt"]): price_a, ("salt", area_b["salt"]): price_b}
+     who.expected_volumes = {("salt", area_b["salt"]): 100.0}
+     rules = dict(stock_offered_where_it_stands=part_it_cannot_carry, cash_for_new_cargo=cash_less_carriage) if clearing else {}
+-    return merchants.orders(who, View({}), carriage, area_map, cash, held, SPECS, 0.0, crewed_share_by_tile=shares, **rules, **crew)
++    rules.update(crew)
++    return merchants.orders(who, View({}), carriage, area_map, cash, held, SPECS, 0.0, crewed_share_by_tile=shares, **rules)
+ 
+ 
+ def bid_for(orders):
+@@ -183,6 +228,11 @@ class OrdersWithTheCrewReckonedInHours(unittest.TestCase):
+         self.assertAlmostEqual(offered(orders), 7.5)
+         self.assertEqual(bid_for(orders), 0.0)
+ 
++    def test_a_merchant_with_cargo_standing_where_it_sells_lays_out_more_of_its_coin(self):
++        only_coin = ordered(40.0, {}, clearing=True, cash_for_new_cargo=spread_over_the_turn)
++        with_cargo = ordered(40.0, {("salt", "b"): 8.0}, clearing=True, cash_for_new_cargo=spread_over_the_turn)       # worth as much as its coin
++        self.assertAlmostEqual(sum(bid.budget for bid in with_cargo.bids), 2.0 * sum(bid.budget for bid in only_coin.bids))
++
+     def test_the_search_rules_take_the_plans_share_and_the_clearing_rules_the_hours(self):
+         self.assertIs(rule_sets.RULE_SETS["search"].merchant_crewed_share_of_stocks, by_the_plans_share)
+         self.assertIs(rule_sets.RULE_SETS["clearing"].merchant_crewed_share_of_stocks, by_the_hours_the_stocks_need)

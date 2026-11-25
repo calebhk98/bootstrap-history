@@ -1,0 +1,123 @@
+"""What it takes a household to get a good: the search rules learn nothing, the clearing rules raise a good's planning
+multiple while its markets deliver less than was asked and ease it once nobody goes short."""
+
+QUICK_TOPIC = True
+
+import math
+import types
+import unittest
+
+from sim.economy import planning_scarcity, rule_sets, year_close
+from sim.economy.goods_record import GoodsRecord
+
+
+class MultipleAfter(unittest.TestCase):
+    def test_a_good_that_delivers_most_of_what_is_asked_keeps_its_multiple(self):
+        self.assertEqual(planning_scarcity.multiple_after(4.0, 95.0, 5.0, 1.0), 4.0)
+        self.assertEqual(planning_scarcity.multiple_after(1.0, 60.0, 40.0, 1.0), 1.0)     # a little short: no multiple begins
+
+    def test_a_good_short_rises_by_the_step_toward_the_spending_that_fits_what_is_delivered(self):
+        # a quarter of what was asked was delivered and spending falls one for one with the price: the spending that fits
+        # is a quarter, and the multiple takes the declared share of that way (in logs)
+        after = planning_scarcity.multiple_after(1.0, 25.0, 75.0, 1.0)
+        self.assertAlmostEqual(after, 4.0 ** planning_scarcity.PLANNING_STEP_SHARE)
+
+    def test_the_rise_in_a_year_is_bounded(self):
+        after = planning_scarcity.multiple_after(2.0, 1.0, 1.0e6, 1.0)
+        self.assertAlmostEqual(after, 2.0 * planning_scarcity.PLANNING_MOST_RAISED_A_YEAR)
+
+    def test_nothing_delivered_at_all_rises_by_the_most_a_year_allows(self):
+        self.assertAlmostEqual(planning_scarcity.multiple_after(1.0, 0.0, 10.0, 1.0), planning_scarcity.PLANNING_MOST_RAISED_A_YEAR)
+
+    def test_the_multiple_never_passes_its_bound(self):
+        self.assertEqual(planning_scarcity.multiple_after(planning_scarcity.PLANNING_MOST_MULTIPLE, 0.0, 10.0, 1.0),
+                         planning_scarcity.PLANNING_MOST_MULTIPLE)
+
+    def test_once_nobody_goes_short_the_multiple_eases_part_of_the_way_back_to_one(self):
+        after = planning_scarcity.multiple_after(5.0, 40.0, 0.0, 1.0)
+        self.assertAlmostEqual(after, 1.0 + 4.0 * (1.0 - planning_scarcity.PLANNING_RELAX_SHARE))
+
+    def test_a_market_that_traded_nothing_and_left_nobody_short_eases_too(self):
+        self.assertLess(planning_scarcity.multiple_after(5.0, 0.0, 0.0, 1.0), 5.0)
+
+    def test_a_mix_that_spends_no_less_on_a_dearer_good_learns_nothing(self):
+        self.assertEqual(planning_scarcity.multiple_after(1.0, 25.0, 75.0, 0.0), 1.0)
+        self.assertEqual(planning_scarcity.multiple_after(1.0, 25.0, 75.0, -0.5), 1.0)
+
+    def test_a_more_elastic_mix_needs_a_smaller_rise(self):
+        self.assertLess(planning_scarcity.multiple_after(1.0, 25.0, 75.0, 2.0), planning_scarcity.multiple_after(1.0, 25.0, 75.0, 1.0))
+
+
+class Learnt(unittest.TestCase):
+    def test_each_short_goods_multiple_and_only_those_above_one(self):
+        learnt = planning_scarcity.learnt({"bronze_kg": 3.0, "cloth_kg": 1.0000001}, {"bronze_kg": 1.0, "steel_kg": 50.0, "cloth_kg": 9.0},
+                                          {"bronze_kg": 99.0}, [["bronze_kg", "steel_kg"], ["cloth_kg"]], 1.0)
+        self.assertEqual(sorted(learnt), ["bronze_kg"])
+        self.assertGreater(learnt["bronze_kg"], 3.0)
+
+    def test_a_good_of_no_need_is_dropped(self):
+        learnt = planning_scarcity.learnt({"silver_kg": 9.0}, {"silver_kg": 1.0}, {"silver_kg": 99.0}, [["bronze_kg"]], 1.0)
+        self.assertEqual(learnt, {})
+
+    def test_a_need_all_of_whose_goods_are_short_plans_its_least_short_good_at_its_price(self):
+        # frames a quarter served, walls not at all: frames stand at one and walls at the ratio of the two rises
+        learnt = planning_scarcity.learnt({}, {"frame_m3": 25.0}, {"frame_m3": 75.0, "wall_m3": 10.0}, [["frame_m3", "wall_m3"]], 1.0)
+        self.assertEqual(sorted(learnt), ["wall_m3"])
+        self.assertAlmostEqual(learnt["wall_m3"], planning_scarcity.PLANNING_MOST_RAISED_A_YEAR / 4.0 ** planning_scarcity.PLANNING_STEP_SHARE)
+
+    def test_nothing_is_learnt_under_the_search_rules(self):
+        self.assertEqual(planning_scarcity.nothing_learnt({"bronze_kg": 3.0}, {"bronze_kg": 1.0}, {"bronze_kg": 99.0}, [["bronze_kg", "steel_kg"]], 1.0), {})
+
+
+class AgainstTheNeedsLowest(unittest.TestCase):
+    def test_a_need_with_a_good_at_one_is_left_as_it_is(self):
+        multiples = {"bronze_kg": 9.0}
+        self.assertEqual(planning_scarcity.against_the_needs_lowest(multiples, [["bronze_kg", "steel_kg"]]), {"bronze_kg": 9.0})
+
+    def test_each_needs_goods_are_divided_by_its_lowest(self):
+        found = planning_scarcity.against_the_needs_lowest({"frame_m3": 2.0, "wall_m3": 8.0, "bronze_kg": 9.0}, [["frame_m3", "wall_m3"], ["bronze_kg", "steel_kg"]])
+        self.assertEqual(found, {"frame_m3": 1.0, "wall_m3": 4.0, "bronze_kg": 9.0})
+
+    def test_a_good_alone_in_its_need_stands_at_one(self):
+        self.assertEqual(planning_scarcity.against_the_needs_lowest({"salt_kg": 27.0}, [["salt_kg"]]), {"salt_kg": 1.0})
+
+
+class ByGood(unittest.TestCase):
+    def test_the_figures_of_a_goods_markets_summed(self):
+        figures = {"bronze_kg|north": 2.0, "bronze_kg|south": 3.0, "bread_kg|north": 7.0}
+        self.assertEqual(planning_scarcity.by_good(figures, "|"), {"bread_kg": 7.0, "bronze_kg": 5.0})
+
+
+class LearnAtTheClose(unittest.TestCase):
+    def record(self):
+        goods = GoodsRecord()
+        goods.volumes.hold_named(["bronze_kg|north", "bronze_kg|south", "silver_kg|north", "steel_kg|north"], [1.0, 1.0, 5.0, 80.0])
+        goods.unmet.hold_named(["bronze_kg|north", "silver_kg|north", "cart|north"], [198.0, 500.0, 40.0])
+        return types.SimpleNamespace(goods=goods, currency=types.SimpleNamespace(backing_good="silver_kg"))
+
+    def setup(self, rule_set):
+        needs = (types.SimpleNamespace(goods=(("bronze_kg", 1.0), ("steel_kg", 2.0))), types.SimpleNamespace(goods=(("silver_kg", 1.0),)))
+        return types.SimpleNamespace(rule_set=rule_set, basket=types.SimpleNamespace(needs=needs, substitution=2.0))
+
+    def test_the_clearing_rules_learn_the_short_goods_that_serve_a_need_and_leave_the_coin_metal_out(self):
+        record = self.record()
+        seen_by_views = record.goods.planning_scarcity
+        year_close.learn_planning_scarcity(self.setup("clearing"), record)
+        self.assertEqual(sorted(record.goods.planning_scarcity), ["bronze_kg"])     # a cart serves no need; silver is the coin metal
+        self.assertAlmostEqual(record.goods.planning_scarcity["bronze_kg"], planning_scarcity.PLANNING_MOST_RAISED_A_YEAR)
+        self.assertIs(record.goods.planning_scarcity, seen_by_views)      # the store a year's views hold is the one written
+
+    def test_the_search_rules_learn_nothing(self):
+        record = self.record()
+        year_close.learn_planning_scarcity(self.setup("search"), record)
+        self.assertEqual(record.goods.planning_scarcity, {})
+
+
+class Rules(unittest.TestCase):
+    def test_which_rule_each_set_runs(self):
+        self.assertIs(rule_sets.RULE_SETS["search"].planning_scarcity_learnt, planning_scarcity.nothing_learnt)
+        self.assertIs(rule_sets.RULE_SETS["clearing"].planning_scarcity_learnt, planning_scarcity.learnt)
+
+
+if __name__ == "__main__":
+    unittest.main()

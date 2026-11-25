@@ -1,0 +1,378 @@
+diff --git a/sim/economy/lending.py b/sim/economy/lending.py
+index bfe2cc2f..66e06e8f 100644
+--- a/sim/economy/lending.py
++++ b/sim/economy/lending.py
+@@ -17,7 +17,7 @@ from sim.loans.columns import NO_TILE
+ from . import bank_service, bondage, cohort_prime, credit, credit_claims, credit_service, households_credit, lender_ask, loss_memory, merchants_book, merchants_credit, merchants_credit_batch, titles, titles_ground, titles_value, transfer_rows
+ from .cohort_store import table_of
+ from .household_time_preference import HOUSEHOLD_TIME_PREFERENCE
+-from . import household_work_year
++from . import household_work_year, rule_sets
+ from .household_work_year import kept_basket
+ from .producers_working_capital import WORKING_CAPITAL_PURPOSE
+ from .goods_order_tables import LOAN
+@@ -158,7 +158,8 @@ def merchant_requests(setup, record, view, area_map, carriage) -> List:
+     if not record.merchants:
+         return []
+     route = merchants_book.route_pass(view, carriage, area_map, setup.specs)
+-    return merchants_credit_batch.credit_requests(MerchantTable.of(record.memory.tables), route, record.book, debts, money, rate)
++    return merchants_credit_batch.credit_requests(MerchantTable.of(record.memory.tables), route, record.book, debts, money, rate,
++                                                  stock_counted_against_room=rule_sets.of(setup).merchant_stock_counted_against_room)
+ 
+ 
+ def bid_household_loans(setup, record, view, ledger, loans, order_book, priced_by_tile) -> None:
+diff --git a/sim/economy/merchant_room_stock.py b/sim/economy/merchant_room_stock.py
+new file mode 100644
+index 00000000..6e57593d
+--- /dev/null
++++ b/sim/economy/merchant_room_stock.py
+@@ -0,0 +1,27 @@
++"""The stock a merchant counts against its room in a market (the rule sets' `merchant_stock_counted_against_room`).
++
++A merchant bids for no more cargo into a market than its share of what the market trades in a year, less what it
++already has for it (`merchants_shares.room_left`), and goods bought one year are sold the next. Under the search rules
++what it holds in the market is all that counts: a merchant that filled its share one year finds no room the next, buys
++nothing, and finds the whole share free the year after, so it buys every other year and a part of each market it serves
++comes and goes with it. That rule rests at half the share bought every year (the cargo standing in the market while
++the next is bought), and any swing around it lasts for ever. Under the clearing rules a year's cargo is no more than
++that half: at least half the share counts as taken, so the merchant comes to buying the same every year, and it still
++never has more than its share standing in a market. Plain functions over arrays by market slot."""
++import numpy as np
++
++YEARS_A_CARGO_TURNS_IN = 2.0     # the timing of `merchants`: bought in one year's market, sold in the next year's
++
++
++def all_it_holds(held, _on_the_road, _volumes, _own_share):
++    """Units counted against the room in each market: all the merchant holds there, with what is on the road to it
++    (`held` counts both)."""
++    return held
++
++
++def no_less_than_the_cargo_standing_at_rest(held, _on_the_road, volumes, own_share):
++    """Units counted against the room in each market: what the merchant holds there (with what is on the road), and
++    no less than the cargo that stands there when it buys the same every year, its share of the market's yearly volume
++    over the years a cargo turns in. What it holds alone where the market's volume was never seen (NaN)."""
++    standing_at_rest = np.where(np.isnan(volumes), 0.0, own_share * volumes / YEARS_A_CARGO_TURNS_IN)
++    return np.maximum(held, standing_at_rest)
+diff --git a/sim/economy/merchants_credit_batch.py b/sim/economy/merchants_credit_batch.py
+index ec06b957..221ad157 100644
+--- a/sim/economy/merchants_credit_batch.py
++++ b/sim/economy/merchants_credit_batch.py
+@@ -1,10 +1,10 @@
+ """Every merchant's credit request in one pass (`merchants_credit.credit_request` for all of them): the rows of the merchants that may
+ borrow are searched together, what each holds by market slot comes from the book and the merchant table, and one kernel sizes the loans."""
+-from typing import List
++from typing import List, Tuple
+ 
+ import numpy
+ 
+-from . import credit, merchant_year, merchant_year_kernels, merchants, merchants_batch, merchants_book, merchants_credit_kernel
++from . import credit, merchant_room_stock, merchant_year, merchant_year_kernels, merchants, merchants_batch, merchants_book, merchants_credit_kernel
+ from .merchant_table import MerchantTable
+ from .merchants_shares import MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE
+ from .merchants_credit import MERCHANT_LEVERAGE_LIMIT, MERCHANT_LOAN_YEARS
+@@ -26,9 +26,9 @@ def slot_resolver(book):
+     return resolve
+ 
+ 
+-def held_by_slot(store: MerchantTable, rows: numpy.ndarray, numbers: numpy.ndarray, book, record_book) -> numpy.ndarray:
++def held_by_slot(store: MerchantTable, rows: numpy.ndarray, numbers: numpy.ndarray, book, record_book) -> Tuple[numpy.ndarray, numpy.ndarray]:
+     """What each merchant at `rows` holds, and has on the road, in each slot of the route book: [merchant position, slot]. Added in the order
+-    a merchant's stock is listed (goods then tiles by name, then its shipments in turn)."""
++    a merchant's stock is listed (goods then tiles by name, then its shipments in turn). With it, the part that is on the road alone."""
+     first = numpy.where(numbers >= 0, record_book.agent_table.first_slot[numpy.where(numbers >= 0, numbers, 0)], -1)
+     table = record_book.stock_rows.table
+     owner, good, tile, quantity = merchant_year_kernels.merchant_stock(first, table.next_in_agent, table.good, table.tile, table.quantity)
+@@ -45,13 +45,17 @@ def held_by_slot(store: MerchantTable, rows: numpy.ndarray, numbers: numpy.ndarr
+     shipped = numpy.argsort(store.transit_owner[:count], kind="stable")
+     transit_slot = TRANSIT_SLOT_PAIRS.lookup(store.transit_good[:count][shipped], store.transit_tile[:count][shipped],
+                                              store.goods.name_list, store.tiles.name_list, (book,), slot_resolver(book))
+-    merchants_credit_kernel.accumulate_by_slot(position_of_row[store.transit_owner[:count][shipped]], transit_slot,
+-                                               store.transit_quantity[:count][shipped], held)
+-    return held
++    on_the_road = numpy.zeros((len(rows), book.slots))
++    for into in (held, on_the_road):
++        merchants_credit_kernel.accumulate_by_slot(position_of_row[store.transit_owner[:count][shipped]], transit_slot,
++                                                   store.transit_quantity[:count][shipped], into)
++    return held, on_the_road
+ 
+ 
+-def credit_requests(store: MerchantTable, route, record_book, debts, currency, interest_rate: float) -> List[LoanRequest]:
+-    """The loan each merchant asks for (none for one that wants nothing), in merchant order; `debts` is what each owes now."""
++def credit_requests(store: MerchantTable, route, record_book, debts, currency, interest_rate: float,
++                    stock_counted_against_room=merchant_room_stock.all_it_holds) -> List[LoanRequest]:
++    """The loan each merchant asks for (none for one that wants nothing), in merchant order; `debts` is what each owes now.
++    `stock_counted_against_room` is the rule set's rule for the stock that takes up room in a market (merchant_room_stock.py)."""
+     rows = store.rank_order()
+     if len(rows) == 0:
+         return []
+@@ -66,7 +70,7 @@ def credit_requests(store: MerchantTable, route, record_book, debts, currency, i
+     expected = store.gather("prices", asked_rows, market_rows)
+     volumes = store.gather("volumes", asked_rows, market_rows)
+     numbers = merchant_year.book_numbers(store, record_book, asked_rows)
+-    held = held_by_slot(store, asked_rows, numbers, book, record_book)
++    held = stock_counted_against_room(*held_by_slot(store, asked_rows, numbers, book, record_book), volumes, merchants.MERCHANT_MARKET_SHARE)
+     counts, _good, _source, _destination, source_slot, destination_slot, rank, _price, outlay, _ceiling = merchants_batch.search_arrays(
+         route, expected, [store.homes[row] for row in asked_rows.tolist()], float(interest_rate), merchants.MERCHANT_MARGIN_SHARE,
+         [store.traded[row] for row in asked_rows.tolist()])
+diff --git a/sim/economy/merchants_plan.py b/sim/economy/merchants_plan.py
+index 4a8dc24f..07fe2f03 100644
+--- a/sim/economy/merchants_plan.py
++++ b/sim/economy/merchants_plan.py
+@@ -9,7 +9,7 @@ from typing import Dict, List, Mapping, Optional, Tuple
+ 
+ import numpy as np
+ 
+-from . import merchant_stuck_stock, merchants, merchants_batch, merchants_book, merchants_book_kernel, merchants_legs
++from . import merchant_room_stock, merchant_stuck_stock, merchants, merchants_batch, merchants_book, merchants_book_kernel, merchants_legs
+ from .merchants_shares import MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE, RouteShares
+ from .protocols import AgentOrders
+ from .types import Bid, GoodId, TileId
+@@ -21,6 +21,7 @@ class _Stock:
+     def __init__(self, route, merchant, held_stock, area_map):
+         book = route.book
+         self.held = np.zeros(book.slots, np.float64)
++        self.on_the_road = np.zeros(book.slots, np.float64)      # the part of `held` that is in transit
+         self.slot_of_stock: Dict[Tuple[GoodId, TileId], int] = {}
+         self.tiles_in_slot: Dict[int, List[Tuple[TileId, float]]] = {}     # the held (tile, quantity) of each slot's area, tiles sorted
+         for (good, tile), quantity in held_stock.items():
+@@ -35,6 +36,7 @@ class _Stock:
+             slot = route.slot_of_stock(area_map, each.good, each.destination_tile)
+             if slot is not None:
+                 self.held[slot] += each.quantity
++                self.on_the_road[slot] += each.quantity
+         self.volumes = merchants_book.merchant_array(book, merchant.expected_volumes)
+         self.expected = merchants_book.merchant_array(book, merchant.expected_prices)
+ 
+@@ -112,14 +114,16 @@ def _group_arrays(book, shares) -> Tuple[np.ndarray, np.ndarray, bool]:
+ 
+ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[Tuple[GoodId, TileId], float], specs,
+            interest_rate: float, shares=None, route=None, rows_out=None, crewed_share_by_tile: Optional[Mapping[TileId, float]] = None,
+-           stock_offered_where_it_stands=merchant_stuck_stock.kept_whole, cash_for_new_cargo=merchant_stuck_stock.all_cash) -> AgentOrders:
++           stock_offered_where_it_stands=merchant_stuck_stock.kept_whole, cash_for_new_cargo=merchant_stuck_stock.all_cash,
++           stock_counted_against_room=merchant_room_stock.all_it_holds) -> AgentOrders:
+     """The merchant's offers and bids for the year (`merchants.orders`). `shares` is what rival merchants have already
+     committed this year (`RouteShares`, or `merchants_book.DenseShares` when the caller sizes many merchants over one
+     `route` pass); this merchant adds its own to it. With `rows_out` (an `OrderRows`) the bids and offers are written to it as rows,
+     offers first as `OrderRows` takes them in any order, and no `Bid` or `Offer` is made; the answer then holds no orders.
+     `crewed_share_by_tile` is the share of its carriage plan's crew hours hired this year by source tile (a tile absent: all of
+     them); `stock_offered_where_it_stands` and `cash_for_new_cargo` are the rule set's rules for stock held on a route
+-    (merchant_stuck_stock.py; the defaults keep it whole and buy with all the cash)."""
++    (merchant_stuck_stock.py; the defaults keep it whole and buy with all the cash), `stock_counted_against_room` its rule for
++    the stock that takes up room in a market (merchant_room_stock.py; the default counts all the merchant holds there)."""
+     route = route or merchants_book.route_pass(view, carriage, area_map, specs)
+     book = route.book
+     shares = shares if shares is not None else RouteShares()
+@@ -127,6 +131,7 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+     merchant.routes = {}
+     held_index = merchants.held_by_good(held_stock)
+     stock = _Stock(route, merchant, held_stock, area_map)
++    counted = stock_counted_against_room(stock.held, stock.on_the_road, stock.volumes, merchants.MERCHANT_MARKET_SHARE)
+     cash_held = max(0.0, cash)
+     rows = _rows(route, merchant, stock, interest_rate, None if cash_held * (1.0 - merchants.BUDGET_SAFETY_SHARE) > 0.0 else held_index)
+     shares_args = (merchants.MERCHANT_MARKET_SHARE, MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE)
+@@ -139,7 +144,7 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+         holding_source[list(stock.tiles_in_slot)] = True
+         held_rows = np.flatnonzero(holding_source[rows.source_slot])
+         room_of_row = merchants_book_kernel.rooms_of(
+-            rows.destination_slot[held_rows], rows.source_slot[held_rows], stock.volumes, stock.held, book.zeros, group_into,
++            rows.destination_slot[held_rows], rows.source_slot[held_rows], stock.volumes, counted, book.zeros, group_into,
+             group_out, *shares_args).tolist()
+         for row, room in zip(held_rows.tolist(), room_of_row):
+             good_index = int(rows.good[row])
+@@ -181,7 +186,7 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+     bought: Dict[Tuple[GoodId, TileId], Dict[Tuple[TileId, str], float]] = {}
+     if remaining > 0.0:
+         quantities = merchants_book_kernel.commit_orders(
+-            rows.destination_slot, rows.source_slot, rows.outlay, remaining, stock.volumes, stock.held,
++            rows.destination_slot, rows.source_slot, rows.outlay, remaining, stock.volumes, counted,
+             np.zeros(book.slots, np.float64), group_into, group_out, *shares_args)
+         for row in np.flatnonzero(quantities > 0.0).tolist():
+             good_index = int(rows.good[row])
+@@ -210,15 +215,16 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+ 
+ 
+ def credit_wanted(merchant, view, carriage, area_map, cash: float, held_stock, specs, interest_rate: float,
+-                  limit: float, route=None) -> Tuple[float, float]:
++                  limit: float, route=None, stock_counted_against_room=merchant_room_stock.all_it_holds) -> Tuple[float, float]:
+     """(loan wanted, gain it is expected to earn) for the cargo `cash` cannot buy, within `limit`
+-    (`merchants_credit.credit_request`)."""
++    (`merchants_credit.credit_request`); `stock_counted_against_room` as `orders` takes it."""
+     route = route or merchants_book.route_pass(view, carriage, area_map, specs)
+     book = route.book
+     stock = _Stock(route, merchant, held_stock, area_map)
++    counted = stock_counted_against_room(stock.held, stock.on_the_road, stock.volumes, merchants.MERCHANT_MARKET_SHARE)
+     rows = _rows(route, merchant, stock, interest_rate)
+     wanted, gain = merchants_book_kernel.commit_credit(
+-        rows.destination_slot, rows.source_slot, rows.rank, rows.outlay, cash, limit, stock.volumes, stock.held,
++        rows.destination_slot, rows.source_slot, rows.rank, rows.outlay, cash, limit, stock.volumes, counted,
+         np.zeros(book.slots, np.float64), np.zeros(book.slots, np.float64), np.zeros(book.slots, np.float64),
+         merchants.MERCHANT_MARKET_SHARE, MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE)
+     return float(wanted), float(gain)
+diff --git a/sim/economy/rule_sets.py b/sim/economy/rule_sets.py
+index ebef85e9..0c655145 100644
+--- a/sim/economy/rule_sets.py
++++ b/sim/economy/rule_sets.py
+@@ -12,7 +12,7 @@ import numpy as np
+ from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
+ 
+ from . import (basket_counted, close_pack, coin_cost, durable_stock, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
+-               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, outside_option_step, plot_hours_value,
++               making_cost_alone, merchant_room_stock, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, outside_option_step, plot_hours_value,
+                rate_step, servant_hours_counted, spin_up_coin, spin_up_migration, spin_up_seats, spin_up_stop, spin_up_trim, spin_up_valued, unkept_goods)
+ from .setup import DEFAULT_RULE_SET as SEARCH
+ 
+@@ -35,6 +35,7 @@ class RuleSet:
+     rate_remembered: Callable       # (the rate remembered, None for none; the rate the year's lending cleared at) -> the rate the economy remembers
+     merchant_stock_offered_where_it_stands: Callable   # (units of a stock held for a route, the share of its tile's carriage plan that is crewed, the room at its destinations) -> units offered where they stand
+     merchant_cash_for_new_cargo: Callable   # (a merchant's cash, the coin carrying the stock it keeps for routes will cost) -> the cash that buys new cargo
++    merchant_stock_counted_against_room: Callable   # (units a merchant holds in each market with those on the road to it, the units on the road, the markets' expected yearly volumes, the share of a market one merchant supplies) -> the units counted against its room there (merchant_room_stock.py)
+     merchant_wage_loan: Callable    # (the loan a merchant wants for its carriers' wages, its capital, its debt) -> the loan it asks for (None: none)
+     memory_making_costs: Callable   # (setup, record) -> {good: what it costs to make}, as the market memory reads it in a year a market traded nothing
+     memory_cost_of_costless: Callable   # (a market's remembered price, None for none) -> what its memory plans from where its good has no making cost (None: nothing)
+@@ -98,6 +99,7 @@ RULE_SETS: Dict[str, RuleSet] = {
+                     rate_remembered=rate_step.the_cleared_rate,
+                     merchant_stock_offered_where_it_stands=merchant_stuck_stock.kept_whole,
+                     merchant_cash_for_new_cargo=merchant_stuck_stock.all_cash,
++                    merchant_stock_counted_against_room=merchant_room_stock.all_it_holds,
+                     merchant_wage_loan=merchant_wage_loans.as_wanted,
+                     memory_making_costs=making_cost_alone.of_every_good,
+                     memory_cost_of_costless=making_cost_alone.no_cost,
+@@ -125,6 +127,7 @@ RULE_SETS: Dict[str, RuleSet] = {
+                       rate_remembered=rate_step.toward_the_cleared_rate,
+                       merchant_stock_offered_where_it_stands=merchant_stuck_stock.part_it_cannot_carry,
+                       merchant_cash_for_new_cargo=merchant_stuck_stock.cash_less_carriage,
++                      merchant_stock_counted_against_room=merchant_room_stock.no_less_than_the_cargo_standing_at_rest,
+                       merchant_wage_loan=merchant_wage_loans.within_leverage,
+                       memory_making_costs=making_cost_alone.of_goods_made_alone,
+                       memory_cost_of_costless=making_cost_alone.the_price_it_had,
+diff --git a/sim/economy/year_order_sources.py b/sim/economy/year_order_sources.py
+index bbd52cfc..3bfdee56 100644
+--- a/sim/economy/year_order_sources.py
++++ b/sim/economy/year_order_sources.py
+@@ -127,5 +127,6 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book, ledger=
+                          held, setup.specs, rate, shares, route, rows,
+                          crewed_share_by_tile=carriage_hours.crewed_share_by_tile(record, merchant, hired, populated),
+                          stock_offered_where_it_stands=rules.merchant_stock_offered_where_it_stands,
+-                         cash_for_new_cargo=rules.merchant_cash_for_new_cargo)
++                         cash_for_new_cargo=rules.merchant_cash_for_new_cargo,
++                         stock_counted_against_room=rules.merchant_stock_counted_against_room)
+     rows.write()
+diff --git a/sim/tests/test_merchant_room_stock.py b/sim/tests/test_merchant_room_stock.py
+new file mode 100644
+index 00000000..34c8569c
+--- /dev/null
++++ b/sim/tests/test_merchant_room_stock.py
+@@ -0,0 +1,112 @@
++"""merchant_room_stock: the stock a merchant counts against its room in a market. Under the search rules it is what the merchant holds
++there; under the clearing rules no less than the cargo that stands there when it buys the same every year, so a year's cargo is at most
++half its share. The plain rules, then `merchants.orders` given them."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++import numpy as np
++
++from sim.economy import merchants, rule_sets
++from sim.economy.merchant_room_stock import all_it_holds, no_less_than_the_cargo_standing_at_rest
++from sim.tests.test_economy_merchants import SPECS, View, merchant, world
++
++NAN = np.nan
++SHARE = 0.3
++
++
++class AllItHolds(unittest.TestCase):
++    def test_what_is_held_counts_and_nothing_more(self):
++        held = np.array([30.0, 0.0, 12.0])
++        counted = all_it_holds(held, np.array([0.0, 0.0, 12.0]), np.array([100.0, 100.0, NAN]), SHARE)
++        self.assertEqual(counted.tolist(), [30.0, 0.0, 12.0])
++
++
++class NoLessThanTheCargoStandingAtRest(unittest.TestCase):
++    def counted(self, held, volume, on_the_road=0.0):
++        return float(no_less_than_the_cargo_standing_at_rest(np.array([held]), np.array([on_the_road]), np.array([volume]), SHARE)[0])
++
++    def test_a_merchant_holding_nothing_counts_half_its_share_of_the_years_volume(self):
++        self.assertAlmostEqual(self.counted(0.0, 100.0), 15.0)
++
++    def test_stock_under_half_the_share_counts_as_half_the_share(self):
++        self.assertAlmostEqual(self.counted(9.0, 100.0), 15.0)
++
++    def test_stock_over_half_the_share_counts_whole(self):
++        self.assertEqual(self.counted(22.0, 100.0), 22.0)
++        self.assertEqual(self.counted(40.0, 100.0), 40.0)
++
++    def test_what_is_on_the_road_is_part_of_what_is_held(self):
++        self.assertEqual(self.counted(22.0, 100.0, on_the_road=22.0), 22.0)
++
++    def test_a_market_whose_volume_was_never_seen_counts_what_is_held(self):
++        self.assertEqual(self.counted(7.0, NAN), 7.0)
++        self.assertEqual(self.counted(0.0, NAN), 0.0)
++
++    def bought_over_years(self, held, years, rule):
++        bought = []
++        for _year in range(years):
++            room = max(0.0, SHARE * 100.0 - float(rule(np.array([held]), np.array([0.0]), np.array([100.0]), SHARE)[0]))
++            bought.append(room)
++            held = room                 # last year's cargo sold, this year's stands in the market
++        return bought
++
++    def test_from_an_empty_market_the_merchant_buys_the_same_every_year(self):
++        self.assertEqual(self.bought_over_years(0.0, 4, no_less_than_the_cargo_standing_at_rest), [15.0, 15.0, 15.0, 15.0])
++
++    def test_from_a_full_share_it_comes_to_the_same_cargo_within_two_years(self):
++        self.assertEqual(self.bought_over_years(30.0, 4, no_less_than_the_cargo_standing_at_rest), [0.0, 15.0, 15.0, 15.0])
++
++    def test_counting_only_what_is_held_it_buys_every_other_year_for_ever(self):
++        self.assertEqual(self.bought_over_years(0.0, 4, all_it_holds), [30.0, 0.0, 30.0, 0.0])
++
++    def test_never_more_than_the_share_stands_in_the_market_with_the_new_cargo(self):
++        for held in (0.0, 10.0, 15.0, 22.0, 30.0, 45.0):
++            room = max(0.0, SHARE * 100.0 - self.counted(held, 100.0))
++            self.assertLessEqual(held + room, max(held, SHARE * 100.0))
++
++
++def ordered(held, rule=None, cash=1000.0):
++    """The orders of a merchant on the two-tile world: salt is cheap on `a` and dear on `b`, where the market trades 100 units a year."""
++    carriage, area_map, area_a, area_b = world()
++    who = merchant()
++    who.expected_prices = {("salt", area_a["salt"]): 2.0, ("salt", area_b["salt"]): 5.0}
++    who.expected_volumes = {("salt", area_b["salt"]): 100.0}
++    rules = {} if rule is None else dict(stock_counted_against_room=rule)
++    return merchants.orders(who, View({}), carriage, area_map, cash, held, SPECS, 0.0, **rules)
++
++
++def bid_for(orders):
++    return sum(bid.floor_quantity + bid.flexible_quantity for bid in orders.bids)
++
++
++class OrdersWithCargoStandingAtTheDestination(unittest.TestCase):
++    SHARE_OF_THE_MARKET = merchants.MERCHANT_MARKET_SHARE * 100.0
++
++    def test_as_before_a_merchant_holding_nothing_bids_for_its_whole_share(self):
++        self.assertAlmostEqual(bid_for(ordered({})), self.SHARE_OF_THE_MARKET)
++        self.assertAlmostEqual(bid_for(ordered({}, rule=all_it_holds)), self.SHARE_OF_THE_MARKET)
++
++    def test_holding_nothing_it_bids_for_half_its_share(self):
++        self.assertAlmostEqual(bid_for(ordered({}, rule=no_less_than_the_cargo_standing_at_rest)), self.SHARE_OF_THE_MARKET / 2.0)
++
++    def test_holding_half_its_share_at_the_destination_it_bids_for_the_other_half_under_either_rule(self):
++        held = {("salt", "b"): self.SHARE_OF_THE_MARKET / 2.0}
++        self.assertAlmostEqual(bid_for(ordered(held)), self.SHARE_OF_THE_MARKET / 2.0)
++        self.assertAlmostEqual(bid_for(ordered(held, rule=no_less_than_the_cargo_standing_at_rest)), self.SHARE_OF_THE_MARKET / 2.0)
++
++    def test_holding_its_whole_share_at_the_destination_it_bids_for_nothing_under_either_rule(self):
++        held = {("salt", "b"): self.SHARE_OF_THE_MARKET}
++        self.assertEqual(bid_for(ordered(held)), 0.0)
++        self.assertEqual(bid_for(ordered(held, rule=no_less_than_the_cargo_standing_at_rest)), 0.0)
++
++
++class Rules(unittest.TestCase):
++    def test_which_rule_each_set_runs(self):
++        self.assertIs(rule_sets.RULE_SETS["search"].merchant_stock_counted_against_room, all_it_holds)
++        self.assertIs(rule_sets.RULE_SETS["clearing"].merchant_stock_counted_against_room, no_less_than_the_cargo_standing_at_rest)
++
++
++if __name__ == "__main__":
++    unittest.main()

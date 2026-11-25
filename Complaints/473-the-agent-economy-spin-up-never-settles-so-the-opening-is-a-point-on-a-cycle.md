@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England the first decade no longer slumps, nobody goes hungry, and every settle quantity but the price level ends inside the tolerance on the ensemble's median; a quarter of the members pass the whole check, the first to do so (Update 45), so England still fails `spin_up_settled` on `clearing` in most members and games still open on `search`. What is left: the price level, moved by markets that have all but closed (the gaming table, for want of a candle) and still carry their opening weight; the members that miss by a hair; the home metal under the coin's wear; the merchants' coin; and the realism of what the settled households buy (firewood and steel a head). On `search` the readings of Update 38 stand. Next, per the passnote's section 6l.
+**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England nobody goes hungry, a run of a century and a half no longer slumps (Update 49), and five members in eight pass the whole settle check, the other three missing the watched prices by a hair (Update 50); England therefore still fails `spin_up_settled` on `clearing` in some members and games still open on `search`. What is left: a merchant that buys cargo its hired carriers cannot move, which paces steel's price; steel a head, far above any sourced figure, which is why one good decides the check; the stone-wall market; the opening's price table and purse; the other civilisations. On `search` the readings of Update 38 stand. Next, per the passnote's section 6n.
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -2673,3 +2673,81 @@ short one, the coin metal left out.
   market itself is still wrong, and so is the supply behind it (Update 48).
 - Households spend down their coin for decades because their share wealth stands far above the wealth target; at
   the end they hold little more than the year's income. With the three rules that no longer ends in a slump.
+
+## Update 50: the first stage long enough to reach the rest; steel's price is moved by a merchant that buys every other year; its crew reckoned in hours; four rules tried and reverted (branch economy-rests-with-clearing-rules)
+
+**The first stage's length.** With the coin stock level the economy reaches its rest about year sixty (Update 49), so
+under `clearing` the first stage of the hidden years runs to a longer bound: `RuleSet.spin_up_first_stage_years`
+(`spin_up_stop.long_enough_to_rest`, the number `FIRST_STAGE_YEARS_TO_REST`, a declared temporary heuristic that an
+opening which starts near its rest retires; `spin_up.stage_years`; `test_spin_up_stop.py`). The environment's
+shortened years (`ROME_SPIN_UP_YEARS`) still win, so the suite's runs are as they were. On the eight members four
+pass at that length and three at one ten years longer (`ROME_SPIN_UP_YEARS=65,15`), so the shorter stands. What a
+fresh opening now costs was not measured cleanly (the one timing taken included a recompile of the kernels);
+`python3 sim/simulator.py openings --prune` on a warm kernel cache measures it.
+
+**The gentler planning rule, tried and shelved for good.** Update 49's rule (households plan a good at a multiple
+learnt from what its markets delivered), acting only on goods served under half of what was asked. One run slumps
+in the middle of the hidden years: the budget parked on bronze floods into steel, the makers size up, the multiple
+eases, the budget goes back and the makers are left with stock. Two members in eight pass. The code is in the
+handoff's `tried/households_plan_at_a_scarcity_multiple.*`.
+
+**What moves steel's price.** Steel is close to half of the watched spending, so the watched prices move with it,
+and every member that misses, misses there. Measured on the committed state with scratch probes (kept in
+`Complaints/reports/473-handoff/probes/`: `good_orders_by_kind.py`, `budget_alternation.py`,
+`merchant_years_probe.py`, `merchant_limits_probe.py`, `merchant_stuck_probe.py`):
+- The bronze budget of Update 49 is small now and bronze stays in the buyers' sight, so that is no longer it.
+- The one merchant bids for steel only every other year, about a twentieth of the market coming and going. The
+  households' steel budget echoes it a year behind and moves the other way to iron bar's, because the mix within a
+  need follows last year's cleared price.
+- Inside a year the price answers a shift in demand by about six tenths of the shift: the buyers' budgets are fixed
+  in coin, and the makers' supply curves (`stock_supply.STOCK_PRICE_SLOPE` over the months of cover of
+  `inventory.target_stock`) let go about two thirds of a per cent more for each per cent of price. No command prints
+  this; it is read from the curve and the bids.
+- Why the merchant buys every other year, link by link. It sizes cargo for all its coin every year
+  (`merchants_book_kernel.commit_orders`), but in alternate years almost none of those bids are written: a merchant
+  buys none of a good in an area where it offers stock of it (`merchants_plan.orders`, the set `selling`), and every
+  stock it held for a route had a part on offer where it stood. That part was the stock times one less the share
+  of last year's carriage plan hired on its tile, so a crew a hair short of the plan put a part of every stock on
+  offer whether or not the hours hired covered the stock.
+
+**Kept: the crew a stock needs is reckoned in hours.** `RuleSet.merchant_crewed_share_of_stocks`
+(`merchant_stuck_stock.by_the_hours_the_stocks_need` and `hours_needed_by_stock`; `merchants_plan.orders` given the
+crew's hours a tonne and the hours hired by crew key; `test_merchant_stuck_stock.py`). Under `clearing` the hours
+hired of each crew key are set against the hours the stocks held need of it, the way the dispatch cuts its
+shipments, so a stock is offered where it stands only when its crew is short in fact. Five members in eight pass,
+the best yet; the other three miss the watched prices by under a point, one of them stock as well and one output
+and the rate
+(`python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages --ensemble 8 --jobs 4`).
+
+**Tried and reverted** (each on the eight members; the patches are in the handoff's `tried/`):
+- *The mix within a need chosen on the usual price* (`need_mix_on_usual_prices.patch`: `need_basket.priced_need`
+  and the kernel `priced_need_kernel.price_needs` given the prices the mix is chosen on, the goods' own prices and
+  the price index left at the offer, kernel and Python agreeing bit for bit). One run's watched prices move half as
+  much, but two members pass: three still miss the watched prices and three others now miss output or stock.
+- *The merchant's room, two forms.* The cargo it sells this year left out of next year's room: four pass and two
+  of the others far worse than before: in the member traced the merchant over-buys where its cargo does not sell
+  within the year, runs out of coin, and its buying all but stops. A year's cargo held to half its share of a market
+  (`merchant_room_half_share_cap.patch`): two pass. The limits probe then showed room never bound; the merchant
+  commits all its coin every year.
+- *New cargo within the merchant's capital over the two years a turn of trade takes*
+  (`merchant_cargo_within_capital_over_the_turn.patch`, on top of the kept rule). Coin laid out one year is back
+  only for the market after next, so two pools of coin trade in alternate years. Held to its capital over the turn
+  the merchant buys in most years, but four pass and two of the others miss by two to four times the tolerance.
+
+**What is left.**
+- The merchant still buys cargo its hired carriers cannot move. Its crew is hired before the goods markets, sized
+  on what last year's shipments wanted and limited by its coin and by the carriers there are, and nothing holds
+  this year's cargo to it; what cannot be carried goes back on sale where it was bought and blocks buying there the
+  year after. The consistent rule: bid only for what the crew hired this year can still carry, and add the hours of
+  the cargo left unbid to next year's plan (`merchants_plan.orders` after `commit_orders`; `merchants_dispatch`,
+  where `carriage_hours_wanted` is set). Every form that let the merchant trade more without that made some members
+  worse.
+- Steel a head. The settled households buy steel of the order of a hundred kilograms a head a year (steel sold,
+  `good_orders_by_kind.py`, over the people in the cohorts), against under two kilograms of iron a head in England
+  about 1500 and four in 1590 (`Complaints/reports/research-fuel-and-iron-per-head.md`, section 2). The implements
+  need takes a fifth of spending above the floors with no upper level (`data/world/needs.json`), and a kilogram of
+  steel costs a few hours of the average wage. This is the first row of the realism table and the reason one good
+  decides the check.
+- A land clearer's stock: `hectare_land` held by one producer rises for years and leaves in one (`holders_by_year.py`
+  on the reverted runs), the stock miss of one member there.
+- The items of Update 49 this round did not reach: the stone-wall market, the opening's price table and purse.
