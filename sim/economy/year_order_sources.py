@@ -121,11 +121,15 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book, ledger=
     merchants_plan.prepare_rows(route, [each for each in ordered if record.book.balance(each.agent_id, money) - carrier_budget.get(each.agent_id, 0.0) > 0.0],
                                 rate)
     first = view.year % len(ordered) if ordered else 0          # who sizes first rotates, so no merchant always gets first pick
+    crew = carriage_hours.crew_for(setup, record.carriage, carriage) if ordered else None
     for merchant in ordered[first:] + ordered[:first]:
         held = held_stock(record.book, merchant.agent_id)
+        hours_hired = carriage_hours.engaged(record, merchant, hired, populated)[0] if crew is not None and carriage_hours.planned(merchant) else None
         merchants.orders(merchant, view, carriage, area_map, record.book.balance(merchant.agent_id, money) - carrier_budget.get(merchant.agent_id, 0.0),
                          held, setup.specs, rate, shares, route, rows,
                          crewed_share_by_tile=carriage_hours.crewed_share_by_tile(record, merchant, hired, populated),
                          stock_offered_where_it_stands=rules.merchant_stock_offered_where_it_stands,
-                         cash_for_new_cargo=rules.merchant_cash_for_new_cargo)
+                         cash_for_new_cargo=rules.merchant_cash_for_new_cargo,
+                         crewed_share_of_stocks=rules.merchant_crewed_share_of_stocks,
+                         crew_hours_per_tonne=None if crew is None else crew.hours_per_tonne, crew_hours_hired=hours_hired)
     rows.write()

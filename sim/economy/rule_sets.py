@@ -35,6 +35,7 @@ class RuleSet:
     rate_remembered: Callable       # (the rate remembered, None for none; the rate the year's lending cleared at) -> the rate the economy remembers
     merchant_stock_offered_where_it_stands: Callable   # (units of a stock held for a route, the share of its tile's carriage plan that is crewed, the room at its destinations) -> units offered where they stand
     merchant_cash_for_new_cargo: Callable   # (a merchant's cash, the coin carrying the stock it keeps for routes will cost) -> the cash that buys new cargo
+    merchant_crewed_share_of_stocks: Callable   # (the stocks a merchant holds for routes, the share of its carriage plan crewed by tile, () -> the crew hours each stock needs by crew key, the hours it hired by crew key) -> the share of each stock its crew can carry (merchant_stuck_stock.py)
     merchant_wage_loan: Callable    # (the loan a merchant wants for its carriers' wages, its capital, its debt) -> the loan it asks for (None: none)
     memory_making_costs: Callable   # (setup, record) -> {good: what it costs to make}, as the market memory reads it in a year a market traded nothing
     memory_cost_of_costless: Callable   # (a market's remembered price, None for none) -> what its memory plans from where its good has no making cost (None: nothing)
@@ -98,6 +99,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                     rate_remembered=rate_step.the_cleared_rate,
                     merchant_stock_offered_where_it_stands=merchant_stuck_stock.kept_whole,
                     merchant_cash_for_new_cargo=merchant_stuck_stock.all_cash,
+                    merchant_crewed_share_of_stocks=merchant_stuck_stock.by_the_plans_share,
                     merchant_wage_loan=merchant_wage_loans.as_wanted,
                     memory_making_costs=making_cost_alone.of_every_good,
                     memory_cost_of_costless=making_cost_alone.no_cost,
@@ -125,6 +127,7 @@ RULE_SETS: Dict[str, RuleSet] = {
                       rate_remembered=rate_step.toward_the_cleared_rate,
                       merchant_stock_offered_where_it_stands=merchant_stuck_stock.part_it_cannot_carry,
                       merchant_cash_for_new_cargo=merchant_stuck_stock.cash_less_carriage,
+                      merchant_crewed_share_of_stocks=merchant_stuck_stock.by_the_hours_the_stocks_need,
                       merchant_wage_loan=merchant_wage_loans.within_leverage,
                       memory_making_costs=making_cost_alone.of_goods_made_alone,
                       memory_cost_of_costless=making_cost_alone.the_price_it_had,

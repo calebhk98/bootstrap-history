@@ -13,6 +13,7 @@ from . import merchant_stuck_stock, merchants, merchants_batch, merchants_book, 
 from .merchants_shares import MERCHANT_GROUP_SHARE, MERCHANT_SOURCE_SHARE, RouteShares
 from .protocols import AgentOrders
 from .types import Bid, GoodId, TileId
+from sim.unit_conversions import KILOGRAMS_PER_TONNE
 
 
 class _Stock:
@@ -112,14 +113,19 @@ def _group_arrays(book, shares) -> Tuple[np.ndarray, np.ndarray, bool]:
 
 def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[Tuple[GoodId, TileId], float], specs,
            interest_rate: float, shares=None, route=None, rows_out=None, crewed_share_by_tile: Optional[Mapping[TileId, float]] = None,
-           stock_offered_where_it_stands=merchant_stuck_stock.kept_whole, cash_for_new_cargo=merchant_stuck_stock.all_cash) -> AgentOrders:
+           stock_offered_where_it_stands=merchant_stuck_stock.kept_whole, cash_for_new_cargo=merchant_stuck_stock.all_cash,
+           crewed_share_of_stocks=merchant_stuck_stock.by_the_plans_share, crew_hours_per_tonne=None,
+           crew_hours_hired: Optional[Mapping[str, float]] = None) -> AgentOrders:
     """The merchant's offers and bids for the year (`merchants.orders`). `shares` is what rival merchants have already
     committed this year (`RouteShares`, or `merchants_book.DenseShares` when the caller sizes many merchants over one
     `route` pass); this merchant adds its own to it. With `rows_out` (an `OrderRows`) the bids and offers are written to it as rows,
     offers first as `OrderRows` takes them in any order, and no `Bid` or `Offer` is made; the answer then holds no orders.
     `crewed_share_by_tile` is the share of its carriage plan's crew hours hired this year by source tile (a tile absent: all of
     them); `stock_offered_where_it_stands` and `cash_for_new_cargo` are the rule set's rules for stock held on a route
-    (merchant_stuck_stock.py; the defaults keep it whole and buy with all the cash)."""
+    (merchant_stuck_stock.py; the defaults keep it whole and buy with all the cash). `crewed_share_of_stocks` is its rule for the
+    share of each such stock the crew can carry (the default: its tile's share of the plan); a rule that reckons in hours reads
+    `crew_hours_per_tonne(tile, destination tile)` (((crew key, hours),), `carriage_hours.Crew.hours_per_tonne`) and
+    `crew_hours_hired` (by crew key; None: no plan to hire for yet)."""
     route = route or merchants_book.route_pass(view, carriage, area_map, specs)
     book = route.book
     shares = shares if shares is not None else RouteShares()
@@ -158,13 +164,20 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
     on_offer: Dict[Tuple[GoodId, TileId], float] = {}
     selling: set = set()         # (good, area) where it offers stock it holds for a route: it buys none of that good there
     carriage_owed = []
-    crewed = crewed_share_by_tile or {}
+    on_routes = {key: quantity for key, quantity in held_stock.items() if key in merchant.routes}
+
+    def hours_needed():
+        if crew_hours_per_tonne is None:
+            return {}
+        tonnes = {good: specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE for good, _tile in on_routes if good in specs}
+        return merchant_stuck_stock.hours_needed_by_stock(on_routes, merchant.routes, tonnes, crew_hours_per_tonne)
+    crewed = crewed_share_of_stocks(list(on_routes), crewed_share_by_tile or {}, hours_needed, crew_hours_hired)
     for key, quantity in held_stock.items():
         legs = merchant.routes.get(key)
         if legs is None:
             on_offer[key] = quantity
             continue
-        offered = min(quantity, stock_offered_where_it_stands(quantity, crewed.get(key[1], 1.0), math.fsum(held_rooms.get(key, {}).values())))
+        offered = min(quantity, stock_offered_where_it_stands(quantity, crewed[key], math.fsum(held_rooms.get(key, {}).values())))
         if offered > 0.0:
             on_offer[key] = offered
             selling.add((key[0], area_map.area_of(key[0], key[1])))
