@@ -91,6 +91,40 @@ With the flows of this note (one to two kilograms of iron a head a year, section
 ten to twenty years, the iron in use a head comes to a few tens of kilograms; the life is not sourced, so this is an
 order of magnitude and not a figure for the data.
 
+## 6. What bar iron cost in days of work (third pass, 2026-11-26)
+
+Asked for: the price of iron and steel in England about 1300 beside a wage of the same years, and the share of a
+household's spending that went on tools and metal wares. Two pages were opened, by the research pass and again by a
+separate fetch, and the quotes below are as both read them.
+
+- **Bar iron, 1275 and 1285.** Dowsing Archaeology, "Historic Availability, Characteristics and Use of Wrought
+  Iron", chapter 4 (http://www.dowsingarchaeology.org.uk/Ironwork/Chapter%204/4.%20History.htm, opened): Spanish
+  iron "in 1275 cost 3s.1d/ cwt when brought to Canterbury"; "Iron from Pont-Audemer in Normandy was being bought in
+  Norwich in 1285 for 15s.6d/ cwt." The page cites "(Salzman LF. 1952 p286)", which was not opened, and does not say
+  what a hundredweight of iron weighed. The second price is five times the first and the page does not say why.
+- **Wages, 1291 to 1350.** Medieval Price List, University of California, Davis
+  (https://medieval.ucdavis.edu/120D/Money.html, opened), a chart "from Dyer ([3], p. 206). These are averages of
+  daily wages in pence": 1291-1300, thatcher 2.5 and thatcher's mate 1; 1311-20, 3 and 1.25; 1321-30, 3 and 1;
+  1331-40 and 1341-50, 3 and 1.25. The same list has "Laborer £2/year max c1300", source Dyer page 29. Its source
+  [3] is Dyer, "Standards of Living in the Later Middle Ages" (1989), which was not opened.
+- **Steel, at any date: no source found.**
+- **The share of a household's spending on tools, metal wares or arms: no source found.** Dyer's and Allen's
+  budgets could not be opened.
+- **The weight of iron goods a holding held and the years a tool lasted: no source found** (as in section 5).
+
+Worked from the figures above, with one assumption that no source here gives, a hundredweight of 112 pounds
+(50.8 kilograms): the Canterbury iron of 1275 cost 37 pence a hundredweight, about three quarters of a penny a
+kilogram, which is about three quarters of a day of a thatcher's mate at a penny a day in the 1290s and under a
+third of a day of the thatcher. The Norwich iron of 1285 comes to about five times that. The prices and the wages
+are a decade or two apart.
+
+Against the model: a kilogram of steel in the settled England costs a few hours of the average wage (the wage of
+`python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages`, steel's price from the
+handoff's `probes/good_orders_by_kind.py`). Bar iron at most of a labourer's day a kilogram is dearer than that,
+and steel was dearer than bar iron, so the model's steel is too cheap by a few times at the least. That is far
+short of the gap in what is bought (section 2 against Update 50 of Complaint 473): the rest is the implements need
+taking a fifth of spending above the floors with no upper level.
+
 ## Not found
 
 - A generous or comfortable level of fuel a head (the most a rich household burned): no source found.

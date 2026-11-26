@@ -1,6 +1,6 @@
 # The agent economy's spin-up never settles, so the opening is a point on a cycle
 
-**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England nobody goes hungry, a run of a century and a half no longer slumps (Update 49), and five members in eight pass the whole settle check, the other three missing the watched prices by a hair (Update 50); England therefore still fails `spin_up_settled` on `clearing` in some members and games still open on `search`. What is left: a merchant that buys cargo its hired carriers cannot move, which paces steel's price; steel a head, far above any sourced figure, which is why one good decides the check; the stone-wall market; the opening's price table and purse; the other civilisations. On `search` the readings of Update 38 stand. Next, per the passnote's section 6n.
+**Status:** partly - the fault is in the yearly rules and shows on the hand-built three-tile economy (Update 39). A second rule set, `clearing`, is swapped in beside the standing `search` set (`sim/economy/rule_sets.py`). On the two hand-built economies it rests, a copy a rounding error apart stays close, a start five per cent off rests in the same place and shocks move it to a new rest (`sim/tests/test_economy_rest_smoke.py`, `sim/tests/test_economy_rest_plant_smoke.py`, all passing). On England nobody goes hungry, a run of a century and a half no longer slumps (Update 49), and about half of the eight members pass the whole settle check, the watched prices' median gap sitting at the tolerance (Updates 50 and 51); England therefore still fails `spin_up_settled` on `clearing` in some members and games still open on `search`. What is left: a merchant whose buying jumps between source tiles from year to year, which paces steel's price; steel a head, far above any sourced figure, which is why one good decides the check and which a ceiling on the need alone does not mend (Update 51); the stone-wall market; the opening's price table and purse; the other civilisations. On `search` the readings of Update 38 stand. Next, per the passnote's section 6n.
 
 Research on reference models for making the opening a steady state (issue #61): `Complaints/reports/research-reference-economy-models.md`.
 
@@ -2751,3 +2751,50 @@ and the rate
 - A land clearer's stock: `hectare_land` held by one producer rises for years and leaves in one (`holders_by_year.py`
   on the reverted runs), the stock miss of one member there.
 - The items of Update 49 this round did not reach: the stone-wall market, the opening's price table and purse.
+
+## Update 51: the count of members passing is a coarse reading; three more rules and a data change tried and reverted; an upper level on the implements need collapses the economy (branch economy-rests-with-clearing-rules)
+
+**How to read the ensemble.** Across this round's runs the members passing went between two and five while most
+misses stayed within a point of the tolerance. `Complaints/reports/473-handoff/probes/ensemble_medians.py` prints
+each quantity's median and worst gap over the members of saved ensemble outputs, and the mean of the members' worst
+gaps. On it:
+- The watched prices' median gap sits at the tolerance in the committed state, before Update 50's hours rule and
+  after it, so a member passes or misses much as a coin falls. Five against four is no finding, and Update 50's
+  "the best yet" claimed more than the runs show. The hours rule is kept because it reckons what the dispatch will
+  do; no quantity's median moved by more than the members differ.
+- No rule tried in this round brought the mean of the members' worst gaps under the committed state's. Three raised
+  it a good deal (the merchant's room without this year's cargo, its capital over the turn, a year's cargo at half
+  its share); the others changed which quantity is worst, the watched prices a little lower and stock, output or the
+  rate a little higher.
+- A rule is to be judged on these medians and on its worst member, over more members than eight where the
+  difference is small, and not on the count.
+
+**Three more rules tried and reverted** (patches in the handoff's `tried/`):
+- *The merchant bids only for the cargo its hired crew can still carry, and the hours of what it leaves unbid join
+  next year's plan* (`merchant_cargo_within_the_crew_hired.patch`). Three pass. `probes/merchant_crew_keys_probe.py`
+  shows why it cannot work alone: nearly all of the plan is hired, but the cargo sized this year wants crews on
+  other tiles than last year's did (one source tile's sailors are wanted by the hundred thousand hours one year and
+  by a handful of hours two years on). The merchant lays all its coin on the routes that rank best at the prices it
+  expects, those change every year, and its buying jumps between source tiles.
+- *The merchant's expected prices moving the share producers' do*
+  (`merchant_expectations_at_the_producers_speed.patch`). Two pass; its buying still swings from year to year.
+- *A flatter supply curve* (`stock_supply.STOCK_PRICE_SLOPE` at a fifth of its value, a trial on the pinned copy that
+  was never in the tree). Two pass; the watched prices move as much as before, and output and stock a good deal
+  more. The two hand-built economies still rest with it.
+
+**An upper level on the implements need, tried and reverted** (`implements_upper_level_from_iron_a_head.patch`).
+The need was given a satiation from the iron sold to consumers a head in England about 1805 (the research note,
+section 2; the chapter was read again for it). In one run hours hired fall year after year to about a sixteenth of
+the first year's, households' coin grows by nearly half, the makers' falls by three quarters, and the hours offered
+fall with them (`python3 sim/simulator.py spin-up-trace --civ england_1300 --rules clearing --stages` with the
+patch applied). The spending freed from implements does not reach other goods: most other needs have upper levels
+too, and what a household cannot spend it keeps. As the data stand, the steel no one would have bought is what
+employs a large part of the economy. So the hundred kilograms a head cannot be mended by a ceiling alone. It needs
+somewhere true to history for the surplus to go, with the research note's figures as the checks (fuel and iron a
+head, what a kilogram of iron cost in days of work), and that is a piece of work of its own.
+
+**What bar iron cost.** Section 6 of `Complaints/reports/research-fuel-and-iron-per-head.md`: a kilogram of bar
+iron at Canterbury in 1275 cost most of a day of a thatcher's mate, on one opened secondary page; the model's steel
+costs a few hours of the average wage. No price of steel and no household's spending on tools was found.
+
+**What is left.** The passnote's section 6n, rewritten after this update.

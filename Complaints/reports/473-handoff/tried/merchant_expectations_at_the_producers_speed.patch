@@ -1,0 +1,150 @@
+diff --git a/sim/economy/merchant_expectations.py b/sim/economy/merchant_expectations.py
+new file mode 100644
+index 00000000..6347a3cd
+--- /dev/null
++++ b/sim/economy/merchant_expectations.py
+@@ -0,0 +1,20 @@
++"""How far a merchant's expected prices and volumes move toward the year's in a year (the rule sets' `merchant_expectation_speed`).
++
++A merchant lays its coin out on the routes that pay best at the prices it expects. Where those follow the last year
++closely, the route that paid best last year takes the coin this year, its source clears dearer and its market cheaper
++for it, and next year the coin goes elsewhere: the merchant's buying jumps between source tiles from year to year, its
++carriers (hired on last year's routes) stand on the wrong tiles, and a part of each market it serves comes and goes.
++Under the clearing rules a merchant's expectations move the share of the gap that producers' do, so the routes it
++chooses follow what a market has done over some years."""
++from . import close_pack, merchants
++
++
++def as_a_merchant_sees_its_markets() -> float:
++    """The share of the gap between what a merchant expected and what the year showed that it closes: the merchants' own."""
++    return merchants.MERCHANT_EXPECTATION_SPEED
++
++
++def as_producers_move_theirs() -> float:
++    """The share of the gap between what a merchant expected and what the year showed that it closes: the share a
++    producer's expected prices move under the clearing rules."""
++    return close_pack.EXPECTATION_SHARE_MOVED_UNDER_CLEARING
+diff --git a/sim/economy/merchants.py b/sim/economy/merchants.py
+index a26e330b..3413c3ec 100644
+--- a/sim/economy/merchants.py
++++ b/sim/economy/merchants.py
+@@ -478,10 +478,10 @@ def dispatch(merchant: Merchant, carriage: CarriageTable,
+     return Dispatch(tuple(moves), within_purse(transfers, cash), wanted, worth, fleet_wanted, tuple(dues_paid))
+ 
+ 
+-def learn_year(tables: MarketTables, news: merchants_news.YearNews, carriage: CarriageTable) -> None:
++def learn_year(tables: MarketTables, news: merchants_news.YearNews, carriage: CarriageTable, speed: float = MERCHANT_EXPECTATION_SPEED) -> None:
+     """Move every merchant of the record whose market numbering is `tables` toward the year's prices and volumes, in one kernel step
+-    over the merchant table (the settlement, `close_all`, follows)."""
+-    merchant_year.learn_year(merchant_table.MerchantTable.of(tables), news, carriage, MERCHANT_EXPECTATION_SPEED)
++    over the merchant table (the settlement, `close_all`, follows); `speed` is the share of the gap closed (merchant_expectations.py)."""
++    merchant_year.learn_year(merchant_table.MerchantTable.of(tables), news, carriage, speed)
+ 
+ 
+ def remember_stretches(merchants_by_id: Mapping[AgentId, Merchant]) -> None:
+diff --git a/sim/economy/rule_sets.py b/sim/economy/rule_sets.py
+index da637681..7b531e22 100644
+--- a/sim/economy/rule_sets.py
++++ b/sim/economy/rule_sets.py
+@@ -12,7 +12,7 @@ import numpy as np
+ from sim.labour.api import clear_labour_at_one_wage, clear_labour_by_search
+ 
+ from . import (basket_counted, close_pack, coin_cost, durable_stock, goods_clear_one_price, goods_good_clear, goods_respend_year, input_orders_after_hiring, labour_demand,
+-               making_cost_alone, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, outside_option_step, plot_hours_value,
++               making_cost_alone, merchant_expectations, merchant_stuck_stock, merchant_volume_news, merchant_wage_loans, opening_issuer_coin, outside_option_step, plot_hours_value,
+                rate_step, servant_hours_counted, spin_up_coin, spin_up_migration, spin_up_seats, spin_up_stop, spin_up_trim, spin_up_valued, unkept_goods)
+ from .setup import DEFAULT_RULE_SET as SEARCH
+ 
+@@ -36,6 +36,7 @@ class RuleSet:
+     merchant_stock_offered_where_it_stands: Callable   # (units of a stock held for a route, the share of its tile's carriage plan that is crewed, the room at its destinations) -> units offered where they stand
+     merchant_cash_for_new_cargo: Callable   # (a merchant's cash, the coin carrying the stock it keeps for routes will cost) -> the cash that buys new cargo
+     merchant_crewed_share_of_stocks: Callable   # (the stocks a merchant holds for routes, the share of its carriage plan crewed by tile, () -> the crew hours each stock needs by crew key, the hours it hired by crew key) -> the share of each stock its crew can carry (merchant_stuck_stock.py)
++    merchant_expectation_speed: Callable   # () -> the share of the gap between what a merchant expected and what the year showed that it closes (merchant_expectations.py)
+     merchant_wage_loan: Callable    # (the loan a merchant wants for its carriers' wages, its capital, its debt) -> the loan it asks for (None: none)
+     memory_making_costs: Callable   # (setup, record) -> {good: what it costs to make}, as the market memory reads it in a year a market traded nothing
+     memory_cost_of_costless: Callable   # (a market's remembered price, None for none) -> what its memory plans from where its good has no making cost (None: nothing)
+@@ -100,6 +101,7 @@ RULE_SETS: Dict[str, RuleSet] = {
+                     merchant_stock_offered_where_it_stands=merchant_stuck_stock.kept_whole,
+                     merchant_cash_for_new_cargo=merchant_stuck_stock.all_cash,
+                     merchant_crewed_share_of_stocks=merchant_stuck_stock.by_the_plans_share,
++                    merchant_expectation_speed=merchant_expectations.as_a_merchant_sees_its_markets,
+                     merchant_wage_loan=merchant_wage_loans.as_wanted,
+                     memory_making_costs=making_cost_alone.of_every_good,
+                     memory_cost_of_costless=making_cost_alone.no_cost,
+@@ -128,6 +130,7 @@ RULE_SETS: Dict[str, RuleSet] = {
+                       merchant_stock_offered_where_it_stands=merchant_stuck_stock.part_it_cannot_carry,
+                       merchant_cash_for_new_cargo=merchant_stuck_stock.cash_less_carriage,
+                       merchant_crewed_share_of_stocks=merchant_stuck_stock.by_the_hours_the_stocks_need,
++                      merchant_expectation_speed=merchant_expectations.as_producers_move_theirs,
+                       merchant_wage_loan=merchant_wage_loans.within_leverage,
+                       memory_making_costs=making_cost_alone.of_goods_made_alone,
+                       memory_cost_of_costless=making_cost_alone.the_price_it_had,
+diff --git a/sim/economy/year_close.py b/sim/economy/year_close.py
+index 55574584..8fe7c24e 100644
+--- a/sim/economy/year_close.py
++++ b/sim/economy/year_close.py
+@@ -118,7 +118,7 @@ def close_agents(setup, record, view, ledger: YearLedger, area_map, carriage, ar
+     anchors = {(good, area.area_id): area.anchor_tile for good in area_map.goods() for area in area_map.areas(good)}
+     news = merchants_news.YearNews(prices, volumes, anchors)
+     interest_rate = own_rate(view, money)
+-    merchants.learn_year(record.memory.tables, news, carriage)
++    merchants.learn_year(record.memory.tables, news, carriage, rule_sets.of(setup).merchant_expectation_speed())
+     merchants.remember_stretches(record.merchants)
+     for transfer in merchants.close_all(record.memory.tables, record.book, area_map, money, interest_rate):
+         paid = ownership.spread(record, (transfer,), cohorts_by_tile)
+diff --git a/sim/tests/test_merchant_expectations.py b/sim/tests/test_merchant_expectations.py
+new file mode 100644
+index 00000000..96c83f9a
+--- /dev/null
++++ b/sim/tests/test_merchant_expectations.py
+@@ -0,0 +1,50 @@
++"""merchant_expectations: how far a merchant's expected prices move toward the year's in a year. The search rules keep the merchants' own
++speed; the clearing rules move them the share producers' expectations move. The rules, then `merchants.learn_year` given a speed."""
++
++QUICK_TOPIC = True
++
++import unittest
++
++from sim.economy import close_pack, merchant_expectations, merchants, merchants_news, rule_sets
++from sim.tests.test_economy_merchants import merchant, world
++
++
++class Rules(unittest.TestCase):
++    def test_which_rule_each_set_runs(self):
++        self.assertIs(rule_sets.RULE_SETS["search"].merchant_expectation_speed, merchant_expectations.as_a_merchant_sees_its_markets)
++        self.assertIs(rule_sets.RULE_SETS["clearing"].merchant_expectation_speed, merchant_expectations.as_producers_move_theirs)
++
++    def test_what_each_rule_gives(self):
++        self.assertEqual(merchant_expectations.as_a_merchant_sees_its_markets(), merchants.MERCHANT_EXPECTATION_SPEED)
++        self.assertEqual(merchant_expectations.as_producers_move_theirs(), close_pack.EXPECTATION_SHARE_MOVED_UNDER_CLEARING)
++        self.assertLess(merchant_expectations.as_producers_move_theirs(), merchant_expectations.as_a_merchant_sees_its_markets())
++
++
++def expected_after_a_year(speed=None):
++    """What a merchant that expected salt at two on its home tile expects after a year in which it cleared at four."""
++    carriage, _area_map, area_a, _area_b = world()
++    who = merchant()
++    key = ("salt", area_a["salt"])
++    who.expected_prices = {key: 2.0}
++    news = merchants_news.YearNews({key: 4.0}, {key: 100.0}, {key: "a"})
++    store, _row = who._table()
++    store.tables.merchant_table = store       # the table `learn_year` finds from the market tables is this merchant's
++    if speed is None:
++        merchants.learn_year(store.tables, news, carriage)
++    else:
++        merchants.learn_year(store.tables, news, carriage, speed)
++    return who.expected_prices[key]
++
++
++class LearnYear(unittest.TestCase):
++    def test_with_no_speed_named_the_merchants_own_speed_moves_the_expectation(self):
++        self.assertAlmostEqual(expected_after_a_year(), 2.0 + merchants.MERCHANT_EXPECTATION_SPEED * 2.0)
++
++    def test_the_expectation_moves_the_share_of_the_gap_the_speed_names(self):
++        self.assertAlmostEqual(expected_after_a_year(0.2), 2.4)
++        self.assertAlmostEqual(expected_after_a_year(1.0), 4.0)
++        self.assertAlmostEqual(expected_after_a_year(0.0), 2.0)
++
++
++if __name__ == "__main__":
++    unittest.main()

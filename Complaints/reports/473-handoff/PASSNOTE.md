@@ -631,36 +631,49 @@ and the other four miss on the watched prices alone, by a hair.
 5. Step 6 of round five (a maker plans from the runs it made; lard opens with no capacity) and the realism table.
 6. The Norse lands and Han on `clearing`, then the game's set.
 
-## 6n. Where it stands after Update 50 (read this first)
+## 6n. Where it stands after Update 51 (read this first)
+
+**Read the ensemble by its medians.** The watched prices' median gap sits at the tolerance, so the count of members
+passing moves between two and five on changes that alter nothing. `probes/ensemble_medians.py <saved ensemble
+outputs>` prints each quantity's median and worst gap and the mean of the members' worst gaps: judge a rule on
+those and on its worst member, with more members than eight where the difference is small.
 
 **One good decides the check, and one agent paces it.** Steel is close to half of the watched spending, and the one
 merchant's buying comes and goes from year to year. When a member misses on the watched prices, print a good's bids
 and offers by kind of agent (`probes/good_orders_by_kind.py`) before anything else: a buyer that is there one year
-and gone the next is the pacemaker, and the households' budgets only echo it. For the merchant, `probes/merchant_years_probe.py`
-(coin, cargo, bids, offers by year), `probes/merchant_limits_probe.py` (coin against room in the sizing) and
-`probes/merchant_stuck_probe.py` (cargo sized against bids written, stock offered where it stands, the share crewed)
-show which link fails. A rule that makes the merchant trade more makes some members much worse while its cargo can
-still outrun its carriers; judge a merchant rule by the worst member as well as by the count.
+and gone the next is the pacemaker, and the households' budgets only echo it. For the merchant,
+`probes/merchant_years_probe.py` (coin, cargo, bids and offers by year), `probes/merchant_limits_probe.py` (coin
+against room in the sizing), `probes/merchant_stuck_probe.py` (cargo sized against bids written, stock offered where
+it stands, the share crewed) and `probes/merchant_crew_keys_probe.py` (the crew hours hired, free and wanted by crew
+key) show which link fails. A rule that makes the merchant trade more makes some members much worse while its cargo
+can still outrun its carriers.
 
 **Done since 6m.** The first stage runs long enough to reach the rest (`spin_up_stop.long_enough_to_rest`). The
 share of a stock a merchant's crew can carry is reckoned in hours against the stocks it holds
-(`merchant_stuck_stock.by_the_hours_the_stocks_need`): five members in eight pass.
+(`merchant_stuck_stock.by_the_hours_the_stocks_need`); the check does not tell it from the rule it replaced.
 
-**Tried and reverted, do not repeat as they were** (patches in `tried/`, reasons in Update 50). Households planning
-goods at a multiple, the gentler form (shelved for good: a slump in the middle of the hidden years). The mix within
-a need chosen on the usual price. The merchant's room without this year's cargo, and a year's cargo held to half its
-share. New cargo within the merchant's capital over the two years a turn takes.
+**Tried and reverted, do not repeat as they were** (patches in `tried/`, reasons in Updates 50 and 51). Households
+planning goods at a multiple, the gentler form (shelved for good: a slump in the middle of the hidden years). The
+mix within a need chosen on the usual price. The merchant's room without this year's cargo, and a year's cargo held
+to half its share. New cargo within the merchant's capital over the two years a turn takes. The merchant bidding
+only for what its hired crew can carry. The merchant's expectations at the producers' speed. A flatter supply
+curve. An upper level on the implements need from iron a head (the economy collapses: Update 51).
 
-**The check.** Five members in eight pass; the other three miss the watched prices by under a point.
+**The check.** About half of eight members pass; the misses are within a point of the tolerance, mostly on the
+watched prices.
 
 **What is left, in order.**
-1. The merchant bids only for what the crew it hired this year can still carry, and the hours of the cargo left
-   unbid join next year's plan (`merchants_plan.orders` after `commit_orders`; `merchants_dispatch`, where
-   `carriage_hours_wanted` is set; the merchant's record in `record.py` if the unbid hours need a field). Then try
-   the capital-over-the-turn patch again on top of it.
-2. Steel a head (of the order of a hundred kilograms a year against under two of iron about 1500): find what makes
-   steel cost a few hours of the average wage a kilogram and whether the implements need should have an upper
-   level, from sources someone opens. Start from `Complaints/reports/research-fuel-and-iron-per-head.md`.
+1. The merchant's choice of routes. It lays all its coin on the routes that rank best at the prices it expects, so
+   its buying jumps between source tiles each year, its carriers (hired before the goods markets, on last year's
+   routes) stand on the wrong tiles, and the cargo they cannot move is sold back where it was bought. Each patch of
+   `tried/` mends one link and none is enough alone; the three that hold the merchant back (cargo within the crew,
+   slower expectations, the usual-price mix for the households' echo) each lowered the watched prices' median a
+   little. Either spread the coin over the routes that pay, by what each pays, so that a small change in prices
+   moves a small part of the cargo, or try those patches together; judge on the medians.
+2. Steel a head (of the order of a hundred kilograms a year against a few of iron in any sourced year) and where
+   the surplus goes. A ceiling on the implements need alone collapses the economy (Update 51). Find from sources
+   someone opens what the surplus of such an economy was spent on and what a kilogram of iron cost in days of work,
+   then change needs and recipes together. Start from `Complaints/reports/research-fuel-and-iron-per-head.md`.
 3. The stone-wall market and the building trades behind it (Update 48, Update 49).
 4. The opening: its price table for wood, draught animals and by-products; the purse it gives households with
    plots; the property income it counts; a land clearer's stock that rises for years and leaves in one.
@@ -670,7 +683,7 @@ share. New cargo within the merchant's capital over the two years a turn takes.
 
 ## 7. What to do first
 
-After Update 50: the list in 6n above replaces the ones below, which are kept for the record.
+After Update 51: the list in 6n above replaces the ones below, which are kept for the record.
 
 After Update 43:
 

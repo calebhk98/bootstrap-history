@@ -1,0 +1,476 @@
+diff --git a/sim/economy/merchant_stuck_stock.py b/sim/economy/merchant_stuck_stock.py
+index b482c3e3..2e761561 100644
+--- a/sim/economy/merchant_stuck_stock.py
++++ b/sim/economy/merchant_stuck_stock.py
+@@ -10,7 +10,13 @@ The part its crew can carry: under the search rules each stock takes the share o
+ hired on its tile, so a stock the hired hours cover whole is still cut, a part of every stock is offered where it stands
+ whenever a crew is a hair short of the plan, and the merchant buys none of a good where it offers it: it buys every
+ other year. Under the clearing rules the hours hired are set against the hours the stocks held need, crew key by crew
+-key, as the dispatch cuts its shipments (`merchants.dispatch`). Plain functions of built inputs."""
++key, as the dispatch cuts its shipments (`merchants.dispatch`).
++
++New cargo: a merchant's crew is hired before the goods markets, on what last year's shipments wanted. Under the search
++rules it bids for all the cargo its coin sizes, whatever that crew can move, and what it cannot carry stands where it
++was bought. Under the clearing rules it bids only for the cargo the hours still free can carry
++(`within_the_crew_hired`), and the hours of the cargo left unbid join next year's plan (`left_unbid`, `with_unbid`),
++so the crew grows to the trade it wants and no cargo is bought to be sold back. Plain functions of built inputs."""
+ import math
+ from typing import Callable, Dict, Iterable, Mapping, Optional, Sequence, Tuple
+ 
+@@ -85,6 +91,73 @@ def by_the_hours_the_stocks_need(stocks: Sequence[Stock], _plan_share_by_tile: M
+     return {stock: min([cut[key] for key in needed.get(stock, {}) if key in cut], default=1.0) for stock in stocks}
+ 
+ 
++def hours_left_for_new_cargo(hours_hired: Optional[Mapping[str, float]], hours_needed: Mapping[Stock, Mapping[str, float]],
++                             share_kept_by_stock: Mapping[Stock, float]) -> Optional[Dict[str, float]]:
++    """{crew key: hours} of the crew hired that the stocks kept for routes leave free: the hours hired less what each
++    stock needs times the share of it that is kept (the whole of a stock no share is named for), never below nothing.
++    None where there is no plan to hire for yet (`hours_hired` None)."""
++    if hours_hired is None:
++        return None
++    left = {key: max(0.0, hours) for key, hours in hours_hired.items()}
++    for stock in sorted(hours_needed):
++        kept = share_kept_by_stock.get(stock, 1.0)
++        for key, hours in hours_needed[stock].items():
++            if key in left:
++                left[key] = max(0.0, left[key] - hours * kept)
++    return left
++
++
++def all_the_cargo_sized(rows: int, _hours_by_row: Callable[[], Sequence[Mapping[str, float]]],
++                        _hours_left: Callable[[], Optional[Mapping[str, float]]]) -> list:
++    """The share of each sized row's cargo that is bid for: all of it."""
++    return [1.0] * rows
++
++
++def within_the_crew_hired(rows: int, hours_by_row: Callable[[], Sequence[Mapping[str, float]]],
++                          hours_left: Callable[[], Optional[Mapping[str, float]]]) -> list:
++    """The share of each sized row's cargo that is bid for: where the rows together need more hours of a crew key than
++    are left of it (`hours_left_for_new_cargo`), the share left; a row takes the least over the keys its haul needs,
++    and all of it where none is short. All of every row where there is no plan to hire for yet (`hours_left()` None)."""
++    left = hours_left()
++    if left is None:
++        return [1.0] * rows
++    needed = hours_by_row()
++    totals: Dict[str, float] = {}
++    for by_key in needed:
++        for key, hours in by_key.items():
++            totals[key] = totals.get(key, 0.0) + hours
++    cut = {key: left.get(key, 0.0) / total for key, total in totals.items() if total > left.get(key, 0.0)}
++    return [min([cut[key] for key in by_key if key in cut], default=1.0) for by_key in needed]
++
++
++def left_unbid(hours_by_row: Sequence[Mapping[str, float]], shares: Sequence[float],
++               carriage_money_by_row: Sequence[float]) -> Tuple[Dict[str, float], Dict[str, float]]:
++    """({crew key: hours}, {crew key: carriage money}) of the cargo not bid for: of each row, the share cut times the
++    hours its haul needs of each key, and times its carriage money shared over the keys by their hours."""
++    hours_unbid: Dict[str, float] = {}
++    money_unbid: Dict[str, float] = {}
++    for by_key, share, money in zip(hours_by_row, shares, carriage_money_by_row):
++        cut = 1.0 - share
++        row_hours = math.fsum(by_key.values())
++        if cut <= 0.0 or row_hours <= 0.0:
++            continue
++        for key, hours in by_key.items():
++            hours_unbid[key] = hours_unbid.get(key, 0.0) + cut * hours
++            money_unbid[key] = money_unbid.get(key, 0.0) + cut * money * hours / row_hours
++    return hours_unbid, money_unbid
++
++
++def with_unbid(wanted: Mapping[str, float], unbid: Mapping[str, float]) -> Mapping[str, float]:
++    """A year's figures by crew key (the hours its shipments wanted, or their carriage money) with those of the cargo
++    left unbid added; the figures themselves where nothing was left unbid."""
++    if not unbid:
++        return wanted
++    found = dict(wanted)
++    for key, value in unbid.items():
++        found[key] = found.get(key, 0.0) + value
++    return found
++
++
+ def kept_whole(_units_held: float, _share_crewed: float, _room_at_destinations: float) -> float:
+     """Units of a stock held for a route that are offered where they stand: none, the stock waits for its haul."""
+     return 0.0
+diff --git a/sim/economy/merchants.py b/sim/economy/merchants.py
+index a26e330b..1c56d3e5 100644
+--- a/sim/economy/merchants.py
++++ b/sim/economy/merchants.py
+@@ -87,6 +87,8 @@ class Merchant:
+     routes: Dict[Tuple[GoodId, TileId], Tuple[merchants_legs.Leg, ...]] = field(default_factory=dict)   # (good, source tile) -> legs (destination tile, area, weight): what it holds there is shared over them by weight
+     carriage_hours_wanted: Optional[Dict[str, float]] = None   # crew hours its shipments needed last year, by (trade, source tile) market key: this year's bid for carriers; None until it has shipped
+     carriage_money_wanted: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by the same key: the most an hour is worth to it
++    crew_hours_unbid: Dict[str, float] = field(default_factory=dict)   # crew hours of the cargo it sized this year and did not bid for, by crew key (merchant_stuck_stock): set by `orders`, added to the plan and emptied by the dispatch
++    crew_money_unbid: Dict[str, float] = field(default_factory=dict)   # the carriage money those hours stand for, by the same key
+     carrier_wear: Dict[str, float] = field(default_factory=dict)   # carrier units its shipments wore last year, by good (carriage_wear): this year's bid for carriers
+     carrier_fleet_wanted: Dict[str, float] = field(default_factory=dict)   # wear a year its routes' stock called for last year, less what it hired, by carrier good (carriage_fleet): the fleet it bids to hold
+     in_transit: List[merchants_transit.Shipment] = field(default_factory=list)   # hauls still on the road (their goods wait in the transit account)
+diff --git a/sim/economy/merchants_dispatch.py b/sim/economy/merchants_dispatch.py
+index 6ca32e14..289d26cf 100644
+--- a/sim/economy/merchants_dispatch.py
++++ b/sim/economy/merchants_dispatch.py
+@@ -2,7 +2,7 @@
+ from sim.geography.api import flow_ledger
+ from sim.unit_conversions import KILOGRAMS_PER_TONNE
+ 
+-from . import carried_book, carriage_fleet_book, carriage_wear_batch, carriage_hours, carriage_wear, merchants, merchants_transit, route_dues
++from . import carried_book, carriage_fleet_book, carriage_wear_batch, carriage_hours, carriage_wear, merchant_stuck_stock, merchants, merchants_transit, route_dues
+ from .cohort_reads import poorest_by_tile, populated_tiles
+ from .market_memory import market_key
+ from .inventory import held_stock
+@@ -56,9 +56,10 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
+     for row, entry in enumerate(entries):
+         merchant = entry.merchant
+         if not entry.dispatching:
+-            if crew is not None:
+-                merchant.carriage_hours_wanted = {}     # nothing shipped: no carriers to bid for next year
+-                merchant.carriage_money_wanted = {}
++            if crew is not None:      # nothing shipped: the carriers to bid for next year are those of the cargo it left unbid, if any
++                merchant.carriage_hours_wanted = dict(merchant.crew_hours_unbid)
++                merchant.carriage_money_wanted = dict(merchant.crew_money_unbid)
++                merchant.crew_hours_unbid, merchant.crew_money_unbid = {}, {}
+             if wear is not None:     # its fleet's wanted size stands: it may ship again
+                 merchant.carrier_wear = {}
+                 shipping.append(merchant.agent_id)
+@@ -69,8 +70,9 @@ def dispatch_merchants(setup, record, carriage, ledger: YearLedger, area_map) ->
+         dues_paid.extend(done.dues)
+         moves.extend(done.moves)
+         if crew is not None:
+-            merchant.carriage_hours_wanted = done.crew_hours_wanted
+-            merchant.carriage_money_wanted = done.crew_money_wanted
++            merchant.carriage_hours_wanted = merchant_stuck_stock.with_unbid(done.crew_hours_wanted, merchant.crew_hours_unbid)
++            merchant.carriage_money_wanted = merchant_stuck_stock.with_unbid(done.crew_money_wanted, merchant.crew_money_unbid)
++            merchant.crew_hours_unbid, merchant.crew_money_unbid = {}, {}
+         if wear is not None:
+             merchant.carrier_wear = answer.worn_of(row)
+             shipping.append(merchant.agent_id)
+diff --git a/sim/economy/merchants_plan.py b/sim/economy/merchants_plan.py
+index e874b3ff..9fc883e8 100644
+--- a/sim/economy/merchants_plan.py
++++ b/sim/economy/merchants_plan.py
+@@ -75,6 +75,15 @@ def _rows(route, merchant, stock, interest_rate, only_held=None, area_map=None)
+                                  good_allowed, source_allowed, merchant.traded_tiles)
+ 
+ 
++def _crew_hours(crew_hours_per_tonne, specs, good, source_tile, destination_tile, units: float) -> Dict[str, float]:
++    """{crew key: hours} to carry `units` of a good from a tile to another (`carriage_hours.Crew.hours_per_tonne` on its tonnes); nothing
++    where the caller has no crew figures or the good no mass."""
++    if crew_hours_per_tonne is None or good not in specs:
++        return {}
++    tonnes = units * specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE
++    return {key: tonnes * hours for key, hours in crew_hours_per_tonne(source_tile, destination_tile)}
++
++
+ def prepare_rows(route, merchants, interest_rate: float) -> None:
+     """Search the candidate rows of these merchants in one call, for their `orders` or `credit_wanted` that follow on this `route`."""
+     if merchants:
+@@ -115,7 +124,8 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+            interest_rate: float, shares=None, route=None, rows_out=None, crewed_share_by_tile: Optional[Mapping[TileId, float]] = None,
+            stock_offered_where_it_stands=merchant_stuck_stock.kept_whole, cash_for_new_cargo=merchant_stuck_stock.all_cash,
+            crewed_share_of_stocks=merchant_stuck_stock.by_the_plans_share, crew_hours_per_tonne=None,
+-           crew_hours_hired: Optional[Mapping[str, float]] = None) -> AgentOrders:
++           crew_hours_hired: Optional[Mapping[str, float]] = None,
++           cargo_the_crew_carries=merchant_stuck_stock.all_the_cargo_sized) -> AgentOrders:
+     """The merchant's offers and bids for the year (`merchants.orders`). `shares` is what rival merchants have already
+     committed this year (`RouteShares`, or `merchants_book.DenseShares` when the caller sizes many merchants over one
+     `route` pass); this merchant adds its own to it. With `rows_out` (an `OrderRows`) the bids and offers are written to it as rows,
+@@ -125,7 +135,9 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+     (merchant_stuck_stock.py; the defaults keep it whole and buy with all the cash). `crewed_share_of_stocks` is its rule for the
+     share of each such stock the crew can carry (the default: its tile's share of the plan); a rule that reckons in hours reads
+     `crew_hours_per_tonne(tile, destination tile)` (((crew key, hours),), `carriage_hours.Crew.hours_per_tonne`) and
+-    `crew_hours_hired` (by crew key; None: no plan to hire for yet)."""
++    `crew_hours_hired` (by crew key; None: no plan to hire for yet). `cargo_the_crew_carries` is its rule for the share of the
++    cargo sized that is bid for (the default: all of it); the hours and carriage money of what a rule leaves unbid are kept on
++    the merchant (`crew_hours_unbid`, `crew_money_unbid`) for the dispatch to add to next year's plan."""
+     route = route or merchants_book.route_pass(view, carriage, area_map, specs)
+     book = route.book
+     shares = shares if shares is not None else RouteShares()
+@@ -165,12 +177,15 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+     selling: set = set()         # (good, area) where it offers stock it holds for a route: it buys none of that good there
+     carriage_owed = []
+     on_routes = {key: quantity for key, quantity in held_stock.items() if key in merchant.routes}
++    needed_once: list = []
++    share_kept: Dict[Tuple[GoodId, TileId], float] = {}
+ 
+     def hours_needed():
+-        if crew_hours_per_tonne is None:
+-            return {}
+-        tonnes = {good: specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE for good, _tile in on_routes if good in specs}
+-        return merchant_stuck_stock.hours_needed_by_stock(on_routes, merchant.routes, tonnes, crew_hours_per_tonne)
++        if not needed_once:
++            tonnes = {good: specs[good].unit_mass_kg / KILOGRAMS_PER_TONNE for good, _tile in on_routes if good in specs}
++            needed_once.append({} if crew_hours_per_tonne is None else merchant_stuck_stock.hours_needed_by_stock(
++                on_routes, merchant.routes, tonnes, crew_hours_per_tonne))
++        return needed_once[0]
+     crewed = crewed_share_of_stocks(list(on_routes), crewed_share_by_tile or {}, hours_needed, crew_hours_hired)
+     for key, quantity in held_stock.items():
+         legs = merchant.routes.get(key)
+@@ -181,6 +196,7 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+         if offered > 0.0:
+             on_offer[key] = offered
+             selling.add((key[0], area_map.area_of(key[0], key[1])))
++        share_kept[key] = (quantity - offered) / quantity if quantity > 0.0 else 0.0
+         carriage_owed.append(merchant_stuck_stock.carriage_set_aside(quantity - offered, held_carriage.get(key, {}), legs))
+     remaining = cash_for_new_cargo(cash_held, math.fsum(carriage_owed)) * (1.0 - merchants.BUDGET_SAFETY_SHARE)     # a hair kept back: borrowed cash is all spent
+     if rows_out is None:
+@@ -192,18 +208,36 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+         offers = []
+     bids: List[Bid] = []
+     bought: Dict[Tuple[GoodId, TileId], Dict[Tuple[TileId, str], float]] = {}
++    hours_unbid: Dict[str, float] = {}
++    money_unbid: Dict[str, float] = {}
+     if remaining > 0.0:
+         quantities = merchants_book_kernel.commit_orders(
+             rows.destination_slot, rows.source_slot, rows.outlay, remaining, stock.volumes, stock.held,
+             np.zeros(book.slots, np.float64), group_into, group_out, *shares_args)
++        sized = []      # (row, good, source area, destination area, units) of each row it would bid for
+         for row in np.flatnonzero(quantities > 0.0).tolist():
+             good_index = int(rows.good[row])
+             good = book.goods[good_index]
+             source = book.areas[good_index][int(rows.source[row])]
+             if (good, source.area_id) in selling:
+                 continue
+-            destination = book.areas[good_index][int(rows.destination[row])]
+-            quantity = float(quantities[row])
++            sized.append((row, good, source, book.areas[good_index][int(rows.destination[row])], float(quantities[row])))
++        hours_once: list = []
++
++        def hours_by_row():
++            if not hours_once:
++                hours_once.append([_crew_hours(crew_hours_per_tonne, specs, good, source.anchor_tile, destination.anchor_tile, quantity)
++                                   for _row, good, source, destination, quantity in sized])
++            return hours_once[0]
++        carried = cargo_the_crew_carries(len(sized), hours_by_row, lambda: merchant_stuck_stock.hours_left_for_new_cargo(
++            crew_hours_hired, hours_needed(), share_kept))
++        if any(share < 1.0 for share in carried):
++            hours_unbid, money_unbid = merchant_stuck_stock.left_unbid(
++                hours_by_row(), carried, [quantity * (float(rows.outlay[row]) - float(rows.price_here[row])) for row, _good, _source, _destination, quantity in sized])
++        for (row, good, source, destination, sized_quantity), share in zip(sized, carried):
++            quantity = sized_quantity * share
++            if quantity <= 0.0:
++                continue
+             if not dense:
+                 shares.commit(good, source.area_id, destination.area_id, quantity)
+             price_here = float(rows.price_here[row])
+@@ -217,6 +251,7 @@ def orders(merchant, view, carriage, area_map, cash: float, held_stock: Mapping[
+             else:
+                 rows_out.bid(merchant.agent_id, good, source.area_id, source.anchor_tile, 0.0, quantity, price_here,
+                              merchants.MERCHANT_BID_ELASTICITY, quantity * price_here, maximum_price=float(rows.ceiling[row]))
++    merchant.crew_hours_unbid, merchant.crew_money_unbid = hours_unbid, money_unbid
+     for key, by_leg in bought.items():      # what was bought is carried to the destinations it was bought for
+         merchant.routes[key] = merchants_legs.from_weights(by_leg)
+     return AgentOrders(bids=tuple(bids), offers=tuple(offers))
+diff --git a/sim/economy/record.py b/sim/economy/record.py
+index 97472291..6f5d16bd 100644
+--- a/sim/economy/record.py
++++ b/sim/economy/record.py
+@@ -147,6 +147,8 @@ def _merchant_record(merchant: Merchant) -> Dict[str, Any]:
+             "routes": {key: [list(leg) for leg in legs] for key, legs in _pair_keys(merchant.routes).items()},
+             "carriage_hours_wanted": merchant.carriage_hours_wanted,
+             "carriage_money_wanted": merchant.carriage_money_wanted,
++            "crew_hours_unbid": merchant.crew_hours_unbid,
++            "crew_money_unbid": merchant.crew_money_unbid,
+             "carrier_wear": merchant.carrier_wear,
+             "carrier_fleet_wanted": merchant.carrier_fleet_wanted,
+             "in_transit": [plain(each) for each in merchant.in_transit],
+@@ -167,6 +169,8 @@ def _merchant_without_figures(record: Dict[str, Any]) -> Merchant:
+                     routes={key: tuple(tuple(leg) for leg in legs) for key, legs in _split_keys(record["routes"]).items()},
+                     carriage_hours_wanted=record["carriage_hours_wanted"],
+                     carriage_money_wanted=record["carriage_money_wanted"],
++                    crew_hours_unbid=record["crew_hours_unbid"],
++                    crew_money_unbid=record["crew_money_unbid"],
+                     carrier_wear=record["carrier_wear"],
+                     carrier_fleet_wanted=record["carrier_fleet_wanted"],
+                     in_transit=[Shipment(**each) for each in record["in_transit"]],
+diff --git a/sim/economy/rule_sets.py b/sim/economy/rule_sets.py
+index da637681..a606d93b 100644
+--- a/sim/economy/rule_sets.py
++++ b/sim/economy/rule_sets.py
+@@ -36,6 +36,7 @@ class RuleSet:
+     merchant_stock_offered_where_it_stands: Callable   # (units of a stock held for a route, the share of its tile's carriage plan that is crewed, the room at its destinations) -> units offered where they stand
+     merchant_cash_for_new_cargo: Callable   # (a merchant's cash, the coin carrying the stock it keeps for routes will cost) -> the cash that buys new cargo
+     merchant_crewed_share_of_stocks: Callable   # (the stocks a merchant holds for routes, the share of its carriage plan crewed by tile, () -> the crew hours each stock needs by crew key, the hours it hired by crew key) -> the share of each stock its crew can carry (merchant_stuck_stock.py)
++    merchant_cargo_the_crew_carries: Callable   # (the number of rows of cargo a merchant sized, () -> the crew hours each row needs by crew key, () -> the hours of its hired crew still free by crew key) -> the share of each row it bids for (merchant_stuck_stock.py)
+     merchant_wage_loan: Callable    # (the loan a merchant wants for its carriers' wages, its capital, its debt) -> the loan it asks for (None: none)
+     memory_making_costs: Callable   # (setup, record) -> {good: what it costs to make}, as the market memory reads it in a year a market traded nothing
+     memory_cost_of_costless: Callable   # (a market's remembered price, None for none) -> what its memory plans from where its good has no making cost (None: nothing)
+@@ -100,6 +101,7 @@ RULE_SETS: Dict[str, RuleSet] = {
+                     merchant_stock_offered_where_it_stands=merchant_stuck_stock.kept_whole,
+                     merchant_cash_for_new_cargo=merchant_stuck_stock.all_cash,
+                     merchant_crewed_share_of_stocks=merchant_stuck_stock.by_the_plans_share,
++                    merchant_cargo_the_crew_carries=merchant_stuck_stock.all_the_cargo_sized,
+                     merchant_wage_loan=merchant_wage_loans.as_wanted,
+                     memory_making_costs=making_cost_alone.of_every_good,
+                     memory_cost_of_costless=making_cost_alone.no_cost,
+@@ -128,6 +130,7 @@ RULE_SETS: Dict[str, RuleSet] = {
+                       merchant_stock_offered_where_it_stands=merchant_stuck_stock.part_it_cannot_carry,
+                       merchant_cash_for_new_cargo=merchant_stuck_stock.cash_less_carriage,
+                       merchant_crewed_share_of_stocks=merchant_stuck_stock.by_the_hours_the_stocks_need,
++                      merchant_cargo_the_crew_carries=merchant_stuck_stock.within_the_crew_hired,
+                       merchant_wage_loan=merchant_wage_loans.within_leverage,
+                       memory_making_costs=making_cost_alone.of_goods_made_alone,
+                       memory_cost_of_costless=making_cost_alone.the_price_it_had,
+diff --git a/sim/economy/year_order_sources.py b/sim/economy/year_order_sources.py
+index d290c5b8..2e94f2fc 100644
+--- a/sim/economy/year_order_sources.py
++++ b/sim/economy/year_order_sources.py
+@@ -131,5 +131,6 @@ def merchant_orders(setup, record, view, area_map, carriage, order_book, ledger=
+                          stock_offered_where_it_stands=rules.merchant_stock_offered_where_it_stands,
+                          cash_for_new_cargo=rules.merchant_cash_for_new_cargo,
+                          crewed_share_of_stocks=rules.merchant_crewed_share_of_stocks,
++                         cargo_the_crew_carries=rules.merchant_cargo_the_crew_carries,
+                          crew_hours_per_tonne=None if crew is None else crew.hours_per_tonne, crew_hours_hired=hours_hired)
+     rows.write()
+diff --git a/sim/tests/test_merchant_stuck_stock.py b/sim/tests/test_merchant_stuck_stock.py
+index 1bc9fd74..9e5e981b 100644
+--- a/sim/tests/test_merchant_stuck_stock.py
++++ b/sim/tests/test_merchant_stuck_stock.py
+@@ -7,9 +7,10 @@ import unittest
+ 
+ from sim.economy import merchants
+ from sim.economy import rule_sets
+-from sim.economy.merchant_stuck_stock import (all_cash, by_the_hours_the_stocks_need, by_the_plans_share, carriage_set_aside,
+-                                              cash_less_carriage, crewed_share_by_tile, hours_needed_by_stock, kept_whole,
+-                                              part_it_cannot_carry)
++from sim.economy.merchant_stuck_stock import (all_cash, all_the_cargo_sized, by_the_hours_the_stocks_need, by_the_plans_share,
++                                              carriage_set_aside, cash_less_carriage, crewed_share_by_tile, hours_left_for_new_cargo,
++                                              hours_needed_by_stock, kept_whole, left_unbid, part_it_cannot_carry, with_unbid,
++                                              within_the_crew_hired)
+ from sim.tests.test_economy_merchants import CARRIAGE_PER_UNIT, SPECS, View, merchant, world
+ 
+ 
+@@ -92,6 +93,70 @@ class HoursNeededByStock(unittest.TestCase):
+         self.assertEqual(hours_needed_by_stock({SALT_A: 8.0, FISH_A: 3.0}, routes, {"salt": 1.0, "fish": 1.0}, self.per_tonne), {})
+ 
+ 
++class HoursLeftForNewCargo(unittest.TestCase):
++    def test_the_hours_hired_less_what_the_stocks_kept_for_routes_need(self):
++        needed = {SALT_A: {"carter|a": 20.0}, FISH_A: {"carter|a": 10.0, "sailor|a": 4.0}}
++        left = hours_left_for_new_cargo({"carter|a": 50.0, "sailor|a": 4.0, "carter|c": 7.0}, needed, {SALT_A: 1.0, FISH_A: 0.5})
++        self.assertEqual(left, {"carter|a": 25.0, "sailor|a": 2.0, "carter|c": 7.0})
++
++    def test_never_below_nothing_and_a_stock_with_no_share_named_is_kept_whole(self):
++        left = hours_left_for_new_cargo({"carter|a": 5.0}, {SALT_A: {"carter|a": 20.0}}, {})
++        self.assertEqual(left, {"carter|a": 0.0})
++
++    def test_with_no_plan_to_hire_for_there_is_no_figure(self):
++        self.assertIsNone(hours_left_for_new_cargo(None, {SALT_A: {"carter|a": 20.0}}, {SALT_A: 1.0}))
++
++
++class CargoTheCrewCarries(unittest.TestCase):
++    ROWS = [{"carter|a": 30.0}, {"carter|a": 10.0, "sailor|a": 6.0}, {"carter|c": 5.0}, {}]
++
++    def test_under_the_search_rules_all_the_cargo_sized_is_bid_for(self):
++        shares = all_the_cargo_sized(3, lambda: self.fail("the hours are not read"), lambda: self.fail("the hours are not read"))
++        self.assertEqual(shares, [1.0, 1.0, 1.0])
++
++    def test_with_no_plan_to_hire_for_yet_all_of_it_is_bid_for(self):
++        self.assertEqual(within_the_crew_hired(4, lambda: self.fail("the hours are not read"), lambda: None), [1.0, 1.0, 1.0, 1.0])
++
++    def test_hours_left_that_cover_the_cargo_leave_it_whole(self):
++        shares = within_the_crew_hired(4, lambda: self.ROWS, lambda: {"carter|a": 40.0, "sailor|a": 6.0, "carter|c": 9.0})
++        self.assertEqual(shares, [1.0, 1.0, 1.0, 1.0])
++
++    def test_a_key_short_of_hours_cuts_every_row_that_needs_it_by_the_share_left(self):
++        shares = within_the_crew_hired(4, lambda: self.ROWS, lambda: {"carter|a": 10.0, "sailor|a": 6.0, "carter|c": 9.0})
++        self.assertEqual(shares, [0.25, 0.25, 1.0, 1.0])
++
++    def test_the_scarcest_key_of_a_rows_haul_sets_its_share(self):
++        shares = within_the_crew_hired(4, lambda: self.ROWS, lambda: {"carter|a": 20.0, "sailor|a": 0.6, "carter|c": 9.0})
++        self.assertAlmostEqual(shares[0], 0.5)
++        self.assertAlmostEqual(shares[1], 0.1)
++
++    def test_a_key_none_was_hired_of_bids_for_none_of_the_cargo_that_needs_it(self):
++        shares = within_the_crew_hired(4, lambda: self.ROWS, lambda: {"carter|a": 40.0, "sailor|a": 6.0})
++        self.assertEqual(shares, [1.0, 1.0, 0.0, 1.0])
++
++
++class LeftUnbid(unittest.TestCase):
++    def test_the_hours_and_the_carriage_money_of_the_cargo_cut_by_crew_key(self):
++        rows = [{"carter|a": 30.0}, {"carter|a": 10.0, "sailor|a": 30.0}, {"carter|c": 5.0}]
++        hours, money = left_unbid(rows, [0.5, 0.25, 1.0], [12.0, 8.0, 3.0])
++        self.assertEqual(hours, {"carter|a": 15.0 + 7.5, "sailor|a": 22.5})
++        self.assertAlmostEqual(money["carter|a"], 6.0 + 6.0 * 10.0 / 40.0)
++        self.assertAlmostEqual(money["sailor|a"], 6.0 * 30.0 / 40.0)
++
++    def test_cargo_bid_for_whole_leaves_nothing(self):
++        self.assertEqual(left_unbid([{"carter|a": 30.0}], [1.0], [12.0]), ({}, {}))
++
++
++class WithUnbid(unittest.TestCase):
++    def test_the_unbid_figures_are_added_key_by_key(self):
++        self.assertEqual(with_unbid({"carter|a": 4.0, "sailor|a": 1.0}, {"carter|a": 6.0, "carter|c": 2.0}),
++                         {"carter|a": 10.0, "sailor|a": 1.0, "carter|c": 2.0})
++
++    def test_with_nothing_unbid_the_figures_come_back_as_they_are(self):
++        wanted = {"carter|a": 4.0}
++        self.assertIs(with_unbid(wanted, {}), wanted)
++
++
+ ROOM = 1e9      # more room at the destinations than any stock here
+ 
+ 
+@@ -183,6 +248,10 @@ class OrdersWithTheCrewReckonedInHours(unittest.TestCase):
+         self.assertAlmostEqual(offered(orders), 7.5)
+         self.assertEqual(bid_for(orders), 0.0)
+ 
++    def test_the_search_rules_bid_for_all_the_cargo_sized_and_the_clearing_rules_for_what_the_crew_carries(self):
++        self.assertIs(rule_sets.RULE_SETS["search"].merchant_cargo_the_crew_carries, all_the_cargo_sized)
++        self.assertIs(rule_sets.RULE_SETS["clearing"].merchant_cargo_the_crew_carries, within_the_crew_hired)
++
+     def test_the_search_rules_take_the_plans_share_and_the_clearing_rules_the_hours(self):
+         self.assertIs(rule_sets.RULE_SETS["search"].merchant_crewed_share_of_stocks, by_the_plans_share)
+         self.assertIs(rule_sets.RULE_SETS["clearing"].merchant_crewed_share_of_stocks, by_the_hours_the_stocks_need)
+@@ -264,5 +333,53 @@ class OrdersBuyWithTheCashLeftAfterCarriage(unittest.TestCase):
+         self.assertEqual(ordered(5.0, self.HELD, shares={"a": 1.0}, clearing=True).bids, ())
+ 
+ 
++def ordered_with_crew(cash, hours_hired, rule=within_the_crew_hired):
++    """(the merchant, its orders) on the two-tile world with nothing held: salt at two a unit on `a` sells at five on `b`, a tonne a unit,
++    two carter hours a tonne; `hours_hired` is what it hired this year by crew key (None: it has no plan yet)."""
++    carriage, area_map, area_a, area_b = world()
++    who = merchant()
++    who.expected_prices = {("salt", area_a["salt"]): 2.0, ("salt", area_b["salt"]): 5.0}
++    who.expected_volumes = {("salt", area_b["salt"]): 100.0}
++    orders = merchants.orders(who, View({}), carriage, area_map, cash, {}, SPECS, 0.0, cargo_the_crew_carries=rule,
++                              crew_hours_per_tonne=two_hours_a_tonne, crew_hours_hired=hours_hired)
++    return who, orders
++
++
++class OrdersWithinTheCrewHired(unittest.TestCase):
++    def test_with_no_plan_yet_it_bids_for_all_it_sized_and_leaves_nothing_unbid(self):
++        who, orders = ordered_with_crew(30.0, None)
++        unlimited = bid_for(orders)
++        self.assertGreater(unlimited, 5.0)
++        self.assertEqual((who.crew_hours_unbid, who.crew_money_unbid), ({}, {}))
++
++    def test_it_bids_for_the_cargo_its_hired_hours_carry_and_keeps_the_rest_for_the_plan(self):
++        _who, unlimited = ordered_with_crew(30.0, None)
++        sized = bid_for(unlimited)
++        who, orders = ordered_with_crew(30.0, {"carter|a": 10.0})
++        self.assertAlmostEqual(bid_for(orders), 5.0)
++        self.assertAlmostEqual(who.crew_hours_unbid["carter|a"], (sized - 5.0) * 2.0)
++        self.assertAlmostEqual(who.crew_money_unbid["carter|a"], (sized - 5.0) * CARRIAGE_PER_UNIT)
++        self.assertEqual(who.routes[("salt", "a")][0][:2], ("b", who.routes[("salt", "a")][0][1]))
++
++    def test_with_a_plan_and_no_crew_hired_it_bids_for_nothing_and_wants_the_hours_next_year(self):
++        _who, unlimited = ordered_with_crew(30.0, None)
++        who, orders = ordered_with_crew(30.0, {})
++        self.assertEqual(orders.bids, ())
++        self.assertAlmostEqual(who.crew_hours_unbid["carter|a"], bid_for(unlimited) * 2.0)
++
++    def test_hours_enough_for_the_cargo_change_nothing(self):
++        _who, unlimited = ordered_with_crew(30.0, None)
++        who, orders = ordered_with_crew(30.0, {"carter|a": 1000.0})
++        self.assertEqual(bid_for(orders), bid_for(unlimited))
++        self.assertEqual(who.crew_hours_unbid, {})
++
++    def test_under_the_search_rule_the_hours_hired_do_not_hold_the_cargo(self):
++        _who, unlimited = ordered_with_crew(30.0, None)
++        who, orders = ordered_with_crew(30.0, {"carter|a": 10.0}, rule=all_the_cargo_sized)
++        self.assertEqual(bid_for(orders), bid_for(unlimited))
++        self.assertEqual(who.crew_hours_unbid, {})
++
++
+ if __name__ == "__main__":
+     unittest.main()
++

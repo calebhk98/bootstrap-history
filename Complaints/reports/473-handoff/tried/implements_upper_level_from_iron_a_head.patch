@@ -1,0 +1,13 @@
+diff --git a/data/world/needs.json b/data/world/needs.json
+index 46cdc6b4..cfd79641 100644
+--- a/data/world/needs.json
++++ b/data/world/needs.json
+@@ -27,6 +27,8 @@
+   "implements_and_arms": {
+    "surplus_budget_share": 0.20,
+    "unit": "kg of bronze equivalent",
++   "satiation_per_capita_per_year": 8.2,
++   "satiation_basis": "An upper bound a household's buying stops at, not a level it is expected to reach: the iron sold to consumers in England a head a year at the eve of its industry, long after the years the game opens in. P. W. King, thesis on the English iron trade, chapter 8, Economic Trends and the Consumption of Iron (archaeologydataservice.ac.uk/catalogue/adsdata/arch-405-1/dissemination/pdf/thesis_text/8_Economic_Trends_and_the_Consumption_of_Iron.pdf, opened): 'consumption per head' is 'estimated by dividing domestic consumption by population', domestic consumption being the iron manufactured less exports of ironware; it 'climbed fairly steadily from 12 lb. in the early 1720s to around 15½ lb. from the early 1760s until the early 1780s, and then to more than 20 lb. around 1805, that is if the contemporary estimate of bar iron production in that year is to be believed'; about 1500 it was '4 lb. or so per person per year'. 20 lb is 9.07 kg of bar iron, 8.2 units at bar iron's effectiveness of 0.9. The figure holds every use of iron (nails, tyres, ploughs, the trades' tools, arms), so it bounds what households and the makers who serve them took together; a household with more to spend than buys this much spends it on the needs still short. Confidence C: one country's total, with its author's own doubt about the 1805 estimate, used as a ceiling.",
+    "effectiveness_basis": "working hardness and edge holding per kg relative to bronze"
+   },
+   "health": {
